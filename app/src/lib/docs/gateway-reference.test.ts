@@ -911,7 +911,14 @@ async function intelligenceScenario() {
   const service = createIntelligenceService({
     status: 'configured-sandbox',
     loadPolicy: async () => ({ state: 'sandbox', permittedRoles: ['student'], allowedModes: ['explain'], allowedModels: ['openai:stub'], maxRequestCents: 5, retentionDays: 30 }),
-    loadApprovedSources: async (_i, ids) => ids.map((id) => ({ id, evidenceIds: ['e1'], body: 'Sandbox source text', origin: 'institution', policyScope: 'institution' })),
+    loadApprovedSources: async (context, _i, ids) => ids.map((id) => ({
+      id,
+      labels: {
+        tenantId: context.tenantId, purpose: 'ai_context', source: { id, kind: 'institution' },
+        freshness: { state: 'current', observedAt: '2026-10-01T00:00:00.000Z' },
+      },
+      evidenceIds: ['e1'], body: 'Sandbox source text', origin: 'institution', policyScope: 'institution',
+    })),
     modelTask: async () => ({ candidates: [{ model: 'openai:stub', provider: 'openai', estimatedCents: 1 }] }),
     generate: async (req) => ({ text: 'A stubbed answer.', citedSourceIds: req.sources.map((s) => s.id), inputTokens: 10, outputTokens: 5, providerRequestId: 'stub-1' }),
     execute: async () => ({ verified: false }),

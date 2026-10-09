@@ -1,10 +1,10 @@
 # Workflow engine
 
-Status: partial implementation; definition builder exists, universal runtime does not.
+Status: partial implementation; a generic in-memory runtime and definition builder exist, but durable production wiring and cross-domain adoption do not.
 
 ## Verified foundation
 
-`workflow_versions`, a closed typed specification, validation, maker/checker publication, RLS and audit exist. Domain-specific state machines also exist for tenant rollout, reconciliation, community cases, dining and institutional sandbox flows. The workflow-builder migration explicitly stores definitions, not student workflow instances.
+`packages/platform/src/engines/workflow.ts` provides a tenant-scoped generic `WorkflowRuntime` and `WorkflowInstance` with optimistic concurrency, legal-transition enforcement, and append-only history. The access saga adds a runner, while a separate durable-store contract and audit/outbox migration exist; the runner is not wired to that persistence layer. `workflow_versions`, a closed typed specification, validation, maker/checker publication, RLS and audit also exist, alongside domain-specific state machines for tenant rollout, reconciliation, community cases, dining and institutional sandbox flows. The workflow-builder migration stores definitions, not a universal durable instance service.
 
 ## Canonical runtime contract
 
@@ -12,7 +12,7 @@ A workflow definition has typed states, allowed transitions, actors/scopes, elig
 
 ## Gap
 
-There is no one general instance/execution service spanning onboarding, guardian consent, institution provisioning, connector setup, marketplace review, support, data rights, billing and incident response. Domain-specific state machines must remain until migrated behind compatibility adapters; a large replacement migration would be unsafe.
+The generic runtime is not wired to durable production storage, timers/escalations, metrics, replay, or provider receipts, and it is not adopted across onboarding, guardian consent, institution provisioning, connector setup, marketplace review, support, data rights, billing, and incident response. Domain-specific state machines must remain until migrated behind compatibility adapters; a duplicate replacement runtime or large migration would be unsafe.
 
 ## First implementation boundary
 

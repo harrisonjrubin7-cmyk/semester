@@ -4,13 +4,18 @@ import { createSupabaseIntelligenceRepository } from './intelligence-repository.
 import { createIntelligenceService } from './intelligence.ts';
 import type { IntelligenceGatewayRequest } from '../../../packages/institution/src/intelligence.ts';
 import type { ProviderGenerationRequest } from './providers/types.ts';
+import { contextFor } from './context.ts';
 
 type Row = Record<string, unknown>;
 const identity = { userId: 'student-1', institutionId: 'northstar', roles: ['student'] as const };
+const aiContext = contextFor(new Request('http://local/v1/intelligence/respond'), { ...identity, roles: [...identity.roles] }, {
+  requestId: 'request-1', correlationId: 'correlation-1',
+}, 'production', 'ai_context');
 const course = { kind: 'course' as const, courseId: 'ECON 101', term: '2026FA' };
 const source = (patch: Row = {}): Row => ({
   id: 'syllabus', tenant_id: 'northstar', course_id: 'ECON 101', origin: 'course',
   authority: 'authoritative', policy_scope: 'course', policy_course_code: 'ECON 101', policy_term: '2026FA',
+  updated_at: '2026-10-01T00:00:00.000Z',
   ...patch,
 });
 const rule = (patch: Row = {}): Row => ({
@@ -66,7 +71,7 @@ function setup(rules = [rule()], sources = [source()], now = '2026-10-01T12:00:0
     modelTask: async () => ({ candidates: [{ provider: 'openai', model: 'openai:test', estimatedCents: 1 }] }),
     generate, execute: async () => ({ verified: false }),
   });
-  return { repo, generate, service, ask: (patch: Partial<IntelligenceGatewayRequest> = {}) => service.respond({ ...identity, roles: [...identity.roles] }, request(patch)) };
+  return { repo, generate, service, ask: (patch: Partial<IntelligenceGatewayRequest> = {}) => service.respond(aiContext, { ...identity, roles: [...identity.roles] }, request(patch)) };
 }
 
 describe('authoritative source scope applies before institutional generation', () => {

@@ -27,6 +27,7 @@ the reverse — fails the build. The card on each page says which.
 | --- | --- |
 | [Events](EVENTS.md) | The event envelope, every event type with its version, classification and retention, and the outbox rules |
 | [Event JSON Schemas](schemas/events/) | The envelope and per-type constants as JSON Schema files |
+| [Registration-readiness workflow](registration-readiness-workflow.md) | Evaluation states, idempotent receipts, reconciliation generations and the persistence adapter contract |
 | [Analytics marks](ANALYTICS-MARKS.md) | The three marks sent to a server, and the events that are only defined |
 
 ## Platform

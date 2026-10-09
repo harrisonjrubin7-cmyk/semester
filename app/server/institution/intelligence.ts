@@ -16,9 +16,16 @@ import type {
 } from './providers/types.ts';
 import { checkProviderRequest } from './ai-data-class.ts';
 import { MemoryIntelligenceActionStore, type IntelligenceActionStore } from './intelligence-action-store.ts';
+import {
+  retrievalLabelsMatch,
+  type RequestContext,
+  type RetrievalLabels,
+} from '../../../packages/platform/src/index.ts';
 
 export interface ApprovedIntelligenceSource {
   id: string;
+  /** Exact policy facts that authorized this source for provider context. */
+  labels: RetrievalLabels;
   evidenceIds: string[];
   /** Used only to assemble the provider request; never returned or journaled. */
   body: string;
@@ -68,6 +75,7 @@ export interface IntelligenceBudgetReservation {
 }
 
 export interface IntelligenceRespondInput {
+  context: RequestContext;
   identity: UniversityIdentity;
   request: IntelligenceGatewayRequest;
   tenantPolicy: TenantIntelligencePolicy;
@@ -123,7 +131,10 @@ const PROVIDER_DEADLINE_MS = 20_000;
 const MAX_OUTPUT_TOKENS = 1_200;
 
 export async function respond(input: IntelligenceRespondInput): Promise<IntelligenceResult> {
-  const { identity, request, tenantPolicy } = input;
+  const { context, identity, request, tenantPolicy } = input;
+  if (context.tenantId !== identity.institutionId || context.actor.personId !== identity.userId || context.purpose !== 'ai_context') {
+    return result(403, { code: 'scope-refused', message: 'The verified AI retrieval context does not match this account.' });
+  }
   if (request.tenantId !== identity.institutionId || request.personId !== identity.userId) {
     return result(403, { code: 'scope-refused', message: 'The authenticated university scope does not match this request.' });
   }
@@ -154,6 +165,15 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
     return result(403, {
       code: 'source-not-approved',
       message: 'Every source sent to Semester Intelligence must be approved for this tenant and account.',
+    });
+  }
+  if (sources.some((source) => !retrievalLabelsMatch(context, source.labels, 'ai_context', {
+    sourceId: source.id,
+    requireCurrent: true,
+  }))) {
+    return result(403, {
+      code: 'source-context-refused',
+      message: 'A source is not current or was not authorized for this tenant and AI purpose.',
     });
   }
   // Same spelling normalization as Course Studio; never a mapping from an opaque ID.
@@ -404,7 +424,7 @@ export interface IntelligenceServiceConfig {
   killSwitch?: (identity: UniversityIdentity) => Promise<boolean>;
   loadCoursePolicy?: IntelligenceRespondInput['loadCoursePolicy'];
   loadPolicy: (identity: UniversityIdentity) => Promise<TenantIntelligencePolicy>;
-  loadApprovedSources: (identity: UniversityIdentity, sourceIds: string[]) => Promise<ApprovedIntelligenceSource[]>;
+  loadApprovedSources: (context: RequestContext, identity: UniversityIdentity, sourceIds: string[]) => Promise<ApprovedIntelligenceSource[]>;
   modelTask: (identity: UniversityIdentity, request: IntelligenceGatewayRequest) => Promise<ModelTask>;
   generate: IntelligenceRespondInput['generate'];
   reserveBudget?: IntelligenceRespondInput['reserveBudget'];
@@ -417,7 +437,7 @@ export interface IntelligenceServiceConfig {
 export interface IntelligenceService {
   status: IntelligenceServiceConfig['status'];
   policy: (identity: UniversityIdentity) => Promise<IntelligenceResult>;
-  respond: (identity: UniversityIdentity, value: unknown) => Promise<IntelligenceResult>;
+  respond: (context: RequestContext, identity: UniversityIdentity, value: unknown) => Promise<IntelligenceResult>;
   confirm: (identity: UniversityIdentity, actionId: string, value: unknown) => Promise<IntelligenceResult>;
 }
 
@@ -447,7 +467,7 @@ export function createIntelligenceService(config: IntelligenceServiceConfig): In
       }
       return result(200, { state: policy.state, allowedModes: policy.allowedModes });
     },
-    respond: async (identity, value) => {
+    respond: async (context, identity, value) => {
       let request: IntelligenceGatewayRequest;
       try {
         request = parseIntelligenceGatewayRequest(value);
@@ -457,11 +477,12 @@ export function createIntelligenceService(config: IntelligenceServiceConfig): In
       const stopped = await killed(identity, request.category);
       if (stopped) return stopped;
       const response = await respond({
+        context,
         identity,
         request,
         tenantPolicy: await config.loadPolicy(identity),
         loadCoursePolicy: config.loadCoursePolicy,
-        approvedSources: await config.loadApprovedSources(identity, request.sourceIds),
+        approvedSources: await config.loadApprovedSources(context, identity, request.sourceIds),
         modelTask: await config.modelTask(identity, request),
         generate: config.generate,
         reserveBudget: config.reserveBudget,

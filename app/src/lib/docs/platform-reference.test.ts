@@ -400,6 +400,10 @@ const PLATFORM_NON_EVENT_IMPORTERS = [
   'app/server/institution/adapter.ts',
   'app/server/institution/context.ts',
   'app/server/institution/gateway.ts',
+  // These import only the platform retrieval/context contract. Neither calls
+  // the event API or mounts the productivity producer.
+  'app/server/institution/intelligence-repository.ts',
+  'app/server/institution/intelligence.ts',
   'app/server/productivity/http.ts',
   'app/server/productivity/service.ts',
 ];
@@ -1237,7 +1241,7 @@ describe('EVENTS.md and its schemas (generated)', () => {
     const all = groups.flatMap((g) => g.types);
     expect(new Set(all).size).toBe(all.length);
     expect(diff(all, Object.keys(EVENT_TYPES))).toEqual(NONE);
-    expect(all.length).toBe(61);
+    expect(all.length).toBe(64);
   });
 
   it('every extracted rejection reason has a stated rule, and no rule is orphaned', () => {

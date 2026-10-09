@@ -372,10 +372,10 @@ export async function retrieveForAi(
       .filter((c) => c.tenantId === ctx.tenantId && c.purpose === 'ai_context' && c.granteePersonId === ctx.actor.personId && consentIsLive(c, now))
       .flatMap((c) => c.resourceIds),
   );
-  const hits = await index.query(scopeFor(ctx, acl, { includeRecords: true }), query, 50);
+  const hits = await index.query(scopeFor(ctx, acl, { purpose: 'ai_context', includeRecords: true }), query, 50);
   // The index returns what the caller may *see*; AI may *use* only what is on the allowlist.
   return hits
-    .filter((h) => allowed.has(h.id))
+    .filter((h) => allowed.has(h.id) && h.labels.freshness.state === 'current')
     .slice(0, limit)
     .map((h) => ({ ...h, provenance: { sourceId: h.id, kind: h.kind } }));
 }
