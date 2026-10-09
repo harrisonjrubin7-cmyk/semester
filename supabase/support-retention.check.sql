@@ -299,7 +299,7 @@ begin
      priority, status, first_response_due)
   values
     (ticket, student, null, false, 'privacy', 'Legacy ticket with grant',
-     'Preserve the ticket, revoke the access window.', 'high', 'resolved',
+     'Preserve the ticket, revoke the access window.', 'high', 'open',
      now() + interval '1 day');
   insert into public.support_access_grant
     (id, tenant_id, student_id, supporter_id, consent_id, ticket_id, scopes,
