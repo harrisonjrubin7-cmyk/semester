@@ -184,8 +184,10 @@ export function importSpecifiers(source: string): string[] {
  * `@semester/*` is aliased, in `tsconfig.app.json` and `vite.config.ts`, to the
  * packages' sources. This is a copy of that, and a copy can fall behind: it did,
  * when `packages/platform` arrived. `importboundaries.test.ts` checks it against
- * `packages/*` and against both configs, so a new package fails there, with the
- * line to add, instead of having its imports read as a third-party package.
+ * every package with a browser entry at `src/index.ts` and against both configs,
+ * so a new browser package fails there, with the line to add, instead of having
+ * its imports read as a third-party package. Node-only workspace tools have no
+ * browser entry and are held out of all three alias maps.
  */
 export const WORKSPACE_ALIASES: Readonly<Record<string, string>> = {
   '@semester/contract': 'packages/contract/src/index.ts',
