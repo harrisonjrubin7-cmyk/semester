@@ -48,6 +48,25 @@ alter table public.course_sources
     scanner_version is null
     or (length(scanner_version) >= 1 and length(scanner_version) <= 120));
 
+alter table public.course_materials
+  drop constraint if exists course_materials_filename_check,
+  add constraint course_materials_filename_check check (
+    length(filename) >= 1
+    and length(filename) <= 120
+    and filename !~ '[\\/[:cntrl:]"<>|:*?]');
+
+alter table public.course_source_corrections
+  drop constraint if exists course_source_corrections_derived_record_id_check,
+  add constraint course_source_corrections_derived_record_id_check check (
+    length(derived_record_id) >= 1
+    and length(derived_record_id) <= 200
+    and derived_record_id !~ '[[:cntrl:]]'),
+  drop constraint if exists course_source_corrections_field_name_check,
+  add constraint course_source_corrections_field_name_check check (
+    length(field_name) >= 1
+    and length(field_name) <= 80
+    and field_name ~ '^[A-Za-z][A-Za-z0-9_.:-]*$');
+
 alter table private.course_material_retention_policy
   drop constraint if exists course_material_retention_policy_days_after_withdrawal_check,
   add constraint course_material_retention_policy_days_after_withdrawal_check check (
