@@ -359,7 +359,9 @@ begin
    using public.support_tickets t
    where t.student_id = old.id
      and not t.retention_classified
-     and o.ticket_id = t.id;
+     and o.ticket_id = t.id
+     and o.accepted_at is null
+     and o.dead_lettered_at is null;
   -- Ticket-bound support access has a composite FK without ON UPDATE. Revoke
   -- and audit those grants before detaching the preserved legacy ticket, or
   -- the student_id update would strand the whole account deletion.

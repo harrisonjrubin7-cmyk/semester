@@ -281,6 +281,9 @@ declare
   ticket uuid := gen_random_uuid();
   consent uuid := gen_random_uuid();
   grant_id uuid := gen_random_uuid();
+  accepted_message uuid := gen_random_uuid();
+  dead_message uuid := gen_random_uuid();
+  pending_message uuid := gen_random_uuid();
 begin
   insert into auth.users (id, instance_id, aud, role, email, email_confirmed_at, created_at, updated_at)
   values
@@ -314,6 +317,17 @@ begin
     (grant_id, school, student, supporter, consent, ticket,
      array['learning-progress'], 'Diagnose this support case.',
      now() + interval '1 day');
+  insert into public.support_ticket_messages (id, ticket_id, from_side, body)
+  values
+    (accepted_message, ticket, 'support', 'Accepted notice evidence.'),
+    (dead_message, ticket, 'support', 'Dead-letter notice evidence.'),
+    (pending_message, ticket, 'support', 'Pending notice to cancel.');
+  insert into public.support_notification_outbox
+    (message_id, ticket_id, accepted_at, dead_lettered_at)
+  values
+    (accepted_message, ticket, now(), null),
+    (dead_message, ticket, null, now()),
+    (pending_message, ticket, null, null);
 
   delete from auth.users where id = student;
 
@@ -321,6 +335,18 @@ begin
     not exists (select 1 from auth.users where id = student));
   perform pg_temp.must('direct auth deletion revokes the ticket-bound grant before detachment',
     not exists (select 1 from public.support_access_grant where id = grant_id));
+  perform pg_temp.must('direct auth deletion cancels a still-deliverable legacy notice',
+    not exists (select 1 from public.support_notification_outbox where message_id = pending_message));
+  perform pg_temp.must('direct auth deletion preserves a completed legacy notice outcome',
+    exists (
+      select 1 from public.support_notification_outbox
+       where message_id = accepted_message and accepted_at is not null
+    ));
+  perform pg_temp.must('direct auth deletion preserves a dead-lettered legacy notice outcome',
+    exists (
+      select 1 from public.support_notification_outbox
+       where message_id = dead_message and dead_lettered_at is not null
+    ));
   perform pg_temp.must('direct auth deletion preserves and detaches the legacy ticket',
     exists (
       select 1 from public.support_tickets
