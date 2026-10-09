@@ -16,6 +16,7 @@ export * from './observability/telemetry.ts';
 
 export * from './tenancy/organization.ts';
 export * from './tenancy/context.ts';
+export * from './tenancy/active-context.ts';
 
 export * from './gateway/errors.ts';
 export * from './gateway/headers.ts';

@@ -33,7 +33,7 @@ envelope and outbox, and the workflow machines in
 | `WorkflowDefinition`, `transition()` | Durable instances with optimistic concurrency, history and exception reasons; the approval machine |
 | Error envelope in the institution gateway (ADR 0010) | The same envelope as a shared catalogue for every surface |
 | SQL RLS and `private.has_capability()` | A TypeScript capability resolver to run beside it; a proposed schema contract with forced RLS |
-| — | Request context, org tree, affiliations, relationships, consent records, hash-chained audit |
+| — | Request context, verified active-context selection and switching, org tree, affiliations, relationships, consent records, hash-chained audit |
 | — | Idempotency, signed cursors, API versioning, service tokens, the command pipeline |
 | — | Notification, file, search, flag, entitlement, reporting and integration engines |
 | — | Per-layer isolation adapters and a conformance suite; observability standards; SDK; reference slice |
@@ -89,7 +89,7 @@ packages/platform/src/
   kernel/          clock, ids, rng (injected, never ambient); canonical JSON, SHA-256, HMAC; backoff
   seam/            the ONE door to packages/institution
   observability/   redaction; structured logs; metric definitions; service descriptors (owner, tier, SLO, runbook)
-  tenancy/         organization tree; RequestContext — the only way a tenant enters
+  tenancy/         organization tree; RequestContext; verified membership/workspace selection and switching
   identity/        affiliations, relationships, consent, capabilities, approvals, audit chain
   policy/          the policy engine (declared actions, deny by default, delegates institution actions)
   events/          events from a context; tenant-bound outbox; tenant-verifying consumer
