@@ -460,6 +460,16 @@ The focused guard was proved red against the missing preview, then Community and
 
 The active HawkScan skill stops at preflight: Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the detected local properties file was not read. No target, scan or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next local slice requires a fresh ranking.
 
+## Governed published-form withdrawal preview — automation pass 39, slice 47
+
+Current `origin/main` remains `0d8f70b2`; no equivalent form-withdrawal preview landed. Re-ranking selected the existing published-form withdrawal because it is a live consequential action with established authority: the authenticated owner-scoped delete removes the published form, the shared link and every response still stored with it, while the author’s device copy and already collected responses remain. Existing RLS and cascade checks are the server authority; this slice does not change them.
+
+The native `window.confirm` now opens the existing `ConfirmDialog` and `ActionPreview`. The preview names the form, the link shutdown, permanent deletion of server-held responses, preservation of device-held questions/settings/collected answers and the fact that republishing creates a new link without restoring deleted responses. Cancel calls no delete and changes no project state. Explicit confirmation closes the dialog, then invokes the unchanged `withdraw` operation for the published id; a failure remains visible through the existing status path. No route, shared component, dependency, schema, policy, server operation, provider or external deployment changed.
+
+The focused guard was proved red against the browser-native prompt, then 32 form-sharing, publishing, modal, ActionPreview and root-unmount tests passed. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. Token export passes 9/9, design audit remains at zero violations with 86 existing warnings, CSS remains within its ledger, 100 token/design/responsive contracts pass and the design report regenerates. The aggregate npm launchers remain unavailable in this shell, so their exact constituents are claimed instead. Ordered/shuffled full suites were not rerun after pass 30’s green 23,872-test baseline.
+
+The active HawkScan skill stops at preflight: Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the detected local properties file was not read. No target, DAST result or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next local slice requires another fresh dependency/consequence ranking.
+
 ## What was read
 
 - Root `CLAUDE.md`.
