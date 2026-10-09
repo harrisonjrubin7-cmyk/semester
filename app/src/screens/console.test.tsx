@@ -605,6 +605,17 @@ describe('the context bar', () => {
     expect(mock.support).toHaveBeenCalled();
     expect(host.querySelector('[aria-label="Second factor"]')).toBeNull();
   });
+
+  it('keeps ordinary console work mounted when assurance cannot be read', async () => {
+    mock.mfa.mockRejectedValue(new Error('The assurance service is unavailable'));
+    await render();
+    expect(host.querySelector('[aria-label="Context bar"]')).not.toBeNull();
+    expect(mock.approvals).toHaveBeenCalled();
+    expect(mock.support).toHaveBeenCalled();
+    expect(host.textContent).toContain('The assurance service is unavailable');
+    expect(host.textContent).toContain('sensitive changes still require a verified second factor');
+    expect(button('Try again')).toBeDefined();
+  });
 });
 
 describe('approvals', () => {

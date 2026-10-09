@@ -144,7 +144,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
     setNow(new Date());
   }, []);
 
-  const mfaKnown = mfa !== null && typeof mfa !== 'string';
+  const mfaKnown = mfa !== null;
 
   // Read assurance before mounting a workspace. The app-level privileged MFA
   // boundary keeps platform_admin and support_agent out at aal1; ordinary
@@ -163,8 +163,9 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
   }, []);
 
   // The context bar and preferences are account-backed and protected by the
-  // same role boundary as the workspaces. Do not ask for them until assurance
-  // is known; ordinary console roles may legitimately remain at aal1.
+  // same role boundary as the workspaces. Do not ask for them until the first
+  // assurance read settles; ordinary console roles may legitimately remain at
+  // aal1 or continue read-only work while that assurance read is unavailable.
   useEffect(() => {
     if (!mfaKnown) return;
     let live = true;
@@ -240,17 +241,15 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       </Page>
     );
   }
-  if (typeof mfa === 'string') {
-    return (
-      <Page blurb={BLURB}>
-        <Notice>{mfa}. The operations console stays closed until the assurance level can be read.</Notice>
-        <button type="button" className="btn" onClick={() => void readMfa()}>Try again</button>
-      </Page>
-    );
-  }
   return (
     <Page blurb={BLURB}>
       <ContextBar context={{ env, scope, operator, grants, mfa, session, support, now }} />
+      {typeof mfa === 'string' && (
+        <Notice>
+          {mfa}. Ordinary console work remains available, but sensitive changes still require a verified second factor.{' '}
+          <button type="button" className="btn" onClick={() => void readMfa()}>Try again</button>
+        </Notice>
+      )}
       {status && (
         <p role="status" style={{ marginBlock: 0, marginBottom: 'var(--sp-4)' }}>
           {status}

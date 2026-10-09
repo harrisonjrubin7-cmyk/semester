@@ -90,6 +90,7 @@ import {
   verifyMfa,
   mfaFactors,
   clearUnverifiedMfaFactors,
+  unverifiedMfaFactorIds,
   privilegedMfaRequired,
   watchMfaSession,
 } from './client';
@@ -547,12 +548,26 @@ describe('identity', () => {
     expect(mfaFresh(level, new Date(1_700_000_000 * 1000))).toBe(true);
   });
 
-  it('removes only abandoned unverified factors before restarting enrolment', async () => {
+  it('reports unfinished factors without removing them', async () => {
+    auth.mfa.listFactors.mockResolvedValue({ data: { all: [{ id: 'pending', status: 'unverified' }, { id: 'live', status: 'verified' }] }, error: null });
+    await expect(unverifiedMfaFactorIds()).resolves.toEqual(['pending']);
+    expect(auth.mfa.unenroll).not.toHaveBeenCalled();
+  });
+
+  it('removes only unverified factors after an explicit restart', async () => {
     auth.mfa.listFactors.mockResolvedValue({ data: { all: [{ id: 'pending', status: 'unverified' }, { id: 'live', status: 'verified' }] }, error: null });
     auth.mfa.unenroll.mockResolvedValue({ data: {}, error: null });
-    await clearUnverifiedMfaFactors();
+    await clearUnverifiedMfaFactors(['pending']);
     expect(auth.mfa.unenroll).toHaveBeenCalledTimes(1);
     expect(auth.mfa.unenroll).toHaveBeenCalledWith({ factorId: 'pending' });
+  });
+
+  it('does not remove an unverified factor created after the restart choice was shown', async () => {
+    auth.mfa.listFactors.mockResolvedValue({ data: { all: [{ id: 'observed', status: 'unverified' }, { id: 'new-tab', status: 'unverified' }] }, error: null });
+    auth.mfa.unenroll.mockResolvedValue({ data: {}, error: null });
+    await clearUnverifiedMfaFactors(['observed']);
+    expect(auth.mfa.unenroll).toHaveBeenCalledTimes(1);
+    expect(auth.mfa.unenroll).toHaveBeenCalledWith({ factorId: 'observed' });
   });
 
   it('enrols, challenges and verifies TOTP through the auth client', async () => {

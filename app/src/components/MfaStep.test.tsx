@@ -14,6 +14,7 @@ const mock = vi.hoisted(() => ({
   enroll: vi.fn(),
   challenge: vi.fn(),
   clear: vi.fn(),
+  pending: vi.fn(),
   verify: vi.fn(),
 }));
 
@@ -22,6 +23,7 @@ vi.mock('../lib/console/client', () => ({
   enrollTotp: mock.enroll,
   challengeMfa: mock.challenge,
   clearUnverifiedMfaFactors: mock.clear,
+  unverifiedMfaFactorIds: mock.pending,
   verifyMfa: mock.verify,
 }));
 
@@ -40,6 +42,7 @@ beforeEach(() => {
   mock.enroll.mockResolvedValue({ factorId: 'f-new', qrCode: 'data:image/svg+xml;utf-8,<svg/>', secret: 'JBSWY3DP', uri: 'otpauth://totp/x' });
   mock.challenge.mockResolvedValue('ch-1');
   mock.clear.mockResolvedValue(undefined);
+  mock.pending.mockResolvedValue([]);
   mock.verify.mockResolvedValue(undefined);
   host = document.createElement('div');
   document.body.append(host);
@@ -77,7 +80,7 @@ describe('MfaStep', () => {
   it('enrols an authenticator when the account has none, showing the QR code and the secret', async () => {
     await render();
     expect(mock.enroll).toHaveBeenCalledTimes(1);
-    expect(mock.clear).toHaveBeenCalledTimes(1);
+    expect(mock.clear).not.toHaveBeenCalled();
     expect(host.querySelector('img')?.getAttribute('src')).toBe('data:image/svg+xml;utf-8,<svg/>');
     expect(host.textContent).toContain('JBSWY3DP');
     expect(button('Enrol and verify')).toBeTruthy();
@@ -88,6 +91,19 @@ describe('MfaStep', () => {
     expect(mock.challenge).toHaveBeenCalledWith('f-new');
     expect(mock.verify).toHaveBeenCalledWith('f-new', 'ch-1', '123456');
     expect(onVerified).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not delete an unfinished setup in another tab without an explicit restart', async () => {
+    mock.pending.mockResolvedValueOnce(['pending-other-tab']).mockResolvedValueOnce([]);
+    await render();
+    expect(host.textContent).toContain('possibly in another tab');
+    expect(mock.clear).not.toHaveBeenCalled();
+    expect(mock.enroll).not.toHaveBeenCalled();
+
+    await act(async () => button('Restart authenticator setup').click());
+    expect(mock.clear).toHaveBeenCalledWith(['pending-other-tab']);
+    expect(mock.enroll).toHaveBeenCalledTimes(1);
+    expect(host.querySelector('img')).not.toBeNull();
   });
 
   it('challenges the existing authenticator without enrolling another', async () => {

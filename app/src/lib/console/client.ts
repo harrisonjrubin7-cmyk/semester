@@ -906,15 +906,22 @@ export async function mfaFactors(): Promise<MfaFactor[]> {
   return factors;
 }
 
-/** Remove only unfinished enrolments so a reload can restart setup without accumulating conflicting factors. */
-export async function clearUnverifiedMfaFactors(): Promise<void> {
+/** IDs of unfinished enrolments. They may still be active in another tab, so merely finding one never removes it. */
+export async function unverifiedMfaFactorIds(): Promise<string[]> {
   const db = await cloud();
   const { data, error } = await db.auth.mfa.listFactors();
   if (error) throw new Error(message(error, 'Could not inspect unfinished authenticator setup.'));
   const all = (data as unknown as { all?: { id: string; status?: string }[] } | null)?.all ?? [];
-  for (const factor of all) {
-    if (factor.status !== 'unverified') continue;
-    const { error: removeError } = await db.auth.mfa.unenroll({ factorId: factor.id });
+  return all.filter((factor) => factor.status === 'unverified').map((factor) => factor.id);
+}
+
+/** Remove only the unfinished enrolments the operator saw before explicitly choosing to restart setup. */
+export async function clearUnverifiedMfaFactors(observedFactorIds: readonly string[]): Promise<void> {
+  const db = await cloud();
+  const stillUnverified = new Set(await unverifiedMfaFactorIds());
+  for (const factorId of observedFactorIds) {
+    if (!stillUnverified.has(factorId)) continue;
+    const { error: removeError } = await db.auth.mfa.unenroll({ factorId });
     if (removeError) throw new Error(message(removeError, 'Could not restart unfinished authenticator setup.'));
   }
 }

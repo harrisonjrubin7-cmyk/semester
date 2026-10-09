@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActionButton } from './ui';
 import { Trouble } from './Trouble';
-import { challengeMfa, clearUnverifiedMfaFactors, enrollTotp, mfaFactors, verifyMfa, type MfaFactor, type TotpEnrolment } from '../lib/console/client';
+import { challengeMfa, clearUnverifiedMfaFactors, enrollTotp, mfaFactors, unverifiedMfaFactorIds, verifyMfa, type MfaFactor, type TotpEnrolment } from '../lib/console/client';
 
 /**
  * The second factor a privileged action asks for.
@@ -28,10 +28,11 @@ export function MfaStep({
   onCancel?: () => void;
   reason?: string;
 }) {
-  const [stage, setStage] = useState<'loading' | 'enrol' | 'challenge'>('loading');
+  const [stage, setStage] = useState<'loading' | 'pending' | 'enrol' | 'challenge'>('loading');
   const [factorId, setFactorId] = useState('');
   const [factorType, setFactorType] = useState<MfaFactor['type']>('totp');
   const [factors, setFactors] = useState<MfaFactor[]>([]);
+  const [pendingFactorIds, setPendingFactorIds] = useState<string[]>([]);
   const [challengeId, setChallengeId] = useState('');
   const [enrolment, setEnrolment] = useState<TotpEnrolment | null>(null);
   const [code, setCode] = useState('');
@@ -57,7 +58,13 @@ export function MfaStep({
           setStage('challenge');
           return;
         }
-        await clearUnverifiedMfaFactors();
+        const pending = await unverifiedMfaFactorIds();
+        if (!live) return;
+        if (pending.length > 0) {
+          setPendingFactorIds(pending);
+          setStage('pending');
+          return;
+        }
         const started = await enrollTotp();
         if (!live) return;
         setEnrolment(started);
@@ -78,6 +85,7 @@ export function MfaStep({
     setCode('');
     setFactorId('');
     setFactors([]);
+    setPendingFactorIds([]);
     setChallengeId('');
     setEnrolment(null);
     setStage('loading');
@@ -116,6 +124,19 @@ export function MfaStep({
     }
   };
 
+  const restartEnrollment = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      await clearUnverifiedMfaFactors(pendingFactorIds);
+      retryStart();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not restart unfinished authenticator setup.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const verify = async () => {
     setBusy(true);
     setError('');
@@ -136,6 +157,23 @@ export function MfaStep({
         <strong>{reason}</strong>
       </p>
       {stage === 'loading' && !error && <p style={{ marginBlock: 0, color: 'var(--app-dim)' }}>Checking your authenticators…</p>}
+      {stage === 'pending' && (
+        <>
+          <p style={{ marginBlock: 0 }}>
+            An authenticator setup is already in progress, possibly in another tab. Finish it there, or explicitly restart it here. Restarting will invalidate the unfinished setup shown here.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
+            <ActionButton tone="secondary" onClick={() => void restartEnrollment()} disabled={busy} style={{ flex: 1 }}>
+              Restart authenticator setup
+            </ActionButton>
+            {onCancel && (
+              <ActionButton tone="secondary" onClick={onCancel} disabled={busy} style={{ flex: 1 }}>
+                Cancel
+              </ActionButton>
+            )}
+          </div>
+        </>
+      )}
       {stage === 'enrol' && enrolment && (
         <>
           <p style={{ marginBlock: 0 }}>
@@ -166,7 +204,7 @@ export function MfaStep({
           </p>
         </>
       )}
-      {stage !== 'loading' && (
+      {(stage === 'enrol' || stage === 'challenge') && (
         <form
           onSubmit={(e) => {
             e.preventDefault();
