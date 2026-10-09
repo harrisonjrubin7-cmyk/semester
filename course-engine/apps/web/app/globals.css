@@ -49,6 +49,9 @@ a { color: inherit; }
 .command-results { max-height: 55vh; overflow-y: auto; padding: var(--space-3); }
 .command-result { align-items: center; border-radius: var(--radius-sm); display: flex; gap: var(--space-4); min-height: var(--tap-target); padding: var(--space-3) var(--space-4); text-decoration: none; }
 .command-result:hover { background: var(--surface-canvas); }
+.source-viewer-backdrop { align-items: stretch; background: rgba(9, 10, 14, 0.72); display: flex; inset: 0; justify-content: flex-end; position: fixed; z-index: 95; }
+.source-viewer { background: var(--surface-canvas); box-shadow: -1rem 0 3rem rgba(9, 10, 14, 0.2); display: flex; flex-direction: column; height: 100dvh; max-width: 48rem; width: 100%; }
+.source-viewer-content { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
 
 @media (min-width: 900px) {
   .workspace-shell { display: grid; grid-template-columns: var(--rail-width) minmax(0, 1fr); }
