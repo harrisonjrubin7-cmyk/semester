@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 7 of 120 · **Integration slice** 15 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `b190f96a`
+**Automation pass** 8 of 120 · **Integration slice** 16 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `55adab11`
 
 ## State
 
-Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. P1-01 through P1-07 are now locally implemented in bounded slices: outbox controls, two producers/projectors, the dormant worker, hold-aware history retention, and the first permissioned query envelope. Scheduler activation and UI consumption remain absent. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. P1-01 through P1-07 and the first repository-native Console consumer are now locally implemented in bounded slices: outbox controls, two producers/projectors, the dormant worker, hold-aware history retention, a permissioned query envelope and its exact-tenant read-only UI. Scheduler activation and production freshness evidence remain absent. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 8 / slice 16
+
+- The clean branch merged `origin/main` `b190f96a` before implementation. Its citation-first Course Engine MVP contains no Supabase projection consumer or equivalent Console UI; it remains new repository evidence to reconcile before Course Studio work. The final fetch observed `55adab11`; its productivity request-context security change touches no Console projection or generated-register file, so the dirty branch was not rebased or merged.
+- `app/src/lib/console/client.ts` now maps `read_tenant_projection` into a strict typed envelope. It forwards the exact tenant, cursor and 50-row bound; rejects malformed freshness/permission/row shapes; rejects a different returned tenant; and preserves the database refusal.
+- The existing Tenant operations workspace owns the UI. A named tenant's projection is read only after explicit disclosure, never from a free-form tenant id. It is labeled projection authority, read only and non-exportable; there are no actions or mutations.
+- Shared Semester/Console patterns cover loading, empty and unknown, permission denial, recoverable error, stale/failed warnings, bounded pagination, long identifiers and auto-fit narrow layouts. Source/computation times, model coverage, worker state, correlation, rollout and entitlements remain visible; policy/event ids and worker diagnostics do not.
+- Focused client/component suites pass 43/43 tests. TypeScript, lint, university typecheck and production build pass; lint retains three existing warnings. Design-system constituents pass 9 token tests and 69 contract tests with zero violations and the existing 86-warning ledger; the report renders successfully.
+- The ordered full suite completes with 23,774 passing and 69 skipped tests. Its three failures are not slice regressions: the runner-mounted `.semester-reference` map refusal and stale role/control generated documents. The two repository-owned documents were regenerated; focused guards pass. The full shuffle with seed `1791505035827` developed unrelated import-scan timeouts and React `act()`/axe cascades and ended with exit 130 before a final count; the focused slice passes 43/43 under that same seed.
+- The 12ui CLI could not install because this runner lacks `npm`/`npx`; the failed install changed no repository file. Repository-native patterns and design contracts are the verified visual authority for this slice.
+- HawkScan remains unavailable because the `hawk` executable and `HAWK_API_KEY` are absent. No DAST result or security pass is claimed.
 
 ## Evidence locked in automation pass 7 / slice 15
 
@@ -168,7 +179,7 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Completed local slice gate
 
-The focused PostgreSQL 17 proof, reapply gate, 73 adjacent SQL checks, repository/generated-reference guards, TypeScript, lint, university typecheck, production build and design-system equivalents are green. Ordered and shuffled full suites both complete with no slice regression and only the exact runner-mounted-directory refusal. Deno and HawkScan remain explicitly open. Secret provisioning, scheduler activation, public-read, additional-projector and UI work remain separate.
+The projection database proof and reapply evidence remain green from slice 15. For slice 16, 43 focused tests in both normal and shuffled order, generated-reference guards, TypeScript, lint, university typecheck, production build and design-system equivalents are green. The ordered full suite has no slice regression; the full shuffled suite is not green because of the recorded unrelated timing/order cascade and exit 130. Deno and HawkScan remain explicitly open. Secret provisioning, scheduler activation, additional projectors and operating deployment remain separate.
 
 ## External gates kept open
 
@@ -176,7 +187,7 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Add the typed client boundary and repository-native Console tenant detail consumer for `read_tenant_projection`, covering loading, empty, permission, stale/failed/unknown, recovery and narrow-layout states without adding mutations. Keep scheduler activation, secret provisioning, deployment, monitoring and operational evidence as separate later gates.
+Reconcile the newly landed `course-engine/` MVP against the archive Course Studio screen/workflow rows and current app source-of-truth, tenancy, file-safety and human-authority contracts. Use that current evidence to select the earliest connected Phase 4 slice; do not build a second course product or infer deployment from the separate MVP tree.
 
 ## Hold-aware projection-history retention — automation runner pass 5, slice 13
 

@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 210 |
+| Migration files | 211 |
 | Tables created in `public` and not later dropped | 333 |
 | … of which enable row-level security in a migration | 333 |
 | Tables created in `private` and not later dropped | 37 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-136 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+137 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -163,6 +163,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/tenant-entitlement-projection.check.sql` | First registered projector transaction (P1-04). |
 | `supabase/tenant-feature-policy-events.check.sql` | The first SQL-native producer: feature-policy audit and outbox facts are one atomic, bounded and tenant-scoped change. |
 | `supabase/tenant-plan.check.sql` | The plan a school is on (tenant_plan) and its history. |
+| `supabase/tenant-projection-read.check.sql` | Permissioned freshness read over the tenant projections (P1-07). |
 | `supabase/tenant-rollout-projection.check.sql` | Tenant-rollout producer and first consumer (P1-06). |
 | `supabase/tenant-rollout.check.sql` | Where a school stands in the pilot-to-production lifecycle (tenant_rollout), the evidence behind each move, and the history. |
 | `supabase/tenant-sso-policy.check.sql` | Whether a school requires campus SSO (tenant_sso_policy), its history, and the launch facts that read it. |
@@ -276,15 +277,15 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 227 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 227 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 228 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 228 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 65 |
 | Register rows in category `sharing` | 21 |
-| Register rows in category `admin` | 86 |
+| Register rows in category `admin` | 87 |
 | Register rows in category `integration` | 6 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |

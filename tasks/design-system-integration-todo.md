@@ -285,9 +285,27 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Reapply all 211 migrations with 370 table fingerprints unchanged; pass 52/52 checks across the reader, grants, RLS, foundation, both projectors and worker.
 - [x] Pass 35/35 focused repository/register tests, TypeScript, lint, university typecheck and the production build; lint retains only three existing warnings.
 - [x] Pass design-system equivalents: 9 token tests, 69 check tests and 96 report-contract tests; zero violations and 86 existing ledgered warnings.
-- [ ] Connect this envelope to Console UI — intentionally deferred to the next vertical slice so this server contract remains independently reviewable.
+- [x] Connect this envelope to the existing Console Tenant operations UI through the bounded, read-only, exact-tenant consumer in slice 16.
 - [ ] Scheduler/secret/deployment/monitoring activation — remains external and separately authorized; no production operation is claimed.
 - [ ] HawkScan DAST — post-commit preflight stopped because the `hawk` executable is absent and `HAWK_API_KEY` is unset for the headless scan. No credential file was read; no scan or pass is claimed.
+
+## 2026-10-08 Console tenant projection consumer — automation pass 8, slice 16
+
+- [x] Merge current `origin/main` `b190f96a` into the clean build branch and confirm its Course Engine MVP contains no equivalent Console projection consumer.
+- [x] Inspect final `origin/main` `55adab11`; its productivity request-context security change has no overlapping Console client/component, projection migration or generated register. Do not rebase or merge the dirty branch.
+- [x] Reuse the existing Tenant operations workspace and tenant groups; do not create a second route, operations shell or free-form tenant lookup.
+- [x] Add a typed `read_tenant_projection` adapter with exact argument names, a 50-row default bound, cursor support, cross-tenant response rejection and fail-closed envelope validation.
+- [x] Load projected state only after an operator opens a named tenant disclosure; keep the surface read-only and explicitly non-exportable.
+- [x] Render authority, freshness, coverage/model/worker state, source and computation times, correlation, rollout and entitlement rows without policy ids, source event ids or private diagnostics.
+- [x] Cover loading, recoverable error, permission denial, empty/unknown, stale/failed warning, pagination and narrow responsive cards with current shared state and Console components.
+- [x] Keep worker scheduling, secret provisioning, deployment, monitoring and production freshness evidence outside this local UI slice.
+- [x] Focused client and component tests pass 43/43; the adapter test proves refusal preservation, tenant binding, pagination arguments, non-export permissions and malformed-envelope rejection.
+- [x] TypeScript, lint, university typecheck and production build pass; lint retains three existing warnings.
+- [x] Design-system constituents pass: 9 token tests, zero audit violations with the existing 86 warnings, CSS within its ledger and 69 contract tests; the report was regenerated successfully.
+- [x] Ordered full suite completes with 23,774 passing and 69 skipped tests. The only failures are the mounted `.semester-reference` repository-map refusal and two generated-register drifts; both registers were regenerated and their focused guards pass.
+- [ ] Shuffled full suite — attempted with seed `1791505035827` after register reconciliation, but it developed unrelated import-scan timeouts and React `act()`/axe cascades and ended with exit 130 before a final count. The focused shuffled slice passes 43/43 with the same seed; no full-suite pass is claimed.
+- [ ] 12ui external improvement pass — unavailable because its installer transitively requires missing `npm`/`npx`; repository-native UI and design gates are used instead.
+- [ ] HawkScan DAST — required for this production UI change but unavailable because `hawk` is absent and `HAWK_API_KEY` is unset; no scan is claimed.
 
 ## Earlier integration baseline preserved
 
