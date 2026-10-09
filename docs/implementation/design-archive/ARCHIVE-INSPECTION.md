@@ -32,7 +32,7 @@ The ZIP is safe to inspect and has been exhaustively inventoried at the file lev
 | Raster images | 248 images reviewed during isolated archive inspection; 86 low-information paths and provisional, non-reproducible scores are preserved in [RASTER-LOW-INFORMATION.md](RASTER-LOW-INFORMATION.md); public contact sheets were removed pending provenance clearance |
 | Fonts/binary | Type, size, and hash inspected; font license reviewed separately |
 
-The parsed corpus contains 47,863,844 text characters. No PDF required OCR by the low-text threshold; no video or nested archive was present. Raster triage paths and provisional scores are recorded in [RASTER-LOW-INFORMATION.md](RASTER-LOW-INFORMATION.md); contact sheets are not retained in the public repository pending provenance clearance.
+The parsed corpus contains 47,863,913 text characters. No PDF required OCR by the low-text threshold; no video or nested archive was present. Raster triage paths and provisional scores are recorded in [RASTER-LOW-INFORMATION.md](RASTER-LOW-INFORMATION.md); contact sheets are not retained in the public repository pending provenance clearance.
 
 ## Canonical structures and conflict
 
