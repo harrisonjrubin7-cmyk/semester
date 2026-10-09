@@ -28,10 +28,11 @@
  * cross a boundary without being seen, and is why the checker counts them.
  */
 
-export type Zone = 'packages' | 'functions' | 'app-src' | 'app-server' | 'app-api' | 'app-scripts' | 'app-other' | 'other';
+export type Zone = 'packages' | 'package-tool' | 'functions' | 'app-src' | 'app-server' | 'app-api' | 'app-scripts' | 'app-other' | 'other';
 
 /** Which part of the repository a path belongs to. Paths are repo-relative, forward-slashed. */
 export function zoneOf(path: string): Zone {
+  if (path.startsWith('packages/platform-control/')) return 'package-tool';
   if (path.startsWith('packages/')) return 'packages';
   if (path.startsWith('supabase/functions/')) return 'functions';
   if (path.startsWith('app/src/')) return 'app-src';
@@ -191,7 +192,6 @@ export const WORKSPACE_ALIASES: Readonly<Record<string, string>> = {
   '@semester/institution': 'packages/institution/src/index.ts',
   '@semester/offline-sync': 'packages/offline-sync/src/index.ts',
   '@semester/platform': 'packages/platform/src/index.ts',
-  '@semester/platform-control': 'packages/platform-control/src/index.ts',
 };
 
 const CODE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.js', '.jsx'];

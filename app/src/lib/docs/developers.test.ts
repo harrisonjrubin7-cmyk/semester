@@ -562,19 +562,20 @@ describe('the onboarding page', () => {
     expect(onboarding).toContain('`node-version: 22`');
     expect(JSON.parse(read('app/package.json')).engines, 'the page says no engines field').toBeUndefined();
     expect(existsSync(at('.nvmrc')), 'the page says there is no .nvmrc').toBe(false);
-    // The root manifest is the workspace root for app and packages/* (PRs 1180 and the C0 PR 1b that followed): it holds the one lockfile and the repository-wide platform-control commands.
-    const root = JSON.parse(read('package.json')) as { private?: boolean; workspaces?: string[]; scripts?: object; engines?: { node?: string } };
+    // The root manifest is the workspace root for app and packages/* (PRs 1180 and the C0 PR 1b that followed): it holds the one lockfile and only platform-control scripts, so plain `npm test` there still fails with "Missing script".
+    const root = JSON.parse(read('package.json')) as { private?: boolean; workspaces?: string[]; scripts?: Record<string, string>; engines?: { node?: string } };
     expect(root.private).toBe(true);
     expect(root.workspaces).toEqual(['app', 'packages/*']);
-    expect(root.scripts).toMatchObject({
-      'registry:validate': expect.any(String),
-      'registry:build': expect.any(String),
-      'release:check': expect.any(String),
-      'release:report': expect.any(String),
-      'platform-control:test': expect.any(String),
-    });
+    expect(Object.keys(root.scripts ?? {}).sort()).toEqual([
+      'platform-control:test',
+      'registry:build',
+      'registry:validate',
+      'release:check',
+      'release:report',
+    ]);
     expect(onboarding).toContain(`engines: { node: "${root.engines?.node}" }`);
-    expect(onboarding).toContain('workspace root for `app` and `packages/*` and defines only repository-wide platform-control scripts');
+    expect(onboarding).toContain('root exposes only the platform-control registry commands');
+    expect(onboarding).toContain('plain `npm test` still fails with "Missing script"');
     expect(existsSync(at('package-lock.json')), 'the page says the one lockfile is at the root').toBe(true);
     expect(existsSync(at('app/package-lock.json')), 'the page no longer mentions an app lockfile').toBe(false);
     expect(read('.github/workflows/ci.yml')).toContain('cache-dependency-path: package-lock.json');
