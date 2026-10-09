@@ -280,7 +280,7 @@ async function heldDone(page, service, title) {
         const rows = await response.json();
         const data = rows?.[0]?.data;
         const task = data?.tasks?.find((candidate) => candidate?.title === title);
-        return Boolean(task?.id && data?.done?.[task.id]);
+        return task?.done === true;
       },
       { ...service, title },
     );
