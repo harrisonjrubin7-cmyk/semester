@@ -214,6 +214,29 @@ describe('capability exposure resolver', () => {
     ]));
   });
 
+  it('rejects value-measure definitions copied from another capability', () => {
+    const original = CAPABILITY_EXPOSURE_INDEX[0]!;
+    const other = CAPABILITY_EXPOSURE_INDEX[1]!;
+    const invalid: CapabilityExposureIndexEntry = { ...original, valueMeasures: other.valueMeasures };
+    const mutated = [invalid, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toContain(
+      `Invalid value measure definitions: ${invalid.capabilityId}.`,
+    );
+  });
+
+  it('rejects a noncanonical incident owner', () => {
+    const original = CAPABILITY_EXPOSURE_INDEX[0]!;
+    const invalid: CapabilityExposureIndexEntry = {
+      ...original,
+      operations: {
+        ...original.operations,
+        incidentOwner: 'privacy' as CapabilityExposureIndexEntry['operations']['incidentOwner'],
+      },
+    };
+    const mutated = [invalid, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toContain(`Invalid incident owner: ${invalid.capabilityId}.`);
+  });
+
   it('authorizes live only for an exact production release of an included standard capability', () => {
     expect(resolveCapabilityExposure('CAP-001', context({ surface: 'marketing' }))).toMatchObject({
       status: 'live',

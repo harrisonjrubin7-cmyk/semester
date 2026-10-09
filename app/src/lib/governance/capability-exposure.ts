@@ -260,6 +260,7 @@ export function validateCapabilityExposureIndex(
     if (canonicalCapability) {
       const canonicalAuthorities = [...new Set(canonicalCapability.data.map((rule) => rule.authority))];
       const canonicalClassifications = [...new Set(canonicalCapability.data.map((rule) => rule.classification))];
+      const canonicalValueMeasures = valueMeasuresFor(canonicalCapability);
       if (entry.dataAuthorities.length !== canonicalAuthorities.length
         || canonicalAuthorities.some((authority) => !entry.dataAuthorities.includes(authority))) {
         errors.push(`Invalid data authorities: ${entry.capabilityId}.`);
@@ -270,6 +271,10 @@ export function validateCapabilityExposureIndex(
       }
       if (entry.productOwner !== canonicalCapability.owner) {
         errors.push(`Invalid product owner: ${entry.capabilityId}.`);
+      }
+      if (entry.valueMeasures.some((measure) =>
+        measure.definition !== canonicalValueMeasures.find((canonical) => canonical.id === measure.id)?.definition)) {
+        errors.push(`Invalid value measure definitions: ${entry.capabilityId}.`);
       }
       const requiredAudiences = audiencesFor(canonicalCapability);
       if (entry.audiences.length !== requiredAudiences.length
@@ -296,6 +301,7 @@ export function validateCapabilityExposureIndex(
     if (Object.values(entry.governance).some((value) => !value.trim())) errors.push(`Incomplete governance: ${entry.capabilityId}.`);
     if (Object.values(entry.operations).some((value) => !value.trim())) errors.push(`Incomplete operations: ${entry.capabilityId}.`);
     if (entry.operations.auditOwner !== 'privacy') errors.push(`Invalid audit owner: ${entry.capabilityId}.`);
+    if (entry.operations.incidentOwner !== 'operations') errors.push(`Invalid incident owner: ${entry.capabilityId}.`);
   }
 
   for (const destination of DESTINATIONS) {
