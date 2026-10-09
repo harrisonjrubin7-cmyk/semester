@@ -147,7 +147,7 @@ function valueMeasuresFor(capability: CapabilityDefinition): readonly Capability
   return Object.freeze([
     Object.freeze({
       id: 'successful-task-completion' as const,
-      definition: `Count an explicitly completed ${capability.name} action only when the capability acceptance condition is met; never infer completion from attention, content, or time spent.`,
+      definition: `Count an explicitly completed ${capability.name} action only when this canonical acceptance criterion is met: ${capability.acceptance.join(' ')} Never infer completion from attention, content, or time spent.`,
       ...common,
     }),
     Object.freeze({
