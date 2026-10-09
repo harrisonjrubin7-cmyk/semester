@@ -234,15 +234,15 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Catalogued event types | Count |
 | --- | --- |
-| All | 62 |
+| All | 65 |
 | retention `operational` | 13 |
-| retention `student_record` | 16 |
-| retention `audit` | 28 |
+| retention `student_record` | 17 |
+| retention `audit` | 30 |
 | retention `commercial` | 5 |
 | classification `public` | 0 |
 | classification `internal` | 23 |
 | classification `student_private` | 27 |
-| classification `education_record` | 12 |
+| classification `education_record` | 15 |
 
 **How counted.** The two constant arrays are imported and printed; event types are counted from the `EVENT_TYPES` catalogue by the retention class and classification floor each declares.
 

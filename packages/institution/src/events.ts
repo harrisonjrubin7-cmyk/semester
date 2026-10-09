@@ -118,6 +118,9 @@ export const EVENT_TYPES = {
   'ai.kill_switch_changed': spec(1, 'internal', 'audit'),
   // Registration. Payloads carry ids and versions, not the checklist or the reason.
   'registration.readiness_viewed': spec(1, 'education_record', 'audit'),
+  'registration.readiness_requested': spec(1, 'education_record', 'audit'),
+  'registration.readiness_evaluated': spec(1, 'education_record', 'student_record'),
+  'registration.readiness_reconciliation_requested': spec(1, 'education_record', 'audit'),
   'registration.override_requested': spec(1, 'education_record', 'audit'),
   'registration.override_granted': spec(1, 'education_record', 'audit'),
   // Support and security
