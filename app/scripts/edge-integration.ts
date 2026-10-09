@@ -29,8 +29,9 @@ export const OUT = resolve(APP, '..', 'supabase', 'functions', '_shared', 'integ
 export const SOURCES = [
   'server/integration/tick.ts',
   'server/integration/registry.ts',
-  '../packages/platform/src/integrations/canvas-read-adapter.ts',
-  '../packages/platform/src/integrations/provider-error.ts',
+  '../packages/platform/src/engines/canvas-read-adapter.ts',
+  '../packages/platform/src/engines/provider-error.ts',
+  '../packages/platform/src/kernel/clock.ts',
   'server/integration/worker.ts',
   'src/lib/integration/adapter.ts',
   '../packages/institution/src/ai-data-class.ts',
@@ -57,8 +58,9 @@ function rewrite(source: string, from: string): string {
     let out: string;
     if (spec === '@supabase/supabase-js') out = 'jsr:@supabase/supabase-js@2';
     else if (spec.startsWith('../../src/lib/integration/')) out = `./${spec.slice('../../src/lib/integration/'.length)}`;
-    else if (spec.startsWith('../../../packages/platform/src/integrations/')) out = `./${spec.slice('../../../packages/platform/src/integrations/'.length)}`;
-    else if (spec.startsWith('../../../../packages/platform/src/integrations/')) out = `./${spec.slice('../../../../packages/platform/src/integrations/'.length)}`;
+    else if (spec === '../../../packages/platform/src/index.ts' && from === 'server/integration/registry.ts') out = './canvas-read-adapter.ts';
+    else if (spec === '@semester/platform' && from === 'src/lib/integration/provider-client.ts') out = './provider-error.ts';
+    else if (spec === '../kernel/clock.ts' && from.endsWith('/canvas-read-adapter.ts')) out = './clock.ts';
     else if (/^\.\/[a-z-]+\.ts$/.test(spec)) out = spec;
     else throw new Error(`${from}: cannot carry the import ${JSON.stringify(spec)} into an Edge Function`);
     const name = out.startsWith('./') ? out.slice(2) : null;

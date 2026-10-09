@@ -103,9 +103,10 @@ describe('README', () => {
     expect(listed.sort()).toEqual([...dirs].sort());
   });
 
-  it('says plainly how little has adopted it: the gateway\'s envelope and context, and no route uses commands, policy or engines', () => {
-    expect(flat(readme)).toMatch(/adopted by one surface so far/i);
-    expect(flat(readme)).toContain('no route uses commands, policy, idempotency or any engine yet');
+  it('says plainly how little has adopted it: the gateway envelope/context and the read-only Canvas adapter', () => {
+    expect(flat(readme)).toMatch(/adopted by two narrow surfaces so far/i);
+    expect(flat(readme)).toContain('integration sync worker now also registers the read-only Canvas course adapter');
+    expect(flat(readme)).toContain('No route uses commands, policy, or idempotency yet, and no other engine is mounted');
   });
 
   it('says how it relates to the constitution and the target-architecture pack, and both exist', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { contractFailures, runContract } from '../../src/lib/integration/contract-harness.ts';
 import type { ProviderClient } from '../../src/lib/integration/provider-client.ts';
-import { canvasOrigin, createCanvasReadAdapter } from '../../../packages/platform/src/integrations/canvas-read-adapter.ts';
+import { canvasOrigin, createCanvasReadAdapter } from '../../../packages/platform/src/index.ts';
 
 const client: ProviderClient = {
   call: (fn) => fn({ accessToken: null, secret: 'canvas-test-token-do-not-log' }),
@@ -60,6 +60,12 @@ describe('Canvas read adapter', () => {
     const limited = createCanvasReadAdapter(vi.fn(async () => new Response('busy', { status: 429, headers: { 'retry-after': '60' } })) as typeof fetch);
     await expect(limited.pull({ connectionPublicId: 'c', tenantId: 't', providerBaseUrl: 'https://northstar.instructure.com', cursor: {}, trigger: 'scheduled' }, client))
       .rejects.toMatchObject({ status: 429, retryAfterMs: 60_000 });
+    const dated = createCanvasReadAdapter(
+      vi.fn(async () => new Response('busy', { status: 503, headers: { 'retry-after': 'Thu, 09 Oct 2026 18:01:00 GMT' } })) as typeof fetch,
+      { now: () => new Date('2026-10-09T18:00:00Z') },
+    );
+    await expect(dated.pull({ connectionPublicId: 'c', tenantId: 't', providerBaseUrl: 'https://northstar.instructure.com', cursor: {}, trigger: 'scheduled' }, client))
+      .rejects.toMatchObject({ status: 503, retryAfterMs: 60_000 });
     const html = createCanvasReadAdapter(vi.fn(async () => new Response('<html>', { headers: { 'content-type': 'text/html' } })) as typeof fetch);
     await expect(html.pull({ connectionPublicId: 'c', tenantId: 't', providerBaseUrl: 'https://northstar.instructure.com', cursor: {}, trigger: 'scheduled' }, client)).rejects.toThrow(/non-JSON/);
     const huge = createCanvasReadAdapter(vi.fn(async () => response([], { 'content-length': String(2 * 1024 * 1024 + 1) })) as typeof fetch);

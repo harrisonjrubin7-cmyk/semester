@@ -4,7 +4,7 @@ import { MOCK_SIS } from '../../src/lib/integration/mock-sis.ts';
 import { validateAdapterRegistry } from './registry-preflight.ts';
 import { ADAPTERS } from './registry.ts';
 import type { RegisteredAdapter } from './tick.ts';
-import { CANVAS_READ_ADAPTER } from '../../../packages/platform/src/integrations/canvas-read-adapter.ts';
+import { CANVAS_READ_ADAPTER } from '../../../packages/platform/src/index.ts';
 
 const live = (patch: Partial<AdapterDeclaration> = {}): RegisteredAdapter => ({
   declaration: { ...MOCK_SIS, id: 'live_sis', mock: false, ...patch },

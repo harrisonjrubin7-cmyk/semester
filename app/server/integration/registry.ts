@@ -11,6 +11,6 @@
  * already claims — `registry.test.ts` holds every entry to that.
  */
 import type { RegisteredAdapter } from './tick.ts';
-import { CANVAS_READ_ADAPTER } from '../../../packages/platform/src/integrations/canvas-read-adapter.ts';
+import { CANVAS_READ_ADAPTER } from '../../../packages/platform/src/index.ts';
 
 export const ADAPTERS: readonly RegisteredAdapter[] = [CANVAS_READ_ADAPTER];

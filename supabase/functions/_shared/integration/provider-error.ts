@@ -1,4 +1,4 @@
-// Generated from app/../packages/platform/src/integrations/provider-error.ts by app/scripts/edge-integration.ts. Do not edit;
+// Generated from app/../packages/platform/src/engines/provider-error.ts by app/scripts/edge-integration.ts. Do not edit;
 // change the source and run `cd app && node scripts/edge-integration.ts`.
 
 /** Provider response error shared by server and Edge integration runtimes. */

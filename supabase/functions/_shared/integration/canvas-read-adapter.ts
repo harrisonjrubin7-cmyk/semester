@@ -1,8 +1,9 @@
-// Generated from app/../packages/platform/src/integrations/canvas-read-adapter.ts by app/scripts/edge-integration.ts. Do not edit;
+// Generated from app/../packages/platform/src/engines/canvas-read-adapter.ts by app/scripts/edge-integration.ts. Do not edit;
 // change the source and run `cd app && node scripts/edge-integration.ts`.
 
 /** Read-only, hosted-Canvas course-context adapter. */
 import { ProviderHttpError, retryAfterMs } from './provider-error.ts';
+import { systemClock, type Clock } from './clock.ts';
 
 const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 const COURSES_PATH = '/api/v1/courses';
@@ -138,7 +139,7 @@ async function sha256Base64Url(value: string): Promise<string> {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
-export function createCanvasReadAdapter(fetcher: typeof fetch = fetch) {
+export function createCanvasReadAdapter(fetcher: typeof fetch = fetch, clock: Clock = systemClock) {
   return {
     declaration: CANVAS_READ_DECLARATION,
     validateConnection(configuration: { tenantId: string; providerBaseUrl?: string; credentialReference?: string | null }) {
@@ -159,7 +160,7 @@ export function createCanvasReadAdapter(fetcher: typeof fetch = fetch) {
           accept: 'application/json', authorization: `Bearer ${auth.secret}`,
         } });
       });
-      if (!response.ok) throw new ProviderHttpError(response.status, retryAfterMs(response.headers.get('retry-after'), new Date()));
+      if (!response.ok) throw new ProviderHttpError(response.status, retryAfterMs(response.headers.get('retry-after'), clock.now()));
       if (!response.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
         throw new Error('Canvas returned a non-JSON course page.');
       }
