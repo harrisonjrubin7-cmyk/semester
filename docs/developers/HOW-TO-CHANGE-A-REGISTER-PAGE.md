@@ -46,6 +46,17 @@ Run the test again without `REGISTERS=write` before pushing. The test also check
 that every governed capability has exactly one passport owner and that every
 declared dependency and external activation gate resolves.
 
+Feature-completion evidence is generated the same way. Edit
+`app/src/lib/featurecompletion.ts`, then run:
+
+```bash
+REGISTERS=write pnpm exec vitest run src/lib/featurecompletion.test.ts
+```
+
+The feature test preserves the ordered eighteen-point gate, verifies referenced
+repository evidence exists, and refuses a complete claim while any gate is
+partial or missing.
+
 ## What fails if you get it wrong
 
 This was followed in a scratch copy on 2026-10-04.

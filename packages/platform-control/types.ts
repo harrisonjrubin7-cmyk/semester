@@ -44,6 +44,12 @@ export interface RegistryRecord {
 
 export interface WorkflowRecord extends RegistryRecord {
   version: number;
+  initial: string;
+  terminal: string[];
+  /** Long-running evaluation loops have no terminal state, but every state must still have an exit. */
+  continuous: boolean;
+  /** Per-cycle states that issue completed receipts before a continuous workflow may begin another cycle. */
+  cycle_outcomes: string[];
   states: string[];
   transitions: Record<string, string[]>;
   idempotency: string;
