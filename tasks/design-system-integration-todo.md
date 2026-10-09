@@ -1022,6 +1022,25 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-09 governed saved-schedule deletion preview — automation pass 42, slice 50
+
+- [x] Fetch current `origin/main` `0d8f70b2`, confirm the branch contains it and find no equivalent Registration saved-schedule deletion preview.
+- [x] Re-rank dependency-ready consequence paths and select one saved potential schedule in the existing Term plan; verify the complete registration library is included in device-workspace backup coverage.
+- [x] Replace immediate device-library deletion with the existing `ConfirmDialog` and `ActionPreview`; add no route, shared component, dependency, schema, policy or server operation.
+- [x] Name the selected schedule and every copied course section removed; preserve the current cart, imported catalog, other saved schedules and official registration.
+- [x] Verify Cancel performs no write and explicit confirmation removes only the selected schedule; state recovery only from a device workspace backup created before deletion.
+- [x] Prove the guard red against the prior immediate deletion, then pass 62/62 Registration, ActionPreview, workspace-backup, modal-accessibility and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass design audit with zero violations and 86 existing warnings, CSS ledger checks and 147/147 token/design/responsive contracts.
+- [ ] Ordered and shuffled full suites — not rerun after pass 30's green 23,872-test baseline; no full-suite result is claimed for this bounded client slice.
+- [ ] HawkScan DAST — preflight confirms Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No credential file was read, no target was started and no scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.

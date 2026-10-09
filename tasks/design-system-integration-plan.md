@@ -490,6 +490,16 @@ Both regression guards were proved red against the prior immediate deletions. Le
 
 The active HawkScan skill stopped at preflight because `hawk` is absent; Docker, `HAWK_API_KEY` and `HAWK_APP_HOST` also remain unavailable from the recorded environment preflight. No target, DAST result or security pass is claimed. Permanent file purge and same-origin demo reset remain separate. Scanner/extractor-backed Import remains externally gated; the next slice requires another fresh dependency/consequence ranking.
 
+## Governed saved-schedule deletion preview — automation pass 42, slice 50
+
+Current `origin/main` remains `0d8f70b2`; no equivalent saved-registration-schedule consequence preview landed. Re-ranking selected the existing single-plan deletion in Term plan because it removes one bounded student-owned device record, changes no cart, imported catalog or official registration, and the complete `semester.registration.v1` library is already included in the repository's device-workspace backup contract.
+
+The prior immediate device-library filter now opens the existing `ConfirmDialog` and `ActionPreview`. The preview names the saved schedule and every copied course section removed, preserves the current cart, imported catalog, other saved schedules and official registration, and states that recovery requires a device workspace backup created before deletion. Cancel performs no write. Explicit confirmation removes only the selected schedule and announces the device-only outcome. No route, shared component, dependency, schema, policy, server operation, provider or external system changed.
+
+The regression guard was proved red against the prior immediate deletion, then the Registration, ActionPreview, backup, modal-accessibility and root-unmount suites passed 62/62. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. Design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and 147/147 token/design/responsive contracts pass.
+
+The active HawkScan loop stopped at preflight because Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No credential file was read, no target was started and no DAST result or security pass is claimed. Ordered and shuffled full suites were not rerun after pass 30's green 23,872-test baseline. Permanent file purge and same-origin demo reset remain separate; scanner/extractor-backed Import remains externally gated. The next slice requires another fresh dependency/consequence ranking.
+
 ## What was read
 
 - Root `CLAUDE.md`.
