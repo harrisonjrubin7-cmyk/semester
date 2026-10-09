@@ -7,6 +7,7 @@ export class ProviderHttpError extends Error {
   readonly retryAfterMs: number | undefined;
   constructor(status: number, retryAfterMs?: number) {
     super(`The provider answered ${status}`);
+    this.name = 'ProviderHttpError';
     this.status = status;
     this.retryAfterMs = retryAfterMs;
   }

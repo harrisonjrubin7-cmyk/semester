@@ -38,8 +38,6 @@ import type { CredentialLease, LeaseBroker, RefusalReason } from './vault.ts';
 import {
   ReauthorizationRequired, TokenManager, TransientTokenError, type TokenResponse, type TokenStore,
 } from './oauth.ts';
-import { ProviderHttpError } from './provider-error.ts';
-export { ProviderHttpError, retryAfterMs } from './provider-error.ts';
 
 /** What a call is given. Valid for that call; adapter code must not keep it. */
 export interface CallAuth {
@@ -69,11 +67,37 @@ export interface OAuthBinding {
 // ----------------------------------------------------------------- errors ----
 
 /** Thrown by adapter code (or `providerHttp`) from a provider's HTTP response. */
+export class ProviderHttpError extends Error {
+  readonly status: number;
+  readonly retryAfterMs: number | undefined;
+  constructor(status: number, retryAfterMs?: number) {
+    super(`The provider answered ${status}`);
+    this.name = 'ProviderHttpError';
+    this.status = status;
+    this.retryAfterMs = retryAfterMs;
+  }
+}
+
 /**
  * The provider's `Retry-After`, as milliseconds. Seconds or an HTTP date;
  * anything else, or a negative, is no hint. Capped at one hour so a hostile
  * or broken value cannot park a connection for a week.
  */
+export function retryAfterMs(header: string | null | undefined, now: Date): number | undefined {
+  if (!header) return undefined;
+  const value = header.trim();
+  const ms = /^\d+$/.test(value) ? Number(value) * 1000 : Date.parse(value) - now.getTime();
+  return Number.isFinite(ms) && ms > 0 ? Math.min(ms, 3_600_000) : undefined;
+}
+
+function providerHttpError(error: unknown): { status: number; retryAfterMs?: number } | null {
+  if (error instanceof ProviderHttpError) return error;
+  if (!(error instanceof Error) || error.name !== 'ProviderHttpError') return null;
+  const candidate = error as Error & { status?: unknown; retryAfterMs?: unknown };
+  if (!Number.isInteger(candidate.status) || (candidate.retryAfterMs !== undefined && typeof candidate.retryAfterMs !== 'number')) return null;
+  return candidate as Error & { status: number; retryAfterMs?: number };
+}
+
 /** The credential could not be obtained. Nothing was sent to the provider. */
 export class CredentialRefused extends Error {
   readonly reason: RefusalReason | 'not_configured' | 'no_token_store' | 'no_oauth_binding';
@@ -134,14 +158,15 @@ export function classifyFailure(error: unknown, now: Date): Failure {
       ? { category: 'provider_unavailable', code: 'circuit_open', outcome: 'permanent_failure', retryAfterMs: wait }
       : { category: 'rate_limit', code: error.reason, outcome: 'permanent_failure', retryAfterMs: wait };
   }
-  if (error instanceof ProviderHttpError) {
-    const { status } = error;
+  const http = providerHttpError(error);
+  if (http) {
+    const { status } = http;
     if (status === 401 || status === 403) return { category: 'authentication', code: `http_${status}`, outcome: 'permanent_failure' };
     if (status === 429) {
-      return { category: 'rate_limit', code: 'http_429', outcome: 'retryable_failure', ...(error.retryAfterMs ? { retryAfterMs: error.retryAfterMs } : {}) };
+      return { category: 'rate_limit', code: 'http_429', outcome: 'retryable_failure', ...(http.retryAfterMs ? { retryAfterMs: http.retryAfterMs } : {}) };
     }
     if (status === 408 || status >= 500) {
-      return { category: 'provider_unavailable', code: `http_${status}`, outcome: 'retryable_failure', ...(error.retryAfterMs ? { retryAfterMs: error.retryAfterMs } : {}) };
+      return { category: 'provider_unavailable', code: `http_${status}`, outcome: 'retryable_failure', ...(http.retryAfterMs ? { retryAfterMs: http.retryAfterMs } : {}) };
     }
     // Any other 4xx: the provider rejected what we sent. Asking again will not change it.
     return { category: 'schema_validation', code: `http_${status}`, outcome: 'permanent_failure' };
