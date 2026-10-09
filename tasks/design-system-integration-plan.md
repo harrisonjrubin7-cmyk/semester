@@ -480,6 +480,16 @@ The focused guard was proved red against the immediate deletion, then 32 journey
 
 The active HawkScan skill stopped at preflight because Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the detected local properties file was not read. No target, DAST result or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next local slice requires another fresh dependency/consequence ranking.
 
+## Governed Learning Map deletion previews — automation pass 41, slice 49
+
+Current `origin/main` remains `0d8f70b2`; no equivalent Learning Map deletion-preview work landed. Re-ranking selected the two existing student-owned Learning Map deletions because both are bounded to the current account/term device library and their recovery contract is already repository-owned: `workspace-backup.ts` includes the complete learning map in a device workspace backup.
+
+Deleting a Start Here result or one private concept/question now opens the existing `ConfirmDialog` and `ActionPreview` before the unchanged device-library update. The result preview names its saved answers, study-plan-shaping choice, possible recommendation change, unaffected course content/review evidence/grades/actions/private concepts and backup-only recovery. The concept preview names its status, note and question flag, removal from office-hours agenda choices when applicable, unaffected course-guide concepts/grades/actions/other private concepts and the same recovery boundary. Cancel performs no write; explicit confirmation removes only the selected result or concept and announces the local outcome. No route, shared component, dependency, schema, policy, server operation, provider or external system changed.
+
+Both regression guards were proved red against the prior immediate deletions. Learning Map, office-agenda, workspace-backup, modal-accessibility, ActionPreview and root-unmount tests pass 57/57. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. Token export passes 9/9, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger, 69/69 design-check contracts and 96/96 report contracts pass. The report regenerates unchanged before its wrapper exits because `npx` is unavailable; no aggregate launcher or ordered/shuffled full-suite pass is claimed.
+
+The active HawkScan skill stopped at preflight because `hawk` is absent; Docker, `HAWK_API_KEY` and `HAWK_APP_HOST` also remain unavailable from the recorded environment preflight. No target, DAST result or security pass is claimed. Permanent file purge and same-origin demo reset remain separate. Scanner/extractor-backed Import remains externally gated; the next slice requires another fresh dependency/consequence ranking.
+
 ## What was read
 
 - Root `CLAUDE.md`.

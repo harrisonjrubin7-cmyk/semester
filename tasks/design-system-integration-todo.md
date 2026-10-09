@@ -1002,6 +1002,26 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-09 governed Learning Map deletion previews — automation pass 41, slice 49
+
+- [x] Fetch current `origin/main` `0d8f70b2`, confirm the branch already contains it and find no equivalent Learning Map deletion-preview work.
+- [x] Re-rank dependency-ready consequence paths and select the two bounded current-account/current-term Learning Map deletions; verify `workspace-backup.ts` includes the complete map before stating recovery.
+- [x] Replace immediate Start Here result and private concept/question deletion with the existing `ConfirmDialog` and `ActionPreview`; add no route, shared component, dependency, schema, policy or server operation.
+- [x] Name saved check answers and plan-shaping choice, or the concept status/note/question flag and office-hours agenda effect; preserve course content, grades, review evidence, plan actions and unrelated private concepts.
+- [x] Verify Cancel performs no write and explicit confirmation removes only the selected result or concept from the existing device library; state recovery only from a device workspace backup created before deletion.
+- [x] Prove both focused guards red against the prior immediate deletions, then pass 57/57 Learning Map, office-agenda, workspace-backup, modal, ActionPreview and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass token export 9/9, design audit with zero violations and 86 existing warnings, CSS ledger checks, 69/69 design-check contracts and 96/96 report contracts.
+- [ ] Aggregate design report/check launchers — unavailable because this shell has no `npm`/`npx`; exact constituents pass and the report regenerates unchanged before its wrapper exits.
+- [ ] Ordered and shuffled full suites — not rerun after pass 30's green 23,872-test baseline; no full-suite result is claimed for this bounded client slice.
+- [ ] HawkScan DAST — the active skill stops at preflight because Hawk v6 is absent; Docker, `HAWK_API_KEY` and `HAWK_APP_HOST` are also unavailable from the recorded environment preflight. No target, DAST result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.

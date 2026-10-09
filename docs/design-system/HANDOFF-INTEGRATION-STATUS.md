@@ -1,10 +1,22 @@
 # Handoff integration status
 
-**Automation pass** 40 of 120 · **Integration slice** 48 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
+**Automation pass** 41 of 120 · **Integration slice** 49 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 41 / slice 49
+
+- Current `origin/main` remains `0d8f70b2`; no equivalent governed Learning Map deletion preview landed.
+- Start Here result and private concept/question deletion now open the shared `ConfirmDialog` and `ActionPreview` before the existing account/term-scoped device-library updates. The complete Learning Map is already covered by the repository's device-workspace backup contract.
+- The result preview names saved answers, the plan-shaping choice, possible recommendation change and unaffected course/review/grade/action/concept state. The concept preview names status, note, question flag, office-hours agenda removal and unaffected course-guide/grade/action/other-concept state. Both identify recovery only from a pre-deletion device workspace backup.
+- Cancel performs no write. Explicit confirmation removes only the selected result or concept and announces the local outcome; no route, shared component, dependency, schema, policy, server operation, provider or external system changes.
+- Both guards were proved red against the prior immediate deletions. Learning Map, office-agenda, workspace-backup, modal-accessibility, ActionPreview and root-unmount suites pass 57/57.
+- TypeScript, lint, university typecheck and production build pass. Existing baselines remain four lint warnings and the chunk-size warning. Token export passes 9/9, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger, 69/69 design-check contracts and 96/96 report contracts pass.
+- The report regenerates unchanged before its wrapper exits because `npx` is unavailable; no aggregate launcher pass is claimed. Ordered and shuffled full suites were not rerun after pass 30's green 23,872-test baseline.
+- The active HawkScan skill stops at preflight because Hawk v6 is absent; Docker, `HAWK_API_KEY` and `HAWK_APP_HOST` also remain unavailable from the recorded environment preflight. No target, DAST result or security pass is claimed.
+- Permanent file purge and same-origin demo reset remain separate. Scanner/extractor-backed Import remains externally gated; the next slice requires a fresh dependency and consequence-path ranking.
 
 ## Evidence locked in automation pass 40 / slice 48
 
