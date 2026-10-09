@@ -1330,3 +1330,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep graph-wide Clear, permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable graph-wide clearing — automation pass 12, integration slice 63
+
+- [x] Fetch current `origin/main` `fb1d683d`; confirm it is already an ancestor and contains no `clearPlots`, Grapher Clear recovery or integration-control equivalent.
+- [x] Re-rank remaining consequence paths and select graph-wide Clear only after proving it owns one persisted `plots` field with no cascade, server operation or external effect.
+- [x] Add a dedicated `clearPlots` action; keep example loading on `setPlot` so choosing an example does not falsely advertise an Undo.
+- [x] Register `clearPlots` with the shared eight-second Undo contract and snapshot only `plots`.
+- [x] Restore every expression, visibility state and list position without reverting later calculator work; keep the existing route, examples and row controls unchanged.
+- [x] Prove four focused assertions red before implementation, then pass 145/145 Grapher, Undo, reducer, one-graph and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 design-check contracts, 96/96 report contracts, design audit with zero violations and 86 existing warnings, and the CSS ledger.
+- [ ] Aggregate design-system report/check launchers — unavailable because this shell has no `npm`/`npx`; exact constituents pass and the report writes unchanged before its wrapper exits.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

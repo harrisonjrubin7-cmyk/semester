@@ -76,6 +76,10 @@ describe('which actions can be taken back', () => {
       label: 'Graph line removed',
       fields: ['plots'],
     });
+    expect(undoableFor('clearPlots')).toEqual({
+      label: 'Graph cleared',
+      fields: ['plots'],
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
@@ -157,6 +161,11 @@ describe('the snapshot', () => {
 
   it('keeps only the student-authored graph lines', () => {
     const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.dropPlot, AT);
+    expect(Object.keys(took.was)).toEqual(['plots']);
+  });
+
+  it('keeps only the student-authored graph lines when clearing the graph', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.clearPlots, AT);
     expect(Object.keys(took.was)).toEqual(['plots']);
   });
 

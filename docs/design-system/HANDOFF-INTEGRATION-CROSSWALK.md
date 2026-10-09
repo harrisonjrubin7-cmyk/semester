@@ -297,3 +297,12 @@ This mapping adds no archive route, role, capability, schema, policy, server ope
 | Graph-wide clearing and external authority boundary | `app/src/components/Grapher.tsx`, `app/src/lib/onegraph.test.ts` | Existing and unchanged. This slice does not make the separate all-lines Clear action recoverable, create a second graph implementation, edit course/grade records or invoke any provider or institution system. |
 
 This mapping adds no archive route, role, capability, schema, policy, server operation or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 12 current-product consequence mapping — integration slice 63
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for clearing every student-authored graph line | `app/src/components/Grapher.tsx`, `app/src/state/slices/made.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: the graph-wide Clear control now dispatches a dedicated `clearPlots` transition through the shared eight-second Undo path. It snapshots only `plots` and restores all expressions, visibility states and list positions without reverting later calculator work. Example loading remains the separate non-destructive `setPlot` path. The red-before-green UI, registry, snapshot and reducer guards are included in 145 focused passing tests. |
+| Graph authority and external boundary | `app/src/lib/onegraph.test.ts`, `app/src/components/Grapher.tsx` | Existing and unchanged. The repository still has one graphing implementation and this local recovery path does not edit course work, grades, submissions, provider data or institution records. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.

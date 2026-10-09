@@ -2613,6 +2613,7 @@ export type Action =
   | { type: 'addPlot'; text?: string }
   | { type: 'writePlot'; id: string; patch: Partial<Omit<PlotLine, 'id'>> }
   | { type: 'dropPlot'; id: string }
+  | { type: 'clearPlots' }
   | { type: 'setPlot'; lines: string[] }
   | { type: 'writeMaths'; text?: string; given?: Record<string, string> }
   | { type: 'sitPaper'; minutes: number; formatId: string; code?: string }
