@@ -154,3 +154,34 @@ grant execute on function public.my_capabilities() to authenticated;
 
 comment on function public.my_capabilities() is
   'The caller''s own currently active capabilities and scopes, including break-glass. platform_admin and support_agent grant rows are omitted below aal2, matching private.has_capability. For deciding what a screen offers; every policy still authorizes.';
+
+-- Auth-js records phone factor verification as `mfa/phone`. Keep the server's
+-- fresh-MFA predicate aligned with the client and with the existing plain
+-- `phone` spelling so a verified phone session can perform the action it was
+-- challenged for.
+create or replace function private.mfa_fresh(within interval default '15 minutes')
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce((
+    select (j.claims ->> 'aal') = 'aal2'
+       and exists (
+         select 1
+           from jsonb_array_elements(
+                  case when jsonb_typeof(j.claims -> 'amr') = 'array'
+                       then j.claims -> 'amr' else '[]'::jsonb end) as m
+          where (m ->> 'method') in ('totp', 'webauthn', 'phone', 'mfa/totp', 'mfa/phone')
+            and (m ->> 'timestamp') ~ '^[0-9]+(\.[0-9]+)?$'
+            and to_timestamp((m ->> 'timestamp')::double precision) >= now() - within
+       )
+      from (select auth.jwt() as claims) j
+  ), false);
+$$;
+
+revoke all on function private.mfa_fresh(interval) from public, anon, authenticated;
+
+comment on function private.mfa_fresh(interval) is
+  'Whether the caller''s JWT says a second factor (totp, webauthn, phone, including auth-js mfa/totp and mfa/phone spellings) was verified within the interval. Read from auth.jwt(); the client''s own MFA state is never consulted.';

@@ -31,6 +31,7 @@ export function MfaStep({
   const [stage, setStage] = useState<'loading' | 'enrol' | 'challenge'>('loading');
   const [factorId, setFactorId] = useState('');
   const [factorType, setFactorType] = useState<MfaFactor['type']>('totp');
+  const [factors, setFactors] = useState<MfaFactor[]>([]);
   const [challengeId, setChallengeId] = useState('');
   const [enrolment, setEnrolment] = useState<TotpEnrolment | null>(null);
   const [code, setCode] = useState('');
@@ -45,6 +46,7 @@ export function MfaStep({
         const factors = await mfaFactors();
         if (!live) return;
         if (factors.length > 0) {
+          setFactors(factors);
           setFactorId(factors[0].id);
           setFactorType(factors[0].type);
           if (factors[0].type === 'phone') {
@@ -74,10 +76,29 @@ export function MfaStep({
     setError('');
     setCode('');
     setFactorId('');
+    setFactors([]);
     setChallengeId('');
     setEnrolment(null);
     setStage('loading');
     setAttempt((n) => n + 1);
+  };
+
+  const chooseFactor = async (nextId: string) => {
+    const factor = factors.find(({ id }) => id === nextId);
+    if (!factor || factor.id === factorId) return;
+    setBusy(true);
+    setError('');
+    setCode('');
+    setChallengeId('');
+    setFactorId(factor.id);
+    setFactorType(factor.type);
+    try {
+      if (factor.type === 'phone') setChallengeId(await challengeMfa(factor.id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not start the second factor.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const verify = async () => {
@@ -112,9 +133,23 @@ export function MfaStep({
         </>
       )}
       {stage === 'challenge' && (
-        <p style={{ marginBlock: 0 }}>
-          {factorType === 'phone' ? 'Type the verification code sent to your phone.' : 'Type the six-digit code from your authenticator app.'}
-        </p>
+        <>
+          {factors.length > 1 && (
+            <label style={{ display: 'grid', gap: 'var(--sp-2)' }}>
+              Authenticator to use
+              <select className="input" value={factorId} disabled={busy} onChange={(e) => void chooseFactor(e.target.value)}>
+                {factors.map((factor) => (
+                  <option key={factor.id} value={factor.id}>
+                    {factor.name || (factor.type === 'phone' ? 'Phone' : 'Authenticator app')} ({factor.type === 'phone' ? 'phone' : 'app'})
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <p style={{ marginBlock: 0 }}>
+            {factorType === 'phone' ? 'Type the verification code sent to your phone.' : 'Type the six-digit code from your authenticator app.'}
+          </p>
+        </>
       )}
       {stage !== 'loading' && (
         <form

@@ -277,6 +277,9 @@ begin
   perform pg_temp.become_mfa(operator, 'aal2', 'webauthn', now() - interval '14 minutes');
   reset role;
   if not private.mfa_fresh() then raise exception 'FAILED: a WebAuthn assertion fourteen minutes ago is not fresh'; end if;
+  perform pg_temp.become_mfa(operator, 'aal2', 'mfa/phone', now() - interval '2 minutes');
+  reset role;
+  if not private.mfa_fresh() then raise exception 'FAILED: an auth-js phone verification two minutes ago is not fresh'; end if;
   perform pg_temp.become_mfa(operator, 'aal2', 'totp', now() - interval '16 minutes');
   reset role;
   if private.mfa_fresh() then raise exception 'FAILED: a TOTP verified sixteen minutes ago counted as fresh'; end if;
@@ -292,7 +295,7 @@ begin
   perform pg_temp.become_mfa(operator, 'aal2', 'totp', now() - interval '40 minutes');
   reset role;
   if not private.mfa_fresh('1 hour') then raise exception 'FAILED: the window argument is ignored'; end if;
-  raise notice 'ok  mfa_fresh: recent totp/webauthn on aal2 is fresh; stale, aal1, a first factor and no claims are not';
+  raise notice 'ok  mfa_fresh: recent totp/webauthn/phone on aal2 is fresh; stale, aal1, a first factor and no claims are not';
 
   perform pg_temp.become_mfa(operator, 'aal2', 'totp', now() - interval '1 minute');
   reset role;

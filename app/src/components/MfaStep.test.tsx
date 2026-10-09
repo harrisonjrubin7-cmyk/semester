@@ -140,4 +140,24 @@ describe('MfaStep', () => {
     expect(mock.challenge).toHaveBeenCalledTimes(1);
     expect(mock.verify).toHaveBeenCalledWith('phone-1', 'ch-1', '246810');
   });
+
+  it('lets an operator switch to another enrolled factor', async () => {
+    mock.factors.mockResolvedValue([
+      { id: 'totp-lost', name: 'Old phone', type: 'totp' },
+      { id: 'phone-2', name: 'Recovery mobile', type: 'phone' },
+    ]);
+    await render();
+    const select = host.querySelector('select') as HTMLSelectElement;
+    expect(select).toBeTruthy();
+    expect(select.options).toHaveLength(2);
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set?.call(select, 'phone-2');
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(mock.challenge).toHaveBeenCalledWith('phone-2');
+    expect(host.textContent).toContain('verification code sent to your phone');
+    typeCode('135790');
+    await submit();
+    expect(mock.verify).toHaveBeenCalledWith('phone-2', 'ch-1', '135790');
+  });
 });
