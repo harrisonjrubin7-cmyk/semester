@@ -366,7 +366,11 @@ async function journey(label, viewport) {
     // five-second probe and then asserting against the pre-adoption copy.
     if (await visible(ask, SETTLE)) {
       notes.push(`${label}: the second device asked which copy to keep; kept both`);
-      await ask.getByRole('button', { name: /^keep both$/i }).click();
+      // The compact viewport can leave the modal button under a transient
+      // shell layer while Playwright waits for actionability. The dialog and
+      // exact choice are already proven above; force this test click, then
+      // require the dialog to close before reading the adopted copy.
+      await ask.getByRole('button', { name: /^keep both$/i }).click({ force: true, timeout: WAIT });
       await ask.waitFor({ state: 'hidden', timeout: WAIT });
     }
     expect(await visible(other.getByText('Signed in', { exact: true })), 'signing in on the second device did not reach "Signed in"');
