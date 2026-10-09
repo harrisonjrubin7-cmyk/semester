@@ -16,7 +16,7 @@ export function PrivilegedMfaBoundary({ subject, children }: { subject: string |
   const [state, setState] = useState<BoundaryState>({ subject: null, status: 'ready', error: '' });
   const request = useRef(0);
 
-  const read = useCallback(async () => {
+  const read = useCallback(async (preserveOnError = false) => {
     if (!subject) return;
     const version = ++request.current;
     try {
@@ -24,7 +24,11 @@ export function PrivilegedMfaBoundary({ subject, children }: { subject: string |
       if (request.current === version) setState({ subject, status: required ? 'required' : 'ready', error: '' });
     } catch (e) {
       if (request.current === version) {
-        setState({ subject, status: 'error', error: e instanceof Error ? e.message : 'Could not check whether this account needs a second factor.' });
+        setState((current) => (
+          preserveOnError && current.subject === subject && current.status !== 'checking'
+            ? current
+            : { subject, status: 'error', error: e instanceof Error ? e.message : 'Could not check whether this account needs a second factor.' }
+        ));
       }
     }
   }, [subject]);
@@ -35,7 +39,7 @@ export function PrivilegedMfaBoundary({ subject, children }: { subject: string |
     void read();
     let live = true;
     let stopAuth = () => {};
-    void watchMfaSession(() => void read()).then((stop) => {
+    void watchMfaSession(() => void read(true)).then((stop) => {
       if (live) stopAuth = stop;
       else stop();
     }).catch(() => {
@@ -43,7 +47,7 @@ export function PrivilegedMfaBoundary({ subject, children }: { subject: string |
       // status read owns the user-facing error, while a later focus still
       // provides recovery if the account service becomes available.
     });
-    const recheck = () => void read();
+    const recheck = () => void read(true);
     window.addEventListener('focus', recheck);
     return () => {
       live = false;

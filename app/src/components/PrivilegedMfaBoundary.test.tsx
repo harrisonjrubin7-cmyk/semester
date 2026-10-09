@@ -78,6 +78,15 @@ describe('PrivilegedMfaBoundary', () => {
     interval.mockRestore();
   });
 
+  it('preserves a verified ordinary state when a background recheck fails', async () => {
+    mock.required.mockResolvedValueOnce(false).mockRejectedValueOnce(new Error('Offline'));
+    await render('student-1');
+    expect(host.textContent).toContain('Protected app');
+    await act(async () => { window.dispatchEvent(new Event('focus')); await Promise.resolve(); });
+    expect(host.textContent).toContain('Protected app');
+    expect(host.querySelector('[role=alert]')).toBeNull();
+  });
+
   it('rechecks when Auth replaces the same account’s session', async () => {
     let changed: (() => void) | undefined;
     mock.watch.mockImplementation(async (callback: () => void) => {
