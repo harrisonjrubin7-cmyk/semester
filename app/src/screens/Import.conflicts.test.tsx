@@ -119,11 +119,35 @@ describe('Import re-import conflict controls', () => {
       'Room · Buttrick 101 → Wilson 103',
     ]);
     expect([...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')].every((radio) => !radio.checked)).toBe(true);
-    expect(host.textContent).toContain('changed date, course detail, or grading row');
+    expect(host.textContent).toContain('changed date, title, course detail, or grading row');
 
     const importedRoom = [...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')]
       .find((radio) => radio.parentElement?.textContent?.includes('Use imported room'));
     act(() => importedRoom!.click());
     expect(choose).toHaveBeenCalledWith('field:Room', 'use_imported');
+  });
+
+  it('renders a separate unselected title choice when a reworded deadline also moved', () => {
+    const changes = diff(
+      course([item('current-id', 'Reflection #1', 8, 10)]),
+      course([item('fresh-id', 'Reflection 1 — play', 8, 17)]),
+      2026,
+    );
+    const choose = vi.fn();
+    act(() => {
+      root.render(<StoreProvider><Rediff changes={changes} kept={{ kept: 0, lost: 0 }} code="ECON 1020" choices={{}} onChoose={choose} /></StoreProvider>);
+    });
+
+    const groups = [...host.querySelectorAll('fieldset.import-conflict-choice')];
+    expect(groups.map((group) => group.querySelector('legend')?.textContent)).toEqual([
+      'Reflection 1 — play · 9/10 → 9/17 · 7 days later',
+      'Title · Reflection #1 → Reflection 1 — play',
+    ]);
+    expect([...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')].every((radio) => !radio.checked)).toBe(true);
+
+    const importedTitle = [...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')]
+      .find((radio) => radio.parentElement?.textContent?.includes('Use imported title'));
+    act(() => importedTitle!.click());
+    expect(choose).toHaveBeenCalledWith('title:current-id', 'use_imported');
   });
 });

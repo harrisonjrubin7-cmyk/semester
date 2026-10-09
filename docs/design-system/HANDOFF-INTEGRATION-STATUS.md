@@ -1,10 +1,22 @@
 # Handoff integration status
 
-**Automation pass** 17 of 120 · **Integration slice** 25 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `27be630d`
+**Automation pass** 18 of 120 · **Integration slice** 26 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `4a01b4a0`
 
 ## State
 
-Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, and the student-controlled date/metadata/grading re-import conflict paths are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Stored bytes, a trustworthy adapter/scanner runtime, extraction, server routes and server-backed current-screen wiring remain absent; production bucket/deployment state is unverified. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, and the student-controlled date/title/metadata/grading re-import conflict paths are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Stored bytes, a trustworthy adapter/scanner runtime, extraction, server routes and server-backed current-screen wiring remain absent; production bucket/deployment state is unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 18 / slice 26
+
+- The clean branch fetched and merged current `origin/main` `4a01b4a0` before work. Its premium Course Engine shell changes the separate `course-engine/` workspace and audit documents, with no equivalent current-product Import/Rediff title choice.
+- Import/Rediff now requires an explicit, unselected keep-current/use-imported choice for every confidently paired reworded deadline title, including an item whose title and date both changed. Stable conflict ids use `title:<current-item-id>`.
+- The unresolved count disables save and the pure merge boundary independently rejects incomplete or invalid maps. Title and date choices apply independently while the current item id and its completion tick remain attached.
+- The UI reuses `Folding`, `Blueprint`, `SectionLabel` and the existing native fieldset/radio pattern. Semantic styles retain keyboard behavior, visible focus, 44px targets, wrapping and narrow-layout behavior; no shared component, raw style value or dependency was added.
+- The guard was proved red by temporarily removing title conflicts: the named test failed on the absent `title:current-id` decision. After restoration, directly changed logic/render tests pass 35/35 and the broader focused Import set passes 39/39.
+- TypeScript, lint, university typecheck and production build pass. Lint retains four existing warnings and the build retains its existing chunk warnings. Token export passes 9/9; design audit has zero violations within the existing 86-warning ledger; CSS remains within its ledger; 69/69 design contracts pass.
+- The design report file regenerated, but its wrapper exits 1 because it invokes the unavailable `npm` command. The named constituents are green; no aggregate report pass is claimed. Ordered and shuffled full suites were not run for this bounded client slice.
+- The active HawkScan skill stopped at preflight because `hawk` is not installed. A local credential file was detected but could not be validated without the CLI, and no live target was started; no DAST result or security pass is claimed.
+- Changed due times, durable server conflict records, external reconciliation, safe ICS publication, server ingestion and signed reads remain incomplete.
 
 ## Evidence locked in automation pass 17 / slice 25
 
@@ -291,15 +303,15 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Completed local slice gate
 
-The projection database proof and reapply evidence remain green from slice 15. Slice 16's 43 focused tests, generated-reference guards and phase gates remain green; slice 17's 16-row structural and 22/22 design-tooling checks remain green; slice 18's authority contract remains green. Slice 19 and slice 20 retain their student-source persistence/settlement proof. Slice 21 retains its versioned policy proof. Slice 22 retains its shared-metadata proof. Slice 23 applies all 217 migrations twice with 376 unchanged table fingerprints, passes 129 focused/adjacent SQL checks and 85 repository plus 78 design contracts, and has green TypeScript/lint/university/build gates. Ordered/shuffled full-suite caveats and HawkScan remain explicitly open. Stored bytes, trusted runtime/receipts, extraction, routes, current-screen wiring, production bucket state and operating deployment remain separate.
+The projection database proof and reapply evidence remain green from slice 15. Slice 16's 43 focused tests, generated-reference guards and phase gates remain green; slice 17's 16-row structural and 22/22 design-tooling checks remain green; slice 18's authority contract remains green. Slice 19 and slice 20 retain their student-source persistence/settlement proof. Slice 21 retains its versioned policy proof. Slice 22 retains its shared-metadata proof. Slice 23 applies all 217 migrations twice with 376 unchanged table fingerprints and passes its focused gates. Slices 24–26 retain green focused date, metadata/grading and title-conflict guards; slice 26 passes 39/39 focused Import contracts plus TypeScript/lint/university/build and all named design constituents. Ordered/shuffled full-suite caveats, the aggregate report wrapper and HawkScan remain explicitly open. Stored bytes, trusted runtime/receipts, extraction, routes, current-screen wiring, production bucket state and operating deployment remain separate.
 
 ## External gates kept open
 
-HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review, DPA/HECVAT/insurance, institutional approval, UAT, accessibility conformance, staffing, live restore evidence and production activation remain unverified. The HawkScan runtime and `HAWK_API_KEY` are unavailable; no DAST pass is claimed.
+HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review, DPA/HECVAT/insurance, institutional approval, UAT, accessibility conformance, staffing, live restore evidence and production activation remain unverified. The HawkScan runtime is unavailable; the headless `HAWK_API_KEY` and target are unset, and the detected local credential file cannot be validated without the CLI. No DAST pass is claimed.
 
 ## Next dependency-ready work
 
-Extend the same explicit, no-default conflict choice model to reworded deadline titles in the existing re-import path while retaining stable item ids and date decisions. The repository adapter/private runtime remains externally gated until it can create the exact planned tenant-bound object and produce genuine storage plus named-scanner receipts. Do not synthesize either receipt, expose browser upload/download routes, wire server ingestion into Import/Study Studio or add a Course Engine route/parallel course model before trusted runtime, session-derived authorization and shared rate-limit evidence exist.
+Extend the same explicit, no-default conflict choice model to changed due times so re-import cannot silently move a reminder within the same day; retain independent title/date decisions and stable item ids. The repository adapter/private runtime remains externally gated until it can create the exact planned tenant-bound object and produce genuine storage plus named-scanner receipts. Do not synthesize either receipt, expose browser upload/download routes, wire server ingestion into Import/Study Studio or add a Course Engine route/parallel course model before trusted runtime, session-derived authorization and shared rate-limit evidence exist.
 
 ## Hold-aware projection-history retention — automation runner pass 5, slice 13
 

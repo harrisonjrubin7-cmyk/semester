@@ -515,8 +515,29 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Extend the same explicit review to reworded deadline titles before re-import replaces student-visible task wording; retain stable ids and the existing date-choice behavior.
+- [x] Extend the same explicit review to reworded deadline titles before re-import replaces student-visible task wording; retain stable ids and the existing date-choice behavior. Completed in automation pass 18 / slice 26.
 - [ ] Keep server-authoritative conflict records, external reconciliation and safe ICS publication separate from this local client merge slice.
+- [ ] Keep server ingestion and signed reads closed until a trustworthy private adapter/scanner runtime can produce genuine receipts.
+
+## 2026-10-08 student-controlled deadline-title conflicts — automation pass 18, slice 26
+
+- [x] Fetch and merge current `origin/main` `4a01b4a0` on the clean branch before work; confirm its separate Course Engine shell contains no equivalent Import/Rediff title-conflict behavior.
+- [x] Reuse the existing Import/Rediff route, native fieldset/radio pattern and semantic form styles; add no route, component, dependency, schema or parallel course model.
+- [x] Treat every confidently paired reworded deadline title as an unresolved source conflict, including items whose date also changed.
+- [x] Use a stable `title:<current-item-id>` decision key with no preselected winner and independently reject incomplete or invalid maps in the pure merge boundary.
+- [x] Apply title and date choices independently while preserving the current item id and its completion-tick relationship.
+- [x] Update the live conflict guidance and render each title comparison in a keyboard-operable, 44px-target native radio group with existing semantic wrapping and narrow-layout behavior.
+- [x] Prove the guard red by temporarily removing title conflicts, observe the named stable-id expectation fail, restore it and pass 35/35 directly changed logic/UI tests.
+- [x] Broader focused Import contracts pass 39/39; TypeScript, lint, university typecheck and production build pass with existing warning baselines.
+- [x] Token export passes 9/9; design audit has zero violations with 86 existing warnings; CSS remains within its ledger; design contracts pass 69/69.
+- [ ] Aggregate design report pass — the report file regenerates, but the wrapper exits 1 because it invokes unavailable `npm`; constituent checks above are green.
+- [ ] Ordered and shuffled full suites — not run for this bounded client slice; focused regression and phase gates are green.
+- [ ] HawkScan DAST — preflight stops because `hawk` is absent. A local credential file exists but cannot be validated without the CLI, and no scan target was started; no DAST result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Extend fail-closed item review to changed due times so re-import cannot silently move a reminder within the same day; keep title and date decisions independent.
+- [ ] Keep lower-consequence extracted item metadata, durable server conflicts, external reconciliation and safe ICS publication separate until each has a named authority and acceptance contract.
 - [ ] Keep server ingestion and signed reads closed until a trustworthy private adapter/scanner runtime can produce genuine receipts.
 
 ## Earlier integration baseline preserved

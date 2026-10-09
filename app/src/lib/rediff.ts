@@ -83,7 +83,7 @@ export interface DateConflict {
 
 export interface ReimportConflict {
   id: string;
-  kind: 'moved' | 'removed' | 'field' | 'reweighted' | 'grading_added' | 'grading_removed';
+  kind: 'moved' | 'removed' | 'renamed' | 'field' | 'reweighted' | 'grading_added' | 'grading_removed';
 }
 
 const DAY = 86_400_000;
@@ -148,8 +148,8 @@ export function diff(before: CourseModule, after: CourseModule, year: number): D
     const a = after.items[p.a];
     const days = daysApart(b, a, year);
     if (days !== 0) moved.push({ before: b, after: a, days });
-    else if (b.title !== a.title) renamed.push({ before: b, after: a });
-    else same++;
+    if (b.title !== a.title) renamed.push({ before: b, after: a });
+    if (days === 0 && b.title === a.title) same++;
   }
 
   // Grading is matched on the row's own wording, which is how a syllabus
@@ -267,14 +267,16 @@ export function unresolvedDateConflictIds(d: Diff, choices: DateConflictChoices)
  * Every imported value that would overwrite or remove current course data.
  *
  * New dates remain individually selectable in Import's source review. Course
- * metadata and grading rows have no equivalent per-value review, so all of
- * their differences belong here alongside moved and removed dates. IDs use
- * the current field/row identity, not array order, so choices survive render
- * changes and can be checked again by the pure merge guard.
+ * metadata, reworded titles and grading rows have no equivalent per-value
+ * review, so all of their differences belong here alongside moved and removed
+ * dates. IDs use the current item/field/row identity, not array order, so
+ * choices survive render changes and can be checked again by the pure merge
+ * guard.
  */
 export function reimportConflicts(d: Diff): ReimportConflict[] {
   return [
     ...dateConflicts(d),
+    ...d.renamed.map(({ before }) => ({ id: `title:${before.id}`, kind: 'renamed' as const })),
     ...d.fields.map((change) => ({ id: `field:${change.field}`, kind: 'field' as const })),
     ...d.reweighted.map((row) => ({ id: `grading:reweighted:${row.what}`, kind: 'reweighted' as const })),
     ...d.gradingRemoved.map((row) => ({ id: `grading:removed:${row.what}`, kind: 'grading_removed' as const })),
@@ -344,6 +346,13 @@ export function applyReimportConflictChoices(
   }
 
   const merged = applyDateConflictChoices(before, after, year, choices);
+  const currentTitles = new Map(changes.renamed.map(({ before }) => [before.id, before.title]));
+  const items = merged.items.map((item) => {
+    const currentTitle = currentTitles.get(item.id);
+    return currentTitle !== undefined && choices[`title:${item.id}`] === 'keep_current'
+      ? { ...item, title: currentTitle }
+      : item;
+  });
   const course = { ...merged.course };
   for (const change of changes.fields) {
     if (choices[`field:${change.field}`] === 'keep_current') {
@@ -371,7 +380,7 @@ export function applyReimportConflictChoices(
     }
   }
 
-  return { ...merged, course: { ...course, grading } };
+  return { ...merged, course: { ...course, grading }, items };
 }
 
 /** How many ticks survive a re-import, so the screen can promise it. */

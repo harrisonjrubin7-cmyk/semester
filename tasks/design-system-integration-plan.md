@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-08 · **Latest observed `origin/main`** `27be630d` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-08 · **Latest observed `origin/main`** `4a01b4a0` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -275,6 +275,14 @@ Current `origin/main` remains `27be630d`, already merged into the branch; no equ
 The merge applies choices per value: it can preserve or replace one course field, keep or accept one changed weight, retain or remove a disappeared grading row, and reject or add a newly extracted row without forcing one source to win the whole table. Re-import also preserves the current term and student-recorded course AI policy because neither is an extracted syllabus field. No route, schema, server authority, provider, dependency or parallel course model was added.
 
 The new regression guard was proved red by temporarily bypassing unresolved-conflict detection; the named test failed on all five missing decisions and passed after restoration. Focused course/import/document contracts pass 60/60; the directly changed logic/rendered-control files pass 31/31. TypeScript, lint, university typecheck and production build pass with the existing four-warning lint and chunk-size baselines. Token export passes 9/9; design audit remains at zero violations and 86 ledgered warnings; CSS stays within its ledger; 138/138 design/style contracts pass and the report regenerates without drift. HawkScan preflight stops because `hawk` is absent; headless `HAWK_API_KEY` and `HAWK_APP_HOST` are also unset, so no DAST result is claimed.
+
+## Student-controlled deadline-title conflicts — automation pass 18, slice 26
+
+The clean branch fetched and merged current `origin/main` `4a01b4a0` before implementation. Its premium Course Engine shell changes only the separately governed `course-engine/` workspace and audit documents; it contains no equivalent Import/Rediff title-choice behavior. The existing product path now classifies every confidently paired, reworded deadline title as an explicit source conflict, including an item whose title and date both changed.
+
+Each title conflict uses the established native, unselected keep-current/use-imported radio group. The unresolved count and pure merge boundary fail closed until a valid title choice exists. Title and date choices are independent: either source can win each value while the current item id remains stable, so completion ticks do not detach. No route, schema, server claim, dependency, parallel model or official-record authority was added.
+
+The regression guard was proved red by temporarily removing title rows from the conflict set; the named test failed on the absent stable `title:<current-id>` decision and passed after restoration. Direct logic/render tests pass 35/35 and the broader focused Import set passes 39/39. TypeScript, lint, university typecheck and production build pass with the existing four lint and chunk warnings. Token export passes 9/9, design audit remains at zero violations with 86 ledgered warnings, CSS remains within its ledger and 69/69 design contracts pass. The report file regenerated, but its wrapper exits nonzero because it invokes the unavailable `npm` command; no aggregate report pass is claimed. HawkScan cannot start because the `hawk` executable is absent; a local credential file is detected but cannot be validated, and no live target was started. Changed due times, durable server conflict records, external reconciliation and safe ICS publication remain incomplete.
 
 ## What was read
 

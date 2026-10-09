@@ -80,6 +80,16 @@ describe('diff', () => {
     expect(d.moved).toEqual([]);
   });
 
+  it('reports a reworded title independently when its date also moved', () => {
+    const d = diff(
+      module([item('a', 'Reflection #1', 8, 10)]),
+      module([item('x', 'Reflection 1 — play', 8, 17)]),
+      YEAR,
+    );
+    expect(d.moved).toHaveLength(1);
+    expect(d.renamed).toHaveLength(1);
+  });
+
   it('counts an unchanged item rather than reporting it', () => {
     const d = diff(
       module([item('a', 'Final exam', 11, 10)]),
@@ -290,6 +300,46 @@ describe('course and grading conflict choices', () => {
     expect(merged.course.room).toBe('Wilson 103');
     expect(merged.course.lms).toBe('https://canvas.example.edu/courses/1020');
     expect(merged.course.grading).toEqual(after.course.grading);
+  });
+});
+
+describe('title conflict choices', () => {
+  const before = module([item('current-id', 'Reflection #1', 8, 10)]);
+  const after = module([item('fresh-id', 'Reflection 1 — play', 8, 17)]);
+
+  it('requires independent choices for a reworded title and moved date', () => {
+    const changes = diff(before, after, YEAR);
+    expect(unresolvedReimportConflictIds(changes, {})).toEqual([
+      'moved:current-id',
+      'title:current-id',
+    ]);
+    expect(() => applyReimportConflictChoices(before, after, YEAR, {
+      'moved:current-id': 'use_imported',
+    })).toThrow(/Every re-import source conflict/);
+  });
+
+  it('preserves the stable id while applying title and date choices independently', () => {
+    const keepTitle = applyReimportConflictChoices(before, after, YEAR, {
+      'moved:current-id': 'use_imported',
+      'title:current-id': 'keep_current',
+    });
+    expect(keepTitle.items[0]).toMatchObject({
+      id: 'current-id',
+      title: 'Reflection #1',
+      month: 8,
+      day: 17,
+    });
+
+    const keepDate = applyReimportConflictChoices(before, after, YEAR, {
+      'moved:current-id': 'keep_current',
+      'title:current-id': 'use_imported',
+    });
+    expect(keepDate.items[0]).toMatchObject({
+      id: 'current-id',
+      title: 'Reflection 1 — play',
+      month: 8,
+      day: 10,
+    });
   });
 });
 

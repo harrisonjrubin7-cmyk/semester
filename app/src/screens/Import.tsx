@@ -1095,7 +1095,7 @@ export function Rediff({
         </div>
         {conflicts.length > 0 && (
           <div role="status" style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
-            Choose what to keep for every changed date, course detail, or grading row. Semester will not decide a source conflict for you.
+            Choose what to keep for every changed date, title, course detail, or grading row. Semester will not decide a source conflict for you.
           </div>
         )}
       </Blueprint>
@@ -1127,8 +1127,12 @@ export function Rediff({
 
       {changes.renamed.length > 0 && (
         <>
-          <SectionLabel>Reworded, same date</SectionLabel>
-          {changes.renamed.map((r) => line(r.after.title, 'was ' + r.before.title))}
+          <SectionLabel>Reworded</SectionLabel>
+          {changes.renamed.map((r) => choose(
+            `title:${r.before.id}`,
+            `Title · ${r.before.title} → ${r.after.title}`,
+            `Use imported title — ${r.after.title}`,
+          ))}
         </>
       )}
 
