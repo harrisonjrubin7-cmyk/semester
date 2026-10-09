@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-09 · **Latest observed `origin/main`** `e128a526` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-09 · **Latest observed `origin/main`** `fb1d683d` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -653,3 +653,13 @@ Current `origin/main` `e128a526` remains an ancestor of the clean branch and con
 The Undo registry assertion failed before implementation. After implementation, 184 focused Undo, reducer, registrar and rendered Registrar tests pass. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. The 78 token/design contracts pass; design audit remains at zero violations with 86 existing warnings; CSS stays within its ledger; and the design report regenerates unchanged. Aggregate npm launchers and ordered/shuffled full suites are not claimed for this bounded state-contract slice.
 
 The required HawkScan skill stopped at preflight: Hawk v6 and Docker are absent, no target host is set, and the detected local credential properties file was not read. No live target, DAST result or security pass is claimed. Permanent file purge, folder-tree deletion, same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
+
+## Recoverable graph-line removal — automation pass 11, integration slice 62
+
+The clean branch merged current `origin/main` `fb1d683d` before selection. Its registration-readiness persistence work touches the institution repository, one migration and supporting reference/control documents; it contains no `dropPlot`, graphing-calculator, shared-Undo or integration-control equivalent. Re-ranking selected removal of one student-authored graph line because it deletes a single persisted `plots` row, has no cascade or external effect, and the row control already names its exact position for assistive technology.
+
+`dropPlot` now snapshots only `plots` through the existing eight-second Undo contract. Undo restores the exact expression, visibility state and list order without reverting later calculator work. The existing Grapher route and row-specific remove control remain unchanged; no route, component, dependency, schema, policy, server operation, provider behavior or external system was added.
+
+The three pre-implementation assertions failed against the missing registration. After implementation, 157 focused Undo, reducer, made-slice and root-unmount tests pass. TypeScript, lint, university typecheck and production build pass; the existing four lint warnings and chunk-size warning remain. Token/design contracts pass 78/78, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the design report regenerates. The aggregate `design-system:check` wrapper cannot complete because this shell has no `npm`; its exact constituents pass. Ordered and shuffled full suites were not rerun for this bounded state-contract slice.
+
+The active HawkScan skill stopped at preflight: Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST result or security pass is claimed. The full integration remains incomplete; graph-wide Clear, permanent file purge, the same-origin demo reset, trusted scanner/extractor runtime, external approvals, deployment and live operation remain separate open gates.

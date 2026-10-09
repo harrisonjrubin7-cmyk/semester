@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 9 of 120 (continued program) · **Integration slice** 60 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `13f7d04f` · **Latest observed `origin/main`** `e128a526`
+**Automation pass** 11 of 120 (continued program) · **Integration slice** 62 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `28286c74` · **Latest observed `origin/main`** `fb1d683d`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in current automation pass 11 / integration slice 62
+
+- The clean branch merged current `origin/main` `fb1d683d`; its registration-readiness persistence slice has no `dropPlot`, Grapher, shared-Undo or integration-control equivalent.
+- Removing one student-authored graph line now enters the existing eight-second Undo path. Its snapshot is limited to `plots`, so Undo restores the exact expression, visibility state and order without reverting later calculator work.
+- The existing Grapher route and row-specific accessible remove control remain unchanged. No route, component, dependency, schema, policy, server operation, provider behavior or external system changed.
+- Three focused assertions were proved red against the missing registration. Undo, reducer, made-slice and root-unmount suites pass 157/157.
+- TypeScript, lint, university typecheck and production build pass. Existing baselines remain four lint warnings and the chunk-size warning. Token/design contracts pass 78/78, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the design report regenerates.
+- The aggregate `design-system:check` launcher exits because this shell has no `npm`; its exact constituents pass. Ordered and shuffled full suites were not rerun; the last recorded baseline remains pass 30's 23,872 tests.
+- The active HawkScan skill stops at preflight: Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No target, DAST result or security pass is claimed.
+- Graph-wide Clear, permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate. The next slice requires another fresh dependency/consequence ranking.
 
 ## Evidence locked in current automation pass 9 / integration slice 60
 

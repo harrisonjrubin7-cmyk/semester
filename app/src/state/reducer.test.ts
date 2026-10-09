@@ -840,6 +840,26 @@ describe('taking it back', () => {
     expect(back.undone).toBeNull();
   });
 
+  it('restores one graph line without reverting later calculator work', () => {
+    const s: State = {
+      ...blank(),
+      plots: [
+        { id: 'demand', text: 'y = 10 - x', on: true },
+        { id: 'supply', text: 'y = x + 2', on: false },
+      ],
+    };
+
+    const gone = reducer(s, { type: 'dropPlot', id: 'demand' });
+    expect(gone.plots).toEqual([{ id: 'supply', text: 'y = x + 2', on: false }]);
+    expect(gone.undone?.label).toBe('Graph line removed');
+
+    const worked = reducer(gone, { type: 'writeMaths', text: '10 - x = x + 2' });
+    const back = reducer(worked, { type: 'undo' });
+    expect(back.plots).toEqual(s.plots);
+    expect(back.mathWorking).toBe('10 - x = x + 2');
+    expect(back.undone).toBeNull();
+  });
+
   it('restores a dropped study plan without reverting unrelated work', () => {
     const sessions: Session[] = [
       {

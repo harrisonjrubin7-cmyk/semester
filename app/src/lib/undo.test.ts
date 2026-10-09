@@ -72,6 +72,10 @@ describe('which actions can be taken back', () => {
       fields: ['registrar'],
       onChange: true,
     });
+    expect(undoableFor('dropPlot')).toEqual({
+      label: 'Graph line removed',
+      fields: ['plots'],
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
@@ -149,6 +153,11 @@ describe('the snapshot', () => {
     const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.dropTermDate, AT);
     expect(Object.keys(took.was)).toEqual(['registrar']);
     expect(UNDOABLE.dropTermDate.onChange).toBe(true);
+  });
+
+  it('keeps only the student-authored graph lines', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.dropPlot, AT);
+    expect(Object.keys(took.was)).toEqual(['plots']);
   });
 
   it('carries the label and the moment', () => {
