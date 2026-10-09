@@ -420,6 +420,16 @@ The regression was proved red first because the old confirmation had no dialog. 
 
 HawkScan preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`, so no target, DAST result or security pass is claimed. Permanent file purge, server-backed revocation and the scanner/extractor adapter remain separate. The next safe slice must again re-rank consequential actions against current authority, external effects and recovery.
 
+## Governed operating-rhythm deletion previews — automation pass 35, slice 43
+
+Current `origin/main` remains `0d8f70b2`; its registration-readiness and Course Engine work contains no equivalent daily/weekly operating-rhythm deletion preview. Re-ranking selected the existing single-plan and whole-rhythm deletions because both are bounded to the current device library, account, term and rhythm kind; the workspace already provides a private backup export and restore path; and neither mutation changes an official course or calendar record.
+
+Both hand-written inline questions now use the existing `ConfirmDialog` and `ActionPreview`. The selected-plan preview names the date and private plan fields removed while preserving other plans and preferences. The whole-rhythm preview names the live plan count and preferences reset while preserving the other rhythm kind, downloaded exports and official records. Both state that recovery requires a private backup exported before deletion. Cancel is the safe initial action, and confirmation invokes the unchanged device-library update. No route, shared component, dependency, schema, server operation, provider or external system changed.
+
+The focused guard was proved red against the missing action previews, then the Operating Rhythm and ActionPreview suites passed 17/17. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. Token export passes 9/9, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and 69/69 design contracts pass. The design report regenerates before its wrapper exits because `npm` is unavailable; no aggregate report pass is claimed. Ordered/shuffled full suites were not rerun after pass 30's green baseline.
+
+The active HawkScan skill stopped at preflight: Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the detected local properties file was not read. No target, DAST result or security pass is claimed. Permanent file purge, server-backed revocation and scanner/extractor-backed Import remain separate. Another fresh consequence-path ranking is required for the next local slice.
+
 ## What was read
 
 - Root `CLAUDE.md`.

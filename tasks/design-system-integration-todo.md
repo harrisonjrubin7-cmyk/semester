@@ -883,6 +883,26 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep permanent file purge separate until its trash, retention and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-09 governed operating-rhythm deletion previews — automation pass 35, slice 43
+
+- [x] Fetch current `origin/main` `0d8f70b2` and confirm no equivalent daily/weekly operating-rhythm deletion-preview work landed.
+- [x] Select only the existing single-plan and whole-rhythm device-library deletions; keep permanent file purge, server revocations and scanner-backed Import wiring separate.
+- [x] Replace both hand-written inline questions with the shared `ConfirmDialog` and `ActionPreview`; add no route, shared component, dependency, schema or server operation.
+- [x] Name the selected plan date or current plan count, private plan fields and working preferences removed, the other plans/rhythm kind and exported/official records that stay, and recovery only from a previously exported private backup.
+- [x] Preserve the existing account/term/rhythm-scoped library updates and explicit-confirmation-only mutation; verify cancel leaves storage unchanged.
+- [x] Prove the focused guard red against the old inline questions, then pass 17/17 Operating Rhythm and ActionPreview tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass token export 9/9, design audit with zero violations and 86 existing warnings, CSS ledger checks and 69/69 design contracts.
+- [ ] Aggregate design report wrapper — regenerates the report, then exits after invoking unavailable `npm`; no aggregate report pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun after pass 30's green 23,872-test baseline; no full-suite result is claimed for this slice.
+- [ ] HawkScan DAST — preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; the local properties file was not read, and no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining consequence-pattern gaps and choose only a bounded action with explicit ownership, external effects and recovery.
+- [ ] Keep permanent file purge separate until its trash, retention and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.
