@@ -40,7 +40,7 @@ git clone https://github.com/harrisonjrubin7-cmyk/semester.git
 cd semester
 ```
 
-The repository's root `package.json` is a workspace root for `app` and `packages/*` and defines no scripts; it holds the one lockfile. Install at the root, then run every other npm command from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says. At the root, `npm test` fails with "Missing script" instead of running the suite.
+The repository's root `package.json` is a workspace root for `app` and `packages/*`; it holds the one lockfile and only the platform-control registry commands (`registry:validate`, `registry:build`, `release:check`, `release:report`, and `platform-control:test`). Install at the root, then run application commands from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says.
 
 ## 3. Check main first
 
