@@ -3,7 +3,7 @@ from uuid import uuid4
 
 import pytest
 
-from app.schemas import GuideContent
+from app.schemas import GuideContent, ReviewPatch
 from app.services.citations import UnsupportedCitationError, deduplicate_flashcards, validate_guide
 from app.services.conflicts import DateFact, find_date_conflicts, normalize_title
 from app.services.dates import parse_explicit_date
@@ -47,3 +47,8 @@ def test_flashcard_deduplication_normalizes_case_and_spacing():
 
 def test_assignment_title_normalization():
     assert normalize_title("Essay One") == normalize_title("Essay #1")
+
+
+def test_review_correction_payload_is_bounded():
+    with pytest.raises(ValueError, match="256 KB"):
+        ReviewPatch(status="confirmed", corrected_payload={"content": "x" * 256_001})
