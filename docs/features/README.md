@@ -9,4 +9,4 @@ separate from deployment, live integration, institutional approval and GA.
 
 | Feature | Repository status | Met | Partial | Missing | Blocking gates |
 | --- | --- | ---: | ---: | ---: | --- |
-| [Registration readiness](./registration-readiness.md) | not complete | 10 | 7 | 1 | FC-06, FC-09, FC-11, FC-12, FC-14, FC-15, FC-17, FC-18 |
+| [Registration readiness](./registration-readiness.md) | not complete | 14 | 3 | 1 | FC-14, FC-15, FC-17, FC-18 |

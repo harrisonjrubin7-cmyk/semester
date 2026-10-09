@@ -42,20 +42,20 @@ describe('feature completion gate', () => {
     expect(FEATURE_COMPLETION_GATES.map((gate) => gate.title)).toEqual(EXPECTED_GATES);
   });
 
-  it('holds registration readiness below complete while durable and human evidence is missing', () => {
+  it('holds registration readiness below complete while interaction and operating evidence is missing', () => {
     const record = FEATURE_COMPLETION_RECORDS.find((item) => item.id === 'registration-readiness');
     expect(record).toBeDefined();
     expect(record?.gates).toHaveLength(18);
     expect(completionSummary(record!).complete).toBe(false);
     expect(completionSummary(record!).blockingGateIds).toEqual(
-      expect.arrayContaining(['FC-06', 'FC-09', 'FC-17', 'FC-18']),
+      expect.arrayContaining(['FC-14', 'FC-15', 'FC-17', 'FC-18']),
     );
   });
 
   it('binds the registration assessment to repository evidence without hiding gaps', () => {
     const record = FEATURE_COMPLETION_RECORDS[0];
     const summary = completionSummary(record);
-    expect(summary).toMatchObject({ complete: false, met: 10, partial: 7, missing: 1, notApplicable: 0 });
+    expect(summary).toMatchObject({ complete: false, met: 14, partial: 3, missing: 1, notApplicable: 0 });
     expect(validateFeatureCompletion()).toEqual([]);
 
     for (const gate of record.gates) {
