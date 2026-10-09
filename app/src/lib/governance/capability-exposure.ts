@@ -223,6 +223,11 @@ export function validateCapabilityExposureIndex(
   exposureIndex: readonly CapabilityExposureIndexEntry[] = CAPABILITY_EXPOSURE_INDEX,
 ): string[] {
   const errors: string[] = [];
+  const requiredValueMeasureIds: readonly CapabilityValueMeasure['id'][] = [
+    'successful-task-completion',
+    'fallback-use',
+    'support-burden',
+  ];
   const capabilityIds = exposureIndex.map((entry) => entry.capabilityId);
   const routeIds = ROUTE_EXPOSURE_INDEX.map((entry) => entry.route);
   const registeredRoutes = new Set(DESTINATIONS.map((destination) => destination.screen as string));
@@ -250,7 +255,11 @@ export function validateCapabilityExposureIndex(
     if (!entry.audiences.length) errors.push(`Missing audiences: ${entry.capabilityId}.`);
     if (!MATURITY_LEVELS.includes(entry.productMaturity)) errors.push(`Unknown product maturity: ${entry.capabilityId}.`);
     if (entry.permittedExposureStates !== CAPABILITY_EXPOSURE_STATES) errors.push(`Invalid exposure vocabulary: ${entry.capabilityId}.`);
-    if (entry.valueMeasures.length !== 3 || entry.valueMeasures.some((measure) => !measure.definition.trim())) {
+    const valueMeasureIds = entry.valueMeasures.map((measure) => measure.id);
+    if (entry.valueMeasures.length !== requiredValueMeasureIds.length
+      || new Set(valueMeasureIds).size !== requiredValueMeasureIds.length
+      || requiredValueMeasureIds.some((id) => !valueMeasureIds.includes(id))
+      || entry.valueMeasures.some((measure) => !measure.definition.trim())) {
       errors.push(`Incomplete value measures: ${entry.capabilityId}.`);
     }
     if (!entry.rollback.trim()) errors.push(`Missing fallback: ${entry.capabilityId}.`);

@@ -139,6 +139,21 @@ describe('capability exposure resolver', () => {
     ]));
   });
 
+  it('rejects duplicate value-measure identities even when three definitions are present', () => {
+    const original = CAPABILITY_EXPOSURE_INDEX[0]!;
+    const duplicated: CapabilityExposureIndexEntry = {
+      ...original,
+      valueMeasures: original.valueMeasures.map((measure) => ({
+        ...measure,
+        id: 'support-burden',
+      })),
+    };
+    const mutated = [duplicated, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toContain(
+      `Incomplete value measures: ${duplicated.capabilityId}.`,
+    );
+  });
+
   it('authorizes live only for an exact production release of an included standard capability', () => {
     expect(resolveCapabilityExposure('CAP-001', context({ surface: 'marketing' }))).toMatchObject({
       status: 'live',
