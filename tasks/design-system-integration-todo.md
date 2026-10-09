@@ -678,7 +678,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ## 2026-10-08 durable re-import conflict evidence — automation pass 25, slice 33
 
-- [x] Begin from merged `origin/main` `4a01b4a0`; final-fetch `0d8f70b2`, inspect its registration-readiness workflow and confirm no overlapping course-source/migration/control file or equivalent source-pair conflict ledger.
+- [x] Begin from merged `origin/main` `4a01b4a0`; final-fetch and merge `0d8f70b2`, confirm its registration-readiness workflow has no overlapping course-source/migration/control file or equivalent ledger, and reconcile the combined 65-type generated event catalog.
 - [x] Bind one resolution batch to two distinct available/hash-settled sources, both derived snapshot hashes, the owner, active membership, tenant, local course record, course code and term.
 - [x] Store only 1–256 validated stable conflict keys and explicit keep-current/use-imported choices; keep compared values, quotations and extracted text out of the ledger and audit event.
 - [x] Deny browser table/function access and require the service-only functions to revalidate the current student relationship independently.
@@ -689,6 +689,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Apply all 218 migrations twice on PostgreSQL 17 with 378 unchanged table fingerprints; pass 24 focused and 179 adjacent checks, 203/203 total.
 - [x] Pass 64/64 focused repository guards, TypeScript, lint, university typecheck and production build; lint retains four existing warnings.
 - [x] Pass token export 9/9, design audit with zero violations and 86 existing warnings, CSS ledger checks and 69/69 design contracts.
+- [x] On the merged head, pass 118 generated-reference/control tests, all six readiness-workflow tests, TypeScript, university typecheck and the production build.
 - [ ] Ordered and shuffled full application suites — not run for this database-only slice; focused, adjacent security and phase gates are green.
 - [ ] HawkScan DAST — unavailable because the Hawk CLI, Docker fallback, `HAWK_API_KEY` and `HAWK_APP_HOST` are absent; no scan or security pass is claimed.
 
