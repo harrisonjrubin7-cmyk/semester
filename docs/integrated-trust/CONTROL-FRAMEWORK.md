@@ -4,7 +4,7 @@
 
 > Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).
 
-57 controls across 8 families, each mapped to the product domains it covers. 11 are enforced, 33 partial, 4 documented and 9 absent.
+57 controls across 8 families, each mapped to the product domains it covers. 11 are enforced, 34 partial, 4 documented and 8 absent.
 
 **What the states mean.** They describe the repository and nothing else. *Enforced* means a test, a database check or a workflow fails when the control is removed. *Partial* means that is true for part of the surface, or true in the tree and not switched on where it matters; the gap says which. *Documented* means it is written down and nothing fails if it is ignored. *Absent* means neither. There is no state for "operating in production": the master register lets no row past `tested` without a file under `docs/evidence/`, and this register follows it. An enforced control is not evidence that the thing was done, only that a build would notice if it were undone.
 
@@ -14,7 +14,7 @@ Every control that is not enforced has an item in the [remediation sequence](REM
 
 | Domain | Enforced | Partial | Documented | Absent |
 | --- | ---: | ---: | ---: | ---: |
-| Identity and tenancy | 7 | 20 | 2 | 7 |
+| Identity and tenancy | 7 | 21 | 2 | 6 |
 | Academic core and records | 10 | 17 | 2 | 6 |
 | Learning and assessment | 7 | 16 | 2 | 6 |
 | Productivity and documents | 7 | 18 | 2 | 6 |
@@ -44,7 +44,7 @@ Controls that apply to all domains count in every row. No domain reads as fully 
 | TC-SEC-08 | High-impact console actions need two different approvers, and the audit row is written before the action and never swallowed. | Institution console and support, Trust, safety and support | database-check | enforced | [console-approvals.check.sql](../../supabase/console-approvals.check.sql)<br>[console-control-plane.check.sql](../../supabase/console-control-plane.check.sql) | — | security |
 | TC-SEC-09 | Break-glass access is opened only from an approved two-person request, expires within four hours and must be reviewed by someone else. | Institution console and support, Trust, safety and support | database-check | partial | [console-control-plane.check.sql](../../supabase/console-control-plane.check.sql) | private.break_glass_active is defined and consumed by nothing, so a grant is an authorization record and review gate that widens no access; the security seat that must co-approve is vacant. | security |
 | TC-SEC-10 | Fresh multi-factor authentication (aal2, within fifteen minutes) is required for approvals, break-glass and support notifications. | Institution console and support, Trust, safety and support | code-test | partial | [client.test.ts](../../app/src/lib/console/client.test.ts) | Console only: has_capability checks no assurance level, and students have no multi-factor or passkey enrolment. | security |
-| TC-SEC-11 | Passkeys and multi-factor authentication for students and for platform staff roles outside the console. | Identity and tenancy | process | absent | see [PASSWORD-SESSION-AND-MFA-STANDARD.md](../trust/PASSWORD-SESSION-AND-MFA-STANDARD.md) | No enrolment screen, no aal2 requirement on platform_admin or support_agent, provider-console multi-factor is an owner attestation only. | security |
+| TC-SEC-11 | Passkeys and multi-factor authentication for students and for platform staff roles outside the console. | Identity and tenancy | database-check | partial | [privileged-mfa.check.sql](../../supabase/privileged-mfa.check.sql)<br>see [PASSWORD-SESSION-AND-MFA-STANDARD.md](../trust/PASSWORD-SESSION-AND-MFA-STANDARD.md) | The product enforces aal2 for platform_admin and support_agent grants and the console can enrol/challenge TOTP. Student-facing enrolment, passkeys, production Auth configuration evidence, recovery tests and provider-console proof remain open. | security |
 | TC-SEC-12 | Academic and student-account ledgers are hash-chained and sealed daily, so an edit to history is detectable. | Academic core and records, Finance and payments | database-check | enforced | [ledger-chains.check.sql](../../supabase/ledger-chains.check.sql)<br>[ledger-seals.check.sql](../../supabase/ledger-seals.check.sql) | Anyone who can read the signing key can re-seal; the seal limit is stated in its own check. | data |
 | TC-SEC-13 | Keys and secrets are inventoried, rotated on a schedule and the rotation recorded. | all | document | documented | see [SECRETS.md](../../SECRETS.md)<br>see [ENCRYPTION-AND-KEY-MANAGEMENT-STANDARD.md](../trust/ENCRYPTION-AND-KEY-MANAGEMENT-STANDARD.md) | The rotation log is empty, and SEMESTER_JOURNAL_KEY and SEMESTER_AUTH_SERVICE_KEY are absent from the rotation table; the journal key has no identifier or re-encryption path. | security |
 | TC-SEC-14 | Production serves HSTS, a content security policy, frame-ancestors and the other response headers. | all | code-test | partial | [hostheaders.test.ts](../../app/src/lib/hostheaders.test.ts) | The headers are specified for hosts that do not serve production; the app is served from GitHub Pages, which sends none of them. | engineering |
