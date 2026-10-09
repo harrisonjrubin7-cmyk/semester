@@ -26,7 +26,9 @@ function withFile(name: string, text: string): string {
 const ids = (dir: string) => find(dir).map((h) => h.id);
 
 describe('the vocabulary rule', () => {
-  it('passes on the app as it stands', () => {
+  it('passes on the app as it stands', { timeout: 60_000 }, () => {
+    // This walks the complete source tree. Four-worker shuffled runs can make
+    // the same scan exceed the global 30 s timeout even though the rule passes.
     expect(overLedger(src, LEDGER).map((p) => `${p.file}:${p.line} ${p.found}`)).toEqual([]);
   });
 
