@@ -307,6 +307,26 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] 12ui external improvement pass — unavailable because its installer transitively requires missing `npm`/`npx`; repository-native UI and design gates are used instead.
 - [ ] HawkScan DAST — required for this production UI change but unavailable because `hawk` is absent and `HAWK_API_KEY` is unset; no scan is claimed.
 
+## 2026-10-08 Course Engine boundary reconciliation — automation pass 9, slice 17
+
+- [x] Fetch and inspect current `origin/main` `55adab11`; merge its productivity request-context hardening into the clean build branch and confirm no Course Engine reconciliation overlap.
+- [x] Measure the landed MVP: 89 tracked files, 15 Next.js workspace modes, 40 FastAPI route decorators and 21 SQLAlchemy entity models.
+- [x] Confirm the root npm workspace, current screen registry and navigation do not integrate the separate app.
+- [x] Map sixteen meaningful MVP families to current Semester owners and archive Course Studio rows with exactly one disposition each.
+- [x] Keep the separate Next.js/Tailwind shell, JWT identity, Alembic schema and parallel deployment topology out of the integration path.
+- [x] Preserve current Import/Study Studio evidence: multi-file course intake, explicit date review/confirmation, multi-source generation, course AI policy checks and verifiable quotations are existing but incomplete rather than absent or verified.
+- [x] Keep provider adapters, credentials, KMS/AV services, deployment and institutional approval as explicit external gates.
+- [x] Select the repository-native `student-files` / `course-materials` authority contract as the next dependency: course identity, tenant/course relationship, storage, validation/scanning, retention/deletion, provenance/correction propagation, idempotency, audit and recovery.
+- [x] Run the focused design-tooling documentation guard through the repository-local Vitest binary — 1 file and 22 tests passed. The `npx` wrapper is unavailable in this shell; no result is attributed to it.
+- [x] HawkScan is not applicable to this documentation/reconciliation-only slice; no production code or scan configuration changed.
+
+### Next implementation boundary
+
+- [ ] Define and test the current-repository course-source authority contract before adding server storage or ingestion.
+- [ ] Extend the existing Import/Study Studio path with the first bounded server-backed source slice; do not add a Course Engine route or parallel course model.
+- [ ] Keep extracted dates/assignments uncommitted until explicit student confirmation, retain source links and propagate confirmed corrections.
+- [ ] Keep faculty-published/official LMS course data behind exact teaching capability and institutional authority rather than treating a student's source as official.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.

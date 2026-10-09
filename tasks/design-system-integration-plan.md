@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-08 · **Base** `origin/main` `a2c9a4d0` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-08 · **Base** `origin/main` `55adab11` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -195,6 +195,14 @@ The clean branch merged current `origin/main` `b190f96a` before implementation. 
 The existing shared `LoadingState`, `ErrorState`, `PermissionNotice`, `EmptyState`, `Notice`, `Fields` and responsive Console grid patterns cover loading, recoverable error, permission denial, empty/unknown, stale, failed, warning and narrow-layout behavior. No mutation, worker schedule, secret, deployment or production operation was added. Focused client/component proof passes 43/43 tests in normal and shuffled order; TypeScript, lint, university typecheck, production build and design-system constituent/report gates pass with zero new violations. The ordered full suite passes 23,774 tests with 69 skipped and only three non-slice failures: the intentional runner-mounted `.semester-reference` map refusal and two stale generated documents, which were regenerated and pass focused guards. Full shuffle seed `1791505035827` developed unrelated scan timeouts and React `act()`/axe cascades, then ended with exit 130 before a final count, so no full-shuffle pass is claimed. The external 12ui improvement CLI could not install because this shell has no `npm`/`npx`; no generated design was substituted for repository-native patterns.
 
 This closes the first local tenant projection read path from private model through bounded RPC to an operator-visible, permission-aware Console consumer. It does not prove scheduled projection freshness or production availability. The next dependency-ready step is to reconcile the newly landed `course-engine/` MVP against the already dispositioned Course Studio screen/workflow rows and current source-of-truth/security contracts before selecting the first Phase 4 vertical slice.
+
+## Course Engine boundary reconciliation — automation pass 9, slice 17
+
+The clean branch fetched, inspected and merged `origin/main` `55adab11`. Its productivity request-context hardening supplies current authorization evidence and does not duplicate this reconciliation. The earlier `b190f96a` Course Engine MVP contains 89 tracked files, 15 separate Next.js modes, 40 FastAPI route decorators and 21 SQLAlchemy entity models, but it is outside the root npm workspace and current route/navigation authorities.
+
+[`REFERENCE-COURSE-ENGINE-RECONCILIATION.md`](../docs/design-system/REFERENCE-COURSE-ENGINE-RECONCILIATION.md) gives each of sixteen meaningful MVP families exactly one disposition: eight existing but incomplete, three intentionally excluded, two prototype only, two documentation/roadmap only and one externally blocked. No family is promoted to existing and verified. The useful file, citation, review, calendar, study, export and progress behaviors map to current Semester owners; the separate shell, JWT identity, Alembic schema and deployment topology are not integration targets.
+
+The earliest connected Course Studio dependency is now explicit rather than inferred from the MVP: define the current-repository `student-files` / `course-materials` source authority before adding server ingestion. That contract must bind canonical course identity, exact tenant/course relationship, storage path, detected type and archive limits, scan/quarantine state, retention/deletion, provenance and correction propagation, idempotency, rate limits, audit and recovery. The first implementation slice after that contract extends the existing Import and Study Studio path; it does not add a Course Engine route or treat student-confirmed dates as official LMS records.
 
 ## What was read
 

@@ -23,6 +23,7 @@
 - [REFERENCE-WORKFLOW-RECONCILIATION.md](REFERENCE-WORKFLOW-RECONCILIATION.md) — all 319 canonical workflow steps reconciled to the exact repository workflow audit and the 84 non-independent screen aliases.
 - [REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md](REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md) — all 49 archive roles, 88 systems and 82 documents mapped to current authorities, dependencies and release boundaries.
 - [REFERENCE-EXECUTION-STREAM-RECONCILIATION.md](REFERENCE-EXECUTION-STREAM-RECONCILIATION.md) — the remaining novel bundles in streams 00–30 mapped into the current phases, dispositions and cross-stream dependency order.
+- [REFERENCE-COURSE-ENGINE-RECONCILIATION.md](REFERENCE-COURSE-ENGINE-RECONCILIATION.md) — the separately landed Course Engine MVP mapped to current Course Studio/import/study authorities without adopting its second app, auth, schema or infrastructure.
 - [HANDOFF-INTEGRATION-STATUS.md](HANDOFF-INTEGRATION-STATUS.md) — resumable automation status, open gates and the next dependency-ready reconciliation slice.
 
 ## Skills

@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 8 of 120 · **Integration slice** 16 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `55adab11`
+**Automation pass** 9 of 120 · **Integration slice** 17 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `55adab11`
 
 ## State
 
-Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. P1-01 through P1-07 and the first repository-native Console consumer are now locally implemented in bounded slices: outbox controls, two producers/projectors, the dormant worker, hold-aware history retention, a permissioned query envelope and its exact-tenant read-only UI. Scheduler activation and production freshness evidence remain absent. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the archive populations and now includes the newly landed Course Engine MVP as current-repository evidence. P1-01 through P1-07 and the first repository-native Console consumer are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app; its useful behaviors are mapped to current Import, Study Studio, Course Studio, storage and authorization owners. Scheduler activation, production freshness, server-backed course-source authority and production Course Engine operation remain absent. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 9 / slice 17
+
+- The clean branch fetched, inspected and merged `origin/main` `55adab11`. Its productivity request-context hardening is current authorization evidence and has no equivalent Course Engine reconciliation.
+- Commit `b190f96a` contributes 89 `course-engine/` files, 15 separate Next.js workspace modes, 40 FastAPI route decorators and 21 SQLAlchemy entities. The root npm workspace still includes only `app` and `packages/*`; current screen/navigation registries do not route the MVP.
+- [`REFERENCE-COURSE-ENGINE-RECONCILIATION.md`](REFERENCE-COURSE-ENGINE-RECONCILIATION.md) gives sixteen meaningful families one disposition each: 8 existing but incomplete, 3 intentionally excluded, 2 prototype only, 2 documentation/roadmap only and 1 externally blocked. Zero are existing and verified.
+- Useful behavior maps to current owners: multi-file import and explicit date confirmation in `Import`, selected multi-source and citation-checked generation in Study Studio, current Course Studio publication controls, the current AI policy/gateway and repository-native storage/tenancy boundaries.
+- The separate Next.js/Tailwind shell, JWT identity, Alembic schema and Compose topology are excluded as integration patterns. They would create a second app, design system, identity authority and parallel data model.
+- The next dependency is the current-repository `student-files` / `course-materials` source-authority contract. It must settle canonical course identity, exact tenant/course relationship, storage path, type/archive/size validation, scan/quarantine state, retention/deletion, provenance and correction propagation, idempotency, rate limits, audit and recovery before server ingestion.
+- Structural validation confirms 16 unique CE rows and the stated 8/3/2/2/1 disposition totals. The repository-local design-tooling guard passes 22/22 tests; the unavailable `npx` wrapper is not claimed.
+- This is a documentation/reconciliation slice. It changes no production code, route, schema, policy, dependency or generated token. HawkScan is therefore not applicable; no security result is claimed.
 
 ## Evidence locked in automation pass 8 / slice 16
 
@@ -179,7 +190,7 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Completed local slice gate
 
-The projection database proof and reapply evidence remain green from slice 15. For slice 16, 43 focused tests in both normal and shuffled order, generated-reference guards, TypeScript, lint, university typecheck, production build and design-system equivalents are green. The ordered full suite has no slice regression; the full shuffled suite is not green because of the recorded unrelated timing/order cascade and exit 130. Deno and HawkScan remain explicitly open. Secret provisioning, scheduler activation, additional projectors and operating deployment remain separate.
+The projection database proof and reapply evidence remain green from slice 15. For slice 16, 43 focused tests in both normal and shuffled order, generated-reference guards, TypeScript, lint, university typecheck, production build and design-system equivalents are green. Slice 17 is documentation/reconciliation only: its 16-row structural check and 22/22 design-tooling guard are green, so application-wide gates were not rerun. The ordered full suite has no slice-16 regression; the full shuffled suite is not green because of the recorded unrelated timing/order cascade and exit 130. Deno and HawkScan remain explicitly open for production changes. Secret provisioning, scheduler activation, additional projectors and operating deployment remain separate.
 
 ## External gates kept open
 
@@ -187,7 +198,7 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Reconcile the newly landed `course-engine/` MVP against the archive Course Studio screen/workflow rows and current app source-of-truth, tenancy, file-safety and human-authority contracts. Use that current evidence to select the earliest connected Phase 4 slice; do not build a second course product or infer deployment from the separate MVP tree.
+Define and test the repository-native `student-files` / `course-materials` authority contract before adding server storage or ingestion. The contract must bind canonical course identity, exact tenant/course relationship, storage path, validation and quarantine, retention/deletion, provenance and confirmed-correction propagation, idempotency, rate limits, audit and recovery. Then extend the existing Import and Study Studio path in one bounded slice; do not add a Course Engine route or parallel course model.
 
 ## Hold-aware projection-history retention — automation runner pass 5, slice 13
 
