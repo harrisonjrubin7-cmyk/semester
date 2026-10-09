@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BROWSER_ENTRY, GATEWAY_EXTERNAL_EXCEPTIONS, SERVER_USES_CLIENT_LIB, checkBoundaries, type Violation } from './importboundaries';
@@ -99,7 +99,6 @@ describe('the workspace aliases', () => {
    */
   const packages = readdirSync(join(root, 'packages'))
     .filter((d) => statSync(join(root, 'packages', d)).isDirectory())
-    .filter((d) => existsSync(join(root, 'packages', d, 'src', 'index.ts')))
     .map((dir) => ({ dir, name: (JSON.parse(readFileSync(join(root, 'packages', dir, 'package.json'), 'utf8')) as { name: string }).name }));
   const tsconfig = readFileSync(join(root, 'app/tsconfig.app.json'), 'utf8');
   const vite = readFileSync(join(root, 'app/vite.config.ts'), 'utf8');
@@ -141,6 +140,11 @@ describe('each rule can fail', () => {
   it('packages-are-a-leaf: and a test may import vitest and a built-in, and nothing more', () => {
     expect(check(clean({ 'packages/contract/src/a.test.ts': "import { it } from 'vitest'; import fs from 'node:fs';" }))).toEqual([]);
     expect(rulesIn(check(clean({ 'packages/contract/src/a.test.ts': "import z from 'zod';" })))).toEqual(['packages-are-a-leaf']);
+  });
+
+  it('packages-are-a-leaf: a package CLI may use Node, but its source entry may not', () => {
+    expect(check(clean({ 'packages/contract/scripts/check.ts': "import fs from 'node:fs';" }))).toEqual([]);
+    expect(rulesIn(check(clean({ 'packages/contract/src/check.ts': "import fs from 'node:fs';" })))).toEqual(['packages-are-a-leaf']);
   });
 
   it('functions-are-self-contained: a function importing the app, or a bare specifier', () => {

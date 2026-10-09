@@ -40,7 +40,7 @@ git clone https://github.com/harrisonjrubin7-cmyk/semester.git
 cd semester
 ```
 
-The repository's root `package.json` is a workspace root for `app` and `packages/*` and defines only the platform-control orchestration scripts; it holds the one lockfile. Install at the root, then run app commands from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says. At the root, `npm test` still fails with "Missing script" instead of running the app suite; use the explicitly named `registry:*`, `release:check`, or `platform-control:test` commands there.
+The repository's root `package.json` is a workspace root for `app` and `packages/*` and defines only repository-wide platform-control scripts; it holds the one lockfile. Install at the root, then run app commands from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says. The root commands validate and build the platform-control registry and produce its fail-closed release report; the app test suite still runs from `app/`.
 
 ## 3. Check main first
 
