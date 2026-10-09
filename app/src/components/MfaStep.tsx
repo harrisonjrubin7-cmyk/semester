@@ -101,6 +101,20 @@ export function MfaStep({
     }
   };
 
+  const resendPhone = async () => {
+    if (factorType !== 'phone' || !factorId) return;
+    setBusy(true);
+    setError('');
+    setCode('');
+    try {
+      setChallengeId(await challengeMfa(factorId));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not send a new verification code.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const verify = async () => {
     setBusy(true);
     setError('');
@@ -176,6 +190,11 @@ export function MfaStep({
             <button type="submit" className="btn btn-primary btn-block" disabled={busy || code.replace(/\s+/g, '').length < 6} style={{ flex: 1 }}>
               {stage === 'enrol' ? 'Enrol and verify' : 'Verify'}
             </button>
+            {stage === 'challenge' && factorType === 'phone' && (
+              <ActionButton tone="secondary" onClick={() => void resendPhone()} disabled={busy} style={{ flex: 1 }}>
+                Send a new code
+              </ActionButton>
+            )}
             {onCancel && (
               <ActionButton tone="secondary" onClick={onCancel} style={{ flex: 1 }}>
                 Cancel

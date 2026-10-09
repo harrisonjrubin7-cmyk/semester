@@ -160,4 +160,20 @@ describe('MfaStep', () => {
     await submit();
     expect(mock.verify).toHaveBeenCalledWith('phone-2', 'ch-1', '135790');
   });
+
+  it('can replace an expired phone challenge without reloading the app', async () => {
+    mock.factors.mockResolvedValue([{ id: 'phone-1', name: 'Mobile', type: 'phone' }]);
+    mock.challenge.mockResolvedValueOnce('expired-challenge').mockResolvedValueOnce('fresh-challenge');
+    mock.verify.mockRejectedValueOnce(new Error('Challenge expired')).mockResolvedValueOnce(undefined);
+    await render();
+    typeCode('246810');
+    await submit();
+    expect(host.querySelector('[role=alert]')?.textContent).toContain('Challenge expired');
+    await act(async () => button('Send a new code').click());
+    expect(mock.challenge).toHaveBeenCalledTimes(2);
+    typeCode('135790');
+    await submit();
+    expect(mock.verify).toHaveBeenLastCalledWith('phone-1', 'fresh-challenge', '135790');
+    expect(onVerified).toHaveBeenCalledTimes(1);
+  });
 });
