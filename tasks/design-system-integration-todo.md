@@ -425,9 +425,32 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Add private shared `course-materials` metadata and controlled lifecycle operations that resolve the current policy authority and bind its exact id/version to an exact tenant/course/term plus current `course:publish` grant.
-- [ ] Preserve policy withdrawal as a gate on new intake while keeping already-bound material governed by its recorded version and legal-hold precedence.
+- [x] Add private shared `course-materials` metadata and controlled lifecycle operations that resolve the current policy authority and bind its exact id/version to an exact tenant/course/term plus current `course:publish` grant.
+- [x] Preserve policy withdrawal as a gate on new intake while keeping already-bound material governed by its recorded version and legal-hold precedence.
 - [ ] Keep storage receipts, scan settlement, extraction and signed reads closed until a trustworthy private runtime exists; do not reuse student ownership as faculty/institution authority.
+
+## 2026-10-08 shared course-material metadata — automation pass 14, slice 22
+
+- [x] Fetch and inspect `origin/main`; merge `845645d3` on the clean branch before production edits, then inspect final `de9ee702` and confirm its registration-readiness package/docs do not overlap this dirty slice or collide with its migration.
+- [x] Reuse the Course Studio `<tenant>/<COURSE>` authority key, `course:publish` capability and canonical term grammar; do not bind faculty material to a student's private `public.courses` row.
+- [x] Add deny-by-default metadata for one exact tenant/course/term, internal object-key plan, bounded filename/type/size and exact retention-policy id/version/duration.
+- [x] Require service role, a current exact course-scoped publisher grant and an expected policy id/version equal to the current active resolver result before new intake.
+- [x] Add request-hash idempotent plan, withdrawal and restore operations with append-only receipts and pseudonymous content-free audit in the same transaction.
+- [x] Prove policy withdrawal blocks new intake and restore while existing rows retain their original policy binding; prove a later active version permits restore without rebinding history.
+- [x] Refuse direct client/service writes and physical deletion; leave a future retention purge responsible for elapsed policy duration and tenant/platform legal-hold precedence.
+- [x] Update the table classification, retention schedule, course-source authority and integration controls.
+- [x] PostgreSQL 17 applies all 216 migrations twice with 376 unchanged table fingerprints; 24 focused and 188 adjacent checks pass, including exact policy/grant, RLS/grant/index, legal-hold and student-source proof.
+- [x] TypeScript, lint, university typecheck and production build pass; lint retains the existing four-warning baseline and build retains existing chunk warnings.
+- [x] Focused repository contracts pass 167/167; token/tooling/style contracts pass 78/78; design audit has zero violations with the existing 86-warning ledger, CSS stays within its ledger and the report regenerates without drift.
+- [ ] Ordered and shuffled full suites — not rerun in this database-only slice. Prior runs remain non-green for the recorded runner-mounted `.semester-reference`, timeout and teardown conditions; no focused slice test fails.
+- [ ] HawkScan DAST — required for this production schema change but unavailable because `hawk` is absent and `HAWK_API_KEY` is unset; no scan or security pass is claimed.
+- [ ] Bucket/object provisioning, trusted storage/scanner receipts, extraction, signed reads, browser routes, UI wiring, deployment and institutional operation remain unimplemented and unverified.
+
+### Next implementation boundary
+
+- [ ] Reconcile the next dependency-ready Course Engine slice against the still-absent private bucket/scanner runtime; do not synthesize storage or scan evidence.
+- [ ] Keep Import/Study Studio server wiring closed until route authentication, rate limiting, private object policy and actual adapter evidence can satisfy the existing contract.
+- [ ] Do not add a Course Engine route, parallel course model or client-readable shared-material table.
 
 ## Earlier integration baseline preserved
 

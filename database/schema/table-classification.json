@@ -173,6 +173,8 @@
    "community_sessions",
    "community_volunteer_votes",
    "connections",
+   "course_material_operations",
+   "course_materials",
    "course_source_corrections",
    "course_source_operations",
    "course_sources",

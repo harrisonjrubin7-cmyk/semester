@@ -1,10 +1,23 @@
 # Handoff integration status
 
-**Automation pass** 13 of 120 · **Integration slice** 21 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `845645d3`
+**Automation pass** 14 of 120 · **Integration slice** 22 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `de9ee702`
 
 ## State
 
-Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student-source metadata/storage-receipt/scan-settlement/correction/recovery persistence and the versioned tenant authority for shared-material retention are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Private buckets, byte storage, deployed scanning, extraction, routes and current-screen wiring remain absent; shared course-material persistence remains closed until controlled metadata binds the exact policy version and course-scoped publisher. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student-source persistence, versioned shared-material retention authority and private shared-material metadata/lifecycle are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Private buckets, byte storage, deployed scanning, extraction, routes and current-screen wiring remain absent. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 14 / slice 22
+
+- The clean branch fetched and merged `origin/main` `845645d3` before production edits. A final dirty-tree fetch observed `de9ee702`; its registration-readiness projection changes six non-overlapping package/docs files and contains no equivalent course-material work or migration collision, so it was not merged or rebased into this slice.
+- `20261009003000_course_material_metadata.sql` adds private metadata and append-only operation history only. It provisions no bucket, object, scanner, extractor, storage/scan receipt, signed read, browser route or UI.
+- New intake requires service role, the named actor's current profile at the tenant, a live exact-course `course:publish` grant and an expected retention id/version equal to the current active resolver result. Tenant, course, term, publisher, planned internal key and original policy authority are bound in one row.
+- Plan, withdrawal and restore use actor/action-scoped request-hash idempotency. Each appends pseudonymous content-free audit and an immutable receipt atomically; forced audit failure rolls state and receipt back.
+- A withdrawn latest policy blocks new intake and restore without rewriting existing material. A later active policy permits restore while the material remains governed by its original id/version/duration. Physical metadata deletion is refused until a separate hold-aware purge implements elapsed duration and tenant/platform hold precedence.
+- Client roles have no table policy or table/function privilege; service role has read-only reconciliation access and cannot bypass the controlled writers.
+- PostgreSQL 17 applies all 216 migrations twice with the schema and all 376 table fingerprints unchanged. The new suite passes 24 checks; retention-policy, Course Studio, grants, RLS, indexes, legal holds and student-source persistence/settlement bring the focused SQL total to 212/212.
+- TypeScript, lint, university typecheck and production build pass. Lint retains the existing four-warning baseline and the build retains its existing chunk warnings. Focused repository contracts pass 167/167; design token/tooling/style contracts pass 78/78, design audit has zero violations within the existing 86-warning ledger, CSS stays within its ledger and the report regenerates without drift.
+- Ordered and shuffled full suites were not rerun for this database-only slice; their previously recorded runner-mount, timeout and teardown caveats remain separate, and no focused slice test failed.
+- HawkScan remains unavailable because both the runtime and API key are absent. No DAST result or security pass is claimed.
 
 ## Evidence locked in automation pass 13 / slice 21
 
@@ -243,7 +256,7 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Completed local slice gate
 
-The projection database proof and reapply evidence remain green from slice 15. Slice 16's 43 focused tests, generated-reference guards and phase gates remain green; slice 17's 16-row structural and 22/22 design-tooling checks remain green; slice 18's authority contract remains green. Slice 19 and slice 20 retain their student-source persistence/settlement proof. Slice 21 applies all 215 migrations twice with 374 unchanged table fingerprints; passes 16 focused policy checks and its adjacent SQL proof; and passes TypeScript, lint, university typecheck, production build, 176 focused app contracts and 147 design token/style contracts. Design audit/CSS/report are green within existing ledgers. The aggregate design launchers remain unavailable because they hardcode absent `npm`; their runnable constituents were invoked directly. Ordered and shuffled full suites retain the previously recorded runner-mount, timeout and teardown caveats. HawkScan remains explicitly open. Bucket provisioning, bytes, extraction, routes, current-screen wiring and operating deployment remain separate.
+The projection database proof and reapply evidence remain green from slice 15. Slice 16's 43 focused tests, generated-reference guards and phase gates remain green; slice 17's 16-row structural and 22/22 design-tooling checks remain green; slice 18's authority contract remains green. Slice 19 and slice 20 retain their student-source persistence/settlement proof. Slice 21 retains its versioned policy proof. Slice 22 applies all 216 migrations twice with 376 unchanged table fingerprints, passes 212 focused/adjacent SQL checks, 167 focused repository contracts and 78 design contracts, plus TypeScript, lint, university typecheck, production build, design audit/CSS/report. Ordered/shuffled full-suite caveats and HawkScan remain explicitly open. Bucket provisioning, bytes, extraction, routes, current-screen wiring and operating deployment remain separate.
 
 ## External gates kept open
 
@@ -251,7 +264,7 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Add only the shared `course-materials` metadata and controlled lifecycle boundary that resolves the current private retention authority, binds its exact id/version to an exact tenant/course/term and current `course:publish` grant, preserves append-only provenance/audit and fails closed after policy withdrawal. Do not provision a bucket or scanner, synthesize receipts, expose upload/download routes, wire Import/Study Studio or add a Course Engine route/parallel course model until the corresponding private runtime and route prerequisites exist.
+Reconcile the next Course Engine dependency against the absent private bucket/scanner runtime. Do not synthesize storage/scan evidence, expose upload/download routes, wire Import/Study Studio or add a Course Engine route/parallel course model until private object policy, trusted adapter, route authorization and rate-limit prerequisites exist.
 
 ## Hold-aware projection-history retention — automation runner pass 5, slice 13
 
