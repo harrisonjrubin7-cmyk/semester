@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 33 of 120 · **Integration slice** 41 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
+**Automation pass** 34 of 120 · **Integration slice** 42 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 34 / slice 42
+
+- Current `origin/main` remains `0d8f70b2`, already merged into the branch; no equivalent Student Operating deletion-preview work landed.
+- Whole Student Operating workspace deletion now uses `ConfirmDialog` plus `ActionPreview`. It names the current workflow-item count, saved preferences, unsaved editor/review/handoff-draft state, the existing optional account-sync effect, outside-Semester non-effects and the lack of recovery without a prior export.
+- Cancel leaves the workspace unchanged. Only explicit **Delete workspace** confirmation dispatches the existing `setOperatingWorkspace: null` mutation and clears the local editor state. No route, shared component, dependency, schema, server operation, provider, deployment or external system changed.
+- The regression was proved red against the old inline confirmation; Student Operating, ActionPreview and modal tests then pass 23/23.
+- TypeScript, lint, university typecheck and production build pass. Existing baselines remain four lint warnings and the build chunk warning. Token export passes 9/9, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and 69/69 design contracts pass.
+- The report regenerates, but both aggregate design launchers invoke unavailable `npm`; no aggregate launcher pass is claimed. Ordered and shuffled full suites were not rerun after pass 30's green 23,872-test baseline.
+- HawkScan preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. No target, DAST result or security pass is claimed.
+- Permanent file purge, server-backed revocation and scanner/extractor-backed Import wiring remain separate and open.
 
 ## Evidence locked in automation pass 33 / slice 41
 

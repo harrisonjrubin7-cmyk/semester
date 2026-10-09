@@ -410,6 +410,16 @@ The focused regression was proved red first because the prior hand-written confi
 
 The active HawkScan skill stopped at preflight: `hawk` is absent, its v6 config/skill checks cannot run, Docker is absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. A local properties file exists but was not read. No target was started and no DAST result or security pass is claimed. Permanent file purge remains non-ready; the next local consequence-pattern slice must again be selected only where authority, external effect and recovery are already explicit.
 
+## Governed Student Operating workspace deletion — automation pass 34, slice 42
+
+Current `origin/main` remains `0d8f70b2`, already merged into the clean pre-slice branch; its registration-readiness and Course Engine work contains no equivalent Student Operating deletion preview. Re-ranking selected the existing whole-workspace delete because ownership and effects are explicit: it clears the private operating manual and saved workflow items through the existing state authority, syncs that deletion only when account sync is enabled, changes no official record and does not delete artifacts already exported outside Semester.
+
+The hand-written inline question now uses the shared `ConfirmDialog` and `ActionPreview`. The preview reports the current workflow-item count, names saved preferences plus workflow items and unsaved editor/review/handoff-draft state as the payload, distinguishes downloaded exports, separately imported calendar entries and official records as non-effects, and states that recovery requires exporting a backup before deletion. Cancel leaves the workspace intact; only the explicit **Delete workspace** action dispatches the unchanged `setOperatingWorkspace: null` mutation and resets local editor state. No route, shared component, dependency, schema, server operation, provider or external system changed.
+
+The regression was proved red first because the old confirmation had no dialog. The Student Operating, ActionPreview and modal suites then pass 23/23. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. Token export passes 9/9, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and 69/69 design contracts pass. The report regenerates, then its wrapper exits because it invokes unavailable `npm`; the aggregate design-check launcher has the same environment limitation, so only the exact green constituents are claimed. Ordered/shuffled full suites were not rerun after pass 30's green baseline.
+
+HawkScan preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`, so no target, DAST result or security pass is claimed. Permanent file purge, server-backed revocation and the scanner/extractor adapter remain separate. The next safe slice must again re-rank consequential actions against current authority, external effects and recovery.
+
 ## What was read
 
 - Root `CLAUDE.md`.

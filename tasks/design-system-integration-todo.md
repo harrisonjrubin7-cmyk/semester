@@ -862,6 +862,27 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep permanent file purge separate until its trash, retention and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-09 governed Student Operating workspace deletion — automation pass 34, slice 42
+
+- [x] Fetch current `origin/main` `0d8f70b2`, confirm it is already merged and find no equivalent Student Operating deletion-preview work.
+- [x] Select the whole Student Operating workspace deletion after re-ranking; keep permanent file purge, server revocations and scanner-backed Import wiring separate.
+- [x] Replace the hand-written inline question with the existing `ConfirmDialog` and `ActionPreview`; add no route, shared component, dependency, schema or server operation.
+- [x] Name the current workflow-item count, saved preferences, unsaved editor/review/handoff-draft state and account-sync behavior; separately preserve downloaded exports, imported calendar entries and official records.
+- [x] State that deletion cannot be undone and direct the student to export a backup first when recovery is needed.
+- [x] Preserve the existing state mutation and editor reset, safe cancel-first modal behavior and explicit-confirmation-only write.
+- [x] Prove the guard red against the old inline confirmation, then pass 23/23 Student Operating, ActionPreview and modal tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass token export 9/9, design audit with zero violations and 86 existing warnings, CSS ledger checks and 69/69 design contracts.
+- [ ] Aggregate `design-system:check` and report launchers — both invoke unavailable `npm`; exact constituents pass and the report regenerates before its wrapper exits.
+- [ ] Ordered and shuffled full suites — not rerun after pass 30's green 23,872-test baseline; no full-suite result is claimed for this slice.
+- [ ] HawkScan DAST — preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining consequence-pattern gaps and choose only a bounded action with explicit ownership, external effects and recovery.
+- [ ] Keep permanent file purge separate until its trash, retention and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.
