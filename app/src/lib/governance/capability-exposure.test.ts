@@ -237,6 +237,35 @@ describe('capability exposure resolver', () => {
     expect(validateCapabilityExposureIndex(mutated)).toContain(`Invalid incident owner: ${invalid.capabilityId}.`);
   });
 
+  it('rejects drift across the remaining canonical contract fields', () => {
+    const original = CAPABILITY_EXPOSURE_INDEX[0]!;
+    const invalid: CapabilityExposureIndexEntry = {
+      ...original,
+      routes: [],
+      coreEntities: CAPABILITY_EXPOSURE_INDEX[1]!.coreEntities,
+      productMaturity: 'L9',
+      profileIds: [],
+      requiredOperationalChecks: [...OPERATIONAL_READINESS_CHECKS].reverse() as unknown as typeof OPERATIONAL_READINESS_CHECKS,
+      supportOwner: 'operations',
+      rollback: 'different fallback',
+      evidenceRefs: [],
+      platforms: ['pwa', 'web'],
+      mobileExperience: { ...original.mobileExperience, acceptance: 'different acceptance' },
+    };
+    const mutated = [invalid, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toEqual(expect.arrayContaining([
+      `Invalid routes: ${invalid.capabilityId}.`,
+      `Invalid core entities: ${invalid.capabilityId}.`,
+      `Invalid product maturity: ${invalid.capabilityId}.`,
+      `Invalid release profiles: ${invalid.capabilityId}.`,
+      `Invalid operational checks: ${invalid.capabilityId}.`,
+      `Invalid support owner: ${invalid.capabilityId}.`,
+      `Invalid fallback: ${invalid.capabilityId}.`,
+      `Invalid evidence refs: ${invalid.capabilityId}.`,
+      `Invalid mobile posture: ${invalid.capabilityId}.`,
+    ]));
+  });
+
   it('authorizes live only for an exact production release of an included standard capability', () => {
     expect(resolveCapabilityExposure('CAP-001', context({ surface: 'marketing' }))).toMatchObject({
       status: 'live',

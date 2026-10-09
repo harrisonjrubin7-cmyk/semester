@@ -252,6 +252,7 @@ export function validateCapabilityExposureIndex(
 
   for (const entry of exposureIndex) {
     const canonicalCapability = capabilityDefinition(entry.capabilityId);
+    const canonicalEntry = CAPABILITY_EXPOSURE_INDEX.find((candidate) => candidate.capabilityId === entry.capabilityId);
     if (!entry.coreEntities.length || entry.coreEntities.some((entity) =>
       [entity.classification, entity.authority, entity.purpose, entity.retention].some((value) => !value.trim()))) {
       errors.push(`Incomplete core entities: ${entry.capabilityId}.`);
@@ -282,6 +283,46 @@ export function validateCapabilityExposureIndex(
         errors.push(`Invalid audiences: ${entry.capabilityId}.`);
       }
     }
+    if (canonicalEntry) {
+      const sameValues = <T>(actual: readonly T[], expected: readonly T[]) =>
+        actual.length === expected.length && expected.every((value, index) => actual[index] === value);
+      const sameCoreEntities = entry.coreEntities.length === canonicalEntry.coreEntities.length
+        && canonicalEntry.coreEntities.every((expected, index) => {
+          const actual = entry.coreEntities[index];
+          return actual?.authority === expected.authority
+            && actual.classification === expected.classification
+            && actual.purpose === expected.purpose
+            && actual.retention === expected.retention;
+        });
+      if (!sameValues(entry.routes, canonicalEntry.routes)) errors.push(`Invalid routes: ${entry.capabilityId}.`);
+      if (!sameCoreEntities) errors.push(`Invalid core entities: ${entry.capabilityId}.`);
+      if (Object.keys(canonicalEntry.governance).some((key) =>
+        entry.governance[key as keyof typeof entry.governance]
+          !== canonicalEntry.governance[key as keyof typeof canonicalEntry.governance])) {
+        errors.push(`Invalid governance: ${entry.capabilityId}.`);
+      }
+      if (entry.productMaturity !== canonicalEntry.productMaturity) errors.push(`Invalid product maturity: ${entry.capabilityId}.`);
+      if (!sameValues(entry.profileIds, canonicalEntry.profileIds)) errors.push(`Invalid release profiles: ${entry.capabilityId}.`);
+      if (!sameValues(entry.requiredOperationalChecks, canonicalEntry.requiredOperationalChecks)) {
+        errors.push(`Invalid operational checks: ${entry.capabilityId}.`);
+      }
+      if (entry.supportOwner !== canonicalEntry.supportOwner) errors.push(`Invalid support owner: ${entry.capabilityId}.`);
+      if (entry.rollback !== canonicalEntry.rollback) errors.push(`Invalid fallback: ${entry.capabilityId}.`);
+      if (!sameValues(entry.evidenceRefs, canonicalEntry.evidenceRefs)) errors.push(`Invalid evidence refs: ${entry.capabilityId}.`);
+      if (!sameValues(entry.platforms, canonicalEntry.platforms)
+        || entry.nativeMobile !== canonicalEntry.nativeMobile
+        || entry.mobileExperience.current !== canonicalEntry.mobileExperience.current
+        || entry.mobileExperience.native !== canonicalEntry.mobileExperience.native
+        || entry.mobileExperience.acceptance !== canonicalEntry.mobileExperience.acceptance) {
+        errors.push(`Invalid mobile posture: ${entry.capabilityId}.`);
+      }
+      if (entry.operations.audit !== canonicalEntry.operations.audit
+        || entry.operations.support !== canonicalEntry.operations.support
+        || entry.operations.incident !== canonicalEntry.operations.incident
+        || entry.operations.supportOwner !== canonicalEntry.operations.supportOwner) {
+        errors.push(`Invalid operations contract: ${entry.capabilityId}.`);
+      }
+    }
     if (!MATURITY_LEVELS.includes(entry.productMaturity)) errors.push(`Unknown product maturity: ${entry.capabilityId}.`);
     if (entry.permittedExposureStates.length !== CAPABILITY_EXPOSURE_STATES.length
       || CAPABILITY_EXPOSURE_STATES.some((state, index) => entry.permittedExposureStates[index] !== state)) {
@@ -291,7 +332,9 @@ export function validateCapabilityExposureIndex(
     if (entry.valueMeasures.length !== requiredValueMeasureIds.length
       || new Set(valueMeasureIds).size !== requiredValueMeasureIds.length
       || requiredValueMeasureIds.some((id) => !valueMeasureIds.includes(id))
-      || entry.valueMeasures.some((measure) => !measure.definition.trim())) {
+      || entry.valueMeasures.some((measure) => !measure.definition.trim()
+        || measure.collection !== 'device-local-or-approved-aggregate'
+        || measure.evidenceStatus !== 'measurement-requirement-not-live-result')) {
       errors.push(`Incomplete value measures: ${entry.capabilityId}.`);
     }
     if (!entry.rollback.trim()) errors.push(`Missing fallback: ${entry.capabilityId}.`);
