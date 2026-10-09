@@ -53,6 +53,16 @@ const button = (text: string) => {
 
 const click = (el: Element) => act(() => (el as HTMLElement).click());
 
+const type = (label: string, value: string) => {
+  const field = host.querySelector(`[aria-label="${label}"]`) as HTMLInputElement | HTMLTextAreaElement | null;
+  if (!field) throw new Error(`no field "${label}"`);
+  const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(field), 'value')?.set;
+  act(() => {
+    setter?.call(field, value);
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+};
+
 describe('Launchpad', () => {
   it('adds the international steps when the student says they are one, and removes nothing', () => {
     draw(<Launchpad />);
@@ -113,6 +123,31 @@ describe('Opportunities', () => {
     click(button('+ Study abroad'));
     expect(host.textContent).not.toContain('Work-study position');
     expect(host.textContent).toContain('not legal advice');
+  });
+
+  it('previews the exact local consequence before deleting an opportunity', () => {
+    draw(<Opportunities />);
+    click(button('+ Research'));
+    type('Title', 'Water quality fellowship');
+    type('Organization', 'River Lab');
+    type('Notes', 'Ask Dr. Chen about the field schedule.');
+
+    click(button('Delete this'));
+    expect(host.textContent).toContain('Delete this opportunity?');
+    expect(host.textContent).toContain('Water quality fellowship');
+    expect(host.textContent).toContain('stage, deadline, source link, checklist');
+    expect(host.textContent).toContain('Other tracked opportunities, your weekly time budget');
+    expect(host.textContent).toContain('There is no undo or backup for this tracker.');
+    expect(host.textContent).toContain('Ask Dr. Chen about the field schedule.');
+
+    click(button('Cancel'));
+    expect((host.querySelector('[aria-label="Title"]') as HTMLInputElement).value).toBe('Water quality fellowship');
+    expect((host.querySelector('[aria-label="Notes"]') as HTMLTextAreaElement).value).toBe('Ask Dr. Chen about the field schedule.');
+
+    click(button('Delete this'));
+    click(button('Delete opportunity'));
+    expect(host.textContent).not.toContain('Water quality fellowship');
+    expect(host.textContent).toContain('Nothing here yet.');
   });
 });
 
