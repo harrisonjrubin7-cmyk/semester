@@ -191,13 +191,13 @@ begin
   perform pg_temp.counted('retrying one reply operation does not duplicate its email intent', n, 1);
   select message_id into notice_message from public.support_notification_outbox where ticket_id = a11y;
   perform pg_temp.must_refuse('a student cannot claim support-notification work', ada,
-    format('select count(*) from public.claim_support_notifications(%L, 1)', notice_message));
+    format('select count(*) from public.claim_support_notifications(%L, 1, now() - interval ''1 minute'')', notice_message));
   execute 'set local role service_role';
-  select count(*) into n from public.claim_support_notifications(notice_message, 1);
+  select count(*) into n from public.claim_support_notifications(notice_message, 1, now() - interval '1 minute');
   execute 'reset role';
   perform pg_temp.counted('the delivery worker atomically claims the pending notice', n, 1);
   execute 'set local role service_role';
-  select count(*) into n from public.claim_support_notifications(notice_message, 1);
+  select count(*) into n from public.claim_support_notifications(notice_message, 1, now() - interval '1 minute');
   execute 'reset role';
   perform pg_temp.counted('an overlapping worker cannot claim the same notice', n, 0);
   select count(*) into n from public.support_notification_outbox
@@ -238,6 +238,22 @@ begin
   select count(*) into n from public.support_notification_outbox
    where ticket_id = a11y and accepted_at is null and dead_lettered_at is null;
   perform pg_temp.counted('a failed claimed notice is cancelled after the student opted out', n, 0);
+
+  -- Vendor activation begins a new delivery epoch. A parked-period intent is
+  -- removed, not released as stale email when the worker is later enabled.
+  select id into notice_message from public.support_ticket_messages
+   where ticket_id = a11y order by created_at limit 1;
+  insert into public.support_notification_outbox (message_id, ticket_id, queued_at, next_attempt_at)
+  values (notice_message, a11y, now() - interval '2 days', now() - interval '2 days');
+  update public.support_tickets set email_notice_enabled = true where id = a11y;
+  execute 'set local role service_role';
+  select count(*) into n
+    from public.claim_support_notifications(notice_message, 1, now() - interval '1 minute');
+  execute 'reset role';
+  perform pg_temp.counted('activation does not claim a notice queued while vendor delivery was parked', n, 0);
+  select count(*) into n from public.support_notification_outbox where message_id = notice_message;
+  perform pg_temp.counted('the activation boundary cancels the parked-period notice', n, 0);
+
   perform pg_temp.become_mfa(agent);
   begin
     perform public.support_reply(a11y, 'closing', 'closed', gen_random_uuid());

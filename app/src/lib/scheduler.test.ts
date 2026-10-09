@@ -143,6 +143,88 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     expect(parked(scheduler())).toEqual(new Set(['push', 'escalation-delivery', 'media-scan', 'support-reply-notify']));
   });
 
+  it('parks vendor-gated support email and reactivates the credential-free retention clock', () => {
+    const sql = scheduler();
+    expect(sql).toMatch(/cron\.alter_job\([\s\S]*?jobname\s*=\s*'support-reply-notify'[\s\S]*?active\s*:=\s*false/);
+    expect(sql).toMatch(/cron\.alter_job\([\s\S]*?jobname\s*=\s*'support-ticket-retention'[\s\S]*?active\s*:=\s*true/);
+  });
+
+  it('installs the credential-free support retention job with its migration', () => {
+    const migration = read(join(MIGRATIONS, '20261008195500_support_ticket_retention.sql'));
+    expect(migration).toMatch(/cron\.schedule\([\s\S]*?'support-ticket-retention'/);
+    expect(migration).toMatch(/cron\.alter_job\([\s\S]*?jobname\s*=\s*'support-ticket-retention'[\s\S]*?active\s*:=\s*true/);
+    expect(migration).toMatch(/create index if not exists support_tickets_retention_due[\s\S]*?where retention_classified[\s\S]*?tenant_id is null/);
+    expect(migration).toMatch(/jobname = 'support-reply-notify'[\s\S]*?active := false/);
+  });
+
+  it('serializes support-ticket deletion with legal-hold writes', () => {
+    const migration = read(join(MIGRATIONS, '20261008195500_support_ticket_retention.sql'));
+    const functions = [
+      'create or replace function private.sweep_support_ticket_retention()',
+      'create or replace function public.forget_my_support_tickets()',
+    ];
+    for (const signature of functions) {
+      const start = migration.indexOf(signature);
+      const end = migration.indexOf('end $$;', start);
+      const body = migration.slice(start, end);
+      const lock = body.indexOf('lock table public.legal_holds in share mode;');
+      const holdCheck = body.indexOf('private.account_is_held');
+      const tenantHoldCheck = body.indexOf('private.tenant_is_held');
+      const deletion = body.indexOf('delete from public.support_tickets');
+      expect(start).toBeGreaterThanOrEqual(0);
+      expect(lock).toBeGreaterThanOrEqual(0);
+      expect(holdCheck).toBeGreaterThanOrEqual(0);
+      expect(tenantHoldCheck).toBeGreaterThanOrEqual(0);
+      expect(deletion).toBeGreaterThanOrEqual(0);
+      expect(lock).toBeLessThan(holdCheck);
+      expect(lock).toBeLessThan(tenantHoldCheck);
+      expect(lock).toBeLessThan(deletion);
+    }
+
+    const directStart = migration.indexOf(
+      'create or replace function public.forget_my_support_tickets()',
+    );
+    const directEnd = migration.indexOf('end $$;', directStart);
+    const directBody = migration.slice(directStart, directEnd);
+    const profileLock = directBody.indexOf('from public.profiles p');
+    const membershipHoldCheck = directBody.indexOf('private.account_is_held');
+    const directDeletion = directBody.indexOf('delete from public.support_tickets');
+    expect(profileLock).toBeGreaterThanOrEqual(0);
+    expect(directBody.slice(profileLock, membershipHoldCheck)).toMatch(/for update of p/);
+    expect(profileLock).toBeLessThan(membershipHoldCheck);
+    expect(profileLock).toBeLessThan(directDeletion);
+  });
+
+  it('snapshots only a signed deployment tenant and locks membership through ticket creation', () => {
+    const migration = read(join(MIGRATIONS, '20261008195500_support_ticket_retention.sql'));
+    expect(migration).toMatch(/add column if not exists tenant_id text/);
+    expect(migration).toMatch(/add column if not exists retention_classified boolean not null default false/);
+    expect(migration).toMatch(/add column if not exists retention_subject_id uuid/);
+    expect(migration).toMatch(/alter column student_id drop not null/);
+    expect(migration).toMatch(/support_ticket_live_or_preserved_subject check/);
+    expect(migration).toMatch(/insert into public\.support_tickets[\s\S]*?\(student_id, tenant_id, retention_classified,/);
+    expect(migration).toMatch(/from public\.profiles p[\s\S]*?for update of p/);
+    expect(migration).toMatch(/lock table public\.billing_account_tenants, public\.contracts in share mode/);
+    expect(migration).toMatch(/public\.billing_account_tenants bt/);
+    expect(migration).toMatch(/join public\.contracts c/);
+    expect(migration).toMatch(/c\.kind = 'order_form'/);
+    expect(migration).toMatch(/c\.status = 'signed'/);
+    expect(migration).toMatch(/who, ticket_tenant, true,/);
+    expect(migration).not.toMatch(/update public\.support_tickets t[\s\S]*?from public\.profiles p/);
+    expect(migration).toMatch(/t\.status in \('resolved', 'closed'\)[\s\S]*?t\.retention_classified[\s\S]*?t\.tenant_id is null/);
+    expect(migration).toMatch(/t\.tenant_id is not null[\s\S]*?private\.tenant_is_held\(t\.tenant_id\)/);
+    expect(migration).toMatch(/active legal hold'[\s\S]*?errcode = '55006'/);
+    expect(migration).toMatch(/current_setting\('semester\.erasing_account', true\) is distinct from who::text[\s\S]*?not t\.retention_classified[\s\S]*?errcode = '55000'/);
+    expect(migration).toMatch(/current_setting\('semester\.erasing_account', true\) = who::text[\s\S]*?set retention_subject_id = student_id,[\s\S]*?student_id = null,[\s\S]*?email_notice_enabled = false,[\s\S]*?status = 'closed'[\s\S]*?and not retention_classified/);
+    expect(migration).toMatch(/support_ticket_queue\(\)[\s\S]*?where t\.student_id is not null/);
+    expect(migration).toMatch(/support_ticket_thread\(want_ticket uuid\)[\s\S]*?t\.student_id is not null/);
+    expect(migration).toMatch(/guard_preserved_support_ticket_message[\s\S]*?t\.student_id is null[\s\S]*?errcode = '55000'/);
+    expect(migration).toMatch(/drop function if exists public\.claim_support_notifications\(uuid, integer\)/);
+    expect(migration).toMatch(/claim_support_notifications\([\s\S]*?want_not_before timestamptz[\s\S]*?delete from public\.support_notification_outbox[\s\S]*?o\.queued_at < want_not_before[\s\S]*?o\.queued_at >= want_not_before/);
+    expect(migration).toMatch(/create or replace function private\.refuse_delete_while_held\(\)[\s\S]*?from public\.profiles p[\s\S]*?for update of p[\s\S]*?lock table public\.legal_holds in share mode[\s\S]*?private\.tenant_is_held\(t\.tenant_id\)[\s\S]*?delete from public\.support_notification_outbox[\s\S]*?delete from public\.support_access_grant[\s\S]*?student_id = null/);
+    expect(migration).toMatch(/create or replace function public\.reply_to_my_ticket\(want_ticket uuid, want_body text\)[\s\S]*?student_id = who[\s\S]*?status <> 'closed'[\s\S]*?for update of t[\s\S]*?update public\.support_tickets[\s\S]*?student_id = who[\s\S]*?status <> 'closed'/);
+  });
+
   it('finds sweep functions in the migrations, including one scheduled from the start', () => {
     const sweeps = [...functionsCreated()].filter((f) => SWEEP_SHAPE.test(f));
     expect(sweeps.length).toBeGreaterThan(8);
