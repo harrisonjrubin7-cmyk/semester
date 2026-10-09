@@ -5,12 +5,12 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from alembic import command
 from alembic.config import Config
 from alembic.migration import MigrationContext
 from sqlalchemy import create_engine, event, inspect, select
 from sqlalchemy.orm import Session
 
+from alembic import command
 from app.models.entities import Citation, Course, SourceChunk, SourceDocument, User
 
 

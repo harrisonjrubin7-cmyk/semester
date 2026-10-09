@@ -57,7 +57,7 @@ jobs:
       - name: Install API and test dependencies
         run: python -m pip install --disable-pip-version-check -e '.[dev]'
       - name: Lint API and worker
-        run: ruff check app tests ../../worker/tasks.py
+        run: ruff check app tests ../worker/tasks.py
       - name: Test API and real migrations
         run: pytest -q
 
