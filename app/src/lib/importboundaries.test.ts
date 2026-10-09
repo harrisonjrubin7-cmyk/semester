@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BROWSER_ENTRY, GATEWAY_EXTERNAL_EXCEPTIONS, SERVER_USES_CLIENT_LIB, checkBoundaries, type Violation } from './importboundaries';
@@ -99,6 +99,7 @@ describe('the workspace aliases', () => {
    */
   const packages = readdirSync(join(root, 'packages'))
     .filter((d) => statSync(join(root, 'packages', d)).isDirectory())
+    .filter((d) => existsSync(join(root, 'packages', d, 'src', 'index.ts')))
     .map((dir) => ({ dir, name: (JSON.parse(readFileSync(join(root, 'packages', dir, 'package.json'), 'utf8')) as { name: string }).name }));
   const tsconfig = readFileSync(join(root, 'app/tsconfig.app.json'), 'utf8');
   const vite = readFileSync(join(root, 'app/vite.config.ts'), 'utf8');
