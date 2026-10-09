@@ -30,6 +30,18 @@ def _confidence_nullable(connection) -> bool:
     return bool(column["nullable"])
 
 
+def _migrate(connection, operation, revision: str) -> None:
+    # Alembic's public command opens its own migration transaction. End any
+    # read-only inspection transaction so SQLite can safely toggle FK checks
+    # around its required batch-table rebuild, then prove they were restored.
+    if connection.in_transaction():
+        connection.commit()
+    operation(_config(connection), revision)
+    if connection.dialect.name == "sqlite":
+        assert connection.exec_driver_sql("PRAGMA foreign_keys").scalar_one() == 1
+        assert connection.exec_driver_sql("PRAGMA foreign_key_check").all() == []
+
+
 def _seed_cited_chunk(connection, confidence: float | None) -> tuple[object, object]:
     with Session(connection) as session:
         user = User(email=f"migration-{uuid4()}@example.com", password_hash="not-used")
@@ -73,15 +85,14 @@ def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed():
         )
 
     with engine.connect() as connection:
-        config = _config(connection)
-        command.upgrade(config, "head")
+        _migrate(connection, command.upgrade, "head")
         assert _confidence_nullable(connection)
 
-        command.downgrade(config, "0001_initial")
+        _migrate(connection, command.downgrade, "0001_initial")
         assert not _confidence_nullable(connection)
         chunk_id, citation_id = _seed_cited_chunk(connection, 0.75)
 
-        command.upgrade(config, "head")
+        _migrate(connection, command.upgrade, "head")
         assert _confidence_nullable(connection)
         assert connection.scalar(
             select(SourceChunk.confidence).where(SourceChunk.id == chunk_id)
@@ -90,8 +101,11 @@ def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed():
 
         unknown_chunk_id, unknown_citation_id = _seed_cited_chunk(connection, None)
         with pytest.raises(RuntimeError, match="unmeasured chunks exist"):
-            command.downgrade(config, "0001_initial")
+            _migrate(connection, command.downgrade, "0001_initial")
 
+        if engine.dialect.name == "sqlite":
+            assert connection.exec_driver_sql("PRAGMA foreign_keys").scalar_one() == 1
+            assert connection.exec_driver_sql("PRAGMA foreign_key_check").all() == []
         assert MigrationContext.configure(connection).get_current_revision() == "0002_review_first_confidence"
         assert connection.scalar(
             select(SourceChunk.confidence).where(SourceChunk.id == unknown_chunk_id)
@@ -104,12 +118,8 @@ def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed():
             SourceChunk.__table__.delete().where(SourceChunk.id == unknown_chunk_id)
         )
         connection.commit()
-        command.downgrade(config, "0001_initial")
+        _migrate(connection, command.downgrade, "0001_initial")
         assert not _confidence_nullable(connection)
         assert connection.scalar(select(Citation.id).where(Citation.id == citation_id)) == citation_id
-        command.upgrade(config, "head")
+        _migrate(connection, command.upgrade, "head")
         assert _confidence_nullable(connection)
-
-        if engine.dialect.name == "sqlite":
-            assert connection.exec_driver_sql("PRAGMA foreign_keys").scalar_one() == 1
-            assert connection.exec_driver_sql("PRAGMA foreign_key_check").all() == []
