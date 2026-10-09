@@ -33,6 +33,8 @@ The CSV records the matching mode, candidate labels, candidate routes, and catal
 
 The rendered inventory adds 98 routes that do not exist in the handoff route list. Each appears as a `rendered_only` row with catalog candidates where available. These additions are evidence of archive drift, not automatic requirements or production implementation.
 
+The supplemental `disposition` column defers to the canonical reconciliation. Five exact route matches use `excluded_by_canonical_D-1287` rather than `retain_exact_route`: `#/student/opportunities`, `#/student/market`, and the three `#/marketplace/*` routes. Their cross-source identities still match, but D-1287 remains the authoritative product-scope decision.
+
 ## Workspace route counts
 
 | Workspace | Handoff | Rendered | Delta |
