@@ -562,13 +562,13 @@ describe('the onboarding page', () => {
     expect(onboarding).toContain('`node-version: 22`');
     expect(JSON.parse(read('app/package.json')).engines, 'the page says no engines field').toBeUndefined();
     expect(existsSync(at('.nvmrc')), 'the page says there is no .nvmrc').toBe(false);
-    // The root manifest is the workspace root for app and packages/* (PRs 1180 and the C0 PR 1b that followed): it holds the one lockfile and no scripts, so `npm test` there fails with "Missing script".
+    // The root manifest holds the workspace lockfile and only cross-workspace platform-control commands.
     const root = JSON.parse(read('package.json')) as { private?: boolean; workspaces?: string[]; scripts?: object; engines?: { node?: string } };
     expect(root.private).toBe(true);
     expect(root.workspaces).toEqual(['app', 'packages/*']);
-    expect(root.scripts, 'the page says the root defines no scripts').toBeUndefined();
+    expect(Object.keys(root.scripts ?? {})).toEqual(['registry:validate', 'registry:build', 'release:check', 'release:report', 'platform-control:test']);
     expect(onboarding).toContain(`engines: { node: "${root.engines?.node}" }`);
-    expect(onboarding).toContain('workspace root for `app` and `packages/*` and defines no scripts');
+    expect(onboarding).toContain('only the platform-control registry commands');
     expect(existsSync(at('package-lock.json')), 'the page says the one lockfile is at the root').toBe(true);
     expect(existsSync(at('app/package-lock.json')), 'the page no longer mentions an app lockfile').toBe(false);
     expect(read('.github/workflows/ci.yml')).toContain('cache-dependency-path: package-lock.json');

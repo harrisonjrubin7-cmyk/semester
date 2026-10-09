@@ -939,6 +939,9 @@ export default defineConfig(({ command, mode }) => {
         '@semester/platform': fileURLToPath(
           new URL('../packages/platform/src/index.ts', import.meta.url),
         ),
+        '@semester/platform-control': fileURLToPath(
+          new URL('../packages/platform-control/src/index.ts', import.meta.url),
+        ),
       },
     },
     // GitHub Pages serves a project site from /<repo>/, not from the root. The
