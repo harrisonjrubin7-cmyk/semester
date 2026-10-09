@@ -89,10 +89,10 @@ do not yet express the school boundary (HECVAT TEN-1).
   limited to named scopes, and expires (`supabase/support-access.check.sql`).
 
 **MFA is partially enforced.** The shared server predicates require an aal2
-session for platform_admin and support_agent capability grants and role-based
-approval requests. The signed-in app challenges those accounts before mounting
-capability-backed tools, and the operations console independently challenges
-before protected reads. Verified TOTP and phone-code factors can be challenged;
+session for platform_admin and support_agent capability listings/checks and
+role-based approval requests. The signed-in app challenges those accounts
+before mounting capability-backed tools; ordinary console roles remain usable
+at aal1. Verified TOTP and phone-code factors can be challenged;
 TOTP can be enrolled. MFA is not yet enforced for every staff role or student
 account, and production Auth and provider-console configuration evidence
 has not been filed. This is not evidence of universal MFA or production-console

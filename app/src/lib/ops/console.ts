@@ -461,7 +461,7 @@ export const CAPABILITIES: readonly Capability[] = [
       { path: CHECK_A, how: 'Both branches: a claim set with a fresh totp entry passes, one without aal2 or with a stale timestamp raises' },
       { path: 'app/src/components/MfaStep.tsx', how: 'Enrol TOTP and challenge/verify before a privileged action' },
       { path: 'app/src/components/MfaStep.test.tsx', how: 'The step is shown when the assurance level is not aal2, and clears when verification succeeds' },
-      { path: CLIENT, how: 'mfaLevel, mfaFactors, enrollTotp, challengeMfa, verifyMfa, privilegedMfaRequired and sessionExpiry' },
+      { path: CLIENT, how: 'mfaLevel, mfaFactors, enrollTotp, challengeMfa, verifyMfa, privilegedMfaRequired, watchMfaSession and sessionExpiry' },
       { path: CLIENT_TEST, how: 'Each wrapper calls the supabase-js auth.mfa method it names' },
     ],
     note: 'SSO for operators is the institution SSO row (IAM-003); the console does not add a second sign-in.',

@@ -31,6 +31,7 @@ export function MfaStep({
   const [stage, setStage] = useState<'loading' | 'enrol' | 'challenge'>('loading');
   const [factorId, setFactorId] = useState('');
   const [factorType, setFactorType] = useState<MfaFactor['type']>('totp');
+  const [challengeId, setChallengeId] = useState('');
   const [enrolment, setEnrolment] = useState<TotpEnrolment | null>(null);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
@@ -46,6 +47,11 @@ export function MfaStep({
         if (factors.length > 0) {
           setFactorId(factors[0].id);
           setFactorType(factors[0].type);
+          if (factors[0].type === 'phone') {
+            const started = await challengeMfa(factors[0].id);
+            if (!live) return;
+            setChallengeId(started);
+          }
           setStage('challenge');
           return;
         }
@@ -68,6 +74,7 @@ export function MfaStep({
     setError('');
     setCode('');
     setFactorId('');
+    setChallengeId('');
     setEnrolment(null);
     setStage('loading');
     setAttempt((n) => n + 1);
@@ -77,8 +84,8 @@ export function MfaStep({
     setBusy(true);
     setError('');
     try {
-      const challengeId = await challengeMfa(factorId);
-      await verifyMfa(factorId, challengeId, code);
+      const activeChallenge = challengeId || await challengeMfa(factorId);
+      await verifyMfa(factorId, activeChallenge, code);
       onVerified();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'That code was not accepted.');

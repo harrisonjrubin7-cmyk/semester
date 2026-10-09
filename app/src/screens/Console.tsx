@@ -144,10 +144,11 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
     setNow(new Date());
   }, []);
 
-  const mfaReady = mfa !== null && typeof mfa !== 'string' && mfa.currentLevel === 'aal2';
+  const mfaKnown = mfa !== null && typeof mfa !== 'string';
 
-  // Assurance is the entry gate. Read it before mounting a workspace or
-  // issuing any capability-protected console read.
+  // Read assurance before mounting a workspace. The app-level privileged MFA
+  // boundary keeps platform_admin and support_agent out at aal1; ordinary
+  // console roles are deliberately allowed through by the database.
   useEffect(() => {
     let live = true;
     mfaLevel().then(
@@ -162,10 +163,10 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
   }, []);
 
   // The context bar and preferences are account-backed and protected by the
-  // same privileged-role boundary as the workspaces. Do not ask for them
-  // until the Auth session has reached aal2.
+  // same role boundary as the workspaces. Do not ask for them until assurance
+  // is known; ordinary console roles may legitimately remain at aal1.
   useEffect(() => {
-    if (!mfaReady) return;
+    if (!mfaKnown) return;
     let live = true;
     sessionExpiry().then(
       (at) => { if (live) setSession(at ?? 'No session'); },
@@ -188,7 +189,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       live = false;
       clearInterval(tick);
     };
-  }, [mfaReady, workspaces]);
+  }, [mfaKnown, workspaces]);
 
   const choose = (next: ConsoleWorkspaceId) => {
     setTab(next);
@@ -247,17 +248,6 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       </Page>
     );
   }
-  if (!mfaReady) {
-    return (
-      <Page blurb={BLURB}>
-        <MfaStep
-          reason="The operations console needs a second factor verified in this session before it can read privileged data."
-          onVerified={() => void readMfa()}
-        />
-      </Page>
-    );
-  }
-
   return (
     <Page blurb={BLURB}>
       <ContextBar context={{ env, scope, operator, grants, mfa, session, support, now }} />

@@ -934,6 +934,15 @@ export async function privilegedMfaRequired(): Promise<boolean> {
   return data === true;
 }
 
+/** Recheck the privileged boundary when Auth replaces or elevates the current session. */
+export async function watchMfaSession(onChange: () => void): Promise<() => void> {
+  const db = await cloud();
+  const { data } = db.auth.onAuthStateChange((event) => {
+    if (event !== 'INITIAL_SESSION') onChange();
+  });
+  return () => data.subscription.unsubscribe();
+}
+
 /** When the session's access token expires, or null when there is no session. */
 export async function sessionExpiry(): Promise<Date | null> {
   const db = await cloud();

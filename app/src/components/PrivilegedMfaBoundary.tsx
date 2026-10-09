@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { privilegedMfaRequired } from '../lib/console/client';
+import { privilegedMfaRequired, watchMfaSession } from '../lib/console/client';
 import { MfaStep } from './MfaStep';
 import { Trouble } from './Trouble';
 
@@ -33,7 +33,26 @@ export function PrivilegedMfaBoundary({ subject, children }: { subject: string |
     // The external Auth/database status is account-backed, not render-derived.
     // oxlint-disable-next-line react/set-state-in-effect
     void read();
-    return () => { request.current += 1; };
+    let live = true;
+    let stopAuth = () => {};
+    void watchMfaSession(() => void read()).then((stop) => {
+      if (live) stopAuth = stop;
+      else stop();
+    }).catch(() => {
+      // A device-only build has no Auth client to subscribe to. The initial
+      // status read owns the user-facing error, while focus and polling still
+      // provide recovery if the account service becomes available.
+    });
+    const recheck = () => void read();
+    const timer = window.setInterval(recheck, 60_000);
+    window.addEventListener('focus', recheck);
+    return () => {
+      live = false;
+      request.current += 1;
+      stopAuth();
+      window.clearInterval(timer);
+      window.removeEventListener('focus', recheck);
+    };
   }, [read]);
 
   const retry = () => {
@@ -44,6 +63,16 @@ export function PrivilegedMfaBoundary({ subject, children }: { subject: string |
   if (!subject) return <>{children}</>;
   const status: Status = state.subject === subject ? state.status : 'checking';
   if (status === 'ready') return <>{children}</>;
+  if (status === 'error') {
+    return (
+      <>
+        <aside style={{ maxWidth: 560, marginInline: 'auto', padding: 'var(--sp-4)' }}>
+          <Trouble said={`${state.error} Privileged tools remain server-blocked, but the ordinary offline-first app stays available.`} onRetry={retry} label="Try the access check again" />
+        </aside>
+        {children}
+      </>
+    );
+  }
 
   return (
     <div role="main" data-semester-root style={{ maxWidth: 560, marginInline: 'auto', padding: 'var(--sp-6)', display: 'grid', gap: 'var(--sp-4)' }}>
@@ -55,7 +84,6 @@ export function PrivilegedMfaBoundary({ subject, children }: { subject: string |
           onVerified={retry}
         />
       )}
-      {status === 'error' && <Trouble said={state.error} onRetry={retry} label="Try the access check again" />}
     </div>
   );
 }

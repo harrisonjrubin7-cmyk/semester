@@ -20,6 +20,7 @@ const replies = new Map<string, Reply>();
 const auth = {
   getUser: vi.fn(async () => ({ data: { user: { id: 'op-1' } } })),
   getSession: vi.fn(async () => ({ data: { session: { expires_at: 1_800_000_000 } } })),
+  onAuthStateChange: vi.fn(),
   mfa: {
     getAuthenticatorAssuranceLevel: vi.fn(),
     listFactors: vi.fn(),
@@ -88,6 +89,7 @@ import {
   verifyMfa,
   mfaFactors,
   privilegedMfaRequired,
+  watchMfaSession,
 } from './client';
 
 const HEALTH_ROW = {
@@ -565,6 +567,24 @@ describe('identity', () => {
     replies.set('rpc:privileged_mfa_required', { data: true });
     await expect(privilegedMfaRequired()).resolves.toBe(true);
     expect(last()).toMatchObject({ kind: 'rpc', name: 'privileged_mfa_required' });
+  });
+
+  it('rechecks on Auth session changes and unsubscribes cleanly', async () => {
+    const unsubscribe = vi.fn();
+    let changed: ((event: string) => void) | undefined;
+    auth.onAuthStateChange.mockImplementation((callback: (event: string) => void) => {
+      changed = callback;
+      return { data: { subscription: { unsubscribe } } };
+    });
+    const onChange = vi.fn();
+    const stop = await watchMfaSession(onChange);
+    changed?.('INITIAL_SESSION');
+    expect(onChange).not.toHaveBeenCalled();
+    changed?.('TOKEN_REFRESHED');
+    changed?.('MFA_CHALLENGE_VERIFIED');
+    expect(onChange).toHaveBeenCalledTimes(2);
+    stop();
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
   });
 
   it('turns the session’s epoch expiry into a date, and none into null', async () => {

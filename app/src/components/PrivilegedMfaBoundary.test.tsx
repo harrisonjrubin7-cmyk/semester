@@ -3,8 +3,8 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mock = vi.hoisted(() => ({ required: vi.fn() }));
-vi.mock('../lib/console/client', () => ({ privilegedMfaRequired: mock.required }));
+const mock = vi.hoisted(() => ({ required: vi.fn(), watch: vi.fn() }));
+vi.mock('../lib/console/client', () => ({ privilegedMfaRequired: mock.required, watchMfaSession: mock.watch }));
 vi.mock('./MfaStep', () => ({ MfaStep: ({ onVerified }: { onVerified: () => void }) => <button onClick={onVerified}>Verify second factor</button> }));
 
 import { PrivilegedMfaBoundary } from './PrivilegedMfaBoundary';
@@ -15,6 +15,7 @@ let root: Root;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mock.watch.mockResolvedValue(() => {});
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -53,9 +54,32 @@ describe('PrivilegedMfaBoundary', () => {
     mock.required.mockRejectedValueOnce(new Error('Status unavailable')).mockResolvedValueOnce(false);
     await render();
     expect(host.querySelector('[role=alert]')?.textContent).toContain('Status unavailable');
+    expect(host.textContent).toContain('Protected app');
     const retry = [...host.querySelectorAll('button')].find((button) => button.textContent?.includes('Try the access check'))!;
     await act(async () => { retry.click(); });
     expect(host.textContent).toContain('Protected app');
+  });
+
+  it('keeps the device-only app usable when no Auth subscription is available', async () => {
+    mock.required.mockRejectedValue(new Error('No account service is configured for this build.'));
+    mock.watch.mockRejectedValue(new Error('No account service is configured for this build.'));
+    await render();
+    expect(host.querySelector('[role=alert]')?.textContent).toContain('No account service is configured');
+    expect(host.textContent).toContain('Protected app');
+  });
+
+  it('rechecks when Auth replaces the same account’s session', async () => {
+    let changed: (() => void) | undefined;
+    mock.watch.mockImplementation(async (callback: () => void) => {
+      changed = callback;
+      return () => {};
+    });
+    mock.required.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    await render('operator-1');
+    expect(host.textContent).toContain('Protected app');
+    await act(async () => { changed?.(); await Promise.resolve(); });
+    expect(host.textContent).not.toContain('Protected app');
+    expect(host.textContent).toContain('Verify second factor');
   });
 
   it('closes again before checking a different signed-in account', async () => {

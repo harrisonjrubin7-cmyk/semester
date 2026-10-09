@@ -186,7 +186,7 @@ The bar and the gate rest on these, whichever view is open.
 - [`supabase/console-control-plane.check.sql`](../supabase/console-control-plane.check.sql) — Both branches: a claim set with a fresh totp entry passes, one without aal2 or with a stale timestamp raises.
 - [`app/src/components/MfaStep.tsx`](../app/src/components/MfaStep.tsx) — Enrol TOTP and challenge/verify before a privileged action.
 - [`app/src/components/MfaStep.test.tsx`](../app/src/components/MfaStep.test.tsx) — The step is shown when the assurance level is not aal2, and clears when verification succeeds.
-- [`app/src/lib/console/client.ts`](../app/src/lib/console/client.ts) — mfaLevel, mfaFactors, enrollTotp, challengeMfa, verifyMfa, privilegedMfaRequired and sessionExpiry.
+- [`app/src/lib/console/client.ts`](../app/src/lib/console/client.ts) — mfaLevel, mfaFactors, enrollTotp, challengeMfa, verifyMfa, privilegedMfaRequired, watchMfaSession and sessionExpiry.
 - [`app/src/lib/console/client.test.ts`](../app/src/lib/console/client.test.ts) — Each wrapper calls the supabase-js auth.mfa method it names.
 
 **Roles and capabilities** (done) — Scoped role_grants with capability, scope and expiry, checked server-side; console:operate, approval:decide and breakglass:request are capabilities of public.app_capabilities. There is no role switching in production.

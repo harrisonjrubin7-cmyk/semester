@@ -115,3 +115,42 @@ grant execute on function public.privileged_mfa_required() to authenticated;
 
 comment on function public.privileged_mfa_required() is
   'Whether the caller has a live platform_admin or support_agent grant whose current JWT is below aal2. For displaying the app-level elevation gate; grants no access.';
+
+-- The client capability projection promises to mirror has_capability. Keep a
+-- privileged grant out of that projection while it is dormant at aal1, while
+-- leaving ordinary and break-glass grants unchanged.
+create or replace function public.my_capabilities()
+returns table (capability text, scope_kind text, scope_id text)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select distinct c.capability, c.scope_kind, c.scope_id
+    from (
+      select rc.capability, g.scope_kind, g.scope_id
+        from public.role_grants g
+        join public.role_capabilities rc on rc.role = g.role
+       where g.subject = (select auth.uid())
+         and g.revoked_at is null
+         and (g.expires_at is null or g.expires_at > now())
+         and (
+           g.role not in ('platform_admin', 'support_agent')
+           or coalesce((select auth.jwt() ->> 'aal') = 'aal2', false)
+         )
+      union all
+      select cap, 'school'::text, b.tenant_id
+        from public.break_glass_grant b
+       cross join lateral unnest(string_to_array(b.scope, ' ')) as cap
+       where b.subject = (select auth.uid())
+         and b.closed_at is null
+         and b.expires_at > now()
+    ) c
+   order by 1, 2, 3;
+$$;
+
+revoke all on function public.my_capabilities() from public, anon;
+grant execute on function public.my_capabilities() to authenticated;
+
+comment on function public.my_capabilities() is
+  'The caller''s own currently active capabilities and scopes, including break-glass. platform_admin and support_agent grant rows are omitted below aal2, matching private.has_capability. For deciding what a screen offers; every policy still authorizes.';

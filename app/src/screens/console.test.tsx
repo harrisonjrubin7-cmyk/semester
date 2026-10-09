@@ -597,21 +597,13 @@ describe('the context bar', () => {
     expect(dd(host.querySelector('[aria-label="Context bar"]')!, 'Environment')).toBe('◆ Staging');
   });
 
-  it('requires aal2 before mounting workspaces or issuing protected console reads', async () => {
-    mock.mfa.mockResolvedValueOnce(STALE).mockResolvedValue(FRESH);
+  it('lets an ordinary console role mount at aal1; the app-level boundary handles the two privileged roles', async () => {
+    mock.mfa.mockResolvedValue(STALE);
     await render();
-    const step = host.querySelector('[aria-label="Second factor"]') as Element;
-    expect(step).toBeTruthy();
-    expect(host.textContent).toContain('before it can read privileged data');
-    expect(host.querySelector('[aria-label="Context bar"]')).toBeNull();
-    expect(mock.approvals).not.toHaveBeenCalled();
-    expect(mock.support).not.toHaveBeenCalled();
-    type(step.querySelector('input'), '123456');
-    await submit(step.querySelector('form'));
-    await flush();
-    expect(mock.verify).toHaveBeenCalledWith('f-1', 'ch-1', '123456');
     expect(host.querySelector('[aria-label="Context bar"]')).not.toBeNull();
     expect(mock.approvals).toHaveBeenCalled();
+    expect(mock.support).toHaveBeenCalled();
+    expect(host.querySelector('[aria-label="Second factor"]')).toBeNull();
   });
 });
 

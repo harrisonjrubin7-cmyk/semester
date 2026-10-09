@@ -300,7 +300,7 @@ The current register also includes 24 callable definers whose current definition
 | `my_action_publish_scopes` | `auth.uid()` | `20260928302000_office_action_feed.sql` |
 | `my_age_status` | `auth.uid()` | `20260929150000_minimum_age.sql` |
 | `my_beta` | `private.beta_my_membership` | `20260928220000_private_beta.sql` |
-| `my_capabilities` | `auth.uid()` | `20261006100000_my_capabilities_includes_break_glass.sql` |
+| `my_capabilities` | `auth.uid()` | `20261008223000_privileged_role_mfa.sql` |
 | `my_community_notices` | `auth.uid()` | `20261004130000_community_appeal_window.sql` |
 | `my_community_refs` | `auth.uid()` | `20260928032000_community.sql` |
 | `my_community_standing` | `auth.uid()` | `20260928032000_community.sql` |

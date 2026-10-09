@@ -132,11 +132,12 @@ describe('MfaStep', () => {
     mock.factors.mockResolvedValue([{ id: 'phone-1', name: 'Mobile', type: 'phone' }]);
     await render();
     expect(mock.enroll).not.toHaveBeenCalled();
+    expect(mock.challenge).toHaveBeenCalledWith('phone-1');
     expect(host.textContent).toContain('verification code sent to your phone');
     expect((host.querySelector('input') as HTMLInputElement).closest('label')?.textContent).toContain('Code sent to your phone');
     typeCode('246810');
     await submit();
-    expect(mock.challenge).toHaveBeenCalledWith('phone-1');
+    expect(mock.challenge).toHaveBeenCalledTimes(1);
     expect(mock.verify).toHaveBeenCalledWith('phone-1', 'ch-1', '246810');
   });
 });
