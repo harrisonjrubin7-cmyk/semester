@@ -270,6 +270,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['productivity_readiness_aggregate', 'admin', ['auth.uid()', "'admin'=any(m.roles)", 'if owners<10']],
   ['propose_offboarding', 'admin', ['auth.uid()', 'private.is_app_admin', 'private.has_capability']],
   ['publish_course_guidance', 'admin', ['auth.uid()', 'private.course_publisher']],
+  ['publish_course_material_retention_policy', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['publish_course_rules', 'admin', ['auth.uid()', 'private.course_publisher']],
   ['publish_study_pack', 'admin', ['auth.uid()', 'private.course_publisher']],
   ['raise_my_data_subject_request', 'self-service', ['auth.uid()']],
@@ -458,6 +459,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * historical snapshot.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261009001500_course_material_retention_policy.sql',
+    functions: ['publish_course_material_retention_policy'],
+  },
   {
     file: '20261008233000_tenant_projection_read.sql',
     functions: ['read_tenant_projection'],

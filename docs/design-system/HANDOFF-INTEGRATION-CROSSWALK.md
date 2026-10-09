@@ -88,6 +88,8 @@ Automation pass 11 implements the student-owned half of CE-05's persistence boun
 
 Automation pass 12 adds the student-source storage-receipt and scan-settlement persistence transitions in `20261009000000_course_source_scan_settlement.sql`. This bounded portion of CE-05 is **existing and verified locally**: only service role can record a tenant-matching receipt or settle a quarantined source; current course membership is rechecked; retries are request-hash idempotent; audit and state commit atomically; and availability requires an allowlisted exact type match plus equal stored/scanned SHA-256 under a named clean scanner. Rejections remain unreadable. CE-05 remains **existing but incomplete** because no bucket, object, scanner, extraction runtime, route/read boundary, current-screen wiring, deployment or operating evidence exists, and shared `course-materials` remains closed.
 
+Automation pass 13 adds the versioned tenant authority that the shared-material contract previously lacked. `20261009001500_course_material_retention_policy.sql` consumes one approved `tenant-policy` request under `console:operate`, fresh MFA, exact tenant/target/detail binding and fail-closed audit, then appends an active or withdrawn private version. The service-only resolver fails closed to no row when authority is absent or withdrawn. This policy sub-contract is **existing and verified locally**; shared `course-materials` remains **missing and in scope** until metadata and controlled lifecycle operations bind the exact policy version and exact course-scoped publication authority. No storage/scanner/runtime or route evidence is inferred.
+
 ## How a row was classed
 
 | Disposition | Meaning here |

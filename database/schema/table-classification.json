@@ -201,6 +201,7 @@
    "private.console_audit_key",
    "private.console_audit_manifest",
    "private.console_audit_verification",
+   "private.course_material_retention_policy",
    "private.direct_rate_limit",
    "private.domain_event_receipts",
    "private.domain_outbox_events",

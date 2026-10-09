@@ -1,6 +1,6 @@
 # Course-source authority contract
 
-**Status:** locally implemented contract plus private student-source metadata, storage-receipt, scan-settlement, correction and recovery persistence; no server bucket, byte storage, upload/download route, scanner, extraction worker, scheduler or deployment exists.
+**Status:** locally implemented contract plus private student-source metadata, storage-receipt, scan-settlement, correction and recovery persistence, and an approved versioned tenant authority for shared-material retention; no shared-material metadata, server bucket, byte storage, upload/download route, scanner, extraction worker, scheduler or deployment exists.
 
 Semester keeps one current product path: Import and Study Studio. The separate Course Engine shell and data model are not integration targets. Before either current screen can persist a source on the server, `app/server/course-sources/contract.ts` requires the caller to supply current server-resolved evidence for one of two existing course authorities.
 
@@ -9,12 +9,12 @@ Semester keeps one current product path: Import and Study Studio. The separate C
 | Student source | Tenant + exact owner + opaque `public.courses.id`; course code and term remain provenance labels | The authenticated actor owns that exact course row and holds the current exact tenant membership | `student-files` | `student_private` |
 | Published course material | Tenant + normalized course code + term | `course:publish` at exact `course` scope `<tenant>/<CODE>` | `course-materials` | `internal` |
 
-The labels name future private storage boundaries; they do not assert that buckets exist. The underlying object-key authority remains `packages/platform/src/engines/files.ts`: `t/<tenant>/<classification>/<yyyy-mm>/<fileId>`, parsed and tenant-checked before every store operation. A client never selects a bucket, key, tenant, owner, role, capability, scan result or retention policy.
+The labels name future private storage boundaries; they do not assert that buckets exist. The underlying object-key authority remains `packages/platform/src/engines/files.ts`: `t/<tenant>/<classification>/<yyyy-mm>/<fileId>`, parsed and tenant-checked before every store operation. A client never selects a bucket, key, tenant, owner, role, capability, scan result or retention policy. `20261009001500_course_material_retention_policy.sql` now supplies the shared-material policy authority: an operator with `console:operate` and fresh MFA consumes one independently approved `tenant-policy` request to append an active or withdrawn tenant version. The private resolver returns no row when no version exists or the latest version is withdrawn, so shared intake remains closed by default.
 
 ## Write and read boundary
 
 1. The server validates the session and builds `RequestContext`; a request tenant hint must agree with that verified context.
-2. A repository reloads the current course row, tenant membership or exact course-scoped publish grant. The request body is not relationship evidence.
+2. A repository reloads the current course row, tenant membership or exact course-scoped publish grant. For shared material it also resolves the current active policy id, version and retention days from the private authority table. The request body is not relationship or retention evidence.
 3. The shared rate limiter must allow the actor and the request must carry a valid idempotency key.
 4. The course contract accepts PDF, Word, PowerPoint, plain text and Markdown. Server ZIP intake remains refused until a bounded sandboxed expander can validate every child; the current device-local ZIP reader is not a server security control.
 5. The generic file engine applies its classification size cap and creates a tenant-prefixed `pending_upload` record. Only a tenant-bound service context may accept a storage receipt and move it to `quarantined`; an ordinary user context is refused.
@@ -38,14 +38,14 @@ Audit facts contain tenant, actor, source id, course code, term, correlation id 
 
 `20261009000000_course_source_scan_settlement.sql` adds only the service-side persistence transitions. A matching object key, byte count, SHA-256 and bounded object version move `pending_upload` metadata to `quarantined`; no receipt makes it readable. Scan settlement rechecks the current course relationship and moves to `available` only for a named scanner's clean verdict when stored and scanned hashes match and the allowlisted detected type exactly matches the declaration. Type mismatch, integrity mismatch, blocked verdict and scanner error settle as `rejected`. Both transitions are tenant-bound, request-hash idempotent and atomic with pseudonymous content-free audit. They record reports from a future private runtime; they do not prove that an object or scanner exists.
 
-Institution-published `course-materials` remains closed. The repository has no current versioned institution retention-policy authority for that material, so a request or service argument cannot supply the missing proof.
+Institution-published `course-materials` remains closed to persistence. The versioned tenant authority now exists locally, but no shared-material metadata schema binds its exact policy id/version to an exact course-scoped publish grant. A request or service argument still cannot supply that proof.
 
 ## Still open before ingestion
 
 - private bucket provisioning and bucket-policy proof;
 - a deployed document scanner and sandboxed extraction worker;
 - a repository adapter for the service-only persistence functions and a private runtime that can produce trustworthy receipts;
-- published-material retention-policy authority;
+- shared-material metadata and controlled operations that resolve and bind the current approved policy version;
 - route authentication, shared rate-limit storage, upload receipts and signed-download authorization;
 - Import and Study Studio wiring, source-version propagation and recovery UI;
 - PostgreSQL/RLS, gateway, browser, accessibility, responsive, failure-state and DAST evidence;

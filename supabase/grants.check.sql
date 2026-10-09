@@ -527,6 +527,11 @@ declare
     'publish_course_guidance(want_course text, want_term text, want_body text)',
     'publish_study_pack(want_course text, want_term text, want_pack uuid, want_title text, want_note text, want_items jsonb, want_retired boolean)',
     'my_course_studio_courses()',
+    -- 20261009001500_course_material_retention_policy.sql: consumes one
+    -- independently approved tenant-policy request. The function rechecks
+    -- console:operate, fresh MFA, exact tenant/target/detail, request status,
+    -- expiry and actor participation before fail-closed audit plus append.
+    'publish_course_material_retention_policy(want_request uuid, want_correlation text)',
 
     -- 20260929310000_gradebook.sql: the gradebook of record. Each checks
     -- auth.uid(), the caller's own school and a course-scoped grades:*

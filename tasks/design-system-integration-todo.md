@@ -405,8 +405,29 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 ### Next implementation boundary
 
 - [ ] Add a private repository adapter/runtime boundary only when it can produce trustworthy tenant-bound storage and scanner receipts; do not synthesize receipt evidence.
-- [ ] Define a current versioned institution-retention authority before enabling shared `course-materials` persistence.
+- [x] Define a current versioned institution-retention authority before enabling shared `course-materials` persistence.
 - [ ] Keep upload/download routes and Import/Study Studio wiring closed until private bucket policy, scanner runtime and route authorization/rate-limit prerequisites exist.
+
+## 2026-10-08 versioned course-material retention authority — automation pass 13, slice 21
+
+- [x] Fetch and inspect `origin/main` before work and again at `845645d3`; confirm its newer Phase A documentation contains no equivalent course-material retention authority, controlled operation, migration collision or overlapping file.
+- [x] Reuse the existing `tenant-policy` duty and approval state machine; do not create a parallel policy workflow or treat request prose as authority.
+- [x] Add one private append-only tenant policy history with exact versions, active/withdrawn state, bounded retention days, approval/evidence references, actor, correlation and effective time.
+- [x] Require `console:operate`, fresh MFA, an approved unexpired exact-tenant request, the `course-materials` target, a closed detail shape and requester/approver participation.
+- [x] Append fail-closed console audit before policy/effect settlement; prove an audit failure rolls back policy history and approval execution.
+- [x] Make withdrawal append a version and make the service-only current resolver return no row when authority is absent or withdrawn.
+- [x] Keep anon, authenticated and service role off direct table access; allow only the controlled authenticated writer and service-only resolver.
+- [x] Add the callable RPC to the deliberate grant allowlist, definer inventory, table classification and retention schedule.
+- [x] Reconcile the Console guard to the existing twelve duties and use the audit chain's UTC day in seal assertions; retain all manifest/head/signature checks.
+- [x] PostgreSQL 17 applies all 215 migrations twice with 374 table fingerprints unchanged; 16 focused checks and the adjacent Console, Course Studio, source, grant, RLS, index and legal-hold suites pass.
+- [ ] HawkScan DAST — required for this production schema change but unavailable because the `hawk` executable is absent and `HAWK_API_KEY` is unset; no scan or security pass is claimed.
+- [ ] Shared-material metadata, buckets/objects, scanner/extraction runtime, public routes, UI wiring, deployment and institutional operation remain unimplemented and unverified.
+
+### Next implementation boundary
+
+- [ ] Add private shared `course-materials` metadata and controlled lifecycle operations that resolve the current policy authority and bind its exact id/version to an exact tenant/course/term plus current `course:publish` grant.
+- [ ] Preserve policy withdrawal as a gate on new intake while keeping already-bound material governed by its recorded version and legal-hold precedence.
+- [ ] Keep storage receipts, scan settlement, extraction and signed reads closed until a trustworthy private runtime exists; do not reuse student ownership as faculty/institution authority.
 
 ## Earlier integration baseline preserved
 
