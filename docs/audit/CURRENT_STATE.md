@@ -1,10 +1,14 @@
 # Semester Education OS current-state audit
 
+> **Type:** explanation · **Audience:** contributors, implementers · **Owner:** `engineering` · **Truth:** reviewed · **Reviewed:** 2026-10-08 · **Held by:** —
+
 Assessed: 2026-10-08
 
 Repository baseline: `55adab11` (`origin/main`)
 
 Scope: the two supplied Education OS outline PDFs, reconciled against the current repository rather than treated as implementation authority.
+
+This is a revision-bound audit snapshot, not a new source of planning authority. The canonical dependency order remains [`docs/product/EDUCATION_OS_BACKLOG.md`](../product/EDUCATION_OS_BACKLOG.md); the current launch verdict remains [`docs/LAUNCH-READINESS-COUNCIL.md`](../LAUNCH-READINESS-COUNCIL.md).
 
 ## Executive finding
 
