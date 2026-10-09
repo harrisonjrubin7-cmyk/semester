@@ -104,7 +104,7 @@ describe('the workspace aliases', () => {
   const tsconfig = readFileSync(join(root, 'app/tsconfig.app.json'), 'utf8');
   const vite = readFileSync(join(root, 'app/vite.config.ts'), 'utf8');
 
-  it('names every workspace package, at its source entry', () => {
+  it('names every browser-facing workspace package, at its source entry', () => {
     for (const { dir, name } of packages) {
       expect(WORKSPACE_ALIASES[name], `${name} (packages/${dir}) has no entry in WORKSPACE_ALIASES in lib/importgraph.ts`).toBe(`packages/${dir}/src/index.ts`);
     }
@@ -141,6 +141,12 @@ describe('each rule can fail', () => {
   it('packages-are-a-leaf: and a test may import vitest and a built-in, and nothing more', () => {
     expect(check(clean({ 'packages/contract/src/a.test.ts': "import { it } from 'vitest'; import fs from 'node:fs';" }))).toEqual([]);
     expect(rulesIn(check(clean({ 'packages/contract/src/a.test.ts': "import z from 'zod';" })))).toEqual(['packages-are-a-leaf']);
+  });
+
+  it('packages-are-a-leaf: package CLI scripts may use Node built-ins', () => {
+    // Only the package-root scripts directory is operational tooling; a nested src/scripts directory is browser-facing code.
+    expect(check(clean({ 'packages/contract/scripts/build.ts': "import fs from 'node:fs';" }))).toEqual([]);
+    expect(rulesIn(check(clean({ 'packages/contract/src/scripts/parser.ts': "import fs from 'node:fs';" })))).toEqual(['packages-are-a-leaf']);
   });
 
   it('functions-are-self-contained: a function importing the app, or a bare specifier', () => {
