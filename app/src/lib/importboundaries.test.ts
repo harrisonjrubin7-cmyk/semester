@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BROWSER_ENTRY, GATEWAY_EXTERNAL_EXCEPTIONS, SERVER_USES_CLIENT_LIB, checkBoundaries, type Violation } from './importboundaries';
@@ -99,14 +99,23 @@ describe('the workspace aliases', () => {
    */
   const packages = readdirSync(join(root, 'packages'))
     .filter((d) => statSync(join(root, 'packages', d)).isDirectory())
-    .map((dir) => ({ dir, name: (JSON.parse(readFileSync(join(root, 'packages', dir, 'package.json'), 'utf8')) as { name: string }).name }));
+    .map((dir) => ({
+      dir,
+      name: (JSON.parse(readFileSync(join(root, 'packages', dir, 'package.json'), 'utf8')) as { name: string }).name,
+      source: statSync(join(root, 'packages', dir)).isDirectory() && existsSync(join(root, 'packages', dir, 'src/index.ts')),
+    }));
+  const sourcePackages = packages.filter((p) => p.source);
   const tsconfig = readFileSync(join(root, 'app/tsconfig.app.json'), 'utf8');
   const vite = readFileSync(join(root, 'app/vite.config.ts'), 'utf8');
 
-  it('names every workspace package, at its source entry', () => {
-    for (const { dir, name } of packages) {
+  it('names every source workspace package, at its source entry', () => {
+    for (const { dir, name } of sourcePackages) {
       expect(WORKSPACE_ALIASES[name], `${name} (packages/${dir}) has no entry in WORKSPACE_ALIASES in lib/importgraph.ts`).toBe(`packages/${dir}/src/index.ts`);
     }
+  });
+
+  it('does not expose tool-only workspaces as browser source aliases', () => {
+    for (const { name } of packages.filter((p) => !p.source)) expect(WORKSPACE_ALIASES[name]).toBeUndefined();
   });
 
   it('names nothing that is not a workspace package', () => {
@@ -115,7 +124,7 @@ describe('the workspace aliases', () => {
   });
 
   it('agrees with the app’s tsconfig and vite aliases', () => {
-    for (const { dir, name } of packages) {
+    for (const { dir, name } of sourcePackages) {
       expect(tsconfig, `${name} is not in tsconfig.app.json paths`).toContain(`"${name}": ["../packages/${dir}/src/index.ts"]`);
       expect(vite, `${name} is not aliased in vite.config.ts`).toContain(`'${name}'`);
     }

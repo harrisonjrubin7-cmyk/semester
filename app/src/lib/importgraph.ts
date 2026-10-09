@@ -28,10 +28,11 @@
  * cross a boundary without being seen, and is why the checker counts them.
  */
 
-export type Zone = 'packages' | 'functions' | 'app-src' | 'app-server' | 'app-api' | 'app-scripts' | 'app-other' | 'other';
+export type Zone = 'packages' | 'package-tools' | 'functions' | 'app-src' | 'app-server' | 'app-api' | 'app-scripts' | 'app-other' | 'other';
 
 /** Which part of the repository a path belongs to. Paths are repo-relative, forward-slashed. */
 export function zoneOf(path: string): Zone {
+  if (/^packages\/[^/]+\/(scripts|tests)\//.test(path)) return 'package-tools';
   if (path.startsWith('packages/')) return 'packages';
   if (path.startsWith('supabase/functions/')) return 'functions';
   if (path.startsWith('app/src/')) return 'app-src';
@@ -181,10 +182,10 @@ export function importSpecifiers(source: string): string[] {
 
 /**
  * `@semester/*` is aliased, in `tsconfig.app.json` and `vite.config.ts`, to the
- * packages' sources. This is a copy of that, and a copy can fall behind: it did,
- * when `packages/platform` arrived. `importboundaries.test.ts` checks it against
- * `packages/*` and against both configs, so a new package fails there, with the
- * line to add, instead of having its imports read as a third-party package.
+ * source packages' entry points. This is a copy of that, and a copy can fall
+ * behind: it did when `packages/platform` arrived. Tool-only workspaces such as
+ * `packages/platform-control` intentionally have no browser source entry and
+ * therefore no app alias. `importboundaries.test.ts` checks both cases.
  */
 export const WORKSPACE_ALIASES: Readonly<Record<string, string>> = {
   '@semester/contract': 'packages/contract/src/index.ts',
