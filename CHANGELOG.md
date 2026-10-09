@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### The operations console verifies MFA before it reads operator data
+
+For operators holding the console grant, opening **Semester Operations** now asks for a multi-factor code before any console workspace or protected console data loads. If the account has not enrolled an authenticator yet, the same step offers enrolment first. If Semester cannot determine the current assurance level, the console stays closed and offers **Try again** rather than loading behind the message. Ordinary student screens are unchanged. Production authentication configuration and recovery still require separate operational verification.
+
 ### Courses you type stay on this device, and you can put them on a meeting agenda
 
 On first run, **Build your registration plan** takes a term and course codes. They stay on this device. While no catalog is imported, the Term plan lists them and says each one is not a section, a seat, or an enrollment. On My Path, registration readiness has a **Courses you named** row. **Add to my meeting** puts each code and term on your own advisor-meeting agenda. Nothing else from your record is copied, and nothing is sent to an advisor. If this build has advisor meetings turned on, that opens the Advisor meeting tab; otherwise the row says the codes are on your agenda. Naming a course does not register you, and you do not have to do anything if you have not named one.
