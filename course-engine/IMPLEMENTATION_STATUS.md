@@ -6,8 +6,8 @@
 - UUID ownership-scoped schema covering every requested record family, initial migration, authentication, CRUD routes, review/conflict safety state, ICS, progress, and versioned asset/export records.
 - PDF, DOCX, PPTX, XLSX, CSV, text, and safe ZIP extraction; source locations and low-confidence review items.
 - Citation validation, deterministic fake LLM, all fourteen prompt-chain definitions, WeasyPrint guide PDF, duplex-safe ReportLab cards, editable DOCX, and isolated renderer benchmarks.
-- Dark real-data workspace modes with loading, error, and empty states; no invented totals.
-- Tests for conflicts, missing date/time behavior, invalid citations, deduplication, safe archives, ICS, and exports.
+- Premium responsive Semester shell with Ink navigation, Parchment work surfaces, a persistent context bar, labeled mobile tabs, keyboard command palette, source/status vocabulary, and loading, error, empty, offline, and stale/review language; no invented totals.
+- Tests for shell navigation, command focus, source labels, operational states, semantic tokens, automated axe accessibility, conflicts, missing date/time behavior, invalid citations, deduplication, safe archives, ICS, and exports.
 
 ## Mocked or credential-dependent
 
@@ -16,6 +16,8 @@
 
 ## Before production
 
-- Add managed secrets/KMS, signed download endpoints, CSRF/session hardening as appropriate, API rate limits, audit logs, retention/deletion verification, ClamAV or managed scanning, real provider adapters, accessibility/visual QA, load tests, backup/restore exercises, independent security review, and institutional privacy/legal approval.
+- Add managed secrets/KMS, signed download endpoints, CSRF/session hardening as appropriate, API rate limits, audit logs, retention/deletion verification, ClamAV or managed scanning, real provider adapters, browser accessibility/visual QA, load tests, backup/restore exercises, independent security review, and institutional privacy/legal approval.
 - Replace the metadata-driven initial Alembic revision with explicit generated operations if the organization requires fully inspectable DDL diffs.
-- Add worker job polling/cancellation UI, cloud upload providers, exact PDF bounding boxes/OCR overlays, and external-calendar reconciliation.
+- Add worker job polling/cancellation UI, cloud upload providers, a focus-managed source sheet with exact PDF bounding boxes/OCR overlays, and external-calendar reconciliation.
+
+See `docs/audit/` at the repository root for the factual current-state inventory, gaps, test coverage, and phased roadmap.
