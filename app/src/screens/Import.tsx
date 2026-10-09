@@ -41,6 +41,7 @@ import { NeedsKey } from '../components/NeedsKey';
 import { reviewReady } from '../lib/import-review';
 import { DOCUMENTS } from '../lib/extract';
 import { formatNumber } from '../lib/locale';
+import type { Item } from '../lib/types';
 
 /**
  * What the picker will offer.
@@ -1074,6 +1075,12 @@ export function Rediff({
       </label>
     </fieldset>
   );
+  const evidence = (item: Item) => {
+    const quote = item.quote ? `“${item.quote}”` : 'no source excerpt';
+    const source = item.checked?.doc || item.source || 'source not named';
+    const page = item.checked?.page ? ` · p. ${item.checked.page}` : '';
+    return `${quote} · ${source}${page}`;
+  };
   const conflicts = reimportConflicts(changes);
 
   return (
@@ -1095,7 +1102,7 @@ export function Rediff({
         </div>
         {conflicts.length > 0 && (
           <div role="status" style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
-            Choose what to keep for every changed date, due time, title, deadline type, deadline weight, deadline location, deadline detail, course detail, or grading row. Semester will not decide a source conflict for you.
+            Choose what to keep for every changed date, due time, title, deadline type, deadline weight, deadline location, deadline detail, source evidence, course detail, or grading row. Semester will not decide a source conflict for you.
           </div>
         )}
       </Blueprint>
@@ -1187,6 +1194,17 @@ export function Rediff({
             `detail:${r.before.id}`,
             `Detail · ${r.before.detail || 'not stated'} → ${r.after.detail || 'not stated'}`,
             `Use imported deadline detail — ${r.after.detail || 'not stated'}`,
+          ))}
+        </>
+      )}
+
+      {changes.reprovenancedItems.length > 0 && (
+        <>
+          <SectionLabel>Changed source evidence</SectionLabel>
+          {changes.reprovenancedItems.map((r) => choose(
+            `provenance:${r.before.id}`,
+            `Source evidence · ${evidence(r.before)} → ${evidence(r.after)}`,
+            `Use imported source evidence — ${evidence(r.after)}`,
           ))}
         </>
       )}

@@ -490,6 +490,64 @@ describe('deadline-detail conflict choices', () => {
   });
 });
 
+describe('deadline-provenance conflict choices', () => {
+  const beforeItem = {
+    ...item('current-id', 'Midterm', 9, 8),
+    quote: 'The midterm is Friday, October 8.',
+    checked: { confirmed: true, page: 3, doc: 'syllabus-v1.pdf' },
+    source: 'syllabus-v1.pdf',
+  };
+  const afterItem = {
+    ...item('fresh-id', 'Midterm', 9, 8),
+    quote: 'The midterm is Monday, October 11.',
+    checked: { confirmed: true, page: 5, doc: 'syllabus-v2.pdf' },
+    source: 'syllabus-v2.pdf',
+  };
+  const before = module([beforeItem]);
+  const after = module([afterItem]);
+
+  it('requires one stable explicit choice for the whole evidence bundle', () => {
+    const changes = diff(before, after, YEAR);
+    expect(unresolvedReimportConflictIds(changes, {})).toEqual(['provenance:current-id']);
+    expect(() => applyReimportConflictChoices(before, after, YEAR, {})).toThrow(/Every re-import source conflict/);
+  });
+
+  it('keeps quote, checked locator and source atomic when either bundle wins', () => {
+    const kept = applyReimportConflictChoices(before, after, YEAR, {
+      'provenance:current-id': 'keep_current',
+    });
+    expect(kept.items[0]).toMatchObject({
+      id: 'current-id',
+      quote: beforeItem.quote,
+      checked: beforeItem.checked,
+      source: beforeItem.source,
+    });
+
+    const imported = applyReimportConflictChoices(before, after, YEAR, {
+      'provenance:current-id': 'use_imported',
+    });
+    expect(imported.items[0]).toMatchObject({
+      id: 'current-id',
+      quote: afterItem.quote,
+      checked: afterItem.checked,
+      source: afterItem.source,
+    });
+
+    const currentWithoutLocator = module([{ ...beforeItem, checked: undefined }]);
+    const withoutLocator = applyReimportConflictChoices(currentWithoutLocator, after, YEAR, {
+      'provenance:current-id': 'keep_current',
+    });
+    expect(withoutLocator.items[0].checked).toBeUndefined();
+  });
+
+  it('does not silently replace a checked locator when the quote text is unchanged', () => {
+    const locatorOnly = module([{ ...afterItem, quote: beforeItem.quote }]);
+    expect(unresolvedReimportConflictIds(diff(before, locatorOnly, YEAR), {})).toEqual([
+      'provenance:current-id',
+    ]);
+  });
+});
+
 describe('ticksKept', () => {
   it('counts what survives and what does not', () => {
     const before = module([

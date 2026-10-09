@@ -629,7 +629,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 ### Next implementation boundary
 
 - [x] Reconcile paired deadline free-form `detail` to named ownership and acceptance behavior before implementing a conflict choice; keep it independent from source quotes and provenance. Completed in automation pass 23 / slice 31.
-- [ ] Keep quote/source provenance separate until its integrity and checked-citation behavior have an explicit acceptance contract.
+- [x] Keep quote/source provenance separate until its integrity and checked-citation behavior have an explicit acceptance contract. Completed atomically in automation pass 24 / slice 32.
 - [ ] Keep durable server conflict records, external reconciliation, safe ICS publication, server ingestion and signed reads outside this local client merge slice.
 
 ## 2026-10-08 student-controlled deadline-detail conflicts — automation pass 23, slice 31
@@ -651,8 +651,30 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Reconcile the paired deadline provenance bundle (`quote`, `checked` locator and `source`) to an integrity-preserving acceptance contract before offering any source choice.
+- [x] Reconcile the paired deadline provenance bundle (`quote`, `checked` locator and `source`) to an integrity-preserving acceptance contract before offering any source choice. Completed in automation pass 24 / slice 32.
 - [ ] Keep durable server conflict records, external reconciliation, safe ICS publication, server ingestion and signed reads outside this local client merge slice.
+
+## 2026-10-08 student-controlled deadline-provenance conflicts — automation pass 24, slice 32
+
+- [x] Fetch current `origin/main` `4a01b4a0`, confirm it is already an ancestor and find no equivalent paired-deadline provenance choice.
+- [x] Define `quote`, `checked` confirmation/document/page locator and `source` as one atomic evidence bundle; never combine fields from different syllabus versions.
+- [x] Treat a change to any bundle field, including a locator-only change, as an unresolved conflict and stop counting the item as unchanged.
+- [x] Use a stable `provenance:<current-item-id>` decision key with no preselected winner; reject incomplete or invalid maps in the pure merge boundary.
+- [x] Restore or accept the whole bundle together, including removing an imported locator when the selected current bundle had none, while preserving the current item id and completion-tick relationship.
+- [x] Reuse the existing Import/Rediff route and keyboard-operable native fieldset/radio pattern; show quotation, named document/source and page where present without adding a route, component, schema, dependency or raw design value.
+- [x] Prove the guard red before implementation: four failures showed the absent stable decision, missing control, ineffective keep-current restoration and silent locator replacement while 50 controls passed.
+- [x] Directly changed logic/render tests pass 54/54; the broader focused Import/source boundary passes 176/176.
+- [x] TypeScript, lint, university typecheck and production build pass with the existing four lint and chunk warnings.
+- [x] The 78 token/design constituents pass; design audit has zero violations with 86 existing warnings; CSS remains within its ledger; the design report regenerates without drift.
+- [ ] Aggregate design report wrapper — writes the unchanged report, then exits 1 because it invokes unavailable `npm`; constituent checks are green and no wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not run for this bounded client slice; focused regression and phase gates are green.
+- [ ] HawkScan DAST — preflight stops because the required Hawk CLI v6+, Docker fallback and `HAWK_APP_HOST` are absent. A local credential file exists but was not read; no DAST result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Reconcile durable re-import conflict records to the current tenant, authorization, audit, idempotency and recovery contracts before moving this local decision map server-side.
+- [ ] Keep external reconciliation and safe ICS publication separate until each has a named authority and acceptance contract.
+- [ ] Keep server ingestion and signed reads closed until a trustworthy private adapter/scanner runtime can produce genuine receipts.
 
 ## Earlier integration baseline preserved
 

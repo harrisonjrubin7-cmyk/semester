@@ -119,7 +119,7 @@ describe('Import re-import conflict controls', () => {
       'Room · Buttrick 101 → Wilson 103',
     ]);
     expect([...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')].every((radio) => !radio.checked)).toBe(true);
-    expect(host.textContent).toContain('changed date, due time, title, deadline type, deadline weight, deadline location, deadline detail, course detail, or grading row');
+    expect(host.textContent).toContain('changed date, due time, title, deadline type, deadline weight, deadline location, deadline detail, source evidence, course detail, or grading row');
 
     const importedRoom = [...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')]
       .find((radio) => radio.parentElement?.textContent?.includes('Use imported room'));
@@ -252,5 +252,35 @@ describe('Import re-import conflict controls', () => {
       .find((radio) => radio.parentElement?.textContent?.includes('Use imported deadline detail'));
     act(() => importedDetail!.click());
     expect(choose).toHaveBeenCalledWith('detail:current-id', 'use_imported');
+  });
+
+  it('renders one unselected choice for an atomic deadline provenance bundle', () => {
+    const current = {
+      ...item('current-id', 'Midterm', 9, 8),
+      quote: 'The midterm is Friday, October 8.',
+      checked: { confirmed: true, page: 3, doc: 'syllabus-v1.pdf' },
+      source: 'syllabus-v1.pdf',
+    };
+    const imported = {
+      ...item('fresh-id', 'Midterm', 9, 8),
+      quote: 'The midterm is Monday, October 11.',
+      checked: { confirmed: true, page: 5, doc: 'syllabus-v2.pdf' },
+      source: 'syllabus-v2.pdf',
+    };
+    const choose = vi.fn();
+    act(() => {
+      root.render(<StoreProvider><Rediff changes={diff(course([current]), course([imported]), 2026)} kept={{ kept: 0, lost: 0 }} code="ECON 1020" choices={{}} onChoose={choose} /></StoreProvider>);
+    });
+
+    const groups = [...host.querySelectorAll('fieldset.import-conflict-choice')];
+    expect(groups.map((group) => group.querySelector('legend')?.textContent)).toEqual([
+      'Source evidence · “The midterm is Friday, October 8.” · syllabus-v1.pdf · p. 3 → “The midterm is Monday, October 11.” · syllabus-v2.pdf · p. 5',
+    ]);
+    expect([...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')].every((radio) => !radio.checked)).toBe(true);
+
+    const importedEvidence = [...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')]
+      .find((radio) => radio.parentElement?.textContent?.includes('Use imported source evidence'));
+    act(() => importedEvidence!.click());
+    expect(choose).toHaveBeenCalledWith('provenance:current-id', 'use_imported');
   });
 });
