@@ -14,6 +14,7 @@
     "registry:validate": "npm run validate --workspace @semester/platform-control",
     "registry:build": "npm run build:registry --workspace @semester/platform-control",
     "release:check": "npm run check:release --workspace @semester/platform-control",
+    "release:report": "npm run report:release --workspace @semester/platform-control",
     "platform-control:test": "npm test --workspace @semester/platform-control"
   },
   "overrides": {

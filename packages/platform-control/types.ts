@@ -52,6 +52,17 @@ export interface WorkflowRecord extends RegistryRecord {
   runbook: string;
 }
 
+export interface BacklogItem {
+  id: string;
+  name: string;
+  owner: string;
+  state: 'planned' | 'in_progress' | 'blocked' | 'verified';
+  registry_keys: string[];
+  depends_on: string[];
+  evidence: string[];
+  blockers: string[];
+}
+
 export interface RegistrySnapshot {
   capabilities: CapabilityRecord[];
   systems: RegistryRecord[];
@@ -62,6 +73,7 @@ export interface RegistrySnapshot {
   controls: RegistryRecord[];
   documents: RegistryRecord[];
   tenants: RegistryRecord[];
+  backlog: BacklogItem[];
 }
 
 export interface ValidationIssue {
