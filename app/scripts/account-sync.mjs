@@ -264,6 +264,32 @@ async function held(page, service, text) {
   return false;
 }
 
+/** The server holds the named personal action and its completed tick, not merely an earlier open copy. */
+async function heldDone(page, service, title) {
+  const until = Date.now() + SETTLE;
+  while (Date.now() < until) {
+    const found = await page.evaluate(
+      async ({ origin, key, title }) => {
+        const session = JSON.parse(localStorage.getItem('semester.auth') || 'null');
+        const token = session?.access_token;
+        if (!token) return false;
+        const response = await fetch(`${origin}/rest/v1/state?select=data`, {
+          headers: { apikey: key, Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) return false;
+        const rows = await response.json();
+        const data = rows?.[0]?.data;
+        const task = data?.tasks?.find((candidate) => candidate?.title === title);
+        return Boolean(task?.id && data?.done?.[task.id]);
+      },
+      { ...service, title },
+    );
+    if (found) return true;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return false;
+}
+
 const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 async function addAction(page, title) {
@@ -330,7 +356,7 @@ async function journey(label, viewport) {
 
     // ── 3 · The server has it — read the way another device would ──────────
     at(STEPS[2]);
-    expect(await held(page, first.service, title), `the account's state row did not hold the action within ${SETTLE / 1000}s`);
+    expect(await heldDone(page, first.service, title), `the account's state row did not hold the finished action within ${SETTLE / 1000}s`);
 
     // ── 4 · A second device, checked empty first ───────────────────────────
     at(STEPS[3]);
