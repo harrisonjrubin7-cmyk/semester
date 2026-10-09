@@ -368,6 +368,14 @@ PostgreSQL 17 applies all 221 migrations twice with 380 unchanged table fingerpr
 
 This closes only the hash-authority prerequisite. A real private scanner/extractor must produce the receipt before a session-derived, shared-rate-limited adapter can safely call record/apply. Import wiring, signed reads, deployment, external reconciliation and safe ICS publication remain separate.
 
+## Confirmed-correction propagation — automation pass 29, slice 37
+
+Current `origin/main` remains `0d8f70b2`; no correction-bound snapshot receipt or equivalent migration landed. The authenticated adapter remains externally gated, but the existing derived-snapshot authority had one safe local integrity gap: a receipt bound the scanned source hash while ignoring student-confirmed corrections appended after extraction. An older snapshot could therefore remain acceptable for a new conflict batch even though it did not reflect the current correction ledger.
+
+`20261009020000_course_source_snapshot_corrections.sql` binds every new receipt to a deterministic count and SHA-256 of the source's append-only correction chain while holding the source lock. Conflict recording recomputes that state under the same source lock and rejects legacy or stale receipts; legacy rows remain readable evidence and are not rewritten. The digest contains stable hashes and identifiers rather than corrected values, and browser/table boundaries are unchanged.
+
+The focused guard was proved red first: a receipt created before a confirmed correction was accepted by the prior function. It now passes 20 checks, including stale-receipt refusal and a correction-current replacement receipt. PostgreSQL 17 applies all 222 migrations twice with 380 unchanged table fingerprints. The full SQL run keeps every course-source, grant, RLS, index, definer, retention, deletion and hold suite green; two unrelated time/ledger suites fail in their pre-existing full-run fixtures and are not attributed to this slice. Eight focused repository guard files pass 113/113; TypeScript, lint, university typecheck, production build, token export, design audit/CSS, 138 design contracts and report generation pass with existing warning ledgers. The trusted scanner/extractor, adapter, Import wiring, signed reads, deployment, external reconciliation and calendar publication remain separate.
+
 ## What was read
 
 - Root `CLAUDE.md`.

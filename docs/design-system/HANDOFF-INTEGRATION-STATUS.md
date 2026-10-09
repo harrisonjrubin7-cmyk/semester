@@ -1,10 +1,20 @@
 # Handoff integration status
 
-**Automation pass** 28 of 120 · **Integration slice** 36 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
+**Automation pass** 29 of 120 · **Integration slice** 37 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
 
 ## State
 
-Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and a hash-only derived-snapshot receipt boundary are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 29 / slice 37
+
+- Current `origin/main` remains `0d8f70b2`; no equivalent correction-bound derived-snapshot receipt, conflict precondition or migration collision landed.
+- The regression guard was proved red before implementation: after a receipt was recorded and a student correction confirmed, the prior conflict function still accepted the older snapshot.
+- `20261009020000_course_source_snapshot_corrections.sql` records the correction count and a deterministic SHA-256 of each new receipt's append-only correction chain while the source row is locked. No corrected value, quotation, source text or extracted course document is stored.
+- Conflict recording locks both sources, recomputes the imported source's correction state and refuses legacy or stale receipts. Existing legacy receipts remain append-only historical evidence and are not falsely backfilled.
+- PostgreSQL 17 applies all 222 migrations twice with 380 unchanged table fingerprints. The focused suite passes 20 checks; every relevant course-source, grant, RLS, index, definer, retention, deletion and legal-hold suite passes in the aggregate run. The aggregate retains unrelated failures in `financial-retention.check.sql` and `ledger-seals.check.sql`, so no full SQL-suite pass is claimed. Eight repository guard files pass 113/113; TypeScript, lint, university typecheck, production build, token export, design audit/CSS, 138 design contracts and report generation pass with existing warning ledgers.
+- A real private scanner/extractor must incorporate the current corrections and produce the receipt. No adapter, route, browser access, Import wiring, signed read, schedule, deployment or production operation is added or inferred.
+- HawkScan preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no DAST result or security pass is claimed.
 
 ## Evidence locked in automation pass 28 / slice 36
 

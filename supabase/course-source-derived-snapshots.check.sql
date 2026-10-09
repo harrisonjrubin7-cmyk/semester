@@ -54,6 +54,8 @@ declare
   current_source constant uuid := '32000000-0000-0000-0000-000000000001';
   imported_source constant uuid := '32000000-0000-0000-0000-000000000002';
   receipt constant uuid := '42000000-0000-0000-0000-000000000001';
+  corrected_receipt constant uuid := '42000000-0000-0000-0000-000000000002';
+  correction constant uuid := '62000000-0000-0000-0000-000000000001';
   batch constant uuid := '52000000-0000-0000-0000-000000000001';
   month text := to_char(now() at time zone 'UTC', 'YYYY-MM');
   result jsonb;
@@ -173,15 +175,36 @@ begin
       batch, student, current_source, imported_source, repeat('d',64), repeat('f',64),
       jsonb_build_object('moved:item-one', 'keep_current')));
 
+  result := pg_temp.service_call(format($q$select public.confirm_course_source_correction(
+    %L,%L,%L,'item-one','title',%L,%L,
+    'derived-correction-key01','corr-derived-correct1')$q$,
+    correction, imported_source, student, repeat('1',64), repeat('2',64)));
+  perform pg_temp.counted('the student correction commits after the first snapshot receipt',
+    ((result ->> 'revision')::int = 1)::int, 1);
+  perform pg_temp.refused('a snapshot receipt that predates a confirmed correction', 'service_role',
+    jsonb_build_object('role', 'service_role'),
+    format($q$select public.record_course_source_conflict_resolution(
+      %L,%L,%L,%L,%L,%L,%L::jsonb,'derived-conflict-key01','corr-derived-conflict1')$q$,
+      batch, student, current_source, imported_source, repeat('d',64), repeat('e',64),
+      jsonb_build_object('moved:item-one', 'keep_current')));
+
+  result := pg_temp.service_call(format($q$select public.record_course_source_derived_snapshot(
+    %L,%L,%L,%L,%L,'extractor-2','derived-receipt-key05','corr-derived-receipt5')$q$,
+    corrected_receipt, imported_source, student, repeat('b',64), repeat('f',64)));
+  perform pg_temp.counted('a new receipt binds the current confirmed-correction state',
+    (select count(*) from public.course_source_derived_snapshots d
+      where d.id = corrected_receipt and d.correction_count = 1
+        and d.corrections_sha256 = private.course_source_corrections_sha256(imported_source)), 1);
+
   result := pg_temp.service_call(format($q$select public.record_course_source_conflict_resolution(
-    %L,%L,%L,%L,%L,%L,%L::jsonb,'derived-conflict-key01','corr-derived-conflict1')$q$,
-    batch, student, current_source, imported_source, repeat('d',64), repeat('e',64),
+    %L,%L,%L,%L,%L,%L,%L::jsonb,'derived-conflict-key03','corr-derived-conflict3')$q$,
+    batch, student, current_source, imported_source, repeat('d',64), repeat('f',64),
     jsonb_build_object('moved:item-one', 'keep_current')));
-  perform pg_temp.counted('a matching receipt unlocks only its exact imported hash',
+  perform pg_temp.counted('a correction-current receipt unlocks only its exact imported hash',
     ((result ->> 'state') = 'recorded')::int
     + (select count(*) from public.course_source_resolution_batches
       where id = batch and imported_source_id = imported_source
-        and imported_snapshot_sha256 = repeat('e',64)), 2);
+        and imported_snapshot_sha256 = repeat('f',64)), 2);
 
   update public.institution_membership set status = 'suspended' where id = membership;
   perform pg_temp.refused('relationship revocation blocking a later derived receipt', 'service_role',

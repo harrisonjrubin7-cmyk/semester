@@ -765,6 +765,26 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and derived-snapshot receipts under session-derived authority and shared rate limits.
 - [ ] Keep external reconciliation, safe ICS publication, signed reads, scheduling, deployment and production operation separate.
 
+## 2026-10-09 confirmed-correction propagation — automation pass 29, slice 37
+
+- [x] Fetch `origin/main` `0d8f70b2` and confirm no equivalent correction-bound derived-snapshot receipt or migration collision landed.
+- [x] Prove the guard red: the prior conflict function accepted a snapshot receipt created before a later student-confirmed correction.
+- [x] Bind each new receipt to a deterministic count and SHA-256 of the append-only correction chain while the source row is locked.
+- [x] Recompute the correction state under the locked source pair and refuse legacy or stale receipts before recording a conflict batch.
+- [x] Preserve legacy receipts as append-only evidence instead of backfilling them with a correction state they may not have incorporated.
+- [x] Store no corrected value or extracted content in the receipt; keep browser policy, table grants and direct-mutation refusal unchanged.
+- [x] Apply all 222 migrations twice on PostgreSQL 17 with 380 unchanged table fingerprints; the focused suite passes 20 checks and every relevant course-source, grant, RLS, index, definer, retention, deletion and hold suite is green.
+- [x] Pass 113/113 focused repository guards, TypeScript, lint, university typecheck and production build; lint retains four existing warnings and build retains its chunk-size warning.
+- [x] Pass token export 9/9, design audit with zero violations and 86 existing warnings, CSS ledger checks, 138/138 design contracts and design-report generation.
+- [ ] The aggregate SQL run retains two unrelated failures in `financial-retention.check.sql` and `ledger-seals.check.sql`; no full SQL-suite pass is claimed.
+- [ ] Ordered and shuffled full application suites — not run for this database-only slice.
+- [ ] HawkScan DAST — preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+- [ ] Keep external reconciliation, safe ICS publication, signed reads, scheduling, deployment and production operation separate.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.

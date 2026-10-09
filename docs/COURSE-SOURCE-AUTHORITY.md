@@ -44,6 +44,8 @@ Audit facts contain tenant, actor, source id, course code, term, correlation id 
 
 `20261009014500_course_source_derived_snapshots.sql` closes only the hash-authority prerequisite for re-import. A service-only append binds a named extractor version and derived snapshot SHA-256 to the exact SHA-256 of one still-available scanned source after rechecking the current student relationship. The receipt is append-only, request-hash idempotent and atomic with bounded audit; it stores no extracted text or course document. `record_course_source_conflict_resolution` now refuses an imported snapshot hash without a matching receipt for that exact source, tenant, owner and current source hash. This does not attest that an extractor is deployed or trustworthy: a real private runtime must create the receipt before any browser adapter is opened.
 
+`20261009020000_course_source_snapshot_corrections.sql` prevents that receipt from silently outliving a student-confirmed correction. New receipts also bind a deterministic count and SHA-256 of the source's append-only correction chain while the source row is locked. Conflict recording recomputes the same state under the source-pair lock and rejects legacy or stale receipts; legacy rows remain historical evidence rather than being backfilled with a correction state their output may not include. The receipt still stores no corrected value or extracted content. A trusted extractor remains responsible for actually applying the corrections before it records the new snapshot hash.
+
 ## Still open before ingestion
 
 - a deployed document scanner and sandboxed extraction worker that produces genuine derived-snapshot receipts;
