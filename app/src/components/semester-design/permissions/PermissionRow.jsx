@@ -1,5 +1,5 @@
 import React from 'react';
-const L = { on: ['✓', 'On'], off: ['○', 'Off'], ask: ['?', 'Ask each time'], blocked: ['⊘', 'Blocked on device'], limited: ['◐', 'Limited'], managed: ['⊘', 'Managed'], unsupported: ['–', 'Not available on this device'] };
+const L = { on: ['✓', 'Allowed'], off: ['○', 'Off'], ask: ['?', 'Ask each time'], notAsked: ['·', 'Not asked yet'], unknown: ['?', 'Not reported'], blocked: ['⊘', 'Blocked'], limited: ['◐', 'Limited'], managed: ['⊘', 'Managed'], unsupported: ['–', 'Not available here'] };
 /** One device capability in Privacy › Device: current state, what it's used for, and how to change it.
  * Hardened: the action button names the capability, managed and unsupported states have no misleading toggle, last-used time, busy while changing. */
 export function PermissionRow({ capability, use, state = 'off', detail, onChange, lastUsed, managedBy, busy = false }) {
