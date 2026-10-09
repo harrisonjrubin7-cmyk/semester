@@ -151,7 +151,7 @@ The current register also includes 27 callable definers whose current definition
 | `revoke_support_access` | `auth.uid()` | `20260925160000_support_access_ui.sql` |
 | `share_with_advisor` | `auth.uid()` | `20260928301000_advisor_shares.sql` |
 | `share_with_support` | `auth.uid()`, `private.may_receive_support_share` | `20260928308000_support_shares.sql` |
-| `support_access_windows` | `auth.uid()`, `private.subject_has_capability`, `private.support_consent_active` | `20261005122000_support_case_access.sql` |
+| `support_access_windows` | `auth.uid()`, `private.subject_has_capability`, `private.support_consent_active` | `20261009213000_support_access_window_mfa.sql` |
 | `support_case_access` | `auth.uid()`, `private.subject_has_capability`, `private.support_agent`, `private.support_consent_active` | `20261005122000_support_case_access.sql` |
 | `trust_room_grant` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 | `trust_room_revoke` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |

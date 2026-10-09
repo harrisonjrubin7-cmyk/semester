@@ -4,7 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mock = vi.hoisted(() => ({ required: vi.fn(), watch: vi.fn() }));
-vi.mock('../lib/console/client', () => ({ privilegedMfaRequired: mock.required, watchMfaSession: mock.watch }));
+vi.mock('../lib/mfa-status', () => ({ privilegedMfaRequired: mock.required, watchMfaSession: mock.watch }));
 vi.mock('./MfaStep', () => ({ MfaStep: ({ onVerified }: { onVerified: () => void }) => <button onClick={onVerified}>Verify second factor</button> }));
 
 import { PrivilegedMfaBoundary } from './PrivilegedMfaBoundary';
@@ -40,6 +40,18 @@ describe('PrivilegedMfaBoundary', () => {
     expect(host.textContent).toContain('Verify second factor');
     await act(async () => { (host.querySelector('button') as HTMLButtonElement).click(); });
     expect(host.textContent).toContain('Protected app');
+  });
+
+  it('lets a locked-out operator sign out and switch accounts', async () => {
+    const leave = vi.fn().mockResolvedValue(undefined);
+    mock.required.mockResolvedValue(true);
+    await act(async () => {
+      root.render(<PrivilegedMfaBoundary subject="operator-1" signOutAccount={leave}><p>Protected app</p></PrivilegedMfaBoundary>);
+    });
+    const signOutButton = [...host.querySelectorAll('button')].find((button) => button.textContent?.includes('Sign out'))!;
+    expect(signOutButton).toBeTruthy();
+    await act(async () => { signOutButton.click(); });
+    expect(leave).toHaveBeenCalledTimes(1);
   });
 
   it('passes ordinary and signed-out sessions without an MFA prompt', async () => {

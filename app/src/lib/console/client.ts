@@ -22,6 +22,7 @@
 import { cloud } from '../cloud';
 
 export { CONSOLE_CAPABILITY, holdsConsole } from './capability';
+export { privilegedMfaRequired, watchMfaSession } from '../mfa-status';
 
 /** MFA is fresh for a privileged action within this many minutes of verifying (`private.mfa_fresh`). */
 export const MFA_FRESH_MINUTES = 15;
@@ -1113,23 +1114,6 @@ export async function verifyMfa(factorId: string, challengeId: string, code: str
   const db = await cloud();
   const { error } = await db.auth.mfa.verify({ factorId, challengeId, code: code.replace(/\s+/g, '') });
   if (error) throw new Error(message(error, 'That code was not accepted.'));
-}
-
-/** Whether a live platform_admin or support_agent grant still needs this session elevated to aal2. */
-export async function privilegedMfaRequired(): Promise<boolean> {
-  const db = await cloud();
-  const { data, error } = await db.rpc('privileged_mfa_required');
-  if (error) throw new Error(message(error, 'Could not check whether this account needs a second factor.'));
-  return data === true;
-}
-
-/** Recheck the privileged boundary when Auth replaces or elevates the current session. */
-export async function watchMfaSession(onChange: () => void): Promise<() => void> {
-  const db = await cloud();
-  const { data } = db.auth.onAuthStateChange((event) => {
-    if (event !== 'INITIAL_SESSION') onChange();
-  });
-  return () => data.subscription.unsubscribe();
 }
 
 /** When the session's access token expires, or null when there is no session. */
