@@ -101,6 +101,11 @@ verify_jwt = false
 [functions.integration-tick]
 verify_jwt = false
 
+# Manually invoked only. There is no scheduler entry, and the handler returns
+# 503 until its dedicated OPS_PROJECTOR_SECRET is explicitly provisioned.
+[functions.ops-projector]
+verify_jwt = false
+
 # The company site's visitors have no Semester account. The site's own
 # origins are built in; SITE_ORIGINS only adds. See DEPLOY.md → lead-intake.
 [functions.lead-intake]

@@ -8,6 +8,8 @@ import { VerifiedListings } from '../components/VerifiedListings';
 import { useDeviceLibrary } from '../lib/device-library';
 import { hasMode } from '../lib/accessmode';
 import { dateToIso } from '../lib/date';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ActionPreview } from '../components/unity/ActionPreview';
 import {
   ABROAD_NOTICE,
   EMPTY_OPPORTUNITIES,
@@ -169,6 +171,7 @@ function Editor({ item: o, onChange, onDelete, onDone }: { item: Opportunity; on
   const [ev, setEv] = useState('');
   const [ref, setRef] = useState('');
   const [skill, setSkill] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const set = (patch: Partial<Opportunity>) => onChange({ ...o, ...patch });
   const kind = KINDS.find((k) => k.id === o.kind)!;
 
@@ -289,9 +292,29 @@ function Editor({ item: o, onChange, onDelete, onDone }: { item: Opportunity; on
         <span>Notes</span>
         <textarea className="input jx-area" value={o.notes} onChange={(e) => set({ notes: e.target.value })} aria-label="Notes" />
       </label>
-      <button type="button" className="btn btn-ghost btn-block" onClick={onDelete}>
+      <button type="button" className="btn btn-ghost btn-block" onClick={() => setDeleting(true)}>
         Delete this
       </button>
+      {deleting ? (
+        <ConfirmDialog
+          title="Delete this opportunity?"
+          preview={
+            <ActionPreview
+              subject={o.title || `${kind.label} opportunity`}
+              says="Deletes this opportunity tracker entry from this device."
+              exactly={`Its organization, stage, deadline, source link, checklist, private work-study flag, evidence, reference tracking, skills, hours estimate and notes will be removed.${o.notes.trim() ? ` Notes include: ${o.notes.trim()}` : ''}`}
+              doesNotChange="Other tracked opportunities, your weekly time budget, official listings and anything held by an employer, lab, program or campus office stay unchanged."
+              recovery={{ kind: 'none', how: 'There is no undo or backup for this tracker. Add the opportunity again from its original source if you need it later.' }}
+            />
+          }
+          confirmLabel="Delete opportunity"
+          onCancel={() => setDeleting(false)}
+          onConfirm={() => {
+            setDeleting(false);
+            onDelete();
+          }}
+        />
+      ) : null}
     </>
   );
 }

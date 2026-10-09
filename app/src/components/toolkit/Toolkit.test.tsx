@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -65,6 +66,12 @@ const type = (el: HTMLInputElement | HTMLTextAreaElement, value: string) =>
     Object.getOwnPropertyDescriptor(proto, 'value')!.set!.call(el, value);
     el.dispatchEvent(new Event('input', { bubbles: true }));
   });
+
+it('keeps irreversible Toolkit deletions on the governed preview dialog', () => {
+  for (const file of ['AssignmentPanel.tsx', 'DataPanel.tsx', 'ResearchPanel.tsx']) {
+    expect(readFileSync(new URL(file, import.meta.url), 'utf8'), file).not.toContain('window.confirm');
+  }
+});
 
 it('asks for a goal first and recommends nothing until there is one', () => {
   mount();
@@ -139,6 +146,40 @@ it('will not mark a stage done until the student writes their own note', () => {
   type(claim, 'Remote work lowers commuting emissions in mid-size cities.');
   click('Mark Claim done');
   expect(host.textContent).toContain('1 of 7 stages done');
+});
+
+it('previews every irreversible local Toolkit deletion before removing anything', () => {
+  mount();
+
+  tab('Assignments');
+  click(/^Start a essay workspace/);
+  click('Delete workspace');
+  let dialog = host.querySelector('[role="dialog"]')!;
+  expect(dialog.textContent).toContain('Deletes this workspace, its stage notes and reflection from this device.');
+  expect(dialog.textContent).toContain('Your course assignment and any files outside Semester stay where they are.');
+  expect(dialog.textContent).toContain('This can’t be undone.');
+  click('Cancel');
+  expect(host.textContent).toContain('0 of 7 stages done');
+  click('Delete workspace');
+  click('Delete it');
+  expect(host.textContent).not.toContain('0 of 7 stages done');
+
+  tab('Research Studio');
+  click('Start a research project');
+  click('Delete project');
+  dialog = host.querySelector('[role="dialog"]')!;
+  expect(dialog.textContent).toContain('Deletes this project, its evidence matrix, claims and search plan from this device.');
+  expect(dialog.textContent).toContain('Original sources and files outside Semester stay where they are.');
+  click('Delete it');
+  expect(host.textContent).toContain('Start a research project');
+
+  importPasted(2, 'x,y\n1,2\n');
+  click('Delete dataset');
+  dialog = host.querySelector('[role="dialog"]')!;
+  expect(dialog.textContent).toContain('Deletes this dataset, its cleaning log and interpretation notes from this device.');
+  expect(dialog.textContent).toContain('The original file outside Semester stays where it is.');
+  click('Delete it');
+  expect(host.textContent).not.toContain('Export cleaned CSV');
 });
 
 it('will not verify a source until the student says they opened the original', () => {

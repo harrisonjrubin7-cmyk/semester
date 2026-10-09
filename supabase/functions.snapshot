@@ -82,6 +82,7 @@ fetchcal          239  platform  2026-09-29T21:10:28Z
 canvas            230  platform  2026-09-29T21:10:28Z
 lti               232  platform  2026-09-29T21:10:28Z
 integration-tick   88  platform  2026-09-29T21:10:28Z
+ops-projector       -  pending   2026-10-08T21:00:00Z
 trust-room         95  platform  2026-09-29T21:10:28Z
 delete-account     72  platform  2026-09-29T21:10:28Z
 billing-cancel      2  platform  2026-09-29T21:10:28Z

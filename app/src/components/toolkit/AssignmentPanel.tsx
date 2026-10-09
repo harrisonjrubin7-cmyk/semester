@@ -5,6 +5,8 @@ import { card, type PolicySource } from '../../lib/toolkit/policy';
 import { DISCLAIMER, interpret } from '../../lib/toolkit/rubric';
 import { completeStage, MIN_NOTE, newWorkspace, progress, reopenStage, submissionChecklist, TEMPLATE_IDS, TEMPLATES, type TemplateId, type Workspace } from '../../lib/toolkit/templates';
 import { Notice } from '../ui';
+import { ConfirmDialog } from '../ConfirmDialog';
+import { ActionPreview } from '../unity/ActionPreview';
 import { ContextBar } from '../unity/ContextBar';
 import { newId, type useToolkit } from './store';
 
@@ -37,6 +39,7 @@ export function AssignmentPanel({
   const [kind, setKind] = useState<TemplateId>(initialTemplate ?? 'essay');
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   const save = (ws: Workspace) => library.update((s) => ({ ...s, workspaces: s.workspaces.map((w) => (w.id === ws.id ? ws : w)) }));
   const create = () => {
@@ -151,15 +154,31 @@ export function AssignmentPanel({
             File the feedback I received
           </button>
           <button
-            onClick={() => {
-              if (!window.confirm(`Delete “${open.title}” from this device? This cannot be undone.`)) return;
-              library.update((s) => ({ ...s, workspaces: s.workspaces.filter((w) => w.id !== open.id) }));
-              setOpenId(null);
-            }}
+            onClick={() => setDeleting(true)}
           >
             Delete workspace
           </button>
         </div>
+        {deleting ? (
+          <ConfirmDialog
+            title="Delete assignment workspace?"
+            preview={(
+              <ActionPreview
+                subject={open.title}
+                says="Deletes this workspace, its stage notes and reflection from this device."
+                doesNotChange="Your course assignment and any files outside Semester stay where they are."
+                recovery={{ kind: 'none' }}
+              />
+            )}
+            confirmLabel="Delete it"
+            onCancel={() => setDeleting(false)}
+            onConfirm={() => {
+              library.update((s) => ({ ...s, workspaces: s.workspaces.filter((w) => w.id !== open.id) }));
+              setDeleting(false);
+              setOpenId(null);
+            }}
+          />
+        ) : null}
       </section>
     );
   }
