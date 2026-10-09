@@ -17,6 +17,10 @@
 
 ## 2. How membership-derived context is established server-side
 
+The canonical field-level contract and current adoption inventory are in
+[`authorization-context-contract.md`](authorization-context-contract.md). It records
+repository evidence and open seams; it is not a production-isolation attestation.
+
 There are **two independent tenant derivations**, and a third that is design only.
 
 | Path | Derivation | Where it is enforced | Evidence | Gap |
