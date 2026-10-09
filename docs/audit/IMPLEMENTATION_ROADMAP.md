@@ -1,5 +1,7 @@
 # Implementation roadmap
 
+See `COURSE_ENGINE_CURRENT_STATE.md` for the scoped current-state evidence behind this roadmap.
+
 The roadmap builds the student course/study loop first. Campus, marketplace, finance, staff, and institutional control-plane expansion should not outrun validated use of this loop.
 
 ## Phase 0 — Foundation (current branch)

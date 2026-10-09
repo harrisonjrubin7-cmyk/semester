@@ -28,7 +28,7 @@ how you use Semester, and information whose job is done.
 | Three daily usage facts (opened, added a course, answered a study card) | 400 days |
 | Log of who read your rows (e.g. a calendar feed was fetched) | 90 days |
 | Queued reminders | Until sent; all of them when you switch reminders off |
-| Support tickets | Until you delete your account [DECIDE: a period for closed tickets] |
+| Support tickets | Individual beta without a tenant: 180 days after resolution or student closure. School deployment: the school's contract; no automatic ticket purge until configured |
 | Community reports closed with no action | 90 days |
 | Community reports that led to action or an appeal | 1 year |
 | Audit record of moderation decisions | 3 years |

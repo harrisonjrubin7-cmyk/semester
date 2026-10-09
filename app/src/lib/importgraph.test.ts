@@ -95,6 +95,7 @@ describe('where an import lands', () => {
   const files = new Set([
     'app/src/lib/a.ts',
     'app/src/lib/b.tsx',
+    'app/src/lib/c.jsx',
     'app/src/lib/dir/index.ts',
     'app/server/x.ts',
     'packages/contract/src/index.ts',
@@ -105,6 +106,7 @@ describe('where an import lands', () => {
   it('adds the extension the source leaves off', () => {
     expect(at('app/src/lib/z.ts', './a')).toEqual({ kind: 'file', path: 'app/src/lib/a.ts' });
     expect(at('app/src/lib/z.ts', './b')).toEqual({ kind: 'file', path: 'app/src/lib/b.tsx' });
+    expect(at('app/src/lib/z.ts', './c.jsx')).toEqual({ kind: 'file', path: 'app/src/lib/c.jsx' });
     expect(at('app/src/lib/z.ts', './dir')).toEqual({ kind: 'file', path: 'app/src/lib/dir/index.ts' });
   });
 

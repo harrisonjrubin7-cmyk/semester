@@ -1,0 +1,49 @@
+/*
+ * Archive component compatibility layer.
+ *
+ * The imported component rules are contained by @scope, so they cannot
+ * retune Semester's existing shell, screens, or saved appearance choices.
+ * This element maps the archive's role names onto the production semantic
+ * token authority in styles/tokens.css.
+ */
+.semester-design-components {
+  --action-primary-hover: var(--action-primary-strong);
+  --action-primary-press: var(--action-primary-strong);
+  --action-secondary-hover: var(--surface-raised);
+  --text-link: var(--action-primary);
+  --status-pending: var(--status-attention);
+  --status-pending-line: var(--status-attention-line);
+  --status-pending-wash: var(--status-attention-wash);
+  --status-success-line: var(--border-strong);
+  --status-success-wash: var(--action-secondary);
+  --source-official: var(--chart-verified);
+  --source-official-line: var(--border-strong);
+  --source-official-wash: var(--action-secondary);
+  --source-connected: var(--chart-verified);
+  --source-connected-line: var(--border-default);
+  --source-personal: var(--chart-student-entered);
+  --source-personal-line: var(--border-default);
+  --source-ai: var(--chart-estimated);
+  --source-ai-line: var(--border-default);
+  --source-ai-wash: var(--surface-quiet);
+  --type-control: var(--type-role-control);
+  --scrim: rgb(0 0 0 / 58%);
+  --tracking-kicker: 0.08em;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --chrome-surface: var(--app-bg);
+  --chrome-surface-raised: var(--app-panel);
+  --chrome-text: var(--app-fg);
+  --chrome-text-secondary: var(--app-dim);
+  --chrome-line: var(--app-line);
+  --chrome-active: var(--app-accent-wash);
+  --blue-300: var(--app-accent);
+  --blur-chrome: var(--sp-7);
+  --ink-raise: var(--app-raise);
+  --ink-fg: var(--app-fg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .semester-design-components {
+    --fast: 0ms linear;
+  }
+}

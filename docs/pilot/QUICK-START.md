@@ -1,6 +1,6 @@
 # Semester — quick start for pilot users
 
-**As of 2026-09-28.** Ten minutes from opening the app to your first deadline
+**As of 2026-10-03.** Ten minutes from opening the app to your first deadline
 on Today. Written from what the app does on a first run
 (`app/src/screens/Onboarding.tsx`, walked in CI by `app/scripts/golden-path.mjs`),
 not from what it will do later. If a step here does not match the screen in

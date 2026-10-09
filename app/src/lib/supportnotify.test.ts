@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { handleSupportNotice, type SupportNoticeDeps } from '../../../supabase/functions/_shared/supportnotify';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { handleSupportNotice, normalizeUtcActivationInstant, type SupportNoticeDeps } from '../../../supabase/functions/_shared/supportnotify';
 
 const origin = 'https://harrisonjrubin7-cmyk.github.io';
 const ticket = '123e4567-e89b-42d3-a456-426614174000';
@@ -31,6 +33,23 @@ const request = (body: unknown = { message_id: message }) => new Request('https:
 });
 
 describe('support reply notification', () => {
+  it('accepts only explicit UTC RFC 3339 activation instants', () => {
+    expect(normalizeUtcActivationInstant('2026-10-08T21:00:00Z')).toBe('2026-10-08T21:00:00.000Z');
+    expect(normalizeUtcActivationInstant('2026-10-08T21:00:00.123456Z')).toBe('2026-10-08T21:00:00.123Z');
+    expect(normalizeUtcActivationInstant('1')).toBeUndefined();
+    expect(normalizeUtcActivationInstant('2026-10-08T21:00:00-05:00')).toBeUndefined();
+    expect(normalizeUtcActivationInstant('2026-02-30T00:00:00Z')).toBeUndefined();
+    expect(normalizeUtcActivationInstant('2026-13-40T21:00:00Z')).toBeUndefined();
+  });
+
+  it('keeps Resend unavailable until the explicit vendor-approval switch is true', () => {
+    const entry = readFileSync(join(process.cwd(), '../supabase/functions/support-reply-notify/index.ts'), 'utf8');
+    expect(entry).toMatch(/SUPPORT_NOTIFY_VENDOR_APPROVED'\) === 'true'/);
+    expect(entry).toMatch(/SUPPORT_NOTIFY_ACTIVATED_AT/);
+    expect(entry).toMatch(/normalizeUtcActivationInstant\(supportActivatedAtRaw\)/);
+    expect(entry).toMatch(/want_not_before: supportActivatedAt/);
+    expect(entry).toMatch(/resendKey: supportVendorApproved && supportActivatedAt && resendKey && supportSender \? resendKey : undefined/);
+  });
   it('sends a generic, idempotent hint without the reply body', async () => {
     const d = deps();
     const response = await handleSupportNotice(request(), d);
