@@ -10,18 +10,28 @@ The sources are:
 - The rendered `ui_kits/semester-app/All Screens.html` navigation captured from the archive bundle: 362 routes across 27 workspaces.
 - `ui_kits/master-catalog/catalog-data.js`: 673 screen labels across 14 catalog groups.
 
-The row-level handoff reconciliation is in [`route-identity-crosswalk.csv`](./route-identity-crosswalk.csv).
+The row-level union reconciliation is in [`route-identity-crosswalk.csv`](./route-identity-crosswalk.csv). Its 379 data rows cover every route identity present in either route source: 281 handoff routes plus 98 rendered-only routes.
+
+## Matching method
+
+Route equality is byte-for-byte string equality. Label matching is deliberately two-stage:
+
+1. `exact_*` means the full source label equals the candidate label with case preserved and no transformation.
+2. Only when there is no exact candidate, `normalized_*` compares `label.trim().toLowerCase()`.
+3. Candidate indexes are collision-checked after normalization. More than one candidate remains ambiguous; the crosswalk never selects one automatically.
+
+The CSV records the matching mode, candidate labels, candidate routes, and catalog groups so every aggregate below can be reproduced. A normalized match is a discovery aid, not exact identity evidence.
 
 ## Reconciliation result
 
-| Comparison | Exact or unique | Ambiguous | Missing | Interpretation |
-| --- | ---: | ---: | ---: | --- |
-| Handoff route → rendered route | 264 exact | — | 17 | Most handoff route identities survive, but the entire handoff-only set is under `#/operations/*`. |
-| Handoff label → rendered label | 248 unique | 16 | 17 | Labels alone are unsafe identifiers because common labels occur in multiple workspaces. |
-| Rendered label → master catalog | 36 unique | 3 | 323 | The master catalog is primarily a conceptual screen taxonomy, not a route registry. |
-| Handoff label → master catalog | 34 unique | 3 | 244 | Catalog presence cannot be inferred for most handoff routes by exact label. |
+| Comparison | Exact unique | Normalized-only unique | Exact ambiguous | Missing | Interpretation |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Handoff route → rendered route | 264 exact routes | — | — | 17 | Most handoff route identities survive, but the entire handoff-only set is under `#/operations/*`. |
+| Handoff label → rendered label | 249 | 0 | 15 | 17 | Labels alone are unsafe identifiers because common labels occur in multiple workspaces. |
+| Rendered label → master catalog | 34 | 2 | 3 | 323 | The master catalog is primarily a conceptual screen taxonomy, not a route registry. |
+| Handoff label → master catalog | 32 | 2 | 3 | 244 | The two normalized-only matches are not exact-label evidence. |
 
-The rendered inventory adds 98 routes that do not exist in the handoff route list. These additions are evidence of archive drift, not automatic requirements or production implementation.
+The rendered inventory adds 98 routes that do not exist in the handoff route list. Each appears as a `rendered_only` row with catalog candidates where available. These additions are evidence of archive drift, not automatic requirements or production implementation.
 
 ## Workspace route counts
 
@@ -86,7 +96,9 @@ This is a namespace and navigation conflict, not evidence that those capabilitie
 
 ## Ambiguity controls
 
-Exact label matching produces 16 ambiguous handoff rows. Repeated labels include Home, Calendar, Family sharing, Gradebook, Transcript, Announcements, Applicants, Decisions, My Work, and Executive Assistant. The CSV records every candidate route; no candidate is selected automatically.
+Exact label matching produces 15 ambiguous handoff rows. Repeated labels include Home, Calendar, Family sharing, Gradebook, Transcript, Announcements, Applicants, Decisions, My Work, and Executive Assistant. The CSV records every candidate route; no candidate is selected automatically.
+
+Two handoff-to-catalog matches exist only after normalization: `Action center` → `Action Center` and `Course studio` → `Course Studio`. They are recorded as `normalized_unique`, not exact matches.
 
 Three rendered labels map to more than one master-catalog group:
 
@@ -109,4 +121,4 @@ These collisions require domain-qualified stable IDs. Display labels must not be
 
 ## Phase gate
 
-Route identity reconciliation is **not passed**. The crosswalk is complete enough to expose the conflicts, but Phase 0 remains blocked on explicit resolution of the 17 Operations route misses, the 98 rendered-only routes, ambiguous label collisions, and the broader provenance and production-evidence gates recorded in the archive requirements matrix.
+Route identity reconciliation is **not passed**. Inventory coverage is complete across the 379-route union, but Phase 0 remains blocked on explicit resolution of the 17 Operations route misses, the 98 rendered-only routes, ambiguous label collisions, and the broader provenance and production-evidence gates recorded in the archive requirements matrix.

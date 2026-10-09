@@ -20,7 +20,7 @@ The archive is broader than the production surface, but much of that breadth is 
 
 ## Material gaps
 
-1. **Catalog coherence:** the 281-route handoff inventory is now reconciled against the 362 rendered routes and 673 catalog labels in [`ROUTE-IDENTITY-CROSSWALK.md`](./ROUTE-IDENTITY-CROSSWALK.md). The remaining gap is disposition: 17 handoff-only Operations routes, 98 rendered-only routes, and ambiguous labels still need authoritative owners and decisions.
+1. **Catalog coherence:** the 379-row union of 281 handoff routes and 362 rendered routes is now reconciled against 673 catalog labels in [`ROUTE-IDENTITY-CROSSWALK.md`](./ROUTE-IDENTITY-CROSSWALK.md). Exact and normalized-only label matches are reported separately. The remaining gap is disposition: 17 handoff-only Operations routes, 98 rendered-only routes, and ambiguous labels still need authoritative owners and decisions.
 2. **Staff/institutional surfaces:** prior row evidence concentrates gaps in administration, integrations, trust/privacy/security operations, and `/ops`.
 3. **Workflow proof:** approval, reconciliation, cutover, launch, and retirement need server transitions, retries, audit evidence, and owners.
 4. **Token conflicts:** 335 archive token rows do not match `tokens.css` by selector, name, and normalized value; the other 49 token rows are exact matches. Conflicts need explicit mapping, not copying.

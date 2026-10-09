@@ -4,7 +4,7 @@ Phases are evidence gates, not calendar promises.
 
 ## Phase 0 — inspection and reconciliation
 
-**Blocked / not passed.** The 281/362/673 screen identities have been crosswalked, but the 17 handoff-only routes, 98 rendered-only routes, and label collisions still need explicit dispositions. Atomize narrative requirements beyond the 1,595-row catalog; review every retained route/state; establish a current build/test/browser baseline; assign external owners.
+**Blocked / not passed.** The 379-route union of the 281 handoff and 362 rendered identities has row-level coverage against 673 catalog labels, with exact and normalized-only matches distinguished. The 17 handoff-only routes, 98 rendered-only routes, and label collisions still need explicit dispositions. Atomize narrative requirements beyond the 1,595-row catalog; review every retained route/state; establish a current build/test/browser baseline; assign external owners.
 
 ## Phase 1 — authority maps and foundations
 
