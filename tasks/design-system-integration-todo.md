@@ -1041,6 +1041,24 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-09 recoverable connected-calendar removal — current automation pass 1, integration slice 51
+
+- [x] Begin at supplied `INITIAL_MAIN_SHA` `8ea0fec5`, then inspect new `origin/main` `d50e699e`; its two new commits only consolidate device permission states and contain no equivalent `removeFeed`, Connect, undo, reducer or integration-control work.
+- [x] Re-rank the remaining consequence paths and select the bounded local Connected calendars removal; keep permanent file purge, same-origin demo reset and scanner-backed Import separate.
+- [x] Register `removeFeed` with the existing cross-cutting Undo contract for exactly `feeds` and `feedEvents`; do not add a competing confirmation pattern.
+- [x] Give the Connect control an accessible name that identifies the selected calendar and its calendar events.
+- [x] Prove both guards red with the undo registration absent, then pass 117/117 focused undo, reducer and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass token export 9/9, design audit with zero violations and 86 existing warnings, CSS ledger checks, 138/138 token/design/responsive contracts and design-report generation.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded local recovery slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.

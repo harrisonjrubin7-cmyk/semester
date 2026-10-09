@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 42 of 120 · **Integration slice** 50 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
+**Automation pass** 1 of 120 (continued program) · **Integration slice** 51 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `8ea0fec5` · **Latest observed `origin/main`** `d50e699e`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in current automation pass 1 / integration slice 51
+
+- The slice began at supplied `INITIAL_MAIN_SHA` `8ea0fec5`. Before commit, `origin/main` advanced to `d50e699e`; inspection of both new commits found only the device-permission-state consolidation and no `removeFeed`, Connect, undo, reducer or integration-control overlap.
+- Connected-calendar removal now enters the repository's existing eight-second Undo path. The snapshot is limited to `feeds` and `feedEvents`, so Undo restores the removed source and all of its imported events without rolling back state outside those two collections.
+- The existing Connect removal control now has an accessible name that identifies both the named calendar and its calendar events. No route, component, dependency, schema, server operation, provider behavior or external system changed.
+- Both new guards were proved red against the prior behavior, then 117 focused undo/reducer/root-unmount tests passed. TypeScript, lint, university typecheck and production build pass with four existing lint warnings and the existing chunk-size warning.
+- Token export passes 9/9, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger, 138 token/design/responsive contracts pass and the design report regenerates.
+- Ordered and shuffled full suites were not rerun in this bounded slice; the last recorded full-suite baseline remains pass 30's 23,872 tests.
+- HawkScan cannot start: `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. No target, scan or security pass is claimed.
+- Permanent file purge and same-origin demo reset remain separate. Scanner/extractor-backed Import remains externally gated; another fresh dependency and consequence-path ranking is required.
 
 ## Evidence locked in automation pass 42 / slice 50
 

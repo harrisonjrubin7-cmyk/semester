@@ -31,6 +31,7 @@ export type Review = {
   item_type: string;
   status: string;
   payload: Record<string, unknown>;
+  resolution_note?: string;
 };
 
 export type SourceFile = {

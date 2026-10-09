@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import date, datetime
 from typing import Any, Literal
 from uuid import UUID
@@ -101,8 +102,16 @@ class AssetPatch(BaseModel):
 
 class ReviewPatch(BaseModel):
     status: Literal["confirmed", "needs_review", "rejected"]
-    resolution_note: str | None = None
+    resolution_note: str | None = Field(default=None, max_length=2000)
     corrected_payload: dict[str, Any] | None = None
+
+    @model_validator(mode="after")
+    def bound_corrected_payload(self):
+        if self.corrected_payload is not None:
+            encoded = json.dumps(self.corrected_payload, separators=(",", ":")).encode()
+            if len(encoded) > 256_000:
+                raise ValueError("Corrected payload must be 256 KB or smaller")
+        return self
 
 
 class ConflictResolution(BaseModel):
