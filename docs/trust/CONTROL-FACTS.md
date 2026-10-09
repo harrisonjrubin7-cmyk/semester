@@ -66,6 +66,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/console-security-reads.check.sql` | Who may read the approval and break-glass records — beyond their own. |
 | `supabase/console-tenant-operations.check.sql` | Tenant/pilot operations workspace (20261005121000). |
 | `supabase/course-source-persistence.check.sql` | Private, tenant-bound course-source metadata, correction and recovery proof. |
+| `supabase/course-source-derived-snapshots.check.sql` | Append-only, hash-only extractor receipts and fail-closed imported-snapshot binding. |
 | `supabase/course-source-scan-settlement.check.sql` | Service-only, tenant-bound storage receipt and fail-closed scan settlement proof. |
 | `supabase/coursestudio.check.sql` | who may publish for a course, and who reads it. |
 | `supabase/definer-sweep.check.sql` | Every definer function a signed-in account can call, called by one that holds nothing. |

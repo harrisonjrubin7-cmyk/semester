@@ -358,6 +358,16 @@ The operation locks the legal-hold register through its decision. A platform hol
 
 The guard was first proved red against the absent function. PostgreSQL 17 applies all 220 migrations twice with all 379 table fingerprints unchanged. The focused expiry suite passes 9 checks and 135 adjacent apply/recovery, legal-hold, hold-blind, index, RLS, definer and grant checks pass. This is local implementation evidence only: the operation has no cron entry, deployment or production run, and the private authenticated/rate-limited adapter remains gated on trustworthy session, snapshot, storage and scanner evidence.
 
+## Hash-only derived-snapshot authority — automation pass 28, slice 36
+
+Current `origin/main` remains `0d8f70b2`; no equivalent derived-snapshot receipt or extraction-bound conflict precondition exists upstream. The authenticated adapter is still not dependency-ready because the repository has no running document scanner or private extractor. The safe prerequisite is therefore content-free source-to-snapshot evidence, not a browser route.
+
+`20261009014500_course_source_derived_snapshots.sql` adds an append-only, deny-by-default receipt for a named extractor result. Its controlled service function locks and reloads one available source, matches the exact settled source SHA-256, rechecks the student's active tenant/course relationship, records only source/snapshot hashes, revision and bounded extractor version, and commits content-free audit plus idempotency evidence atomically. Conflict recording now refuses any imported snapshot hash without a matching receipt for that exact source, tenant, owner and source hash. No extracted text or normalized course document is stored in this table.
+
+PostgreSQL 17 applies all 221 migrations twice with 380 unchanged table fingerprints. The focused suite passes 17 checks; adjacent conflict, apply and expiry suites pass 50, and grant/RLS/index/definer/persistence/scan/legal-hold/hold-blind suites pass 165. Classification, retention, design-tooling, inventory and course-source contract guards pass 72/72. TypeScript, lint, university typecheck, production build, token export, design audit/CSS, 69 design contracts and the generated design report pass with existing warning ledgers. The first focused run exposed a test fixture that bypassed the existing storage-receipt shape; the fixture was corrected rather than weakening the contract. The HawkScan preflight cannot proceed because `hawk` v6+, Docker and `HAWK_APP_HOST` are absent; no DAST pass is claimed.
+
+This closes only the hash-authority prerequisite. A real private scanner/extractor must produce the receipt before a session-derived, shared-rate-limited adapter can safely call record/apply. Import wiring, signed reads, deployment, external reconciliation and safe ICS publication remain separate.
+
 ## What was read
 
 - Root `CLAUDE.md`.

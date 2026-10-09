@@ -115,6 +115,10 @@ begin
     %L,'resolution-u',%L,'application/pdf',%L,'test-scanner-1','clean',
     'resolution-scan-import01','corr-resolution-scan02')$q$,
     imported_source, other, repeat('b',64)));
+  perform pg_temp.service_call(format($q$select public.record_course_source_derived_snapshot(
+    %L,%L,%L,%L,%L,'test-extractor-1','resolution-derive-key01','corr-resolution-derive1')$q$,
+    '51000000-0000-0000-0000-000000000001', imported_source, student,
+    repeat('b',64), repeat('e',64)));
   perform pg_temp.service_call(format($q$select public.settle_student_course_source_scan(
     %L,'resolution-other',%L,'application/pdf',%L,'test-scanner-1','clean',
     'resolution-scan-other001','corr-resolution-scan03')$q$,

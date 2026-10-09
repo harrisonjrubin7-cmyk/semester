@@ -741,9 +741,29 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Add the private server adapter only when session-derived actor/tenant authority, shared rate limiting and trustworthy canonical snapshot creation can call the service-only record/apply contracts without exposing `service_role`.
+- [ ] Add the private server adapter only when session-derived actor/tenant authority, shared rate limiting and a real private scanner/extractor can create the hash-only receipt and call the service-only record/apply contracts without exposing `service_role`.
 - [ ] Do not wire Import or call the workflow server-backed until that adapter, deployment and operating evidence exist.
 - [ ] Keep external reconciliation, safe ICS publication, trustworthy ingestion/scanning and signed reads separate.
+
+## 2026-10-09 hash-only derived-snapshot authority — automation pass 28, slice 36
+
+- [x] Fetch `origin/main` `0d8f70b2` and confirm no equivalent derived-snapshot receipt, conflict precondition or migration collision landed.
+- [x] Add one append-only, tenant/owner/source-bound receipt containing only the exact scanned source hash, derived snapshot hash, revision and bounded named extractor version; store no extracted text or course document.
+- [x] Require service role, an available hash-settled source and a current exact tenant/course relationship before recording a receipt; deny browser table/function access and direct service-role table mutation.
+- [x] Make receipt creation request-hash idempotent and atomic with pseudonymous content-free audit and bounded operation evidence.
+- [x] Make conflict recording refuse an imported snapshot hash unless it has a receipt for the exact imported source, tenant, owner and current source hash.
+- [x] Cover the new table in the tenant-scoped classification and retention authorities and add the exact foreign-key covering index.
+- [x] Correct the focused fixture to satisfy the existing storage-receipt constraint instead of weakening that contract.
+- [x] Apply all 221 migrations twice on PostgreSQL 17 with 380 unchanged table fingerprints; pass 17 focused and 215 adjacent SQL checks.
+- [x] Pass 72/72 classification, retention, design-tooling, inventory and course-source contract guards.
+- [x] Pass TypeScript, lint, university typecheck and production build with four existing lint warnings and the existing chunk-size warning; pass token export 9/9, design audit with zero violations and 86 existing warnings, CSS ledger checks, 69/69 design contracts and design-report generation.
+- [ ] Ordered and shuffled full application suites — not run for this database-only slice; focused, adjacent security and phase gates are green.
+- [ ] HawkScan DAST — preflight stops because the Hawk CLI v6+, Docker fallback and `HAWK_APP_HOST` are absent. A local credential file exists but was not read; no scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and derived-snapshot receipts under session-derived authority and shared rate limits.
+- [ ] Keep external reconciliation, safe ICS publication, signed reads, scheduling, deployment and production operation separate.
 
 ## Earlier integration baseline preserved
 

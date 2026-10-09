@@ -42,9 +42,11 @@ Audit facts contain tenant, actor, source id, course code, term, correlation id 
 
 `20261009004500_course_source_storage_buckets.sql` closes only the local bucket-definition dependency. `student-files` is private with a 50 MiB object cap; `course-materials` is private with a 100 MiB cap; both allow only PDF, plain text, Markdown, DOCX and PPTX. The migration-owner repair function is unavailable to anon, authenticated and service roles. With no browser object policy, direct client inserts fail and reads, updates and deletes see or affect zero rows. The buckets contain no production byte and expose no signed read or upload path.
 
+`20261009014500_course_source_derived_snapshots.sql` closes only the hash-authority prerequisite for re-import. A service-only append binds a named extractor version and derived snapshot SHA-256 to the exact SHA-256 of one still-available scanned source after rechecking the current student relationship. The receipt is append-only, request-hash idempotent and atomic with bounded audit; it stores no extracted text or course document. `record_course_source_conflict_resolution` now refuses an imported snapshot hash without a matching receipt for that exact source, tenant, owner and current source hash. This does not attest that an extractor is deployed or trustworthy: a real private runtime must create the receipt before any browser adapter is opened.
+
 ## Still open before ingestion
 
-- a deployed document scanner and sandboxed extraction worker;
+- a deployed document scanner and sandboxed extraction worker that produces genuine derived-snapshot receipts;
 - a repository adapter for the service-only persistence functions and a private runtime that can produce trustworthy receipts;
 - route authentication, shared rate-limit storage, upload receipts and signed-download authorization;
 - Import and Study Studio wiring, source-version propagation and recovery UI;
