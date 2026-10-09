@@ -8,7 +8,7 @@ This plan extends the current Semester foundation. It does not create a disconne
 
 Outcome: a student, assigned advisor and authorized registrar see the same policy-filtered, source-aware readiness state; stale and unknown facts fail safely; exceptions enter a durable queue; every consequential attempt receives a receipt and reconciliation result.
 
-1. Add a versioned readiness projection contract to the existing institution package.
+1. [x] Add a versioned readiness projection contract to the existing institution package.
 2. Add persistence/migration for evaluation requests, facts, source versions, workflow state, tasks and receipts only where current tables cannot carry them.
 3. Evaluate reads and commands through the current policy/access-saga boundary.
 4. Connect the existing student UI to the projection behind an exposure/feature gate, retaining the local planning fallback.
@@ -68,7 +68,7 @@ Outcome: partner/developer platform and advanced operations after the governed c
 
 ## Near-term implementation order
 
-1. governed readiness projection;
+1. governed readiness projection — implemented in repository source;
 2. durable readiness evaluation and reconciliation workflow;
 3. student UI adoption with explicit fallback;
 4. advisor/registrar queue projections;
