@@ -19,6 +19,7 @@ describe("source locations", () => {
 
   it("formats media timestamps and provides a stable fallback", () => {
     expect(formatSourceLocation(chunk({ start_seconds: 65, end_seconds: 130 }))).toBe("1:05–2:10");
+    expect(formatSourceLocation(chunk({ start_seconds: null, end_seconds: null }))).toBe("Extract 1");
     expect(formatSourceLocation(chunk({ chunk_index: 2 }))).toBe("Extract 3");
   });
 });
