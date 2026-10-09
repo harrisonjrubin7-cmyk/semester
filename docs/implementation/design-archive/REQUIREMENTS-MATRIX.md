@@ -14,15 +14,30 @@ This ledger contains 1,595 canonical requirements: 673 screens, 319 workflow ste
 
 | Status | Count |
 | --- | ---: |
-| existing/verified | 477 |
+| existing/verified | 480 |
 | existing/defective | 0 |
-| partial | 562 |
+| partial | 559 |
 | absent | 200 |
 | ambiguous | 0 |
 | conflict | 336 |
 | externally blocked | 20 |
 | not applicable | 0 |
 | **Total requirements / scheduled requirement work items** | **1595** |
+
+### Canonical status definitions
+
+These definitions govern every shard and the aggregate counts above:
+
+| Status | Reproducible classification rule |
+| --- | --- |
+| existing/verified | Concrete repository implementation evidence matches the requirement at the audited snapshot. This does not establish deployment, approval, activation, institutional operation, or completion of release gates. |
+| existing/defective | A matching implementation exists, but a documented defect prevents the requirement from meeting its acceptance contract. |
+| partial | Related implementation or documentation exists, but the requirement is incomplete, narrower than the archive concept, semantically unresolved, or lacks authority/approval evidence. |
+| absent | No production-repository implementation or semantic equivalent was located at the audited snapshot. Archive-only prototypes and documents do not count as implementation. |
+| ambiguous | Available evidence is insufficient or internally inconsistent, so no reproducible mapping or disposition can yet be assigned. |
+| conflict | The archive requirement diverges from a current authoritative repository contract, value, selector, data/security rule, or product decision and requires an explicit reconciliation decision. |
+| externally blocked | Completion depends on named external institution, provider, legal, security, accessibility, or operations evidence rather than repository implementation alone. |
+| not applicable | An explicit, evidence-linked disposition places the requirement outside the product scope; the rationale and approving owner must be recorded. |
 
 ## Requirement shards
 
