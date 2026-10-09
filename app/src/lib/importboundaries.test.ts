@@ -142,6 +142,11 @@ describe('each rule can fail', () => {
     expect(rulesIn(check(clean({ 'packages/contract/src/a.test.ts': "import z from 'zod';" })))).toEqual(['packages-are-a-leaf']);
   });
 
+  it('packages-are-a-leaf: a package CLI may use Node, but its source entry may not', () => {
+    expect(check(clean({ 'packages/contract/scripts/check.ts': "import fs from 'node:fs';" }))).toEqual([]);
+    expect(rulesIn(check(clean({ 'packages/contract/src/check.ts': "import fs from 'node:fs';" })))).toEqual(['packages-are-a-leaf']);
+  });
+
   it('functions-are-self-contained: a function importing the app, or a bare specifier', () => {
     expect(rulesIn(check(clean({ 'supabase/functions/x/index.ts': "import '../../../app/src/screen';" })))).toEqual(['functions-are-self-contained']);
     expect(rulesIn(check(clean({ 'supabase/functions/x/index.ts': "import z from 'zod';" })))).toEqual(['functions-are-self-contained']);
