@@ -397,7 +397,13 @@ interface ProducerFacts {
  * and whether anything publishes what they write. Both are facts about imports
  * and calls, so they are read from the source rather than written down.
  */
-const GATEWAY_PLATFORM_IMPORTERS = ['app/server/institution/adapter.ts', 'app/server/institution/context.ts', 'app/server/institution/gateway.ts'];
+const PLATFORM_NON_EVENT_IMPORTERS = [
+  'app/server/institution/adapter.ts',
+  'app/server/institution/context.ts',
+  'app/server/institution/gateway.ts',
+  'app/server/productivity/http.ts',
+  'app/server/productivity/service.ts',
+];
 
 function producerFactsOf(uses: readonly EventUse[], files: readonly { path: string; text: string }[]): ProducerFacts {
   // A producer's root: the package (packages/x) or the server module (app/server/x) it lives in, not the folder of the file.
@@ -414,7 +420,7 @@ function producerFactsOf(uses: readonly EventUse[], files: readonly { path: stri
       if (f.path.startsWith(`${dir}/`) || !importsIt.test(f.text)) continue;
       // The institution gateway takes the error envelope, correlation ids and request context from the platform package
       // (MIGRATION phase 1). That is the package's gateway half; it does not mount the event producer.
-      if (dir === 'packages/platform' && GATEWAY_PLATFORM_IMPORTERS.includes(f.path)) continue;
+      if (dir === 'packages/platform' && PLATFORM_NON_EVENT_IMPORTERS.includes(f.path)) continue;
       mounts.add(f.path);
     }
   }
