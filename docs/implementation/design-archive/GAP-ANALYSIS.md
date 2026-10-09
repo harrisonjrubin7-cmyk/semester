@@ -6,10 +6,10 @@ The archive is broader than the production surface, but much of that breadth is 
 
 | Status | Count |
 | --- | ---: |
-| existing/verified | 480 |
+| existing/verified | 481 |
 | existing/defective | 0 |
-| partial | 559 |
-| absent | 200 |
+| partial | 561 |
+| absent | 197 |
 | ambiguous | 0 |
 | conflict | 336 |
 | externally blocked | 20 |
