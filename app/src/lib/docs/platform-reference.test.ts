@@ -371,6 +371,7 @@ function findEventUses(files: readonly { path: string; text: string }[]): EventU
     if (/\bimplements\s+(?:OutboxStore|ReceiptLedger)\b/.test(text)) why.push('implements a store');
     if (/from\s+['"][^'"]*institution\/src\/events(?:\.ts)?['"]/.test(text) || (path.startsWith('packages/institution/src/') && /from\s+['"]\.\/events(?:\.ts)?['"]/.test(text) && !path.endsWith('/index.ts'))) why.push('imports events.ts');
     if (/insert\s+into\s+private\.domain_(?:outbox_events|event_receipts)/i.test(text)) why.push('inserts into the outbox tables');
+    if (/(?:perform|select)\s+private\.emit_domain_event\s*\(/i.test(text)) why.push('emits through the SQL helper');
     if (why.length) out.push({ file: path, why: why.join(', ') });
   }
   return out;
@@ -400,8 +401,11 @@ const PLATFORM_NON_EVENT_IMPORTERS = [
   'app/server/institution/adapter.ts',
   'app/server/institution/context.ts',
   'app/server/institution/gateway.ts',
-  // These import only the platform retrieval/context contract. Neither calls
-  // the event API or mounts the productivity producer.
+  // Course sources reuse only the tenant context, error envelope and file
+  // engine through the public package. The intelligence path imports only the
+  // platform retrieval/context contract. None calls event primitives or mounts
+  // the productivity producer.
+  'app/server/course-sources/contract.ts',
   'app/server/institution/intelligence-repository.ts',
   'app/server/institution/intelligence.ts',
   'app/server/productivity/http.ts',
@@ -922,9 +926,9 @@ describe('EDGE-FUNCTIONS.md', () => {
   const rows = edgeRows(md);
   const dirs = functionDirs();
 
-  it('has 16 functions to be right or wrong about, and the parser reads every row (control)', () => {
-    expect(dirs).toHaveLength(16);
-    expect(rows).toHaveLength(16);
+  it('has 17 functions to be right or wrong about, and the parser reads every row (control)', () => {
+    expect(dirs).toHaveLength(17);
+    expect(rows).toHaveLength(17);
     for (const r of rows) {
       expect(r.env.length, r.fn).toBeGreaterThan(0);
       expect(r.methods.length, r.fn).toBeGreaterThan(0);
@@ -935,7 +939,7 @@ describe('EDGE-FUNCTIONS.md', () => {
     expect(diff(rows.map((r) => r.fn), dirs)).toEqual(NONE);
     const sections = [...md.matchAll(/^## `([a-z-]+)`$/gm)].map((m) => m[1]);
     expect(diff(sections, dirs)).toEqual(NONE);
-    expect(md).toContain('16 Supabase edge functions');
+    expect(md).toContain('17 Supabase edge functions');
   });
 
   it('gives every function a status word from the vocabulary', () => {
@@ -1241,7 +1245,7 @@ describe('EVENTS.md and its schemas (generated)', () => {
     const all = groups.flatMap((g) => g.types);
     expect(new Set(all).size).toBe(all.length);
     expect(diff(all, Object.keys(EVENT_TYPES))).toEqual(NONE);
-    expect(all.length).toBe(64);
+    expect(all.length).toBe(65);
   });
 
   it('every extracted rejection reason has a stated rule, and no rule is orphaned', () => {
@@ -1355,15 +1359,16 @@ describe('EVENTS.md and its schemas (generated)', () => {
     expect(findEventUses([{ path: 'a.ts', text: 'const e = makeEvent({})' }])).toHaveLength(1);
     expect(findEventUses([{ path: 'b.ts', text: "import { x } from '../../packages/institution/src/events.ts'" }])).toHaveLength(1);
     expect(findEventUses([{ path: 'c.sql', text: 'insert into private.domain_outbox_events (id) values (1)' }])).toHaveLength(1);
+    expect(findEventUses([{ path: 'producer.sql', text: 'perform private.emit_domain_event(' }])).toHaveLength(1);
     expect(findEventUses([{ path: 'd.ts', text: 'class A implements OutboxStore {}' }])).toHaveLength(1);
     expect(findEventUses([{ path: 'e.ts', text: 'the domain outbox and drainOutbox exist, and makeEvent is a function' }])).toEqual([]);
     expect(findEventUses([{ path: 'packages/institution/src/index.ts', text: "export * from './events.ts'" }])).toEqual([]);
   });
 
   it('the repository has exactly the producers the page lists, none mounted and none published', () => {
-    // The productivity command service (PR 1175) is the one producer: it builds events, and a migration function
-    // writes them to the outbox in the command's transaction. One route imports it, switched off unless a deployment
-    // sets SEMESTER_PRODUCTIVITY=on, and nothing calls drainOutbox.
+    // The productivity command service (PR 1175) builds events, and migration functions write those plus the
+    // feature-policy producer's bounded events to the outbox in each command's transaction. One route imports the
+    // productivity producer, switched off unless a deployment sets SEMESTER_PRODUCTIVITY=on; nothing calls drainOutbox.
     // When that changes this goes red, and the page's status, the event-consumer guide and the example's README
     // (all of which say "no running code writes to the outbox") are revisited in the same change.
     const uses = repoEventUses();
@@ -1381,6 +1386,12 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // Not a producer: private.emit_domain_event is the helper a SQL producer will call (backlog P1-02). Nothing calls it,
       // so the claims above (one producer, nothing published) still hold; the page lists it because it inserts.
       'supabase/migrations/20261008183934_emit_domain_event.sql',
+      // Not a producer: P1-03 writes only consumer receipts while settling or dead-lettering an existing event.
+      'supabase/migrations/20261008190500_projection_outbox_operations.sql',
+      // The first SQL-native caller of the helper: one feature-policy audit fact emits one bounded event.
+      'supabase/migrations/20261008193000_tenant_feature_policy_events.sql',
+      // P1-06 binds immutable tenant-rollout history to one bounded event and private projector.
+      'supabase/migrations/20261008230000_tenant_rollout_projection.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);

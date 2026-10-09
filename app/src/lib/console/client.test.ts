@@ -68,6 +68,8 @@ import {
   loadFigures,
   loadCommandCenter,
   loadTenantOperations,
+  loadTenantProjection,
+  readTenantProjection,
   loadIntegrationHealth,
   loadReleaseIncidents,
   loadPrivacyRequests,
@@ -417,6 +419,59 @@ describe('tenant operations', () => {
 
     replies.set('rpc:console_tenant_operations', { error: { message: 'console:operate at platform scope is required.' } });
     await expect(loadTenantOperations()).rejects.toThrow('console:operate at platform scope is required.');
+  });
+});
+
+describe('tenant projection', () => {
+  const envelope = {
+    data: {
+      tenantId: 'vu',
+      entitlements: [{
+        capability: 'course:view', state: 'production', deleted: false, revision: 3,
+        sourceOccurredAt: '2026-10-08T10:00:00Z', projectedAt: '2026-10-08T10:00:01Z',
+      }],
+      rollout: {
+        state: 'pilot_read_only', resumeState: null, revision: 4,
+        sourceOccurredAt: '2026-10-08T10:00:00Z', projectedAt: '2026-10-08T10:00:01Z',
+      },
+    },
+    meta: {
+      generatedAt: '2026-10-08T10:01:00Z', sourceUpdatedAt: '2026-10-08T10:00:00Z',
+      computedAt: '2026-10-08T10:01:00Z', freshness: 'stale', authority: 'projection',
+      modelVersion: 1, correlationId: 'tenant-projection:vu:1',
+      coverage: {
+        entitlements: { freshness: 'stale', modelVersion: 1, freshnessSloSeconds: 300, workerStatus: 'idle', hasMore: true, nextCursor: 'course:view' },
+        rollout: { freshness: 'fresh', modelVersion: 1, freshnessSloSeconds: 300, workerStatus: 'idle', present: true },
+      },
+    },
+    permissions: { canView: true, canExport: false, allowedActions: [] },
+    warnings: ['Verify the entitlement source.'],
+  };
+
+  it('maps the bounded read-only envelope and sends the exact tenant cursor', async () => {
+    replies.set('rpc:read_tenant_projection', { data: envelope });
+    const projection = await loadTenantProjection('vu', 'advising:view', 25);
+
+    expect(projection).toMatchObject({
+      data: { tenantId: 'vu', entitlements: [{ capability: 'course:view', deleted: false }], rollout: { state: 'pilot_read_only' } },
+      meta: { freshness: 'stale', authority: 'projection', coverage: { entitlements: { hasMore: true, nextCursor: 'course:view' } } },
+      permissions: { canView: true, canExport: false, allowedActions: [] },
+    });
+    expect(last()).toMatchObject({
+      kind: 'rpc', name: 'read_tenant_projection',
+      args: { want_tenant: 'vu', after_capability: 'advising:view', want_limit: 25 },
+    });
+  });
+
+  it('preserves a refusal and rejects cross-tenant or malformed envelopes', async () => {
+    replies.set('rpc:read_tenant_projection', { error: { message: 'tenant:configure over the requested tenant is required.' } });
+    await expect(loadTenantProjection('vu')).rejects.toThrow('tenant:configure over the requested tenant is required.');
+
+    replies.set('rpc:read_tenant_projection', { data: { ...envelope, data: { ...envelope.data, tenantId: 'other' } } });
+    await expect(loadTenantProjection('vu')).rejects.toThrow('did not match the requested tenant');
+
+    expect(() => readTenantProjection({ ...envelope, meta: { ...envelope.meta, freshness: 'maybe' } })).toThrow('unknown freshness state');
+    expect(() => readTenantProjection({ ...envelope, permissions: { canView: true, canExport: true, allowedActions: [] } })).toThrow('invalid read envelope');
   });
 });
 

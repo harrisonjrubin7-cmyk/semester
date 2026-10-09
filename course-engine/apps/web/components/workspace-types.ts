@@ -39,6 +39,31 @@ export type SourceFile = {
   classification: string;
   status: string;
   size_bytes: number;
+  mime_type?: string;
+  page_count?: number;
+};
+
+export type SourceChunk = {
+  id: string;
+  chunk_index: number;
+  content: string;
+  content_type: string;
+  page_number?: number;
+  slide_number?: number;
+  sheet_name?: string;
+  cell_range?: string;
+  start_seconds?: number;
+  end_seconds?: number;
+  confidence: number;
+};
+
+export type SourceView = {
+  document: SourceFile;
+  chunks: SourceChunk[];
+  total: number;
+  offset: number;
+  limit: number;
+  has_more: boolean;
 };
 
 export type WorkspaceData = {
