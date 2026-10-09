@@ -99,25 +99,39 @@ describe('the workspace aliases', () => {
    */
   const packages = readdirSync(join(root, 'packages'))
     .filter((d) => statSync(join(root, 'packages', d)).isDirectory())
-    .map((dir) => ({ dir, name: (JSON.parse(readFileSync(join(root, 'packages', dir, 'package.json'), 'utf8')) as { name: string }).name }));
+    .map((dir) => {
+      const manifest = JSON.parse(readFileSync(join(root, 'packages', dir, 'package.json'), 'utf8')) as { name: string; browser?: boolean };
+      return { dir, name: manifest.name, browser: manifest.browser !== false };
+    });
+  const browserPackages = packages.filter((p) => p.browser);
   const tsconfig = readFileSync(join(root, 'app/tsconfig.app.json'), 'utf8');
   const vite = readFileSync(join(root, 'app/vite.config.ts'), 'utf8');
 
-  it('names every workspace package, at its source entry', () => {
-    for (const { dir, name } of packages) {
+  it('names every browser workspace package, at its source entry', () => {
+    for (const { dir, name } of browserPackages) {
       expect(WORKSPACE_ALIASES[name], `${name} (packages/${dir}) has no entry in WORKSPACE_ALIASES in lib/importgraph.ts`).toBe(`packages/${dir}/src/index.ts`);
     }
   });
 
-  it('names nothing that is not a workspace package', () => {
-    const real = new Set(packages.map((p) => p.name));
+  it('names nothing that is not a browser workspace package', () => {
+    const real = new Set(browserPackages.map((p) => p.name));
     for (const name of Object.keys(WORKSPACE_ALIASES)) expect(real.has(name), `${name} is aliased and no package has that name`).toBe(true);
   });
 
   it('agrees with the app’s tsconfig and vite aliases', () => {
-    for (const { dir, name } of packages) {
+    for (const { dir, name } of browserPackages) {
       expect(tsconfig, `${name} is not in tsconfig.app.json paths`).toContain(`"${name}": ["../packages/${dir}/src/index.ts"]`);
       expect(vite, `${name} is not aliased in vite.config.ts`).toContain(`'${name}'`);
+    }
+  });
+
+  it('keeps explicitly Node-only workspaces out of the browser aliases', () => {
+    const nodeOnly = packages.filter((p) => !p.browser);
+    expect(nodeOnly.length).toBeGreaterThan(0);
+    for (const { name } of nodeOnly) {
+      expect(WORKSPACE_ALIASES[name]).toBeUndefined();
+      expect(tsconfig).not.toContain(`"${name}"`);
+      expect(vite).not.toContain(`'${name}'`);
     }
   });
 });
@@ -135,6 +149,11 @@ describe('each rule can fail', () => {
   it('packages-are-a-leaf: a package gaining a dependency, or a built-in, outside a test', () => {
     expect(rulesIn(check(clean({ 'packages/contract/src/dep.ts': "import z from 'zod';" })))).toEqual(['packages-are-a-leaf']);
     expect(rulesIn(check(clean({ 'packages/contract/src/fs.ts': "import fs from 'node:fs';" })))).toEqual(['packages-are-a-leaf']);
+  });
+
+  it('packages-are-a-leaf: a Node-only workspace script may use a built-in, but not a third-party dependency', () => {
+    expect(check(clean({ 'packages/contract/scripts/read.ts': "import fs from 'node:fs';" }))).toEqual([]);
+    expect(rulesIn(check(clean({ 'packages/contract/scripts/read.ts': "import z from 'zod';" })))).toEqual(['packages-are-a-leaf']);
   });
 
   it('packages-are-a-leaf: and a test may import vitest and a built-in, and nothing more', () => {

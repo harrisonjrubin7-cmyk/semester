@@ -3,6 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "browser": false,
   "scripts": {
     "validate": "node --experimental-strip-types scripts/validate-registry.ts",
     "build:registry": "node --experimental-strip-types scripts/build-atlas.ts",

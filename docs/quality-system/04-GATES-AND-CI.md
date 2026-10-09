@@ -54,7 +54,7 @@ owner's ([README Q2](README.md)).
 ## 2. What each gate requires
 
 Commands run from `app/` unless they start `supabase/` (`CLAUDE.md`: the repository
-root has no scripts, so `npm test` there silently does nothing).
+root has no `test` script, so `npm test` there does not run the application suite).
 
 ### `commit` — local, advisory
 

@@ -8,7 +8,7 @@ proof here.
 
 ## The gates every phase runs
 
-From `app/` — the repository root defines no scripts:
+From `app/` — the repository root scripts are reserved for the Node-only platform-control registry:
 
 ```bash
 npx tsc -b

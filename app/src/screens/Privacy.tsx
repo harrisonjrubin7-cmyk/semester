@@ -35,7 +35,6 @@ import { eraseDevice } from '../lib/erase';
 import { record, yours } from '../lib/journal';
 import { Toggle } from '../components/ui';
 import { SupportAccess } from '../components/SupportAccess';
-import { DevicePermissions } from '../components/DevicePermissions';
 import { DataRightsRequests } from '../components/DataRightsRequests';
 import { SchoolDataPanel } from '../components/SchoolRecords';
 import { DESTINATIONS, offered } from '../lib/nav';
@@ -52,6 +51,9 @@ import {
 
 /** Read when the screen is open, not when it loads: it asks the network, so it has its own loading state anyway. */
 const WhoCanSeeYou = lazy(() => import('../components/WhoCanSeeYou').then((m) => ({ default: m.WhoCanSeeYou })));
+
+/** Browser permission probes are needed only after this screen opens. */
+const DevicePermissions = lazy(() => import('../components/DevicePermissions').then((m) => ({ default: m.DevicePermissions })));
 
 // The Trust & Data Center (Phase N), at the top of this page.
 const TrustCenter = lazy(() => import('../components/TrustCenter').then((m) => ({ default: m.TrustCenter })));
@@ -161,7 +163,9 @@ export function Privacy({ trustCenter = moduleOn(MODULE_FLAGS.trust_center) }: {
         <WhoCanSeeYou account={account} />
       </Suspense>
 
-      <DevicePermissions openAlerts={() => dispatch({ type: 'go', screen: 'setAlerts' })} />
+      <Suspense fallback={<p role="status" style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>Checking this device’s permissions…</p>}>
+        <DevicePermissions openAlerts={() => dispatch({ type: 'go', screen: 'setAlerts' })} />
+      </Suspense>
 
       <SchoolDataPanel />
 
