@@ -695,8 +695,34 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Define an atomic server-side apply command that consumes only an active resolution batch, rechecks source/snapshot hashes and current relationship, preserves course/item ids and completion state, and has an audited idempotent rollback path.
+- [x] Define an atomic server-side apply command that consumes only an active resolution batch, rechecks source/snapshot hashes and current relationship, preserves course/item ids and completion state, and has an audited idempotent rollback path. Completed in pass 26 / slice 34 below.
 - [ ] Do not wire Import to the service until the command and a private server adapter exist; the current save remains local-only.
+- [ ] Keep external reconciliation, safe ICS publication, trustworthy ingestion/scanning and signed reads separate.
+
+## 2026-10-09 atomic re-import application and recovery — automation pass 26, slice 34
+
+- [x] Fetch `origin/main` `0d8f70b2` and confirm its registration-readiness changes contain no equivalent course-source apply/rollback command, recovery table or check.
+- [x] Consume only an active resolution batch; lock and recheck the owner, active membership, exact tenant/course relationship and both available source bindings.
+- [x] Recompute canonical current/imported course-document hashes and refuse either stale snapshot before mutation.
+- [x] Derive the replacement in the database from append-only choices; do not accept a caller-supplied resolved document.
+- [x] Require normalized stable course/item ids, preserve current ids and refuse any current-item removal without an explicit use-imported removal choice.
+- [x] Apply independent date, title, type, weight, location, detail, provenance, course-field and grading choices cumulatively.
+- [x] Update the existing `public.courses` row atomically with application evidence, batch state, content-free audit and idempotency receipt; leave `public.state` completion ticks untouched.
+- [x] Keep a private service-only 30-day recovery copy; rollback only when the exact applied hash is still current, then restore the prior document and clear its copy.
+- [x] Make apply and rollback idempotent and fail closed after relationship revocation, a later course edit, an expired window or an audit append failure.
+- [x] Add the application table to classification and retention controls without claiming automatic recovery-copy expiry.
+- [x] Prove and fix cumulative-choice behavior: the first focused run exposed date/provenance choices being overwritten by a later title choice; the corrected 17-check PostgreSQL 17 suite passes and an apply replay reports a later rollback honestly.
+- [x] Apply all 219 migrations twice on PostgreSQL 17 with 379 unchanged table fingerprints; pass 309/309 focused and adjacent course-source, grants, RLS, index, hold, deletion and recovery checks.
+- [x] Pass 64/64 classification, retention, definer and design-tooling guards; TypeScript, lint, university typecheck and the production build pass with four existing lint warnings and the existing chunk-size warning.
+- [x] Pass token export 9/9, design audit with zero violations and 86 existing warnings, CSS ledger checks and 69/69 design contracts. The design report file regenerates unchanged, but its wrapper exits 1 because it invokes unavailable `npm`; no aggregate report pass is claimed.
+- [ ] Ordered and shuffled full application suites — not run for this database-only slice; focused, adjacent security and phase gates are green.
+- [ ] HawkScan DAST — required for this production schema change, but the Hawk CLI, Docker fallback, `HAWK_API_KEY` and `HAWK_APP_HOST` are unavailable. No scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Add the private server adapter only when session-derived actor/tenant authority, shared rate limiting and trustworthy canonical snapshot creation can call the service-only record/apply contracts without exposing `service_role`.
+- [ ] Do not wire Import or call the workflow server-backed until that adapter, deployment and operating evidence exist.
+- [ ] Add a hold-aware expiry operation before claiming the 30-day recovery copy is physically scrubbed after its deadline.
 - [ ] Keep external reconciliation, safe ICS publication, trustworthy ingestion/scanning and signed reads separate.
 
 ## Earlier integration baseline preserved

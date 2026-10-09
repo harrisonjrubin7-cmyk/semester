@@ -342,6 +342,14 @@ PostgreSQL 17 applies all 218 migrations twice with 378 table fingerprints uncha
 
 This closes the durable-decision-record prerequisite, not the end-to-end re-import workflow. The next dependency boundary is an atomic server-side apply contract that revalidates the active batch and exact snapshot/source hashes while preserving current course/item identifiers, completion state, audit, idempotency and rollback. No browser wiring should precede that contract. External reconciliation, safe ICS publication, trustworthy ingestion/scanning and signed reads remain separate.
 
+## Atomic re-import application and recovery — automation pass 26, slice 34
+
+Current `origin/main` is `0d8f70b2`, already merged into the clean pre-slice branch. Its registration-readiness work contains no equivalent course-source apply/rollback command, recovery table or SQL guard. `20261009011500_course_source_resolution_apply.sql` consumes only an active, service-only resolution batch after locking and independently rechecking the current relationship, both available source bindings and the canonical JSON hashes of the current and normalized imported course documents.
+
+The database derives the replacement itself from the append-only choices. It refuses stale or malformed snapshots, non-normalized course/item identities, choices that no longer describe an actual difference and any unapproved removal of a stable current item. The existing `public.courses` row is replaced atomically with the application row, batch transition, content-free audit event and idempotency receipt. `public.state` is not touched, so completion ticks survive through the stable item ids. A private 30-day recovery copy supports an idempotent rollback only while the course still has the exact applied hash; later edits fail closed instead of being overwritten. Rollback restores the exact prior document and immediately clears the recovery copy.
+
+The focused PostgreSQL 17 guard passes 17 checks. It proved a first implementation bug—later choices on the same item erased earlier date/provenance choices—then passed after derivation was made cumulative. The guard covers browser refusal, audit-atomic rollback, imported-hash refusal, independent field/item/grading choices, stable ids, untouched completion state, apply/rollback receipts, later-edit refusal, idempotent recovery and truthful apply replay after rollback. The server contract is now locally implemented, but the current Import route remains local-only: a private authenticated/rate-limited adapter, trusted snapshot creation, deployment and operating evidence are still prerequisites to wiring it.
+
 ## What was read
 
 - Root `CLAUDE.md`.
