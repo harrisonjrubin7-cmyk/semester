@@ -4,6 +4,7 @@
     "api": {
       "root": "app",
       "entrypoint": "server/institution/vercel-service.ts",
+      "installCommand": "npm install --no-save typescript@6.0.3",
       "headers": [
         {
           "source": "/(.*)",

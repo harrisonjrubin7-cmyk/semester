@@ -25,6 +25,7 @@ describe('root vercel.json services carry what each folder file says', () => {
   it('routes both API prefixes to an explicit Node service before the app catch-all', () => {
     expect(root.services.api.root).toBe('app');
     expect(root.services.api.entrypoint).toBe('server/institution/vercel-service.ts');
+    expect(root.services.api.installCommand).toBe('npm install --no-save typescript@6.0.3');
     expect(root.services.api.headers).toEqual(app.headers);
     expect(root.services.api.functions).toEqual({
       'server/institution/vercel-service.ts': { maxDuration: 30 },
