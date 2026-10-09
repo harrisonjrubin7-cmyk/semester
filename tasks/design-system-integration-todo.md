@@ -455,7 +455,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ## 2026-10-08 private course-source buckets — automation pass 15, slice 23
 
-- [x] Fetch and inspect `origin/main` before work; inspect final `aac5da38` and confirm its search/AI authorization changes add no bucket migration, equivalent work or version collision. Commit the slice before merging that head on a clean tree.
+- [x] Fetch and inspect `origin/main` before work; inspect final `aac5da38`, commit slice `be28289f`, then merge it on the clean tree. Preserve both course-source and intelligence non-event importer allowlists; 370/370 combined focused tests plus TypeScript, lint, university typecheck and build pass.
 - [x] Reuse the existing private `trust-packet` bucket convention instead of creating a browser upload policy or parallel storage model.
 - [x] Define `student-files` and `course-materials` as private, idempotently repaired buckets with the current 50 MiB / 100 MiB classification caps and exact five-type course-document allowlist.
 - [x] Revoke the repair function from all runtime roles and add no anon/authenticated object policy.

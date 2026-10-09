@@ -402,10 +402,12 @@ const PLATFORM_NON_EVENT_IMPORTERS = [
   'app/server/institution/context.ts',
   'app/server/institution/gateway.ts',
   // Course sources reuse only the tenant context, error envelope and file
-  // engine through the public package. They neither call event primitives nor
-  // construct an outbox, so this is another package consumer, not a mount of
-  // the event producer that happens to live elsewhere in the same package.
+  // engine through the public package. The intelligence path imports only the
+  // platform retrieval/context contract. None calls event primitives or mounts
+  // the productivity producer.
   'app/server/course-sources/contract.ts',
+  'app/server/institution/intelligence-repository.ts',
+  'app/server/institution/intelligence.ts',
   'app/server/productivity/http.ts',
   'app/server/productivity/service.ts',
 ];

@@ -8,7 +8,7 @@ Phase 0 reconciliation is complete for the archive populations and includes the 
 
 ## Evidence locked in automation pass 15 / slice 23
 
-- The pass began clean at `7abd715d`, which includes `origin/main` `de9ee702`. A final dirty-tree fetch observed `aac5da38`; its search/AI authorization changes add no Supabase migration or bucket work and do not overlap this slice. The slice is committed before merging that upstream head on the clean branch.
+- The pass began clean at `7abd715d`, which includes `origin/main` `de9ee702`. A final dirty-tree fetch observed `aac5da38`; its search/AI authorization changes add no Supabase migration or bucket work and do not overlap this slice. After slice commit `be28289f`, that head was merged on the clean branch. Two repository-map conflicts were resolved by retaining both the course-source and new intelligence non-event platform importers; 370/370 combined focused tests plus TypeScript, lint, university typecheck and production build pass on the merged tree.
 - `20261009004500_course_source_storage_buckets.sql` creates or repairs only `student-files` and `course-materials` when Supabase Storage exists. Both are private, use the current 50 MiB student-private / 100 MiB internal caps and accept exactly PDF, plain text, Markdown, DOCX and PPTX.
 - No anon or authenticated object policy is added. The migration-owner repair function is revoked from anon, authenticated and service roles. Focused behavior proves direct client inserts fail and browser reads, updates and deletes see or affect zero planted rows.
 - The privacy guard was shown red by temporarily making `student-files` public; it failed with one of two buckets private, then passed after restoration.

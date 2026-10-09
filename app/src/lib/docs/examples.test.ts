@@ -764,14 +764,17 @@ describe('examples/event-consumer', () => {
     ]);
     // Nothing outside the producers' own folders imports them, so no entry point runs them. (packages/platform is the
     // tenancy kernel: it builds events and checks the tenant on a store; only build configuration names it.)
-    // These exact consumers take non-event primitives from the platform package. The institution gateway uses the
-    // error envelope, correlation ids and request context (MIGRATION phase 1); the course-source contract imports
-    // only the file engine, request context and errors. None imports events/emit or the productivity service.
+    // These exact consumers take non-event primitives from the platform package. The institution gateway and
+    // intelligence path use the error envelope, correlation ids, request context and retrieval contract; the
+    // course-source contract imports only the file engine, request context and errors. None imports events/emit or
+    // the productivity service.
     const nonEventPlatformFiles = [
       'app/server/institution/adapter.ts',
       'app/server/institution/context.ts',
       'app/server/institution/gateway.ts',
       'app/server/course-sources/contract.ts',
+      'app/server/institution/intelligence-repository.ts',
+      'app/server/institution/intelligence.ts',
     ];
     const mounts = code
       .filter((c) => !c.file.startsWith('app/server/productivity/') && !c.file.startsWith('packages/platform/'))

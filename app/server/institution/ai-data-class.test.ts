@@ -5,6 +5,8 @@ import { PROVIDER_FIELD_CLASS, SOURCE_FIELD_CLASS, checkProviderRequest } from '
 import type { IntelligenceGatewayRequest, TenantIntelligencePolicy } from '../../../packages/institution/src/intelligence.ts';
 import { courseAgentPolicy } from '../../../packages/institution/src/course-agent-policy.ts';
 import { AI_DATA_CEILING, AI_DATA_CLASSES } from '../../../packages/institution/src/ai-data-class.ts';
+import { contextFor } from './context.ts';
+import type { UniversityIdentity } from '../../../packages/institution/src/index.ts';
 
 /**
  * C7 on the institution gateway: before a request reaches the provider, every
@@ -12,7 +14,18 @@ import { AI_DATA_CEILING, AI_DATA_CLASSES } from '../../../packages/institution/
  * with none) is refused and audited by name, never by content.
  */
 
-const scope = { origin: 'course', policyScope: 'course', policyCourseCode: 'ECON 101', policyTerm: '2026FA' };
+const identity: UniversityIdentity = { userId: 'student-1', institutionId: 'northstar', roles: ['student'] };
+const context = contextFor(new Request('http://local/v1/intelligence/respond'), identity, {
+  requestId: 'request-1', correlationId: 'correlation-1',
+}, 'production', 'ai_context');
+const scope = {
+  origin: 'course', policyScope: 'course', policyCourseCode: 'ECON 101', policyTerm: '2026FA',
+  labels: {
+    tenantId: 'northstar', purpose: 'ai_context' as const,
+    source: { id: 'syllabus', kind: 'course' },
+    freshness: { state: 'current' as const, observedAt: '2026-10-01T00:00:00.000Z' },
+  },
+};
 const SECRET = 'Jordan Rivera, student id 20418837, midterm 61.5';
 
 const request = (patch: Partial<IntelligenceGatewayRequest> = {}): IntelligenceGatewayRequest => ({
@@ -34,7 +47,8 @@ function fixture(patch: Partial<IntelligenceRespondInput> = {}) {
   const reserveBudget = vi.fn().mockResolvedValue({ id: 'res-1', reservedCents: 1 });
   const settleBudget = vi.fn().mockResolvedValue(true);
   const input: IntelligenceRespondInput = {
-    identity: { userId: 'student-1', institutionId: 'northstar', roles: ['student'] },
+    context,
+    identity,
     request: request(),
     tenantPolicy: policy(),
     loadCoursePolicy: async () => courseAgentPolicy(null),
