@@ -280,7 +280,7 @@ async function heldDone(page, service, title) {
         const rows = await response.json();
         const data = rows?.[0]?.data;
         const task = data?.tasks?.find((candidate) => candidate?.title === title);
-        return Boolean(task?.id && data?.done?.[task.id]);
+        return task?.done === true;
       },
       { ...service, title },
     );
@@ -392,11 +392,13 @@ async function journey(label, viewport) {
     // five-second probe and then asserting against the pre-adoption copy.
     if (await visible(ask, SETTLE)) {
       notes.push(`${label}: the second device asked which copy to keep; kept both`);
-      // The compact viewport can leave the modal button under a transient
-      // shell layer while Playwright waits for actionability. The dialog and
-      // exact choice are already proven above; force this test click, then
-      // require the dialog to close before reading the adopted copy.
-      await ask.getByRole('button', { name: /^keep both$/i }).click({ force: true, timeout: WAIT });
+      // Prove the compact viewport can reach the real control. Playwright's
+      // normal click waits for the button to be visible, stable, enabled and
+      // unobstructed; bypassing those checks would let a mobile UI regression
+      // pass even though a student could not make the adoption choice.
+      const keepBoth = ask.getByRole('button', { name: /^keep both$/i });
+      await keepBoth.scrollIntoViewIfNeeded({ timeout: WAIT });
+      await keepBoth.click({ timeout: SETTLE });
       await ask.waitFor({ state: 'hidden', timeout: WAIT });
     }
     expect(await visible(other.getByText('Signed in', { exact: true })), 'signing in on the second device did not reach "Signed in"');
