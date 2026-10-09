@@ -1215,3 +1215,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 governed emergency-contact removal — automation pass 6, integration slice 57
+
+- [x] Re-fetch current `origin/main` `34ac2e1d` and confirm it contains no equivalent Support-workspace consequence preview.
+- [x] Select only the current student's device-owned emergency-contact removal; keep server support tickets, official campus contacts and external systems outside the mutation.
+- [x] Reuse `ConfirmDialog` and `ActionPreview` to name the selected contact and phone number, the exact device-only removal boundary, preserved Support data and the honest no-backup recovery limit.
+- [x] Keep Cancel as the safe initial modal action and prove it leaves rendered and persisted state unchanged.
+- [x] Remove only the selected contact after explicit confirmation and a successful guarded device-library write; announce the local result.
+- [x] Prove the rendered guard red against the immediate deletion, then pass 14/14 focused journey and ActionPreview tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 9/9 token-export, 69/69 design-check and 96/96 report-contract tests, design audit with zero violations and 86 existing warnings, and CSS ledger checks.
+- [ ] Aggregate design report/check launchers — `npm`/`npx` are unavailable; the report regenerates before its wrapper exits and the exact constituents pass, so no aggregate launcher pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
