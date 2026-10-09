@@ -476,7 +476,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ## 2026-10-08 student-controlled re-import date conflicts — automation pass 16, slice 24
 
-- [x] Begin from merged `origin/main` `aac5da38`, then inspect final `27be630d`; confirm its Education OS governance/documentation update has no equivalent Import conflict-choice behavior or overlapping production/control file. Do not merge or rebase the dirty branch.
+- [x] Begin from merged `origin/main` `aac5da38`, then inspect final `27be630d`; confirm its Education OS governance/documentation update has no equivalent Import conflict-choice behavior or overlapping production/control file. Do not merge or rebase the dirty branch before the coherent slice commit.
 - [x] Verify the repository still has no document-malware scanner, configured scanner provider, scanner credential or runtime; do not reuse the image-only community scanner or synthesize a receipt.
 - [x] Reuse the current Import/Rediff course-replacement path; add no route, second course model, server authority or provider claim.
 - [x] Treat every moved or disappearing deadline as an unresolved source conflict with no preselected winner.
@@ -487,6 +487,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Prove the guard red by temporarily bypassing unresolved-conflict detection, observe the focused test fail, restore it and pass 67/67 focused logic/UI/design/responsive tests.
 - [x] TypeScript, lint, university typecheck and production build pass; lint retains the existing four-warning baseline and the build retains existing chunk warnings.
 - [x] Token export, design audit, CSS budget and 69/69 design-system contracts pass; audit retains zero violations and the existing 86-warning ledger.
+- [x] Commit the coherent slice as `4c258362`, merge `origin/main` `27be630d` on the clean branch, and pass 72/72 combined focused Course Engine/document tests plus TypeScript, lint, university typecheck and production build.
 - [ ] HawkScan DAST — required for this production UI change, but `hawk`, `HAWK_API_KEY` and `HAWK_APP_HOST` remain absent; no scan or security pass is claimed.
 - [ ] Ordered and shuffled full suites — not run for this bounded client slice; focused regression and phase gates are green.
 
