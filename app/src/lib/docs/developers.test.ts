@@ -571,6 +571,7 @@ describe('the onboarding page', () => {
       'registry:build',
       'registry:validate',
       'release:check',
+      'release:report',
     ]);
     expect(onboarding).toContain(`engines: { node: "${root.engines?.node}" }`);
     expect(onboarding).toContain('root exposes only the platform-control registry commands');

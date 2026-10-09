@@ -40,7 +40,7 @@ git clone https://github.com/harrisonjrubin7-cmyk/semester.git
 cd semester
 ```
 
-The repository's root `package.json` is the workspace root for `app` and `packages/*` and holds the one lockfile. Install at the root. Product commands still run from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says; the root exposes only the platform-control registry commands (`registry:validate`, `registry:build`, `release:check`, and `platform-control:test`). At the root, plain `npm test` still fails with "Missing script" instead of running the product suite.
+The repository's root `package.json` is the workspace root for `app` and `packages/*` and holds the one lockfile. Install at the root. Product commands still run from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says; the root exposes only the platform-control registry commands (`registry:validate`, `registry:build`, `release:check`, `release:report`, and `platform-control:test`). At the root, plain `npm test` still fails with "Missing script" instead of running the product suite.
 
 ## 3. Check main first
 
