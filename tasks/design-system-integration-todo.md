@@ -785,6 +785,25 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 - [ ] Keep external reconciliation, safe ICS publication, signed reads, scheduling, deployment and production operation separate.
 
+## 2026-10-09 full-suite reconciliation — automation pass 30, slice 38
+
+- [x] Fetch `origin/main` `0d8f70b2` and confirm no newer equivalent work or migration collision landed.
+- [x] Run the complete ordered suite and classify all five initial failures: one runner-mount map mismatch, two stale generated registers, one stale support label and one reserved migration-filename collision affecting both new files.
+- [x] Ignore `.semester-reference/` explicitly as an untrusted runner mount instead of adding it to the repository map.
+- [x] Rename both migration files without changing their versions or SQL, refresh every exact documentation reference and pass the snapshot-location guard.
+- [x] Align the support article with the current `Reworded` interface label and regenerate the role-launch and control-facts authorities.
+- [x] Pass the five directly affected guard files, 246/246 tests.
+- [x] Apply all 222 migrations twice on PostgreSQL 17 with 380 unchanged table fingerprints and pass the 20-check derivation-receipt suite.
+- [x] Pass the complete ordered suite: 1,490 files and 23,872 tests passed; one file and 69 tests skipped.
+- [x] Pass the complete shuffled suite at seed `1791526111475` with the same 1,490-file / 23,872-test result.
+- [x] Pass TypeScript, lint, university typecheck, production build, 147 design contracts, design audit/CSS and design-report generation with existing warning ledgers.
+- [ ] HawkScan DAST — preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; a local properties file exists but was not read. No scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+- [ ] Keep external reconciliation, safe ICS publication, signed reads, scheduling, deployment and production operation separate.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.

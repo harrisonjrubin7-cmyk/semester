@@ -1,16 +1,26 @@
 # Handoff integration status
 
-**Automation pass** 29 of 120 · **Integration slice** 37 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
+**Automation pass** 30 of 120 · **Integration slice** 38 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
 
+## Evidence locked in automation pass 30 / slice 38
+
+- Current `origin/main` remains `0d8f70b2`; the clean pass began at `4d4e87f5` and no equivalent reconciliation landed.
+- The initial complete ordered run found five branch regressions. `.semester-reference/` is now an explicit ignored runner mount rather than repository source; the support article uses the current `Reworded` label; `ROLE-LAUNCH-REGISTER.md` and `CONTROL-FACTS.md` are regenerated from the current tree; and the two new migration filenames no longer contain the reserved word `snapshot`.
+- Migration versions and SQL are unchanged. PostgreSQL 17 applies all 222 migrations twice with 380 unchanged table fingerprints, then passes the 20-check `course-source-derived-snapshots` suite. Five directly affected guard files pass 246/246.
+- The complete ordered and shuffled application suites each pass 23,872 tests with 69 skipped across 1,490 passing files and one skipped file. The shuffled seed is `1791526111475`.
+- TypeScript, university gateway typecheck, lint, production build, 147 design contracts, design audit/CSS and design-report generation pass. Existing baselines remain four lint warnings, 86 design-audit warnings and the build's chunk-size warning.
+- HawkScan preflight confirms the Hawk CLI and Docker runtime are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. A local properties file exists but was not read. No DAST result or security pass is claimed.
+- The adapter/runtime boundary is unchanged: no scanner, extractor, route, Import wiring, signed read, schedule, deployment, production byte or external system changed.
+
 ## Evidence locked in automation pass 29 / slice 37
 
 - Current `origin/main` remains `0d8f70b2`; no equivalent correction-bound derived-snapshot receipt, conflict precondition or migration collision landed.
 - The regression guard was proved red before implementation: after a receipt was recorded and a student correction confirmed, the prior conflict function still accepted the older snapshot.
-- `20261009020000_course_source_snapshot_corrections.sql` records the correction count and a deterministic SHA-256 of each new receipt's append-only correction chain while the source row is locked. No corrected value, quotation, source text or extracted course document is stored.
+- `20261009020000_course_source_correction_bindings.sql` records the correction count and a deterministic SHA-256 of each new receipt's append-only correction chain while the source row is locked. No corrected value, quotation, source text or extracted course document is stored.
 - Conflict recording locks both sources, recomputes the imported source's correction state and refuses legacy or stale receipts. Existing legacy receipts remain append-only historical evidence and are not falsely backfilled.
 - PostgreSQL 17 applies all 222 migrations twice with 380 unchanged table fingerprints. The focused suite passes 20 checks; every relevant course-source, grant, RLS, index, definer, retention, deletion and legal-hold suite passes in the aggregate run. The aggregate retains unrelated failures in `financial-retention.check.sql` and `ledger-seals.check.sql`, so no full SQL-suite pass is claimed. Eight repository guard files pass 113/113; TypeScript, lint, university typecheck, production build, token export, design audit/CSS, 138 design contracts and report generation pass with existing warning ledgers.
 - A real private scanner/extractor must incorporate the current corrections and produce the receipt. No adapter, route, browser access, Import wiring, signed read, schedule, deployment or production operation is added or inferred.
@@ -19,7 +29,7 @@ Phase 0 reconciliation is complete for the archive populations and includes the 
 ## Evidence locked in automation pass 28 / slice 36
 
 - Current `origin/main` remains `0d8f70b2`; no equivalent course-source derived-snapshot receipt, extraction-bound conflict precondition or migration collision landed.
-- `20261009014500_course_source_derived_snapshots.sql` adds an append-only, RLS-protected, hash-only receipt binding one available source's exact scanned SHA-256 to a derived snapshot SHA-256, revision and bounded named extractor version. It stores no extracted document or course content.
+- `20261009014500_course_source_derivation_receipts.sql` adds an append-only, RLS-protected, hash-only receipt binding one available source's exact scanned SHA-256 to a derived snapshot SHA-256, revision and bounded named extractor version. It stores no extracted document or course content.
 - Only service role may append through the controlled function. The database independently locks and reloads the source, requires `available`, matches the settled source hash, rechecks the active exact tenant/course relationship, makes the request idempotent and commits bounded audit plus operation evidence atomically. Browser access and direct service-role mutation are refused.
 - Conflict recording now fails closed unless the imported snapshot hash has an append-only receipt for the exact imported source, tenant, owner and still-current source hash. A browser-supplied snapshot hash alone is no longer accepted as extraction evidence.
 - The guard first failed on an invalid direct-availability fixture that omitted existing storage receipt fields; the fixture was corrected without weakening `course_source_available_receipt`. PostgreSQL 17 applies all 221 migrations twice with 380 unchanged table fingerprints. The new 17-check suite, 50 adjacent conflict/apply/expiry checks, 165 grant/RLS/index/definer/persistence/scan/hold checks and 72 repository classification/retention/design/course-source guards pass. TypeScript, lint, university typecheck, production build, token export, design audit/CSS, 69 design contracts and the generated design report also pass with the existing four lint, 86 design-audit and chunk-size warning baselines.
