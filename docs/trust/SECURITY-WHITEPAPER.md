@@ -90,9 +90,11 @@ do not yet express the school boundary (HECVAT TEN-1).
 
 **MFA is partially enforced.** The shared server predicates require an aal2
 session for platform_admin and support_agent capability listings/checks and
-role-based approval requests. The signed-in app challenges those accounts
-before mounting capability-backed tools; ordinary console roles remain usable
-at aal1. Verified TOTP and phone-code factors can be challenged;
+role-based approval requests. Ordinary content stays available while the role
+lookup is pending; capability listings and server policies keep privileged
+tools dormant, and the app presents an elevation gate once either privileged
+role is confirmed. Ordinary console roles remain usable at aal1. Verified TOTP
+and phone-code factors can be challenged;
 TOTP can be enrolled. MFA is not yet enforced for every staff role or student
 account, and production Auth and provider-console configuration evidence
 has not been filed. This is not evidence of universal MFA or production-console

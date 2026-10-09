@@ -225,7 +225,7 @@ export const CONTROLS: readonly Control[] = [
     mechanism: 'code-test',
     state: 'partial',
     proof: ['app/src/lib/console/client.test.ts', 'app/src/screens/console.test.tsx', 'supabase/privileged-mfa.check.sql'],
-    gap: 'The signed-in app requires aal2 before privileged tools, capability listings/checks and role-party predicates require aal2 for platform_admin and support_agent grants, and sensitive actions require a fresh second factor. Ordinary console roles retain aal1 access. Student enrolment, passkeys, other staff-role coverage and production Auth evidence remain open.',
+    gap: 'Capability listings/checks and role-party predicates require aal2 for platform_admin and support_agent grants, the app gates either role after the lookup confirms it without blocking ordinary offline-first use while pending, and sensitive actions require a fresh second factor. Ordinary console roles retain aal1 access. Student enrolment, passkeys, other staff-role coverage and production Auth evidence remain open.',
     owner: 'security',
   },
   {

@@ -63,6 +63,16 @@ export function PrivilegedMfaBoundary({ subject, children }: { subject: string |
   if (!subject) return <>{children}</>;
   const status: Status = state.subject === subject ? state.status : 'checking';
   if (status === 'ready') return <>{children}</>;
+  if (status === 'checking') {
+    return (
+      <>
+        <p role="status" style={{ maxWidth: 560, margin: 'var(--sp-3) auto', paddingInline: 'var(--sp-4)', color: 'var(--app-dim)' }}>
+          Checking privileged access…
+        </p>
+        {children}
+      </>
+    );
+  }
   if (status === 'error') {
     return (
       <>
@@ -77,7 +87,6 @@ export function PrivilegedMfaBoundary({ subject, children }: { subject: string |
   return (
     <div role="main" data-semester-root style={{ maxWidth: 560, marginInline: 'auto', padding: 'var(--sp-6)', display: 'grid', gap: 'var(--sp-4)' }}>
       <h2 style={{ margin: 0 }}>Verify this privileged session</h2>
-      {status === 'checking' && <p role="status">Checking whether this account needs a second factor…</p>}
       {status === 'required' && (
         <MfaStep
           reason="This account holds a privileged platform role. Verify a second factor before Semester opens capability-backed tools."

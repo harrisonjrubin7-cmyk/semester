@@ -151,8 +151,8 @@ export const EVIDENCE: readonly EvidenceRow[] = [
     evidence: 'Identity-provider policy export or configuration screenshot; a test that a second factor is demanded.', frequency: 'Quarterly and on change', owner: 'security', visibility: 'summary', status: 'defined',
     holds: [
       { path: 'supabase/privileged-mfa.check.sql', shows: 'platform_admin and support_agent grants fail at aal1 and succeed at aal2' },
-      { path: 'app/src/components/PrivilegedMfaBoundary.test.tsx', shows: 'privileged aal1 sessions cannot mount the app until factor verification succeeds' },
-      { path: 'app/src/components/MfaStep.test.tsx', shows: 'TOTP enrolment, TOTP and phone-code challenge, and retry after factor-discovery failure' },
+      { path: 'app/src/components/PrivilegedMfaBoundary.test.tsx', shows: 'ordinary content stays mounted during lookup while confirmed privileged aal1 sessions are gated until factor verification succeeds' },
+      { path: 'app/src/components/MfaStep.test.tsx', shows: 'TOTP enrolment, selectable TOTP and resendable phone-code challenges, and retry after factor-discovery failure' },
       { path: 'app/src/screens/console.test.tsx', shows: 'the operations console challenges before protected reads' },
       { path: 'docs/market-readiness/HECVAT_DRAFT_RESPONSE.md', shows: 'the owner attests MFA is on for GitHub, Google and Supabase; an attestation, not evidence' },
     ],

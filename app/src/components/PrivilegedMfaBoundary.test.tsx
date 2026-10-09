@@ -82,15 +82,19 @@ describe('PrivilegedMfaBoundary', () => {
     expect(host.textContent).toContain('Verify second factor');
   });
 
-  it('closes again before checking a different signed-in account', async () => {
+  it('keeps ordinary content mounted while checking a different signed-in account, then gates a confirmed privileged session', async () => {
     mock.required.mockResolvedValueOnce(false);
     await render('operator-1');
     expect(host.textContent).toContain('Protected app');
-    mock.required.mockImplementationOnce(() => new Promise<boolean>(() => {}));
+    let finish!: (required: boolean) => void;
+    mock.required.mockImplementationOnce(() => new Promise<boolean>((resolve) => { finish = resolve; }));
     await act(async () => {
       root.render(<PrivilegedMfaBoundary subject="operator-2"><p>Protected app</p></PrivilegedMfaBoundary>);
     });
+    expect(host.textContent).toContain('Protected app');
+    expect(host.textContent).toContain('Checking privileged access');
+    await act(async () => { finish(true); await Promise.resolve(); });
     expect(host.textContent).not.toContain('Protected app');
-    expect(host.textContent).toContain('Checking whether this account needs a second factor');
+    expect(host.textContent).toContain('Verify second factor');
   });
 });
