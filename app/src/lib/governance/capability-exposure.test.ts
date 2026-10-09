@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DESTINATIONS, offered } from '../nav';
 import { NO_SCHOOL } from '../school';
@@ -11,6 +13,7 @@ import {
   resolveCapabilityExposure,
   validateCapabilityExposureIndex,
   type CapabilityExposureContext,
+  type CapabilityExposureIndexEntry,
 } from './capability-exposure';
 import type { ReleaseProfileDecision, ReleaseTarget } from './release-profiles';
 
@@ -36,6 +39,8 @@ const connectedTarget: ReleaseTarget = {
   configurationVersion: 'enterprise-v1',
   dataMode: 'connected',
 };
+
+const root = join(import.meta.dirname, '../../../..');
 
 const release = (
   overrides: Partial<ReleaseProfileDecision> = {},
@@ -81,6 +86,16 @@ describe('capability exposure resolver', () => {
       'live', 'connected', 'pilot', 'early_access', 'institution_controlled', 'planned_but_not_exposed',
     ]);
     for (const item of CAPABILITY_EXPOSURE_INDEX) {
+      expect(item.coreEntities.length).toBeGreaterThan(0);
+      expect(item.audiences).toContain('student');
+      expect(item.productMaturity).toMatch(/^L[0-9]$/);
+      expect(item.permittedExposureStates).toBe(CAPABILITY_EXPOSURE_STATES);
+      expect(item.valueMeasures.map((measure) => measure.id)).toEqual([
+        'successful-task-completion', 'fallback-use', 'support-burden',
+      ]);
+      expect(item.valueMeasures.every((measure) =>
+        measure.collection === 'device-local-or-approved-aggregate' &&
+        measure.evidenceStatus === 'measurement-requirement-not-live-result')).toBe(true);
       expect(item.requiredOperationalChecks).toEqual(OPERATIONAL_READINESS_CHECKS);
       expect(item.dataAuthorities.length).toBeGreaterThan(0);
       expect(item.securityClassifications.length).toBeGreaterThan(0);
@@ -90,7 +105,38 @@ describe('capability exposure resolver', () => {
       expect(item.evidenceRefs.length).toBeGreaterThan(0);
       expect(item.platforms).toEqual(['web', 'pwa']);
       expect(item.nativeMobile).toBe('planned_but_not_exposed');
+      expect(item.mobileExperience).toMatchObject({
+        current: 'responsive-web-and-pwa',
+        native: 'planned_but_not_exposed',
+      });
+      expect(item.mobileExperience.acceptance.trim()).not.toBe('');
+      expect(item.operations.supportOwner).toBe(item.supportOwner);
+      expect(item.operations.incidentOwner).toBe('operations');
+      for (const reference of [item.operations.audit, item.operations.support, item.operations.incident]) {
+        expect(existsSync(join(root, reference))).toBe(true);
+      }
     }
+  });
+
+  it('derives governed audiences without turning every capability into a family, partner, or institutional surface', () => {
+    const entry = (id: string) => CAPABILITY_EXPOSURE_INDEX.find((item) => item.capabilityId === id)!;
+    expect(entry('CAP-001').audiences).toEqual(['student']);
+    expect(entry('CAP-013').audiences).toEqual(['student', 'institution', 'operator', 'partner']);
+    expect(entry('CAP-027').audiences).toEqual(['student', 'institution', 'operator']);
+    expect(entry('CAP-041').audiences).toEqual(['student', 'family', 'institution', 'operator']);
+  });
+
+  it('rejects an incomplete operating contract instead of silently publishing it', () => {
+    const incomplete: CapabilityExposureIndexEntry = {
+      ...CAPABILITY_EXPOSURE_INDEX[0]!,
+      audiences: [],
+      valueMeasures: [],
+    };
+    const mutated = [incomplete, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toEqual(expect.arrayContaining([
+      `Missing audiences: ${incomplete.capabilityId}.`,
+      `Incomplete value measures: ${incomplete.capabilityId}.`,
+    ]));
   });
 
   it('authorizes live only for an exact production release of an included standard capability', () => {
