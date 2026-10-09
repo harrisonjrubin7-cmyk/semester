@@ -4,7 +4,7 @@ Status: partial implementation; a generic in-memory runtime and definition build
 
 ## Verified foundation
 
-`packages/platform/src/engines/workflow.ts` provides a tenant-scoped generic `WorkflowRuntime` and `WorkflowInstance` with optimistic concurrency, legal-transition enforcement, and append-only history. The access saga adds a runner with durable audit/outbox persistence. `workflow_versions`, a closed typed specification, validation, maker/checker publication, RLS and audit also exist, alongside domain-specific state machines for tenant rollout, reconciliation, community cases, dining and institutional sandbox flows. The workflow-builder migration stores definitions, not a universal durable instance service.
+`packages/platform/src/engines/workflow.ts` provides a tenant-scoped generic `WorkflowRuntime` and `WorkflowInstance` with optimistic concurrency, legal-transition enforcement, and append-only history. The access saga adds a runner, while a separate durable-store contract and audit/outbox migration exist; the runner is not wired to that persistence layer. `workflow_versions`, a closed typed specification, validation, maker/checker publication, RLS and audit also exist, alongside domain-specific state machines for tenant rollout, reconciliation, community cases, dining and institutional sandbox flows. The workflow-builder migration stores definitions, not a universal durable instance service.
 
 ## Canonical runtime contract
 
