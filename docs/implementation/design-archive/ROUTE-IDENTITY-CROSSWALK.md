@@ -18,18 +18,18 @@ Route equality is byte-for-byte string equality. Label matching is deliberately 
 
 1. `exact_*` means the full source label equals the candidate label with case preserved and no transformation.
 2. Only when there is no exact candidate, `normalized_*` compares `label.trim().toLowerCase()`.
-3. Candidate indexes are collision-checked after normalization. More than one candidate remains ambiguous; the crosswalk never selects one automatically.
+3. Candidate indexes are collision-checked after normalization even when an exact spelling exists. `exact_with_normalized_collision` records an exact candidate plus every additional case-normalized variant. More than one candidate remains ambiguous; the crosswalk never selects one automatically.
 
 The CSV records the matching mode, candidate labels, candidate routes, and catalog groups so every aggregate below can be reproduced. A normalized match is a discovery aid, not exact identity evidence.
 
 ## Reconciliation result
 
-| Comparison | Exact unique | Normalized-only unique | Exact ambiguous | Missing | Interpretation |
-| --- | ---: | ---: | ---: | ---: | --- |
-| Handoff route → rendered route | 264 exact routes | — | — | 17 | Most handoff route identities survive, but the entire handoff-only set is under `#/operations/*`. |
-| Handoff label → rendered label | 249 | 0 | 15 | 17 | Labels alone are unsafe identifiers because common labels occur in multiple workspaces. |
-| Rendered label → master catalog | 34 | 2 | 3 | 323 | The master catalog is primarily a conceptual screen taxonomy, not a route registry. |
-| Handoff label → master catalog | 32 | 2 | 3 | 244 | The two normalized-only matches are not exact-label evidence. |
+| Comparison | Exact unique | Normalized-only unique | Exact + normalized collision | Exact ambiguous | Missing | Interpretation |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| Handoff route → rendered route | 264 exact routes | — | — | — | 17 | Most handoff route identities survive, but the entire handoff-only set is under `#/operations/*`. |
+| Handoff label → rendered label | 248 | 0 | 1 | 15 | 17 | Labels alone are unsafe identifiers because common labels occur in multiple workspaces. |
+| Rendered label → master catalog | 34 | 2 | 0 | 3 | 323 | The master catalog is primarily a conceptual screen taxonomy, not a route registry. |
+| Handoff label → master catalog | 32 | 2 | 0 | 3 | 244 | The two normalized-only matches are not exact-label evidence. |
 
 The rendered inventory adds 98 routes that do not exist in the handoff route list. Each appears as a `rendered_only` row with catalog candidates where available. These additions are evidence of archive drift, not automatic requirements or production implementation.
 
@@ -96,7 +96,7 @@ This is a namespace and navigation conflict, not evidence that those capabilitie
 
 ## Ambiguity controls
 
-Exact label matching produces 15 ambiguous handoff rows. Repeated labels include Home, Calendar, Family sharing, Gradebook, Transcript, Announcements, Applicants, Decisions, My Work, and Executive Assistant. The CSV records every candidate route; no candidate is selected automatically.
+Exact label matching produces 15 ambiguous handoff rows. Repeated exact labels include Home, Calendar, Family sharing, Gradebook, Transcript, Announcements, Applicants, Decisions, and My Work. `Executive Assistant` has one exact rendered candidate at `#/studio/assistant` plus the normalized spelling variant `Executive assistant` at `#/os/assistant`; its row is therefore `exact_with_normalized_collision`, not `exact_unique`. The CSV records every candidate route; no candidate is selected automatically.
 
 Two handoff-to-catalog matches exist only after normalization: `Action center` → `Action Center` and `Course studio` → `Course Studio`. They are recorded as `normalized_unique`, not exact matches.
 

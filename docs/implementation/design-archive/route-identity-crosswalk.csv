@@ -255,7 +255,7 @@
 "handoff","studio","Assignment workspace","#/studio/assignment","exact","studio","Assignment workspace","#/studio/assignment","exact_unique","#/studio/assignment","Assignment workspace","missing","","","retain_exact_route"
 "handoff","studio","Research Studio","#/studio/research","exact","studio","Research Studio","#/studio/research","exact_unique","#/studio/research","Research Studio","missing","","","retain_exact_route"
 "handoff","studio","Calendar","#/studio/calendar","exact","studio","Calendar","#/studio/calendar","exact_ambiguous","#/student/calendar | #/studio/calendar","Calendar","exact_unique","Calendar [B · Student OS]","B · Student OS","retain_exact_route"
-"handoff","studio","Executive Assistant","#/studio/assistant","exact","studio","Executive Assistant","#/studio/assistant","exact_unique","#/studio/assistant","Executive Assistant","missing","","","retain_exact_route"
+"handoff","studio","Executive Assistant","#/studio/assistant","exact","studio","Executive Assistant","#/studio/assistant","exact_with_normalized_collision","#/os/assistant | #/studio/assistant","Executive Assistant","missing","","","retain_exact_route"
 "handoff","studio","Intelligence","#/studio/intelligence","exact","studio","Intelligence","#/studio/intelligence","exact_unique","#/studio/intelligence","Intelligence","missing","","","retain_exact_route"
 "handoff","studio","AI Policy Center","#/studio/policy","exact","studio","AI Policy Center","#/studio/policy","exact_unique","#/studio/policy","AI Policy Center","missing","","","retain_exact_route"
 "handoff","studio","ECON 201 folders","#/studio/course","exact","studio","ECON 201 folders","#/studio/course","exact_unique","#/studio/course","ECON 201 folders","missing","","","retain_exact_route"
