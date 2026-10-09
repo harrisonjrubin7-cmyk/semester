@@ -40,7 +40,7 @@ git clone https://github.com/harrisonjrubin7-cmyk/semester.git
 cd semester
 ```
 
-The repository's root `package.json` is the workspace root for `app` and `packages/*` and holds the one lockfile. It exposes only four Node-only platform-control entry points: `registry:validate`, `registry:build`, `release:check`, and `platform-control:test`. All application commands still run from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says. At the root, `npm test` still fails with "Missing script" instead of pretending to run the full suite.
+The repository's root `package.json` is the workspace root for `app` and `packages/*` and holds the one lockfile. It exposes only five Node-only platform-control entry points: `registry:validate`, `registry:build`, `release:check`, `release:report`, and `platform-control:test`. All application commands still run from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says. At the root, `npm test` still fails with "Missing script" instead of pretending to run the full suite.
 
 ## 3. Check main first
 
