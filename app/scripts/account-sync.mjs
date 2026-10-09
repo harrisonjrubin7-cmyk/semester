@@ -402,6 +402,10 @@ async function journey(label, viewport) {
       await ask.waitFor({ state: 'hidden', timeout: WAIT });
     }
     expect(await visible(other.getByText('Signed in', { exact: true })), 'signing in on the second device did not reach "Signed in"');
+    expect(
+      await visible(other.getByRole('status').filter({ hasText: /^Synced/ }), SETTLE),
+      'the second device did not finish pulling the account before the sync window closed',
+    );
     await go(other, '#/mine', 'Personal');
     expect(await visible(other.getByRole('button', { name: done(title) }), SETTLE), 'the second device, signed in, does not show the action as done');
 
