@@ -1,0 +1,9 @@
+[
+  {"key":"identity","name":"Identity","owner":"platform-security","status":"implemented","evidence":["packages/platform/src/tenancy/context.ts"]},
+  {"key":"authorization","name":"Authorization","owner":"platform-security","status":"implemented","evidence":["packages/institution/src/policy.ts","packages/institution/src/policy.test.ts"]},
+  {"key":"provenance","name":"Provenance","owner":"data-governance","status":"implemented","evidence":["packages/institution/src/readiness.ts"]},
+  {"key":"workflow","name":"Workflow","owner":"platform-reliability","status":"implemented","evidence":["packages/institution/src/workflow.ts","packages/institution/src/readiness-workflow.ts"]},
+  {"key":"integrations.sis","name":"SIS integration","owner":"integration-platform","status":"blocked","evidence":["docs/UNIVERSITY_CONNECTIONS.md"]},
+  {"key":"notifications","name":"Notifications","owner":"platform-reliability","status":"implemented","evidence":["packages/platform/src/engines/notifications.ts"]},
+  {"key":"audit","name":"Audit","owner":"platform-security","status":"implemented","evidence":["packages/platform/src/identity/audit.ts"]}
+]

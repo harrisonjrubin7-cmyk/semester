@@ -1,0 +1,4 @@
+{
+  "key":"tenant.synthetic","name":"Synthetic validation tenant","owner":"platform-security","status":"designed",
+  "synthetic":true,"activation":"not_activated","evidence":["packages/platform/src/testing/memory.ts"]
+}
