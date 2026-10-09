@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 2 of 120 (continued program) · **Integration slice** 53 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `ebc86521` · **Latest observed `origin/main`** `34ac2e1d`
+**Automation pass** 3 of 120 (continued program) · **Integration slice** 54 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `ff12fa63` · **Latest observed `origin/main`** `34ac2e1d`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in current automation pass 3 / integration slice 54
+
+- The clean branch merged current `origin/main` `34ac2e1d` before selection. Its governed review-resolution changes remain inside the separately reconciled Course Engine MVP and contain no saved-equation, shared-Undo or current-screen equivalent. A final fetch found main unchanged.
+- Kept-formula removal now enters the existing eight-second Undo path. Its snapshot is limited to `equations`, so Undo restores the exact formula name, notation, note and course/deadline filing without reverting calculator work or unrelated state.
+- The visible Remove control now has an accessible name identifying the exact saved equation. Other formulas, plotted/calculator work and every external system remain unchanged; no route, shared component, dependency, schema, server operation or provider behavior changed.
+- The focused regression was proved red against the prior behavior. Undo, reducer, made-slice and root-unmount suites pass 142/142.
+- TypeScript, lint, university typecheck and production build pass. Existing baselines remain four lint warnings and the chunk-size warning. Token/design contracts pass 78/78, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the design report regenerates.
+- Aggregate npm design-system launchers are unavailable because this shell has no `npm`; their exact constituents pass. Ordered and shuffled full suites were not rerun; the last recorded baseline remains pass 30's 23,872 tests.
+- The required HawkScan loop stops at preflight because Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No target, DAST result or security pass is claimed.
+- Permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate. The next slice requires another fresh dependency/consequence ranking.
 
 ## Evidence locked in current automation pass 2 / integration slice 53
 

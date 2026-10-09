@@ -530,6 +530,16 @@ The three focused guards were proved red against the prior behavior, then 128 re
 
 The active HawkScan skill stopped at preflight because the Hawk CLI and Docker are absent and `HAWK_APP_HOST` is unset; a local properties file exists but was not read. No target, DAST result or security pass is claimed. Permanent file purge, the broad same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
 
+## Recoverable saved-equation removal — automation pass 3, integration slice 54
+
+The clean branch first merged current `origin/main` `34ac2e1d`; its governed review-resolution work remains inside the separately reconciled Course Engine MVP and contains no saved-equation, shared-Undo or current-screen equivalent. Re-ranking selected the existing Kept formulas removal because it deletes one student-owned `equations` row from device state, has no cascade or external effect, and adjacent device-owned single-row removals already use the repository's eight-second Undo contract.
+
+`deleteEquation` now snapshots only `equations`, restoring the exact formula name, notation, note and course/deadline filing without rolling back calculator work or any unrelated state. The visible Remove action has an accessible name identifying the exact saved equation. No route, shared component, dependency, schema, server operation, provider behavior or external system changed.
+
+The focused regression was proved red against the prior behavior, then 142 Undo, reducer, made-slice and root-unmount tests passed. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. The exact token/design suite passes 78/78, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the design report regenerates. Ordered and shuffled full suites were not rerun for this bounded device-only recovery slice.
+
+The required HawkScan loop stops at preflight: Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST result or security pass is claimed. Permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
+
 ## What was read
 
 - Root `CLAUDE.md`.

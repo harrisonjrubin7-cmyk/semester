@@ -1094,7 +1094,26 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Merge and reconcile `origin/main` `34ac2e1d` on the clean branch before selecting another slice; keep its separate Course Engine review workflow outside the current product unless repository reconciliation authorizes a native integration.
+- [x] Merge and reconcile `origin/main` `34ac2e1d` on the clean branch before selecting another slice; its separate Course Engine review workflow remains outside the current product. Completed before automation pass 3 / slice 54.
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable saved-equation removal — automation pass 3, integration slice 54
+
+- [x] Merge current `origin/main` `34ac2e1d` on the clean branch and confirm its separate Course Engine review-resolution workflow has no saved-equation, Undo or current-screen equivalent.
+- [x] Re-rank the remaining consequence paths and select bounded saved-equation removal; keep permanent file purge, broad demo reset and scanner-backed Import separate.
+- [x] Add `deleteEquation` to the existing eight-second Undo contract with only `equations`, restoring the exact saved formula and filing without reverting unrelated calculator work.
+- [x] Give the visible Remove control an accessible name identifying the exact saved equation; add no route, component, dependency, schema, server operation or provider behavior.
+- [x] Prove the focused regression red against the prior behavior, then pass 142/142 Undo, reducer, made-slice and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and design-report generation.
+- [ ] Aggregate npm design-system launchers — unavailable because this shell has no `npm`; their exact constituents pass and the report regenerates.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only recovery slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

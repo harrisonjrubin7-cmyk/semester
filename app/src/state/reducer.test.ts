@@ -819,6 +819,26 @@ describe('taking it back', () => {
     expect(back.undone).toBeNull();
   });
 
+  it('restores one saved equation without reverting unrelated work', () => {
+    const s: State = {
+      ...blank(),
+      equations: [
+        { id: 'elasticity', name: 'Elasticity', latex: 'a/b', note: 'Chapter 4', courseId: 'econ', itemId: null, created: 1 },
+        { id: 'mean', name: 'Mean', latex: 'x/n', note: '', courseId: null, itemId: null, created: 2 },
+      ],
+    };
+
+    const gone = reducer(s, { type: 'deleteEquation', id: 'elasticity' });
+    expect(gone.equations.map((equation) => equation.id)).toEqual(['mean']);
+    expect(gone.undone?.label).toBe('Equation removed');
+
+    const edited = reducer(gone, { type: 'writeMaths', text: '2+2' });
+    const back = reducer(edited, { type: 'undo' });
+    expect(back.equations).toEqual(s.equations);
+    expect(back.mathWorking).toBe('2+2');
+    expect(back.undone).toBeNull();
+  });
+
   it('offers nothing for an action that only edits', () => {
     // An edit leaves the thing there to edit back.
     const s = twoNotes();

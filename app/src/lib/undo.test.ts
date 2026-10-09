@@ -38,6 +38,10 @@ describe('which actions can be taken back', () => {
       label: 'Link removed',
       fields: ['extraLinks', 'linkUrls'],
     });
+    expect(undoableFor('deleteEquation')).toEqual({
+      label: 'Equation removed',
+      fields: ['equations'],
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
@@ -82,6 +86,11 @@ describe('the snapshot', () => {
   it('keeps both halves of a student-created link', () => {
     const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.removeLink, AT);
     expect(Object.keys(took.was)).toEqual(['extraLinks', 'linkUrls']);
+  });
+
+  it('keeps only the saved equation library', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.deleteEquation, AT);
+    expect(Object.keys(took.was)).toEqual(['equations']);
   });
 
   it('carries the label and the moment', () => {
