@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { CORRELATION_ID_PATTERN, type PolicyAction, type UserAction } from '../../../packages/institution/src/index.ts';
+import { isPlatformError } from '../../../packages/platform/src/index.ts';
 import { DEFAULT_RATE_LIMIT, MemoryRateLimiter, type RateLimiter } from '../institution/rate-limit.ts';
 import {
   API_VERSION,
@@ -180,7 +181,15 @@ export function createProductivityApi(config: ApiConfig): (request: Request) => 
       if (purpose !== null && (purpose.length > 200 || /[\u0000-\u001F\u007F]/.test(purpose))) {
         return done(fail(400, 'validation_failed', 'X-Semester-Purpose must be plain text of at most 200 characters.'));
       }
-      const meta: RequestMeta = { correlationId, ...(purpose ? { purpose: purpose.trim() } : {}) };
+      const tenantHint = request.headers.get('x-tenant-id');
+      const idempotencyKey = request.headers.get('idempotency-key');
+      const meta: RequestMeta = {
+        correlationId,
+        requestId,
+        ...(purpose ? { purpose: purpose.trim() } : {}),
+        ...(tenantHint !== null ? { tenantHint } : {}),
+        ...(idempotencyKey !== null ? { idempotencyKey } : {}),
+      };
 
       if (r.name === 'commands') {
         const type = request.headers.get('content-type') ?? '';
@@ -248,6 +257,12 @@ export function createProductivityApi(config: ApiConfig): (request: Request) => 
           return done(fail(404, 'route_not_found', 'There is nothing at this address.'));
       }
     } catch (error) {
+      if (isPlatformError(error)) {
+        return done(fail(error.status, error.code, error.message, {
+          ...(error.userAction ? { userAction: error.userAction } : {}),
+          ...(error.retryAfterSeconds !== undefined ? { retryAfter: error.retryAfterSeconds } : {}),
+        }));
+      }
       if (error instanceof ApiError) {
         return done(fail(error.status, error.code, error.message, {
           ...(error.userAction ? { userAction: error.userAction } : {}),
