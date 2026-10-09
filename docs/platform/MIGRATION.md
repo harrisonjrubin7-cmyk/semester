@@ -97,7 +97,13 @@ not carry the gateway's domain codes (`review_expired`, `record_changed`, kebab-
 a client that sends `X-Tenant-Id` disagreeing with its session is now refused
 (`tenant_mismatch`), and an identity whose tenant or user id falls outside the platform's
 id alphabet is refused rather than passed through; every id in the repository's fixtures
-fits. **Not done:** `lib/university.ts` is not on the SDK (it reads three older response
+fits. The shared platform now also has an additive, tested active-context primitive
+(`packages/platform/src/tenancy/active-context.ts`): a requested membership/workspace
+is resolved only from a server-verified directory, its tenant/person/grants cannot be
+client supplied, its expiry is capped by both membership and session, and changing
+membership or workspace requires explicit confirmation. It is **not yet wired into the
+gateway or UI**, so it is foundation evidence, not evidence of live context switching.
+**Not done:** `lib/university.ts` is not on the SDK (it reads three older response
 shapes and mints its own correlation id; moving it is its own change with its own
 equivalence test), the edge functions have not adopted the envelope, and `environment`,
 tenant status and `verifiedBy` in the context are approximations the file says so about.
