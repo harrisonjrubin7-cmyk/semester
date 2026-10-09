@@ -1,10 +1,10 @@
 # Registration-readiness evaluation workflow
 
-> **Type:** reference · **Audience:** implementers · **Owner:** `data` · **Truth:** held · **Reviewed:** 2026-10-08 · **Held by:** `packages/institution/src/readiness-workflow.test.ts`
+> **Type:** reference · **Audience:** implementers · **Owner:** `data` · **Truth:** held · **Reviewed:** 2026-10-09 · **Held by:** `packages/institution/src/readiness-workflow.test.ts`
 
-Status: repository contract. No production persistence adapter, live SIS connection, or official registration write is activated by this module.
+Status: repository contract plus a service-only Postgres persistence adapter. No HTTP route or worker uses the adapter, and no live SIS connection or official registration write is activated by this module.
 
-`packages/institution/src/readiness-workflow.ts` defines the aggregate rules that a durable readiness repository must preserve. It sits between the source-aware projection and the future Postgres adapter so HTTP handlers, workers, and SQL cannot each invent different retry behavior.
+`packages/institution/src/readiness-workflow.ts` defines the aggregate rules that the durable readiness repository preserves. `app/server/institution/readiness-repository.ts` is the server-side port and `supabase/migrations/20261009160000_registration_readiness_store.sql` is its transactional store. They sit between the source-aware projection and future HTTP or worker adoption so callers and SQL cannot each invent different retry behavior.
 
 ## State path
 
@@ -36,15 +36,15 @@ The aggregate returns minimal outbox descriptors for:
 
 Payloads contain only evaluation id, term id, and aggregate version. They do not carry holds, prerequisite details, student-entered plan content, or source payloads. The event catalog classifies all three as education records; the request and reconciliation events use audit retention, while evaluated projections use student-record retention.
 
-## Required persistence adapter behavior
+## Persistence adapter behavior
 
-The next storage slice must:
+The store now:
 
 1. tenant-bind every evaluation, task, receipt, and query;
 2. make `(evaluation_id, aggregate_version)` and tenant-scoped idempotency uniqueness enforceable in Postgres;
 3. save the aggregate, receipt, audit evidence, and outbox row in one transaction;
 4. encrypt or minimize stored source facts rather than copying institutional payloads into command or event ledgers;
-5. expose reconciliation work only to an authorized assigned advisor or registrar relationship;
-6. retain rollback SQL and database-negative tests for cross-tenant reads and writes.
+5. keeps reconciliation work service-only; a later query surface must authorize an assigned advisor or registrar relationship before exposing it;
+6. documents forward rollback order and has database-negative tests for cross-tenant reads and writes.
 
-Until that adapter is merged and configured, this contract is implementation evidence for workflow rules only—not evidence of durable production operation.
+The adapter is repository implementation evidence only. It has not been configured in a deployed runtime, called by an HTTP route or worker, exercised against a live institution, or used for an official registration write. Those remain separate gates.
