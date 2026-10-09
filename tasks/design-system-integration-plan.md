@@ -500,6 +500,16 @@ The regression guard was proved red against the prior immediate deletion, then t
 
 The active HawkScan loop stopped at preflight because Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No credential file was read, no target was started and no DAST result or security pass is claimed. Ordered and shuffled full suites were not rerun after pass 30's green 23,872-test baseline. Permanent file purge and same-origin demo reset remain separate; scanner/extractor-backed Import remains externally gated. The next slice requires another fresh dependency/consequence ranking.
 
+## Recoverable connected-calendar removal — current automation pass 1, integration slice 51
+
+The slice began at the supplied `INITIAL_MAIN_SHA` `8ea0fec5`. Before commit, `origin/main` advanced to `d50e699e`; both new commits were inspected and touch only the device-permission-state consolidation, with no equivalent `removeFeed`, Connect, undo, reducer or integration-control work. Re-ranking selected Connect's existing calendar-source removal because its complete local mutation is already explicit: one `FeedSource` and every `FeedEvent` with that source id are removed, while other sources, manually entered calendar state and official systems remain unchanged.
+
+Repository design authority prefers Undo over a confirmation for reversible local work. `removeFeed` now snapshots only `feeds` and `feedEvents` through the existing cross-cutting reducer contract, restoring the exact source and events for eight seconds without reverting state outside those two collections. The Connect control also names the calendar and its events for assistive technology. This adds no route, shared component, dependency, schema, server operation, provider action or authority claim.
+
+The two focused guards were proved red with the `removeFeed` undo registration temporarily absent, then restored. Undo, reducer and root-unmount suites pass 117/117; TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. Token export passes 9/9; design audit remains at zero violations with 86 warnings; CSS remains within its ledger; 138 design/token/responsive contracts pass; and the report regenerates. Ordered and shuffled full suites were not rerun for this bounded slice.
+
+The required HawkScan loop cannot start because Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset; no target, scan or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate. The next slice requires another fresh dependency and consequence-path ranking.
+
 ## What was read
 
 - Root `CLAUDE.md`.

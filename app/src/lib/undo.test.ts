@@ -30,6 +30,10 @@ describe('which actions can be taken back', () => {
   it('names one for every kind of removal', () => {
     expect(undoableFor('deleteNote')?.label).toBe('Note deleted');
     expect(undoableFor('dropLetter')?.fields).toEqual(['letters']);
+    expect(undoableFor('removeFeed')).toEqual({
+      label: 'Calendar and its events removed',
+      fields: ['feeds', 'feedEvents'],
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
