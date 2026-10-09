@@ -148,9 +148,13 @@ export const EVIDENCE: readonly EvidenceRow[] = [
   {
     id: 'SEC-IAM-002', control: 'MFA enforcement — account takeover of an operator', rubric: 'security',
     rests: ['IAM-005', 'GOV-1'],
-    evidence: 'Identity-provider policy export or configuration screenshot; a test that a second factor is demanded.', frequency: 'Quarterly and on change', owner: 'security', visibility: 'summary', status: 'owed',
-    holds: [{ path: 'docs/market-readiness/HECVAT_DRAFT_RESPONSE.md', shows: 'the owner attests MFA is on for GitHub, Google and Supabase; an attestation, not evidence' }],
-    produce: 'A configuration export from each console, dated, filed; and MFA for privileged app roles once IAM-005 is designed.',
+    evidence: 'Identity-provider policy export or configuration screenshot; a test that a second factor is demanded.', frequency: 'Quarterly and on change', owner: 'security', visibility: 'summary', status: 'defined',
+    holds: [
+      { path: 'supabase/privileged-mfa.check.sql', shows: 'platform_admin and support_agent grants fail at aal1 and succeed at aal2' },
+      { path: 'app/src/screens/console.test.tsx', shows: 'the operations console challenges before protected reads' },
+      { path: 'docs/market-readiness/HECVAT_DRAFT_RESPONSE.md', shows: 'the owner attests MFA is on for GitHub, Google and Supabase; an attestation, not evidence' },
+    ],
+    produce: 'File a dated configuration export from each production console and Supabase Auth; extend product MFA to the remaining adopted staff roles and recovery paths.',
   },
   {
     id: 'SEC-SDLC-001', control: 'Secure code review — a change reaching main unreviewed', rubric: 'security',

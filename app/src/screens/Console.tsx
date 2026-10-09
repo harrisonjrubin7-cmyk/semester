@@ -144,7 +144,10 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
     setNow(new Date());
   }, []);
 
-  // The context bar and the preferences: account-backed, read once at open.
+  const mfaReady = mfa !== null && typeof mfa !== 'string' && mfa.currentLevel === 'aal2';
+
+  // Assurance is the entry gate. Read it before mounting a workspace or
+  // issuing any capability-protected console read.
   useEffect(() => {
     let live = true;
     mfaLevel().then(
@@ -155,6 +158,15 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       },
       (e: unknown) => { if (live) setMfa(said(e, 'Could not read')); },
     );
+    return () => { live = false; };
+  }, []);
+
+  // The context bar and preferences are account-backed and protected by the
+  // same privileged-role boundary as the workspaces. Do not ask for them
+  // until the Auth session has reached aal2.
+  useEffect(() => {
+    if (!mfaReady) return;
+    let live = true;
     sessionExpiry().then(
       (at) => { if (live) setSession(at ?? 'No session'); },
       (e: unknown) => { if (live) setSession(said(e, 'Could not read')); },
@@ -176,7 +188,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       live = false;
       clearInterval(tick);
     };
-  }, [workspaces]);
+  }, [mfaReady, workspaces]);
 
   const choose = (next: ConsoleWorkspaceId) => {
     setTab(next);
@@ -219,6 +231,32 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
 
   const sessionEnds = session instanceof Date ? `At session end, ${when(session.toISOString())}` : 'At session end';
   const viewProps = { env, scope, filter, onStatus, privileged };
+
+  if (mfa === null) {
+    return (
+      <Page blurb={BLURB}>
+        <p role="status">Checking the operator session’s second factor…</p>
+      </Page>
+    );
+  }
+  if (typeof mfa === 'string') {
+    return (
+      <Page blurb={BLURB}>
+        <Notice>{mfa}. The operations console stays closed until the assurance level can be read.</Notice>
+        <button type="button" className="btn" onClick={() => void readMfa()}>Try again</button>
+      </Page>
+    );
+  }
+  if (!mfaReady) {
+    return (
+      <Page blurb={BLURB}>
+        <MfaStep
+          reason="The operations console needs a second factor verified in this session before it can read privileged data."
+          onVerified={() => void readMfa()}
+        />
+      </Page>
+    );
+  }
 
   return (
     <Page blurb={BLURB}>

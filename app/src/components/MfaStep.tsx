@@ -17,7 +17,15 @@ import { challengeTotp, enrollTotp, totpFactors, verifyTotp, type TotpEnrolment 
  * Nothing about the factor is kept in this component past its verification,
  * and nothing is written to browser storage.
  */
-export function MfaStep({ onVerified, onCancel }: { onVerified: () => void; onCancel?: () => void }) {
+export function MfaStep({
+  onVerified,
+  onCancel,
+  reason = 'A privileged action needs a second factor verified in this session.',
+}: {
+  onVerified: () => void;
+  onCancel?: () => void;
+  reason?: string;
+}) {
   const [stage, setStage] = useState<'loading' | 'enrol' | 'challenge'>('loading');
   const [factorId, setFactorId] = useState('');
   const [enrolment, setEnrolment] = useState<TotpEnrolment | null>(null);
@@ -67,7 +75,7 @@ export function MfaStep({ onVerified, onCancel }: { onVerified: () => void; onCa
   return (
     <section aria-label="Second factor" className="portal-panel" style={{ display: 'grid', gap: 'var(--sp-4)' }}>
       <p style={{ marginBlock: 0 }}>
-        <strong>A privileged action needs a second factor verified in this session.</strong>
+        <strong>{reason}</strong>
       </p>
       {stage === 'loading' && !error && <p style={{ marginBlock: 0, color: 'var(--app-dim)' }}>Checking your authenticators…</p>}
       {stage === 'enrol' && enrolment && (

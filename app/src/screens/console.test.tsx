@@ -119,6 +119,7 @@ const INTEGRATION_PLATFORM = [...PLATFORM, { capability: 'integration:view', sco
 const INCIDENT_PLATFORM = [...PLATFORM, { capability: 'incident:communicate', scopeKind: 'platform', scopeId: '' }];
 const FRESH = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 2 * 60_000) };
 const STALE = { currentLevel: 'aal1', nextLevel: 'aal2', verifiedAt: null };
+const STALE_AAL2 = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 20 * 60_000) };
 
 const DUTIES = [
   { id: 'role-grant', action: 'Grant or widen a privileged role', requester: 'role:university_admin', approvers: ['security'], twoPerson: false, evidence: 'The access request, naming the person, the role, the tenant and the reason' },
@@ -596,12 +597,21 @@ describe('the context bar', () => {
     expect(dd(host.querySelector('[aria-label="Context bar"]')!, 'Environment')).toBe('◆ Staging');
   });
 
-  it('says None for support access when no grant is open, and how the MFA stands when it is not aal2', async () => {
-    mock.mfa.mockResolvedValue(STALE);
+  it('requires aal2 before mounting workspaces or issuing protected console reads', async () => {
+    mock.mfa.mockResolvedValueOnce(STALE).mockResolvedValue(FRESH);
     await render();
-    const bar = host.querySelector('[aria-label="Context bar"]') as Element;
-    expect(dd(bar, 'Support access')).toBe('None');
-    expect(dd(bar, 'MFA')).toContain('Not verified this session');
+    const step = host.querySelector('[aria-label="Second factor"]') as Element;
+    expect(step).toBeTruthy();
+    expect(host.textContent).toContain('before it can read privileged data');
+    expect(host.querySelector('[aria-label="Context bar"]')).toBeNull();
+    expect(mock.approvals).not.toHaveBeenCalled();
+    expect(mock.support).not.toHaveBeenCalled();
+    type(step.querySelector('input'), '123456');
+    await submit(step.querySelector('form'));
+    await flush();
+    expect(mock.verify).toHaveBeenCalledWith('f-1', 'ch-1', '123456');
+    expect(host.querySelector('[aria-label="Context bar"]')).not.toBeNull();
+    expect(mock.approvals).toHaveBeenCalled();
   });
 });
 
@@ -662,7 +672,7 @@ describe('approvals', () => {
   });
 
   it('puts the second factor in front of a decision when the session is not aal2, and decides once it is', async () => {
-    mock.mfa.mockResolvedValueOnce(STALE).mockResolvedValue(FRESH);
+    mock.mfa.mockResolvedValueOnce(STALE_AAL2).mockResolvedValue(FRESH);
     await render();
     await press('Approve');
     expect(mock.decide).not.toHaveBeenCalled();
@@ -693,7 +703,7 @@ describe('approvals', () => {
   });
 
   it('runs nothing when the second factor is cancelled', async () => {
-    mock.mfa.mockResolvedValue(STALE);
+    mock.mfa.mockResolvedValue(STALE_AAL2);
     await render();
     type(field('Evidence attached'), 'Draft evidence survives MFA.');
     await press('Approve');

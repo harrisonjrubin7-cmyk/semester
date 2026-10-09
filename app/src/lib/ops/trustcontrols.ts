@@ -224,8 +224,8 @@ export const CONTROLS: readonly Control[] = [
     domains: ['administration', 'safety-support'],
     mechanism: 'code-test',
     state: 'partial',
-    proof: ['app/src/lib/console/client.test.ts'],
-    gap: 'Console only: has_capability checks no assurance level, and students have no multi-factor or passkey enrolment.',
+    proof: ['app/src/lib/console/client.test.ts', 'app/src/screens/console.test.tsx', 'supabase/privileged-mfa.check.sql'],
+    gap: 'The console requires aal2 before privileged reads, the shared predicate requires aal2 for platform_admin and support_agent grants, and sensitive actions require a fresh second factor. Student enrolment, passkeys, other staff-role coverage and production Auth evidence remain open.',
     owner: 'security',
   },
   {

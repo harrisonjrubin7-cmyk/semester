@@ -235,7 +235,7 @@ export const POINTS: readonly Item[] = [
       { path: 'supabase/migrations/20260925103000_support_access.sql', shows: 'Consent-backed support access, at most seven days' },
       { path: 'app/src/lib/rolelaunch.ts', shows: 'The internal boundary: no Semester role holds a student-record capability, held by rolelaunch.test.ts (this change)' },
     ],
-    gap: 'No privileged access review or recertification; no two-person, time-limited break-glass; no MFA for privileged roles (IAM-005).',
+    gap: 'No privileged access review or recertification; no two-person, time-limited break-glass; aal2 covers platform_admin and support_agent grants but not every staff role, student/passkey enrolment or production configuration proof (IAM-005).',
   },
   {
     id: 'BP-10',

@@ -275,9 +275,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'MFA required for privileged/admin roles and supported for configured users',
     validation: 'MFA policy/config export',
     severity: 'P0',
-    status: 'designed',
-    evidence: [{ path: 'docs/trust/SOC2-READINESS.md', shows: 'CC6-02: app has no MFA for admins; MFA enforcement export Absent' }, { path: 'docs/trust/SECURITY-WHITEPAPER.md', shows: 'States MFA is not yet enforced' }, { path: 'app/src/lib/governance/rollout.ts', shows: 'Rollout checklist item \'Session and MFA policy configured\' (text only)' }],
-    gap: 'No MFA enrollment or aal2 enforcement in app or database; console MFA not evidenced. Needs MFA enforcement for privileged roles, user opt-in, and exported config/screenshots.',
+    status: 'tested',
+    evidence: [{ path: 'supabase/migrations/20261008223000_privileged_role_mfa.sql', shows: 'platform_admin and support_agent grants require an aal2 JWT' }, { path: 'supabase/privileged-mfa.check.sql', shows: 'aal1 denials and aal2 success for both privileged roles' }, { path: 'app/src/screens/console.test.tsx', shows: 'The console challenges for MFA before mounting privileged workspaces or reading protected data' }, { path: 'app/src/components/MfaStep.test.tsx', shows: 'TOTP enrolment and challenge paths' }],
+    gap: 'Product aal2 is enforced for platform_admin and support_agent grants and at console entry, with fresh MFA on sensitive console actions. Other staff roles, student opt-in/passkeys, recovery tests, production Auth configuration and provider-console exports remain open.',
   },
   {
     id: 'IAM-006',
