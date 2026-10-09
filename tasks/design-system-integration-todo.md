@@ -449,9 +449,30 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Reconcile the next dependency-ready Course Engine slice against the still-absent private bucket/scanner runtime; do not synthesize storage or scan evidence.
+- [x] Reconcile the next dependency-ready Course Engine slice against the absent private bucket/scanner runtime; add only private deny-by-default bucket definitions and do not synthesize storage or scan evidence.
 - [ ] Keep Import/Study Studio server wiring closed until route authentication, rate limiting, private object policy and actual adapter evidence can satisfy the existing contract.
 - [ ] Do not add a Course Engine route, parallel course model or client-readable shared-material table.
+
+## 2026-10-08 private course-source buckets — automation pass 15, slice 23
+
+- [x] Fetch and inspect `origin/main` before work; inspect final `aac5da38` and confirm its search/AI authorization changes add no bucket migration, equivalent work or version collision. Commit the slice before merging that head on a clean tree.
+- [x] Reuse the existing private `trust-packet` bucket convention instead of creating a browser upload policy or parallel storage model.
+- [x] Define `student-files` and `course-materials` as private, idempotently repaired buckets with the current 50 MiB / 100 MiB classification caps and exact five-type course-document allowlist.
+- [x] Revoke the repair function from all runtime roles and add no anon/authenticated object policy.
+- [x] Prove direct authenticated inserts fail and browser reads, updates and deletes expose or affect zero planted objects in both buckets.
+- [x] Show the guard red by temporarily making one bucket public, then restore the implementation and pass the focused suite.
+- [x] PostgreSQL 17 applies all 217 migrations twice with 376 unchanged table fingerprints; 12 focused and 117 adjacent checks pass, 129/129 total.
+- [x] Focused repository contracts pass 85/85; TypeScript, lint, university typecheck and production build pass; token/design contracts pass 78/78, audit/CSS stay within their ledgers and the design report regenerates without drift.
+- [ ] Aggregate `design-system:check` launcher — cannot start because it hardcodes unavailable `npm`; the exact token, audit, CSS and 78-test constituent commands pass under the bundled runtime.
+- [ ] Ordered and shuffled full suites — not rerun for this database-only boundary; prior runner-mount/timeout/teardown caveats remain open and no focused slice test fails.
+- [ ] HawkScan DAST — required for this production schema change; committed configs exist, but `hawk`, `HAWK_API_KEY` and `HAWK_APP_HOST` are absent, so no scan or security pass is claimed.
+- [ ] Stored bytes, trusted storage/scanner receipts, extraction, signed reads, browser routes, UI wiring, deployment and production bucket state remain unimplemented or unverified.
+
+### Next implementation boundary
+
+- [ ] Add a repository adapter/private runtime only when it can create the planned tenant-bound object and produce genuine storage plus named-scanner receipts; do not synthesize either receipt.
+- [ ] Keep browser upload/download routes and Import/Study Studio wiring closed until session-derived tenant authority, shared rate limiting, signed-object policy and scanner runtime are all available.
+- [ ] Do not add client object policies, a Course Engine route, a parallel course model or a client-readable material table.
 
 ## Earlier integration baseline preserved
 
@@ -468,7 +489,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Probe the eight tables that were inconclusive. Done on main (`D-1298`): 64 tables, floor 64.
 - [x] Sweep the fifteen owner-column names in `D-1303` (79 tables). `created_by`, `subject`, `owner_id` and `account_id` stay out: they mostly name staff.
 - [ ] Decide whether the shared-key path keeps a per-request audit row.
-- [ ] `student-files` and `course-materials` buckets, with retention and course scope.
+- [x] `student-files` and `course-materials` bucket definitions, with current retention/course metadata scope and deny-by-default browser policy; production provisioning and runtime remain unverified.
 - [ ] Provenance ladder, conflict resolution, projection-lag freshness, consequence pattern.
 - [x] Blanket anon revoke of `private` helpers — not done. `rls-coverage.check.sql` says it would break `private.form_open()`.
 

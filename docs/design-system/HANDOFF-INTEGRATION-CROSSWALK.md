@@ -92,6 +92,8 @@ Automation pass 13 adds the versioned tenant authority that the shared-material 
 
 Automation pass 14 adds that bounded shared-material metadata/lifecycle layer in `20261009003000_course_material_metadata.sql`. It is **existing and verified locally** for metadata only: the service rechecks current exact `course:publish` scope and current expected retention-policy version, binds one tenant/course/term and the original policy duration, records idempotent plan/withdraw/restore history, and commits pseudonymous content-free audit atomically. Policy withdrawal closes new intake/restore without rebinding existing rows, and metadata cannot be physically deleted before a separate hold-aware purge exists. CE-05 remains **existing but incomplete** because the `course-materials` bucket, objects, trustworthy storage/scanner runtime and receipts, extraction, signed reads, route/rate-limit boundary, current-screen wiring, deployment and operating evidence remain absent.
 
+Automation pass 15 adds the deny-by-default Storage boundary in `20261009004500_course_source_storage_buckets.sql`. The two bucket definitions are **existing and verified locally**: both are private, repair configuration drift idempotently, use the current classification caps and exact five-type course-document allowlist, expose no repair function to runtime roles and grant no browser object policy. CE-05 remains **existing but incomplete** because no byte, trustworthy adapter/scanner receipt, extraction, signed read, route/rate-limit boundary, current-screen wiring, deployment or operating evidence exists. Local bucket definitions are not production bucket evidence.
+
 ## How a row was classed
 
 | Disposition | Meaning here |
@@ -170,7 +172,7 @@ The diff is `docs/execute/01-platform-core-diff.md` §4. Section 8 corrects thre
 | `ops.social_posts`, crisis-mode settings | Roadmap or business concept until stream 08. |
 | `ai_policy.student_id_pattern` | Not authorized with the scanner. `D-1298` withdrew the row. |
 | `audit.ai_usage` | Existing but incomplete. Institution gateway writes a content-free row. Shared-key path keeps monthly totals. |
-| `student-files`, `course-materials` buckets | Missing. Student-source metadata persistence exists locally, but no bucket or storage policy is provisioned and `course-materials` remains closed pending retention-policy authority. |
+| `student-files`, `course-materials` buckets | Existing and verified locally as private, deny-by-default bucket definitions with exact caps/types and no browser object policy. Production provisioning, stored bytes and a trusted adapter/scanner runtime remain unverified. |
 | Evidence bucket | Duplicate or superseded. `trust-packet` is the pattern. |
 | Free-text scan (`lib/ai/redact.ts`) | Not built. `D-1298`: the class gate does not read free text on purpose. A drafted scan on this branch was discarded before push. |
 | Provenance ladder and conflict resolution | Existing but incomplete. Five source labels, no ranked conflict pick. |

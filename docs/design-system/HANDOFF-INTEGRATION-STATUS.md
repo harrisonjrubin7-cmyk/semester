@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 14 of 120 · **Integration slice** 22 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `de9ee702`
+**Automation pass** 15 of 120 · **Integration slice** 23 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `aac5da38`
 
 ## State
 
-Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student-source persistence, versioned shared-material retention authority and private shared-material metadata/lifecycle are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Private buckets, byte storage, deployed scanning, extraction, routes and current-screen wiring remain absent. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, and deny-by-default private bucket definitions are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Stored bytes, a trustworthy adapter/scanner runtime, extraction, routes and current-screen wiring remain absent; production bucket/deployment state is unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 15 / slice 23
+
+- The pass began clean at `7abd715d`, which includes `origin/main` `de9ee702`. A final dirty-tree fetch observed `aac5da38`; its search/AI authorization changes add no Supabase migration or bucket work and do not overlap this slice. The slice is committed before merging that upstream head on the clean branch.
+- `20261009004500_course_source_storage_buckets.sql` creates or repairs only `student-files` and `course-materials` when Supabase Storage exists. Both are private, use the current 50 MiB student-private / 100 MiB internal caps and accept exactly PDF, plain text, Markdown, DOCX and PPTX.
+- No anon or authenticated object policy is added. The migration-owner repair function is revoked from anon, authenticated and service roles. Focused behavior proves direct client inserts fail and browser reads, updates and deletes see or affect zero planted rows.
+- The privacy guard was shown red by temporarily making `student-files` public; it failed with one of two buckets private, then passed after restoration.
+- PostgreSQL 17 applies all 217 migrations twice with the schema and all 376 table fingerprints unchanged. The 12 bucket checks plus 117 adjacent course-source, retention, grant, RLS and index checks pass, 129/129 total.
+- Focused repository contracts pass 85/85. TypeScript, lint, university typecheck and production build pass; lint retains the existing four-warning baseline and build retains existing chunk warnings. Token/design contracts pass 78/78, design audit/CSS stay within their current ledgers and the report regenerates without drift. The aggregate design launcher itself cannot start because it hardcodes unavailable `npm`; its exact constituents pass through the bundled runtime.
+- This slice stores no byte and adds no repository adapter, scanner, extractor, signed URL, request route, UI, scheduler or deployment. Local bucket-definition proof is not production-bucket or operating evidence.
+- HawkScan preflight found both committed configuration files, but the `hawk` runtime, `HAWK_API_KEY` and `HAWK_APP_HOST` target are absent. No DAST result or security pass is claimed.
 
 ## Evidence locked in automation pass 14 / slice 22
 
@@ -256,7 +267,7 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Completed local slice gate
 
-The projection database proof and reapply evidence remain green from slice 15. Slice 16's 43 focused tests, generated-reference guards and phase gates remain green; slice 17's 16-row structural and 22/22 design-tooling checks remain green; slice 18's authority contract remains green. Slice 19 and slice 20 retain their student-source persistence/settlement proof. Slice 21 retains its versioned policy proof. Slice 22 applies all 216 migrations twice with 376 unchanged table fingerprints, passes 212 focused/adjacent SQL checks, 167 focused repository contracts and 78 design contracts, plus TypeScript, lint, university typecheck, production build, design audit/CSS/report. Ordered/shuffled full-suite caveats and HawkScan remain explicitly open. Bucket provisioning, bytes, extraction, routes, current-screen wiring and operating deployment remain separate.
+The projection database proof and reapply evidence remain green from slice 15. Slice 16's 43 focused tests, generated-reference guards and phase gates remain green; slice 17's 16-row structural and 22/22 design-tooling checks remain green; slice 18's authority contract remains green. Slice 19 and slice 20 retain their student-source persistence/settlement proof. Slice 21 retains its versioned policy proof. Slice 22 retains its shared-metadata proof. Slice 23 applies all 217 migrations twice with 376 unchanged table fingerprints, passes 129 focused/adjacent SQL checks and 85 repository plus 78 design contracts, and has green TypeScript/lint/university/build gates. Ordered/shuffled full-suite caveats and HawkScan remain explicitly open. Stored bytes, trusted runtime/receipts, extraction, routes, current-screen wiring, production bucket state and operating deployment remain separate.
 
 ## External gates kept open
 
@@ -264,7 +275,7 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Reconcile the next Course Engine dependency against the absent private bucket/scanner runtime. Do not synthesize storage/scan evidence, expose upload/download routes, wire Import/Study Studio or add a Course Engine route/parallel course model until private object policy, trusted adapter, route authorization and rate-limit prerequisites exist.
+Define the repository adapter/private runtime only when it can create the exact planned tenant-bound object and produce genuine storage plus named-scanner receipts. Do not synthesize either receipt, expose browser upload/download routes, wire Import/Study Studio or add a Course Engine route/parallel course model before trusted runtime, session-derived authorization and shared rate-limit evidence exist.
 
 ## Hold-aware projection-history retention — automation runner pass 5, slice 13
 

@@ -1,6 +1,6 @@
 # Course-source authority contract
 
-**Status:** locally implemented contract plus private student-source metadata, storage-receipt, scan-settlement, correction and recovery persistence, and an approved versioned tenant authority for shared-material retention; no shared-material metadata, server bucket, byte storage, upload/download route, scanner, extraction worker, scheduler or deployment exists.
+**Status:** locally implemented contract, student/shared metadata and controlled lifecycle, plus deny-by-default private bucket definitions; no stored byte, upload/download route, storage adapter, scanner, extraction worker, scheduler, deployment or production-bucket evidence exists.
 
 Semester keeps one current product path: Import and Study Studio. The separate Course Engine shell and data model are not integration targets. Before either current screen can persist a source on the server, `app/server/course-sources/contract.ts` requires the caller to supply current server-resolved evidence for one of two existing course authorities.
 
@@ -9,7 +9,7 @@ Semester keeps one current product path: Import and Study Studio. The separate C
 | Student source | Tenant + exact owner + opaque `public.courses.id`; course code and term remain provenance labels | The authenticated actor owns that exact course row and holds the current exact tenant membership | `student-files` | `student_private` |
 | Published course material | Tenant + normalized course code + term | `course:publish` at exact `course` scope `<tenant>/<CODE>` | `course-materials` | `internal` |
 
-The labels name future private storage boundaries; they do not assert that buckets exist. The underlying object-key authority remains `packages/platform/src/engines/files.ts`: `t/<tenant>/<classification>/<yyyy-mm>/<fileId>`, parsed and tenant-checked before every store operation. A client never selects a bucket, key, tenant, owner, role, capability, scan result or retention policy. `20261009001500_course_material_retention_policy.sql` now supplies the shared-material policy authority: an operator with `console:operate` and fresh MFA consumes one independently approved `tenant-policy` request to append an active or withdrawn tenant version. The private resolver returns no row when no version exists or the latest version is withdrawn, so shared intake remains closed by default.
+`20261009004500_course_source_storage_buckets.sql` now defines those two private boundaries where Supabase Storage exists. It repairs either bucket to private, applies the existing classification size cap and restricts both to the five course-document MIME types. It deliberately creates no anon or authenticated object policy. This is local schema evidence only: it does not show that a migration is deployed, a production bucket exists or any byte has been accepted. The underlying object-key authority remains `packages/platform/src/engines/files.ts`: `t/<tenant>/<classification>/<yyyy-mm>/<fileId>`, parsed and tenant-checked before every store operation. A client never selects a bucket, key, tenant, owner, role, capability, scan result or retention policy. `20261009001500_course_material_retention_policy.sql` supplies the shared-material policy authority: an operator with `console:operate` and fresh MFA consumes one independently approved `tenant-policy` request to append an active or withdrawn tenant version. The private resolver returns no row when no version exists or the latest version is withdrawn, so shared intake remains closed by default.
 
 ## Write and read boundary
 
@@ -40,14 +40,12 @@ Audit facts contain tenant, actor, source id, course code, term, correlation id 
 
 `20261009003000_course_material_metadata.sql` implements the shared-material metadata boundary without reusing a student's ownership model. The service-only planner rechecks the named publisher's current profile and exact live `course:publish` grant at `<tenant>/<COURSE>`, resolves the current active retention policy, and requires the server's expected policy id/version to match before it records an `internal` plan for one tenant/course/term. Plan, withdrawal and restore are idempotent and atomic with pseudonymous content-free audit; operation history is append-only. Policy withdrawal closes new intake and restore, while an already-bound row keeps its original policy id, version and duration. Metadata has no client policy or write grant and cannot be physically deleted, leaving object creation, storage/scanner settlement, extraction, signed reads and a future legal-hold-aware purge explicitly closed.
 
-Institution-published `course-materials` remains closed to persistence. The versioned tenant authority now exists locally, but no shared-material metadata schema binds its exact policy id/version to an exact course-scoped publish grant. A request or service argument still cannot supply that proof.
+`20261009004500_course_source_storage_buckets.sql` closes only the local bucket-definition dependency. `student-files` is private with a 50 MiB object cap; `course-materials` is private with a 100 MiB cap; both allow only PDF, plain text, Markdown, DOCX and PPTX. The migration-owner repair function is unavailable to anon, authenticated and service roles. With no browser object policy, direct client inserts fail and reads, updates and deletes see or affect zero rows. The buckets contain no production byte and expose no signed read or upload path.
 
 ## Still open before ingestion
 
-- private bucket provisioning and bucket-policy proof;
 - a deployed document scanner and sandboxed extraction worker;
 - a repository adapter for the service-only persistence functions and a private runtime that can produce trustworthy receipts;
-- shared-material metadata and controlled operations that resolve and bind the current approved policy version;
 - route authentication, shared rate-limit storage, upload receipts and signed-download authorization;
 - Import and Study Studio wiring, source-version propagation and recovery UI;
 - PostgreSQL/RLS, gateway, browser, accessibility, responsive, failure-state and DAST evidence;
