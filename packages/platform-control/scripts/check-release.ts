@@ -8,4 +8,4 @@ const decision = validateRelease(snapshot);
 const report = { ...decision, allowed: registryIssues.length === 0 && decision.allowed, registryIssues };
 await writeGenerated('release-evidence.json', report);
 console.log(JSON.stringify(report, null, 2));
-if (!report.allowed) process.exitCode = 1;
+if (!report.allowed && !process.argv.includes('--report-only')) process.exitCode = 1;
