@@ -415,6 +415,31 @@ describe('deadline-kind conflict choices', () => {
   });
 });
 
+describe('deadline-weight conflict choices', () => {
+  const beforeItem = { ...item('current-id', 'Midterm', 9, 8), weight: '20% of grade' };
+  const afterItem = { ...item('fresh-id', 'Midterm', 9, 8), weight: '25% of grade' };
+  const before = module([beforeItem]);
+  const after = module([afterItem]);
+
+  it('requires a stable explicit choice separate from course-level grading rows', () => {
+    const changes = diff(before, after, YEAR);
+    expect(unresolvedReimportConflictIds(changes, {})).toEqual(['weight:current-id']);
+    expect(() => applyReimportConflictChoices(before, after, YEAR, {})).toThrow(/Every re-import source conflict/);
+  });
+
+  it('applies either source only after a choice and preserves the stable item id', () => {
+    const kept = applyReimportConflictChoices(before, after, YEAR, {
+      'weight:current-id': 'keep_current',
+    });
+    expect(kept.items[0]).toMatchObject({ id: 'current-id', weight: '20% of grade' });
+
+    const imported = applyReimportConflictChoices(before, after, YEAR, {
+      'weight:current-id': 'use_imported',
+    });
+    expect(imported.items[0]).toMatchObject({ id: 'current-id', weight: '25% of grade' });
+  });
+});
+
 describe('ticksKept', () => {
   it('counts what survives and what does not', () => {
     const before = module([

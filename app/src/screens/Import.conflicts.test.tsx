@@ -119,7 +119,7 @@ describe('Import re-import conflict controls', () => {
       'Room · Buttrick 101 → Wilson 103',
     ]);
     expect([...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')].every((radio) => !radio.checked)).toBe(true);
-    expect(host.textContent).toContain('changed date, due time, title, deadline type, course detail, or grading row');
+    expect(host.textContent).toContain('changed date, due time, title, deadline type, deadline weight, course detail, or grading row');
 
     const importedRoom = [...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')]
       .find((radio) => radio.parentElement?.textContent?.includes('Use imported room'));
@@ -192,5 +192,25 @@ describe('Import re-import conflict controls', () => {
       .find((radio) => radio.parentElement?.textContent?.includes('Use imported type'));
     act(() => importedKind!.click());
     expect(choose).toHaveBeenCalledWith('kind:current-id', 'use_imported');
+  });
+
+  it('renders an unselected deadline-weight choice with the stable item id', () => {
+    const current = { ...item('current-id', 'Midterm', 9, 8), weight: '20% of grade' };
+    const imported = { ...item('fresh-id', 'Midterm', 9, 8), weight: '25% of grade' };
+    const choose = vi.fn();
+    act(() => {
+      root.render(<StoreProvider><Rediff changes={diff(course([current]), course([imported]), 2026)} kept={{ kept: 0, lost: 0 }} code="ECON 1020" choices={{}} onChoose={choose} /></StoreProvider>);
+    });
+
+    const groups = [...host.querySelectorAll('fieldset.import-conflict-choice')];
+    expect(groups.map((group) => group.querySelector('legend')?.textContent)).toEqual([
+      'Weight · 20% of grade → 25% of grade',
+    ]);
+    expect([...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')].every((radio) => !radio.checked)).toBe(true);
+
+    const importedWeight = [...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')]
+      .find((radio) => radio.parentElement?.textContent?.includes('Use imported deadline weight'));
+    act(() => importedWeight!.click());
+    expect(choose).toHaveBeenCalledWith('weight:current-id', 'use_imported');
   });
 });

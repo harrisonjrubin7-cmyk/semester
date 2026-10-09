@@ -1095,7 +1095,7 @@ export function Rediff({
         </div>
         {conflicts.length > 0 && (
           <div role="status" style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
-            Choose what to keep for every changed date, due time, title, deadline type, course detail, or grading row. Semester will not decide a source conflict for you.
+            Choose what to keep for every changed date, due time, title, deadline type, deadline weight, course detail, or grading row. Semester will not decide a source conflict for you.
           </div>
         )}
       </Blueprint>
@@ -1154,6 +1154,17 @@ export function Rediff({
             `kind:${r.before.id}`,
             `Type · ${r.before.kind || 'not stated'} → ${r.after.kind || 'not stated'}`,
             `Use imported type — ${r.after.kind || 'not stated'}`,
+          ))}
+        </>
+      )}
+
+      {changes.reweightedItems.length > 0 && (
+        <>
+          <SectionLabel>Changed deadline weight</SectionLabel>
+          {changes.reweightedItems.map((r) => choose(
+            `weight:${r.before.id}`,
+            `Weight · ${r.before.weight || 'not stated'} → ${r.after.weight || 'not stated'}`,
+            `Use imported deadline weight — ${r.after.weight || 'not stated'}`,
           ))}
         </>
       )}

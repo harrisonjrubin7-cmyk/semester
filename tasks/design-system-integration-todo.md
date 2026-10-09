@@ -582,8 +582,31 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Reconcile paired deadline `weight` to named ownership and acceptance behavior before implementing a conflict choice; do not conflate it with course-level grading rows.
+- [x] Reconcile paired deadline `weight` to named ownership and acceptance behavior before implementing a conflict choice; do not conflate it with course-level grading rows. Completed in automation pass 21 / slice 29.
 - [ ] Keep location/detail and quote/source provenance separate until each has an explicit authority and integrity contract.
+- [ ] Keep durable server conflict records, external reconciliation, safe ICS publication, server ingestion and signed reads outside this local client merge slice.
+
+## 2026-10-08 student-controlled deadline-weight conflicts — automation pass 21, slice 29
+
+- [x] Fetch current `origin/main` `4a01b4a0`, confirm it is already an ancestor and find no equivalent paired-deadline weight choice.
+- [x] Name the student-approved current item weight as the authority until the student explicitly accepts newly extracted syllabus text; keep this deadline-level value separate from course-level grading rows.
+- [x] Reuse the existing Import/Rediff route, native fieldset/radio pattern and semantic form styles; add no route, component, dependency, schema, raw design value or parallel course model.
+- [x] Treat every changed weight on a confidently paired deadline as an unresolved source conflict and stop counting it as unchanged.
+- [x] Use a stable `weight:<current-item-id>` decision key, separate from `grading:*`, with no preselected winner; reject incomplete or invalid maps in the pure merge boundary.
+- [x] Apply the weight choice independently from date, title, due time, kind and grading while preserving the current item id and completion-tick relationship.
+- [x] Render the comparison in the existing keyboard-operable native radio group and extend live conflict guidance to name deadline weight.
+- [x] Prove the guard red before implementation: three focused failures showed the absent stable decision, missing control and ineffective keep-current merge while 41 controls passed.
+- [x] Directly changed logic/render tests pass 44/44; the broader focused Import boundary passes 99/99.
+- [x] TypeScript, lint, university typecheck and production build pass with the existing four lint and chunk warnings.
+- [x] The 78 token/design constituents pass; design audit has zero violations with 86 existing warnings; CSS remains within its ledger; the design report regenerates without drift.
+- [ ] Aggregate design report wrapper — writes the unchanged report, then exits 1 because it invokes unavailable `npm`; constituent checks are green and no wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not run for this bounded client slice; focused regression and phase gates are green.
+- [ ] HawkScan DAST — preflight stops because `hawk`, Docker and `HAWK_APP_HOST` are absent. A local credential file exists but was not read; no DAST result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Reconcile paired deadline `where` to named ownership and acceptance behavior before implementing a conflict choice; keep location changes independent from deadline weight and course room metadata.
+- [ ] Keep free-form detail and quote/source provenance separate until each has an explicit authority and integrity contract.
 - [ ] Keep durable server conflict records, external reconciliation, safe ICS publication, server ingestion and signed reads outside this local client merge slice.
 
 ## Earlier integration baseline preserved
