@@ -51,12 +51,13 @@ export interface FeatureCompletionRecord {
   gates: readonly FeatureGateResult[];
 }
 
-const missingGates = (): readonly FeatureGateResult[] => FEATURE_COMPLETION_GATES.map((gate) => ({
-  id: gate.id,
-  status: 'missing',
-  evidence: [],
-  gap: 'Evidence has not been bound to this gate.',
-}));
+const evidence = (path: string, shows: string): FeatureEvidence => ({ path, shows });
+const result = (
+  id: FeatureGateId,
+  status: FeatureGateStatus,
+  items: readonly FeatureEvidence[],
+  gap = '',
+): FeatureGateResult => ({ id, status, evidence: items, gap });
 
 export const FEATURE_COMPLETION_RECORDS: readonly FeatureCompletionRecord[] = [{
   id: 'registration-readiness',
@@ -66,7 +67,26 @@ export const FEATURE_COMPLETION_RECORDS: readonly FeatureCompletionRecord[] = [{
   owner: 'Product and registration operations',
   declaredComplete: false,
   truthBoundary: 'Repository evidence does not prove durable production persistence, live SIS data, an official registration write, institutional approval or student UAT.',
-  gates: missingGates(),
+  gates: [
+    result('FC-01', 'met', [evidence('docs/learning-university-systems/REGISTRATION-READINESS-SPEC.md', 'The student problem, inputs, output and non-authoritative boundary.')]),
+    result('FC-02', 'met', [evidence('app/src/lib/rollout-capabilities.ts', 'CAP-050 Registration, its owner, dependencies, acceptance contract and external gate.')]),
+    result('FC-03', 'met', [evidence('app/src/lib/systempassports.ts', 'The Registration passport with authority, records, commands, events, dependencies and activation gates.')]),
+    result('FC-04', 'met', [evidence('packages/institution/src/readiness.ts', 'The source-aware projection keeps SIS facts authoritative and student choices non-authoritative.')]),
+    result('FC-05', 'met', [evidence('docs/reference/schemas/events/registration.schema.json', 'The registration event payload contract and education-record classification boundary.')]),
+    result('FC-06', 'partial', [evidence('supabase/migrations/20260929300000_registration_transaction.sql', 'Durable registration request, receipt and reconciliation records.')], 'The readiness aggregate still has no production Postgres persistence adapter or migration.'),
+    result('FC-07', 'met', [evidence('app/server/institution/registration.ts', 'The server registration command and receipt contract.'), evidence('packages/institution/src/readiness-workflow.ts', 'The readiness transition and idempotency contract.')]),
+    result('FC-08', 'met', [evidence('packages/institution/src/policy.ts', 'Relationship- and capability-scoped registration-readiness policy decisions.')]),
+    result('FC-09', 'partial', [evidence('supabase/registration_transaction.check.sql', 'Tenant and authorization negatives for the durable registration transaction.')], 'Readiness evaluations and reconciliation assignments are not yet persisted behind tenant RLS.'),
+    result('FC-10', 'met', [evidence('app/src/components/RegistrationReadiness.tsx', 'The student view renders status, source-aware next steps and non-authoritative language.')]),
+    result('FC-11', 'partial', [evidence('packages/institution/src/readiness-workflow.ts', 'Idempotent transitions return minimal outbox descriptors and reconciliation work.')], 'The aggregate, receipt, audit row and outbox row are not yet committed atomically by a production repository.'),
+    result('FC-12', 'partial', [evidence('docs/reference/registration-readiness-workflow.md', 'Named readiness audit and event evidence requirements.')], 'Durable audit persistence for readiness evaluation transitions is still specified rather than implemented.'),
+    result('FC-13', 'met', [evidence('docs/reference/registration-readiness-workflow.md', 'The boundary between readiness projection, a future Postgres adapter and SIS authority.')]),
+    result('FC-14', 'partial', [evidence('app/src/screens/registration.test.tsx', 'Registration route states and recovery behavior under test.')], 'The design archive still lacks one end-to-end proof covering every ready, loading, empty, error, forbidden, offline and stale state.'),
+    result('FC-15', 'partial', [evidence('app/src/components/RegistrationReadiness.test.tsx', 'Component interaction and accessible text coverage.')], 'No representative student keyboard, mobile and assistive-technology UAT has been recorded.'),
+    result('FC-16', 'met', [evidence('packages/institution/src/readiness-workflow.test.ts', 'Workflow state, retry, concurrency, receipt and event tests.'), evidence('app/server/institution/registration.test.ts', 'Server registration transaction tests.')]),
+    result('FC-17', 'missing', [], 'No seeded end-to-end run proves the complete student-to-authoritative-handoff flow.'),
+    result('FC-18', 'partial', [evidence('app/src/lib/institution-ops.ts', 'The registration_ready metric and registrar owner.'), evidence('app/src/lib/systempassports.ts', 'The operational owner, alerts, rollback boundary and disabled-by-default system flag contract.')], 'A feature-specific runbook, named pilot owner and verified tenant flag configuration are not present.'),
+  ],
 }];
 
 export function completionSummary(record: FeatureCompletionRecord): {

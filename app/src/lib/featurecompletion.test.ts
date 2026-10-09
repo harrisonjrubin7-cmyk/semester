@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   FEATURE_COMPLETION_GATES,
@@ -43,6 +45,20 @@ describe('feature completion gate', () => {
     expect(completionSummary(record!).blockingGateIds).toEqual(
       expect.arrayContaining(['FC-06', 'FC-09', 'FC-17', 'FC-18']),
     );
+  });
+
+  it('binds the registration assessment to repository evidence without hiding gaps', () => {
+    const record = FEATURE_COMPLETION_RECORDS[0];
+    const summary = completionSummary(record);
+    expect(summary).toMatchObject({ complete: false, met: 10, partial: 7, missing: 1, notApplicable: 0 });
+    expect(validateFeatureCompletion()).toEqual([]);
+
+    const root = join(import.meta.dirname, '../../..');
+    for (const gate of record.gates) {
+      for (const evidence of gate.evidence) {
+        expect(existsSync(join(root, evidence.path)), `${gate.id}: ${evidence.path}`).toBe(true);
+      }
+    }
   });
 
   it('rejects missing gates, unsupported met claims and a false complete claim', () => {
