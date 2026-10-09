@@ -13,6 +13,11 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+const experience = vi.hoisted(() => ({ supportEmailNotices: 'production' }));
+vi.mock('../lib/experience-flags', () => ({
+  EXPERIENCE_FLAGS: experience,
+}));
+
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 interface World {
@@ -63,6 +68,7 @@ let host: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
+  experience.supportEmailNotices = 'production';
   world = { tickets: [], thread: [], calls: [], gates: new Map(), errors: new Map(), noticeOutcome: 'on' };
   host = document.createElement('div');
   document.body.append(host);
@@ -123,7 +129,15 @@ describe('asking Semester support', () => {
     await draw();
     expect(host.textContent).toMatch(/without your name or email address/);
     expect(host.textContent).toMatch(/only if you tick them/);
+    expect(host.textContent).toMatch(/targets, not guaranteed coverage/);
     expect(host.querySelector('a[href="#/support"]')).not.toBeNull();
+  });
+
+  it('labels the category response window as a target rather than a promised SLA', async () => {
+    await draw();
+    await write('Response target', 'I need help with the app.');
+    await click(button('Check before sending'));
+    expect(host.textContent).toContain('Our first-reply target is 72 hours. It is not a guaranteed SLA.');
   });
 
   it('starts every app detail unticked, with its value shown beside it', async () => {
@@ -174,6 +188,18 @@ describe('asking Semester support', () => {
     expect(host.querySelector('dl[aria-label="What will be sent"]')?.textContent).toMatch(/Email noticeOn — generic notice only/);
     await click(button('Send to Semester support'));
     expect(world.calls.find((call) => call.name === 'open_support_ticket')?.args?.want_email_notice).toBe(true);
+  });
+
+  it('keeps account email out of a new question while the provider gate is closed', async () => {
+    experience.supportEmailNotices = 'off';
+    await draw();
+    await write('Reply notice', 'I will read the answer in Help.');
+    expect(host.textContent).toContain('Email notices are unavailable while the email provider review and terms are incomplete.');
+    expect(host.textContent).toContain('No account email is sent while this gate is closed.');
+    expect(host.querySelectorAll('input[type="checkbox"]')).toHaveLength(6);
+    await click(button('Check before sending'));
+    await click(button('Send to Semester support'));
+    expect(world.calls.find((call) => call.name === 'open_support_ticket')?.args?.want_email_notice).toBe(false);
   });
 
   it('shows a question and its thread, and lets the student reply or close it', async () => {

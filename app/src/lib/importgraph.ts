@@ -42,7 +42,7 @@ export function zoneOf(path: string): Zone {
   return 'other';
 }
 
-export const isTestFile = (path: string): boolean => /\.test\.(tsx?|mjs)$/.test(path);
+export const isTestFile = (path: string): boolean => /\.test\.(tsx?|jsx?|mjs)$/.test(path);
 
 type Token = { t: 'id' | 'str' | 're' | 'num' | 'p'; v: string };
 
@@ -193,7 +193,7 @@ export const WORKSPACE_ALIASES: Readonly<Record<string, string>> = {
   '@semester/platform': 'packages/platform/src/index.ts',
 };
 
-const CODE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.js'];
+const CODE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.js', '.jsx'];
 /** Files a bundler imports that are not code. */
 const ASSET = /\.(css|json|svg|png|jpe?g|gif|webp|avif|woff2?|ttf|mp3|mp4|webm|vtt|txt|md|csv|wasm)(\?.*)?$/i;
 

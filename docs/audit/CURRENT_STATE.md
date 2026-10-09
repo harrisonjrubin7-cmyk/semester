@@ -63,7 +63,7 @@ Keep the current modular monolith. Do not create the PDF's proposed parallel `ap
 
 ## Immediate implementation sequence
 
-1. Define one server-issued registration-readiness projection contract that carries tenant, subject, term, authority, source references, freshness, version and field-level visibility.
+1. **Implemented in repository source:** define one server-issued registration-readiness projection contract that carries tenant, subject, term, authority, source references, freshness, version and field-level visibility.
 2. Route student, assigned-advisor and authorized-registrar reads through `packages/institution` policy evaluation and apply returned obligations before serialization.
 3. Persist a durable readiness evaluation/request workflow with idempotency, audit event, receipt, stale/unknown states and a reconciliation task.
 4. Replace only the readiness component's data seam—not its Semester UI—with the governed projection behind a feature flag; retain local planning as an explicit fallback.

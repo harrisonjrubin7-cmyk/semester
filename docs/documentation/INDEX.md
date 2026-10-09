@@ -176,7 +176,7 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [How to add an edge function](../developers/HOW-TO-ADD-AN-EDGE-FUNCTION.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add an event type](../developers/HOW-TO-ADD-AN-EVENT-TYPE.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to change a page that a register renders](../developers/HOW-TO-CHANGE-A-REGISTER-PAGE.md) | how-to | held | `engineering` | 2026-10-04 |
-| [How to ship a change behind a flag](../developers/HOW-TO-SHIP-BEHIND-A-FLAG.md) | how-to | held | `engineering` | 2026-10-04 |
+| [How to ship a change behind a flag](../developers/HOW-TO-SHIP-BEHIND-A-FLAG.md) | how-to | held | `engineering` | 2026-10-08 |
 | [Contributor onboarding](../developers/ONBOARDING.md) | tutorial | held | `engineering` | 2026-10-04 |
 | [Contributor documentation](../developers/README.md) | reference | held | `engineering` | 2026-10-04 |
 | [Repository map](../developers/REPO-MAP.md) | reference | held | `engineering` | 2026-10-04 |
@@ -272,7 +272,7 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [How to add an edge function](../developers/HOW-TO-ADD-AN-EDGE-FUNCTION.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add an event type](../developers/HOW-TO-ADD-AN-EVENT-TYPE.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to change a page that a register renders](../developers/HOW-TO-CHANGE-A-REGISTER-PAGE.md) | how-to | held | `engineering` | 2026-10-04 |
-| [How to ship a change behind a flag](../developers/HOW-TO-SHIP-BEHIND-A-FLAG.md) | how-to | held | `engineering` | 2026-10-04 |
+| [How to ship a change behind a flag](../developers/HOW-TO-SHIP-BEHIND-A-FLAG.md) | how-to | held | `engineering` | 2026-10-08 |
 | [Testing guide](../developers/TESTING-GUIDE.md) | how-to | held | `engineering` | 2026-10-04 |
 | [Admin guide](../guides/institution/ADMIN-GUIDE.md) | how-to | held | `success` | 2026-10-04 |
 | [Audit and data requests](../guides/institution/AUDIT-AND-DATA-REQUESTS.md) | how-to | held | `privacy` | 2026-10-04 |

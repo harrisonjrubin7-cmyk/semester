@@ -1,6 +1,6 @@
 # First-day checklist — for pilot users
 
-**As of 2026-09-28.** One page to tick through on the first day of a pilot,
+**As of 2026-10-03.** One page to tick through on the first day of a pilot,
 for a student and for the staff member running it. Each line names the screen
 it happens on. [`QUICK-START.md`](QUICK-START.md) is the longer walk;
 [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md) is what to read before relying

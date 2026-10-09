@@ -20,8 +20,24 @@
  */
 
 const VERSION = 'semester-v1';
-const SHELL = `${VERSION}-shell`;
-const MEDIA = `${VERSION}-media`;
+
+// The worker is served from wherever the app is — '/' locally, '/semester/' on
+// GitHub Pages and '/app/' on the unified host — so every path it holds is
+// derived from its own location. A hard-coded '/index.html' would cache the
+// wrong page, or none.
+const BASE = new URL('./', self.location).pathname;
+
+/*
+ * CacheStorage belongs to the origin, not to a worker's scope. A root worker
+ * and an /app worker that both open `semester-v1-shell` can therefore prune
+ * each other's assets even though their registrations are separate. Preserve
+ * the established root names, and namespace every non-root build by its base.
+ */
+const CACHE_VERSION = BASE === '/'
+  ? VERSION
+  : `${VERSION}-${BASE.replace(/^\/+|\/+$/g, '').replace(/[^a-z0-9._-]+/gi, '-')}`;
+const SHELL = `${CACHE_VERSION}-shell`;
+const MEDIA = `${CACHE_VERSION}-media`;
 
 /*
  * Where a shared file waits between the worker and the page.
@@ -55,10 +71,6 @@ const SHARE_KEY = './__shared';
 const MEDIA_CAP = 150 * 1024 * 1024;
 
 
-// The worker is served from wherever the app is — '/' locally, '/semester/' on
-// GitHub Pages — so every path it holds is derived from its own location. A
-// hard-coded '/index.html' would cache the wrong page, or none.
-const BASE = new URL('./', self.location).pathname;
 const SHELL_FILES = [BASE, `${BASE}index.html`, `${BASE}manifest.webmanifest`, `${BASE}icon.svg`];
 
 /**

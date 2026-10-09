@@ -12,12 +12,14 @@ Repository outcome: the application can demonstrate, with sandbox data, a studen
 
 Execution must preserve the complete canonical backlog dependency order: E1 foundation, E7 first integration evidence, E5 governed AI, E2/E3 student and course foundations, E9 control-plane consumers, and only then the E4/E6 registrar and advising slice. The readiness contract can be modeled earlier, but target-facing implementation cannot use this focused roadmap to skip those intervening gates.
 
+Post-audit repository update: the versioned readiness projection contract landed after the `55adab11` audit baseline. That is repository-source progress only; it does not advance the dependency, pilot, integration, approval or activation gates below.
+
 1. Complete the applicable E1 foundation items and cite their evidence in the implementing pull requests.
 2. Establish the applicable E7 read-adapter and migration-rehearsal prerequisites for a target pilot; sandbox-only work may proceed but stays labeled repository demonstration.
 3. Complete applicable E5 governed-AI prerequisites before any readiness assistance is exposed.
 4. Complete the applicable E2/E3 student and course persistence/source foundations.
 5. Complete applicable E9 configuration and workflow consumers so tenant settings take effect.
-6. Add a versioned readiness projection contract to the existing institution package.
+6. [x] Add a versioned readiness projection contract to the existing institution package.
 7. Add persistence/migration for evaluation requests, facts, source versions, workflow state, tasks and receipts only where current tables cannot carry them.
 8. Evaluate reads and commands through the current policy/access-saga boundary.
 9. Connect the existing student UI to the projection behind an exposure/feature gate, retaining the local planning fallback.
@@ -84,7 +86,7 @@ Outcome: partner/developer platform and advanced operations after the governed c
 3. E5 governed-AI prerequisites for any assisted readiness behavior;
 4. applicable E2/E3 student and course persistence/source foundations;
 5. applicable E9 configuration and workflow consumers;
-6. governed readiness projection;
+6. governed readiness projection — implemented in repository source after the audit baseline; activation gates remain open;
 7. durable readiness evaluation and reconciliation workflow;
 8. student UI adoption with explicit fallback;
 9. advisor/registrar queue projections;
