@@ -770,6 +770,31 @@ describe('taking it back', () => {
     expect(back.done.e1).toBe(true);
   });
 
+  it('restores a removed calendar together with only its imported events', () => {
+    const s: State = {
+      ...blank(),
+      feeds: [
+        { id: 'feed-one', kind: 'ics', name: 'Course dates', url: '', added: 1, synced: 2, status: '2 events read', count: 2 },
+        { id: 'feed-two', kind: 'ics', name: 'Club dates', url: '', added: 3, synced: 4, status: '1 event read', count: 1 },
+      ],
+      feedEvents: [
+        { id: 'event-one', sourceId: 'feed-one', title: 'Midterm', date: '2026-10-20', at: 540, time: '9:00 AM', where: 'Calhoun 101', note: '', courseId: null },
+        { id: 'event-two', sourceId: 'feed-one', title: 'Final', date: '2026-12-10', at: null, time: '', where: '', note: '', courseId: null },
+        { id: 'event-three', sourceId: 'feed-two', title: 'Meeting', date: '2026-10-22', at: 1080, time: '6:00 PM', where: 'Commons', note: '', courseId: null },
+      ],
+    };
+
+    const gone = reducer(s, { type: 'removeFeed', id: 'feed-one' });
+    expect(gone.feeds.map((feed) => feed.id)).toEqual(['feed-two']);
+    expect(gone.feedEvents.map((event) => event.id)).toEqual(['event-three']);
+    expect(gone.undone?.label).toBe('Calendar and its events removed');
+
+    const back = reducer(gone, { type: 'undo' });
+    expect(back.feeds).toEqual(s.feeds);
+    expect(back.feedEvents).toEqual(s.feedEvents);
+    expect(back.undone).toBeNull();
+  });
+
   it('offers nothing for an action that only edits', () => {
     // An edit leaves the thing there to edit back.
     const s = twoNotes();

@@ -27,7 +27,9 @@ import {
   type RhythmLibrary,
   type RhythmPlan,
 } from '../lib/operating-rhythm';
+import { ConfirmDialog } from './ConfirmDialog';
 import { FilePick } from './ui';
+import { ActionPreview } from './unity/ActionPreview';
 
 export function OperatingRhythm() {
   const { account, state, dispatch } = useStore();
@@ -866,53 +868,60 @@ export function RhythmWorkspace({
         </div>
       )}
       {removeAll && (
-        <div>
-          <p>
-            Delete every {kind} plan and its working preferences for this account and term? Export a private backup
-            first.
-          </p>
-          <button
-            className="btn"
-            type="button"
-            onClick={() => {
-              if (lib.update(EMPTY_RHYTHM)) {
-                setRemoveAll(false);
-                setNotice('Rhythm data deleted.');
-              }
-            }}
-          >
-            Confirm delete rhythm
-          </button>
-          <button className="btn" type="button" onClick={() => setRemoveAll(false)}>
-            Keep rhythm data
-          </button>
-        </div>
+        <ConfirmDialog
+          title={`Delete this ${kind} rhythm?`}
+          preview={
+            <ActionPreview
+              subject={`${kind === 'daily' ? 'Daily' : 'Weekly'} rhythm for this account and term`}
+              says={`Semester will delete ${lib.value.plans.length} ${kind} ${lib.value.plans.length === 1 ? 'plan' : 'plans'} and reset the ${kind} working preferences saved on this device.`}
+              exactly={`${lib.value.plans.length} ${kind} ${lib.value.plans.length === 1 ? 'plan' : 'plans'} and the ${kind} working preferences.`}
+              doesNotChange={`${kind === 'daily' ? 'Weekly' : 'Daily'} rhythm data, downloaded exports, and official course or calendar records do not change.`}
+              recovery={{
+                kind: 'none',
+                how: 'Restore only from a private backup you exported before deletion.',
+              }}
+            />
+          }
+          confirmLabel="Delete rhythm"
+          onCancel={() => setRemoveAll(false)}
+          onConfirm={() => {
+            if (lib.update(EMPTY_RHYTHM)) {
+              setRemoveAll(false);
+              setNotice('Rhythm data deleted.');
+            }
+          }}
+        />
       )}
       {remove && (
-        <div>
-          <p>Delete the plan for {plan.date}, including its private notes?</p>
-          <button
-            className="btn"
-            type="button"
-            onClick={() => {
-              if (
-                lib.update((old) => ({
-                  ...old,
-                  plans: old.plans.filter((p) => p.date !== planDate),
-                }))
-              ) {
-                setRemove(false);
-                setRemoveAll(false);
-                setNotice('Plan deleted.');
-              }
-            }}
-          >
-            Confirm delete
-          </button>
-          <button className="btn" type="button" onClick={() => setRemove(false)}>
-            Keep plan
-          </button>
-        </div>
+        <ConfirmDialog
+          title={`Delete the ${kind} plan for ${plan.date}?`}
+          preview={
+            <ActionPreview
+              subject={`${kind === 'daily' ? 'Daily' : 'Weekly'} plan for ${plan.date}`}
+              says={`Semester will delete the ${kind} plan for ${plan.date} from this device.`}
+              exactly="The plan fields, private notes, reflection, support audit, progress, and focus-session state saved for this date."
+              doesNotChange={`Other ${kind} plans and your ${kind} rhythm preferences stay saved. ${kind === 'daily' ? 'Weekly' : 'Daily'} rhythm data, downloaded exports, and official records do not change.`}
+              recovery={{
+                kind: 'none',
+                how: 'Restore only from a private backup you exported before deletion.',
+              }}
+            />
+          }
+          confirmLabel="Delete plan"
+          onCancel={() => setRemove(false)}
+          onConfirm={() => {
+            if (
+              lib.update((old) => ({
+                ...old,
+                plans: old.plans.filter((p) => p.date !== planDate),
+              }))
+            ) {
+              setRemove(false);
+              setRemoveAll(false);
+              setNotice('Plan deleted.');
+            }
+          }}
+        />
       )}
       <dialog aria-label="Focus session" ref={dialog} className="rhythm-focus" onCancel={() => setRunning(false)}>
         <h2>One next action</h2>

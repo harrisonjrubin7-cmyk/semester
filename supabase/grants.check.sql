@@ -531,6 +531,11 @@ declare
     'publish_course_guidance(want_course text, want_term text, want_body text)',
     'publish_study_pack(want_course text, want_term text, want_pack uuid, want_title text, want_note text, want_items jsonb, want_retired boolean)',
     'my_course_studio_courses()',
+    -- 20261009001500_course_material_retention_policy.sql: consumes one
+    -- independently approved tenant-policy request. The function rechecks
+    -- console:operate, fresh MFA, exact tenant/target/detail, request status,
+    -- expiry and actor participation before fail-closed audit plus append.
+    'publish_course_material_retention_policy(want_request uuid, want_correlation text)',
 
     -- 20260929310000_gradebook.sql: the gradebook of record. Each checks
     -- auth.uid(), the caller's own school and a course-scoped grades:*
@@ -607,6 +612,12 @@ declare
     -- demos by default and never accepts a tenant id from the caller.
     'console_tenant_operations(include_demo boolean)',
 
+    -- The first query-side contract over the private tenant projections. It
+    -- checks platform console or exact-school tenant configuration authority,
+    -- bounds entitlement pagination, and computes freshness from private
+    -- watermarks without exposing either projection table.
+    'read_tenant_projection(want_tenant text, after_capability text, want_limit integer)',
+
     -- Credential-free connector health. It requires the platform console
     -- shell, derives tenants from exact-school integration:view grants,
     -- excludes demos by default, and returns no credential, cursor, payload,
@@ -655,6 +666,14 @@ declare
     'console_approvals(include_demo boolean)',
     'console_break_glass(include_demo boolean)',
     'console_customers(include_demo boolean)',
+
+    -- The approval-bound dead-letter operation in 20261008190000. It requires
+    -- console:operate, fresh MFA and a current two-person projection-replay
+    -- approval bound to the exact tenant, event and consumer. Its focused
+    -- suite proves wrong tenant/consumer, stale MFA and audit failure refuse
+    -- the reset. This is the human control path; worker transitions stay in
+    -- `private` and service-role only.
+    'replay_domain_event(want_event uuid, want_consumer text, want_approval uuid, want_correlation text)',
 
     -- The nine in 20260929300000_registration_transaction.sql. The three
     -- student writers act only on the caller's own enrollment at the
