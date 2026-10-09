@@ -1,6 +1,6 @@
 # Course-source authority contract
 
-**Status:** locally implemented contract plus private student-source metadata/correction/recovery persistence; no server bucket, byte storage, upload/download route, scanner, extraction worker, scheduler or deployment exists.
+**Status:** locally implemented contract plus private student-source metadata, storage-receipt, scan-settlement, correction and recovery persistence; no server bucket, byte storage, upload/download route, scanner, extraction worker, scheduler or deployment exists.
 
 Semester keeps one current product path: Import and Study Studio. The separate Course Engine shell and data model are not integration targets. Before either current screen can persist a source on the server, `app/server/course-sources/contract.ts` requires the caller to supply current server-resolved evidence for one of two existing course authorities.
 
@@ -36,14 +36,16 @@ Audit facts contain tenant, actor, source id, course code, term, correlation id 
 
 `20261008234500_course_source_persistence.sql` implements only the student-owned half of this authority. Its controlled service functions independently reload the exact current `public.courses` row and active `institution_membership` on create, correction, deletion and restore. Client roles have no metadata policy or table privilege. Exact retries are idempotent; conflicting retries fail. Corrections are append-only and hash-linked. Deletion preserves a 30-day recovery window and legal holds refuse it. Pseudonymous audit and the domain change commit or roll back together.
 
+`20261009000000_course_source_scan_settlement.sql` adds only the service-side persistence transitions. A matching object key, byte count, SHA-256 and bounded object version move `pending_upload` metadata to `quarantined`; no receipt makes it readable. Scan settlement rechecks the current course relationship and moves to `available` only for a named scanner's clean verdict when stored and scanned hashes match and the allowlisted detected type exactly matches the declaration. Type mismatch, integrity mismatch, blocked verdict and scanner error settle as `rejected`. Both transitions are tenant-bound, request-hash idempotent and atomic with pseudonymous content-free audit. They record reports from a future private runtime; they do not prove that an object or scanner exists.
+
 Institution-published `course-materials` remains closed. The repository has no current versioned institution retention-policy authority for that material, so a request or service argument cannot supply the missing proof.
 
 ## Still open before ingestion
 
 - private bucket provisioning and bucket-policy proof;
 - a deployed document scanner and sandboxed extraction worker;
-- storage-receipt and scan-settlement persistence transitions;
-- a repository adapter for the service-only persistence functions and published-material retention-policy authority;
+- a repository adapter for the service-only persistence functions and a private runtime that can produce trustworthy receipts;
+- published-material retention-policy authority;
 - route authentication, shared rate-limit storage, upload receipts and signed-download authorization;
 - Import and Study Studio wiring, source-version propagation and recovery UI;
 - PostgreSQL/RLS, gateway, browser, accessibility, responsive, failure-state and DAST evidence;

@@ -133,11 +133,16 @@ begin
       't/source-u/student_private/%s/%s','syllabus.pdf','application/pdf',101,
       'student-source-key-0001','corr-source-0001')$q$, source, student, membership, month, source));
 
-  -- Scan settlement belongs to the next storage/scanner slice. Seed the exact
-  -- state it will atomically produce so correction persistence can be proved.
-  update public.course_sources set lifecycle_state = 'available',
-    sha256 = repeat('a', 64), detected_content_type = declared_content_type, scanner_version = 'test-scanner-1'
-   where id = source;
+  -- Exercise the controlled storage and scan transitions before proving that
+  -- correction persistence accepts only the resulting available source.
+  perform pg_temp.service_call(format($q$select public.record_student_course_source_storage(
+    %L,'source-u',%L,'t/source-u/student_private/%s/%s',100,%L,'test-object-v1',
+    'student-storage-key-01','corr-storage-0001')$q$,
+    source, other, month, source, repeat('a',64)));
+  perform pg_temp.service_call(format($q$select public.settle_student_course_source_scan(
+    %L,'source-u',%L,'application/pdf',%L,'test-scanner-1','clean',
+    'student-scan-key-0001','corr-scan-000001')$q$,
+    source, other, repeat('a',64)));
   corrected := pg_temp.service_call(format($q$select public.confirm_course_source_correction(
     %L,%L,%L,'assignment-1','dueDate',%L,%L,'student-correct-key-01','corr-correct-0001')$q$,
     correction1, source, student, repeat('b',64), repeat('c',64)));

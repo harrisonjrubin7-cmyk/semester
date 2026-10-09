@@ -1,10 +1,22 @@
 # Handoff integration status
 
-**Automation pass** 11 of 120 · **Integration slice** 19 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `f2b8b56d`
+**Automation pass** 12 of 120 · **Integration slice** 20 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `f9f5d000`
 
 ## State
 
-Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract and private student-source metadata/correction/recovery persistence are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Private buckets, byte storage, scan settlement, extraction, routes and current-screen wiring remain absent; shared course-material persistence remains closed pending a current retention-policy authority. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract and private student-source metadata/storage-receipt/scan-settlement/correction/recovery persistence are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Private buckets, byte storage, deployed scanning, extraction, routes and current-screen wiring remain absent; shared course-material persistence remains closed pending a current retention-policy authority. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 12 / slice 20
+
+- The clean branch merged `origin/main` `eb2504dd`. Generated role, SRE and trust conflicts were resolved through their repository generators with 101 focused tests passing; the merged service catalog was refreshed. A final fetch observed `f9f5d000`; its six standalone-shell/developer-tool files do not overlap or duplicate this course-source slice.
+- `20261009000000_course_source_scan_settlement.sql` records a storage receipt only for the exact tenant/source, planned object key and byte count, with valid stored SHA-256 and bounded object version. The source remains quarantined.
+- Scan settlement rechecks the active course relationship. Availability requires a named scanner's clean verdict, exact allowlisted declared/detected type match and equal stored/scanned SHA-256. Type mismatch, integrity mismatch, blocked verdict and scanner error settle rejected.
+- Both functions are service-only and request-hash idempotent. Client calls, cross-tenant calls, mismatched receipts, conflicting retries and direct service table writes fail closed. State, operation ledger and pseudonymous content-free audit commit or roll back together.
+- PostgreSQL 17 applies all 214 migrations twice with all 373 table fingerprints unchanged. The focused settlement suite passes 17 checks and the adjacent persistence suite passes 30.
+- Definer, grant, index and RLS sweeps pass 34/34 checks. Course-contract and generated role/definer/trust/design-tooling guards pass 96/96 tests.
+- TypeScript, lint, university typecheck and production build pass. Lint retains four pre-existing merged-main warnings and the build retains its chunk-size warnings. Design-system constituents pass 9 token tests, zero violations with the existing 86-warning ledger, CSS within its ledger and 69 contract tests. The aggregate wrappers hardcode missing `npm`, so no aggregate check/report pass is claimed.
+- No bucket, object bytes, signed URL, scanner runtime, extraction worker, route, UI, scheduler, deployment, production data or external system changed. The functions persist future private-runtime evidence; they do not prove that evidence currently exists.
+- HawkScan cannot start because the `hawk` executable and `HAWK_API_KEY` are absent. No DAST result or security pass is claimed; the release gate remains open.
 
 ## Evidence locked in automation pass 11 / slice 19
 

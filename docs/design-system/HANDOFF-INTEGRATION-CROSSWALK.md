@@ -86,6 +86,8 @@ Automation pass 10 implements and tests that pre-ingestion authority in `app/ser
 
 Automation pass 11 implements the student-owned half of CE-05's persistence boundary in `20261008234500_course_source_persistence.sql`. Student metadata, correction revisions and idempotency facts are now **existing and verified locally** through service-only controlled functions, deny-by-default RLS, current course/membership rechecks, hash-linked correction ordering, 30-day recovery, legal-hold refusal and transactional pseudonymous audit. CE-05 as a whole remains **existing but incomplete**: shared `course-materials` still lacks a current versioned retention-policy authority, and neither bucket policy, byte storage, scan settlement, extraction, route/read boundary, current-screen wiring, deployment nor operating evidence exists.
 
+Automation pass 12 adds the student-source storage-receipt and scan-settlement persistence transitions in `20261009000000_course_source_scan_settlement.sql`. This bounded portion of CE-05 is **existing and verified locally**: only service role can record a tenant-matching receipt or settle a quarantined source; current course membership is rechecked; retries are request-hash idempotent; audit and state commit atomically; and availability requires an allowlisted exact type match plus equal stored/scanned SHA-256 under a named clean scanner. Rejections remain unreadable. CE-05 remains **existing but incomplete** because no bucket, object, scanner, extraction runtime, route/read boundary, current-screen wiring, deployment or operating evidence exists, and shared `course-materials` remains closed.
+
 ## How a row was classed
 
 | Disposition | Meaning here |

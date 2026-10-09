@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 213 |
+| Migration files | 214 |
 | Tables created in `public` and not later dropped | 336 |
 | … of which enable row-level security in a migration | 336 |
 | Tables created in `private` and not later dropped | 37 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-139 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+140 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -66,6 +66,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/console-security-reads.check.sql` | Who may read the approval and break-glass records — beyond their own. |
 | `supabase/console-tenant-operations.check.sql` | Tenant/pilot operations workspace (20261005121000). |
 | `supabase/course-source-persistence.check.sql` | Private, tenant-bound course-source metadata, correction and recovery proof. |
+| `supabase/course-source-scan-settlement.check.sql` | Service-only, tenant-bound storage receipt and fail-closed scan settlement proof. |
 | `supabase/coursestudio.check.sql` | who may publish for a course, and who reads it. |
 | `supabase/definer-sweep.check.sql` | Every definer function a signed-in account can call, called by one that holds nothing. |
 | `supabase/deletion.check.sql` | What "Delete my account" actually empties, walked as the account doing it. |

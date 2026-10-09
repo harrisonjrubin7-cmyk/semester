@@ -383,6 +383,31 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Provision neither bucket nor scanner until their private policy/runtime evidence exists; keep public upload/download and current-screen wiring closed.
 - [ ] Define a repository authority for versioned institution course-material retention before enabling `course-materials` persistence.
 
+## 2026-10-08 student course-source storage and scan settlement — automation pass 12, slice 20
+
+- [x] Fetch and merge current `origin/main` `eb2504dd` on the clean branch; preserve support-retention/UAT, archive-audit, component-foundation, PWA and provider-state work.
+- [x] Inspect final `origin/main` `f9f5d000`; its standalone-shell/developer-tool changes do not overlap or duplicate this slice.
+- [x] Resolve the three generated-register conflicts through their repository generators; pass 101 focused generator tests and refresh the merged service-catalog count.
+- [x] Add a service-only, tenant-bound storage-receipt transition that requires the planned object key and byte count plus a valid stored SHA-256 and bounded object version.
+- [x] Keep every received source quarantined; a storage receipt alone never makes metadata readable.
+- [x] Add service-only scan settlement with current course/membership recheck and exact declared/detected type plus stored/scanned SHA-256 agreement under a named scanner.
+- [x] Settle type mismatch, integrity mismatch, blocked verdict and scanner error as rejected; only a matching clean result becomes available.
+- [x] Scope receipt and scan idempotency by tenant, service actor and action; replay exact requests and refuse changed requests under the same key.
+- [x] Append pseudonymous content-free audit atomically and prove an audit failure rolls state and idempotency back.
+- [x] Preserve deny-by-default RLS and table grants; client roles cannot call either function and service role cannot bypass them with direct writes.
+- [x] PostgreSQL 17 applies all 214 migrations twice with all 373 table fingerprints unchanged; 17 focused settlement checks and 30 adjacent persistence checks pass.
+- [x] Definer, grant, index and RLS sweeps pass 34/34 checks; course-contract and generated-register guards pass 96/96 tests.
+- [x] TypeScript, lint, university typecheck and production build pass; lint retains the four-warning merged-main baseline and build retains chunk-size warnings.
+- [x] Design-system constituents pass: 9/9 token tests, zero audit violations with the existing 86-warning ledger, CSS within its ledger and 69/69 contract tests. Aggregate wrappers cannot run because they hardcode missing `npm`; no wrapper/report pass is claimed.
+- [ ] HawkScan DAST — required for this production schema change but unavailable because `hawk` is absent and `HAWK_API_KEY` is unset; no scan or security pass is claimed.
+- [ ] Bucket/scanner runtime, extraction, public routes, UI wiring, deployment and production operation remain unimplemented and unverified.
+
+### Next implementation boundary
+
+- [ ] Add a private repository adapter/runtime boundary only when it can produce trustworthy tenant-bound storage and scanner receipts; do not synthesize receipt evidence.
+- [ ] Define a current versioned institution-retention authority before enabling shared `course-materials` persistence.
+- [ ] Keep upload/download routes and Import/Study Studio wiring closed until private bucket policy, scanner runtime and route authorization/rate-limit prerequisites exist.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.
