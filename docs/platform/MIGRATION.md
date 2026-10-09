@@ -101,8 +101,12 @@ fits. The shared platform now also has an additive, tested active-context primit
 (`packages/platform/src/tenancy/active-context.ts`): a requested membership/workspace
 is resolved only from a server-verified directory, its tenant/person/grants cannot be
 client supplied, its expiry is capped by both membership and session, and changing
-membership or workspace requires explicit confirmation. It is **not yet wired into the
-gateway or UI**, so it is foundation evidence, not evidence of live context switching.
+membership or workspace requires explicit confirmation. The gateway now has an additive
+`contextForSelection` adapter that rechecks the activated person and institution against
+the authenticated identity, carries the selected membership into `RequestContext`, and
+caps its role grants at the active-context expiry. No production authentication result
+provides the verified directory/session-expiry input yet, and no route or UI calls the
+adapter, so this remains an integration seam—not evidence of live context switching.
 **Not done:** `lib/university.ts` is not on the SDK (it reads three older response
 shapes and mints its own correlation id; moving it is its own change with its own
 equivalence test), the edge functions have not adopted the envelope, and `environment`,
