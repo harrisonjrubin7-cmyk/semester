@@ -13,6 +13,7 @@ const mock = vi.hoisted(() => ({
   factors: vi.fn(),
   enroll: vi.fn(),
   challenge: vi.fn(),
+  clear: vi.fn(),
   verify: vi.fn(),
 }));
 
@@ -20,6 +21,7 @@ vi.mock('../lib/console/client', () => ({
   mfaFactors: mock.factors,
   enrollTotp: mock.enroll,
   challengeMfa: mock.challenge,
+  clearUnverifiedMfaFactors: mock.clear,
   verifyMfa: mock.verify,
 }));
 
@@ -37,6 +39,7 @@ beforeEach(() => {
   mock.factors.mockResolvedValue([]);
   mock.enroll.mockResolvedValue({ factorId: 'f-new', qrCode: 'data:image/svg+xml;utf-8,<svg/>', secret: 'JBSWY3DP', uri: 'otpauth://totp/x' });
   mock.challenge.mockResolvedValue('ch-1');
+  mock.clear.mockResolvedValue(undefined);
   mock.verify.mockResolvedValue(undefined);
   host = document.createElement('div');
   document.body.append(host);
@@ -74,6 +77,7 @@ describe('MfaStep', () => {
   it('enrols an authenticator when the account has none, showing the QR code and the secret', async () => {
     await render();
     expect(mock.enroll).toHaveBeenCalledTimes(1);
+    expect(mock.clear).toHaveBeenCalledTimes(1);
     expect(host.querySelector('img')?.getAttribute('src')).toBe('data:image/svg+xml;utf-8,<svg/>');
     expect(host.textContent).toContain('JBSWY3DP');
     expect(button('Enrol and verify')).toBeTruthy();
@@ -90,6 +94,7 @@ describe('MfaStep', () => {
     mock.factors.mockResolvedValue([{ id: 'f-old', name: 'Authenticator', type: 'totp' }]);
     await render();
     expect(mock.enroll).not.toHaveBeenCalled();
+    expect(mock.clear).not.toHaveBeenCalled();
     expect(host.querySelector('img')).toBeNull();
     expect(button('Verify')).toBeTruthy();
     typeCode('654321');

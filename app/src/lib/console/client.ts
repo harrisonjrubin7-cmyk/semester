@@ -851,7 +851,7 @@ export interface MfaLevel {
   verifiedAt: Date | null;
 }
 
-const MFA_METHODS = new Set(['totp', 'phone', 'mfa/totp', 'mfa/phone']);
+const MFA_METHODS = new Set(['totp', 'phone', 'webauthn', 'mfa/totp', 'mfa/phone', 'mfa/webauthn']);
 
 export async function mfaLevel(): Promise<MfaLevel> {
   const db = await cloud();
@@ -904,6 +904,19 @@ export async function mfaFactors(): Promise<MfaFactor[]> {
     }
   }
   return factors;
+}
+
+/** Remove only unfinished enrolments so a reload can restart setup without accumulating conflicting factors. */
+export async function clearUnverifiedMfaFactors(): Promise<void> {
+  const db = await cloud();
+  const { data, error } = await db.auth.mfa.listFactors();
+  if (error) throw new Error(message(error, 'Could not inspect unfinished authenticator setup.'));
+  const all = (data as unknown as { all?: { id: string; status?: string }[] } | null)?.all ?? [];
+  for (const factor of all) {
+    if (factor.status !== 'unverified') continue;
+    const { error: removeError } = await db.auth.mfa.unenroll({ factorId: factor.id });
+    if (removeError) throw new Error(message(removeError, 'Could not restart unfinished authenticator setup.'));
+  }
 }
 
 export async function enrollTotp(friendlyName = 'Operations console'): Promise<TotpEnrolment> {

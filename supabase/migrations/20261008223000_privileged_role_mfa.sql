@@ -173,7 +173,7 @@ as $$
            from jsonb_array_elements(
                   case when jsonb_typeof(j.claims -> 'amr') = 'array'
                        then j.claims -> 'amr' else '[]'::jsonb end) as m
-          where (m ->> 'method') in ('totp', 'webauthn', 'phone', 'mfa/totp', 'mfa/phone')
+          where (m ->> 'method') in ('totp', 'webauthn', 'phone', 'mfa/totp', 'mfa/phone', 'mfa/webauthn')
             and (m ->> 'timestamp') ~ '^[0-9]+(\.[0-9]+)?$'
             and to_timestamp((m ->> 'timestamp')::double precision) >= now() - within
        )

@@ -27,6 +27,7 @@ const auth = {
     enroll: vi.fn(),
     challenge: vi.fn(),
     verify: vi.fn(),
+    unenroll: vi.fn(),
   },
 };
 
@@ -88,6 +89,7 @@ import {
   challengeMfa,
   verifyMfa,
   mfaFactors,
+  clearUnverifiedMfaFactors,
   privilegedMfaRequired,
   watchMfaSession,
 } from './client';
@@ -535,14 +537,22 @@ describe('identity', () => {
     expect(mfaFresh(level, new Date(1_700_000_000 * 1000))).toBe(false);
   });
 
-  it('does not call an unsupported WebAuthn method fresh in the code-factor flow', async () => {
+  it('accepts the auth client WebAuthn spelling as fresh for privileged actions', async () => {
     auth.mfa.getAuthenticatorAssuranceLevel.mockResolvedValue({
-      data: { currentLevel: 'aal2', nextLevel: 'aal2', currentAuthenticationMethods: [{ method: 'webauthn', timestamp: 1_700_000_000 }] },
+      data: { currentLevel: 'aal2', nextLevel: 'aal2', currentAuthenticationMethods: [{ method: 'mfa/webauthn', timestamp: 1_700_000_000 }] },
       error: null,
     });
     const level = await mfaLevel();
-    expect(level.verifiedAt).toBeNull();
-    expect(mfaFresh(level, new Date(1_700_000_000 * 1000))).toBe(false);
+    expect(level.verifiedAt?.toISOString()).toBe(new Date(1_700_000_000 * 1000).toISOString());
+    expect(mfaFresh(level, new Date(1_700_000_000 * 1000))).toBe(true);
+  });
+
+  it('removes only abandoned unverified factors before restarting enrolment', async () => {
+    auth.mfa.listFactors.mockResolvedValue({ data: { all: [{ id: 'pending', status: 'unverified' }, { id: 'live', status: 'verified' }] }, error: null });
+    auth.mfa.unenroll.mockResolvedValue({ data: {}, error: null });
+    await clearUnverifiedMfaFactors();
+    expect(auth.mfa.unenroll).toHaveBeenCalledTimes(1);
+    expect(auth.mfa.unenroll).toHaveBeenCalledWith({ factorId: 'pending' });
   });
 
   it('enrols, challenges and verifies TOTP through the auth client', async () => {

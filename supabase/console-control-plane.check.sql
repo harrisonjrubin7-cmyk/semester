@@ -277,6 +277,9 @@ begin
   perform pg_temp.become_mfa(operator, 'aal2', 'webauthn', now() - interval '14 minutes');
   reset role;
   if not private.mfa_fresh() then raise exception 'FAILED: a WebAuthn assertion fourteen minutes ago is not fresh'; end if;
+  perform pg_temp.become_mfa(operator, 'aal2', 'mfa/webauthn', now() - interval '4 minutes');
+  reset role;
+  if not private.mfa_fresh() then raise exception 'FAILED: an auth-js WebAuthn assertion four minutes ago is not fresh'; end if;
   perform pg_temp.become_mfa(operator, 'aal2', 'mfa/phone', now() - interval '2 minutes');
   reset role;
   if not private.mfa_fresh() then raise exception 'FAILED: an auth-js phone verification two minutes ago is not fresh'; end if;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActionButton } from './ui';
 import { Trouble } from './Trouble';
-import { challengeMfa, enrollTotp, mfaFactors, verifyMfa, type MfaFactor, type TotpEnrolment } from '../lib/console/client';
+import { challengeMfa, clearUnverifiedMfaFactors, enrollTotp, mfaFactors, verifyMfa, type MfaFactor, type TotpEnrolment } from '../lib/console/client';
 
 /**
  * The second factor a privileged action asks for.
@@ -57,6 +57,7 @@ export function MfaStep({
           setStage('challenge');
           return;
         }
+        await clearUnverifiedMfaFactors();
         const started = await enrollTotp();
         if (!live) return;
         setEnrolment(started);
