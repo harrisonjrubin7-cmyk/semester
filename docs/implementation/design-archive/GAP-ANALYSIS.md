@@ -20,7 +20,7 @@ The archive is broader than the production surface, but much of that breadth is 
 
 ## Material gaps
 
-1. **Catalog coherence:** 281, 362, and 673 screen totals are not normalized by identity, ownership, state, or reachability.
+1. **Catalog coherence:** the 281-route handoff inventory is now reconciled against the 362 rendered routes and 673 catalog labels in [`ROUTE-IDENTITY-CROSSWALK.md`](./ROUTE-IDENTITY-CROSSWALK.md). The remaining gap is disposition: 17 handoff-only Operations routes, 98 rendered-only routes, and ambiguous labels still need authoritative owners and decisions.
 2. **Staff/institutional surfaces:** prior row evidence concentrates gaps in administration, integrations, trust/privacy/security operations, and `/ops`.
 3. **Workflow proof:** approval, reconciliation, cutover, launch, and retirement need server transitions, retries, audit evidence, and owners.
 4. **Token conflicts:** 335 archive token rows do not match `tokens.css` by selector, name, and normalized value; the other 49 token rows are exact matches. Conflicts need explicit mapping, not copying.
@@ -35,4 +35,4 @@ Preserve route/navigation authorities and history; `semester-store`, collection 
 
 ## Phase 0 gate
 
-**NOT PASSED.** File inspection and the canonical 1,595-row ledger are complete, but narrative requirements and interactive states still need atomization and reconciliation. The screen-count conflict, incomplete 362-route state walkthrough, unmapped narrative requirements, and absent current test baseline block implementation.
+**NOT PASSED.** File inspection, the canonical 1,595-row ledger, and the route-identity crosswalk are complete. Route dispositions, narrative requirements, and interactive states still need reconciliation. The unresolved 17/98 route deltas, incomplete 362-route state walkthrough, unmapped narrative requirements, provenance gaps, and absent current test baseline block implementation.
