@@ -31,7 +31,9 @@ describe('root vercel.json services carry what each folder file says', () => {
       'server/institution/vercel-entrypoint.js': { maxDuration: 30 },
     });
     expect(readText('app/server/institution/vercel-entrypoint.js')).toBe(
-      "export { default } from './vercel-service.ts';\n",
+      "import { createVercelApiServer } from './vercel-service.ts';\n\n" +
+        'const server = createVercelApiServer();\n' +
+        'server.listen(Number(process.env.PORT ?? 3000));\n',
     );
     expect(root.rewrites.slice(1, 3)).toEqual([
       { source: '/api/institution/(.*)', destination: { service: 'api' } },
