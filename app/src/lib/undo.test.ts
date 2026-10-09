@@ -80,6 +80,10 @@ describe('which actions can be taken back', () => {
       label: 'Graph cleared',
       fields: ['plots'],
     });
+    expect(undoableFor('forgetSchool')).toEqual({
+      label: 'School profile removed',
+      fields: ['mySchools', 'schoolId'],
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
@@ -167,6 +171,11 @@ describe('the snapshot', () => {
   it('keeps only the student-authored graph lines when clearing the graph', () => {
     const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.clearPlots, AT);
     expect(Object.keys(took.was)).toEqual(['plots']);
+  });
+
+  it('keeps a student-created school profile and its active selection together', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.forgetSchool, AT);
+    expect(Object.keys(took.was)).toEqual(['mySchools', 'schoolId']);
   });
 
   it('carries the label and the moment', () => {

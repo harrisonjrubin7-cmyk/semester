@@ -1075,6 +1075,29 @@ describe('taking it back', () => {
     expect(back.undone).toBeNull();
   });
 
+  it('restores a student-created school profile and its active selection', () => {
+    const school = {
+      id: 'my-college',
+      name: 'My College',
+      verified: false,
+      capabilities: { mealPlan: 'none', housing: false, campusMap: false },
+      data: {},
+    } satisfies State['mySchools'][number];
+    const s: State = { ...blank(), mySchools: [school], schoolId: school.id };
+
+    const gone = reducer(s, { type: 'forgetSchool', id: school.id });
+    expect(gone.mySchools).toEqual([]);
+    expect(gone.schoolId).toBe('');
+    expect(gone.undone?.label).toBe('School profile removed');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.mySchools).toEqual([school]);
+    expect(back.schoolId).toBe(school.id);
+    expect(back.done['deadline-1']).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
   it('offers nothing for an action that only edits', () => {
     // An edit leaves the thing there to edit back.
     const s = twoNotes();

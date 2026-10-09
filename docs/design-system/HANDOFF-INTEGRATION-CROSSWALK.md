@@ -306,3 +306,12 @@ This mapping adds no archive route, role, capability, schema, policy, server ope
 | Graph authority and external boundary | `app/src/lib/onegraph.test.ts`, `app/src/components/Grapher.tsx` | Existing and unchanged. The repository still has one graphing implementation and this local recovery path does not edit course work, grades, submissions, provider data or institution records. |
 
 This mapping adds no archive route, role, capability, schema, policy, server operation or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 13 current-product consequence mapping — integration slice 64
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for forgetting one student-created school profile | `app/src/components/SchoolPicker.tsx`, `app/src/state/slices/settings.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: `forgetSchool` now enters the shared eight-second Undo path and snapshots exactly `mySchools` plus `schoolId`. Undo restores the exact custom profile, order and active selection while preserving unrelated work. The existing row control already exposes the school's name to assistive technology. The red-before-green registry/snapshot guard and reducer integration are included in 217 focused passing tests. |
+| Institution-authored school-pack and provider boundary | `app/src/components/SchoolPackDoor.tsx`, `app/src/state/slices/settings.ts`, `app/src/lib/schoolpack.ts` | Existing and unchanged. This slice does not restore, remove or reclassify an institution-authored pack, claim current institutional data, mutate a server/provider record or change capability authority. Pack removal remains a separate provenance/recovery decision. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.

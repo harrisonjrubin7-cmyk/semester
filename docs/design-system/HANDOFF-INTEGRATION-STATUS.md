@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 12 of 120 (continued program) · **Integration slice** 63 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `03ffa0a7` · **Latest observed `origin/main`** `fb1d683d`
+**Automation pass** 13 of 120 (continued program) · **Integration slice** 64 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `cc89de58` · **Latest observed `origin/main`** `fb1d683d`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in current automation pass 13 / integration slice 64
+
+- Current `origin/main` remains `fb1d683d` and is already an ancestor of the branch; it contains no custom-school recovery or shared-Undo equivalent.
+- Forgetting one student-created school profile now enters the shared eight-second Undo path. Its snapshot is limited to `mySchools` and `schoolId`, so restoring the profile also restores its active selection without reverting unrelated work.
+- The existing School Picker route, row-specific accessible Forget name, device persistence and capability-gated fallback remain unchanged. University-pack provenance is outside this slice; no route, component, dependency, schema, policy, server operation, provider behavior or external system changed.
+- Three focused assertions were proved red before implementation. Undo, reducer, school-pack, school-resolution and school-model suites pass 217/217.
+- TypeScript, lint, university typecheck and production build pass. Existing baselines remain four lint warnings and the chunk-size warning. Token export passes 9/9, design-check contracts pass 69/69, report contracts pass 96/96, design audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Aggregate npm launchers and report regeneration are unavailable because this shell has no `npm`/`npx`; exact constituents pass. Ordered and shuffled full suites were not rerun; the last recorded baseline remains pass 30's 23,872 tests.
+- The required HawkScan preflight stops because Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No target, DAST result or security pass is claimed.
+- University-pack removal, permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate. The next slice requires another fresh dependency/consequence ranking.
 
 ## Evidence locked in current automation pass 12 / integration slice 63
 
