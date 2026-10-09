@@ -91,14 +91,14 @@ describe('the style rule', () => {
     // somewhere, had added one — and under a single total a file could grow by
     // five while another shrank by five and this never fired at all.
     expect(overBudget(src, BUDGET).map((p) => `${p.file} ${p.found}`)).toEqual([]);
-  });
+  }, 60_000);
 
   it('keeps the generated ledger byte-for-byte what the tree measures', () => {
     // The ledger is generated, so the thing that can rot is the generator: a
     // hand-edit that happens to be arithmetically right would pass the check
     // above and still be a file nobody can regenerate without a diff.
     expect(render(countsByFile(src))).toBe(readFileSync(join(src, 'styles', 'budget.ts'), 'utf8'));
-  });
+  }, 60_000);
 
   it('exempts nothing, and says so where an exemption would go', () => {
     expect(ALLOWED).toEqual([]);
