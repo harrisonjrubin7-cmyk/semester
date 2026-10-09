@@ -1393,6 +1393,9 @@ describe('EVENTS.md and its schemas (generated)', () => {
       'supabase/migrations/20261008193000_tenant_feature_policy_events.sql',
       // P1-06 binds immutable tenant-rollout history to one bounded event and private projector.
       'supabase/migrations/20261008230000_tenant_rollout_projection.sql',
+      // The service-only registration-readiness store emits the command's minimized event in the save transaction.
+      // No route or worker calls that store yet, so this is repository evidence rather than a mounted producer.
+      'supabase/migrations/20261009160000_registration_readiness_store.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);

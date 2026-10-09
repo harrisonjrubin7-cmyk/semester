@@ -49,12 +49,12 @@ export type SourceChunk = {
   chunk_index: number;
   content: string;
   content_type: string;
-  page_number?: number;
-  slide_number?: number;
-  sheet_name?: string;
-  cell_range?: string;
-  start_seconds?: number;
-  end_seconds?: number;
+  page_number?: number | null;
+  slide_number?: number | null;
+  sheet_name?: string | null;
+  cell_range?: string | null;
+  start_seconds?: number | null;
+  end_seconds?: number | null;
   confidence: number;
 };
 

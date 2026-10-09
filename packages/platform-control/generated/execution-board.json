@@ -1,0 +1,383 @@
+[
+  {
+    "id": "P0-001",
+    "name": "Repository baseline and CI",
+    "owner": "platform-engineering",
+    "state": "in_progress",
+    "registry_keys": [
+      "control.tenant-isolation"
+    ],
+    "depends_on": [],
+    "evidence": [
+      "package.json",
+      ".github/workflows/ci.yml"
+    ],
+    "blockers": [
+      "Hosted completion and retained immutable artifacts are external run evidence, not established by the workflow definition alone."
+    ]
+  },
+  {
+    "id": "P0-002",
+    "name": "Shared tokens and component package",
+    "owner": "design-systems",
+    "state": "in_progress",
+    "registry_keys": [],
+    "depends_on": [
+      "P0-001"
+    ],
+    "evidence": [
+      "app/src/styles/tokens.css",
+      "app/src/components"
+    ],
+    "blockers": [
+      "The complete catalog has not been registered in platform control."
+    ]
+  },
+  {
+    "id": "P0-003",
+    "name": "Tenants, memberships, role grants, and workspace context",
+    "owner": "platform-security",
+    "state": "in_progress",
+    "registry_keys": [
+      "identity",
+      "authorization"
+    ],
+    "depends_on": [
+      "P0-001"
+    ],
+    "evidence": [
+      "packages/platform/src/tenancy/context.ts",
+      "packages/platform/src/tenancy/tenancy.test.ts"
+    ],
+    "blockers": [
+      "Target-environment and named-tenant verification remain open."
+    ]
+  },
+  {
+    "id": "P0-004",
+    "name": "RLS test harness and tenant-isolation gate",
+    "owner": "platform-security",
+    "state": "in_progress",
+    "registry_keys": [
+      "control.tenant-isolation"
+    ],
+    "depends_on": [
+      "P0-003"
+    ],
+    "evidence": [
+      "packages/platform/src/isolation/isolation.test.ts",
+      "supabase"
+    ],
+    "blockers": [
+      "Hosted database isolation evidence remains open."
+    ]
+  },
+  {
+    "id": "P0-005",
+    "name": "Policy-decision service and obligations",
+    "owner": "platform-security",
+    "state": "in_progress",
+    "registry_keys": [
+      "authorization"
+    ],
+    "depends_on": [
+      "P0-003"
+    ],
+    "evidence": [
+      "packages/institution/src/policy.ts",
+      "packages/institution/src/policy.test.ts"
+    ],
+    "blockers": [
+      "Runtime enforcement coverage is not registered across every command."
+    ]
+  },
+  {
+    "id": "P0-006",
+    "name": "Provenance, source, and freshness package",
+    "owner": "data-governance",
+    "state": "in_progress",
+    "registry_keys": [
+      "provenance",
+      "registration.readiness"
+    ],
+    "depends_on": [
+      "P0-001"
+    ],
+    "evidence": [
+      "packages/institution/src/readiness.ts"
+    ],
+    "blockers": [
+      "Cross-domain adoption is incomplete."
+    ]
+  },
+  {
+    "id": "P0-007",
+    "name": "Audit log and evidence store",
+    "owner": "platform-security",
+    "state": "in_progress",
+    "registry_keys": [
+      "audit"
+    ],
+    "depends_on": [
+      "P0-003",
+      "P0-005"
+    ],
+    "evidence": [
+      "packages/platform/src/identity/audit.ts"
+    ],
+    "blockers": [
+      "Production sample and reviewer sign-off remain open."
+    ]
+  },
+  {
+    "id": "P0-008",
+    "name": "Outbox, job leases, retries, and dead letters",
+    "owner": "platform-reliability",
+    "state": "in_progress",
+    "registry_keys": [
+      "workflow"
+    ],
+    "depends_on": [
+      "P0-001"
+    ],
+    "evidence": [
+      "packages/institution/src/workflow.ts"
+    ],
+    "blockers": [
+      "Durable hosted-worker operation is not proven."
+    ]
+  },
+  {
+    "id": "P0-009",
+    "name": "Workflow engine and receipt model",
+    "owner": "platform-reliability",
+    "state": "in_progress",
+    "registry_keys": [
+      "workflow",
+      "registration.readiness.evaluation"
+    ],
+    "depends_on": [
+      "P0-005",
+      "P0-007",
+      "P0-008"
+    ],
+    "evidence": [
+      "packages/institution/src/readiness-workflow.ts",
+      "packages/institution/src/readiness-workflow.test.ts"
+    ],
+    "blockers": [
+      "End-to-end recovery operation is not proven."
+    ]
+  },
+  {
+    "id": "P0-010",
+    "name": "Integration SDK and SIS sandbox adapter",
+    "owner": "integration-platform",
+    "state": "blocked",
+    "registry_keys": [
+      "integrations.sis"
+    ],
+    "depends_on": [
+      "P0-003",
+      "P0-006",
+      "P0-008"
+    ],
+    "evidence": [
+      "docs/UNIVERSITY_CONNECTIONS.md"
+    ],
+    "blockers": [
+      "No approved tenant credentials or accepted SIS sandbox connection."
+    ]
+  },
+  {
+    "id": "P0-011",
+    "name": "Registration-readiness domain model",
+    "owner": "product-registration",
+    "state": "in_progress",
+    "registry_keys": [
+      "registration.readiness"
+    ],
+    "depends_on": [
+      "P0-005",
+      "P0-006",
+      "P0-009"
+    ],
+    "evidence": [
+      "packages/institution/src/readiness.ts",
+      "packages/institution/src/readiness.test.ts"
+    ],
+    "blockers": [
+      "API and target-environment evidence remain open."
+    ]
+  },
+  {
+    "id": "P0-012",
+    "name": "Student readiness experience",
+    "owner": "product-registration",
+    "state": "planned",
+    "registry_keys": [
+      "registration.readiness",
+      "student.registration.readiness"
+    ],
+    "depends_on": [
+      "P0-010",
+      "P0-011"
+    ],
+    "evidence": [],
+    "blockers": [
+      "SIS sandbox adapter and authoritative API are incomplete."
+    ]
+  },
+  {
+    "id": "P0-013",
+    "name": "Advisor blocker-routing experience",
+    "owner": "product-registration",
+    "state": "planned",
+    "registry_keys": [
+      "registration.readiness",
+      "staff.advising.readiness"
+    ],
+    "depends_on": [
+      "P0-012"
+    ],
+    "evidence": [],
+    "blockers": [
+      "Student readiness vertical slice is incomplete."
+    ]
+  },
+  {
+    "id": "P0-014",
+    "name": "Registrar cohort and reconciliation console",
+    "owner": "product-registration",
+    "state": "planned",
+    "registry_keys": [
+      "registration.readiness",
+      "institution.registration.readiness"
+    ],
+    "depends_on": [
+      "P0-010",
+      "P0-013"
+    ],
+    "evidence": [],
+    "blockers": [
+      "Advisor routing and SIS reconciliation are incomplete."
+    ]
+  },
+  {
+    "id": "P0-015",
+    "name": "Institution integration-health console",
+    "owner": "institution-product",
+    "state": "planned",
+    "registry_keys": [
+      "integrations.sis",
+      "institution.registration.readiness"
+    ],
+    "depends_on": [
+      "P0-010"
+    ],
+    "evidence": [],
+    "blockers": [
+      "No accepted live connection-health contract."
+    ]
+  },
+  {
+    "id": "P0-016",
+    "name": "Operations inbox for pilot exceptions",
+    "owner": "operations",
+    "state": "planned",
+    "registry_keys": [
+      "ops.workflows.registration",
+      "registration.readiness.evaluation"
+    ],
+    "depends_on": [
+      "P0-009",
+      "P0-014",
+      "P0-015"
+    ],
+    "evidence": [],
+    "blockers": [
+      "Upstream operator workflows are incomplete."
+    ]
+  },
+  {
+    "id": "P0-017",
+    "name": "Staging E2E pilot suite",
+    "owner": "quality-engineering",
+    "state": "blocked",
+    "registry_keys": [
+      "registration.readiness"
+    ],
+    "depends_on": [
+      "P0-012",
+      "P0-013",
+      "P0-014",
+      "P0-015",
+      "P0-016"
+    ],
+    "evidence": [],
+    "blockers": [
+      "The complete synthetic cross-plane journey does not exist."
+    ]
+  },
+  {
+    "id": "P0-018",
+    "name": "Tenant provisioning automation",
+    "owner": "platform-security",
+    "state": "in_progress",
+    "registry_keys": [
+      "tenant.synthetic",
+      "identity"
+    ],
+    "depends_on": [
+      "P0-003",
+      "P0-004",
+      "P0-005",
+      "P0-007"
+    ],
+    "evidence": [
+      "packages/platform-control/scripts/create-tenant.ts"
+    ],
+    "blockers": [
+      "Only unactivated synthetic registry creation is implemented."
+    ]
+  },
+  {
+    "id": "P0-019",
+    "name": "Vercel production deployment and canary controls",
+    "owner": "platform-reliability",
+    "state": "blocked",
+    "registry_keys": [
+      "registration.readiness"
+    ],
+    "depends_on": [
+      "P0-017",
+      "P0-018"
+    ],
+    "evidence": [
+      ".github/workflows/pages.yml"
+    ],
+    "blockers": [
+      "No approved release packet or pilot cohort activation."
+    ]
+  },
+  {
+    "id": "P0-020",
+    "name": "Pilot launch evidence packet",
+    "owner": "operations",
+    "state": "blocked",
+    "registry_keys": [
+      "registration.readiness"
+    ],
+    "depends_on": [
+      "P0-017",
+      "P0-018",
+      "P0-019"
+    ],
+    "evidence": [
+      "docs/operating-model/RELEASE-CERTIFICATION.md"
+    ],
+    "blockers": [
+      "Named-institution acceptance, activation, monitoring, and operated evidence remain open."
+    ]
+  }
+]

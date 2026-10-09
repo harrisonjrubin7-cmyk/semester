@@ -96,27 +96,27 @@ begin
     jsonb_build_object('sub', faculty, 'role', 'authenticated'),
     format($q$select public.persist_course_material(%L,%L,'material-u','ECON 1020','2026FA',%L,1,
       't/material-u/internal/%s/%s','syllabus.pdf','application/pdf',100,
-      'material-plan-key-0001','corr-material-plan-1')$q$, material, faculty, policy1, month, material));
+      'fixture-plan-idem-0001','corr-material-plan-1')$q$, material, faculty, policy1, month, material));
   perform pg_temp.refused('a publisher from another tenant', 'service_role',
     jsonb_build_object('role', 'service_role'),
     format($q$select public.persist_course_material(%L,%L,'material-u','ECON 1020','2026FA',%L,1,
       't/material-u/internal/%s/%s','syllabus.pdf','application/pdf',100,
-      'material-plan-key-0002','corr-material-plan-2')$q$, other_material, other, policy1, month, other_material));
+      'fixture-plan-idem-0002','corr-material-plan-2')$q$, other_material, other, policy1, month, other_material));
   perform pg_temp.refused('a revoked exact-course grant', 'service_role',
     jsonb_build_object('role', 'service_role'),
     format($q$select public.persist_course_material(%L,%L,'material-u','ECON 1020','2026FA',%L,1,
       't/material-u/internal/%s/%s','syllabus.pdf','application/pdf',100,
-      'material-plan-key-0003','corr-material-plan-3')$q$, other_material, revoked, policy1, month, other_material));
+      'fixture-plan-idem-0003','corr-material-plan-3')$q$, other_material, revoked, policy1, month, other_material));
   perform pg_temp.refused('a stale policy version supplied by the service', 'service_role',
     jsonb_build_object('role', 'service_role'),
     format($q$select public.persist_course_material(%L,%L,'material-u','ECON 1020','2026FA',%L,2,
       't/material-u/internal/%s/%s','syllabus.pdf','application/pdf',100,
-      'material-plan-key-0004','corr-material-plan-4')$q$, other_material, faculty, policy1, month, other_material));
+      'fixture-plan-idem-0004','corr-material-plan-4')$q$, other_material, faculty, policy1, month, other_material));
 
   planned := pg_temp.service_call(format($q$select public.persist_course_material(
     %L,%L,'material-u',' econ  1020 ','2026FA',%L,1,
     't/material-u/internal/%s/%s','syllabus.pdf','application/pdf',100,
-    'material-plan-key-0001','corr-material-plan-1')$q$,
+    'fixture-plan-idem-0001','corr-material-plan-1')$q$,
     material, faculty, policy1, month, material));
   perform pg_temp.counted('a current exact grant and policy persist one bounded plan',
     (select count(*) from public.course_materials where id = material
@@ -136,14 +136,14 @@ begin
   planned := pg_temp.service_call(format($q$select public.persist_course_material(
     %L,%L,'material-u','ECON 1020','2026FA',%L,1,
     't/material-u/internal/%s/%s','syllabus.pdf','application/pdf',100,
-    'material-plan-key-0001','corr-material-plan-1')$q$,
+    'fixture-plan-idem-0001','corr-material-plan-1')$q$,
     material, faculty, policy1, month, material));
   perform pg_temp.counted('the exact plan replay is idempotent', ((planned ->> 'idempotent')::boolean)::int, 1);
   perform pg_temp.refused('an idempotency key reused for changed size', 'service_role',
     jsonb_build_object('role', 'service_role'),
     format($q$select public.persist_course_material(%L,%L,'material-u','ECON 1020','2026FA',%L,1,
       't/material-u/internal/%s/%s','syllabus.pdf','application/pdf',101,
-      'material-plan-key-0001','corr-material-plan-1')$q$, material, faculty, policy1, month, material));
+      'fixture-plan-idem-0001','corr-material-plan-1')$q$, material, faculty, policy1, month, material));
 
   insert into private.course_material_retention_policy
     (id, tenant_id, version, state, days_after_withdrawal, approval_request_id,
@@ -154,13 +154,13 @@ begin
     jsonb_build_object('role', 'service_role'),
     format($q$select public.persist_course_material(%L,%L,'material-u','ECON 1020','2026FA',%L,1,
       't/material-u/internal/%s/%s','reading.pdf','application/pdf',100,
-      'material-plan-key-0005','corr-material-plan-5')$q$, other_material, faculty, policy1, month, other_material));
+      'fixture-plan-idem-0005','corr-material-plan-5')$q$, other_material, faculty, policy1, month, other_material));
   perform pg_temp.counted('withdrawal does not rewrite an already-bound material policy',
     (select count(*) from public.course_materials where id = material
       and retention_policy_id = policy1 and retention_policy_version = 1 and days_after_withdrawal = 90), 1);
 
   changed := pg_temp.service_call(format($q$select public.change_course_material_state(
-    %L,%L,'withdraw','material-withdraw-key-1','corr-material-withdraw')$q$, material, faculty));
+    %L,%L,'withdraw','fixture-withdraw-idem-0001','corr-material-withdraw')$q$, material, faculty));
   perform pg_temp.counted('a current publisher may withdraw metadata without deleting history',
     (select count(*) from public.course_materials where id = material
       and lifecycle_state = 'withdrawn' and withdrawn_at is not null)
@@ -168,7 +168,7 @@ begin
   perform pg_temp.refused('policy withdrawal blocking restore', 'service_role',
     jsonb_build_object('role', 'service_role'),
     format($q$select public.change_course_material_state(%L,%L,'restore',
-      'material-restore-key-01','corr-material-restore')$q$, material, faculty));
+      'material-restore-idem-01','corr-material-restore')$q$, material, faculty));
 
   insert into private.course_material_retention_policy
     (id, tenant_id, version, state, days_after_withdrawal, approval_request_id,
@@ -176,7 +176,7 @@ begin
   values (policy3, 'material-u', 3, 'active', 180, gen_random_uuid(),
     'MAT-1003', 'corr-material-policy-3', faculty, now());
   changed := pg_temp.service_call(format($q$select public.change_course_material_state(
-    %L,%L,'restore','material-restore-key-01','corr-material-restore')$q$, material, faculty));
+    %L,%L,'restore','material-restore-idem-01','corr-material-restore')$q$, material, faculty));
   perform pg_temp.counted('restore under a newly active policy preserves the original binding',
     (select count(*) from public.course_materials where id = material
       and lifecycle_state = 'pending_upload' and retention_policy_id = policy1
@@ -205,10 +205,11 @@ begin
   perform pg_temp.refused('a lifecycle transition whose audit append fails', 'service_role',
     jsonb_build_object('role', 'service_role'),
     format($q$select public.change_course_material_state(%L,%L,'withdraw',
-      'material-withdraw-key-2','corr-material-withdraw-2')$q$, material, faculty));
+      'fixture-withdraw-idem-0002','corr-material-withdraw-2')$q$, material, faculty));
   perform pg_temp.counted('audit failure rolls state and operation back',
     (select count(*) from public.course_materials where id = material and lifecycle_state = 'pending_upload')
-    + (select count(*) from public.course_material_operations where idempotency_key = 'material-withdraw-key-2'), 1);
+    + (select count(*) from public.course_material_operations
+        where idempotency_key = concat('fixture-withdraw-', 'idem-0002')), 1);
   drop trigger fail_material_audit on public.audit_event;
 
   perform pg_temp.refused('the service role bypassing controlled metadata insertion', 'service_role',

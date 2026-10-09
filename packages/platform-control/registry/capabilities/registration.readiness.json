@@ -1,0 +1,47 @@
+{
+  "key": "registration.readiness",
+  "name": "Registration readiness",
+  "domain": "registration",
+  "workspace": "student",
+  "phase": "P0",
+  "owner": "product-registration",
+  "risk": "high",
+  "data_classification": "restricted",
+  "roles": {
+    "student": "full",
+    "advisor": "scoped",
+    "registrar": "scoped",
+    "institution_admin": "audited",
+    "operations": "audited"
+  },
+  "systems": ["identity", "authorization", "provenance", "workflow", "integrations.sis", "notifications", "audit"],
+  "routes": [
+    "app.semester.com/registration/readiness",
+    "staff.semester.com/advising/readiness",
+    "institution.semester.com/registration/readiness",
+    "ops.semester.com/workflows/registration"
+  ],
+  "commands": ["registration.readiness.request", "registration.blocker.route", "registration.readiness.refresh"],
+  "events": [
+    "registration.readiness_requested",
+    "registration.readiness_evaluated",
+    "registration.readiness_reconciliation_requested"
+  ],
+  "maturity": {
+    "designed": true,
+    "schema": true,
+    "policies": true,
+    "api": false,
+    "user_interface": false,
+    "e2e_tested": false,
+    "staged": false,
+    "production_ready": false,
+    "tenant_activated": false,
+    "monitored": false
+  },
+  "evidence": {
+    "designed": ["docs/reference/registration-readiness-workflow.md"],
+    "schema": ["packages/institution/src/readiness.ts", "packages/institution/src/readiness-workflow.ts"],
+    "policies": ["packages/institution/src/policy.test.ts", "packages/platform/src/tenancy/context.ts"]
+  }
+}

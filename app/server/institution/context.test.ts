@@ -1,11 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import { PlatformError } from '../../../packages/platform/src/index.ts';
+import { PlatformError, type ContextDirectory } from '../../../packages/platform/src/index.ts';
 import type { UniversityIdentity } from '../../../packages/institution/src/index.ts';
-import { contextFor, trustedIdentityFor } from './context.ts';
+import { contextFor, contextForSelection, trustedIdentityFor } from './context.ts';
 
 const IDS = { requestId: 'req-from-the-gateway', correlationId: 'corr-12345678' };
 const who: UniversityIdentity = { userId: '8d4a2c1e-7b0f-4c3a-9a55-1f2e3d4c5b6a', institutionId: 'northstar', roles: ['student', 'family'] };
 const req = (headers: Record<string, string> = {}) => new Request('https://x.test/v1/records/courses', { headers });
+const directory = (over: Partial<ContextDirectory> = {}): ContextDirectory => ({
+  personId: who.userId,
+  sessionExpiresAt: '2099-01-01T02:00:00Z',
+  memberships: [{
+    id: 'membership-northstar-student',
+    tenantId: who.institutionId,
+    institutionId: who.institutionId,
+    personId: who.userId,
+    status: 'active',
+    expiresAt: '2099-01-01T01:00:00Z',
+    workspaces: ['student'],
+    roleGrantIds: ['grant-student', 'grant-family'],
+  }],
+  ...over,
+});
 const code = (fn: () => unknown) => {
   try {
     fn();
@@ -57,5 +72,52 @@ describe('the gateway identity as a request context', () => {
     for (const id of ['northstar', 'vanderbilt', 'school-a', 'school-b', 'vu', 'cedar', 'eastfield', 's', 'another-school', '8d4a2c1e-7b0f-4c3a-9a55-1f2e3d4c5b6a']) {
       expect(code(() => contextFor(req(), { ...who, institutionId: id }, IDS)), id).toBe('none');
     }
+  });
+});
+
+describe('the gateway selected active context', () => {
+  it('activates only a server-directory membership and carries its workspace and expiry', () => {
+    const ctx = contextForSelection(req(), who, {
+      directory: directory(),
+      selection: { membershipId: 'membership-northstar-student', workspace: 'student' },
+    }, IDS);
+
+    expect(ctx.membershipIds).toEqual(['membership-northstar-student']);
+    expect(ctx.roleGrants.map((grant) => grant.expiresAt)).toEqual([
+      '2099-01-01T01:00:00.000Z',
+      '2099-01-01T01:00:00.000Z',
+    ]);
+    expect(ctx.activeContext).toMatchObject({
+      tenantId: 'northstar',
+      institutionId: 'northstar',
+      personId: who.userId,
+      membershipId: 'membership-northstar-student',
+      workspace: 'student',
+      roleGrantIds: ['grant-student', 'grant-family'],
+      expiresAt: '2099-01-01T01:00:00.000Z',
+    });
+    expect(Object.isFrozen(ctx)).toBe(true);
+  });
+
+  it('refuses a selected directory that does not belong to the authenticated identity', () => {
+    expect(code(() => contextForSelection(req(), who, {
+      directory: directory({ personId: 'different-person' }),
+      selection: { membershipId: 'membership-northstar-student', workspace: 'student' },
+    }, IDS))).toBe('unauthenticated');
+
+    const otherTenant = directory({
+      memberships: [{ ...directory().memberships[0], tenantId: 'another-school', institutionId: 'another-school' }],
+    });
+    expect(code(() => contextForSelection(req(), who, {
+      directory: otherTenant,
+      selection: { membershipId: 'membership-northstar-student', workspace: 'student' },
+    }, IDS))).toBe('tenant_mismatch');
+  });
+
+  it('keeps client tenant hints subordinate to the selected verified context', () => {
+    expect(code(() => contextForSelection(req({ 'x-tenant-id': 'vanderbilt' }), who, {
+      directory: directory(),
+      selection: { membershipId: 'membership-northstar-student', workspace: 'student' },
+    }, IDS))).toBe('tenant_mismatch');
   });
 });
