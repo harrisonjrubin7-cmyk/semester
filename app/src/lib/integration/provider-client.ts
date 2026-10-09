@@ -35,7 +35,7 @@ import type { CredentialLease, LeaseBroker, RefusalReason } from './vault.ts';
 import {
   ReauthorizationRequired, TokenManager, TransientTokenError, type TokenResponse, type TokenStore,
 } from './oauth.ts';
-import { ProviderHttpError, retryAfterMs } from '../../../../packages/platform/src/integrations/provider-error.ts';
+import { ProviderHttpError } from '../../../../packages/platform/src/integrations/provider-error.ts';
 export { ProviderHttpError, retryAfterMs } from '../../../../packages/platform/src/integrations/provider-error.ts';
 
 /** What a call is given. Valid for that call; adapter code must not keep it. */
