@@ -34,6 +34,10 @@ describe('which actions can be taken back', () => {
       label: 'Calendar and its events removed',
       fields: ['feeds', 'feedEvents'],
     });
+    expect(undoableFor('removeLink')).toEqual({
+      label: 'Link removed',
+      fields: ['extraLinks', 'linkUrls'],
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
@@ -73,6 +77,11 @@ describe('the snapshot', () => {
   it('keeps several where one action reaches several', () => {
     const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.dropPerson, AT);
     expect(Object.keys(took.was).sort()).toEqual(['letters', 'people', 'visits']);
+  });
+
+  it('keeps both halves of a student-created link', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.removeLink, AT);
+    expect(Object.keys(took.was)).toEqual(['extraLinks', 'linkUrls']);
   });
 
   it('carries the label and the moment', () => {

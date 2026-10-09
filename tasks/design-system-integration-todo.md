@@ -1079,6 +1079,26 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-09 recoverable student-created link removal — automation pass 2, integration slice 53
+
+- [x] Start from `origin/main` `3c17385d`; a final dirty-tree fetch observed `34ac2e1d`, whose governed Course Engine review workflow has no Links, `removeLink`, Undo, test or integration-control overlap.
+- [x] Re-rank the remaining consequence paths and select bounded student-created link removal; keep permanent file purge, broad demo reset and scanner-backed Import separate.
+- [x] Add `removeLink` to the existing eight-second Undo contract with only `extraLinks` and `linkUrls`, restoring the exact row, custom group and corrected address without reverting unrelated state.
+- [x] Give the visible `REMOVE` control an accessible name that identifies the exact student-created link; add no route, component, dependency, schema, server operation or provider behavior.
+- [x] Prove three focused guards red against the prior behavior, then pass 128/128 reducer, Links, Undo and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and design-report generation.
+- [ ] Aggregate design report/check launchers — the report regenerates, then its wrapper exits because `npm` is unavailable; exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only recovery slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but the Hawk CLI and Docker are absent and `HAWK_APP_HOST` is unset; a local properties file exists but was not read. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Merge and reconcile `origin/main` `34ac2e1d` on the clean branch before selecting another slice; keep its separate Course Engine review workflow outside the current product unless repository reconciliation authorizes a native integration.
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.

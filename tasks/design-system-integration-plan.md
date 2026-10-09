@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-09 · **Latest observed `origin/main`** `3c17385d` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-09 · **Latest observed `origin/main`** `34ac2e1d` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -519,6 +519,16 @@ Deleting a custom Drive folder now opens the existing `ConfirmDialog` and `Actio
 The guard was proved red against the prior immediate deletion, then 33 focused Drive, folder, ActionPreview and root-unmount tests passed. TypeScript, lint, university typecheck and the production build pass; the build required moving aside the existing generated `dist/` after two `ENOTEMPTY` cleanup races, then completed with the existing chunk-size warning. The four pre-existing lint warnings remain. The design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and 78 token/design contracts pass. The design report regenerates before its aggregate wrapper exits because this shell has no `npm`/`npx`; no aggregate launcher or ordered/shuffled full-suite pass is claimed.
 
 HawkScan remains unavailable (`hawk runtime=false`, `HAWK_API_KEY=false`; the runner also reports no Docker or target host), so no DAST result or security pass is claimed. The next slice requires a fresh ranking of the remaining consequence paths; permanent file purge and the same-origin demo reset remain intentionally separate.
+
+## Recoverable student-created link removal — automation pass 2, integration slice 53
+
+The slice began with `origin/main` `3c17385d`. A final dirty-tree fetch observed `34ac2e1d`; its governed review-resolution workflow changes only the separately governed `course-engine/` MVP and its audit roadmap, with no Links, `removeLink`, shared-Undo, test or integration-control overlap. The dirty branch was not merged or rebased; that new current-repository evidence must be reconciled on the next clean pass. Re-ranking selected the existing student-created link removal because its bounded device mutation is explicit: it removes one `extraLinks` row and that row's corrected `linkUrls` entry while leaving bundled links, other student links and every external site unchanged.
+
+`removeLink` now snapshots only `extraLinks` and `linkUrls` through the existing eight-second Undo contract, restoring the exact student-created row, custom group and corrected address without rolling back unrelated state. The visible `REMOVE` control also has an accessible name that identifies the exact link. No route, shared component, dependency, schema, server operation, provider behavior or external system changed.
+
+The three focused guards were proved red against the prior behavior, then 128 reducer, Links, Undo and root-unmount tests passed. TypeScript, lint, university typecheck and the production build pass with the existing four lint warnings and chunk-size warning. Token/design contracts pass 78/78, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the design report regenerates before its wrapper exits because `npm` is unavailable. Ordered and shuffled full suites were not rerun for this bounded local recovery slice.
+
+The active HawkScan skill stopped at preflight because the Hawk CLI and Docker are absent and `HAWK_APP_HOST` is unset; a local properties file exists but was not read. No target, DAST result or security pass is claimed. Permanent file purge, the broad same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
 
 ## What was read
 

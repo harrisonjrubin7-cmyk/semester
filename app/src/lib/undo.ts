@@ -114,6 +114,7 @@ export const UNDOABLE: Record<string, Undoable> = {
    */
   moveMail: { label: 'Moved', fields: ['mailMarks'], onChange: true },
   removeFeed: { label: 'Calendar and its events removed', fields: ['feeds', 'feedEvents'] },
+  removeLink: { label: 'Link removed', fields: ['extraLinks', 'linkUrls'] },
   dropSource: { label: 'Source removed', fields: ['sources'] },
   dropSitting: { label: 'Paper removed', fields: ['sittings'] },
   /*

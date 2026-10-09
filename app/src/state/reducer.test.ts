@@ -795,6 +795,30 @@ describe('taking it back', () => {
     expect(back.undone).toBeNull();
   });
 
+  it('restores a student-created link together with its corrected address', () => {
+    const s: State = {
+      ...blank(),
+      extraLinks: [
+        { id: 'landlord', name: 'Landlord', url: 'https://old.example.edu', hint: '', note: '', group: 'Housing' },
+        { id: 'gym', name: 'Gym', url: 'https://gym.example.edu', hint: '', note: '' },
+      ],
+      linkUrls: {
+        landlord: 'https://rent.example.edu',
+        gym: 'https://gym.example.edu',
+      },
+    };
+
+    const gone = reducer(s, { type: 'removeLink', id: 'landlord' });
+    expect(gone.extraLinks.map((link) => link.id)).toEqual(['gym']);
+    expect(gone.linkUrls).toEqual({ gym: 'https://gym.example.edu' });
+    expect(gone.undone?.label).toBe('Link removed');
+
+    const back = reducer(gone, { type: 'undo' });
+    expect(back.extraLinks).toEqual(s.extraLinks);
+    expect(back.linkUrls).toEqual(s.linkUrls);
+    expect(back.undone).toBeNull();
+  });
+
   it('offers nothing for an action that only edits', () => {
     // An edit leaves the thing there to edit back.
     const s = twoNotes();

@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 1 of 120 (continued program) · **Integration slice** 52 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `3c17385d` · **Latest observed `origin/main`** `3c17385d`
+**Automation pass** 2 of 120 (continued program) · **Integration slice** 53 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `ebc86521` · **Latest observed `origin/main`** `34ac2e1d`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in current automation pass 2 / integration slice 53
+
+- The slice began with `origin/main` `3c17385d`. A final dirty-tree fetch observed `34ac2e1d`; its governed review-resolution workflow changes only the separate `course-engine/` MVP and audit roadmap, with no Links, `removeLink`, shared-Undo, test or integration-control overlap. The dirty branch was not merged or rebased; reconciliation remains for the next clean pass.
+- Student-created link removal now enters the existing eight-second Undo path. Its snapshot is limited to `extraLinks` and `linkUrls`, so Undo restores the exact row, custom group and corrected address without reverting unrelated state.
+- The visible `REMOVE` control now has an accessible name identifying the exact student-created link. Bundled links, other student links and every external site remain unchanged; no route, shared component, dependency, schema, server operation or provider behavior changed.
+- Three focused guards were proved red against the prior behavior. Reducer, Links, Undo and root-unmount suites pass 128/128.
+- TypeScript, lint, university typecheck and production build pass. Existing baselines remain four lint warnings and the chunk-size warning. Token/design contracts pass 78/78, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the design report regenerates.
+- The aggregate design report wrapper exits after report generation because this shell has no `npm`; exact constituents pass. Ordered and shuffled full suites were not rerun; the last recorded baseline remains pass 30's 23,872 tests.
+- The active HawkScan skill stopped at preflight because the Hawk CLI and Docker are absent and `HAWK_APP_HOST` is unset; a local properties file exists but was not read. No target, DAST result or security pass is claimed.
+- Permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate. The next slice requires another fresh dependency/consequence ranking.
 
 ## Evidence locked in current automation pass 1 / integration slice 52
 
