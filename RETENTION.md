@@ -196,6 +196,9 @@ behind and a client that believes it succeeded.
 | --- | --- | --- |
 | `state` | account deletion | the sync payload |
 | `courses` | account deletion | soft-deleted rows leave a tombstone — see above |
+| `course_sources` | active sources: account deletion; explicit source deletion: metadata remains through a **30-day recovery window** and, today, after that window until a hold-aware purge is implemented | private student-source metadata only, including the display filename and object key but no bytes or extracted text. The owner foreign key cascades on account deletion; an account/tenant/platform legal hold blocks the account delete or the source deletion request. The 30-day tombstone is recoverable and preserves the prior lifecycle state. No purge or bucket exists in this slice, so expiry of the window does **not** claim physical removal |
+| `course_source_corrections` | with its `course_sources` row or the confirming account's deletion | append-only source/derived-value hashes and revision links, never the corrected value. Cascades with the source and with the confirming owner |
+| `course_source_operations` | with its `course_sources` row or the acting account's deletion | append-only idempotency receipts for plan, correction, delete and restore. Contains bounded result metadata, not filename, source text or correction values; cascades with the source and actor |
 | `usage` | account deletion | which screens have been opened, and the day each last was |
 | `notes`, `tasks`, `appointments`, `sittings` | account deletion | soft-deleted rows leave a tombstone — see above |
 | `profiles`, `enrollments` | account deletion | |

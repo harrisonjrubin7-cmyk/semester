@@ -1,10 +1,26 @@
 # Handoff integration status
 
-**Automation pass** 10 of 120 · **Integration slice** 18 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `55adab11`
+**Automation pass** 11 of 120 · **Integration slice** 19 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `f2b8b56d`
 
 ## State
 
-Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer and the pre-ingestion course-source authority contract are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Server course-source persistence, private buckets, scanning, extraction, routes and current-screen wiring remain absent. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract and private student-source metadata/correction/recovery persistence are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Private buckets, byte storage, scan settlement, extraction, routes and current-screen wiring remain absent; shared course-material persistence remains closed pending a current retention-policy authority. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 11 / slice 19
+
+- The clean branch began with `origin/main` `55adab11` already an ancestor. A later fetch observed `bf208b6e`; its design-component foundation, archive-audit documents and PWA cache namespacing contain no equivalent course-source schema or persistence operation. The final fetch observed `f2b8b56d`; its production-support UAT and support-retention work still has no equivalent course-source persistence, but overlaps `RETENTION.md`, `ROLE-LAUNCH-REGISTER.md` and `CONTROL-FACTS.md`. The dirty branch was not merged or rebased; both landed increments require clean-branch reconciliation next.
+- `20261008234500_course_source_persistence.sql` adds three deny-by-default tables: private student-source metadata, append-only hash-linked corrections and an append-only idempotency ledger. Client roles have no policies or table privileges; service role can read the tables but mutates only through three controlled functions.
+- Every create, correction, deletion and restore reloads exact current `public.courses` ownership plus the exact active `institution_membership`. Tenant/actor mismatch, course deletion, suspension and deprovisioning fail closed.
+- Student metadata is limited to the authority contract's document types, 50 MiB classification cap and exact `t/<tenant>/student_private/<yyyy-mm>/<source>` key. No byte, source text, extraction or signed URL is stored.
+- Idempotency is scoped by tenant, actor and action and binds a request hash. Exact retry returns the first result; changed input conflicts. Corrections require an available SHA-256-bound source and chain each revision to the latest corrected-value hash.
+- Deletion preserves an exact 30-day recovery window and prior lifecycle state. Account/tenant/platform holds refuse deletion; restore clears the tombstone. Failed audit append rolls back both the state mutation and its idempotency fact.
+- Audit pseudonymizes actor/source ids and contains only course code, term and bounded outcome; it excludes filename, object key, source/value hashes, excerpts, extracted text and old/new content.
+- Institution-published `course-materials` is not opened: no current repository table proves a named versioned retention policy, and caller-supplied policy text is not authority.
+- PostgreSQL 17 applies all 212 migrations twice with the schema and all 373 table fingerprints unchanged. The focused suite passes 30 checks; whole-schema grant/RLS/index guards pass 30; adjacent legal-hold, deletion, institution-membership, audit and Course Studio suites pass 204. The first index run found seven uncovered foreign keys; covering indexes were added before the green rerun.
+- TypeScript, lint, university typecheck and the production build pass; lint retains the existing three warnings. Design-system constituents pass 9 token-export tests, zero violations with the existing 86-warning ledger, CSS within its ledger and 69 contract tests. The aggregate check and report-with-tests launchers hardcode the unavailable `npm` executable, so no aggregate-wrapper or report pass is claimed.
+- The ordered full suite finishes with 23,784 passing and 69 skipped; it is not green because the runner-mounted `.semester-reference` map guard and a `deadcss` timeout remain. Two generated-document failures found during that run were refreshed and their focused guards pass. Shuffled seed `1791510957791` finishes with 23,782 passing, 69 skipped, six failures and eight teardown errors; the generated documents were refreshed and the task-action/import teardown cascade passes in a 143-test focused rerun, but no full-shuffle pass is claimed.
+- HawkScan preflight cannot start because the `hawk` executable is absent and `HAWK_API_KEY` is unset. No DAST result or security pass is claimed; the release gate remains open.
+- No bucket, object, scanner, extractor, public route, UI, deployment, production data or external system changed.
 
 ## Evidence locked in automation pass 10 / slice 18
 
@@ -204,7 +220,7 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Completed local slice gate
 
-The projection database proof and reapply evidence remain green from slice 15. Slice 16's 43 focused tests, generated-reference guards and phase gates remain green; slice 17's 16-row structural and 22/22 design-tooling checks remain green. Slice 18 passes 66/66 ordered and shuffled authority/file tests, 144/144 combined architecture/reference guards, TypeScript, lint, university typecheck, production build and the design-system constituents/report. The ordered full suite is not wholly green only for the mounted-reference map refusal and an unrelated waiting-row timeout; full shuffle is not wholly green only for the mounted-reference map refusal. Deno and HawkScan remain explicitly open where applicable. Secret provisioning, scheduler activation, additional projectors, course-source persistence/storage/scanning and operating deployment remain separate.
+The projection database proof and reapply evidence remain green from slice 15. Slice 16's 43 focused tests, generated-reference guards and phase gates remain green; slice 17's 16-row structural and 22/22 design-tooling checks remain green; slice 18's authority contract remains green. Slice 19 applies all 212 migrations twice with 373 unchanged table fingerprints, passes 30 focused and 234 adjacent/whole-schema SQL checks, passes TypeScript, lint, university typecheck, production build and the design-system constituents, and refreshes the repository-owned generated references found by the broad suite. The aggregate design launchers remain unavailable because they hardcode absent `npm`; ordered and shuffled full suites remain non-green for the recorded runner-mount, timeout and teardown conditions. HawkScan remains explicitly open. Bucket provisioning, bytes, scan settlement, extraction, routes, current-screen wiring and operating deployment remain separate.
 
 ## External gates kept open
 
@@ -212,7 +228,7 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Add the repository-native course-source metadata, correction and deletion/recovery schema with deny-by-default RLS, exact server-side relationship resolution and atomic content-free audit. Prove tenant isolation, idempotency, legal-hold/recovery behavior and relationship revocation in focused PostgreSQL checks. Do not provision buckets, expose upload/download routes or wire Import/Study Studio until the private storage and deployed scanner prerequisites are actually available; do not add a Course Engine route or parallel course model.
+On a clean branch, merge or reconcile `origin/main` `f2b8b56d`, preserving its support-retention/UAT evidence and resolving the three overlapping generated/control files. Then add only the service-side storage-receipt and scan-settlement persistence transition, keeping bytes quarantined until declared and detected type, integrity hash and a named scanner version agree. Do not provision a bucket or scanner, expose upload/download routes, wire Import/Study Studio or enable shared `course-materials` until the corresponding private runtime and versioned institution-retention authority exist; do not add a Course Engine route or parallel course model.
 
 ## Hold-aware projection-history retention — automation runner pass 5, slice 13
 

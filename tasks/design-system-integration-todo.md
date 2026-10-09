@@ -348,9 +348,40 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Add repository-native source metadata, correction and deletion/recovery persistence with deny-by-default RLS and exact server-side relationship resolution.
-- [ ] Append content-free audit and source state atomically; prove idempotency and tenant isolation in focused PostgreSQL checks.
+- [x] Add repository-native student-source metadata, correction and deletion/recovery persistence with deny-by-default RLS and exact server-side relationship resolution.
+- [x] Append content-free audit and source state atomically; prove idempotency and tenant isolation in focused PostgreSQL checks.
 - [ ] Keep bucket provisioning, deployed scanning, extraction, public upload/download routes and Import/Study Studio UI wiring outside that schema slice unless their prerequisites are actually available.
+
+## 2026-10-08 student course-source persistence — automation pass 11, slice 19
+
+- [x] Fetch and inspect starting `origin/main` `55adab11`; confirm it is already an ancestor and contains no equivalent course-source persistence boundary.
+- [x] Inspect `origin/main` `bf208b6e`; its design-component foundation, archive-audit documents and PWA cache namespacing contain no equivalent course-source migration or overlapping integration-control file.
+- [x] Inspect final `origin/main` `f2b8b56d`; its production-support UAT and support-retention work contains no equivalent course-source persistence but overlaps `RETENTION.md`, `ROLE-LAUNCH-REGISTER.md` and `CONTROL-FACTS.md`. Do not merge or rebase the dirty branch.
+- [x] Add private student-source metadata, append-only correction lineage and an append-only idempotency ledger without creating a second course model.
+- [x] Give `anon` and `authenticated` no policy or table privilege; give service role read-only table grants and controlled function execution only.
+- [x] Resolve the exact current `public.courses` ownership and active `institution_membership` inside PostgreSQL on create, correction, deletion and restore.
+- [x] Enforce the repository document allowlist, 50 MiB student-private cap and exact tenant-prefixed object-key shape while creating no storage object or signed URL.
+- [x] Scope idempotency by tenant, actor and action; reject reuse with a different request hash and return the original result on exact replay.
+- [x] Require an available integrity-bound source for a correction and hash-link each revision to the latest derived-value revision.
+- [x] Preserve an exact 30-day recovery window, restore the prior lifecycle state and refuse deletion under account, tenant or platform legal hold.
+- [x] Append pseudonymous content-free audit in the same transaction and prove a failed audit append rolls back state and idempotency.
+- [x] Keep shared `course-materials` closed until a current versioned institution retention-policy authority exists; do not accept request prose as policy evidence.
+- [x] PostgreSQL 17 focused proof: 30/30 checks; reapply leaves the schema and all 373 table fingerprints unchanged.
+- [x] Whole-schema grant/RLS/index guards: 30/30 checks after the first index run identified and the slice fixed seven uncovered foreign keys.
+- [x] Adjacent legal-hold, deletion, membership, audit and Course Studio suites: 204/204 checks.
+- [x] `pnpm exec tsc -b`, lint, `check:university` and the production build pass; lint retains the existing three-warning baseline.
+- [x] Design-system constituents pass: 9/9 token-export tests, zero audit violations with the existing 86-warning ledger, CSS within its ledger and 69/69 contract tests. The aggregate `npm` wrapper and `design-system:report --with-tests` cannot launch their internal tests because this runtime has no `npm`; no wrapper/report pass is claimed.
+- [x] Focused post-register proof passes 143/143 tests; generated-register/evidence guards pass 113/113 after the role, trust, retention and classification references were refreshed.
+- [ ] Ordered full suite — 23,784 pass and 69 skip; the mounted `.semester-reference` map refusal and a `deadcss` timeout remain, while the two generated-document failures found by the run were refreshed and pass focused guards.
+- [ ] Shuffled full suite — seed `1791510957791` finishes with 23,782 pass, 69 skip, six failures and eight teardown errors. The mounted-reference refusal and `deadcss` timeout remain; stale generated documents were refreshed, and the task-action/import teardown cascade passes in the 143-test focused rerun. No full-suite pass is claimed.
+- [ ] HawkScan DAST — preflight cannot start because the `hawk` executable is absent and `HAWK_API_KEY` is unset. No scan or security pass is claimed; the release gate remains open.
+
+### Next implementation boundary
+
+- [ ] Merge/reconcile `origin/main` `f2b8b56d` on a clean branch, preserving its support-retention/UAT evidence and resolving the three overlapping generated/control files before the next slice.
+- [ ] Add the service-only storage-receipt and scan-settlement persistence transition, preserving quarantine until declared/detected type, integrity hash and named scanner version agree.
+- [ ] Provision neither bucket nor scanner until their private policy/runtime evidence exists; keep public upload/download and current-screen wiring closed.
+- [ ] Define a repository authority for versioned institution course-material retention before enabling `course-materials` persistence.
 
 ## Earlier integration baseline preserved
 
