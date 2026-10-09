@@ -242,14 +242,16 @@ describe('capability exposure resolver', () => {
     const invalid: CapabilityExposureIndexEntry = {
       ...original,
       routes: [],
-      coreEntities: CAPABILITY_EXPOSURE_INDEX[1]!.coreEntities,
+      coreEntities: original.coreEntities.map((entity, index) => index === 0
+        ? { ...entity, retention: 'different retention' }
+        : entity),
       productMaturity: 'L9',
       profileIds: [],
       requiredOperationalChecks: [...OPERATIONAL_READINESS_CHECKS].reverse() as unknown as typeof OPERATIONAL_READINESS_CHECKS,
       supportOwner: 'operations',
       rollback: 'different fallback',
       evidenceRefs: [],
-      platforms: ['pwa', 'web'],
+      platforms: ['pwa', 'web'] as unknown as CapabilityExposureIndexEntry['platforms'],
       mobileExperience: { ...original.mobileExperience, acceptance: 'different acceptance' },
     };
     const mutated = [invalid, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
