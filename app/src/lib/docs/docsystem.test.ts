@@ -120,6 +120,10 @@ describe('the governed set', () => {
     // The charter itself is governed; if discovery broke, nothing below would be checked.
     expect(pages).toContain('docs/documentation/README.md');
     expect(pages).toContain('docs/documentation/QUALITY-GATES.md');
+    expect(pages).toContain('docs/audit/CURRENT_STATE.md');
+    expect(pages).toContain('docs/audit/ROLE_AND_SCREEN_GAP_ANALYSIS.md');
+    expect(pages).toContain('docs/audit/SYSTEM_AND_WORKFLOW_GAP_ANALYSIS.md');
+    expect(pages).toContain('docs/roadmap/P0-P3-IMPLEMENTATION_PLAN.md');
     expect(pages.length).toBeGreaterThanOrEqual(8);
     for (const d of GOVERNED_DIRS) expect(d.startsWith('/')).toBe(false);
     for (const f of GOVERNED_FILES) expect(f.endsWith('.md')).toBe(true);

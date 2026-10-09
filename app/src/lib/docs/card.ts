@@ -67,6 +67,10 @@ export const GOVERNED_DIRS = [
 /** Single files that are governed although their directory is not. */
 export const GOVERNED_FILES = [
   'docs/README.md', 'CONTRIBUTING.md',
+  'docs/audit/CURRENT_STATE.md',
+  'docs/audit/ROLE_AND_SCREEN_GAP_ANALYSIS.md',
+  'docs/audit/SYSTEM_AND_WORKFLOW_GAP_ANALYSIS.md',
+  'docs/roadmap/P0-P3-IMPLEMENTATION_PLAN.md',
   'docs/trust/DOCUMENT-MAP.md', 'docs/trust/SECURITY-OVERVIEW.md', 'docs/trust/CONTROL-FACTS.md', 'docs/trust/REVIEWER-QUESTION-MAP.md',
 ] as const;
 
