@@ -1195,3 +1195,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Accessibility conformance review (not claimed)
 - [ ] Restore drill and production evidence
 - [x] Archive availability resolved by the authenticated 2026-10-08 mount. Prototype material remains reference-only and must be rebuilt through repository-native controls.
+
+## 2026-10-09 recoverable course-material removal — automation pass 5, integration slice 56
+
+- [x] Start from and re-fetch current `origin/main` `34ac2e1d`; confirm its separate Course Engine review-resolution work has no equivalent current-product course-material removal or Undo path.
+- [x] Re-rank the remaining consequence paths and select the bounded device-owned **Already added** removal; keep Source Locker file trash, permanent purge, broad demo reset and scanner-backed Import separate.
+- [x] Replace the two-dispatch update/deadline removal with one `removeUpdate` reducer action bounded by the selected update's `courseId` and recorded `addedItems` ids.
+- [x] Add `removeUpdate` to the existing eight-second Undo contract with `updates` and `courses`; restore the exact material/deadline pair without reverting unrelated completion state.
+- [x] Give the visible **REMOVE** control an accessible name identifying the exact material; add no route, component, dependency, schema, server operation or provider behavior.
+- [x] Prove the focused reducer guard red against the prior behavior, then pass 140/140 Undo, reducer, Add Material and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 9/9 token-export and 138/138 token/design/responsive contract tests, design audit with zero violations and 86 existing warnings, and CSS ledger checks.
+- [ ] Aggregate npm design-system launchers and report wrapper — unavailable because this shell has no `npm`/`npx`; exact constituents pass, but no aggregate or regenerated-report pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only recovery slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

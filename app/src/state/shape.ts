@@ -2736,6 +2736,7 @@ export type Action =
   | { type: 'openDeck'; unit: number }
   | { type: 'openUpdate'; courseId: CourseId; unit?: number | null }
   | { type: 'addUpdate'; update: Omit<CourseUpdate, 'id' | 'created'> }
+  | { type: 'removeUpdate'; id: string }
   | { type: 'deleteUpdate'; id: string }
   | { type: 'addFeed'; feed: Omit<FeedSource, 'id' | 'added'>; events: FeedEvent[] }
   | { type: 'syncFeed'; id: string; events: FeedEvent[]; status: string }

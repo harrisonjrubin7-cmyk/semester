@@ -870,6 +870,43 @@ describe('taking it back', () => {
     expect(back.undone).toBeNull();
   });
 
+  it('restores removed course material together with the deadlines it added', () => {
+    const keptItem = { id: 'existing', title: 'Existing deadline' };
+    const addedItem = { id: 'from-reading', title: 'Reading response' };
+    const course = {
+      course: { id: 'econ', code: 'ECON 1020', title: 'Economics', term: '2026FA' },
+      items: [keptItem, addedItem],
+      schedule: [],
+      guide: { code: 'ECON 1020', units: [] },
+    } as unknown as State['courses'][number];
+    const update = {
+      id: 'reading-seven',
+      courseId: 'econ',
+      unit: null,
+      title: 'Reading 7',
+      source: 'reading-7.pdf',
+      body: '',
+      cards: [],
+      terms: [],
+      fileIds: [],
+      addedItems: ['from-reading'],
+      created: 1,
+    } as State['updates'][number];
+    const s: State = { ...blank(), courses: [course], updates: [update] };
+
+    const gone = reducer(s, { type: 'removeUpdate', id: update.id });
+    expect(gone.updates).toEqual([]);
+    expect(gone.courses[0].items).toEqual([keptItem]);
+    expect(gone.undone?.label).toBe('Course material removed');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'existing' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.updates).toEqual([update]);
+    expect(back.courses).toEqual([course]);
+    expect(back.done.existing).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
   it('offers nothing for an action that only edits', () => {
     // An edit leaves the thing there to edit back.
     const s = twoNotes();

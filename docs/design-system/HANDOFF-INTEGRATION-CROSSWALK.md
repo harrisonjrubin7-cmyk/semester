@@ -234,3 +234,12 @@ Legal review, DPA, insurance, HECVAT, named institutional contacts, live IdP, li
 ## Not complete
 
 The source audit still records 57 missing screen rows and 75 missing workflow steps. Pass 5 dispositions the screen set as 44 missing and in scope, 4 externally blocked, 6 excluded, 1 roadmap-only and 2 consent-bounded existing analogues. Pass 6 dispositions the workflow set as 54 missing and in scope, 18 roadmap-only, 2 externally blocked, 4 excluded and 241 existing incomplete. Role, system, document and execution-stream reconciliation are closed for the identified populations, but implementation is not: P1-07 and slice 16 supply only the first projection query/Console read path, while slices 18–19 supply a pre-ingestion contract plus private student-source metadata/correction/recovery persistence—not storage, scanning, extraction, routes or current-screen wiring. The buildable screen/workflow candidates remain open. The five brief names that looked absent are recorded in `SCREEN-PACKS.md` §4. The folded advisor list is labeled Caseload and is shared plans only. This page does not say the handoff is integrated.
+
+## Pass 5 current-product consequence mapping — integration slice 56
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for removing student-added course material | `app/src/screens/Update.tsx`, `app/src/state/slices/library.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: the **Already added** row now dispatches one bounded `removeUpdate` transition for the selected `CourseUpdate` plus only its recorded `addedItems`, and the shared eight-second Undo restores the pair. The source file and unrelated course data remain outside the mutation. Reducer and rendered-control guards are included in the 140 focused passing tests. |
+| Source Locker material/file cascade | `app/src/components/SourceLocker.tsx`, `app/src/lib/source-locker.ts` | Existing but incomplete and intentionally separate from this slice. File trash, generated-item cascade and recovery semantics remain authoritative there; `deleteUpdate` is retained for that plan rather than silently adopting the Add Material Undo boundary. |
+
+This mapping adds no archive route, role, capability, schema or provider claim. Deployment, HawkScan, external ingestion/scanning and institutional readiness remain unverified.
