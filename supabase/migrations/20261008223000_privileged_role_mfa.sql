@@ -58,3 +58,60 @@ grant execute on function private.has_capability(text, text, text)
 
 comment on function private.has_capability(text, text, text) is
   'Whether the caller holds a live role carrying this capability over this scope. platform_admin and support_agent grants require an aal2 JWT; ordinary-role grants remain independent. For policies to read; deliberately not reachable from a client.';
+
+-- Approval duties also ask whether the caller holds a named role. Keep the
+-- same two privileged grants dormant there, so request_approval cannot bypass
+-- the capability boundary by calling private.party_held instead.
+create or replace function private.party_held(party text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select case
+    when party = 'student' then false
+    when party like 'role:%' then exists (
+      select 1
+        from public.role_grants g
+       where g.subject = (select auth.uid())
+         and g.role = substr(party, 6)
+         and g.revoked_at is null
+         and (g.expires_at is null or g.expires_at > now())
+         and (
+           g.role not in ('platform_admin', 'support_agent')
+           or coalesce((select auth.jwt() ->> 'aal') = 'aal2', false)
+         )
+    )
+    else private.holds_seat(party)
+  end;
+$$;
+
+revoke all on function private.party_held(text) from public, anon, authenticated;
+
+-- The app-level elevation gate needs to distinguish an ordinary account from
+-- an aal1 account whose privileged grant is deliberately dormant. It returns
+-- only the caller's own yes/no status and grants no capability.
+create or replace function public.privileged_mfa_required()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce((select auth.jwt() ->> 'aal'), 'aal1') <> 'aal2'
+     and exists (
+       select 1
+         from public.role_grants g
+        where g.subject = (select auth.uid())
+          and g.role in ('platform_admin', 'support_agent')
+          and g.revoked_at is null
+          and (g.expires_at is null or g.expires_at > now())
+     );
+$$;
+
+revoke all on function public.privileged_mfa_required() from public, anon;
+grant execute on function public.privileged_mfa_required() to authenticated;
+
+comment on function public.privileged_mfa_required() is
+  'Whether the caller has a live platform_admin or support_agent grant whose current JWT is below aal2. For displaying the app-level elevation gate; grants no access.';

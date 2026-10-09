@@ -17,10 +17,10 @@ const mock = vi.hoisted(() => ({
 }));
 
 vi.mock('../lib/console/client', () => ({
-  totpFactors: mock.factors,
+  mfaFactors: mock.factors,
   enrollTotp: mock.enroll,
-  challengeTotp: mock.challenge,
-  verifyTotp: mock.verify,
+  challengeMfa: mock.challenge,
+  verifyMfa: mock.verify,
 }));
 
 import { MfaStep } from './MfaStep';
@@ -87,7 +87,7 @@ describe('MfaStep', () => {
   });
 
   it('challenges the existing authenticator without enrolling another', async () => {
-    mock.factors.mockResolvedValue([{ id: 'f-old', name: 'Phone' }]);
+    mock.factors.mockResolvedValue([{ id: 'f-old', name: 'Authenticator', type: 'totp' }]);
     await render();
     expect(mock.enroll).not.toHaveBeenCalled();
     expect(host.querySelector('img')).toBeNull();
@@ -100,7 +100,7 @@ describe('MfaStep', () => {
   });
 
   it('does not call back on a refused code, and says why', async () => {
-    mock.factors.mockResolvedValue([{ id: 'f-old', name: 'Phone' }]);
+    mock.factors.mockResolvedValue([{ id: 'f-old', name: 'Authenticator', type: 'totp' }]);
     mock.verify.mockRejectedValue(new Error('Invalid TOTP code entered'));
     await render();
     typeCode('000000');
@@ -110,7 +110,7 @@ describe('MfaStep', () => {
   });
 
   it('gives every control a name and offers a way out', async () => {
-    mock.factors.mockResolvedValue([{ id: 'f-old', name: 'Phone' }]);
+    mock.factors.mockResolvedValue([{ id: 'f-old', name: 'Authenticator', type: 'totp' }]);
     await render();
     const input = host.querySelector('input') as HTMLInputElement;
     expect(input.closest('label')?.textContent).toContain('Code from your authenticator');
@@ -120,9 +120,23 @@ describe('MfaStep', () => {
   });
 
   it('says so when the auth service cannot start the step', async () => {
-    mock.factors.mockRejectedValue(new Error('Could not list your authenticators.'));
+    mock.factors.mockRejectedValueOnce(new Error('Could not list your authenticators.')).mockResolvedValueOnce([{ id: 'f-old', name: 'Authenticator', type: 'totp' }]);
     await render();
     expect(host.querySelector('[role=alert]')?.textContent).toContain('Could not list your authenticators.');
     expect(host.querySelector('form')).toBeNull();
+    await act(async () => button('Try MFA setup again').click());
+    expect(host.querySelector('form')).toBeTruthy();
+  });
+
+  it('challenges an existing phone factor instead of forcing TOTP enrolment', async () => {
+    mock.factors.mockResolvedValue([{ id: 'phone-1', name: 'Mobile', type: 'phone' }]);
+    await render();
+    expect(mock.enroll).not.toHaveBeenCalled();
+    expect(host.textContent).toContain('verification code sent to your phone');
+    expect((host.querySelector('input') as HTMLInputElement).closest('label')?.textContent).toContain('Code sent to your phone');
+    typeCode('246810');
+    await submit();
+    expect(mock.challenge).toHaveBeenCalledWith('phone-1');
+    expect(mock.verify).toHaveBeenCalledWith('phone-1', 'ch-1', '246810');
   });
 });

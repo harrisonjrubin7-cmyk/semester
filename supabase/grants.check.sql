@@ -384,6 +384,10 @@ declare
     -- 20260928010000: the caller's own live capabilities, same predicate as
     -- private.has_capability, so staff screens can open for staff.
     'my_capabilities()',
+    -- 20261008223000: the caller's own yes/no signal for whether a live
+    -- platform_admin or support_agent grant still needs aal2. It exposes no
+    -- role roster or capability and is used only to show the elevation gate.
+    'privileged_mfa_required()',
     -- 20260929070000: click-to-cancel. The owner of an individual
     -- subscription ends it at the period end in one call, reason optional;
     -- cancelling must be as easy as signing up. Refuses anyone else's.

@@ -276,8 +276,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'MFA policy/config export',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'supabase/migrations/20261008223000_privileged_role_mfa.sql', shows: 'platform_admin and support_agent grants require an aal2 JWT' }, { path: 'supabase/privileged-mfa.check.sql', shows: 'aal1 denials and aal2 success for both privileged roles' }, { path: 'app/src/screens/console.test.tsx', shows: 'The console challenges for MFA before mounting privileged workspaces or reading protected data' }, { path: 'app/src/components/MfaStep.test.tsx', shows: 'TOTP enrolment and challenge paths' }],
-    gap: 'Product aal2 is enforced for platform_admin and support_agent grants and at console entry, with fresh MFA on sensitive console actions. Other staff roles, student opt-in/passkeys, recovery tests, production Auth configuration and provider-console exports remain open.',
+    evidence: [{ path: 'supabase/migrations/20261008223000_privileged_role_mfa.sql', shows: 'platform_admin and support_agent grants require an aal2 JWT for capabilities and role-based approval requests' }, { path: 'supabase/privileged-mfa.check.sql', shows: 'aal1 denials, app-gate status and aal2 success for both privileged roles' }, { path: 'app/src/components/PrivilegedMfaBoundary.test.tsx', shows: 'The signed-in app does not mount capability-backed tools until a privileged session elevates' }, { path: 'app/src/screens/console.test.tsx', shows: 'The console independently challenges before mounting privileged workspaces or reading protected data' }, { path: 'app/src/components/MfaStep.test.tsx', shows: 'TOTP enrolment, TOTP and phone challenge, and factor-discovery retry paths' }],
+    gap: 'Product aal2 is enforced for platform_admin and support_agent capabilities and role-based approval requests, with an app-level elevation gate and fresh MFA on sensitive console actions. Other staff roles, student opt-in/passkeys, recovery tests, production Auth configuration and provider-console exports remain open.',
   },
   {
     id: 'IAM-006',

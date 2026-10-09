@@ -70,6 +70,11 @@ begin
   perform pg_temp.become(admin, 'aal1');
   select private.has_capability('platform:configure') into got;
   perform pg_temp.answered('an aal1 platform_admin grant is dormant', got, false);
+  select public.privileged_mfa_required() into got;
+  perform pg_temp.answered('an aal1 platform_admin is offered the app elevation gate', got, true);
+  set local role postgres;
+  select private.party_held('role:platform_admin') into got;
+  perform pg_temp.answered('an aal1 platform_admin cannot request a privileged duty', got, false);
 
   perform pg_temp.become(admin, 'aal2', now() - interval '1 hour');
   select private.has_capability('platform:configure') into got;
@@ -78,11 +83,20 @@ begin
   perform pg_temp.become(admin, 'aal2', now());
   select private.has_capability('platform:configure') into got;
   perform pg_temp.answered('an aal2 platform_admin carries its capability', got, true);
+  select public.privileged_mfa_required() into got;
+  perform pg_temp.answered('an aal2 platform_admin no longer needs the app elevation gate', got, false);
+  set local role postgres;
+  select private.party_held('role:platform_admin') into got;
+  perform pg_temp.answered('an aal2 platform_admin may request its duty', got, true);
 
   perform pg_temp.become(supporter, 'aal1');
+  select public.privileged_mfa_required() into got;
+  perform pg_temp.answered('an aal1 support_agent is offered the app elevation gate', got, true);
   set local role postgres;
   select private.support_agent() into got;
   perform pg_temp.answered('an aal1 support_agent grant is dormant', got, false);
+  select private.party_held('role:support_agent') into got;
+  perform pg_temp.answered('an aal1 support_agent cannot request support access', got, false);
 
   perform pg_temp.become(supporter, 'aal2', now());
   set local role postgres;
@@ -92,6 +106,8 @@ begin
   perform pg_temp.become(moderator, 'aal1');
   select private.has_capability('report:read') into got;
   perform pg_temp.answered('ordinary roles do not acquire an MFA requirement', got, true);
+  select public.privileged_mfa_required() into got;
+  perform pg_temp.answered('ordinary roles do not see the app elevation gate', got, false);
 
   set local role postgres;
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance)

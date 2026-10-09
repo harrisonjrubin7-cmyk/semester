@@ -88,10 +88,13 @@ do not yet express the school boundary (HECVAT TEN-1).
 - Staff access to a student's records requires the student's consent, is
   limited to named scopes, and expires (`supabase/support-access.check.sql`).
 
-**MFA is partially enforced.** The shared server predicate requires an aal2
-session for platform_admin and support_agent grants, and the operations console
-challenges before protected reads. It is not yet enforced for every staff role or
-student account, and production Auth and provider-console configuration evidence
+**MFA is partially enforced.** The shared server predicates require an aal2
+session for platform_admin and support_agent capability grants and role-based
+approval requests. The signed-in app challenges those accounts before mounting
+capability-backed tools, and the operations console independently challenges
+before protected reads. Verified TOTP and phone-code factors can be challenged;
+TOTP can be enrolled. MFA is not yet enforced for every staff role or student
+account, and production Auth and provider-console configuration evidence
 has not been filed. This is not evidence of universal MFA or production-console
 enforcement. The remaining product and provider-console work is tracked in the
 remediation plan and still requires dated configuration evidence.

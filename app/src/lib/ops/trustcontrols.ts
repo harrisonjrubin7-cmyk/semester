@@ -225,7 +225,7 @@ export const CONTROLS: readonly Control[] = [
     mechanism: 'code-test',
     state: 'partial',
     proof: ['app/src/lib/console/client.test.ts', 'app/src/screens/console.test.tsx', 'supabase/privileged-mfa.check.sql'],
-    gap: 'The console requires aal2 before privileged reads, the shared predicate requires aal2 for platform_admin and support_agent grants, and sensitive actions require a fresh second factor. Student enrolment, passkeys, other staff-role coverage and production Auth evidence remain open.',
+    gap: 'The signed-in app and console require aal2 before privileged tools and reads, capability and role-party predicates require aal2 for platform_admin and support_agent grants, and sensitive actions require a fresh second factor. Student enrolment, passkeys, other staff-role coverage and production Auth evidence remain open.',
     owner: 'security',
   },
   {
@@ -237,7 +237,7 @@ export const CONTROLS: readonly Control[] = [
     state: 'partial',
     proof: ['supabase/privileged-mfa.check.sql'],
     described: ['docs/trust/PASSWORD-SESSION-AND-MFA-STANDARD.md'],
-    gap: 'The product enforces aal2 for platform_admin and support_agent grants and the console can enrol/challenge TOTP. Student-facing enrolment, passkeys, production Auth configuration evidence, recovery tests and provider-console proof remain open.',
+    gap: 'The product enforces aal2 for platform_admin and support_agent grants; the app can challenge verified TOTP or phone factors and enrol TOTP, with retry. Student-facing enrolment, passkeys, production Auth configuration evidence, recovery tests and provider-console proof remain open.',
     owner: 'security',
   },
   {

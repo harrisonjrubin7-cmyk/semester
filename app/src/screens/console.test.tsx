@@ -96,10 +96,10 @@ vi.mock('../lib/console/client', async (orig) => ({
   loadPreferences: mock.prefs,
   savePreference: mock.savePref,
   mfaLevel: mock.mfa,
-  totpFactors: mock.factors,
+  mfaFactors: mock.factors,
   enrollTotp: mock.enroll,
-  challengeTotp: mock.challenge,
-  verifyTotp: mock.verify,
+  challengeMfa: mock.challenge,
+  verifyMfa: mock.verify,
   sessionExpiry: mock.session,
   openSupportGrants: mock.support,
 }));

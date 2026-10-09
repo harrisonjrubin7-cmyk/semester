@@ -851,7 +851,7 @@ export interface MfaLevel {
   verifiedAt: Date | null;
 }
 
-const MFA_METHODS = new Set(['totp', 'webauthn', 'phone', 'mfa/totp', 'mfa/phone', 'mfa/webauthn']);
+const MFA_METHODS = new Set(['totp', 'phone', 'mfa/totp', 'mfa/phone']);
 
 export async function mfaLevel(): Promise<MfaLevel> {
   const db = await cloud();
@@ -881,12 +881,29 @@ export interface TotpEnrolment {
   uri: string;
 }
 
-/** The verified TOTP factors this account already has, so the step knows whether to enrol or challenge. */
-export async function totpFactors(): Promise<{ id: string; name: string }[]> {
+export interface MfaFactor {
+  id: string;
+  name: string;
+  type: 'totp' | 'phone';
+}
+
+/** The verified code factors this account already has, so the step can challenge one before enrolling TOTP. */
+export async function mfaFactors(): Promise<MfaFactor[]> {
   const db = await cloud();
   const { data, error } = await db.auth.mfa.listFactors();
   if (error) throw new Error(message(error, 'Could not list your authenticators.'));
-  return (data?.totp ?? []).map((f) => ({ id: f.id, name: f.friendly_name ?? '' }));
+  const groups = data as unknown as {
+    totp?: { id: string; friendly_name?: string; status?: string }[];
+    phone?: { id: string; friendly_name?: string; status?: string }[];
+  } | null;
+  const factors: MfaFactor[] = [];
+  for (const [type, listed] of [['totp', groups?.totp ?? []], ['phone', groups?.phone ?? []]] as const) {
+    for (const factor of listed) {
+      if (factor.status && factor.status !== 'verified') continue;
+      factors.push({ id: factor.id, name: factor.friendly_name ?? '', type });
+    }
+  }
+  return factors;
 }
 
 export async function enrollTotp(friendlyName = 'Operations console'): Promise<TotpEnrolment> {
@@ -896,17 +913,25 @@ export async function enrollTotp(friendlyName = 'Operations console'): Promise<T
   return { factorId: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret, uri: data.totp.uri };
 }
 
-export async function challengeTotp(factorId: string): Promise<string> {
+export async function challengeMfa(factorId: string): Promise<string> {
   const db = await cloud();
   const { data, error } = await db.auth.mfa.challenge({ factorId });
   if (error || !data) throw new Error(message(error, 'Could not start the challenge.'));
   return data.id;
 }
 
-export async function verifyTotp(factorId: string, challengeId: string, code: string): Promise<void> {
+export async function verifyMfa(factorId: string, challengeId: string, code: string): Promise<void> {
   const db = await cloud();
   const { error } = await db.auth.mfa.verify({ factorId, challengeId, code: code.replace(/\s+/g, '') });
   if (error) throw new Error(message(error, 'That code was not accepted.'));
+}
+
+/** Whether a live platform_admin or support_agent grant still needs this session elevated to aal2. */
+export async function privilegedMfaRequired(): Promise<boolean> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('privileged_mfa_required');
+  if (error) throw new Error(message(error, 'Could not check whether this account needs a second factor.'));
+  return data === true;
 }
 
 /** When the session's access token expires, or null when there is no session. */

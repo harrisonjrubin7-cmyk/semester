@@ -340,7 +340,7 @@ begin
   end if;
   raise notice 'ok  the duty matrix cannot be rewritten through the API';
 
-  perform set_config('request.jwt.claims', json_build_object('sub', operator::text)::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', operator::text, 'aal', 'aal2')::text, true);
   if not private.party_held('role:platform_admin') then raise exception 'FAILED: party_held misses a live role'; end if;
   if private.party_held('role:university_admin') then raise exception 'FAILED: party_held claims a role not held'; end if;
   if private.party_held('security') then raise exception 'FAILED: party_held gives the operator a seat'; end if;

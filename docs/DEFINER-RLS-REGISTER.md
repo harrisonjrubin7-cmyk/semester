@@ -38,7 +38,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 
 ### After the second reading
 
-The current register also includes 23 callable definers whose current definitions were added after that dated catalogue snapshot: `20261008190000_console_postmerge_safety.sql` (`console_command_center`, `console_release_incidents`); `20261005125000_console_integration_health.sql` (`console_integration_health`); `20261005124000_privacy_case_actions.sql` (`claim_privacy_request`, `my_privacy_completion_certificates`, `read_privacy_request_detail`, `resolve_privacy_request`, `verify_privacy_request`); `20261005123000_privacy_case_workspace.sql` (`console_privacy_requests`); `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`); `20261005120000_console_scoped_tenant_access.sql` (`console_tenant_access`); `20261005121000_console_tenant_operations.sql` (`console_tenant_operations`); `20261005122000_support_case_access.sql` (`available_case_supporters`, `read_support_case_signals`, `support_case_access`); `20261003120000_support_notification_consent_boundary.sql` (`set_support_email_notice`); `20261006000000_onboarding_journeys_and_handoff.sql` (`complete_onboarding_step`, `consume_handoff`, `skip_onboarding_step`, `start_onboarding`); `20261006160000_my_sessions.sql` (`end_my_session`, `my_sessions`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
+The current register also includes 24 callable definers whose current definitions were added after that dated catalogue snapshot: `20261008223000_privileged_role_mfa.sql` (`privileged_mfa_required`); `20261008190000_console_postmerge_safety.sql` (`console_command_center`, `console_release_incidents`); `20261005125000_console_integration_health.sql` (`console_integration_health`); `20261005124000_privacy_case_actions.sql` (`claim_privacy_request`, `my_privacy_completion_certificates`, `read_privacy_request_detail`, `resolve_privacy_request`, `verify_privacy_request`); `20261005123000_privacy_case_workspace.sql` (`console_privacy_requests`); `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`); `20261005120000_console_scoped_tenant_access.sql` (`console_tenant_access`); `20261005121000_console_tenant_operations.sql` (`console_tenant_operations`); `20261005122000_support_case_access.sql` (`available_case_supporters`, `read_support_case_signals`, `support_case_access`); `20261003120000_support_notification_consent_boundary.sql` (`set_support_email_notice`); `20261006000000_onboarding_journeys_and_handoff.sql` (`complete_onboarding_step`, `consume_handoff`, `skip_onboarding_step`, `start_onboarding`); `20261006160000_my_sessions.sql` (`end_my_session`, `my_sessions`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
 
 ## How this page is held
 
@@ -57,8 +57,8 @@ The current register also includes 23 callable definers whose current definition
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 3 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
-| read-helper | 31 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 226 | |
+| read-helper | 32 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
+| **total** | 227 | |
 
 ### self-service (65)
 
@@ -285,7 +285,7 @@ The current register also includes 23 callable definers whose current definition
 | `volunteer_next_tasks` | `auth.uid()`, `private.volunteer_ready` | `20260928032000_community.sql` |
 | `volunteer_roster` | `private.has_capability` | `20260928032000_community.sql` |
 
-### read-helper (31)
+### read-helper (32)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -319,6 +319,7 @@ The current register also includes 23 callable definers whose current definition
 | `my_support_tickets` | `auth.uid()` | `20260928210000_support_tickets.sql` |
 | `my_volunteer_standing` | `auth.uid()` | `20260928032000_community.sql` |
 | `office_action_programs` | `auth.uid()` | `20260928302000_office_action_feed.sql` |
+| `privileged_mfa_required` | `auth.uid()` | `20261008223000_privileged_role_mfa.sql` |
 | `referral_standing` | `auth.uid()` | `20260921002623_referrals.sql` |
 
 ## Policy-less tables

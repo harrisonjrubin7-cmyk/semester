@@ -24,9 +24,9 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
-### The operations console verifies MFA before it reads operator data
+### Privileged platform accounts verify MFA before Semester opens staff tools
 
-For operators holding the console grant, opening **Semester Operations** now asks for a multi-factor code before any console workspace or protected console data loads. If the account has not enrolled an authenticator yet, the same step offers enrolment first. If Semester cannot determine the current assurance level, the console stays closed and offers **Try again** rather than loading behind the message. Ordinary student screens are unchanged. Production authentication configuration and recovery still require separate operational verification.
+An account with a live `platform_admin` or `support_agent` grant now verifies a second factor before Semester mounts any capability-backed tool, including tools outside **Semester Operations**. An enrolled authenticator-app or phone-code factor can be challenged; if neither exists, the step offers authenticator-app enrolment. A failed factor lookup has its own retry. The database also keeps those two grants dormant at `aal1` for capability checks and role-based approval requests. Accounts without either privileged role are unchanged. Production authentication configuration and recovery still require separate operational verification.
 
 ### Courses you type stay on this device, and you can put them on a meeting agenda
 
