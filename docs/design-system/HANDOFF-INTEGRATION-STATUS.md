@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 31 of 120 · **Integration slice** 39 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
+**Automation pass** 33 of 120 · **Integration slice** 41 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 33 / slice 41
+
+- Current `origin/main` remains `0d8f70b2`, the branch merge-base; no equivalent Trust Center conversation-preview work landed.
+- The existing device-only assistant-conversation deletion now uses `ConfirmDialog` plus `ActionPreview`. It names the current conversation/message count, deletes live and archived local threads, states that profile facts, notes and plans stay, and says the action cannot be undone.
+- `clearConversations()`, content-free journaling, safe cancel-first focus and device-only storage remain unchanged. No route, component, dependency, schema, server action, provider, account deletion, deployment or external system changed.
+- The regression guard was proved red first on the missing `.action-preview`; Trust Center and ActionPreview tests then pass 16/16.
+- TypeScript, lint, university typecheck, production build, token export 9/9, design audit/CSS and 69/69 design contracts pass. Existing baselines remain four lint warnings, 86 design-audit warnings and the build chunk warning. The design report regenerates, but its wrapper exits after invoking unavailable `npm`, so no aggregate launcher pass is claimed.
+- Ordered and shuffled full suites were not rerun after pass 30's green 23,872-test baseline.
+- The active HawkScan skill stops at preflight because `hawk` v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. A local properties file exists but was not read; no target, DAST result or security pass is claimed.
+- Permanent file purge remains non-ready pending trash, retention and recovery reconciliation. The scanner/extractor adapter and Import wiring remain closed.
 
 ## Evidence locked in automation pass 31 / slice 39
 

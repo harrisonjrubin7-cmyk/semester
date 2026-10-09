@@ -400,6 +400,16 @@ The slice reuses the current modal, action-preview, device-library and feedback-
 
 HawkScan preflight stops before target startup because neither Hawk nor Docker is installed and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. A local properties file exists but was not read, so no DAST result or security pass is claimed. Permanent file purge remains non-ready until its trash, retention and recovery semantics are reconciled; the next slice must re-rank the remaining consequence-pattern gaps against current repository authority instead of assuming another deletion is safe.
 
+## Governed conversation deletion preview — automation pass 33, slice 41
+
+Current `origin/main` remains `0d8f70b2`, already the branch merge-base; no equivalent Trust Center conversation-preview change landed. Re-ranking the remaining consequence paths selected the existing device-only conversation deletion because its payload and boundary are already explicit: it removes live and archived Semester assistant threads from local storage, leaves profile facts, notes and plans unchanged, and has no recovery. Server-backed revocations, synced facts and permanent file purge remain separate.
+
+The existing `ConfirmDialog` now renders the shared `ActionPreview` with the current thread/message count, the exact live-plus-archive deletion scope, non-effects and irreversible recovery language. The underlying `clearConversations()` mutation, content-free journal fact, safe cancel-first modal behavior and device-only storage boundary are unchanged. No route, shared component, dependency, schema, server operation, provider, account deletion or external system changed.
+
+The focused regression was proved red first because the prior hand-written confirmation had no `.action-preview`; after implementation, Trust Center and ActionPreview tests pass 16/16. TypeScript, lint, university typecheck, production build, 9 token-export tests, design audit/CSS and 69 design contracts pass with the existing four lint, 86 design-audit and chunk-size warning baselines. The design report regenerates, then its wrapper exits 1 because it invokes unavailable `npm`; no aggregate launcher pass is claimed. Ordered/shuffled full suites were not rerun after pass 30's green 23,872-test baseline.
+
+The active HawkScan skill stopped at preflight: `hawk` is absent, its v6 config/skill checks cannot run, Docker is absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. A local properties file exists but was not read. No target was started and no DAST result or security pass is claimed. Permanent file purge remains non-ready; the next local consequence-pattern slice must again be selected only where authority, external effect and recovery are already explicit.
+
 ## What was read
 
 - Root `CLAUDE.md`.

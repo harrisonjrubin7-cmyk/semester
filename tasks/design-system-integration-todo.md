@@ -843,6 +843,25 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep permanent file purge separate until its trash, retention and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-09 governed conversation deletion preview — automation pass 33, slice 41
+
+- [x] Fetch current `origin/main` `0d8f70b2`, confirm it is the branch merge-base and find no equivalent Trust Center conversation-preview change.
+- [x] Select the device-only assistant-conversation deletion after re-ranking remaining consequence paths; keep server revocations, synced facts and permanent file purge separate.
+- [x] Reuse the existing `ConfirmDialog` and `ActionPreview`; name the current conversation/message count, live-plus-archive local payload, profile/notes/plans that remain and the lack of recovery.
+- [x] Preserve `clearConversations()`, content-free journaling, safe cancel-first behavior and the device-only storage boundary; add no route, shared component, dependency, schema or server operation.
+- [x] Prove the focused regression red on the missing `.action-preview`, then pass 16/16 Trust Center and ActionPreview tests.
+- [x] Pass TypeScript, lint, university typecheck and production build with the existing four lint warnings and chunk-size warning.
+- [x] Pass token export 9/9, design audit with zero violations and 86 existing warnings, CSS ledger checks and 69/69 design contracts.
+- [ ] Aggregate design report wrapper — writes the unchanged report, then exits 1 because it invokes unavailable `npm`; no aggregate launcher pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun after pass 30's green 23,872-test baseline; no full-suite result is claimed for this slice.
+- [ ] HawkScan DAST — the active skill stops at preflight because `hawk` v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. A local properties file exists but was not read; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining consequence-pattern gaps and choose only a bounded action with explicit ownership, external effects and recovery.
+- [ ] Keep permanent file purge separate until its trash, retention and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.
