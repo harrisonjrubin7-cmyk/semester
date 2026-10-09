@@ -134,9 +134,10 @@ def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed(
             select(Citation.id).where(Citation.id == unknown_citation_id)
         ) == unknown_citation_id
 
-        connection.execute(
-            SourceChunk.__table__.delete().where(SourceChunk.id == unknown_chunk_id)
-        )
+        # Delete the dependent explicitly: the FK-off test mode must not rely on
+        # SQLite cascade enforcement to prepare the successful downgrade case.
+        connection.execute(Citation.__table__.delete().where(Citation.id == unknown_citation_id))
+        connection.execute(SourceChunk.__table__.delete().where(SourceChunk.id == unknown_chunk_id))
         connection.commit()
         _migrate(connection, command.downgrade, "0001_initial")
         assert not _confidence_nullable(connection)
