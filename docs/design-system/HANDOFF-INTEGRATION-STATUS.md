@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 37 of 120 · **Integration slice** 45 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
+**Automation pass** 38 of 120 · **Integration slice** 46 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 38 / slice 46
+
+- Current `origin/main` remains `0d8f70b2`; no equivalent governed Community-post deletion preview landed.
+- Deleting a signed-in student's own Community post now opens the shared `ConfirmDialog` and `ActionPreview` before the existing authenticated RPC. The preview identifies the post body, its disappearance from the author view and member feeds, the server's active-review evidence-retention branch, the permanent-delete branch when no active review exists, unaffected membership/account/other posts and the lack of recovery.
+- Cancel performs no RPC. Explicit confirmation invokes the unchanged owner-checked `delete_community_post` operation for the selected id; server authorization, review preservation, cascades, media retention/sweep behavior and audit boundaries are unchanged.
+- The focused guard was proved red against the prior immediate RPC. Community and ActionPreview suites pass 42/42.
+- TypeScript, lint, university typecheck and production build pass. Existing baselines remain four lint warnings and the chunk-size warning. Token export passes 9/9, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and 69/69 design contracts pass.
+- The design report regenerates unchanged, then its aggregate wrapper exits after invoking unavailable `npm`; no aggregate launcher pass is claimed. Ordered and shuffled full suites were not rerun after pass 30's green 23,872-test baseline.
+- The active HawkScan skill stops at preflight because Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. The detected local properties file was not read; no target, DAST result or security pass is claimed.
+- Permanent file purge and same-origin demo reset remain separate. Scanner/extractor-backed Import remains externally gated; the next slice requires a fresh dependency and consequence-path ranking.
 
 ## Evidence locked in automation pass 37 / slice 45
 

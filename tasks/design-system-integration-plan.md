@@ -450,6 +450,16 @@ The focused guard was proved red against the missing action preview, then 26 App
 
 The active HawkScan skill stops at preflight: Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the detected local properties file was not read. No target, DAST result or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next local slice requires another fresh ranking.
 
+## Governed Community-post deletion preview — automation pass 38, slice 46
+
+Current `origin/main` remains `0d8f70b2`; no equivalent Community deletion-preview work landed. Re-ranking selected the existing signed-in student's own-post deletion because the server operation is already owner-checked and its two outcomes are explicit: a post with an active case is withdrawn while evidence survives for authorized review, and a post without an active case is permanently deleted. This is a narrower, authority-backed consequence path than permanent file purge or the same-origin demo reset.
+
+The prior immediate `delete_community_post` call now opens the existing `ConfirmDialog` and `ActionPreview`. It names the selected post, removal from author/member views, the active-review retention branch, the no-active-review permanent-delete branch, unaffected membership/account/other posts and the lack of recovery. Cancel calls no RPC; confirmation closes the dialog and invokes the unchanged authenticated client operation for the selected id. No route, shared component, dependency, schema, policy, RPC, provider or external system changed.
+
+The focused guard was proved red against the missing preview, then Community and ActionPreview suites passed 42/42. TypeScript, lint, university typecheck and production build pass with the existing four lint and chunk warnings. Token export passes 9/9, design audit remains at zero violations with 86 existing warnings, CSS remains within its ledger and 69/69 design contracts pass. The design report regenerates before its wrapper exits because `npm` is unavailable; no aggregate launcher pass is claimed. Ordered/shuffled full suites were not rerun after pass 30's green baseline.
+
+The active HawkScan skill stops at preflight: Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the detected local properties file was not read. No target, scan or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next local slice requires a fresh ranking.
+
 ## What was read
 
 - Root `CLAUDE.md`.

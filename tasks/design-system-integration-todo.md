@@ -942,6 +942,26 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-09 governed Community-post deletion preview — automation pass 38, slice 46
+
+- [x] Fetch current `origin/main` `0d8f70b2` and confirm no equivalent governed Community-post deletion preview landed.
+- [x] Re-rank the remaining consequence paths and select the existing owner-checked authenticated post deletion; keep permanent file purge and the same-origin demo reset separate.
+- [x] Replace the immediate client RPC with the existing `ConfirmDialog` and `ActionPreview`; add no route, shared component, dependency, schema, policy or server operation.
+- [x] Name the selected post, author/member visibility change, active-review evidence retention, no-active-review permanent deletion, unaffected membership/account/other posts and irreversible recovery.
+- [x] Verify cancel calls no RPC and explicit confirmation calls the unchanged owner-checked `delete_community_post` path for the selected id.
+- [x] Prove the focused guard red against the missing preview, then pass 42/42 Community and ActionPreview tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass token export 9/9, design audit with zero violations and 86 existing warnings, CSS ledger checks, 69/69 design contracts and design-report generation.
+- [ ] Aggregate design report/check launchers — unavailable because this environment has no `npm`; exact constituents pass and the report regenerates before its wrapper exits.
+- [ ] Ordered and shuffled full suites — not rerun after pass 30's green 23,872-test baseline; no full-suite result is claimed for this bounded client slice.
+- [ ] HawkScan DAST — the active skill stops at preflight because Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. A local properties file exists but was not read; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.
