@@ -1274,3 +1274,21 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable student-entered bill-row removal — automation pass 9, integration slice 60
+
+- [x] Re-fetch and reconcile current `origin/main` `e128a526`; confirm it is already an ancestor and contains no equivalent `dropCharge`, `dropAid` or `dropPayment` Undo registration.
+- [x] Re-rank remaining consequence paths and select the three student-entered Bill rows as one bounded screen/state-owner slice; keep university ledgers, official aid decisions, money movement, permanent purge, broad demo reset and scanner-backed Import outside the mutation.
+- [x] Add each action to the shared eight-second Undo contract with only its exact field: `charges`, `aid` or `payments`.
+- [x] Preserve the existing Bill route, row-specific accessible remove names, `student_entered` provenance, export behavior and official payment deep-link boundary.
+- [x] Prove the registry/snapshot guard red in two assertions, then pass 295/295 focused Undo, reducer, bill, export and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 147/147 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and design-report generation with all contracts passing.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — the active skill stops at preflight because `hawk` and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

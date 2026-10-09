@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-09 · **Latest observed `origin/main`** `34ac2e1d` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-09 · **Latest observed `origin/main`** `e128a526` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -633,3 +633,13 @@ Current `origin/main` `e128a526` is already an ancestor of the branch and contai
 The pre-implementation guard failed in the two expected places, proving the missing registry entry and snapshot. After implementation, 164 focused Undo, reducer, mailbox and mail-rule tests pass. TypeScript, lint, university typecheck and production build pass with the existing four lint and chunk-size warnings. The 78 token/design contracts pass; design audit remains at zero violations with 86 existing warnings; CSS stays within its ledger; and the design report regenerates unchanged. Its wrapper exits after writing because this shell has no `npm`; ordered and shuffled full suites were not rerun for this bounded state-contract slice.
 
 The required HawkScan skill stopped at preflight: Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the detected local properties file was not read. No live target, DAST result or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
+
+## Recoverable student-entered bill-row removal — automation pass 9, integration slice 60
+
+Current `origin/main` `e128a526` remains an ancestor of the clean branch and contains no `dropCharge`, `dropAid` or `dropPayment` Undo registration. Re-ranking selected the three remove controls on the existing Bill screen as one bounded finance-planning slice: all three operate only on student-entered device state, share the same screen and state owner, and are explicitly separate from the university ledger, official aid decisions and money movement.
+
+Each removal now enters the shared eight-second Undo path with one isolated field: `charges`, `aid` or `payments`. Undo restores the exact row and order for that list without reverting a later change in either of the other two bill lists. The existing Bill route, accessible row-specific remove names, `student_entered` provenance badge, export coverage and official-payment deep-link boundary remain unchanged. No route, UI component, dependency, schema, server operation, provider behavior, university record or external system changed.
+
+The pre-implementation guard failed in the two expected Undo-registry/snapshot assertions. After implementation, 295 focused Undo, reducer, bill arithmetic/provenance/form, export and root-unmount tests pass. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. The 147 token/design contracts pass; design audit remains at zero violations with 86 existing warnings; CSS stays within its ledger; and the design report regenerates with every contract passing. Ordered and shuffled full suites were not rerun for this bounded state-contract slice.
+
+The required HawkScan skill stopped at preflight: `hawk version`, `hawk config --help` and `hawk skills status` cannot run because Hawk is absent; Docker is absent; and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No target, DAST result or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.

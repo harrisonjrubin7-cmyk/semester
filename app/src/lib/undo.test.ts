@@ -55,6 +55,18 @@ describe('which actions can be taken back', () => {
       label: 'Mail rule deleted',
       fields: ['mailRules'],
     });
+    expect(undoableFor('dropCharge')).toEqual({
+      label: 'Charge removed',
+      fields: ['charges'],
+    });
+    expect(undoableFor('dropAid')).toEqual({
+      label: 'Aid entry removed',
+      fields: ['aid'],
+    });
+    expect(undoableFor('dropPayment')).toEqual({
+      label: 'Payment record removed',
+      fields: ['payments'],
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
@@ -120,6 +132,12 @@ describe('the snapshot', () => {
   it('keeps only the student-created mail rules', () => {
     const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.dropMailRule, AT);
     expect(Object.keys(took.was)).toEqual(['mailRules']);
+  });
+
+  it('keeps each student-entered bill list separate', () => {
+    expect(Object.keys(snapshot(DEFAULT_PERSISTED, UNDOABLE.dropCharge, AT).was)).toEqual(['charges']);
+    expect(Object.keys(snapshot(DEFAULT_PERSISTED, UNDOABLE.dropAid, AT).was)).toEqual(['aid']);
+    expect(Object.keys(snapshot(DEFAULT_PERSISTED, UNDOABLE.dropPayment, AT).was)).toEqual(['payments']);
   });
 
   it('carries the label and the moment', () => {

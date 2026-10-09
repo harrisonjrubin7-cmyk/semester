@@ -963,6 +963,59 @@ describe('taking it back', () => {
     expect(back.undone).toBeNull();
   });
 
+  it.each([
+    {
+      action: 'dropCharge' as const,
+      field: 'charges' as const,
+      label: 'Charge removed',
+      rows: [
+        { id: 'tuition', term: '2026FA', what: 'Tuition', kind: 'tuition' as const, cents: 320000, at: 1 },
+        { id: 'housing', term: '2026FA', what: 'Housing', kind: 'housing' as const, cents: 180000, at: 2 },
+      ],
+    },
+    {
+      action: 'dropAid' as const,
+      field: 'aid' as const,
+      label: 'Aid entry removed',
+      rows: [
+        { id: 'grant', term: '2026FA', what: 'Need-based grant', kind: 'grant' as const, cents: 90000, pending: false, at: 1 },
+        { id: 'scholarship', term: '2026FA', what: 'Scholarship', kind: 'scholarship' as const, cents: 50000, pending: true, at: 2 },
+      ],
+    },
+    {
+      action: 'dropPayment' as const,
+      field: 'payments' as const,
+      label: 'Payment record removed',
+      rows: [
+        { id: 'first', term: '2026FA', what: 'First instalment', cents: 70000, on: '2026-08-15', at: 1 },
+        { id: 'second', term: '2026FA', what: 'Second instalment', cents: 70000, on: '2026-09-15', at: 2 },
+      ],
+    },
+  ])('restores one student-entered bill row without reverting the other bill lists: $field', ({ action, field, label, rows }) => {
+    const otherCharge = { id: 'fees', term: '2026FA', what: 'Fees', kind: 'fees' as const, cents: 10000, at: 3 };
+    const otherAid = { id: 'loan', term: '2026FA', what: 'Student loan', kind: 'loan' as const, cents: 10000, pending: true, at: 3 };
+    const otherPayment = { id: 'deposit', term: '2026FA', what: 'Deposit', cents: 10000, on: '2026-07-15', at: 3 };
+    const s: State = {
+      ...blank(),
+      charges: field === 'charges' ? rows as State['charges'] : [otherCharge],
+      aid: field === 'aid' ? rows as State['aid'] : [otherAid],
+      payments: field === 'payments' ? rows as State['payments'] : [otherPayment],
+    };
+
+    const gone = reducer(s, { type: action, id: rows[0].id });
+    expect(gone[field]).toEqual([rows[1]]);
+    expect(gone.undone?.label).toBe(label);
+
+    const changedElsewhere = field === 'charges'
+      ? reducer(gone, { type: 'addAid', aid: { term: '2026FA', what: 'New grant', kind: 'grant', cents: 5000, pending: true } })
+      : reducer(gone, { type: 'addCharge', charge: { term: '2026FA', what: 'Books', kind: 'other', cents: 5000 } });
+    const back = reducer(changedElsewhere, { type: 'undo' });
+    expect(back[field]).toEqual(rows);
+    if (field === 'charges') expect(back.aid).toHaveLength(2);
+    else expect(back.charges).toHaveLength(2);
+    expect(back.undone).toBeNull();
+  });
+
   it('offers nothing for an action that only edits', () => {
     // An edit leaves the thing there to edit back.
     const s = twoNotes();

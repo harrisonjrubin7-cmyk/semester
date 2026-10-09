@@ -121,6 +121,10 @@ export const UNDOABLE: Record<string, Undoable> = {
   removeUpdate: { label: 'Course material removed', fields: ['updates', 'courses'] },
   deleteEquation: { label: 'Equation removed', fields: ['equations'] },
   clearPlan: { label: 'Study plan dropped', fields: ['sessions', 'liveSession'] },
+  // Student-entered planning rows, never the school's ledger or a money movement.
+  dropCharge: { label: 'Charge removed', fields: ['charges'] },
+  dropAid: { label: 'Aid entry removed', fields: ['aid'] },
+  dropPayment: { label: 'Payment record removed', fields: ['payments'] },
   dropSource: { label: 'Source removed', fields: ['sources'] },
   dropSitting: { label: 'Paper removed', fields: ['sittings'] },
   /*
