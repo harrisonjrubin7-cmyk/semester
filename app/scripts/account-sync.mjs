@@ -360,7 +360,11 @@ async function journey(label, viewport) {
     // the other two would pass this step by discarding a side. Its confirm
     // button is named exactly that; the options' names carry their blurbs.
     const ask = other.getByRole('dialog', { name: 'Which copy to keep' });
-    if (await visible(ask, 5_000)) {
+    // The phone viewport can still be reconciling its first local copy after
+    // sign-in when the shell reports success. Give the adoption decision the
+    // same bounded window as the sync it controls instead of racing it with a
+    // five-second probe and then asserting against the pre-adoption copy.
+    if (await visible(ask, SETTLE)) {
       notes.push(`${label}: the second device asked which copy to keep; kept both`);
       await ask.getByRole('button', { name: /^keep both$/i }).click();
       await ask.waitFor({ state: 'hidden', timeout: WAIT });
