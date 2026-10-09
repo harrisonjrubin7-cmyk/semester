@@ -261,3 +261,12 @@ This mapping adds no archive route, role, capability, schema or provider claim. 
 | Whole-task removal and broader recovery | `app/src/lib/undo.ts`, `app/src/components/Undone.tsx` | Existing and unchanged. Whole-task deletion already has its own `deleteTask` Undo entry; this slice adds no history stack, backup claim, server persistence or cross-device rollback. |
 
 This mapping adds no archive route, role, capability, schema or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 8 current-product consequence mapping — integration slice 59
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for deleting a student-created Semester Mail rule | `app/src/components/mail/Rules.tsx`, `app/src/state/slices/mailbox.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: `dropMailRule` now enters the shared eight-second Undo path and snapshots only `mailRules`. Undo restores the exact search/action rule and order while preserving later message marks. The two red-before-green assertions and reducer integration guard are included in 164 focused passing tests. |
+| Provider and mailbox history boundary | `app/src/lib/mailrules.ts`, `app/src/lib/mailbox.ts` | Existing and unchanged. Rules are an account-local derived layer beneath explicit message marks; deleting or restoring one does not mutate provider mail, replay historical effects or overwrite later read, star, label, folder or snooze actions. |
+
+This mapping adds no archive route, role, capability, schema or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.

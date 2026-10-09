@@ -935,6 +935,34 @@ describe('taking it back', () => {
     expect(back.undone).toBeNull();
   });
 
+  it('restores a deleted mail rule without reverting a later message mark', () => {
+    const rule = {
+      id: 'course-mail',
+      name: 'Course mail',
+      when: 'course:econ',
+      label: 'ECON 1020',
+      created: 1,
+    } as State['mailRules'][number];
+    const kept = {
+      id: 'newsletters',
+      name: 'Newsletters',
+      when: 'from:noreply',
+      folder: 'archive',
+      created: 2,
+    } as State['mailRules'][number];
+    const s: State = { ...blank(), mailRules: [rule, kept] };
+
+    const gone = reducer(s, { type: 'dropMailRule', id: rule.id });
+    expect(gone.mailRules).toEqual([kept]);
+    expect(gone.undone?.label).toBe('Mail rule deleted');
+
+    const marked = reducer(gone, { type: 'markMail', ids: ['message-1'], mark: { read: true } });
+    const back = reducer(marked, { type: 'undo' });
+    expect(back.mailRules).toEqual([rule, kept]);
+    expect(back.mailMarks['message-1']).toEqual({ read: true });
+    expect(back.undone).toBeNull();
+  });
+
   it('offers nothing for an action that only edits', () => {
     // An edit leaves the thing there to edit back.
     const s = twoNotes();

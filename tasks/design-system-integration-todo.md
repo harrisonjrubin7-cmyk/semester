@@ -783,6 +783,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 ### Next implementation boundary
 
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 - [ ] Keep external reconciliation, safe ICS publication, signed reads, scheduling, deployment and production operation separate.
 
 ## 2026-10-09 full-suite reconciliation — automation pass 30, slice 38
@@ -1248,6 +1249,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Aggregate design report/check launchers — `npm`/`npx` are unavailable; the report regenerates before its wrapper exits and the exact constituents pass, so no aggregate launcher pass is claimed.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded device-only recovery slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
 - [ ] HawkScan DAST — required after this production change, but preflight confirms the Hawk CLI, Docker runtime and target host are absent; a local credential properties file exists but was not read. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable Semester Mail rule deletion — automation pass 8, integration slice 59
+
+- [x] Re-fetch and reconcile current `origin/main` `e128a526`; confirm it is already an ancestor and contains no equivalent `dropMailRule` Undo registration.
+- [x] Re-rank remaining consequence paths and select only the student-created Semester Mail rule; keep provider mailbox state, permanent purge, broad demo reset and scanner-backed Import outside the mutation.
+- [x] Add `dropMailRule` to the existing eight-second Undo contract with only `mailRules`; preserve later read, star, label, folder and snooze marks.
+- [x] Retain the existing named delete control and rule semantics; add no route, component, dependency, schema, server operation or provider behavior.
+- [x] Prove the guard red in two focused assertions, then pass 164/164 Undo, reducer, mailbox and mail-rule tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and unchanged design-report generation.
+- [ ] Aggregate design-report/check launchers — the report writes successfully, then its wrapper exits because this shell has no `npm`; exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — the active skill stops at preflight because Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the local properties file was not read. No target, scan or security pass is claimed.
 
 ### Next implementation boundary
 

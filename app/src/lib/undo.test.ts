@@ -51,6 +51,10 @@ describe('which actions can be taken back', () => {
       fields: ['tasks'],
       onChange: true,
     });
+    expect(undoableFor('dropMailRule')).toEqual({
+      label: 'Mail rule deleted',
+      fields: ['mailRules'],
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
@@ -111,6 +115,11 @@ describe('the snapshot', () => {
     const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.dropStep, AT);
     expect(Object.keys(took.was)).toEqual(['tasks']);
     expect(UNDOABLE.dropStep.onChange).toBe(true);
+  });
+
+  it('keeps only the student-created mail rules', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.dropMailRule, AT);
+    expect(Object.keys(took.was)).toEqual(['mailRules']);
   });
 
   it('carries the label and the moment', () => {
