@@ -56,6 +56,12 @@ create index if not exists registration_readiness_open_tasks
   on private.registration_readiness_tasks (tenant_id, evaluation_id, generation)
   where state = 'open';
 
+-- The partial open-task index serves the read path but cannot cover the
+-- foreign key for resolved rows. Keep an unqualified prefix for deletes and
+-- parent-key updates across every task state.
+create index if not exists registration_readiness_tasks_evaluation_fk
+  on private.registration_readiness_tasks (tenant_id, evaluation_id);
+
 create table if not exists private.registration_readiness_receipts (
   tenant_id       text not null,
   evaluation_id   text not null,
@@ -80,6 +86,9 @@ create table if not exists private.registration_readiness_receipts (
   foreign key (tenant_id, evaluation_id)
     references private.registration_readiness_evaluations (tenant_id, id) on delete cascade
 );
+
+create index if not exists registration_readiness_receipts_evaluation_fk
+  on private.registration_readiness_receipts (tenant_id, evaluation_id);
 
 alter table private.registration_readiness_evaluations enable row level security;
 alter table private.registration_readiness_tasks enable row level security;

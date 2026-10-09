@@ -85,6 +85,16 @@ begin
         (select has_table_privilege('authenticated', 'private.' || t, p)::int), 0);
     end loop;
   end loop;
+  perform pg_temp.counted('both composite foreign keys have an unqualified covering index', (
+    select count(*)::integer
+      from pg_indexes
+     where schemaname = 'private'
+       and indexname in (
+         'registration_readiness_tasks_evaluation_fk',
+         'registration_readiness_receipts_evaluation_fk'
+       )
+       and indexdef not like '% WHERE %'
+  ), 2);
   foreach f in array array[
     'registration_readiness_get(text,text)',
     'registration_readiness_save(text,integer,text,jsonb)'
