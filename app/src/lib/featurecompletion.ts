@@ -25,7 +25,7 @@ export const FEATURE_COMPLETION_GATES = [
   { id: 'FC-18', title: 'Runbook, metrics, owner and feature flag exist' },
 ] as const;
 
-export type FeatureGateId = (typeof FEATURE_COMPLETION_GATES)[number][0];
+export type FeatureGateId = (typeof FEATURE_COMPLETION_GATES)[number]['id'];
 export type FeatureGateStatus = 'met' | 'partial' | 'missing' | 'not-applicable';
 
 export interface FeatureEvidence {
@@ -137,4 +137,69 @@ export function validateFeatureCompletion(
     }
   }
   return problems;
+}
+
+const gateTitle = (id: FeatureGateId): string =>
+  FEATURE_COMPLETION_GATES.find((gate) => gate.id === id)?.title ?? id;
+
+export function renderFeatureCompletion(record: FeatureCompletionRecord): string {
+  const summary = completionSummary(record);
+  const rows = record.gates.map((gate) => {
+    const evidenceText = gate.evidence.length === 0
+      ? 'None.'
+      : gate.evidence.map((item) => `\`${item.path}\` — ${item.shows}`).join('<br>');
+    return `| ${gate.id} | ${gateTitle(gate.id)} | ${gate.status} | ${evidenceText} | ${gate.gap || 'None.'} |`;
+  });
+  return `# ${record.name} feature completion
+
+<!-- Rendered from app/src/lib/featurecompletion.ts by featurecompletion.test.ts. Edit the registry, then run npm run registers from app/. -->
+
+> **Status:** ${summary.complete ? 'complete' : 'not complete'} · ${summary.met} met · ${summary.partial} partial · ${summary.missing} missing · ${summary.notApplicable} not applicable
+
+This page is repository evidence, not a deployment, institution approval, live
+integration, production activation or general-availability claim.
+
+## Objective
+
+- Problem: ${record.problem}
+- Primary actor: ${record.primaryActor}
+- Owner: ${record.owner}
+- Declared complete: ${record.declaredComplete ? 'yes' : 'no'}
+
+## Truth boundary
+
+${record.truthBoundary}
+
+## Eighteen-point gate
+
+| Gate | Requirement | Status | Repository evidence | Remaining gap |
+| --- | --- | --- | --- | --- |
+${rows.join('\n')}
+
+## Blocking gates
+
+${summary.blockingGateIds.length === 0
+    ? 'None in the repository contract. External release gates still apply.'
+    : summary.blockingGateIds.map((id) => `- ${id}: ${gateTitle(id)}`).join('\n')}
+`;
+}
+
+export function renderFeatureCompletionIndex(): string {
+  const rows = FEATURE_COMPLETION_RECORDS.map((record) => {
+    const summary = completionSummary(record);
+    return `| [${record.name}](./${record.id}.md) | ${summary.complete ? 'complete' : 'not complete'} | ${summary.met} | ${summary.partial} | ${summary.missing} | ${summary.blockingGateIds.join(', ') || 'None'} |`;
+  });
+  return `# Feature completion evidence
+
+<!-- Rendered from app/src/lib/featurecompletion.ts by featurecompletion.test.ts. Edit the registry, then run npm run registers from app/. -->
+
+This register applies the PDF's eighteen-point completion contract to each
+vertical slice. A feature is complete only when every applicable gate is met.
+Prototype routes, documentation, local tests and repository scaffolding remain
+separate from deployment, live integration, institutional approval and GA.
+
+| Feature | Repository status | Met | Partial | Missing | Blocking gates |
+| --- | --- | ---: | ---: | ---: | --- |
+${rows.join('\n')}
+`;
 }

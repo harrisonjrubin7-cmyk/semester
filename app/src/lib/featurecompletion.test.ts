@@ -1,12 +1,17 @@
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   FEATURE_COMPLETION_GATES,
   FEATURE_COMPLETION_RECORDS,
   completionSummary,
+  renderFeatureCompletion,
+  renderFeatureCompletionIndex,
   validateFeatureCompletion,
 } from './featurecompletion';
+
+const root = join(import.meta.dirname, '../../..');
+const docsDir = join(root, 'docs/features');
 
 const EXPECTED_GATES = [
   'Problem and primary actor defined',
@@ -53,11 +58,29 @@ describe('feature completion gate', () => {
     expect(summary).toMatchObject({ complete: false, met: 10, partial: 7, missing: 1, notApplicable: 0 });
     expect(validateFeatureCompletion()).toEqual([]);
 
-    const root = join(import.meta.dirname, '../../..');
     for (const gate of record.gates) {
       for (const evidence of gate.evidence) {
         expect(existsSync(join(root, evidence.path)), `${gate.id}: ${evidence.path}`).toBe(true);
       }
+    }
+  });
+
+  it('renders an index and exact feature evidence pages', () => {
+    const indexPath = join(docsDir, 'README.md');
+    if (process.env.REGISTERS === 'write') {
+      mkdirSync(docsDir, { recursive: true });
+      writeFileSync(indexPath, renderFeatureCompletionIndex());
+      for (const record of FEATURE_COMPLETION_RECORDS) {
+        writeFileSync(join(docsDir, `${record.id}.md`), renderFeatureCompletion(record));
+      }
+    }
+
+    expect(existsSync(indexPath), indexPath).toBe(true);
+    expect(readFileSync(indexPath, 'utf8')).toBe(renderFeatureCompletionIndex());
+    for (const record of FEATURE_COMPLETION_RECORDS) {
+      const path = join(docsDir, `${record.id}.md`);
+      expect(existsSync(path), path).toBe(true);
+      expect(readFileSync(path, 'utf8')).toBe(renderFeatureCompletion(record));
     }
   });
 
