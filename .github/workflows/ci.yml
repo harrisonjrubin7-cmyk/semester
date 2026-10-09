@@ -82,6 +82,30 @@ jobs:
       - name: Install
         run: npm ci
 
+      # The implementation-control registry is an executable claim boundary.
+      # CI checks that every registry reference and evidence path resolves,
+      # that maturity cannot skip an unproven gate, and that committed reports
+      # are exactly what the current source records generate. The release
+      # report is informational here: a truthful blocked decision is valid
+      # registry output, while `npm run release:check` remains the blocking
+      # command for an actual release attempt.
+      - name: Validate the platform-control registry
+        run: |
+          npx tsc -p packages/platform-control/tsconfig.json
+          npm run registry:validate
+          npm run platform-control:test
+          npm run registry:build
+          npm run release:report
+          git diff --exit-code -- packages/platform-control/generated
+
+      - name: Keep platform-control reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: platform-control-reports
+          path: packages/platform-control/generated/
+          if-no-files-found: error
+
       # ── Advisories published since the lockfile was written ──────────────
       #
       # Everything else in this job asks whether the code is right. This asks
