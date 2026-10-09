@@ -164,7 +164,7 @@ The full, tested version is [`reference/tasks.ts`](../../packages/platform/src/r
 
 ## Running it
 
-From `app/` (the repository root has no scripts; see `CLAUDE.md`):
+From `app/` (the repository root scripts are reserved for platform-control registry operations; see `CLAUDE.md`):
 
 ```bash
 npx vitest run ../packages/platform/src   # the platform's own suite
