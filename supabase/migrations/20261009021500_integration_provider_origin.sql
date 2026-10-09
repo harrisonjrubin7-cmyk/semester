@@ -8,7 +8,8 @@ alter table public.integration_connections
 alter table public.integration_connections
   add constraint integration_provider_base_url_shape check (
     provider_base_url is null
-    or length(provider_base_url) between 12 and 300
+    or length(provider_base_url) >= 12
+      and length(provider_base_url) <= 300
       and provider_base_url ~ '^https://[A-Za-z0-9.-]+(:443)?$'
       and provider_base_url !~ '@'
   );
