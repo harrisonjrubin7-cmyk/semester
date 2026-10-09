@@ -113,6 +113,7 @@ export const UNDOABLE: Record<string, Undoable> = {
    * an undo strip nobody reads.
    */
   moveMail: { label: 'Moved', fields: ['mailMarks'], onChange: true },
+  removeFeed: { label: 'Calendar and its events removed', fields: ['feeds', 'feedEvents'] },
   dropSource: { label: 'Source removed', fields: ['sources'] },
   dropSitting: { label: 'Paper removed', fields: ['sittings'] },
   /*
