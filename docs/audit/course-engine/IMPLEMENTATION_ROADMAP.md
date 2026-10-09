@@ -15,7 +15,7 @@ Exit: merge review, complete browser journey tests, run DAST in a credentialed e
 
 ## Phase 1 — Student core
 
-1. Build the protected source viewer with page/slide/cell/timestamp highlighting and correction actions.
+1. Extend the protected source viewer from location-labeled chunks to exact bounding-box highlighting and correction actions. Owner-scoped source inspection, focus management, and protected original download are implemented.
 2. Finish review resolution UI and calendar editing with consequence preview and undo.
 3. Add worker polling/cancellation and failure recovery.
 4. Complete Cards, Read, Quiz, and Doc interactions against real stored asset shapes.
