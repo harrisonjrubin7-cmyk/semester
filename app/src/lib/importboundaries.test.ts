@@ -25,7 +25,7 @@ function sourcesUnder(dir: string, into: Record<string, string>) {
     if (SKIP.has(name)) continue;
     const at = `${dir}/${name}`;
     if (statSync(join(root, at)).isDirectory()) sourcesUnder(at, into);
-    else if (/\.(ts|tsx|mts|mjs|js)$/.test(name) && !/\.d\.ts$/.test(name)) into[at] = readFileSync(join(root, at), 'utf8');
+    else if (/\.(ts|tsx|mts|mjs|js|jsx)$/.test(name) && !/\.d\.ts$/.test(name)) into[at] = readFileSync(join(root, at), 'utf8');
   }
 }
 
