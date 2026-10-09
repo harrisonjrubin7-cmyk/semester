@@ -1,0 +1,14 @@
+{
+  "name": "@semester/platform-control",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "validate": "node --experimental-strip-types scripts/validate-registry.ts",
+    "build:registry": "node --experimental-strip-types scripts/build-atlas.ts",
+    "check:release": "node --experimental-strip-types scripts/check-release.ts",
+    "tenant:create": "node --experimental-strip-types scripts/create-tenant.ts",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}
