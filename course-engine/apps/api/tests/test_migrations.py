@@ -36,10 +36,17 @@ def _migrate(connection, operation, revision: str) -> None:
     # around its required batch-table rebuild, then prove they were restored.
     if connection.in_transaction():
         connection.commit()
+    expected_foreign_keys = None
+    if connection.dialect.name == "sqlite":
+        expected_foreign_keys = connection.exec_driver_sql("PRAGMA foreign_keys").scalar_one()
+        connection.rollback()
     operation(_config(connection), revision)
     if connection.dialect.name == "sqlite":
-        assert connection.exec_driver_sql("PRAGMA foreign_keys").scalar_one() == 1
+        actual_foreign_keys = connection.exec_driver_sql("PRAGMA foreign_keys").scalar_one()
+        assert actual_foreign_keys == expected_foreign_keys
         assert connection.exec_driver_sql("PRAGMA foreign_key_check").all() == []
+        connection.rollback()
+    assert not connection.in_transaction()
 
 
 def _seed_cited_chunk(connection, confidence: float | None) -> tuple[object, object]:
@@ -74,10 +81,19 @@ def _seed_cited_chunk(connection, confidence: float | None) -> tuple[object, obj
         return chunk.id, citation.id
 
 
-def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed():
+@pytest.mark.parametrize("sqlite_foreign_keys", [False, True])
+def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed(
+    sqlite_foreign_keys: bool,
+):
     database_url = os.environ["MIGRATION_TEST_DATABASE_URL"]
     engine = create_engine(database_url)
+    if engine.dialect.name != "sqlite" and sqlite_foreign_keys:
+        pytest.skip("PostgreSQL does not have SQLite PRAGMA modes")
     if engine.dialect.name == "sqlite":
+        engine.dispose()
+        database_url = f"{database_url}-fk-{'on' if sqlite_foreign_keys else 'off'}"
+        engine = create_engine(database_url)
+    if engine.dialect.name == "sqlite" and sqlite_foreign_keys:
         event.listen(
             engine,
             "connect",
@@ -104,8 +120,12 @@ def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed():
             _migrate(connection, command.downgrade, "0001_initial")
 
         if engine.dialect.name == "sqlite":
-            assert connection.exec_driver_sql("PRAGMA foreign_keys").scalar_one() == 1
+            assert connection.exec_driver_sql("PRAGMA foreign_keys").scalar_one() == int(
+                sqlite_foreign_keys
+            )
             assert connection.exec_driver_sql("PRAGMA foreign_key_check").all() == []
+            connection.rollback()
+            assert not connection.in_transaction()
         assert MigrationContext.configure(connection).get_current_revision() == "0002_review_first_confidence"
         assert connection.scalar(
             select(SourceChunk.confidence).where(SourceChunk.id == unknown_chunk_id)
