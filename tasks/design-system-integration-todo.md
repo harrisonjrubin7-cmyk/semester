@@ -982,6 +982,26 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-09 governed Opportunities-tracker deletion preview — automation pass 40, slice 48
+
+- [x] Fetch current `origin/main` `0d8f70b2`, confirm it is already merged and find no equivalent Opportunities deletion-preview work.
+- [x] Re-rank dependency-ready consequence paths and select the one-entry student-owned Opportunities tracker deletion; keep permanent file purge and same-origin demo reset separate.
+- [x] Replace immediate device-library deletion with the existing `ConfirmDialog` and `ActionPreview`; add no route, shared component, dependency, schema, policy or server operation.
+- [x] Name the opportunity and every removed field; preserve other opportunities, the weekly time budget, official listings and external employer/lab/program/office state.
+- [x] State the truthful recovery boundary: this tracker has no undo, separate export or device-workspace backup. Verify Cancel preserves the edited entry and explicit confirmation removes only the selected id.
+- [x] Prove the focused guard red against immediate deletion, then pass 32/32 journey, ActionPreview, modal-accessibility and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass token export 9/9, design audit with zero violations and 86 existing warnings, CSS ledger checks, 100/100 token/design/responsive contracts and design-report generation.
+- [ ] Aggregate npm launchers — unavailable because this shell has no `npm`; exact constituents pass and the report regenerates before its wrapper exits.
+- [ ] Ordered and shuffled full suites — not rerun after pass 30's green 23,872-test baseline; no full-suite result is claimed for this bounded client slice.
+- [ ] HawkScan DAST — the active skill stops at preflight because Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. A local properties file exists but was not read; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.

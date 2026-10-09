@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 39 of 120 · **Integration slice** 47 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
+**Automation pass** 40 of 120 · **Integration slice** 48 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 40 / slice 48
+
+- Current `origin/main` remains `0d8f70b2`; no equivalent governed Opportunities-tracker deletion preview landed.
+- Deleting one student-owned opportunity now opens the shared `ConfirmDialog` and `ActionPreview` before the existing device-library filter. The preview names the selected entry, every local tracker field removed, preserved opportunities/time budget/external systems and the lack of undo or backup.
+- Cancel preserves the edited entry. Explicit confirmation invokes the unchanged selected-id filter; no employer, lab, program, campus office, official listing or other tracked opportunity changes.
+- The focused guard was proved red against the prior immediate deletion. Journey, ActionPreview, modal-accessibility and root-unmount suites pass 32/32.
+- TypeScript, lint, university typecheck and production build pass. Existing baselines remain four lint warnings and the chunk-size warning. Token export passes 9/9, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and 100/100 token/design/responsive contracts pass.
+- The design report regenerates before its wrapper exits because `npm` is unavailable; no aggregate launcher pass is claimed. Ordered and shuffled full suites were not rerun after pass 30's green 23,872-test baseline.
+- The active HawkScan skill stops at preflight because Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. The detected local properties file was not read; no target, DAST result or security pass is claimed.
+- Permanent file purge and same-origin demo reset remain separate. Scanner/extractor-backed Import remains externally gated; the next slice requires a fresh dependency and consequence-path ranking.
 
 ## Evidence locked in automation pass 39 / slice 47
 

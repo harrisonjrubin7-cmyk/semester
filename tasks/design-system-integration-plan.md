@@ -470,6 +470,16 @@ The focused guard was proved red against the browser-native prompt, then 32 form
 
 The active HawkScan skill stops at preflight: Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the detected local properties file was not read. No target, DAST result or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next local slice requires another fresh dependency/consequence ranking.
 
+## Governed Opportunities-tracker deletion preview — automation pass 40, slice 48
+
+Current `origin/main` remains `0d8f70b2`; its Opportunities history contains no equivalent deletion preview. Re-ranking selected the existing student-owned Opportunities tracker deletion because it removes one bounded device record, changes no employer, lab, program, campus-office or official listing state, and has an explicit recovery boundary: the tracker is deliberately outside the device workspace backup and exposes no separate export.
+
+The prior immediate device-library filter now opens the existing `ConfirmDialog` and `ActionPreview`. The preview names the selected opportunity; the organization, stage, deadline, source link, checklist, private work-study flag, evidence, reference tracking, skills, hours estimate and notes removed; the other opportunities, weekly time budget and outside systems preserved; and the absence of undo or backup. Cancel preserves the edited entry. Explicit confirmation closes the dialog and invokes the unchanged selected-id filter. No route, shared component, dependency, schema, policy, server operation, provider or external system changed.
+
+The focused guard was proved red against the immediate deletion, then 32 journey, ActionPreview, modal-accessibility and root-unmount tests passed. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. Token export passes 9/9, design audit remains at zero violations with 86 existing warnings, CSS remains within its ledger and 100/100 token/design/responsive contracts pass. The design report regenerates before its wrapper exits because `npm` is unavailable; no aggregate launcher or ordered/shuffled full-suite pass is claimed.
+
+The active HawkScan skill stopped at preflight because Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the detected local properties file was not read. No target, DAST result or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next local slice requires another fresh dependency/consequence ranking.
+
 ## What was read
 
 - Root `CLAUDE.md`.
