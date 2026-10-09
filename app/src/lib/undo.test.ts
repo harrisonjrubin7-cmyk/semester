@@ -84,6 +84,10 @@ describe('which actions can be taken back', () => {
       label: 'School profile removed',
       fields: ['mySchools', 'schoolId'],
     });
+    expect(undoableFor('forgetSchoolPack')).toEqual({
+      label: 'University file removed',
+      fields: ['schoolPack'],
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
@@ -176,6 +180,11 @@ describe('the snapshot', () => {
   it('keeps a student-created school profile and its active selection together', () => {
     const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.forgetSchool, AT);
     expect(Object.keys(took.was)).toEqual(['mySchools', 'schoolId']);
+  });
+
+  it('keeps only the loaded university file', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.forgetSchoolPack, AT);
+    expect(Object.keys(took.was)).toEqual(['schoolPack']);
   });
 
   it('carries the label and the moment', () => {

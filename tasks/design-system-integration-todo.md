@@ -1369,3 +1369,21 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep university-pack removal, permanent file purge and same-origin demo reset separate until their wider authority, erase and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable university-pack removal — automation pass 14, integration slice 65
+
+- [x] Fetch current `origin/main` `fb1d683d`; confirm it is already an ancestor and contains no `forgetSchoolPack` recovery or shared-Undo equivalent.
+- [x] Re-rank the university-pack boundary and prove that removal mutates only the device-persisted `schoolPack`; preserve the selected school, fallback profile and institutional/provider boundaries.
+- [x] Add `forgetSchoolPack` to the shared eight-second Undo contract with exactly `schoolPack`.
+- [x] Restore the exact snapshot and import date without reverting unrelated work or changing `schoolId`; preserve existing stale-file and capability-fallback language.
+- [x] Prove registry, snapshot and reducer assertions red before implementation, then pass 165/165 focused Undo, reducer and school-pack tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass design audit and CSS ledger checks plus 148/148 token, design, responsive and root-unmount contracts.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

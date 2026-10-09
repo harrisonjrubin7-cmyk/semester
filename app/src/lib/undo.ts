@@ -131,6 +131,8 @@ export const UNDOABLE: Record<string, Undoable> = {
   dropTermDate: { label: 'Registrar date cleared', fields: ['registrar'], onChange: true },
   // A custom profile can also be selected, so removal owns both fields.
   forgetSchool: { label: 'School profile removed', fields: ['mySchools', 'schoolId'] },
+  // Removing an imported snapshot leaves the selected school and fallback profile alone.
+  forgetSchoolPack: { label: 'University file removed', fields: ['schoolPack'] },
   dropSource: { label: 'Source removed', fields: ['sources'] },
   dropSitting: { label: 'Paper removed', fields: ['sittings'] },
   /*

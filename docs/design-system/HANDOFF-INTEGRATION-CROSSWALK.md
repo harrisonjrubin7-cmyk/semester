@@ -315,3 +315,12 @@ This mapping adds no archive route, role, capability, schema, policy, server ope
 | Institution-authored school-pack and provider boundary | `app/src/components/SchoolPackDoor.tsx`, `app/src/state/slices/settings.ts`, `app/src/lib/schoolpack.ts` | Existing and unchanged. This slice does not restore, remove or reclassify an institution-authored pack, claim current institutional data, mutate a server/provider record or change capability authority. Pack removal remains a separate provenance/recovery decision. |
 
 This mapping adds no archive route, role, capability, schema, policy, server operation or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 14 current-product consequence mapping — integration slice 65
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for removing one loaded university file | `app/src/components/SchoolPackDoor.tsx`, `app/src/state/slices/settings.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: `forgetSchoolPack` now enters the shared eight-second Undo path and snapshots exactly `schoolPack`. Undo restores the exact institution-authored snapshot and import date while preserving later unrelated work. The red-before-green registry/snapshot guard and reducer integration are included in 165 focused passing tests. |
+| School selection, provenance and external authority boundary | `app/src/lib/schoolpack.ts`, `app/src/state/slices/settings.ts` | Existing and unchanged. Removal and restoration leave `schoolId` intact, use the existing bundled/custom fallback, do not upgrade file verification or freshness, and do not mutate a server, provider or institution record. Import review and current institutional data remain separate authority questions. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.

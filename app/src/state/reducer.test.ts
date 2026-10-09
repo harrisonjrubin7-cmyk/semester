@@ -1098,6 +1098,32 @@ describe('taking it back', () => {
     expect(back.undone).toBeNull();
   });
 
+  it('restores a removed university file without reverting unrelated work', () => {
+    const schoolPack: NonNullable<State['schoolPack']> = {
+      school: {
+        id: 'my-college',
+        name: 'My College',
+        verified: false,
+        capabilities: { mealPlan: 'none', housing: false, campusMap: false },
+        data: {},
+      },
+      importedAt: '2026-10-09',
+    };
+    const s: State = { ...blank(), schoolPack, schoolId: schoolPack.school.id };
+
+    const gone = reducer(s, { type: 'forgetSchoolPack' });
+    expect(gone.schoolPack).toBeNull();
+    expect(gone.schoolId).toBe(s.schoolId);
+    expect(gone.undone?.label).toBe('University file removed');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.schoolPack).toEqual(schoolPack);
+    expect(back.schoolId).toBe(s.schoolId);
+    expect(back.done['deadline-1']).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
   it('offers nothing for an action that only edits', () => {
     // An edit leaves the thing there to edit back.
     const s = twoNotes();
