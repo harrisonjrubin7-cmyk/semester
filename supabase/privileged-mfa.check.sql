@@ -80,12 +80,14 @@ begin
   perform pg_temp.answered('an aal2 platform_admin carries its capability', got, true);
 
   perform pg_temp.become(supporter, 'aal1');
+  set local role postgres;
   select private.support_agent() into got;
-  perform pg_temp.answered('an aal1 support_agent cannot enter the support boundary', got, false);
+  perform pg_temp.answered('an aal1 support_agent grant is dormant', got, false);
 
   perform pg_temp.become(supporter, 'aal2', now());
+  set local role postgres;
   select private.support_agent() into got;
-  perform pg_temp.answered('an aal2 support_agent enters the support boundary', got, true);
+  perform pg_temp.answered('an aal2 support_agent carries its capability', got, true);
 
   perform pg_temp.become(moderator, 'aal1');
   select private.has_capability('report:read') into got;
