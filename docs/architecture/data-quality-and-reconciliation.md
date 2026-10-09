@@ -8,7 +8,7 @@ Integration mappings, sync runs, discrepancy workflow, provenance/source labels,
 
 ## Required record contract
 
-Every imported or derived record carries tenant, source type/system, connection, external ID, source and ingestion timestamps, sync run, source version, classification, lifecycle, freshness, confidence where derived, and correlation/audit reference. External IDs are unique only inside their tenant and provider scope.
+Every imported or derived record carries tenant, source type/system, connection, external ID, canonical entity type, source and ingestion timestamps, sync run, source version, classification, lifecycle, freshness, confidence where derived, and correlation/audit reference. External identity is keyed by tenant, connection, source system, external ID, and canonical entity type so multiple connections or reused provider IDs cannot collapse distinct records.
 
 ## Quality controls
 
