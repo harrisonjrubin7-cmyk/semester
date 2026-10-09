@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { contractFailures, runContract } from '../../src/lib/integration/contract-harness.ts';
 import type { ProviderClient } from '../../src/lib/integration/provider-client.ts';
-import { canvasOrigin, createCanvasReadAdapter } from '../../../packages/platform/src/index.ts';
+import { canvasOrigin, createCanvasReadAdapter } from '../../../packages/platform/src/canvas-read-adapter.ts';
 
 const client: ProviderClient = {
   call: (fn) => fn({ accessToken: null, secret: 'canvas-test-token-do-not-log' }),

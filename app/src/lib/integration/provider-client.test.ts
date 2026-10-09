@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { ProviderHttpError as PlatformProviderHttpError } from '@semester/platform';
 import { MOCK_SIS } from './mock-sis';
 import type { AdapterDeclaration } from './adapter';
 import { ConnectionGuard } from './rate-control';
@@ -92,7 +91,10 @@ describe('classifying a failure', () => {
     expect(failure(new ProviderHttpError(408))).toMatchObject({ category: 'provider_unavailable' });
     expect(failure(new ProviderHttpError(422))).toMatchObject({ category: 'schema_validation', outcome: 'permanent_failure' });
     expect(failure(new ProviderHttpError(404))).toMatchObject({ category: 'schema_validation' });
-    expect(failure(new PlatformProviderHttpError(503, 15_000))).toMatchObject({
+    const foreign = Object.assign(new Error('The provider answered 503'), {
+      name: 'ProviderHttpError', status: 503, retryAfterMs: 15_000,
+    });
+    expect(failure(foreign)).toMatchObject({
       category: 'provider_unavailable', outcome: 'retryable_failure', retryAfterMs: 15_000,
     });
     expect(failure(new Error('ECONNRESET'))).toMatchObject({ category: 'provider_unavailable', code: 'provider_error', outcome: 'retryable_failure' });

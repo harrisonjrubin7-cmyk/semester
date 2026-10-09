@@ -44,8 +44,6 @@ export * from './engines/flags.ts';
 export * from './engines/entitlements.ts';
 export * from './engines/reporting.ts';
 export * from './engines/integration.ts';
-export * from './engines/canvas-read-adapter.ts';
-export * from './engines/provider-error.ts';
 
 export * from './isolation/layers.ts';
 

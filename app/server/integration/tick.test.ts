@@ -12,7 +12,7 @@ import type { AdapterDeclaration } from '../../src/lib/integration/adapter.ts';
 import { LeaseBroker, memoryBackend, type VaultAuditEvent } from '../../src/lib/integration/vault.ts';
 import { OAuthError, type TokenRecord, type TokenStore } from '../../src/lib/integration/oauth.ts';
 import { GuardRefusal, ProviderHttpError, providerRuntime, type CredentialServices } from '../../src/lib/integration/provider-client.ts';
-import { CANVAS_READ_ADAPTER } from '../../../packages/platform/src/index.ts';
+import { CANVAS_READ_ADAPTER } from '../../../packages/platform/src/canvas-read-adapter.ts';
 import type { CallAuth } from './tick.ts';
 import { fakeDb, type Row, type Tables } from './fakedb.ts';
 import { TICK_MINUTES, adapterFor, cadenceMinutes, connectionIssue, intervalMinutes, isDue, tick, type PullRequest, type RegisteredAdapter } from './tick.ts';

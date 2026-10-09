@@ -58,7 +58,7 @@ function rewrite(source: string, from: string): string {
     let out: string;
     if (spec === '@supabase/supabase-js') out = 'jsr:@supabase/supabase-js@2';
     else if (spec.startsWith('../../src/lib/integration/')) out = `./${spec.slice('../../src/lib/integration/'.length)}`;
-    else if (spec === '../../../packages/platform/src/index.ts' && from === 'server/integration/registry.ts') out = './canvas-read-adapter.ts';
+    else if (spec === '../../../packages/platform/src/canvas-read-adapter.ts' && from === 'server/integration/registry.ts') out = './canvas-read-adapter.ts';
     else if (spec === '../kernel/clock.ts' && from.endsWith('/canvas-read-adapter.ts')) out = './clock.ts';
     else if (/^\.\/[a-z-]+\.ts$/.test(spec)) out = spec;
     else throw new Error(`${from}: cannot carry the import ${JSON.stringify(spec)} into an Edge Function`);
