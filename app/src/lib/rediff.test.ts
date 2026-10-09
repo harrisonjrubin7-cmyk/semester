@@ -343,6 +343,53 @@ describe('title conflict choices', () => {
   });
 });
 
+describe('due-time conflict choices', () => {
+  const before = module([item('current-id', 'Reflection #1', 8, 10)]);
+  const afterItem = { ...item('fresh-id', 'Reflection 1 — play', 8, 17), dueTime: '5:00p' };
+  const after = module([afterItem]);
+
+  it('requires a choice independent of a reworded title and moved date', () => {
+    const changes = diff(before, after, YEAR);
+    expect(unresolvedReimportConflictIds(changes, {})).toEqual([
+      'moved:current-id',
+      'title:current-id',
+      'time:current-id',
+    ]);
+    expect(() => applyReimportConflictChoices(before, after, YEAR, {
+      'moved:current-id': 'use_imported',
+      'title:current-id': 'use_imported',
+    })).toThrow(/Every re-import source conflict/);
+  });
+
+  it('preserves the stable id while applying time, title, and date choices independently', () => {
+    const keepTime = applyReimportConflictChoices(before, after, YEAR, {
+      'moved:current-id': 'use_imported',
+      'title:current-id': 'use_imported',
+      'time:current-id': 'keep_current',
+    });
+    expect(keepTime.items[0]).toMatchObject({
+      id: 'current-id',
+      title: 'Reflection 1 — play',
+      month: 8,
+      day: 17,
+      dueTime: '11:59p',
+    });
+
+    const keepDateAndTitle = applyReimportConflictChoices(before, after, YEAR, {
+      'moved:current-id': 'keep_current',
+      'title:current-id': 'keep_current',
+      'time:current-id': 'use_imported',
+    });
+    expect(keepDateAndTitle.items[0]).toMatchObject({
+      id: 'current-id',
+      title: 'Reflection #1',
+      month: 8,
+      day: 10,
+      dueTime: '5:00p',
+    });
+  });
+});
+
 describe('ticksKept', () => {
   it('counts what survives and what does not', () => {
     const before = module([

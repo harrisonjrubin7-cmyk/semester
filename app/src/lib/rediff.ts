@@ -46,6 +46,11 @@ export interface Renamed {
   after: Item;
 }
 
+export interface Retimed {
+  before: Item;
+  after: Item;
+}
+
 export interface Reweighted {
   what: string;
   before: string;
@@ -55,9 +60,11 @@ export interface Reweighted {
 export interface Diff {
   moved: Moved[];
   renamed: Renamed[];
+  /** Paired items whose due-time wording changed, independent of their date. */
+  retimed: Retimed[];
   added: Item[];
   removed: Item[];
-  /** Items in both, unchanged in date and title. */
+  /** Items in both, unchanged in date, title and due time. */
   same: number;
   /** Grading rows whose weight changed, and rows added or dropped. */
   reweighted: Reweighted[];
@@ -83,7 +90,7 @@ export interface DateConflict {
 
 export interface ReimportConflict {
   id: string;
-  kind: 'moved' | 'removed' | 'renamed' | 'field' | 'reweighted' | 'grading_added' | 'grading_removed';
+  kind: 'moved' | 'removed' | 'renamed' | 'retimed' | 'field' | 'reweighted' | 'grading_added' | 'grading_removed';
 }
 
 const DAY = 86_400_000;
@@ -141,6 +148,7 @@ export function diff(before: CourseModule, after: CourseModule, year: number): D
 
   const moved: Moved[] = [];
   const renamed: Renamed[] = [];
+  const retimed: Retimed[] = [];
   let same = 0;
 
   for (const p of pairs) {
@@ -149,7 +157,8 @@ export function diff(before: CourseModule, after: CourseModule, year: number): D
     const days = daysApart(b, a, year);
     if (days !== 0) moved.push({ before: b, after: a, days });
     if (b.title !== a.title) renamed.push({ before: b, after: a });
-    if (days === 0 && b.title === a.title) same++;
+    if (b.dueTime !== a.dueTime) retimed.push({ before: b, after: a });
+    if (days === 0 && b.title === a.title && b.dueTime === a.dueTime) same++;
   }
 
   // Grading is matched on the row's own wording, which is how a syllabus
@@ -179,6 +188,7 @@ export function diff(before: CourseModule, after: CourseModule, year: number): D
   return {
     moved,
     renamed,
+    retimed,
     added,
     removed,
     same,
@@ -189,6 +199,7 @@ export function diff(before: CourseModule, after: CourseModule, year: number): D
     identical:
       moved.length === 0 &&
       renamed.length === 0 &&
+      retimed.length === 0 &&
       added.length === 0 &&
       removed.length === 0 &&
       reweighted.length === 0 &&
@@ -267,16 +278,17 @@ export function unresolvedDateConflictIds(d: Diff, choices: DateConflictChoices)
  * Every imported value that would overwrite or remove current course data.
  *
  * New dates remain individually selectable in Import's source review. Course
- * metadata, reworded titles and grading rows have no equivalent per-value
- * review, so all of their differences belong here alongside moved and removed
- * dates. IDs use the current item/field/row identity, not array order, so
- * choices survive render changes and can be checked again by the pure merge
- * guard.
+ * metadata, reworded titles, changed due times and grading rows have no
+ * equivalent per-value review, so all of their differences belong here
+ * alongside moved and removed dates. IDs use the current item/field/row
+ * identity, not array order, so choices survive render changes and can be
+ * checked again by the pure merge guard.
  */
 export function reimportConflicts(d: Diff): ReimportConflict[] {
   return [
     ...dateConflicts(d),
     ...d.renamed.map(({ before }) => ({ id: `title:${before.id}`, kind: 'renamed' as const })),
+    ...d.retimed.map(({ before }) => ({ id: `time:${before.id}`, kind: 'retimed' as const })),
     ...d.fields.map((change) => ({ id: `field:${change.field}`, kind: 'field' as const })),
     ...d.reweighted.map((row) => ({ id: `grading:reweighted:${row.what}`, kind: 'reweighted' as const })),
     ...d.gradingRemoved.map((row) => ({ id: `grading:removed:${row.what}`, kind: 'grading_removed' as const })),
@@ -315,7 +327,7 @@ export function applyDateConflictChoices(
     if (!move || choices[`moved:${item.id}`] !== 'keep_current') return item;
     const current = currentById.get(item.id);
     return current
-      ? { ...item, year: current.year, month: current.month, day: current.day, dueTime: current.dueTime }
+      ? { ...item, year: current.year, month: current.month, day: current.day }
       : item;
   });
 
@@ -347,11 +359,16 @@ export function applyReimportConflictChoices(
 
   const merged = applyDateConflictChoices(before, after, year, choices);
   const currentTitles = new Map(changes.renamed.map(({ before }) => [before.id, before.title]));
+  const currentTimes = new Map(changes.retimed.map(({ before }) => [before.id, before.dueTime]));
   const items = merged.items.map((item) => {
     const currentTitle = currentTitles.get(item.id);
-    return currentTitle !== undefined && choices[`title:${item.id}`] === 'keep_current'
+    const titled = currentTitle !== undefined && choices[`title:${item.id}`] === 'keep_current'
       ? { ...item, title: currentTitle }
       : item;
+    const currentTime = currentTimes.get(item.id);
+    return currentTime !== undefined && choices[`time:${item.id}`] === 'keep_current'
+      ? { ...titled, dueTime: currentTime }
+      : titled;
   });
   const course = { ...merged.course };
   for (const change of changes.fields) {
@@ -406,6 +423,7 @@ export function summary(d: Diff): string {
   if (d.moved.length) bits.push(`${d.moved.length} moved`);
   if (d.added.length) bits.push(`${d.added.length} new`);
   if (d.renamed.length) bits.push(`${d.renamed.length} reworded`);
+  if (d.retimed.length) bits.push(`${d.retimed.length} ${d.retimed.length === 1 ? 'time changed' : 'times changed'}`);
   const weights = d.reweighted.length + d.gradingAdded.length + d.gradingRemoved.length;
   if (weights) bits.push(`${weights} to the grading`);
   return `${bits.join(', ')}.`;

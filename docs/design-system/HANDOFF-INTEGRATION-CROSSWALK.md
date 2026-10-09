@@ -100,6 +100,8 @@ Automation pass 17 extends CE-08's same fail-closed review to course metadata an
 
 Automation pass 18 extends CE-08 to reworded deadline titles. Every confidently paired title change, including one combined with a date move, now requires an un-defaulted stable-id choice. Title and date decisions apply independently while the current item id and completion-tick relationship survive. This title subpath is **existing and verified locally** by a proved-red guard, 35/35 directly changed tests, 39/39 broader focused Import contracts and green TypeScript/lint/university/build plus design constituents. Changed due times, durable server conflict records, external reconciliation and safe ICS publication remain incomplete; the separately merged Course Engine shell does not make this current-product path server-backed or official.
 
+Automation pass 19 extends CE-08 to changed deadline due times. Every changed time on a confidently paired item, including one whose title and calendar date also changed, now requires an un-defaulted stable `time:<current-id>` choice. Time, title and date decisions apply independently; keeping a current date cannot implicitly override an explicit imported-time choice, and the current item id/tick relationship survives. This time subpath is **existing and verified locally** by a proved-red guard, 38/38 directly changed tests, 109/109 broader focused Import/course contracts and green TypeScript/lint/university/build plus design constituents and report. Remaining item metadata, durable server conflict records, external reconciliation and safe ICS publication remain incomplete; no server ingestion or official-record authority is inferred.
+
 ## How a row was classed
 
 | Disposition | Meaning here |

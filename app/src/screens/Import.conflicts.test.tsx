@@ -119,7 +119,7 @@ describe('Import re-import conflict controls', () => {
       'Room · Buttrick 101 → Wilson 103',
     ]);
     expect([...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')].every((radio) => !radio.checked)).toBe(true);
-    expect(host.textContent).toContain('changed date, title, course detail, or grading row');
+    expect(host.textContent).toContain('changed date, due time, title, course detail, or grading row');
 
     const importedRoom = [...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')]
       .find((radio) => radio.parentElement?.textContent?.includes('Use imported room'));
@@ -149,5 +149,28 @@ describe('Import re-import conflict controls', () => {
       .find((radio) => radio.parentElement?.textContent?.includes('Use imported title'));
     act(() => importedTitle!.click());
     expect(choose).toHaveBeenCalledWith('title:current-id', 'use_imported');
+  });
+
+  it('renders a separate unselected due-time choice for the same stable deadline', () => {
+    const current = item('current-id', 'Reflection #1', 8, 10);
+    const imported = { ...item('fresh-id', 'Reflection 1 — play', 8, 17), dueTime: '5:00p' };
+    const changes = diff(course([current]), course([imported]), 2026);
+    const choose = vi.fn();
+    act(() => {
+      root.render(<StoreProvider><Rediff changes={changes} kept={{ kept: 0, lost: 0 }} code="ECON 1020" choices={{}} onChoose={choose} /></StoreProvider>);
+    });
+
+    const groups = [...host.querySelectorAll('fieldset.import-conflict-choice')];
+    expect(groups.map((group) => group.querySelector('legend')?.textContent)).toEqual([
+      'Reflection 1 — play · 9/10 → 9/17 · 7 days later',
+      'Title · Reflection #1 → Reflection 1 — play',
+      'Due time · 11:59p → 5:00p',
+    ]);
+    expect([...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')].every((radio) => !radio.checked)).toBe(true);
+
+    const importedTime = [...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')]
+      .find((radio) => radio.parentElement?.textContent?.includes('Use imported time'));
+    act(() => importedTime!.click());
+    expect(choose).toHaveBeenCalledWith('time:current-id', 'use_imported');
   });
 });

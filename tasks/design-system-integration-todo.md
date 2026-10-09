@@ -536,8 +536,30 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Extend fail-closed item review to changed due times so re-import cannot silently move a reminder within the same day; keep title and date decisions independent.
+- [x] Extend fail-closed item review to changed due times so re-import cannot silently move a reminder within the same day; keep title and date decisions independent. Completed in automation pass 19 / slice 27.
 - [ ] Keep lower-consequence extracted item metadata, durable server conflicts, external reconciliation and safe ICS publication separate until each has a named authority and acceptance contract.
+- [ ] Keep server ingestion and signed reads closed until a trustworthy private adapter/scanner runtime can produce genuine receipts.
+
+## 2026-10-08 student-controlled deadline-time conflicts — automation pass 19, slice 27
+
+- [x] Fetch current `origin/main` `4a01b4a0` and confirm no equivalent current-product Import/Rediff due-time choice landed.
+- [x] Reuse the existing Import/Rediff route, native fieldset/radio pattern and semantic form styles; add no route, component, dependency, schema, raw design value or parallel course model.
+- [x] Treat every changed due time on a confidently paired deadline as an unresolved source conflict, including an item whose title and calendar date also changed.
+- [x] Use a stable `time:<current-item-id>` decision key with no preselected winner and reject incomplete or invalid maps in the pure merge boundary.
+- [x] Apply due-time, title and calendar-date choices independently while preserving the current item id and completion-tick relationship.
+- [x] Correct the date-choice merge so keeping the current date cannot implicitly keep the current time against an explicit use-imported-time choice.
+- [x] Render the comparison in the existing keyboard-operable native radio group and extend the live conflict guidance to name due time.
+- [x] Prove the guard red before implementation: three named failures showed the missing stable decision, absent control and ineffective keep-current merge.
+- [x] Directly changed logic/render tests pass 38/38; the broader focused Import/course set passes 109/109.
+- [x] TypeScript, lint, university typecheck and production build pass with the existing four lint and chunk warnings.
+- [x] Token export passes 9/9; design audit has zero violations with 86 existing warnings; CSS remains within its ledger; design contracts pass 69/69; the design report regenerates without drift.
+- [ ] Ordered and shuffled full suites — not run for this bounded client slice; focused regression and phase gates are green.
+- [ ] HawkScan DAST — preflight stops because `hawk` is absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No live target was started and no DAST result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Reconcile the remaining paired-item fields (`kind`, `weight`, `where`, `detail`, quote and source provenance) to named ownership and acceptance behavior before adding any further conflict choices.
+- [ ] Keep durable server conflict records, external reconciliation and safe ICS publication separate from this local client merge slice.
 - [ ] Keep server ingestion and signed reads closed until a trustworthy private adapter/scanner runtime can produce genuine receipts.
 
 ## Earlier integration baseline preserved
