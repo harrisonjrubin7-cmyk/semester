@@ -38,6 +38,8 @@ import type { CredentialLease, LeaseBroker, RefusalReason } from './vault.ts';
 import {
   ReauthorizationRequired, TokenManager, TransientTokenError, type TokenResponse, type TokenStore,
 } from './oauth.ts';
+import { ProviderHttpError, retryAfterMs } from './provider-error.ts';
+export { ProviderHttpError, retryAfterMs } from './provider-error.ts';
 
 /** What a call is given. Valid for that call; adapter code must not keep it. */
 export interface CallAuth {
@@ -67,28 +69,11 @@ export interface OAuthBinding {
 // ----------------------------------------------------------------- errors ----
 
 /** Thrown by adapter code (or `providerHttp`) from a provider's HTTP response. */
-export class ProviderHttpError extends Error {
-  readonly status: number;
-  readonly retryAfterMs: number | undefined;
-  constructor(status: number, retryAfterMs?: number) {
-    super(`The provider answered ${status}`);
-    this.status = status;
-    this.retryAfterMs = retryAfterMs;
-  }
-}
-
 /**
  * The provider's `Retry-After`, as milliseconds. Seconds or an HTTP date;
  * anything else, or a negative, is no hint. Capped at one hour so a hostile
  * or broken value cannot park a connection for a week.
  */
-export function retryAfterMs(header: string | null | undefined, now: Date): number | undefined {
-  if (!header) return undefined;
-  const value = header.trim();
-  const ms = /^\d+$/.test(value) ? Number(value) * 1000 : Date.parse(value) - now.getTime();
-  return Number.isFinite(ms) && ms > 0 ? Math.min(ms, 3_600_000) : undefined;
-}
-
 /** The credential could not be obtained. Nothing was sent to the provider. */
 export class CredentialRefused extends Error {
   readonly reason: RefusalReason | 'not_configured' | 'no_token_store' | 'no_oauth_binding';
@@ -170,6 +155,8 @@ export interface ClientDeps {
   adapter: { declaration: AdapterDeclaration; oauth?: OAuthBinding };
   tenantId: string;
   connectionPublicId: string;
+  /** Connection-scoped secret-manager pointer. Omitted only by legacy callers/tests. */
+  credentialReference?: string | null;
   guard: ConnectionGuard;
   /** Absent means no credentials can be issued; an adapter that needs one is refused. */
   credentials?: CredentialServices;
@@ -193,10 +180,16 @@ export function providerRuntime(options: { credentials?: CredentialServices } = 
       adapter: { declaration: AdapterDeclaration; oauth?: OAuthBinding };
       tenantId: string;
       connectionPublicId: string;
+      credentialReference?: string | null;
       now: () => Date;
     }): ProviderClient {
       return createProviderClient({
         adapter: context.adapter, tenantId: context.tenantId, connectionPublicId: context.connectionPublicId,
+        // Test fixtures predate connection rows carrying credential pointers.
+        // Live adapters never fall back to their registry declaration.
+        credentialReference: context.credentialReference === undefined && context.adapter.declaration.mock
+          ? context.adapter.declaration.credentialsReference
+          : context.credentialReference,
         guard: new ConnectionGuard({ perMinute: context.adapter.declaration.rateLimitPerMinute }),
         credentials: options.credentials, now: context.now,
       });
@@ -207,6 +200,9 @@ export function providerRuntime(options: { credentials?: CredentialServices } = 
 
 export function createProviderClient(deps: ClientDeps): ProviderClient {
   const { declaration: d } = deps.adapter;
+  const credentialReference = Object.prototype.hasOwnProperty.call(deps, 'credentialReference')
+    ? deps.credentialReference
+    : d.credentialsReference;
   const { tenantId, connectionPublicId: connection } = deps;
   let lease: CredentialLease | null = null;
   let manager: TokenManager | null = null;
@@ -223,7 +219,7 @@ export function createProviderClient(deps: ClientDeps): ProviderClient {
     }
     if (!deps.credentials) throw new CredentialRefused('not_configured');
     const result = await deps.credentials.broker.lease({
-      reference: d.credentialsReference as string, tenantId, connectionId: connection, purpose: 'sync',
+      reference: credentialReference as string, tenantId, connectionId: connection, purpose: 'sync',
     });
     if (!result.ok) throw new CredentialRefused(result.reason);
     lease = result.lease;
@@ -231,7 +227,8 @@ export function createProviderClient(deps: ClientDeps): ProviderClient {
   }
 
   async function authorize(): Promise<CallAuth> {
-    if (d.credentialsReference === null) return { accessToken: null, secret: null };
+    if (credentialReference === null) return { accessToken: null, secret: null };
+    if (!credentialReference) throw new CredentialRefused('not_configured');
     const held = await credential();
     if (d.authentication !== 'oauth2' && d.authentication !== 'oidc') return { accessToken: null, secret: held.reveal() };
 

@@ -765,13 +765,15 @@ describe('examples/event-consumer', () => {
     // Nothing outside the producers' own folders imports them, so no entry point runs them. (packages/platform is the
     // tenancy kernel: it builds events and checks the tenant on a store; only build configuration names it.)
     // The institution gateway takes the error envelope, correlation ids and request context from the platform package
-    // (MIGRATION phase 1). Those three files may import it; none of them may import the productivity service.
+    // (MIGRATION phase 1). These listed infrastructure files may import it; none may import the productivity service.
     const gatewayFiles = [
+      'app/server/integration/registry.ts',
       'app/server/institution/adapter.ts',
       'app/server/institution/context.ts',
       'app/server/institution/gateway.ts',
       'app/server/institution/intelligence-repository.ts',
       'app/server/institution/intelligence.ts',
+      'app/src/lib/integration/provider-client.ts',
     ];
     const mounts = code
       .filter((c) => !c.file.startsWith('app/server/productivity/') && !c.file.startsWith('packages/platform/'))
@@ -1159,7 +1161,7 @@ const PATHS: { path: string; row: string; status: string }[] = [
   { path: 'OneRoster', row: '| OneRoster staging and reconciliation |', status: 'PLANNED' },
   { path: 'SCIM provisioning', row: '| SCIM 2.0 |', status: 'IMPLEMENTED_NOT_RELEASED' },
   { path: 'LTI 1.3', row: '| LTI 1.3 (launch, deep link, AGS) |', status: 'IMPLEMENTED_NOT_RELEASED' },
-  { path: 'SIS adapter', row: '| SIS / catalog connectors |', status: 'PLANNED' },
+  { path: 'SIS adapter', row: '| SIS / catalog connectors |', status: 'PARTIAL' },
   { path: 'Institution gateway', row: '| Institution gateway (records/actions/AI) |', status: 'MOCK_DEMO' },
   { path: 'Calendar (ICS) feeds', row: '| Plan: calendar |', status: 'LIVE' },
 ];

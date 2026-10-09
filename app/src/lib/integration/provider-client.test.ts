@@ -326,6 +326,21 @@ describe('the runtime the tick is handed', () => {
     expect(await refuses(without.call(async () => undefined))).toMatchObject({ reason: 'not_configured' });
   });
 
+  it('requires a connection-scoped credential pointer for live adapters and uses that pointer', async () => {
+    const live = { ...apiKeyDeclaration, mock: false };
+    const alternate = 'vault:tenants/school-a/canvas';
+    const backend = memoryBackend({ [alternate]: { value: 'connection-secret', version: 'v1', rotatedAt } });
+    const credentials = { broker: new LeaseBroker({ backend, now: () => t0, audit: () => undefined }) };
+
+    const missing = providerRuntime({ credentials }).clientFor(context(live));
+    expect(await refuses(missing.call(async () => undefined))).toMatchObject({ reason: 'not_configured' });
+    expect(backend.reads).toEqual([]);
+
+    const scoped = providerRuntime({ credentials }).clientFor({ ...context(live), credentialReference: alternate });
+    await expect(scoped.call(async (auth) => auth.secret)).resolves.toBe('connection-secret');
+    expect(backend.reads).toEqual([alternate]);
+  });
+
   it('classifies with the same function the worker would have imported', () => {
     expect(providerRuntime().classify).toBe(classifyFailure);
   });
