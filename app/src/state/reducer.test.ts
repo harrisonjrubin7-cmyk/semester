@@ -907,6 +907,34 @@ describe('taking it back', () => {
     expect(back.undone).toBeNull();
   });
 
+  it('restores a removed task step without reverting unrelated work', () => {
+    const task = {
+      id: 'midterm-review',
+      title: 'Review for the midterm',
+      date: null,
+      time: '',
+      note: '',
+      done: false,
+      created: 1,
+      courseId: 'econ',
+      steps: [
+        { id: 'outline', text: 'Outline chapters', done: true },
+        { id: 'practice', text: 'Take a practice exam', done: false },
+      ],
+    } as State['tasks'][number];
+    const s: State = { ...blank(), tasks: [task] };
+
+    const gone = reducer(s, { type: 'dropStep', id: task.id, stepId: 'practice' });
+    expect(gone.tasks[0].steps).toEqual([task.steps?.[0]]);
+    expect(gone.undone?.label).toBe('Step removed');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.tasks).toEqual([task]);
+    expect(back.done['deadline-1']).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
   it('offers nothing for an action that only edits', () => {
     // An edit leaves the thing there to edit back.
     const s = twoNotes();

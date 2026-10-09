@@ -1235,3 +1235,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable task-step removal — automation pass 7, integration slice 58
+
+- [x] Fetch and merge current `origin/main` `e128a526`; confirm its governed system-passport registry has no equivalent `dropStep`, nested-task Undo or current-screen change.
+- [x] Re-rank the remaining consequence paths and select only the current student's device-owned task checklist step; keep whole-task deletion, permanent file purge, broad demo reset and scanner-backed Import separate.
+- [x] Add `dropStep` to the existing eight-second Undo contract with only `tasks` and `onChange`, because the nested removal does not shrink the top-level task list.
+- [x] Restore the exact step text, completion state and order without reverting unrelated deadline completion; retain the existing named Remove control and route.
+- [x] Prove the focused guards red against the missing registration, then pass 126 Undo, reducer and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and design-report generation.
+- [ ] Aggregate design report/check launchers — `npm`/`npx` are unavailable; the report regenerates before its wrapper exits and the exact constituents pass, so no aggregate launcher pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only recovery slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms the Hawk CLI, Docker runtime and target host are absent; a local credential properties file exists but was not read. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

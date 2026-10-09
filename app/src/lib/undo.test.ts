@@ -46,6 +46,11 @@ describe('which actions can be taken back', () => {
       label: 'Study plan dropped',
       fields: ['sessions', 'liveSession'],
     });
+    expect(undoableFor('dropStep')).toEqual({
+      label: 'Step removed',
+      fields: ['tasks'],
+      onChange: true,
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
@@ -100,6 +105,12 @@ describe('the snapshot', () => {
   it('keeps only the committed study plan and its live pointer', () => {
     const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.clearPlan, AT);
     expect(Object.keys(took.was)).toEqual(['sessions', 'liveSession']);
+  });
+
+  it('keeps the task list for a nested step removal', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.dropStep, AT);
+    expect(Object.keys(took.was)).toEqual(['tasks']);
+    expect(UNDOABLE.dropStep.onChange).toBe(true);
   });
 
   it('carries the label and the moment', () => {

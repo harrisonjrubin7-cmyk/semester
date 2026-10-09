@@ -82,6 +82,8 @@ export const UNDOABLE: Record<string, Undoable> = {
    */
   moveFolder: { label: 'Folder moved', fields: ['folders'], onChange: true },
   deleteTask: { label: 'Action deleted', fields: ['tasks'] },
+  // A step disappears inside one task, so the top-level list stays the same size.
+  dropStep: { label: 'Step removed', fields: ['tasks'], onChange: true },
   deleteAppointment: { label: 'Appointment deleted', fields: ['appointments'] },
   removeCommitment: { label: 'Activity removed', fields: ['commitments'] },
   removePlace: { label: 'Place removed', fields: ['places'] },
