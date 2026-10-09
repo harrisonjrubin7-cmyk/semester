@@ -246,7 +246,7 @@ PostgreSQL 17 applies all 215 migrations twice with 374 table fingerprints uncha
 
 ## Shared course-material metadata — automation pass 14, slice 22
 
-The clean branch merged `origin/main` `845645d3` before implementation. A final dirty-tree fetch observed `de9ee702`; its registration-readiness projection changes six non-overlapping architecture/roadmap/package files and contains no equivalent shared-material schema, lifecycle function or migration collision, so it was not merged or rebased into the in-progress slice.
+The clean branch merged `origin/main` `845645d3` before implementation. A final dirty-tree fetch observed `de9ee702`; its registration-readiness projection changes six non-overlapping architecture/roadmap/package files and contains no equivalent shared-material schema, lifecycle function or migration collision, so it was not merged or rebased into the in-progress slice. After the coherent slice commit `b6a610c2`, the clean branch merged that upstream head without conflict; the combined head passed the new readiness test, slice structural guards, TypeScript and the university gateway typecheck.
 
 `20261009003000_course_material_metadata.sql` adds only the private metadata boundary for institution-published course material. One service-only planner rechecks the named actor's current school profile and exact live `course:publish` grant at `<tenant>/<COURSE>`, resolves the current active tenant policy and requires the server's expected policy id/version to match before recording the plan. Each row binds an exact tenant/course/term, internal object-key plan and original retention id/version/duration. Client roles have no policy or table/function privilege, and service role cannot write around the controlled functions.
 

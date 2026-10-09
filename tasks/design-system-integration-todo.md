@@ -431,7 +431,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ## 2026-10-08 shared course-material metadata — automation pass 14, slice 22
 
-- [x] Fetch and inspect `origin/main`; merge `845645d3` on the clean branch before production edits, then inspect final `de9ee702` and confirm its registration-readiness package/docs do not overlap this dirty slice or collide with its migration.
+- [x] Fetch and inspect `origin/main`; merge `845645d3` before production edits, then inspect final `de9ee702`, commit the non-overlapping slice and merge that upstream registration-readiness head on the clean tree.
 - [x] Reuse the Course Studio `<tenant>/<COURSE>` authority key, `course:publish` capability and canonical term grammar; do not bind faculty material to a student's private `public.courses` row.
 - [x] Add deny-by-default metadata for one exact tenant/course/term, internal object-key plan, bounded filename/type/size and exact retention-policy id/version/duration.
 - [x] Require service role, a current exact course-scoped publisher grant and an expected policy id/version equal to the current active resolver result before new intake.
@@ -442,6 +442,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] PostgreSQL 17 applies all 216 migrations twice with 376 unchanged table fingerprints; 24 focused and 188 adjacent checks pass, including exact policy/grant, RLS/grant/index, legal-hold and student-source proof.
 - [x] TypeScript, lint, university typecheck and production build pass; lint retains the existing four-warning baseline and build retains existing chunk warnings.
 - [x] Focused repository contracts pass 167/167; token/tooling/style contracts pass 78/78; design audit has zero violations with the existing 86-warning ledger, CSS stays within its ledger and the report regenerates without drift.
+- [x] After the final upstream merge, the registration-readiness test plus slice structural guards pass 68/68 and TypeScript plus the university gateway typecheck remain green on the combined head.
 - [ ] Ordered and shuffled full suites — not rerun in this database-only slice. Prior runs remain non-green for the recorded runner-mounted `.semester-reference`, timeout and teardown conditions; no focused slice test fails.
 - [ ] HawkScan DAST — required for this production schema change but unavailable because `hawk` is absent and `HAWK_API_KEY` is unset; no scan or security pass is claimed.
 - [ ] Bucket/object provisioning, trusted storage/scanner receipts, extraction, signed reads, browser routes, UI wiring, deployment and institutional operation remain unimplemented and unverified.

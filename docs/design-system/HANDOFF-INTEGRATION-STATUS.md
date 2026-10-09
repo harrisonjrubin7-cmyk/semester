@@ -8,7 +8,7 @@ Phase 0 reconciliation is complete for the archive populations and includes the 
 
 ## Evidence locked in automation pass 14 / slice 22
 
-- The clean branch fetched and merged `origin/main` `845645d3` before production edits. A final dirty-tree fetch observed `de9ee702`; its registration-readiness projection changes six non-overlapping package/docs files and contains no equivalent course-material work or migration collision, so it was not merged or rebased into this slice.
+- The clean branch fetched and merged `origin/main` `845645d3` before production edits. A final dirty-tree fetch observed `de9ee702`; its registration-readiness projection changes six non-overlapping package/docs files and contains no equivalent course-material work or migration collision. After slice commit `b6a610c2`, that upstream head merged cleanly; 68 combined readiness/structural tests, TypeScript and the university gateway typecheck pass on the merged head.
 - `20261009003000_course_material_metadata.sql` adds private metadata and append-only operation history only. It provisions no bucket, object, scanner, extractor, storage/scan receipt, signed read, browser route or UI.
 - New intake requires service role, the named actor's current profile at the tenant, a live exact-course `course:publish` grant and an expected retention id/version equal to the current active resolver result. Tenant, course, term, publisher, planned internal key and original policy authority are bound in one row.
 - Plan, withdrawal and restore use actor/action-scoped request-hash idempotency. Each appends pseudonymous content-free audit and an immutable receipt atomically; forced audit failure rolls state and receipt back.
