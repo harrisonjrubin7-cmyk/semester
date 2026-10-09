@@ -34,17 +34,17 @@ export type ExposureSurface = 'navigation' | 'marketing' | 'ai' | 'tenant-contro
 export type CapabilityAudience = 'student' | 'family' | 'institution' | 'partner' | 'operator';
 
 export interface CapabilityCoreEntity {
-  classification: string;
-  authority: CapabilityDefinition['data'][number]['authority'];
-  purpose: string;
-  retention: string;
+  readonly classification: string;
+  readonly authority: CapabilityDefinition['data'][number]['authority'];
+  readonly purpose: string;
+  readonly retention: string;
 }
 
 export interface CapabilityValueMeasure {
-  id: 'successful-task-completion' | 'fallback-use' | 'support-burden';
-  definition: string;
-  collection: 'device-local-or-approved-aggregate';
-  evidenceStatus: 'measurement-requirement-not-live-result';
+  readonly id: 'successful-task-completion' | 'fallback-use' | 'support-burden';
+  readonly definition: string;
+  readonly collection: 'device-local-or-approved-aggregate';
+  readonly evidenceStatus: 'measurement-requirement-not-live-result';
 }
 
 /**
@@ -114,6 +114,7 @@ export interface CapabilityExposureIndexEntry {
     audit: 'docs/institutional-readiness/AUDIT-LOGGING-EVIDENCE.md';
     support: 'docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md';
     incident: 'docs/RELEASE-INCIDENT-OPERATOR-RUNBOOK.md';
+    auditOwner: 'privacy-security';
     supportOwner: CapabilityDefinition['supportOwner'];
     incidentOwner: 'operations';
   };
@@ -143,21 +144,21 @@ function valueMeasuresFor(capability: CapabilityDefinition): readonly Capability
     evidenceStatus: 'measurement-requirement-not-live-result' as const,
   };
   return Object.freeze([
-    {
+    Object.freeze({
       id: 'successful-task-completion' as const,
       definition: `Count an explicitly completed ${capability.name} action only when the capability acceptance condition is met; never infer completion from attention, content, or time spent.`,
       ...common,
-    },
-    {
+    }),
+    Object.freeze({
       id: 'fallback-use' as const,
       definition: `Measure how often an eligible ${capability.name} attempt uses the declared unavailable-source fallback, without recording protected content.`,
       ...common,
-    },
-    {
+    }),
+    Object.freeze({
       id: 'support-burden' as const,
       definition: `Measure support cases and unresolved incidents for ${capability.name} against authorized active use, using approved aggregate thresholds.`,
       ...common,
-    },
+    }),
   ]);
 }
 
@@ -204,6 +205,7 @@ export const CAPABILITY_EXPOSURE_INDEX: readonly CapabilityExposureIndexEntry[] 
       audit: 'docs/institutional-readiness/AUDIT-LOGGING-EVIDENCE.md' as const,
       support: 'docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md' as const,
       incident: 'docs/RELEASE-INCIDENT-OPERATOR-RUNBOOK.md' as const,
+      auditOwner: 'privacy-security' as const,
       supportOwner: capability.supportOwner,
       incidentOwner: 'operations' as const,
     }),
@@ -248,13 +250,24 @@ export function validateCapabilityExposureIndex(
   }
 
   for (const entry of exposureIndex) {
+    const canonicalCapability = capabilityDefinition(entry.capabilityId);
     if (!entry.coreEntities.length || entry.coreEntities.some((entity) =>
       [entity.classification, entity.authority, entity.purpose, entity.retention].some((value) => !value.trim()))) {
       errors.push(`Incomplete core entities: ${entry.capabilityId}.`);
     }
     if (!entry.audiences.length) errors.push(`Missing audiences: ${entry.capabilityId}.`);
+    if (canonicalCapability) {
+      const requiredAudiences = audiencesFor(canonicalCapability);
+      if (entry.audiences.length !== requiredAudiences.length
+        || requiredAudiences.some((audience) => !entry.audiences.includes(audience))) {
+        errors.push(`Invalid audiences: ${entry.capabilityId}.`);
+      }
+    }
     if (!MATURITY_LEVELS.includes(entry.productMaturity)) errors.push(`Unknown product maturity: ${entry.capabilityId}.`);
-    if (entry.permittedExposureStates !== CAPABILITY_EXPOSURE_STATES) errors.push(`Invalid exposure vocabulary: ${entry.capabilityId}.`);
+    if (entry.permittedExposureStates.length !== CAPABILITY_EXPOSURE_STATES.length
+      || CAPABILITY_EXPOSURE_STATES.some((state, index) => entry.permittedExposureStates[index] !== state)) {
+      errors.push(`Invalid exposure vocabulary: ${entry.capabilityId}.`);
+    }
     const valueMeasureIds = entry.valueMeasures.map((measure) => measure.id);
     if (entry.valueMeasures.length !== requiredValueMeasureIds.length
       || new Set(valueMeasureIds).size !== requiredValueMeasureIds.length

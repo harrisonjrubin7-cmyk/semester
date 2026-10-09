@@ -93,6 +93,7 @@ describe('capability exposure resolver', () => {
       expect(item.valueMeasures.map((measure) => measure.id)).toEqual([
         'successful-task-completion', 'fallback-use', 'support-burden',
       ]);
+      expect(item.valueMeasures.every(Object.isFrozen)).toBe(true);
       expect(item.valueMeasures.every((measure) =>
         measure.collection === 'device-local-or-approved-aggregate' &&
         measure.evidenceStatus === 'measurement-requirement-not-live-result')).toBe(true);
@@ -111,6 +112,7 @@ describe('capability exposure resolver', () => {
       });
       expect(item.mobileExperience.acceptance.trim()).not.toBe('');
       expect(item.operations.supportOwner).toBe(item.supportOwner);
+      expect(item.operations.auditOwner).toBe('privacy-security');
       expect(item.operations.incidentOwner).toBe('operations');
       for (const reference of [item.operations.audit, item.operations.support, item.operations.incident]) {
         expect(existsSync(join(root, reference))).toBe(true);
@@ -152,6 +154,21 @@ describe('capability exposure resolver', () => {
     expect(validateCapabilityExposureIndex(mutated)).toContain(
       `Incomplete value measures: ${duplicated.capabilityId}.`,
     );
+  });
+
+  it('rejects an incomplete audience set derived from the canonical capability', () => {
+    const family = CAPABILITY_EXPOSURE_INDEX.find((item) => item.capabilityId === 'CAP-041')!;
+    const incomplete: CapabilityExposureIndexEntry = { ...family, audiences: ['student'] };
+    const mutated = CAPABILITY_EXPOSURE_INDEX.map((item) => item.capabilityId === family.capabilityId ? incomplete : item);
+    expect(validateCapabilityExposureIndex(mutated)).toContain(`Invalid audiences: ${family.capabilityId}.`);
+  });
+
+  it('accepts the exposure-state vocabulary by value after serialization', () => {
+    const cloned = CAPABILITY_EXPOSURE_INDEX.map((item) => ({
+      ...item,
+      permittedExposureStates: [...item.permittedExposureStates] as typeof CAPABILITY_EXPOSURE_STATES,
+    }));
+    expect(validateCapabilityExposureIndex(cloned)).toEqual([]);
   });
 
   it('authorizes live only for an exact production release of an included standard capability', () => {
