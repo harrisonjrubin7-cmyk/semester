@@ -87,7 +87,7 @@ Outcome: partner/developer platform and advanced operations after the governed c
 4. applicable E2/E3 student and course persistence/source foundations;
 5. applicable E9 configuration and workflow consumers;
 6. governed readiness projection — implemented in repository source after the audit baseline; activation gates remain open;
-7. durable readiness evaluation and reconciliation workflow;
+7. durable readiness evaluation and reconciliation workflow — aggregate/state/idempotency contract implemented; Postgres adapter pending;
 8. student UI adoption with explicit fallback;
 9. advisor/registrar queue projections;
 10. sandbox E2E and database negative tests;
