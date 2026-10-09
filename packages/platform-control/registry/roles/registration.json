@@ -1,0 +1,7 @@
+[
+  {"key":"student","name":"Student","owner":"product-registration","status":"designed","evidence":["docs/ROLE-PERMISSION-MATRIX.md"]},
+  {"key":"advisor","name":"Advisor","owner":"product-registration","status":"designed","evidence":["docs/ROLE-PERMISSION-MATRIX.md"]},
+  {"key":"registrar","name":"Registrar","owner":"product-registration","status":"designed","evidence":["docs/ROLE-PERMISSION-MATRIX.md"]},
+  {"key":"institution_admin","name":"Institution administrator","owner":"institution-product","status":"designed","evidence":["docs/ROLE-PERMISSION-MATRIX.md"]},
+  {"key":"operations","name":"Operations","owner":"operations","status":"designed","evidence":["docs/ROLE-PERMISSION-MATRIX.md"]}
+]
