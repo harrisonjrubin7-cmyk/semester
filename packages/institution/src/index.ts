@@ -36,6 +36,7 @@ export * from './events.ts';
 export * from './pilot.ts';
 export * from './access-saga.ts';
 export * from './registry.ts';
+export * from './readiness.ts';
 
 /**
  * The thirty-seven service areas, each with the name a student would read.
