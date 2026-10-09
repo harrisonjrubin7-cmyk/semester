@@ -266,6 +266,7 @@ describe('in a real store, against the legacy reducer', () => {
   let host: HTMLDivElement;
   let root: Root;
   let actions: TaskActions;
+  let actionRevision = 0;
   let tasks: PersonalTask[] = [];
 
   function Probe({ flag }: { flag: 'off' | 'production' }) {
@@ -273,6 +274,9 @@ describe('in a real store, against the legacy reducer', () => {
     const { state } = useStore();
     useEffect(() => {
       actions = a;
+      actionRevision += 1;
+    }, [a]);
+    useEffect(() => {
       tasks = state.tasks;
     });
     return null;
@@ -283,6 +287,7 @@ describe('in a real store, against the legacy reducer', () => {
   });
 
   beforeEach(async () => {
+    actionRevision = 0;
     host = document.createElement('div');
     document.body.append(host);
     await act(async () => {
@@ -310,8 +315,14 @@ describe('in a real store, against the legacy reducer', () => {
       );
     });
     // A production build fetches the domains lazily, and a press before they arrive takes the legacy path,
-    // which would make every comparison below pass for the wrong reason. Wait for them.
-    if (flag === 'production') await act(async () => void (await new Promise((r) => setTimeout(r, 400))));
+    // which would make every comparison below pass for the wrong reason. The action object changes when the
+    // domains arrive; wait for that transition rather than guessing how many milliseconds a loaded CI runner needs.
+    if (flag === 'production') {
+      for (let i = 0; i < 200 && actionRevision < 2; i += 1) {
+        await act(async () => void (await new Promise((r) => setTimeout(r, 20))));
+      }
+      if (actionRevision < 2) throw new Error('task domains did not finish loading');
+    }
   }
   /** Let queued presses run: each waits for a commit, and a commit needs the `act` scope to close. */
   async function flush() {
