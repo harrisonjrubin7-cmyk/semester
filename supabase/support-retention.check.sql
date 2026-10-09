@@ -288,6 +288,12 @@ begin
      'legacy-grant-student@example.test', now(), now(), now()),
     (supporter, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
      'legacy-grant-supporter@example.test', now(), now(), now());
+  insert into public.profiles (user_id, handle, school_id) values
+    (student, 'legacy_grant_student', null),
+    (supporter, 'legacy_grant_supporter', school);
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+    (supporter, 'support_agent', 'platform', '', 'platform'),
+    (supporter, 'university_staff', 'school', school, 'institution');
   insert into public.consent_record
     (id, tenant_id, subject_user_id, capability, status, policy_version,
      recorded_by, expires_at)
