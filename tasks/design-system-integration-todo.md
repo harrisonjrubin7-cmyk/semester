@@ -1059,6 +1059,26 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-09 governed Drive folder-hierarchy deletion — current automation pass 1, integration slice 52
+
+- [x] Start from and re-fetch current `origin/main` `3c17385d`; confirm no equivalent Drive folder-deletion preview or overlapping control-file work landed.
+- [x] Re-rank the remaining consequence paths and select bounded custom-folder hierarchy deletion; keep permanent file purge, broad demo reset and scanner-backed Import separate.
+- [x] Replace immediate folder deletion with the existing `ConfirmDialog` and `ActionPreview`; add no route, shared component, dependency, schema, server operation or provider behavior.
+- [x] Name the selected folder, nested-folder count and affected-file count; preserve file bytes, course/deadline links, course folders and folders outside the subtree; state the manual-only recovery boundary.
+- [x] Verify Cancel performs no write; confirmation moves direct and nested files to the folder's parent before removing the subtree; a failed move leaves the hierarchy intact and reports recovery guidance.
+- [x] Prove the guard red against the prior immediate deletion, then pass 33/33 Drive, folder, ActionPreview and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning. The build succeeded after moving aside the generated `dist/` that twice raced Vite cleanup with `ENOTEMPTY`.
+- [x] Pass 78/78 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and design-report generation.
+- [ ] Aggregate design report/check launchers — unavailable because this shell has no `npm`/`npx`; exact constituents pass and the report regenerates before its wrapper exits.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but the runner reports `hawk runtime=false`, `HAWK_API_KEY=false` and no Docker/target host; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.

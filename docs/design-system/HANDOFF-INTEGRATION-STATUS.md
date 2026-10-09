@@ -1,10 +1,22 @@
 # Handoff integration status
 
-**Automation pass** 1 of 120 (continued program) · **Integration slice** 51 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `8ea0fec5` · **Latest observed `origin/main`** `d50e699e`
+**Automation pass** 1 of 120 (continued program) · **Integration slice** 52 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `3c17385d` · **Latest observed `origin/main`** `3c17385d`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in current automation pass 1 / integration slice 52
+
+- Current `origin/main` and the branch began and remained together at `3c17385d`; no equivalent Drive folder preview or control-file update landed.
+- Deleting a custom Drive folder now opens the shared `ConfirmDialog` and `ActionPreview` before any write. The preview names the folder, nested-folder count, affected-file count, unaffected file bytes/links/course folders/outside folders and manual-only hierarchy recovery.
+- Cancel performs no write. Confirmation closes first, then moves every direct or nested file to the deleted folder's parent before removing the subtree. A failed file move stops the sequence, reports the failure and leaves the hierarchy in place.
+- No route, shared component, dependency, schema, policy, server operation, provider behavior or external system changed. Permanent file purge and the broad same-origin demo reset remain separate.
+- The guard was proved red against the prior immediate deletion. Drive, folder, ActionPreview and root-unmount suites pass 33/33; TypeScript, lint and university typecheck pass with the existing four lint warnings.
+- Production build passes with the existing chunk-size warning after the pre-existing generated `dist/` was moved aside to clear two Vite `ENOTEMPTY` cleanup races. Token/design contracts pass 78/78, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the design report regenerates.
+- The aggregate design wrapper exits after report generation because this shell has no `npm`/`npx`; exact constituents pass. Ordered and shuffled full suites were not rerun; the last recorded baseline remains pass 30's 23,872 tests.
+- HawkScan remains unavailable (`hawk runtime=false`, `HAWK_API_KEY=false`; the runner also reports no Docker or target host). No target, DAST result or security pass is claimed.
+- The next slice requires another fresh dependency/consequence ranking. Scanner/extractor-backed Import remains externally gated.
 
 ## Evidence locked in current automation pass 1 / integration slice 51
 

@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-08 · **Latest observed `origin/main`** `0d8f70b2` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-09 · **Latest observed `origin/main`** `3c17385d` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -509,6 +509,16 @@ Repository design authority prefers Undo over a confirmation for reversible loca
 The two focused guards were proved red with the `removeFeed` undo registration temporarily absent, then restored. Undo, reducer and root-unmount suites pass 117/117; TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. Token export passes 9/9; design audit remains at zero violations with 86 warnings; CSS remains within its ledger; 138 design/token/responsive contracts pass; and the report regenerates. Ordered and shuffled full suites were not rerun for this bounded slice.
 
 The required HawkScan loop cannot start because Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset; no target, scan or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate. The next slice requires another fresh dependency and consequence-path ranking.
+
+## Governed Drive folder-hierarchy deletion — automation pass 1, integration slice 52
+
+Current `origin/main` and the branch began this slice together at `3c17385d`; a second pre-control-file fetch found no new commit and no equivalent Drive folder preview. Re-ranking selected custom-folder deletion because it is a bounded device-only consequence whose current mutation and data ownership are explicit. Permanent file purge, the broad same-origin demo reset and scanner-backed Import remain separate.
+
+Deleting a custom Drive folder now opens the existing `ConfirmDialog` and `ActionPreview` before any write. The preview names the selected folder, counts every nested custom folder and affected file, states that the file bytes, course/deadline links, course folders and folders outside the subtree stay unchanged, and explains that the removed hierarchy cannot be restored automatically. Cancel performs no write. Confirmation moves each direct or nested file to the deleted folder's parent before removing the complete folder subtree; a failed file move stops the operation and leaves the hierarchy in place. Closing the dialog before that asynchronous sequence prevents duplicate confirmation.
+
+The guard was proved red against the prior immediate deletion, then 33 focused Drive, folder, ActionPreview and root-unmount tests passed. TypeScript, lint, university typecheck and the production build pass; the build required moving aside the existing generated `dist/` after two `ENOTEMPTY` cleanup races, then completed with the existing chunk-size warning. The four pre-existing lint warnings remain. The design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and 78 token/design contracts pass. The design report regenerates before its aggregate wrapper exits because this shell has no `npm`/`npx`; no aggregate launcher or ordered/shuffled full-suite pass is claimed.
+
+HawkScan remains unavailable (`hawk runtime=false`, `HAWK_API_KEY=false`; the runner also reports no Docker or target host), so no DAST result or security pass is claimed. The next slice requires a fresh ranking of the remaining consequence paths; permanent file purge and the same-origin demo reset remain intentionally separate.
 
 ## What was read
 
