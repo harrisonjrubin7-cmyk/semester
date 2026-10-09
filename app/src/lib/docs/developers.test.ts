@@ -566,7 +566,7 @@ describe('the onboarding page', () => {
     const root = JSON.parse(read('package.json')) as { private?: boolean; workspaces?: string[]; scripts?: object; engines?: { node?: string } };
     expect(root.private).toBe(true);
     expect(root.workspaces).toEqual(['app', 'packages/*']);
-    expect(Object.keys(root.scripts ?? {}).sort()).toEqual(['platform-control:test', 'registry:build', 'registry:validate', 'release:check']);
+    expect(Object.keys(root.scripts ?? {}).sort()).toEqual(['platform-control:test', 'registry:build', 'registry:validate', 'release:check', 'release:report']);
     expect(onboarding).toContain(`engines: { node: "${root.engines?.node}" }`);
     expect(onboarding).toContain('workspace root for `app` and `packages/*` and defines only the platform-control orchestration scripts');
     expect(existsSync(at('package-lock.json')), 'the page says the one lockfile is at the root').toBe(true);
