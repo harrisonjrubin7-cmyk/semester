@@ -1,10 +1,23 @@
 # Handoff integration status
 
-**Automation pass** 22 of 120 · **Integration slice** 30 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `4a01b4a0`
+**Automation pass** 23 of 120 · **Integration slice** 31 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `4a01b4a0`
 
 ## State
 
-Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, and the student-controlled date/time/title/type/weight/location/metadata/grading re-import conflict paths are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Stored bytes, a trustworthy adapter/scanner runtime, extraction, server routes and server-backed current-screen wiring remain absent; production bucket/deployment state is unverified. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, and the student-controlled date/time/title/type/weight/location/detail/metadata/grading re-import conflict paths are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Stored bytes, a trustworthy adapter/scanner runtime, extraction, server routes and server-backed current-screen wiring remain absent; production bucket/deployment state is unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 23 / slice 31
+
+- Current `origin/main` remains `4a01b4a0`, already an ancestor of the branch; no equivalent paired-deadline detail conflict behavior has landed.
+- A paired deadline's `detail` is student-facing context used across current course, calendar, search, planning and export surfaces. The student's approved current copy remains authoritative until they explicitly accept the newly extracted detail. Every changed item detail now creates an unselected stable `detail:<current-item-id>` conflict and is no longer counted as unchanged.
+- The unresolved count disables save and the pure merge boundary independently rejects incomplete or invalid maps. Keep-current restores the current deadline detail, use-imported retains the extracted detail, and both preserve the current item id and completion-tick relationship without affecting date, title, due-time, type, weight, location or course-field choices.
+- The detail decision does not rewrite the verbatim quote, `checked` citation locator or source label. That provenance bundle remains a separate integrity boundary rather than another free-text choice.
+- The UI reuses `Folding`, `Blueprint`, `SectionLabel` and the existing native fieldset/radio pattern. Existing semantic styles retain keyboard operation, focus, 44px targets, wrapping and narrow-layout behavior; no route, shared component, raw design value, schema, dependency or parallel course model was added.
+- The guard was proved red before implementation: three focused failures showed the absent `detail:current-id` decision, missing radio group and ineffective keep-current merge while 47 controls passed. After implementation, directly changed logic/render tests pass 50/50 and the broader focused Import/document/source boundary passes 153/153.
+- TypeScript, lint, university typecheck and production build pass. Lint retains four existing warnings and the build retains existing chunk warnings. The 78 token/design constituents pass; design audit has zero violations within the existing 86-warning ledger; CSS remains within its ledger; and the design report regenerates without drift.
+- The aggregate report wrapper writes the unchanged report but exits 1 because it invokes unavailable `npm`. Ordered and shuffled full suites were not run for this bounded client slice; no aggregate wrapper or full-suite pass is claimed.
+- HawkScan preflight cannot start because the Hawk CLI v6+, Docker, `HAWK_API_KEY` and `HAWK_APP_HOST` are absent. A local credential file exists but was not read. No DAST result or security pass is claimed.
+- Quote/source provenance, durable server conflict records, external reconciliation, safe ICS publication, server ingestion and signed reads remain incomplete.
 
 ## Evidence locked in automation pass 22 / slice 30
 

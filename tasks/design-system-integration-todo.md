@@ -628,8 +628,30 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Reconcile paired deadline free-form `detail` to named ownership and acceptance behavior before implementing a conflict choice; keep it independent from source quotes and provenance.
+- [x] Reconcile paired deadline free-form `detail` to named ownership and acceptance behavior before implementing a conflict choice; keep it independent from source quotes and provenance. Completed in automation pass 23 / slice 31.
 - [ ] Keep quote/source provenance separate until its integrity and checked-citation behavior have an explicit acceptance contract.
+- [ ] Keep durable server conflict records, external reconciliation, safe ICS publication, server ingestion and signed reads outside this local client merge slice.
+
+## 2026-10-08 student-controlled deadline-detail conflicts — automation pass 23, slice 31
+
+- [x] Fetch current `origin/main` `4a01b4a0`, confirm it is already an ancestor and find no equivalent paired-deadline detail choice.
+- [x] Name the student-approved current item detail as the authority until the student explicitly accepts newly extracted syllabus text; keep it separate from verbatim quotes, checked citation locators and source labels.
+- [x] Reuse the existing Import/Rediff route, native fieldset/radio pattern and semantic form styles; add no route, component, dependency, schema, raw design value or parallel course model.
+- [x] Treat every changed detail on a confidently paired deadline as an unresolved source conflict and stop counting it as unchanged.
+- [x] Use a stable `detail:<current-item-id>` decision key with no preselected winner; reject incomplete or invalid maps in the pure merge boundary.
+- [x] Apply the detail choice independently from date, title, due time, type, weight, location and course metadata while preserving the current item id and completion-tick relationship.
+- [x] Render the comparison in the existing keyboard-operable native radio group and extend live conflict guidance to name deadline detail.
+- [x] Prove the guard red before implementation: three focused failures showed the absent stable decision, missing control and ineffective keep-current merge while 47 controls passed.
+- [x] Directly changed logic/render tests pass 50/50; the broader focused Import/document/source boundary passes 153/153.
+- [x] TypeScript, lint, university typecheck and production build pass with the existing four lint and chunk warnings.
+- [x] The 78 token/design constituents pass; design audit has zero violations with 86 existing warnings; CSS remains within its ledger; the design report regenerates without drift.
+- [ ] Aggregate design report wrapper — writes the unchanged report, then exits 1 because it invokes unavailable `npm`; constituent checks are green and no wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not run for this bounded client slice; focused regression and phase gates are green.
+- [ ] HawkScan DAST — preflight stops because the Hawk CLI v6+, Docker, `HAWK_API_KEY` and `HAWK_APP_HOST` are absent. A local credential file exists but was not read; no DAST result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Reconcile the paired deadline provenance bundle (`quote`, `checked` locator and `source`) to an integrity-preserving acceptance contract before offering any source choice.
 - [ ] Keep durable server conflict records, external reconciliation, safe ICS publication, server ingestion and signed reads outside this local client merge slice.
 
 ## Earlier integration baseline preserved

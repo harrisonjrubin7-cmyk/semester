@@ -465,6 +465,31 @@ describe('deadline-location conflict choices', () => {
   });
 });
 
+describe('deadline-detail conflict choices', () => {
+  const beforeItem = { ...item('current-id', 'Midterm', 9, 8), detail: 'Chapters 1–4; bring a calculator.' };
+  const afterItem = { ...item('fresh-id', 'Midterm', 9, 8), detail: 'Chapters 1–5; one note card allowed.' };
+  const before = module([beforeItem]);
+  const after = module([afterItem]);
+
+  it('requires a stable explicit choice separate from citation provenance', () => {
+    const changes = diff(before, after, YEAR);
+    expect(unresolvedReimportConflictIds(changes, {})).toEqual(['detail:current-id']);
+    expect(() => applyReimportConflictChoices(before, after, YEAR, {})).toThrow(/Every re-import source conflict/);
+  });
+
+  it('applies either source only after a choice and preserves the stable item id', () => {
+    const kept = applyReimportConflictChoices(before, after, YEAR, {
+      'detail:current-id': 'keep_current',
+    });
+    expect(kept.items[0]).toMatchObject({ id: 'current-id', detail: 'Chapters 1–4; bring a calculator.' });
+
+    const imported = applyReimportConflictChoices(before, after, YEAR, {
+      'detail:current-id': 'use_imported',
+    });
+    expect(imported.items[0]).toMatchObject({ id: 'current-id', detail: 'Chapters 1–5; one note card allowed.' });
+  });
+});
+
 describe('ticksKept', () => {
   it('counts what survives and what does not', () => {
     const before = module([
