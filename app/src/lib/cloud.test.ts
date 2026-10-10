@@ -237,6 +237,14 @@ describe('sendReset', () => {
   });
 });
 
+describe('signOut', () => {
+  it('propagates an account-service refusal to the caller', async () => {
+    const mod = await load();
+    harness.db.auth.signOut.mockResolvedValueOnce({ error: { message: 'Sign-out service unavailable' } });
+    await expect(mod.signOut()).rejects.toThrow(/Sign-out service unavailable/);
+  });
+});
+
 describe('namesSaid', () => {
   /*
    * The paragraph under the buttons named Google and Microsoft by hand, and
