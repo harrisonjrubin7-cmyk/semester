@@ -161,6 +161,7 @@ describe('an edit goes up on the database path', () => {
     let seenWhenFlushed = '';
     flushNow.mockImplementationOnce(async () => {
       seenWhenFlushed = JSON.parse(localStorage.getItem(SEEN_KEY) || '{}').state ?? '';
+      return true;
     });
 
     await mount();
@@ -173,6 +174,22 @@ describe('an edit goes up on the database path', () => {
     expect(flushNow).toHaveBeenCalled();
     expect(seenWhenFlushed).toBe('s1');
     expect(store.asking).toBeNull();
+  });
+
+  it('does not mark an automatic account pull as seen when its durable write fails', async () => {
+    pull.mockResolvedValue({
+      state: { tasks: [{ id: 'remote', title: 'From the account', done: true, created: 2 }] },
+      courses: [],
+      updated: 2,
+      seen: { state: 'account-v2', courses: {} },
+    });
+    flushNow.mockResolvedValue(false);
+
+    await mount();
+    await wait(3_000);
+
+    expect(JSON.parse(localStorage.getItem(SEEN_KEY) || '{}').state).not.toBe('account-v2');
+    expect(store.state.tasks.some((task) => task.id === 'remote')).toBe(false);
   });
 
   it('makes an accepted account copy durable before recording it as seen', async () => {

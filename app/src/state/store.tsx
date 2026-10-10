@@ -1035,7 +1035,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           }
           durable = reducer(durable, { type: 'hydrate', persisted: taken });
           persistToDb(pickPersisted(durable), tellOtherTabs);
-          await flushNow();
+          if (!(await flushNow())) {
+            throw new Error('The account copy could not be saved on this device.');
+          }
         }
         if (Object.keys(gone).length > 0) dispatch({ type: 'dropTicks', removals: gone });
         if (Object.keys(deletions.dropHere).length > 0) dispatch({ type: 'dropRecords', removals: deletions.dropHere });
