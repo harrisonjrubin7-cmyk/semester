@@ -111,8 +111,10 @@ The browser's `lib/university.ts` now uses the shared SDK. Its transport
 preserves the existing secure-origin, no-redirect, no-cookie and timeout rules;
 mutating calls receive one idempotency key per logical call; only safe reads or
 keyed writes retry. The gateway context now validates and carries that key to
-adapters, but the legacy institution commit route still opts out of network
-retry until a shared persistent idempotency store wraps the route, preserving its
+adapters. The local SQLite action journal implements the shared persistent
+idempotency-store contract, but the production PostgreSQL journal does not and
+the legacy institution commit route is not wrapped with the store. That route
+therefore still opts out of network retry, preserving its
 unknown-outcome-to-reconciliation rule. The two older refusal shapes are translated at this
 migration boundary with a focused equivalence test. **Not done:** the edge
 functions have not adopted the envelope, and `environment`,

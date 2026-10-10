@@ -22,6 +22,7 @@
 import { cloud } from '../cloud';
 
 export { CONSOLE_CAPABILITY, holdsConsole } from './capability';
+export { privilegedMfaRequired, watchMfaSession } from '../mfa-status';
 
 /** MFA is fresh for a privileged action within this many minutes of verifying (`private.mfa_fresh`). */
 export const MFA_FRESH_MINUTES = 15;
@@ -1020,7 +1021,7 @@ export interface MfaLevel {
   verifiedAt: Date | null;
 }
 
-const MFA_METHODS = new Set(['totp', 'webauthn', 'phone', 'mfa/totp', 'mfa/phone', 'mfa/webauthn']);
+const MFA_METHODS = new Set(['totp', 'phone', 'webauthn', 'mfa/totp', 'mfa/phone', 'mfa/webauthn']);
 
 export async function mfaLevel(): Promise<MfaLevel> {
   const db = await cloud();
@@ -1050,12 +1051,49 @@ export interface TotpEnrolment {
   uri: string;
 }
 
-/** The verified TOTP factors this account already has, so the step knows whether to enrol or challenge. */
-export async function totpFactors(): Promise<{ id: string; name: string }[]> {
+export interface MfaFactor {
+  id: string;
+  name: string;
+  type: 'totp' | 'phone';
+}
+
+/** The verified code factors this account already has, so the step can challenge one before enrolling TOTP. */
+export async function mfaFactors(): Promise<MfaFactor[]> {
   const db = await cloud();
   const { data, error } = await db.auth.mfa.listFactors();
   if (error) throw new Error(message(error, 'Could not list your authenticators.'));
-  return (data?.totp ?? []).map((f) => ({ id: f.id, name: f.friendly_name ?? '' }));
+  const groups = data as unknown as {
+    totp?: { id: string; friendly_name?: string; status?: string }[];
+    phone?: { id: string; friendly_name?: string; status?: string }[];
+  } | null;
+  const factors: MfaFactor[] = [];
+  for (const [type, listed] of [['totp', groups?.totp ?? []], ['phone', groups?.phone ?? []]] as const) {
+    for (const factor of listed) {
+      if (factor.status && factor.status !== 'verified') continue;
+      factors.push({ id: factor.id, name: factor.friendly_name ?? '', type });
+    }
+  }
+  return factors;
+}
+
+/** IDs of unfinished enrolments. They may still be active in another tab, so merely finding one never removes it. */
+export async function unverifiedMfaFactorIds(): Promise<string[]> {
+  const db = await cloud();
+  const { data, error } = await db.auth.mfa.listFactors();
+  if (error) throw new Error(message(error, 'Could not inspect unfinished authenticator setup.'));
+  const all = (data as unknown as { all?: { id: string; status?: string }[] } | null)?.all ?? [];
+  return all.filter((factor) => factor.status === 'unverified').map((factor) => factor.id);
+}
+
+/** Remove only the unfinished enrolments the operator saw before explicitly choosing to restart setup. */
+export async function clearUnverifiedMfaFactors(observedFactorIds: readonly string[]): Promise<void> {
+  const db = await cloud();
+  const stillUnverified = new Set(await unverifiedMfaFactorIds());
+  for (const factorId of observedFactorIds) {
+    if (!stillUnverified.has(factorId)) continue;
+    const { error: removeError } = await db.auth.mfa.unenroll({ factorId });
+    if (removeError) throw new Error(message(removeError, 'Could not restart unfinished authenticator setup.'));
+  }
 }
 
 export async function enrollTotp(friendlyName = 'Operations console'): Promise<TotpEnrolment> {
@@ -1065,14 +1103,15 @@ export async function enrollTotp(friendlyName = 'Operations console'): Promise<T
   return { factorId: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret, uri: data.totp.uri };
 }
 
-export async function challengeTotp(factorId: string): Promise<string> {
+export async function challengeMfa(factorId: string, factorType: MfaFactor['type'] = 'totp'): Promise<string> {
   const db = await cloud();
-  const { data, error } = await db.auth.mfa.challenge({ factorId });
+  const params = factorType === 'phone' ? { factorId, channel: 'sms' as const } : { factorId };
+  const { data, error } = await db.auth.mfa.challenge(params);
   if (error || !data) throw new Error(message(error, 'Could not start the challenge.'));
   return data.id;
 }
 
-export async function verifyTotp(factorId: string, challengeId: string, code: string): Promise<void> {
+export async function verifyMfa(factorId: string, challengeId: string, code: string): Promise<void> {
   const db = await cloud();
   const { error } = await db.auth.mfa.verify({ factorId, challengeId, code: code.replace(/\s+/g, '') });
   if (error) throw new Error(message(error, 'That code was not accepted.'));

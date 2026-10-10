@@ -35,7 +35,7 @@ create or replace function pg_temp.become(who uuid)
 returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims',
-    json_build_object('sub', who::text, 'role', 'authenticated')::text, true);
+    json_build_object('sub', who::text, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   execute 'set local role authenticated';
 end $$;
 
@@ -278,6 +278,12 @@ begin
   perform pg_temp.become_mfa(operator, 'aal2', 'webauthn', now() - interval '14 minutes');
   reset role;
   if not private.mfa_fresh() then raise exception 'FAILED: a WebAuthn assertion fourteen minutes ago is not fresh'; end if;
+  perform pg_temp.become_mfa(operator, 'aal2', 'mfa/webauthn', now() - interval '4 minutes');
+  reset role;
+  if not private.mfa_fresh() then raise exception 'FAILED: an auth-js WebAuthn assertion four minutes ago is not fresh'; end if;
+  perform pg_temp.become_mfa(operator, 'aal2', 'mfa/phone', now() - interval '2 minutes');
+  reset role;
+  if not private.mfa_fresh() then raise exception 'FAILED: an auth-js phone verification two minutes ago is not fresh'; end if;
   perform pg_temp.become_mfa(operator, 'aal2', 'totp', now() - interval '16 minutes');
   reset role;
   if private.mfa_fresh() then raise exception 'FAILED: a TOTP verified sixteen minutes ago counted as fresh'; end if;
@@ -293,7 +299,7 @@ begin
   perform pg_temp.become_mfa(operator, 'aal2', 'totp', now() - interval '40 minutes');
   reset role;
   if not private.mfa_fresh('1 hour') then raise exception 'FAILED: the window argument is ignored'; end if;
-  raise notice 'ok  mfa_fresh: recent totp/webauthn on aal2 is fresh; stale, aal1, a first factor and no claims are not';
+  raise notice 'ok  mfa_fresh: recent totp/webauthn/phone on aal2 is fresh; stale, aal1, a first factor and no claims are not';
 
   perform pg_temp.become_mfa(operator, 'aal2', 'totp', now() - interval '1 minute');
   reset role;
@@ -341,7 +347,7 @@ begin
   end if;
   raise notice 'ok  the duty matrix cannot be rewritten through the API';
 
-  perform set_config('request.jwt.claims', json_build_object('sub', operator::text)::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', operator::text, 'aal', 'aal2')::text, true);
   if not private.party_held('role:platform_admin') then raise exception 'FAILED: party_held misses a live role'; end if;
   if private.party_held('role:university_admin') then raise exception 'FAILED: party_held claims a role not held'; end if;
   if private.party_held('security') then raise exception 'FAILED: party_held gives the operator a seat'; end if;

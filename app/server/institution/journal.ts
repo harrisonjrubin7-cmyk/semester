@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import type {
   ActionInput,
@@ -5,6 +6,12 @@ import type {
   Review,
   UniversityIdentity,
 } from '../../../packages/institution/src/index.ts';
+import type {
+  BeginOutcome,
+  IdempotencyScope,
+  IdempotencyStore,
+  StoredResponse,
+} from '@semester/platform';
 import type { IntelligenceAuditRecord } from './intelligence.ts';
 import {
   assertJournalKey,
@@ -103,7 +110,7 @@ const KEEP = {
   audit: 180 * 86_400_000,
 } as const;
 
-export class ActionJournal implements ActionJournalStore {
+export class ActionJournal implements ActionJournalStore, IdempotencyStore {
   private db: DatabaseSync;
   private key: Buffer;
 
@@ -147,6 +154,21 @@ export class ActionJournal implements ActionJournalStore {
         action_id TEXT,
         confirmation TEXT
       );
+      CREATE TABLE IF NOT EXISTS idempotency(
+        tenant TEXT NOT NULL,
+        actor TEXT NOT NULL,
+        command TEXT NOT NULL,
+        idempotency_key TEXT NOT NULL,
+        request_hash TEXT NOT NULL,
+        lease_id TEXT NOT NULL,
+        state TEXT NOT NULL CHECK(state IN ('in_progress','completed')),
+        response_status INTEGER,
+        response_body TEXT,
+        lease_until INTEGER NOT NULL,
+        expires INTEGER NOT NULL,
+        PRIMARY KEY(tenant,actor,command,idempotency_key)
+      );
+      CREATE INDEX IF NOT EXISTS idempotency_expiry ON idempotency(expires);
     `);
     /*
      * A journal file written before the correlation column existed has an
@@ -318,6 +340,106 @@ export class ActionJournal implements ActionJournalStore {
       );
   }
 
+  /** Begin one shared-platform idempotency lease in the same durable file as the action journal. */
+  async begin(
+    scope: IdempotencyScope,
+    requestHash: string,
+    now: Date,
+    leaseMs: number,
+    ttlMs: number,
+  ): Promise<BeginOutcome> {
+    const at = now.getTime();
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const row = this.db.prepare(
+        `SELECT request_hash,lease_id,state,response_status,response_body,lease_until,expires
+           FROM idempotency
+          WHERE tenant=? AND actor=? AND command=? AND idempotency_key=?`,
+      ).get(scope.tenantId, scope.actorId, scope.command, scope.key) as {
+        request_hash: string;
+        lease_id: string;
+        state: 'in_progress' | 'completed';
+        response_status: number | null;
+        response_body: string | null;
+        lease_until: number;
+        expires: number;
+      } | undefined;
+
+      if (row && row.expires > at) {
+        if (row.request_hash !== requestHash) {
+          this.db.exec('COMMIT');
+          return { kind: 'conflict' };
+        }
+        if (row.state === 'completed' && row.response_status !== null && row.response_body !== null) {
+          const body = openJournalRow(this.key, row.response_body);
+          this.db.exec('COMMIT');
+          return { kind: 'replay', response: { status: row.response_status, body } };
+        }
+        if (row.lease_until > at) {
+          this.db.exec('COMMIT');
+          return { kind: 'in_progress', retryAfterSeconds: Math.ceil((row.lease_until - at) / 1000) };
+        }
+      }
+
+      const leaseId = randomUUID();
+      this.db.prepare(
+        `INSERT INTO idempotency(
+           tenant,actor,command,idempotency_key,request_hash,lease_id,state,
+           response_status,response_body,lease_until,expires
+         ) VALUES(?,?,?,?,?,?,'in_progress',NULL,NULL,?,?)
+         ON CONFLICT(tenant,actor,command,idempotency_key) DO UPDATE SET
+           request_hash=excluded.request_hash,
+           lease_id=excluded.lease_id,
+           state='in_progress',
+           response_status=NULL,
+           response_body=NULL,
+           lease_until=excluded.lease_until,
+           expires=excluded.expires`,
+      ).run(
+        scope.tenantId,
+        scope.actorId,
+        scope.command,
+        scope.key,
+        requestHash,
+        leaseId,
+        at + leaseMs,
+        at + ttlMs,
+      );
+      this.db.exec('COMMIT');
+      return { kind: 'started', leaseId };
+    } catch (error) {
+      this.db.exec('ROLLBACK');
+      throw error;
+    }
+  }
+
+  async complete(scope: IdempotencyScope, leaseId: string, response: StoredResponse, now: Date): Promise<boolean> {
+    if (JSON.stringify(response.body) === undefined) throw new Error('An idempotency response must be JSON-serialisable.');
+    const body = sealJournalRow(this.key, response.body);
+    const result = this.db.prepare(
+      `UPDATE idempotency
+          SET state='completed',response_status=?,response_body=?,lease_until=?
+        WHERE tenant=? AND actor=? AND command=? AND idempotency_key=? AND lease_id=?`,
+    ).run(
+      response.status,
+      body,
+      now.getTime(),
+      scope.tenantId,
+      scope.actorId,
+      scope.command,
+      scope.key,
+      leaseId,
+    );
+    return result.changes === 1;
+  }
+
+  async release(scope: IdempotencyScope, leaseId: string): Promise<boolean> {
+    const result = this.db.prepare(
+      'DELETE FROM idempotency WHERE tenant=? AND actor=? AND command=? AND idempotency_key=? AND lease_id=?',
+    ).run(scope.tenantId, scope.actorId, scope.command, scope.key, leaseId);
+    return result.changes === 1;
+  }
+
   /**
    * Drop what is safely done with. Never what is unresolved.
    *
@@ -335,6 +457,7 @@ export class ActionJournal implements ActionJournalStore {
       .run(now - KEEP.ready, now - KEEP.completed);
     this.db.prepare('DELETE FROM audit WHERE at<?').run(new Date(now - KEEP.audit).toISOString());
     this.db.prepare('DELETE FROM intelligence_audit WHERE at<?').run(new Date(now - KEEP.audit).toISOString());
+    this.db.prepare('DELETE FROM idempotency WHERE expires<?').run(now);
   }
 
   close(): void {
