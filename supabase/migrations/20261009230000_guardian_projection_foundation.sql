@@ -50,6 +50,16 @@ create index if not exists guardian_calendar_projection_reader_idx
 create index if not exists guardian_calendar_projection_link_idx
   on private.guardian_calendar_projections (link_id)
   where invalidated_at is null;
+-- Full indexes cover foreign-key cleanup. The partial read indexes above do
+-- not cover invalidated rows and therefore cannot support every FK check.
+create index if not exists guardian_calendar_projection_school_fk_idx
+  on private.guardian_calendar_projections (school_id);
+create index if not exists guardian_calendar_projection_link_fk_idx
+  on private.guardian_calendar_projections (link_id);
+create index if not exists guardian_calendar_projection_student_fk_idx
+  on private.guardian_calendar_projections (student_id);
+create index if not exists guardian_calendar_projection_guardian_fk_idx
+  on private.guardian_calendar_projections (guardian_id);
 
 create table if not exists private.guardian_projection_access_events (
   id               bigint      generated always as identity primary key,
@@ -79,6 +89,8 @@ create index if not exists guardian_projection_access_student_idx
   on private.guardian_projection_access_events (student_id, read_at desc);
 create index if not exists guardian_projection_access_guardian_idx
   on private.guardian_projection_access_events (guardian_id, read_at desc);
+create index if not exists guardian_projection_access_school_fk_idx
+  on private.guardian_projection_access_events (school_id);
 
 revoke all on table private.guardian_calendar_projections,
                     private.guardian_projection_access_events
