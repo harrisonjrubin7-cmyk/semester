@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -9,7 +10,14 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.core.database import Base
-from app.models.entities import BackgroundJob, Course, JobStatus, SourceDocument, User
+from app.models.entities import (
+    BackgroundJob,
+    Course,
+    JobStatus,
+    SourceDocument,
+    StudyAsset,
+    User,
+)
 
 
 def _worker_module():
@@ -84,12 +92,31 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
             status=JobStatus.failed,
             revoked_at=now - timedelta(minutes=1),
         )
-        session.add_all([expired_extract, expired_generation, active, revoked])
+        deleted_target = StudyAsset(
+            course_id=course.id,
+            asset_type="study_guide",
+            title="Deleted target",
+            content={"sections": []},
+            deleted_at=now - timedelta(minutes=1),
+        )
+        session.add(deleted_target)
+        session.flush()
+        inactive = BackgroundJob(
+            course_id=course.id,
+            target_id=deleted_target.id,
+            job_type="regenerate:study_guide",
+            status=JobStatus.running,
+            lease_owner="deleted-target-worker",
+            lease_generation=1,
+            lease_expires_at=now - timedelta(seconds=1),
+        )
+        session.add_all([expired_extract, expired_generation, active, revoked, inactive])
         session.commit()
         expected = {
             ("extract_document", str(expired_extract.id)),
             ("generate_study_asset", str(expired_generation.id)),
         }
+        inactive_id = inactive.id
 
     worker = _worker_module()
     worker.SessionLocal = testing_session
@@ -103,3 +130,31 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
 
     assert worker.recover_expired_jobs.run() == {"redelivered": 2}
     assert set(sent) == expected
+    with testing_session() as session:
+        terminal = session.get(BackgroundJob, inactive_id)
+        assert terminal.status == JobStatus.failed
+        assert terminal.revoked_at == now
+        assert terminal.error == "Job scope was deleted"
+
+
+def test_lease_heartbeat_runs_while_worker_operation_is_blocked(monkeypatch):
+    worker = _worker_module()
+    monkeypatch.setattr(worker, "JOB_HEARTBEAT_INTERVAL_SECONDS", 0.01, raising=False)
+    calls = []
+
+    class FakeSession:
+        def close(self):
+            pass
+
+    monkeypatch.setattr(worker, "SessionLocal", FakeSession)
+    monkeypatch.setattr(
+        worker,
+        "heartbeat_job",
+        lambda _db, lease, _now, _ttl: calls.append(lease) or True,
+        raising=False,
+    )
+    lease = object()
+    with worker.maintain_job_lease(lease):
+        time.sleep(0.04)
+
+    assert len(calls) >= 2

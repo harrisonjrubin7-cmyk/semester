@@ -45,10 +45,16 @@ def test_job_cancellation_is_owner_scoped_idempotent_and_terminal():
             job_type="generate:study_guide",
             status=JobStatus.completed,
         )
-        session.add_all([running, completed])
+        failed = BackgroundJob(
+            course_id=course.id,
+            job_type="generate:study_guide",
+            status=JobStatus.failed,
+            error="Original provider failure",
+        )
+        session.add_all([running, completed, failed])
         session.commit()
         owner_id, outsider_id = owner.id, outsider.id
-        running_id, completed_id = running.id, completed.id
+        running_id, completed_id, failed_id = running.id, completed.id, failed.id
 
     def override_db():
         with testing_session() as session:
@@ -81,6 +87,11 @@ def test_job_cancellation_is_owner_scoped_idempotent_and_terminal():
         assert client.post(
             f"/api/v1/jobs/{completed_id}/cancel", headers=owner_headers
         ).status_code == 409
+        assert client.post(
+            f"/api/v1/jobs/{failed_id}/cancel", headers=owner_headers
+        ).status_code == 409
+        with testing_session() as session:
+            assert session.get(BackgroundJob, failed_id).error == "Original provider failure"
     finally:
         app.dependency_overrides.clear()
 
@@ -124,7 +135,9 @@ def test_deleting_study_asset_revokes_its_inflight_regeneration():
             f"/api/v1/study-assets/{asset_id}", headers=headers
         ).status_code == 204
         with testing_session() as session:
-            assert session.get(StudyAsset, asset_id) is None
+            deleted = session.get(StudyAsset, asset_id)
+            assert deleted is not None
+            assert deleted.deleted_at is not None
             revoked = session.get(BackgroundJob, job_id)
             assert revoked is not None
             assert revoked.status == JobStatus.failed

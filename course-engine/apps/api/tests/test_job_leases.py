@@ -16,6 +16,7 @@ from app.models.entities import (
     Course,
     JobStatus,
     SourceDocument,
+    StudyAsset,
     User,
 )
 from app.services.job_leases import (
@@ -210,6 +211,27 @@ def test_revocation_and_soft_deletion_barriers_prevent_resurrection(tmp_path: Pa
         db.get(User, deleted_user).deleted_at = NOW
         db.commit()
         assert claim_job(db, third_job, "worker", NOW, TTL) is None
+
+    with sessions() as db:
+        asset = StudyAsset(
+            course_id=course_id,
+            asset_type="study_guide",
+            title="Deleted target",
+            content={"sections": []},
+            deleted_at=NOW,
+        )
+        db.add(asset)
+        db.flush()
+        target_job = BackgroundJob(
+            course_id=course_id,
+            target_id=asset.id,
+            job_type="regenerate:study_guide",
+        )
+        db.add(target_job)
+        db.commit()
+        target_job_id = target_job.id
+    with sessions() as db:
+        assert claim_job(db, target_job_id, "worker", NOW, TTL) is None
 
 
 def test_failure_is_terminal_and_stale_failure_is_ignored(tmp_path: Path):
