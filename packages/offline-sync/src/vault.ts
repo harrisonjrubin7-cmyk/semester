@@ -270,8 +270,9 @@ export class AttachmentCache {
   }
 
   /** Erase by file id, by owning entity (membership removed), or everything. Bytes and wrapped key both go. */
-  async revoke(match: { ids?: string[]; ownerEntityIds?: string[]; all?: boolean }): Promise<number> {
-    const matches = (row: CachedFile) => match.all || match.ids?.includes(row.id) || match.ownerEntityIds?.includes(row.ownerEntityId)
+  async revoke(match: { ids?: string[]; owners?: Array<{ dataClass: string; id: string }>; all?: boolean }): Promise<number> {
+    const ownerKeys = new Set(match.owners?.map((owner) => `${owner.dataClass}\u0000${owner.id}`))
+    const matches = (row: CachedFile) => match.all || match.ids?.includes(row.id) || ownerKeys.has(`${row.dataClass}\u0000${row.ownerEntityId}`)
     // A prior interrupted call may already have made the row logically retired.
     // Count it when this invocation completes its owed blob deletion so callers
     // observe the cleanup they requested, not a misleading zero.

@@ -266,12 +266,18 @@ describe('attachment cache', () => {
     expect(blobs.names()).toEqual([])
   })
 
-  it('erases the bytes and the key when revoked by file, by owner, or all', async () => {
+  it('revokes owners by class and id without touching an authored-id collision', async () => {
     const { c, blobs, rows } = await cache()
-    await c.put(meta('a'), bytes('1')); await c.put(meta('b', { ownerEntityId: 'course-2' }), bytes('2')); await c.put(meta('c', { ownerEntityId: 'course-2' }), bytes('3'))
+    await c.put(meta('a'), bytes('1'))
+    await c.put(meta('b', { ownerEntityId: 'course-2' }), bytes('2'))
+    await c.put(meta('c', { ownerEntityId: 'course-2' }), bytes('3'))
+    await c.put(meta('authored', { dataClass: 'personal_plan', ownerEntityId: 'course-2' }), bytes('student plan'))
     expect(await c.revoke({ ids: ['a'] })).toBe(1)
-    expect(await c.revoke({ ownerEntityIds: ['course-2'] })).toBe(2)
-    expect(blobs.names()).toEqual([]); expect(rows()).toEqual([])
+    expect(await c.revoke({ owners: [{ dataClass: 'course_content', id: 'course-2' }] })).toBe(2)
+    expect(rows().map((row) => row.id)).toEqual(['authored'])
+    expect(blobs.names()).toEqual([rows()[0]!.blobName])
+    expect(await c.revoke({ all: true })).toBe(1)
+    expect(rows()).toEqual([])
   })
 
   it('detects a tampered blob', async () => {
