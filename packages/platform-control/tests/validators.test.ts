@@ -22,6 +22,25 @@ test('later maturity cannot bypass an earlier unproven stage', async () => {
   assert.ok(issues.some(({ code, path }) => code === 'missing_stage_evidence' && path.endsWith('production_ready')));
 });
 
+test('a true maturity stage requires the evidence classes that prove that stage', async () => {
+  const snapshot = await loadRegistry();
+  snapshot.capabilities[0]!.evidence.schema = [
+    { path: 'packages/institution/src/readiness.ts', kind: 'code' },
+  ];
+  const issues = await validateSnapshot(snapshot);
+  assert.deepEqual(
+    issues.filter(({ code, path }) => code === 'missing_evidence_kind' && path.endsWith('.schema')).map(({ message }) => message),
+    ['True stage schema requires schema evidence.', 'True stage schema requires test evidence.'],
+  );
+});
+
+test('malformed maturity evidence reports an issue instead of crashing validation', async () => {
+  const snapshot = await loadRegistry();
+  snapshot.capabilities[0]!.evidence.designed = ['not-an-evidence-object'] as never;
+  const issues = await validateSnapshot(snapshot);
+  assert.ok(issues.some(({ code, path }) => code === 'invalid_evidence_reference' && path.endsWith('.designed.0')));
+});
+
 test('the P0 board is complete, ordered, and remains fail-closed at launch', async () => {
   const snapshot = await loadRegistry();
   assert.equal(snapshot.backlog.length, 20);

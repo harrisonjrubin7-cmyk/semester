@@ -14,7 +14,9 @@ import { repositoryRoot } from './registry-io.ts';
 export async function validateEvidence(snapshot: RegistrySnapshot): Promise<ValidationIssue[]> {
   const issues: ValidationIssue[] = [];
   const paths = new Set<string>();
-  for (const capability of snapshot.capabilities) for (const values of Object.values(capability.evidence)) for (const path of values ?? []) paths.add(path);
+  for (const capability of snapshot.capabilities) for (const values of Object.values(capability.evidence)) for (const reference of values ?? []) {
+    if (typeof reference === 'object' && reference !== null && typeof reference.path === 'string' && reference.path.trim()) paths.add(reference.path);
+  }
   for (const group of [snapshot.systems, snapshot.roles, snapshot.screens, snapshot.workflows, snapshot.integrations, snapshot.controls, snapshot.documents, snapshot.tenants, snapshot.manifests ?? [], snapshot.workspaces ?? []]) {
     for (const record of group) for (const path of record.evidence) paths.add(path);
   }

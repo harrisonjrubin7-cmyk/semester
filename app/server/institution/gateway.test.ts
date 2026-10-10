@@ -118,6 +118,7 @@ function fixture({
   let intelligenceConfirmedRoles: UniversityIdentity['roles'] = [];
   let version = '1';
   let calls = 0;
+  let executedIdempotencyKey: string | undefined;
   let mode = 'ok';
   let reviewTitle = 'Submit coursework';
 
@@ -159,8 +160,9 @@ function fixture({
       if (mode === 'crash') throw new Error('pg: password authentication failed for user "sis"');
       return { title: reviewTitle, details: [{ label: 'Action', value: 'Submit coursework' }] };
     },
-    execute: async () => {
+    execute: async (context) => {
       calls++;
+      executedIdempotencyKey = context.request?.idempotencyKey;
       // The message a vendor failure carries must never reach the student.
       if (mode === 'timeout') throw new Error('Vendor secret must not be exposed');
       if (mode === 'refuse-late') throw new Refusal('You are already enrolled in this course.');
@@ -238,6 +240,7 @@ function fixture({
     request,
     prepare,
     calls: () => calls,
+    executedIdempotencyKey: () => executedIdempotencyKey,
     identity: (v: UniversityIdentity | null) => {
       identity = v;
     },
@@ -469,6 +472,28 @@ describe('university gateway boundaries', () => {
     const raw = Buffer.concat([readFileSync(f.path), readFileSync(`${f.path}-wal`)]).toString('utf8');
     expect(raw).not.toContain('Private coursework response');
     expect(raw).not.toContain('Recorded by school');
+  });
+
+  it('validates the SDK idempotency key and carries it to the adapter request context', async () => {
+    const f = fixture();
+    const r = await f.prepare();
+    const invalid = await f.request(
+      '/actions/commit',
+      { reviewId: r.id, confirmed: true },
+      { 'idempotency-key': 'too-short' },
+    );
+    expect(invalid.status).toBe(400);
+    expect((await invalid.json()).error.code).toBe('invalid_request');
+    expect(f.calls()).toBe(0);
+
+    const key = 'commit-key-00000001';
+    const committed = await f.request(
+      '/actions/commit',
+      { reviewId: r.id, confirmed: true },
+      { 'idempotency-key': key },
+    );
+    expect(committed.status).toBe(200);
+    expect(f.executedIdempotencyKey()).toBe(key);
   });
 
   it('serializes concurrent confirmations across durable claims', async () => {
