@@ -61,7 +61,7 @@ class MemoryReadinessRepository implements RegistrationReadinessRepository {
   }
 }
 
-function rig(evaluator?: RegistrationReadinessEvaluator) {
+function rig(evaluator?: RegistrationReadinessEvaluator, timeoutMs?: number) {
   const repository = new MemoryReadinessRepository();
   const service = new RegistrationReadinessService(repository);
   const commands = new RegistrationReadinessCommands({
@@ -70,6 +70,7 @@ function rig(evaluator?: RegistrationReadinessEvaluator) {
     evaluator,
     now: () => new Date(NOW),
     evaluationIdFor: (_context, _key, termId) => termId === '2027-spring' ? 'readiness-evaluation-1' : 'readiness-evaluation-2',
+    ...(timeoutMs === undefined ? {} : { timeoutMs }),
   });
   return { commands, repository };
 }
@@ -90,6 +91,7 @@ describe('registration-readiness command boundary', () => {
     const result = await commands.start(context(), ['student'], { termId: '2027-spring' });
 
     expect(result).toEqual({
+      evaluationId: 'readiness-evaluation-1',
       id: 'readiness-command-0001',
       status: 'pending',
       state: 'requested',
@@ -211,6 +213,88 @@ describe('registration-readiness evaluator worker', () => {
       'readiness-evaluation-1',
     )).rejects.toMatchObject({ code: 'not_found' });
     expect(evaluator.evaluate).not.toHaveBeenCalled();
+  });
+
+  it('returns the pending durable claim to an overlapping retry without invoking the source twice', async () => {
+    let release!: (value: {
+      outcome: 'ready';
+      projectionVersion: number;
+      sourceObservedAt: string;
+      freshUntil: string;
+    }) => void;
+    let markStarted!: () => void;
+    const started = new Promise<void>((resolve) => { markStarted = resolve; });
+    const observation = new Promise<{
+      outcome: 'ready';
+      projectionVersion: number;
+      sourceObservedAt: string;
+      freshUntil: string;
+    }>((resolve) => { release = resolve; });
+    const evaluator: RegistrationReadinessEvaluator = {
+      evaluate: vi.fn(async () => {
+        markStarted();
+        return await observation;
+      }),
+    };
+    const { commands } = rig(evaluator);
+    await commands.start(context(), ['student'], { termId: '2027-spring' });
+    const workerContext = context({ idempotencyKey: 'readiness-evaluate-concurrent' });
+
+    const first = commands.evaluate(workerContext, ['student'], 'readiness-evaluation-1');
+    await started;
+    const retry = commands.evaluate(workerContext, ['student'], 'readiness-evaluation-1');
+    await Promise.resolve();
+    release({
+      outcome: 'ready',
+      projectionVersion: 10,
+      sourceObservedAt: '2026-10-10T11:55:00.000Z',
+      freshUntil: '2026-10-10T12:05:00.000Z',
+    });
+    const [firstResult, retryResult] = await Promise.all([first, retry]);
+
+    expect(evaluator.evaluate).toHaveBeenCalledTimes(1);
+    expect(firstResult).toMatchObject({ evaluationId: 'readiness-evaluation-1', status: 'completed', state: 'ready' });
+    expect(retryResult).toMatchObject({ evaluationId: 'readiness-evaluation-1', status: 'pending', state: 'evaluating' });
+  });
+
+  it('enforces the evaluator deadline and durably opens reconciliation when the adapter ignores abort', async () => {
+    let signal: AbortSignal | undefined;
+    const evaluator: RegistrationReadinessEvaluator = {
+      evaluate: vi.fn(async (request) => {
+        signal = request.signal;
+        await new Promise((resolve) => setTimeout(resolve, 60));
+        return {
+          outcome: 'ready' as const,
+          projectionVersion: 11,
+          sourceObservedAt: '2026-10-10T11:55:00.000Z',
+          freshUntil: '2026-10-10T12:05:00.000Z',
+        };
+      }),
+    };
+    const { commands, repository } = rig(evaluator, 5);
+    await commands.start(context(), ['student'], { termId: '2027-spring' });
+
+    const run = commands.evaluate(
+      context({ idempotencyKey: 'readiness-evaluate-timeout' }),
+      ['student'],
+      'readiness-evaluation-1',
+    );
+    const bounded = await Promise.race([
+      run,
+      new Promise<'deadline-not-enforced'>((resolve) => setTimeout(() => resolve('deadline-not-enforced'), 30)),
+    ]);
+
+    expect(bounded).not.toBe('deadline-not-enforced');
+    expect(bounded).toMatchObject({
+      evaluationId: 'readiness-evaluation-1',
+      status: 'pending',
+      state: 'reconciling',
+    });
+    expect(signal?.aborted).toBe(true);
+    expect(repository.rows.get('readiness-evaluation-1')).toMatchObject({
+      state: 'reconciling',
+      reconciliationTasks: [expect.objectContaining({ state: 'open' })],
+    });
   });
 
   it('replays a completed worker command without calling the source twice', async () => {
