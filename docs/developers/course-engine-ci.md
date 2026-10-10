@@ -1,5 +1,9 @@
 # Course Engine CI
 
+> **Type:** reference · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-10 · **Held by:** `app/src/lib/docs/developers.test.ts`
+
+This page explains the isolated Course Engine source gate; stop reading if you are looking for the repository-wide merge gate.
+
 `.github/workflows/course-engine.yml` is the blocking source gate for changes under
 `course-engine/`. It runs without production credentials or provider access.
 

@@ -2,7 +2,7 @@
 
 # Service catalog (generated)
 
-71 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
+72 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
 
 | Id | Name | Kind | Class | Role | Journeys | Depends on | Kill switch | Runbook |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -64,6 +64,7 @@
 | `job:commercial-financial-retention` | Financial retention (monthly) | job | C2 | billing | — | `supabase-db` | — | RB-10 |
 | `job:account-health` | Compute account health (daily) | job | C3 | support | — | `supabase-db` | — | RB-10 |
 | `pipeline:ci` | CI (the merge gate) | pipeline | C2 | platform | — | `github-pages` | — | RB-08 |
+| `pipeline:course-engine` | Course Engine source gate | pipeline | C3 | platform | — | — | — | RB-08 |
 | `pipeline:pages` | Deploy to Pages | pipeline | C2 | platform | — | `github-pages` | — | RB-08 |
 | `pipeline:functions` | Deploy Edge Functions | pipeline | C2 | platform | — | `supabase-edge-runtime` | — | RB-08 |
 | `pipeline:schema-deploy` | Schema deploy (Supabase Branching, db push) | pipeline | C1 | data | — | `supabase-db` | — | RB-09 |
