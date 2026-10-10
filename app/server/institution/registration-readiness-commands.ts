@@ -265,6 +265,22 @@ export class RegistrationReadinessCommands implements RegistrationReadinessComma
       throw new PlatformError('not_found', 'Registration readiness evaluation was not found.');
     }
 
+    const outcomeEntry = record.commandLedger.find(
+      (item) => item.idempotencyKey === internalCommandKey(idempotencyKey, 'outcome'),
+    );
+    if (outcomeEntry && ['needs_review', 'unknown', 'stale'].includes(record.state)) {
+      await this.dependencies.service.transition({
+        evaluationId: id,
+        tenantId: context.tenantId,
+        expectedVersion: record.version,
+        targetState: 'reconciling',
+        correlationId: context.correlationId,
+        idempotencyKey: internalCommandKey(idempotencyKey, 'reconcile'),
+        at: this.now().toISOString(),
+      });
+      return commandReceipt(id, idempotencyKey, outcomeEntry.receipt);
+    }
+
     const replay = completedReplay(record, idempotencyKey);
     if (replay) return commandReceipt(id, idempotencyKey, replay);
 
