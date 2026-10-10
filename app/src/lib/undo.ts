@@ -82,6 +82,8 @@ export const UNDOABLE: Record<string, Undoable> = {
    */
   moveFolder: { label: 'Folder moved', fields: ['folders'], onChange: true },
   deleteTask: { label: 'Action deleted', fields: ['tasks'] },
+  // A step disappears inside one task, so the top-level list stays the same size.
+  dropStep: { label: 'Step removed', fields: ['tasks'], onChange: true },
   deleteAppointment: { label: 'Appointment deleted', fields: ['appointments'] },
   removeCommitment: { label: 'Activity removed', fields: ['commitments'] },
   removePlace: { label: 'Place removed', fields: ['places'] },
@@ -113,7 +115,26 @@ export const UNDOABLE: Record<string, Undoable> = {
    * an undo strip nobody reads.
    */
   moveMail: { label: 'Moved', fields: ['mailMarks'], onChange: true },
+  dropMailRule: { label: 'Mail rule deleted', fields: ['mailRules'] },
   removeFeed: { label: 'Calendar and its events removed', fields: ['feeds', 'feedEvents'] },
+  removeLink: { label: 'Link removed', fields: ['extraLinks', 'linkUrls'] },
+  removeUpdate: { label: 'Course material removed', fields: ['updates', 'courses'] },
+  deleteEquation: { label: 'Equation removed', fields: ['equations'] },
+  dropPlot: { label: 'Graph line removed', fields: ['plots'] },
+  clearPlots: { label: 'Graph cleared', fields: ['plots'] },
+  clearPlan: { label: 'Study plan dropped', fields: ['sessions', 'liveSession'] },
+  // The card-level undo stays cleared; restoring it would offer a second, stale rewind.
+  forgetCards: { label: 'Study evidence cleared', fields: ['reviews', 'answers'] },
+  // Student-entered planning rows, never the school's ledger or a money movement.
+  dropCharge: { label: 'Charge removed', fields: ['charges'] },
+  dropAid: { label: 'Aid entry removed', fields: ['aid'] },
+  dropPayment: { label: 'Payment record removed', fields: ['payments'] },
+  // Clearing a landmark edits its row; clearing a date of your own removes it.
+  dropTermDate: { label: 'Registrar date cleared', fields: ['registrar'], onChange: true },
+  // A custom profile can also be selected, so removal owns both fields.
+  forgetSchool: { label: 'School profile removed', fields: ['mySchools', 'schoolId'] },
+  // Removing an imported snapshot leaves the selected school and fallback profile alone.
+  forgetSchoolPack: { label: 'University file removed', fields: ['schoolPack'] },
   dropSource: { label: 'Source removed', fields: ['sources'] },
   dropSitting: { label: 'Paper removed', fields: ['sittings'] },
   /*
