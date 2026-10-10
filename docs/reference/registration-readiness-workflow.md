@@ -53,7 +53,7 @@ A stale aggregate version is refused. Replaying the same idempotency key and com
 
 The aggregate returns minimal outbox descriptors for:
 
-- `registration.readiness_requested` for aggregate creation and the persisted source-request claim;
+- `registration.readiness_requested` for aggregate creation and the persisted source-request claim (the expansion migration temporarily also accepts the legacy `registration.readiness_evaluated` claim event for DB-first rolling compatibility);
 - `registration.readiness_evaluated` only after a source observation produces an outcome;
 - `registration.readiness_reconciliation_requested`.
 
