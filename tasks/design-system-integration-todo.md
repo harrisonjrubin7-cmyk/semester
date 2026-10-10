@@ -1629,3 +1629,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep official study-abroad operations, provider changes and account deletion separate from this device-plan mutation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed graduation-scenario removal — automation pass 13, integration slice 78
+
+- [x] Start from clean head `0f3cc514`; fetch current `origin/main` `a607200c`, confirm it is already included and contains no equivalent graduation-scenario preview or regression guard.
+- [x] Re-rank remaining Phase 3 consequence paths and select only removal of one student-authored graduation what-if scenario from device storage; keep account-draft deletion and official degree records separate.
+- [x] Replace first-press removal with the shared `ConfirmDialog` and `ActionPreview`, naming the scenario and its exact credit-load assumptions, including study-abroad assumptions when present.
+- [x] State that the current plan, other scenarios, downloaded summaries and official degree audit remain unchanged, and that a separately saved account draft remains in the account.
+- [x] Preserve initial Cancel focus and no-write cancellation; explicit confirmation uses the unchanged exact-id device-library mutation, closes only on a successful write and announces a device-only receipt.
+- [x] State the bounded recovery path: only a device workspace backup made before removal can restore the earlier scenario.
+- [x] Prove the focused guard red against prior immediate deletion, then pass 57/57 focused and adjacent graduation, cloud-draft, backup, preview/modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the six existing lint warnings and build chunk-size warning.
+- [x] Pass 147/147 combined token, design-check and report contracts; retain zero audit violations, 86 existing warnings and the CSS ledger.
+- [ ] Aggregate design-system wrappers — cannot complete because they hardcode unavailable `npm`/`npx`; their exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-library slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan, finding result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep account-draft deletion, official degree-audit operations and account deletion separate from this device-only scenario mutation.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
