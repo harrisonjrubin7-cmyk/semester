@@ -68,7 +68,9 @@ function makeDb() {
         getSession: async (): Promise<{ data: { session: { access_token: string } | null } }> => ({
           data: { session: { access_token: 'access-token' } },
         }),
-        signOut: vi.fn(async () => ({ error: null })),
+        signOut: vi.fn(async (): Promise<{ error: { message: string } | null }> => ({
+          error: errors.signOut ? { message: errors.signOut } : null,
+        })),
         signInWithSSO: vi.fn(async (args: unknown) => {
           log.push({ table: 'auth', op: 'signInWithSSO', args: [args] });
           return { error: errors.auth ? { message: errors.auth } : null };
@@ -240,7 +242,7 @@ describe('sendReset', () => {
 describe('signOut', () => {
   it('propagates an account-service refusal to the caller', async () => {
     const mod = await load();
-    harness.db.auth.signOut.mockResolvedValueOnce({ error: { message: 'Sign-out service unavailable' } });
+    harness.errors.signOut = 'Sign-out service unavailable';
     await expect(mod.signOut()).rejects.toThrow(/Sign-out service unavailable/);
   });
 });
