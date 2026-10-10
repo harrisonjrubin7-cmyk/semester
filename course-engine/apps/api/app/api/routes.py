@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import os
 import tempfile
@@ -10,6 +12,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse
 from sqlalchemy import delete, func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -30,6 +33,7 @@ from app.models.entities import (
     StudyAsset,
     StudyAssetCitation,
     StudyExport,
+    UploadCompletion,
     User,
 )
 from app.schemas import (
@@ -56,7 +60,15 @@ from app.services.citations import (
     validate_study_asset_content,
 )
 from app.services.exports import export_flashcards_pdf, export_guide_docx, export_guide_pdf
-from app.services.storage import ObjectStorage, storage_key, validate_upload
+from app.services.storage import (
+    MIME_FAMILIES,
+    ObjectStorage,
+    normalize_upload_mime,
+    sha256_file,
+    storage_key,
+    validate_upload,
+)
+from app.services.upload_dispatch import dispatch_upload_completion
 
 router = APIRouter()
 storage = ObjectStorage()
@@ -212,17 +224,30 @@ def delete_course(course_id: UUID, user: User = Depends(get_current_user), db: S
 @router.post("/courses/{course_id}/uploads/initiate")
 def initiate_upload(course_id: UUID, payload: UploadInitiate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     course = owned_course(db, user, course_id)
-    try: validate_upload(payload.filename, payload.size_bytes)
+    try: validate_upload(payload.filename, payload.size_bytes, payload.mime_type)
     except ValueError as exc: raise HTTPException(400, str(exc)) from exc
-    duplicate = db.scalar(select(SourceDocument).where(SourceDocument.course_id == course.id, SourceDocument.sha256 == payload.sha256, SourceDocument.deleted_at.is_(None)))
+    mime_type = normalize_upload_mime(payload.filename, payload.mime_type)
+    checksum = payload.sha256.lower()
+    duplicate = db.scalar(select(SourceDocument).where(SourceDocument.course_id == course.id, SourceDocument.sha256 == checksum, SourceDocument.deleted_at.is_(None)))
     if duplicate: raise HTTPException(409, detail={"message": "Duplicate file", "document_id": str(duplicate.id)})
     key = storage_key(str(course.id), payload.filename)
-    document = SourceDocument(course_id=course.id, filename=payload.filename, storage_key=key, mime_type=payload.mime_type, size_bytes=payload.size_bytes, sha256=payload.sha256)
+    document = SourceDocument(course_id=course.id, filename=payload.filename, storage_key=key, mime_type=mime_type, size_bytes=payload.size_bytes, sha256=checksum)
     db.add(document); db.commit(); db.refresh(document)
     return {
         "document_id": document.id,
-        "upload_url": storage.presign_put(key, payload.mime_type),
-        "upload_headers": {"x-amz-server-side-encryption": settings.s3_sse}
+        "upload_url": storage.presign_put(
+            key,
+            mime_type,
+            size_bytes=payload.size_bytes,
+            sha256=checksum,
+        ),
+        "upload_headers": {
+            "content-type": mime_type,
+            "x-amz-checksum-sha256": base64.b64encode(
+                bytes.fromhex(checksum)
+            ).decode(),
+            "x-amz-server-side-encryption": settings.s3_sse,
+        }
         if settings.storage_backend != "local"
         else {},
         "storage_key": key,
@@ -241,6 +266,11 @@ async def local_upload(
     if not document:
         raise HTTPException(404)
     owned_course(db, user, document.course_id)
+    completed = db.scalar(select(UploadCompletion.id).where(
+        UploadCompletion.document_id == document.id
+    ))
+    if completed or document.status != "uploaded":
+        raise HTTPException(409, "Original upload is already closed")
     path = storage.path(key)
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(
@@ -257,6 +287,8 @@ async def local_upload(
                 destination.write(chunk)
             destination.flush()
             os.fsync(destination.fileno())
+        if received != document.size_bytes or sha256_file(temporary_path) != document.sha256:
+            raise HTTPException(409, "Uploaded bytes do not match the initiated upload")
         os.replace(temporary_path, path)
     except BaseException:
         temporary_path.unlink(missing_ok=True)
@@ -268,12 +300,109 @@ def complete_upload(course_id: UUID, payload: UploadComplete, user: User = Depen
     owned_course(db, user, course_id)
     document = db.scalar(select(SourceDocument).where(SourceDocument.id == payload.document_id, SourceDocument.course_id == course_id, SourceDocument.deleted_at.is_(None)))
     if not document: raise HTTPException(404, "File not found")
-    if payload.classification: document.classification = payload.classification
-    document.status = "queued"
+    document_id = document.id
+    classification = payload.classification or document.classification
+    fingerprint = hashlib.sha256(json.dumps(
+        {"document_id": str(document.id), "classification": classification},
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()).hexdigest()
+    existing = db.scalar(select(UploadCompletion).where(
+        UploadCompletion.document_id == document.id
+    ))
+    if existing:
+        if existing.payload_fingerprint != fingerprint:
+            raise HTTPException(409, "Upload was already completed with different data")
+        job = db.get(BackgroundJob, existing.job_id)
+        dispatch_upload_completion(db, existing.id, celery_client)
+        db.refresh(existing)
+        return {
+            "document": serialize(document),
+            "receipt": serialize(existing),
+            "job": serialize(job),
+        }
+    try:
+        metadata = storage.inspect(document.storage_key)
+    except (OSError, ValueError) as exc:
+        raise HTTPException(409, str(exc)) from exc
+    expected_prefix = f"courses/{course_id}/originals/"
+    expected_mimes = MIME_FAMILIES.get(Path(document.filename).suffix.lower())
+    valid = (
+        metadata.key == document.storage_key
+        and metadata.key.startswith(expected_prefix)
+        and metadata.size_bytes == document.size_bytes
+        and metadata.size_bytes <= settings.max_upload_bytes
+        and metadata.checksum_sha256 == document.sha256.lower()
+        and metadata.owner_verified
+        and expected_mimes is not None
+        and metadata.content_type in expected_mimes
+        and document.mime_type in expected_mimes
+    )
+    if metadata.backend == "s3":
+        valid = valid and (
+            metadata.bucket == settings.s3_bucket
+            and metadata.encryption == settings.s3_sse
+            and metadata.content_type == document.mime_type
+        )
+    elif metadata.backend == "local":
+        valid = valid and metadata.bucket is None and metadata.encryption is None
+    else:
+        valid = False
+    if not valid:
+        raise HTTPException(409, "Uploaded object metadata does not match the initiated upload")
+
+    document.classification = classification
+    document.status = "quarantined"
     job = BackgroundJob(course_id=course_id, document_id=document.id, job_type="extract")
-    db.add(job); db.commit(); db.refresh(job)
-    celery_client.send_task("extract_document", args=[str(job.id)])
-    return {"document": serialize(document), "job": serialize(job)}
+    db.add(job)
+    db.flush()
+    receipt = UploadCompletion(
+        course_id=course_id,
+        document_id=document_id,
+        job_id=job.id,
+        payload_fingerprint=fingerprint,
+        verified_metadata={
+            field: getattr(metadata, field)
+            for field in (
+                "backend",
+                "bucket",
+                "key",
+                "size_bytes",
+                "content_type",
+                "checksum_sha256",
+                "encryption",
+                "owner_verified",
+            )
+        },
+    )
+    db.add(receipt)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        existing = db.scalar(select(UploadCompletion).where(
+            UploadCompletion.document_id == document_id
+        ))
+        if not existing or existing.payload_fingerprint != fingerprint:
+            raise HTTPException(409, "Upload was already completed with different data")
+        document = db.get(SourceDocument, document_id)
+        job = db.get(BackgroundJob, existing.job_id)
+        dispatch_upload_completion(db, existing.id, celery_client)
+        db.refresh(existing)
+        return {
+            "document": serialize(document),
+            "receipt": serialize(existing),
+            "job": serialize(job),
+        }
+    db.refresh(job)
+    db.refresh(receipt)
+    dispatch_upload_completion(db, receipt.id, celery_client)
+    db.refresh(receipt)
+    return {
+        "document": serialize(document),
+        "receipt": serialize(receipt),
+        "job": serialize(job),
+    }
 
 
 @router.get("/courses/{course_id}/files")

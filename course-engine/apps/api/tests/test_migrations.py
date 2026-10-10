@@ -103,6 +103,19 @@ def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed(
     with engine.connect() as connection:
         _migrate(connection, command.upgrade, "head")
         assert _confidence_nullable(connection)
+        completion_columns = {
+            column["name"] for column in inspect(connection).get_columns("upload_completions")
+        }
+        assert completion_columns == {
+            "id", "document_id", "course_id", "job_id", "payload_fingerprint",
+            "verified_metadata", "dispatch_status", "dispatch_claimed_at",
+            "dispatched_at", "created_at", "updated_at",
+        }
+        completion_uniques = {
+            tuple(constraint["column_names"])
+            for constraint in inspect(connection).get_unique_constraints("upload_completions")
+        }
+        assert {("document_id",), ("job_id",)} <= completion_uniques
 
         _migrate(connection, command.downgrade, "0001_initial")
         assert not _confidence_nullable(connection)
@@ -126,7 +139,12 @@ def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed(
             assert connection.exec_driver_sql("PRAGMA foreign_key_check").all() == []
             connection.rollback()
             assert not connection.in_transaction()
-        assert MigrationContext.configure(connection).get_current_revision() == "0002_review_first_confidence"
+        expected_revision = (
+            "0002_review_first_confidence"
+            if engine.dialect.name == "sqlite"
+            else "0003_upload_completion"
+        )
+        assert MigrationContext.configure(connection).get_current_revision() == expected_revision
         assert connection.scalar(
             select(SourceChunk.confidence).where(SourceChunk.id == unknown_chunk_id)
         ) is None

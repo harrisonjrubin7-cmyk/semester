@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     s3_access_key: str = "minioadmin"
     s3_secret_key: str = "minioadmin"
     s3_bucket: str = "course-engine"
+    s3_expected_bucket_owner: str | None = None
     s3_sse: str = "AES256"
     redis_url: str = "redis://redis:6379/0"
     max_upload_bytes: int = 104_857_600

@@ -85,6 +85,14 @@ def test_extraction_routes_even_high_confidence_evidence_through_review(tmp_path
     worker = _worker_module()
     worker.SessionLocal = testing_session
     worker.storage = type("Storage", (), {"path": lambda _self, _key: source})()
+    scan_states = []
+
+    class Scanner:
+        def scan(self, _path):
+            with testing_session() as session:
+                scan_states.append(session.get(SourceDocument, document_id).status)
+
+    worker.DevelopmentMalwareScanner = Scanner
     worker.extractor_for = lambda _path: lambda _source: [
         ExtractedChunk("Final exam: December 10.", "document", confidence=0.99)
     ]
@@ -102,6 +110,7 @@ def test_extraction_routes_even_high_confidence_evidence_through_review(tmp_path
         assert chunk.confidence == 0.99
         assert citation.status == ReviewStatus.needs_review
         assert document.status == "needs_review"
+        assert scan_states == ["scanning"]
         assert [review.item_type for review in reviews] == ["extracted_evidence"]
         review_id = reviews[0].id
         citation_id = citation.id
