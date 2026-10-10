@@ -1387,3 +1387,21 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 recoverable opportunity-suggestion dismissal — automation pass 15, integration slice 66
+
+- [x] Fast-forward the clean branch to current `origin/main` `071e679d`; confirm its typed capability-maturity evidence has no `dismissProgramme`, suggestion-preference or shared-Undo equivalent.
+- [x] Re-rank remaining consequence paths and select only **Not for me** on a shipped opportunity suggestion; keep permanent file purge, broad demo reset and scanner-backed Import outside the mutation.
+- [x] Add `dismissProgramme` to the shared eight-second Undo contract with exactly `wanted` and change detection for the nested preference update.
+- [x] Restore the exact dismissed list plus year and field filters without reverting unrelated work; keep the catalog, provenance caveats, official link, route, visible control and persistence unchanged.
+- [x] Prove registry, snapshot and reducer assertions red before implementation, then pass 190/190 focused Undo, reducer, suggestion, Applying and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and build chunk-size warning.
+- [x] Pass 9/9 token-export tests, 69/69 design-check contracts, 96/96 report contracts, design audit with no violations and CSS ledger checks.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
