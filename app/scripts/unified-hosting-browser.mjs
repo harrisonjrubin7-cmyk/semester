@@ -213,8 +213,9 @@ try {
   }
 
   // A legacy installed app's cache is worker-owned. Seed through a synthetic
-  // non-root worker, then unregister it before /app starts so it cannot affect
-  // routing or control. This is a migration fixture, not the experimental bridge.
+  // non-root worker and retain that isolated registration during migration,
+  // matching the no-automatic-retirement requirement. It has no fetch handler,
+  // cannot control /app, and is not the experimental bridge.
   const legacyWorkerSeed = await page.evaluate(async () => {
     const registration = await navigator.serviceWorker.register('/__legacy-sw.js', {
       scope: '/legacy/',
@@ -243,7 +244,6 @@ try {
     const keys = await cache.keys();
     const absolute = new URL('/legacy-shared', location.href).href;
     const hit = await cache.match(absolute);
-    const unregistered = await registration.unregister();
     return {
       workerScope: registration.scope,
       entries: keys.map((request) => ({ url: request.url, method: request.method })),
@@ -251,13 +251,13 @@ try {
       bytes: hit ? (await hit.clone().arrayBuffer()).byteLength : null,
       contentType: hit?.headers.get('content-type') || null,
       vary: hit?.headers.get('vary') || null,
-      unregistered,
+      registrationRetained: true,
     };
   });
   evidence.checks.sharedCacheFromLegacyWorker = legacyWorkerSeed;
   assert.equal(legacyWorkerSeed.workerScope, `${origin}/legacy/`);
   assert.equal(legacyWorkerSeed.present, true, 'legacy worker must durably seed the shared entry');
-  assert.equal(legacyWorkerSeed.unregistered, true, 'legacy fixture worker must be removed before /app');
+  assert.equal(legacyWorkerSeed.registrationRetained, true);
 
   evidence.timings = { appNavigationStartedAt: Date.now() };
   await page.goto(appUrl, { waitUntil: 'domcontentloaded' });
@@ -541,6 +541,13 @@ try {
   assert.deepEqual(storageOffline, storageBeforeOffline);
   evidence.checks.storageAfterOfflineRelaunch = storageOffline;
   await context.setOffline(false);
+
+  const legacyWorkerCleanup = await page.evaluate(async () => {
+    const registration = await navigator.serviceWorker.getRegistration('/legacy/');
+    return registration ? registration.unregister() : false;
+  });
+  assert.equal(legacyWorkerCleanup, true, 'synthetic legacy worker must be removed after continuity checks');
+  evidence.checks.legacyWorkerCleanup = legacyWorkerCleanup;
 
   evidence.capabilities = await page.evaluate(async () => {
     const registration = await navigator.serviceWorker.getRegistration('/app/');
