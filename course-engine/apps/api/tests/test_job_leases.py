@@ -1,3 +1,4 @@
+# ruff: noqa: I001 -- keep stdlib imports grouped for the dual-dialect test harness
 from __future__ import annotations
 
 import os
