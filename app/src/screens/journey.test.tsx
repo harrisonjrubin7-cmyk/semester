@@ -112,6 +112,35 @@ describe('Support', () => {
     expect(privacy.textContent).toMatch(/^Confidential/);
     expect(privacy.compareDocumentPosition(door) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
+
+  it('previews the unrecoverable device-only consequence before removing an emergency contact', () => {
+    localStorage.setItem('semester.support.v1:device', JSON.stringify({
+      contacts: [{ id: 'c-1', name: 'Aunt Maya', phone: '615-555-0142' }],
+      accessNotes: 'Ask about a quiet testing room.',
+      routines: ['A regular bedtime on weeknights'],
+      continuity: { sources: true },
+      commute: { travel: 20, buffer: 10 },
+    }));
+    draw(<Support />);
+
+    click(host.querySelector('button[aria-label="Remove Aunt Maya"]')!);
+    expect(host.textContent).toContain('Remove this emergency contact?');
+    expect(host.textContent).toContain('Aunt Maya');
+    expect(host.textContent).toContain('615-555-0142');
+    expect(host.textContent).toContain('Other emergency contacts, access planning notes, routines');
+    expect(host.textContent).toContain('This Support workspace is not included in a device workspace backup.');
+    expect(JSON.parse(localStorage.getItem('semester.support.v1:device')!).contacts).toHaveLength(1);
+
+    click(button('Cancel'));
+    expect(host.querySelector('a[href="tel:615-555-0142"]')).not.toBeNull();
+    expect(JSON.parse(localStorage.getItem('semester.support.v1:device')!).contacts).toHaveLength(1);
+
+    click(host.querySelector('button[aria-label="Remove Aunt Maya"]')!);
+    click(button('Remove contact'));
+    expect(host.querySelector('a[href="tel:615-555-0142"]')).toBeNull();
+    expect(JSON.parse(localStorage.getItem('semester.support.v1:device')!).contacts).toHaveLength(0);
+    expect(host.textContent).toContain('Aunt Maya removed from this device.');
+  });
 });
 
 describe('Opportunities', () => {

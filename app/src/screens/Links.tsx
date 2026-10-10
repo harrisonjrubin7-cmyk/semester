@@ -182,6 +182,7 @@ export function Links() {
                       <button
                         type="button"
                         className="bare"
+                        aria-label={`Remove ${link.name} link`}
                         onClick={() => dispatch({ type: 'removeLink', id: link.id })}
                         style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
                       >

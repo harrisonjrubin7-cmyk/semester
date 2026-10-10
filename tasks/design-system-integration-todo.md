@@ -783,6 +783,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 ### Next implementation boundary
 
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 - [ ] Keep external reconciliation, safe ICS publication, signed reads, scheduling, deployment and production operation separate.
 
 ## 2026-10-09 full-suite reconciliation — automation pass 30, slice 38
@@ -1059,6 +1060,84 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-09 governed Drive folder-hierarchy deletion — current automation pass 1, integration slice 52
+
+- [x] Start from and re-fetch current `origin/main` `3c17385d`; confirm no equivalent Drive folder-deletion preview or overlapping control-file work landed.
+- [x] Re-rank the remaining consequence paths and select bounded custom-folder hierarchy deletion; keep permanent file purge, broad demo reset and scanner-backed Import separate.
+- [x] Replace immediate folder deletion with the existing `ConfirmDialog` and `ActionPreview`; add no route, shared component, dependency, schema, server operation or provider behavior.
+- [x] Name the selected folder, nested-folder count and affected-file count; preserve file bytes, course/deadline links, course folders and folders outside the subtree; state the manual-only recovery boundary.
+- [x] Verify Cancel performs no write; confirmation moves direct and nested files to the folder's parent before removing the subtree; a failed move leaves the hierarchy intact and reports recovery guidance.
+- [x] Prove the guard red against the prior immediate deletion, then pass 33/33 Drive, folder, ActionPreview and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning. The build succeeded after moving aside the generated `dist/` that twice raced Vite cleanup with `ENOTEMPTY`.
+- [x] Pass 78/78 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and design-report generation.
+- [ ] Aggregate design report/check launchers — unavailable because this shell has no `npm`/`npx`; exact constituents pass and the report regenerates before its wrapper exits.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but the runner reports `hawk runtime=false`, `HAWK_API_KEY=false` and no Docker/target host; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable student-created link removal — automation pass 2, integration slice 53
+
+- [x] Start from `origin/main` `3c17385d`; a final dirty-tree fetch observed `34ac2e1d`, whose governed Course Engine review workflow has no Links, `removeLink`, Undo, test or integration-control overlap.
+- [x] Re-rank the remaining consequence paths and select bounded student-created link removal; keep permanent file purge, broad demo reset and scanner-backed Import separate.
+- [x] Add `removeLink` to the existing eight-second Undo contract with only `extraLinks` and `linkUrls`, restoring the exact row, custom group and corrected address without reverting unrelated state.
+- [x] Give the visible `REMOVE` control an accessible name that identifies the exact student-created link; add no route, component, dependency, schema, server operation or provider behavior.
+- [x] Prove three focused guards red against the prior behavior, then pass 128/128 reducer, Links, Undo and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and design-report generation.
+- [ ] Aggregate design report/check launchers — the report regenerates, then its wrapper exits because `npm` is unavailable; exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only recovery slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but the Hawk CLI and Docker are absent and `HAWK_APP_HOST` is unset; a local properties file exists but was not read. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [x] Merge and reconcile `origin/main` `34ac2e1d` on the clean branch before selecting another slice; its separate Course Engine review workflow remains outside the current product. Completed before automation pass 3 / slice 54.
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable saved-equation removal — automation pass 3, integration slice 54
+
+- [x] Merge current `origin/main` `34ac2e1d` on the clean branch and confirm its separate Course Engine review-resolution workflow has no saved-equation, Undo or current-screen equivalent.
+- [x] Re-rank the remaining consequence paths and select bounded saved-equation removal; keep permanent file purge, broad demo reset and scanner-backed Import separate.
+- [x] Add `deleteEquation` to the existing eight-second Undo contract with only `equations`, restoring the exact saved formula and filing without reverting unrelated calculator work.
+- [x] Give the visible Remove control an accessible name identifying the exact saved equation; add no route, component, dependency, schema, server operation or provider behavior.
+- [x] Prove the focused regression red against the prior behavior, then pass 142/142 Undo, reducer, made-slice and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and design-report generation.
+- [ ] Aggregate npm design-system launchers — unavailable because this shell has no `npm`; their exact constituents pass and the report regenerates.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only recovery slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable committed Study-plan removal — automation pass 4, integration slice 55
+
+- [x] Start from and re-fetch current `origin/main` `34ac2e1d`; confirm no equivalent `clearPlan`, Undo or Study-plan recovery work landed.
+- [x] Re-rank the remaining consequence paths and select bounded committed Study-plan removal; keep permanent file purge, broad demo reset and scanner-backed Import separate.
+- [x] Add `clearPlan` to the existing eight-second Undo contract with only `sessions` and `liveSession`, restoring the exact sitting schedule, progress and live association without reverting unrelated work.
+- [x] Preserve the existing Study route and **Drop the plan** control; add no component, dependency, schema, server operation or provider behavior.
+- [x] Prove the focused guard red against the missing Undo registration, then pass 152/152 Undo, reducer, plan and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and design-report generation.
+- [ ] Aggregate npm design-system launchers — unavailable because this shell has no `npm`; exact constituents pass and the report regenerates before its wrapper exits.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only recovery slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.
@@ -1117,3 +1196,194 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Accessibility conformance review (not claimed)
 - [ ] Restore drill and production evidence
 - [x] Archive availability resolved by the authenticated 2026-10-08 mount. Prototype material remains reference-only and must be rebuilt through repository-native controls.
+
+## 2026-10-09 recoverable course-material removal — automation pass 5, integration slice 56
+
+- [x] Start from and re-fetch current `origin/main` `34ac2e1d`; confirm its separate Course Engine review-resolution work has no equivalent current-product course-material removal or Undo path.
+- [x] Re-rank the remaining consequence paths and select the bounded device-owned **Already added** removal; keep Source Locker file trash, permanent purge, broad demo reset and scanner-backed Import separate.
+- [x] Replace the two-dispatch update/deadline removal with one `removeUpdate` reducer action bounded by the selected update's `courseId` and recorded `addedItems` ids.
+- [x] Add `removeUpdate` to the existing eight-second Undo contract with `updates` and `courses`; restore the exact material/deadline pair without reverting unrelated completion state.
+- [x] Give the visible **REMOVE** control an accessible name identifying the exact material; add no route, component, dependency, schema, server operation or provider behavior.
+- [x] Prove the focused reducer guard red against the prior behavior, then pass 140/140 Undo, reducer, Add Material and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 9/9 token-export and 138/138 token/design/responsive contract tests, design audit with zero violations and 86 existing warnings, and CSS ledger checks.
+- [ ] Aggregate npm design-system launchers and report wrapper — unavailable because this shell has no `npm`/`npx`; exact constituents pass, but no aggregate or regenerated-report pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only recovery slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 governed emergency-contact removal — automation pass 6, integration slice 57
+
+- [x] Re-fetch current `origin/main` `34ac2e1d` and confirm it contains no equivalent Support-workspace consequence preview.
+- [x] Select only the current student's device-owned emergency-contact removal; keep server support tickets, official campus contacts and external systems outside the mutation.
+- [x] Reuse `ConfirmDialog` and `ActionPreview` to name the selected contact and phone number, the exact device-only removal boundary, preserved Support data and the honest no-backup recovery limit.
+- [x] Keep Cancel as the safe initial modal action and prove it leaves rendered and persisted state unchanged.
+- [x] Remove only the selected contact after explicit confirmation and a successful guarded device-library write; announce the local result.
+- [x] Prove the rendered guard red against the immediate deletion, then pass 14/14 focused journey and ActionPreview tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 9/9 token-export, 69/69 design-check and 96/96 report-contract tests, design audit with zero violations and 86 existing warnings, and CSS ledger checks.
+- [ ] Aggregate design report/check launchers — `npm`/`npx` are unavailable; the report regenerates before its wrapper exits and the exact constituents pass, so no aggregate launcher pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable task-step removal — automation pass 7, integration slice 58
+
+- [x] Fetch and merge current `origin/main` `e128a526`; confirm its governed system-passport registry has no equivalent `dropStep`, nested-task Undo or current-screen change.
+- [x] Re-rank the remaining consequence paths and select only the current student's device-owned task checklist step; keep whole-task deletion, permanent file purge, broad demo reset and scanner-backed Import separate.
+- [x] Add `dropStep` to the existing eight-second Undo contract with only `tasks` and `onChange`, because the nested removal does not shrink the top-level task list.
+- [x] Restore the exact step text, completion state and order without reverting unrelated deadline completion; retain the existing named Remove control and route.
+- [x] Prove the focused guards red against the missing registration, then pass 126 Undo, reducer and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and design-report generation.
+- [ ] Aggregate design report/check launchers — `npm`/`npx` are unavailable; the report regenerates before its wrapper exits and the exact constituents pass, so no aggregate launcher pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only recovery slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms the Hawk CLI, Docker runtime and target host are absent; a local credential properties file exists but was not read. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable Semester Mail rule deletion — automation pass 8, integration slice 59
+
+- [x] Re-fetch and reconcile current `origin/main` `e128a526`; confirm it is already an ancestor and contains no equivalent `dropMailRule` Undo registration.
+- [x] Re-rank remaining consequence paths and select only the student-created Semester Mail rule; keep provider mailbox state, permanent purge, broad demo reset and scanner-backed Import outside the mutation.
+- [x] Add `dropMailRule` to the existing eight-second Undo contract with only `mailRules`; preserve later read, star, label, folder and snooze marks.
+- [x] Retain the existing named delete control and rule semantics; add no route, component, dependency, schema, server operation or provider behavior.
+- [x] Prove the guard red in two focused assertions, then pass 164/164 Undo, reducer, mailbox and mail-rule tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and unchanged design-report generation.
+- [ ] Aggregate design-report/check launchers — the report writes successfully, then its wrapper exits because this shell has no `npm`; exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — the active skill stops at preflight because Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the local properties file was not read. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable student-entered bill-row removal — automation pass 9, integration slice 60
+
+- [x] Re-fetch and reconcile current `origin/main` `e128a526`; confirm it is already an ancestor and contains no equivalent `dropCharge`, `dropAid` or `dropPayment` Undo registration.
+- [x] Re-rank remaining consequence paths and select the three student-entered Bill rows as one bounded screen/state-owner slice; keep university ledgers, official aid decisions, money movement, permanent purge, broad demo reset and scanner-backed Import outside the mutation.
+- [x] Add each action to the shared eight-second Undo contract with only its exact field: `charges`, `aid` or `payments`.
+- [x] Preserve the existing Bill route, row-specific accessible remove names, `student_entered` provenance, export behavior and official payment deep-link boundary.
+- [x] Prove the registry/snapshot guard red in two assertions, then pass 295/295 focused Undo, reducer, bill, export and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 147/147 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and design-report generation with all contracts passing.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — the active skill stops at preflight because `hawk` and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable registrar-date clearing — automation pass 10, integration slice 61
+
+- [x] Re-fetch current `origin/main` `e128a526`; confirm it remains an ancestor and contains no equivalent `dropTermDate` Undo registration or row-specific Clear name.
+- [x] Re-rank remaining consequence paths and select only the student-managed Registrar sheet; keep official institutional calendars, registration records, permanent purge, broad demo reset and scanner-backed Import outside the mutation.
+- [x] Add `dropTermDate` to the shared eight-second Undo contract with only `registrar` and `onChange`, covering both removal of a student-added row and same-length clearing of a built-in landmark.
+- [x] Give each repeated Clear control an accessible name containing its exact date label; add no route, component, dependency, schema, server operation or provider behavior.
+- [x] Prove the registry guard red, then pass 184/184 focused Undo, reducer, registrar and rendered Registrar tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and unchanged design-report generation.
+- [ ] Aggregate npm design-system launchers — unavailable because this shell has no `npm`/`npx`; exact constituents pass and the report regenerates before its wrapper exits.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — the active skill stops at preflight because Hawk v6 and Docker are absent and no target host is set; a local credential properties file exists but was not read. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge, folder-tree deletion and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable graph-line removal — automation pass 11, integration slice 62
+
+- [x] Fetch and merge current `origin/main` `fb1d683d`; inspect its registration-readiness persistence slice and find no `dropPlot`, Grapher, shared-Undo or integration-control equivalent.
+- [x] Re-rank remaining consequence paths and select only one student-authored graph line; keep graph-wide Clear, permanent purge, broad demo reset and scanner-backed Import outside the mutation.
+- [x] Add `dropPlot` to the shared eight-second Undo contract with only `plots`; restore the exact expression, visibility state and order without reverting later calculator work.
+- [x] Preserve the existing Grapher route and row-specific accessible remove name; add no route, component, dependency, schema, policy, server operation or provider behavior.
+- [x] Prove three focused assertions red against the missing registration, then pass 157/157 Undo, reducer, made-slice and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and unchanged design-report generation.
+- [ ] Aggregate `design-system:check` launcher — unavailable because this shell has no `npm`; its exact constituents pass and the report regenerates.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — the active skill stops at preflight because Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep graph-wide Clear, permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable graph-wide clearing — automation pass 12, integration slice 63
+
+- [x] Fetch current `origin/main` `fb1d683d`; confirm it is already an ancestor and contains no `clearPlots`, Grapher Clear recovery or integration-control equivalent.
+- [x] Re-rank remaining consequence paths and select graph-wide Clear only after proving it owns one persisted `plots` field with no cascade, server operation or external effect.
+- [x] Add a dedicated `clearPlots` action; keep example loading on `setPlot` so choosing an example does not falsely advertise an Undo.
+- [x] Register `clearPlots` with the shared eight-second Undo contract and snapshot only `plots`.
+- [x] Restore every expression, visibility state and list position without reverting later calculator work; keep the existing route, examples and row controls unchanged.
+- [x] Prove four focused assertions red before implementation, then pass 145/145 Grapher, Undo, reducer, one-graph and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 design-check contracts, 96/96 report contracts, design audit with zero violations and 86 existing warnings, and the CSS ledger.
+- [ ] Aggregate design-system report/check launchers — unavailable because this shell has no `npm`/`npx`; exact constituents pass and the report writes unchanged before its wrapper exits.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable custom-school removal — automation pass 13, integration slice 64
+
+- [x] Fetch current `origin/main` `fb1d683d`; confirm it is already an ancestor and contains no `forgetSchool`, custom-school or shared-Undo equivalent.
+- [x] Re-rank the remaining consequence paths and select only a student-created school profile; keep university-pack removal, permanent file purge, broad demo reset and scanner-backed Import outside the mutation.
+- [x] Add `forgetSchool` to the shared eight-second Undo contract with exactly `mySchools` and `schoolId`, because removing the active custom profile clears both fields.
+- [x] Restore the exact profile, order and active selection without reverting unrelated work; preserve the existing named Forget control, device persistence and capability-gated fallback.
+- [x] Prove three focused assertions red before implementation, then pass 217/217 Undo, reducer, school-pack, school-resolution and school-model tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 9/9 token-export tests, 69/69 design-check contracts and 96/96 design-report contracts; retain zero audit violations, 86 existing warnings and the CSS ledger.
+- [ ] Aggregate npm design-system launchers/report regeneration — this shell has no `npm`/`npx`; exact constituents pass, but no aggregate launcher or regenerated report is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep university-pack removal, permanent file purge and same-origin demo reset separate until their wider authority, erase and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable university-pack removal — automation pass 14, integration slice 65
+
+- [x] Fetch current `origin/main` `fb1d683d`; confirm it is already an ancestor and contains no `forgetSchoolPack` recovery or shared-Undo equivalent.
+- [x] Re-rank the university-pack boundary and prove that removal mutates only the device-persisted `schoolPack`; preserve the selected school, fallback profile and institutional/provider boundaries.
+- [x] Add `forgetSchoolPack` to the shared eight-second Undo contract with exactly `schoolPack`.
+- [x] Restore the exact snapshot and import date without reverting unrelated work or changing `schoolId`; preserve existing stale-file and capability-fallback language.
+- [x] Prove registry, snapshot and reducer assertions red before implementation, then pass 165/165 focused Undo, reducer and school-pack tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass design audit and CSS ledger checks plus 148/148 token, design, responsive and root-unmount contracts.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

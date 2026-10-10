@@ -34,6 +34,64 @@ describe('which actions can be taken back', () => {
       label: 'Calendar and its events removed',
       fields: ['feeds', 'feedEvents'],
     });
+    expect(undoableFor('removeLink')).toEqual({
+      label: 'Link removed',
+      fields: ['extraLinks', 'linkUrls'],
+    });
+    expect(undoableFor('deleteEquation')).toEqual({
+      label: 'Equation removed',
+      fields: ['equations'],
+    });
+    expect(undoableFor('clearPlan')).toEqual({
+      label: 'Study plan dropped',
+      fields: ['sessions', 'liveSession'],
+    });
+    expect(undoableFor('dropStep')).toEqual({
+      label: 'Step removed',
+      fields: ['tasks'],
+      onChange: true,
+    });
+    expect(undoableFor('dropMailRule')).toEqual({
+      label: 'Mail rule deleted',
+      fields: ['mailRules'],
+    });
+    expect(undoableFor('dropCharge')).toEqual({
+      label: 'Charge removed',
+      fields: ['charges'],
+    });
+    expect(undoableFor('dropAid')).toEqual({
+      label: 'Aid entry removed',
+      fields: ['aid'],
+    });
+    expect(undoableFor('dropPayment')).toEqual({
+      label: 'Payment record removed',
+      fields: ['payments'],
+    });
+    expect(undoableFor('dropTermDate')).toEqual({
+      label: 'Registrar date cleared',
+      fields: ['registrar'],
+      onChange: true,
+    });
+    expect(undoableFor('dropPlot')).toEqual({
+      label: 'Graph line removed',
+      fields: ['plots'],
+    });
+    expect(undoableFor('clearPlots')).toEqual({
+      label: 'Graph cleared',
+      fields: ['plots'],
+    });
+    expect(undoableFor('forgetSchool')).toEqual({
+      label: 'School profile removed',
+      fields: ['mySchools', 'schoolId'],
+    });
+    expect(undoableFor('forgetSchoolPack')).toEqual({
+      label: 'University file removed',
+      fields: ['schoolPack'],
+    });
+    expect(undoableFor('forgetCards')).toEqual({
+      label: 'Study evidence cleared',
+      fields: ['reviews', 'answers'],
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
@@ -73,6 +131,69 @@ describe('the snapshot', () => {
   it('keeps several where one action reaches several', () => {
     const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.dropPerson, AT);
     expect(Object.keys(took.was).sort()).toEqual(['letters', 'people', 'visits']);
+  });
+
+  it('keeps both halves of a student-created link', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.removeLink, AT);
+    expect(Object.keys(took.was)).toEqual(['extraLinks', 'linkUrls']);
+  });
+
+  it('keeps only the saved equation library', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.deleteEquation, AT);
+    expect(Object.keys(took.was)).toEqual(['equations']);
+  });
+
+  it('keeps only the committed study plan and its live pointer', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.clearPlan, AT);
+    expect(Object.keys(took.was)).toEqual(['sessions', 'liveSession']);
+  });
+
+  it('keeps the task list for a nested step removal', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.dropStep, AT);
+    expect(Object.keys(took.was)).toEqual(['tasks']);
+    expect(UNDOABLE.dropStep.onChange).toBe(true);
+  });
+
+  it('keeps only the student-created mail rules', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.dropMailRule, AT);
+    expect(Object.keys(took.was)).toEqual(['mailRules']);
+  });
+
+  it('keeps each student-entered bill list separate', () => {
+    expect(Object.keys(snapshot(DEFAULT_PERSISTED, UNDOABLE.dropCharge, AT).was)).toEqual(['charges']);
+    expect(Object.keys(snapshot(DEFAULT_PERSISTED, UNDOABLE.dropAid, AT).was)).toEqual(['aid']);
+    expect(Object.keys(snapshot(DEFAULT_PERSISTED, UNDOABLE.dropPayment, AT).was)).toEqual(['payments']);
+  });
+
+  it('keeps only the student-managed registrar sheet', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.dropTermDate, AT);
+    expect(Object.keys(took.was)).toEqual(['registrar']);
+    expect(UNDOABLE.dropTermDate.onChange).toBe(true);
+  });
+
+  it('keeps only the student-authored graph lines', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.dropPlot, AT);
+    expect(Object.keys(took.was)).toEqual(['plots']);
+  });
+
+  it('keeps only the student-authored graph lines when clearing the graph', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.clearPlots, AT);
+    expect(Object.keys(took.was)).toEqual(['plots']);
+  });
+
+  it('keeps a student-created school profile and its active selection together', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.forgetSchool, AT);
+    expect(Object.keys(took.was)).toEqual(['mySchools', 'schoolId']);
+  });
+
+  it('keeps only the loaded university file', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.forgetSchoolPack, AT);
+    expect(Object.keys(took.was)).toEqual(['schoolPack']);
+  });
+
+  it('keeps the study evidence and confidence history together', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.forgetCards, AT);
+    expect(Object.keys(took.was)).toEqual(['reviews', 'answers']);
   });
 
   it('carries the label and the moment', () => {
