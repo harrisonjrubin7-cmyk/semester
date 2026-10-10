@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 
 from app.models.entities import UploadCompletion
 
-
 DISPATCH_CLAIM_TTL = timedelta(minutes=5)
 
 
