@@ -115,7 +115,7 @@ try {
   // Seed the same origin before the /app worker exists. These are synthetic
   // authored/pending sentinels, not production account or offline-policy rows.
   await page.goto(`${origin}/__seed`);
-  await page.evaluate(async () => {
+  const seedCacheSnapshot = await page.evaluate(async () => {
     localStorage.setItem('semester.contract.authored', 'student-authored-plan');
     localStorage.setItem('semester.contract.pending', 'pending-outbox-item');
     const db = await new Promise((resolveOpen, rejectOpen) => {
@@ -148,8 +148,56 @@ try {
     }
     const shared = await caches.open('semester-shared');
     await shared.put('/legacy-shared', new Response('legacy-share-sentinel'));
-  });
 
+    const keys = await shared.keys();
+    const absolute = new URL('/legacy-shared', location.href).href;
+    const exact = keys.find((request) => request.url === absolute) || null;
+    const describe = async (request) => {
+      const response = request ? await shared.match(request) : undefined;
+      return response
+        ? {
+            present: true,
+            bytes: (await response.clone().arrayBuffer()).byteLength,
+            contentType: response.headers.get('content-type'),
+            vary: response.headers.get('vary'),
+          }
+        : { present: false, bytes: null, contentType: null, vary: null };
+    };
+    return {
+      absolute,
+      entries: keys.map((request) => ({ url: request.url, method: request.method })),
+      pathMatch: await describe('/legacy-shared'),
+      absoluteMatch: await describe(absolute),
+      exactMatch: await describe(exact),
+    };
+  });
+  evidence.checks.sharedCacheAtSeed = seedCacheSnapshot;
+  assert.equal(seedCacheSnapshot.pathMatch.present, true, 'shared entry must exist when seeded');
+  assert.equal(seedCacheSnapshot.absoluteMatch.present, true, 'absolute shared entry must match when seeded');
+  assert.equal(seedCacheSnapshot.exactMatch.present, true, 'enumerated shared entry must match when seeded');
+
+  await page.goto(`${origin}/__seed?roundtrip=1`);
+  const seedRoundTripSnapshot = await page.evaluate(async () => {
+    const cache = await caches.open('semester-shared');
+    const keys = await cache.keys();
+    const absolute = new URL('/legacy-shared', location.href).href;
+    const hit = await cache.match(absolute);
+    return {
+      absolute,
+      entries: keys.map((request) => ({ url: request.url, method: request.method })),
+      present: Boolean(hit),
+      bytes: hit ? (await hit.clone().arrayBuffer()).byteLength : null,
+      vary: hit?.headers.get('vary') || null,
+    };
+  });
+  evidence.checks.sharedCacheAfterSeedNavigation = seedRoundTripSnapshot;
+  assert.equal(
+    seedRoundTripSnapshot.present,
+    true,
+    'shared entry must survive a same-origin navigation before worker activation',
+  );
+
+  evidence.timings = { appNavigationStartedAt: Date.now() };
   await page.goto(appUrl, { waitUntil: 'domcontentloaded' });
   try {
     await page.waitForFunction(async () => {
@@ -179,6 +227,7 @@ try {
       { cause: error },
     );
   }
+  evidence.timings.workerActivatedAt = Date.now();
   if (!await page.evaluate(() => Boolean(navigator.serviceWorker.controller))) {
     await page.reload({ waitUntil: 'domcontentloaded' });
   }
@@ -250,6 +299,13 @@ try {
   });
   assert.deepEqual(worker, { scope: '/app/', script: '/app/sw.js', controlled: true });
   evidence.checks.worker = worker;
+  evidence.checks.workerArtifact = await page.evaluate(async () => {
+    const text = await (await fetch('/app/sw.js', { cache: 'no-store' })).text();
+    return {
+      version: text.match(/const VERSION = '([^']+)'/)?.[1] || null,
+      bytes: new TextEncoder().encode(text).byteLength,
+    };
+  });
 
   const cachesAfterActivation = await page.evaluate(() => caches.keys());
   assert.ok(!cachesAfterActivation.includes('semester-v0-scope-app-shell'));
@@ -264,15 +320,29 @@ try {
 
   const legacyShareAfterActivation = await page.evaluate(async () => {
     const cache = await caches.open('semester-shared');
-    const hit = await cache.match('/legacy-shared');
-    return hit ? await hit.text() : null;
+    const keys = await cache.keys();
+    const absolute = new URL('/legacy-shared', location.href).href;
+    const exact = keys.find((request) => request.url === absolute) || null;
+    const pathHit = await cache.match('/legacy-shared');
+    const absoluteHit = await cache.match(absolute);
+    const exactHit = exact ? await cache.match(exact) : undefined;
+    return {
+      absolute,
+      entries: keys.map((request) => ({ url: request.url, method: request.method })),
+      pathPresent: Boolean(pathHit),
+      absolutePresent: Boolean(absoluteHit),
+      exactPresent: Boolean(exactHit),
+      bytes: exactHit ? (await exactHit.clone().arrayBuffer()).byteLength : null,
+      vary: exactHit?.headers.get('vary') || null,
+      body: exactHit ? await exactHit.text() : null,
+    };
   });
-  assert.equal(
-    legacyShareAfterActivation,
-    'legacy-share-sentinel',
-    'activation must preserve existing shared-cache entries',
-  );
   evidence.checks.legacyShareAfterActivation = legacyShareAfterActivation;
+  assert.equal(
+    legacyShareAfterActivation.body,
+    'legacy-share-sentinel',
+    `activation must preserve existing shared-cache entries: ${JSON.stringify(legacyShareAfterActivation)}`,
+  );
 
   const storageBeforeOffline = {
     authored: await page.evaluate(() => localStorage.getItem('semester.contract.authored')),
