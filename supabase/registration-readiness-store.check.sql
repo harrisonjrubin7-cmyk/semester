@@ -31,7 +31,7 @@ end $$;
 create or replace function pg_temp.result(
   eid text, tenant text, version integer, state text, generation integer,
   projection integer, key text, correlation text, event_type text,
-  updated text, tasks jsonb default '[]'::jsonb
+  updated text, tasks jsonb default '[]'::jsonb, reason text default null
 )
 returns jsonb language sql immutable as $$
   select jsonb_build_object(
@@ -52,6 +52,7 @@ returns jsonb language sql immutable as $$
       'eventType', event_type, 'aggregateId', eid, 'idempotencyKey', key,
       'correlationId', correlation,
       'payload', jsonb_build_object('evaluationId', eid, 'termId', 'fall-2026', 'version', version)
+        || case when reason is null then '{}'::jsonb else jsonb_build_object('reason', reason) end
     ),
     'replayed', false
   );
@@ -125,6 +126,23 @@ begin
   perform pg_temp.counted('an exact replay wrote no second outbox event',
     (select count(*) from private.domain_outbox_events where aggregate_id = 'eval-1'), 1);
 
+  -- The additive RPC migration can be applied before the new server during a rolling deploy.
+  perform public.registration_readiness_save(
+    'readiness-a', 0, '["requested"]',
+    pg_temp.result('eval-legacy', 'readiness-a', 1, 'requested', 1, null,
+      'legacy-request-1', 'request-legacy-01', 'registration.readiness_requested',
+      '2026-10-09T15:00:00.000Z')
+  );
+  perform public.registration_readiness_save(
+    'readiness-a', 1, '["evaluating",null]',
+    pg_temp.result('eval-legacy', 'readiness-a', 2, 'evaluating', 1, null,
+      'legacy-evaluate-1', 'request-legacy-02', 'registration.readiness_evaluated',
+      '2026-10-09T15:01:00.000Z')
+  );
+  perform pg_temp.counted('the rolling RPC accepts the legacy evaluating event',
+    (select count(*) from private.registration_readiness_evaluations
+      where id = 'eval-legacy' and state = 'evaluating' and version = 2), 1);
+
   perform pg_temp.refuses('an idempotency key reused for another command', format(
     'select public.registration_readiness_save(%L, 0, %L, %L::jsonb)',
     'readiness-a', '["other"]', pg_temp.result('eval-1', 'readiness-a', 1, 'requested', 1, null,
@@ -137,14 +155,14 @@ begin
   perform pg_temp.refuses('another tenant cannot update the evaluation', format(
     'select public.registration_readiness_save(%L, 1, %L, %L::jsonb)',
     'readiness-b', '["evaluating",null]', pg_temp.result('eval-1', 'readiness-b', 2, 'evaluating', 1, null,
-      'other-1', 'request-11234567', 'registration.readiness_evaluated',
+      'other-1', 'request-11234567', 'registration.readiness_requested',
       '2026-10-09T15:01:00.000Z')::text
   ), 'SC404');
 
   perform public.registration_readiness_save(
     'readiness-a', 1, '["evaluating",null]',
     pg_temp.result('eval-1', 'readiness-a', 2, 'evaluating', 1, null,
-      'evaluate-1', 'request-21234567', 'registration.readiness_evaluated',
+      'evaluate-1', 'request-21234567', 'registration.readiness_requested',
       '2026-10-09T15:01:00.000Z')
   );
   perform pg_temp.refuses('reconciliation requires a completed evaluation outcome', format(
@@ -167,10 +185,10 @@ begin
     (select version from private.registration_readiness_evaluations where id = 'eval-1'), 2);
 
   perform public.registration_readiness_save(
-    'readiness-a', 2, '["unknown",1]',
-    pg_temp.result('eval-1', 'readiness-a', 3, 'unknown', 1, 1,
+    'readiness-a', 2, '["unknown",null,"evaluator_timeout"]',
+    pg_temp.result('eval-1', 'readiness-a', 3, 'unknown', 1, null,
       'outcome-1', 'request-41234567', 'registration.readiness_evaluated',
-      '2026-10-09T15:02:00.000Z')
+      '2026-10-09T15:02:00.000Z', '[]'::jsonb, 'evaluator_timeout')
   );
   tasks := jsonb_build_array(jsonb_build_object(
     'id', 'eval-1:reconcile:1', 'generation', 1, 'state', 'open',
@@ -178,7 +196,7 @@ begin
   ));
   perform public.registration_readiness_save(
     'readiness-a', 3, '["reconciling",null]',
-    pg_temp.result('eval-1', 'readiness-a', 4, 'reconciling', 1, 1,
+    pg_temp.result('eval-1', 'readiness-a', 4, 'reconciling', 1, null,
       'reconcile-1', 'request-51234567', 'registration.readiness_reconciliation_requested',
       '2026-10-09T15:03:00.000Z', tasks)
   );
@@ -192,8 +210,8 @@ begin
   ));
   perform public.registration_readiness_save(
     'readiness-a', 4, '["evaluating",null]',
-    pg_temp.result('eval-1', 'readiness-a', 5, 'evaluating', 2, 1,
-      'evaluate-2', 'request-61234567', 'registration.readiness_evaluated',
+    pg_temp.result('eval-1', 'readiness-a', 5, 'evaluating', 2, null,
+      'evaluate-2', 'request-61234567', 'registration.readiness_requested',
       '2026-10-09T15:04:00.000Z', tasks)
   );
   perform pg_temp.counted('the next generation resolved the task',
