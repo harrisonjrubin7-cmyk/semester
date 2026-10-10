@@ -7,7 +7,16 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from uuid import UUID
 
+from sqlalchemy import and_, exists, or_, select, update
 from sqlalchemy.orm import Session
+
+from app.models.entities import (
+    BackgroundJob,
+    Course,
+    JobStatus,
+    SourceDocument,
+    User,
+)
 
 
 @dataclass(frozen=True)
@@ -31,7 +40,46 @@ def claim_job(
     now: datetime,
     lease_ttl: timedelta,
 ) -> JobLease | None:
-    return None
+    if not worker_id.strip():
+        raise ValueError("worker_id is required")
+    if lease_ttl <= timedelta(0):
+        raise ValueError("lease_ttl must be positive")
+    expires_at = now + lease_ttl
+    row = db.execute(
+        update(BackgroundJob)
+        .where(
+            BackgroundJob.id == job_id,
+            BackgroundJob.revoked_at.is_(None),
+            _active_scope(),
+            or_(
+                BackgroundJob.status == JobStatus.queued,
+                and_(
+                    BackgroundJob.status == JobStatus.running,
+                    BackgroundJob.lease_expires_at <= now,
+                ),
+            ),
+        )
+        .values(
+            status=JobStatus.running,
+            lease_owner=worker_id,
+            lease_generation=BackgroundJob.lease_generation + 1,
+            lease_expires_at=expires_at,
+            heartbeat_at=now,
+            attempt_count=BackgroundJob.attempt_count + 1,
+            error=None,
+        )
+        .returning(BackgroundJob.course_id, BackgroundJob.lease_generation)
+    ).one_or_none()
+    db.commit()
+    if row is None:
+        return None
+    return JobLease(
+        job_id=job_id,
+        course_id=row.course_id,
+        worker_id=worker_id,
+        generation=row.lease_generation,
+        expires_at=expires_at,
+    )
 
 
 def heartbeat_job(
@@ -40,7 +88,16 @@ def heartbeat_job(
     now: datetime,
     lease_ttl: timedelta,
 ) -> bool:
-    return False
+    if lease_ttl <= timedelta(0):
+        raise ValueError("lease_ttl must be positive")
+    expires_at = now + lease_ttl
+    changed = db.execute(
+        update(BackgroundJob)
+        .where(_current_lease(lease, now), _active_scope())
+        .values(heartbeat_at=now, lease_expires_at=expires_at)
+    ).rowcount
+    db.commit()
+    return bool(changed)
 
 
 def commit_job(
@@ -50,7 +107,16 @@ def commit_job(
     result: dict,
     apply: Callable[[Session], None] | None = None,
 ) -> bool:
-    return False
+    return _finish_job(
+        db,
+        lease,
+        now,
+        status=JobStatus.completed,
+        result=result,
+        error=None,
+        progress=100,
+        apply=apply,
+    )
 
 
 def fail_job(
@@ -60,7 +126,16 @@ def fail_job(
     error: str,
     apply: Callable[[Session], None] | None = None,
 ) -> bool:
-    return False
+    return _finish_job(
+        db,
+        lease,
+        now,
+        status=JobStatus.failed,
+        result=None,
+        error=error,
+        progress=None,
+        apply=apply,
+    )
 
 
 def revoke_job(
@@ -70,4 +145,127 @@ def revoke_job(
     now: datetime,
     reason: str,
 ) -> bool:
-    return False
+    changed = db.execute(
+        update(BackgroundJob)
+        .where(
+            BackgroundJob.id == job_id,
+            BackgroundJob.course_id == course_id,
+            BackgroundJob.status != JobStatus.completed,
+            BackgroundJob.revoked_at.is_(None),
+        )
+        .values(
+            status=JobStatus.failed,
+            error=reason,
+            revoked_at=now,
+            lease_owner=None,
+            lease_expires_at=None,
+            heartbeat_at=None,
+        )
+    ).rowcount
+    db.commit()
+    return bool(changed)
+
+
+def update_job_progress(
+    db: Session,
+    lease: JobLease,
+    now: datetime,
+    lease_ttl: timedelta,
+    progress: int,
+    apply: Callable[[Session], None] | None = None,
+) -> bool:
+    """Renew a current lease and commit a fenced progress transition."""
+    if not 0 <= progress <= 100:
+        raise ValueError("progress must be between 0 and 100")
+    expires_at = now + lease_ttl
+    changed = db.execute(
+        update(BackgroundJob)
+        .where(_current_lease(lease, now), _active_scope())
+        .values(progress=progress, heartbeat_at=now, lease_expires_at=expires_at)
+    ).rowcount
+    if not changed:
+        db.rollback()
+        return False
+    try:
+        if apply:
+            apply(db)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    return True
+
+
+def _active_scope():
+    active_course = exists(
+        select(Course.id)
+        .join(User, User.id == Course.user_id)
+        .where(
+            Course.id == BackgroundJob.course_id,
+            Course.deleted_at.is_(None),
+            User.deleted_at.is_(None),
+        )
+    )
+    active_document = or_(
+        BackgroundJob.document_id.is_(None),
+        exists(
+            select(SourceDocument.id).where(
+                SourceDocument.id == BackgroundJob.document_id,
+                SourceDocument.course_id == BackgroundJob.course_id,
+                SourceDocument.deleted_at.is_(None),
+            )
+        ),
+    )
+    return and_(active_course, active_document)
+
+
+def _current_lease(lease: JobLease, now: datetime):
+    return and_(
+        BackgroundJob.id == lease.job_id,
+        BackgroundJob.course_id == lease.course_id,
+        BackgroundJob.status == JobStatus.running,
+        BackgroundJob.revoked_at.is_(None),
+        BackgroundJob.lease_owner == lease.worker_id,
+        BackgroundJob.lease_generation == lease.generation,
+        BackgroundJob.lease_expires_at > now,
+    )
+
+
+def _finish_job(
+    db: Session,
+    lease: JobLease,
+    now: datetime,
+    *,
+    status: JobStatus,
+    result: dict | None,
+    error: str | None,
+    progress: int | None,
+    apply: Callable[[Session], None] | None,
+) -> bool:
+    values = {
+        "status": status,
+        "error": error,
+        "lease_owner": None,
+        "lease_expires_at": None,
+        "heartbeat_at": now,
+    }
+    if result is not None:
+        values["result"] = result
+    if progress is not None:
+        values["progress"] = progress
+    changed = db.execute(
+        update(BackgroundJob)
+        .where(_current_lease(lease, now), _active_scope())
+        .values(**values)
+    ).rowcount
+    if not changed:
+        db.rollback()
+        return False
+    try:
+        if apply:
+            apply(db)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    return True
