@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { purgeDisallowedOfflineData, SyncEngine } from '@semester/offline-sync';
+import { AttachmentCache, memoryBlobs, newKey, purgeDisallowedOfflineData, SyncEngine, type CachedFile } from '@semester/offline-sync';
 import { fakeIndexedDB } from '../fakeidb';
 import { fakeTaskRows } from './fake-rows';
 import { store } from '../../idb';
@@ -7,6 +7,7 @@ import { eraseVaults, idbStorage } from '../../vault/idb';
 import { openVault, VaultError, type Identity, type Vault } from '../../vault/vault';
 import { clearEngineStore, idbSnapshotPort, openEngineStore, sealedSnapshotPort } from './persistent';
 import { tasksTransport } from './tasks-transport';
+import { createAttachmentPolicyPurge } from './attachments-runtime';
 
 const NOW = 1_800_000_000_000;
 const identity = { tenantId: 'self', userId: 'u1', deviceId: 'a' };
@@ -32,6 +33,46 @@ describe('the engine store on disk', () => {
     await restarted.flush();
     const acknowledged = await openEngineStore(idbSnapshotPort('u1'));
     expect(Object.keys(acknowledged.snapshot().cursors).filter((key) => key.includes('purge'))).toEqual([]);
+  });
+
+  it('replays exact attachment cleanup after restart without deleting authored or pending work', async () => {
+    let files: CachedFile[] = [];
+    const blobs = memoryBlobs();
+    const index = {
+      load: async () => structuredClone(files),
+      update: async <T>(change: (rows: CachedFile[]) => { rows: CachedFile[]; value: T }) => {
+        const next = change(structuredClone(files)); files = structuredClone(next.rows); return next.value;
+      },
+    };
+    const cache = new AttachmentCache({ dek: await newKey(), blobs, index, now: () => NOW, scope: identity });
+    const authored = await cache.put({ id: 'authored-file', tenantId: 'self', dataClass: 'personal_plan', ownerEntityId: 'shared', mime: 'text/plain', scan: 'clean', aclEpoch: 1, pinned: false }, new TextEncoder().encode('student-authored plan'));
+    files.unshift({ ...authored, id: 'issued-file', dataClass: 'grade', blobName: 'issued-generation' });
+
+    const durable = idbSnapshotPort('u1');
+    const first = await openEngineStore(durable);
+    await first.entities.put({ dataClass: 'grade', id: 'shared', value: { score: 90 }, version: 1, phase: 'reconciled', fetchedAt: NOW });
+    await first.entities.put({ dataClass: 'personal_plan', id: 'shared', value: { body: 'student plan' }, version: null, phase: 'queued', fetchedAt: NOW, commandId: 'plan-command' });
+    await first.outbox.put({
+      id: 'plan-command', tenantId: 'self', userId: 'u1', deviceId: 'a', dataClass: 'personal_plan', entityId: 'shared', op: 'patch', payload: { body: 'student plan' }, baseVersion: null,
+      hlc: { wall: NOW, counter: 0, node: 'a' }, policyVersion: '1', permissionEpoch: 0, createdAt: NOW, expiresAt: NOW + 1, seq: 1, phase: 'queued', attempts: 0, nextAttemptAt: NOW,
+    });
+    await first.flush();
+
+    const cleanup = createAttachmentPolicyPurge(cache);
+    await expect(purgeDisallowedOfflineData(first, undefined, async (rows) => {
+      await cleanup(rows);
+      throw new Error('synthetic close after dependent cleanup');
+    })).rejects.toThrow(/synthetic close/);
+    await first.flush();
+    expect(files.map((row) => row.id)).toEqual(['authored-file']);
+
+    const restarted = await openEngineStore(durable);
+    await purgeDisallowedOfflineData(restarted, undefined, cleanup);
+    await restarted.flush();
+    expect(await restarted.entities.get('grade', 'shared')).toBeUndefined();
+    expect(await restarted.entities.get('personal_plan', 'shared')).toMatchObject({ value: { body: 'student plan' }, phase: 'queued' });
+    expect((await restarted.outbox.all()).map((row) => row.id)).toEqual(['plan-command']);
+    expect(files.map((row) => row.id)).toEqual(['authored-file']);
   });
 
   it('keeps primary data when the durable journal transaction aborts', async () => {

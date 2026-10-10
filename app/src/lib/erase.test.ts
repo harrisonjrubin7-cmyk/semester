@@ -133,6 +133,9 @@ describe('every database the app opens is one the sweep clears', () => {
     }
     // `state/persist/db.ts` is the one that does not go through `lib/idb.ts`.
     opened.add('semester-store');
+    // The multi-store offline attachment adapter uses raw IndexedDB so its
+    // generation metadata and ciphertext can share one versioned database.
+    opened.add('semester-offline-attachments');
     expect([...opened].sort()).toEqual([...DATABASES].sort());
   });
 
@@ -149,6 +152,7 @@ describe('every database the app opens is one the sweep clears', () => {
     const share = await import('./shared');
     const outbox = await import('./sync/outbox');
     const engine = await import('./sync/engine/persistent');
+    const offlineAttachments = await import('./sync/engine/attachments-idb');
     const hist = await import('./history/history');
     const db = await import('../state/persist/db');
     const persist = await import('../state/persist');
@@ -176,6 +180,9 @@ describe('every database the app opens is one the sweep clears', () => {
     });
     vi.spyOn(engine, 'clearEngineStore').mockImplementation(async () => {
       calls.push('semester-engine');
+    });
+    vi.spyOn(offlineAttachments, 'clearOfflineAttachmentPersistence').mockImplementation(async () => {
+      calls.push('semester-offline-attachments');
     });
     vi.spyOn(hist, 'clearHistory').mockImplementation(async () => {
       calls.push('semester-history');
