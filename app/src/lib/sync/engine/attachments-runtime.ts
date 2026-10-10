@@ -25,8 +25,10 @@ export function createAttachmentPolicyPurge(cache: AttachmentCache): (rows: read
 export async function openOfflineAttachmentRuntime(config: OfflineAttachmentRuntimeConfig): Promise<OfflineAttachmentRuntime | undefined> {
   if (!config.enabled) return undefined;
   const key = config.dek as Partial<CryptoKey> | undefined;
-  if (!key || key.type !== 'secret' || typeof key.extractable !== 'boolean' || !key.algorithm || !Array.isArray(key.usages)) {
-    throw new TypeError('offline attachment persistence requires a valid encryption key');
+  if (typeof CryptoKey === 'undefined' || !(config.dek instanceof CryptoKey)
+    || key.type !== 'secret' || typeof key.extractable !== 'boolean' || key.algorithm?.name !== 'AES-GCM'
+    || !Array.isArray(key.usages) || !key.usages.includes('wrapKey') || !key.usages.includes('unwrapKey')) {
+    throw new TypeError('offline attachment persistence requires a genuine AES-GCM wrapping encryption key');
   }
   const persistence = await openAttachmentPersistence(config);
   if (!persistence) throw new Error('enabled attachment persistence did not open');

@@ -19,6 +19,20 @@ describe('attachment policy cleanup integration', () => {
     expect(opens).toBe(0);
   });
 
+  it('rejects a genuine non-AES wrapping key before opening persistence', async () => {
+    let opens = 0;
+    const factory = { open: () => { opens += 1; throw new Error('storage opened'); } } as unknown as IDBFactory;
+    const hmac = await crypto.subtle.generateKey({ name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
+    await expect(openOfflineAttachmentRuntime({
+      enabled: true,
+      identity: { tenantId: 't', userId: 'u', deviceId: 'd' },
+      factory,
+      dek: hmac,
+      now: () => NOW,
+    })).rejects.toThrow(/AES-GCM wrapping/);
+    expect(opens).toBe(0);
+  });
+
   it('removes only the exact source-class owner and preserves authored collisions and pending drafts', async () => {
     let files: CachedFile[] = [];
     const index = {

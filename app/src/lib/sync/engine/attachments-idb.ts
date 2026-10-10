@@ -1,4 +1,4 @@
-import type { BlobStore, CachedFile } from '@semester/offline-sync';
+import { policyFor, type BlobStore, type CachedFile } from '@semester/offline-sync';
 
 export interface AttachmentIdentity {
   tenantId: string;
@@ -50,7 +50,12 @@ interface StoredBlob {
 function isCachedFile(value: unknown): value is CachedFile {
   if (!value || typeof value !== 'object') return false;
   const file = value as Partial<CachedFile>;
-  return [file.id, file.tenantId, file.dataClass, file.ownerEntityId, file.mime, file.contentSha256, file.blobName]
+  let recognizedCacheClass = false;
+  if (typeof file.dataClass === 'string') {
+    try { recognizedCacheClass = policyFor(file.dataClass).cache !== 'never'; } catch { /* unknown classes fail closed */ }
+  }
+  return recognizedCacheClass
+    && [file.id, file.tenantId, file.dataClass, file.ownerEntityId, file.mime, file.contentSha256, file.blobName]
     .every((field) => typeof field === 'string' && field.length > 0)
     && [file.size, file.aclEpoch, file.fetchedAt, file.lastReadAt].every((field) => typeof field === 'number' && Number.isFinite(field) && field >= 0)
     && ['clean', 'pending', 'infected', 'unscannable'].includes(String(file.scan))

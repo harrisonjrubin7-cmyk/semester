@@ -9,6 +9,8 @@ const playwright = process.env.SMOKE_PLAYWRIGHT ?? '/opt/codex/runtimes/codex-pr
 const { chromium } = require(playwright);
 const source = await readFile(new URL('../src/lib/sync/engine/attachments-idb.ts', import.meta.url), 'utf8');
 const javascript = stripTypeScriptTypes(source, { mode: 'transform' });
+const policySource = await readFile(new URL('../../packages/offline-sync/src/policy.ts', import.meta.url), 'utf8');
+const policyJavascript = stripTypeScriptTypes(policySource, { mode: 'transform' });
 const server = createServer((_req, res) => {
   res.writeHead(200, { 'content-type': 'text/html', 'cache-control': 'no-store' });
   res.end('<!doctype html><title>synthetic offline attachment adapter</title>');
@@ -21,10 +23,12 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME_BIN ?
 try {
   const page = await browser.newPage();
   await page.goto(`http://127.0.0.1:${address.port}/`);
-  const result = await page.evaluate(async (code) => {
-    const moduleUrl = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
+  const result = await page.evaluate(async ({ code, policyCode }) => {
+    const policyUrl = URL.createObjectURL(new Blob([policyCode], { type: 'text/javascript' }));
+    const moduleUrl = URL.createObjectURL(new Blob([code.replaceAll("'@semester/offline-sync'", `'${policyUrl}'`)], { type: 'text/javascript' }));
     const adapter = await import(moduleUrl);
     URL.revokeObjectURL(moduleUrl);
+    URL.revokeObjectURL(policyUrl);
 
     let opens = 0;
     const disabled = await adapter.openAttachmentPersistence({
@@ -81,6 +85,14 @@ try {
     await adapter.clearOfflineAttachmentPersistence(indexedDB);
     const afterEmptyErase = await adapter.openAttachmentPersistence({ enabled: true, identity });
     afterEmptyErase.close();
+    await deleteDatabase();
+
+    await seedLegacy({ key: `${scope}\u0000legacy-file`, scope, file: legacyFile({ dataClass: 'not_a_real_class' }) });
+    let unknownClass = '';
+    try { await adapter.openAttachmentPersistence({ enabled: true, identity }); } catch (error) { unknownClass = error?.code ?? error?.name ?? ''; }
+    if (unknownClass !== 'ambiguous_legacy_attachment') throw new Error(`unknown legacy class was not rejected: ${unknownClass}`);
+    const preservedUnknown = await inspectLegacy();
+    if (preservedUnknown.version !== 1 || preservedUnknown.metadata !== 1 || preservedUnknown.blobs !== 1) throw new Error('unknown-class upgrade changed legacy storage');
     await deleteDatabase();
 
     const first = await adapter.openAttachmentPersistence({ enabled: true, identity });
@@ -183,9 +195,9 @@ try {
     });
     recovery.close();
     await deleteDatabase();
-    return { opens, count: ids.length, distinct: new Set(ids).size, ambiguous, duplicate, blocked: 'cancelled', interruptedUpgrade: 'recovered', retiredRestart: 'recovered', versionchange: 'closed' };
-  }, javascript);
-  assert.deepEqual(result, { opens: 0, count: 24, distinct: 24, ambiguous: 'ambiguous_legacy_attachment', duplicate: 'ambiguous_legacy_attachment', blocked: 'cancelled', interruptedUpgrade: 'recovered', retiredRestart: 'recovered', versionchange: 'closed' });
+    return { opens, count: ids.length, distinct: new Set(ids).size, ambiguous, duplicate, unknownClass, blocked: 'cancelled', interruptedUpgrade: 'recovered', retiredRestart: 'recovered', versionchange: 'closed' };
+  }, { code: javascript, policyCode: policyJavascript });
+  assert.deepEqual(result, { opens: 0, count: 24, distinct: 24, ambiguous: 'ambiguous_legacy_attachment', duplicate: 'ambiguous_legacy_attachment', unknownClass: 'ambiguous_legacy_attachment', blocked: 'cancelled', interruptedUpgrade: 'recovered', retiredRestart: 'recovered', versionchange: 'closed' });
   console.log(JSON.stringify({ browser: 'chromium', indexedDB: 'native', atomicUpdates: 24, upgrades: 'abort-safe', cleanupRestart: 'pass', result: 'pass' }));
 } finally {
   await browser.close();
