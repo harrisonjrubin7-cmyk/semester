@@ -92,7 +92,7 @@ export interface RegistrationReadinessEvaluationRecord {
   commandLedger: ReadinessCommandLedgerEntry[];
 }
 
-export type ReadinessTransitionReason = 'evaluator_timeout' | 'evaluator_invalid_observation';
+export type ReadinessTransitionReason = 'evaluator_timeout';
 
 export type ReadinessWorkflowEventType =
   | 'registration.readiness_requested'
@@ -250,7 +250,7 @@ export function transitionRegistrationReadinessEvaluation(
   if (command.expectedVersion !== current.version) {
     throw new Error(`Readiness evaluation is at version ${current.version}, not ${command.expectedVersion}.`);
   }
-  if (command.reason !== undefined && (command.targetState !== 'unknown' || !['evaluator_timeout', 'evaluator_invalid_observation'].includes(command.reason))) {
+  if (command.reason !== undefined && (command.reason !== 'evaluator_timeout' || command.targetState !== 'unknown')) {
     throw new Error('Readiness transition reason is not valid for this outcome.');
   }
   if (command.projectionVersion !== undefined && (!Number.isInteger(command.projectionVersion) || command.projectionVersion < 1)) {
@@ -258,7 +258,7 @@ export function transitionRegistrationReadinessEvaluation(
   }
 
   if (REGISTRATION_READINESS_COMPLETED_OUTCOMES.some((outcome) => outcome === command.targetState)) {
-    if (command.projectionVersion === undefined && !(command.targetState === 'unknown' && command.reason !== undefined)) {
+    if (command.projectionVersion === undefined && !(command.targetState === 'unknown' && command.reason === 'evaluator_timeout')) {
       throw new Error('An evaluated readiness outcome requires a projection version.');
     }
     if (command.projectionVersion !== undefined && current.projectionVersion !== undefined && command.projectionVersion <= current.projectionVersion) {
