@@ -161,6 +161,7 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
             : 'Campus only';
     if (c.state.calView === 'semester') return { kicker: source, title: 'Semester' };
     if (c.state.calView === 'day') return { kicker: source, title: 'Day' };
+    if (c.state.calView === 'agenda') return { kicker: source, title: 'Agenda' };
     // The month of `calDay`, not a `calMonth` of its own. The header used to
     // read a second field, so it could name a different month from the grid
     // under it once the two drifted apart. See `calDay` in `state/shape.ts`.

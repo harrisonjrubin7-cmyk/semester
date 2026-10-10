@@ -909,7 +909,7 @@ export interface Ephemeral {
    */
   changes: ChangeSource;
   /** Which schedule view the calendar is showing. */
-  calView: 'day' | 'week' | 'month' | 'semester';
+  calView: 'day' | 'week' | 'month' | 'semester' | 'agenda';
   /** Which sources the calendar is showing — combined, or one at a time. */
   calSource: 'all' | 'classes' | 'deadlines' | 'campus';
   /**
@@ -2491,7 +2491,7 @@ export type Action =
   /** Join the held term to this definition, both indexes into `pairs`. */
   | { type: 'joinTerm'; right: number }
   | { type: 'nextQuestion' }
-  | { type: 'setCalView'; view: 'day' | 'week' | 'month' | 'semester' }
+  | { type: 'setCalView'; view: 'day' | 'week' | 'month' | 'semester' | 'agenda' }
   | { type: 'setReport'; grain: ReportGrain }
   | { type: 'setChanges'; source: ChangeSource }
   /*

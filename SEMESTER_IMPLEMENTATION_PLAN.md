@@ -141,8 +141,11 @@ record rather than from the student's memory.
 
 Independent of everything above, and each an afternoon:
 
-- **§94 Agenda view.** Calendar has Day, Week, Month, Semester
-  (`screens/Calendar.tsx:2832`). Agenda is the fifth.
+- **§94 Agenda view.** ~~Calendar has Day, Week, Month, Semester; Agenda is the
+  fifth.~~ **Built, 10 October 2026.** `lib/agenda.ts` lists the next fourteen
+  days from the day view's own selectors, under the same source chips; each
+  day heading opens that day. Tests: `lib/agenda.test.ts`,
+  `screens/Calendar.agenda.test.tsx` (red against a revert of the view switch).
 - **§112 Socratic mode.** Nothing in the tree names it; the assistant
   (`lib/assistant.ts`, `ai/`) is where it goes, as a mode beside the others.
 - **§116 Academic search**, scoped to one course's materials rather than

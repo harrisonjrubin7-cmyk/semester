@@ -28,7 +28,7 @@ import { WIDE, useMedia } from '../lib/media';
 import { PrintButton } from '../components/PrintButton';
 import { CAMPUS_KIND, kindOf } from '../lib/kinds';
 import { DOTS, dayCount, dayLabel, monthLabel, moveBy } from '../lib/monthgrid';
-import { dateToIso, isoToDate, longLabel, minutesNow, monthDay, monthGrid, monthShort, monthShortYear, sameDay, shiftIso, shownTime, weekdayInitial, weekdayInitialOf, weekdayShort } from '../lib/date';
+import { dateToIso, isoToDate, longLabel, weekdayDayMonth, minutesNow, monthDay, monthGrid, monthShort, monthShortYear, sameDay, shiftIso, shownTime, weekdayInitial, weekdayInitialOf, weekdayShort } from '../lib/date';
 import {
   appointmentsOn,
   bannersOn,
@@ -68,6 +68,7 @@ import type {
 import { Folding } from '../components/Fold';
 import { goMine } from '../lib/openmine';
 import { goCal } from '../lib/opencal';
+import { AGENDA_DAYS, agendaCount, agendaDays } from '../lib/agenda';
 import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 
@@ -2661,6 +2662,152 @@ const CAMPUS_ROW: CSSProperties = {
   alignItems: 'flex-start',
 };
 
+/**
+ * The agenda — the next two weeks as a list, day under day (§94).
+ *
+ * The grids answer "what does this stretch look like"; this answers "what is
+ * next, in order", which is the question a phone is usually asked between
+ * classes. Every row is drawn the way the day view draws it — the same
+ * deadline row, the same task row with its tick and arrows, the same campus
+ * row — so a thing looks like itself whichever view it is found in. What is
+ * on each day comes from `lib/agenda.ts`, which reads the day view's own
+ * selectors rather than deciding it a second time.
+ */
+function AgendaView() {
+  const dayRow = useRowStyle(12);
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
+  const source = state.calSource;
+  const on = shows(source);
+  const kind = eventFilter(source, state.evFilter as EvFilter);
+  const days = agendaDays(
+    {
+      items: on.deadlines ? datedItems(catalog, now) : [],
+      events: on.campus
+        ? datedEvents(now, state.schoolId, state.sample).filter((e) => keepEvent(e, kind, state.saved))
+        : [],
+      feed: on.campus && keepFeedEvent(kind) ? state.feedEvents : [],
+      tasks: on.deadlines ? state.tasks : [],
+      // Gated on `on.classes`, as the month grid and the semester mark them.
+      appointments: on.classes ? state.appointments : [],
+    },
+    now,
+  );
+  const today = dateToIso(now);
+  const total = agendaCount(days);
+  const timeCell: CSSProperties = {
+    width: 54,
+    flex: 'none',
+    fontFamily: 'var(--font-heading)',
+    fontSize: 'var(--type-sm)',
+    color: 'var(--app-dim)',
+  };
+
+  return (
+    <div style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(18px * var(--density, 1))' }}>
+      <div className="section-label" style={{ marginBottom: 'var(--sp-4)' }}>
+        {total} {total === 1 ? 'thing' : 'things'} in the next {AGENDA_DAYS} days
+      </div>
+
+      {days.map((d) => (
+        <section key={d.iso} aria-label={d.iso === today ? `Today, ${weekdayDayMonth(d.date)}` : weekdayDayMonth(d.date)}>
+          <SectionLabel style={{ marginTop: 'var(--sp-5)' }}>
+            <button
+              type="button"
+              className="bare"
+              onClick={() => goCal(dispatch, d.iso, 'day')}
+              aria-label={`Open ${weekdayDayMonth(d.date)} as a day`}
+            >
+              {d.iso === today ? `Today · ${weekdayDayMonth(d.date)}` : weekdayDayMonth(d.date)}
+            </button>
+          </SectionLabel>
+          {d.entries.map((e) => {
+            switch (e.kind) {
+              case 'deadline':
+                return (
+                  <DeadlineRow
+                    key={`d:${e.item.id}`}
+                    item={e.item}
+                    tone={standingOf(e.item, state.done)}
+                    meta={e.item.dueTime}
+                    trail={null}
+                  />
+                );
+              case 'action':
+                return <DayTask key={`t:${e.task.id}`} task={e.task} />;
+              case 'campus':
+                return (
+                  <button
+                    key={`c:${e.event.id}`}
+                    type="button"
+                    className="bare tappable on-paper"
+                    onClick={() => dispatch({ type: 'openEvent', id: e.event.id })}
+                    style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'center', ...dayRow }}
+                  >
+                    <span className="tag tag-outline">{e.event.kind}</span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-display-xs)' }}>
+                        {e.event.title}
+                      </span>
+                      <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
+                        {shownTime(e.event.time)} · {e.event.where}
+                      </span>
+                    </span>
+                  </button>
+                );
+              case 'appointment':
+              case 'feed': {
+                const row = e.kind === 'appointment' ? e.appointment : e.event;
+                // Where it came from, on the rule the day view states: an
+                // entry from a connected calendar is never mistaken for one
+                // you made or one the university published.
+                const from =
+                  e.kind === 'appointment'
+                    ? 'Yours'
+                    : (state.feeds.find((f) => f.id === e.event.sourceId)?.name ?? 'Calendar');
+                return (
+                  <div
+                    key={`${e.kind}:${row.id}:${d.iso}`}
+                    style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'center', ...dayRow }}
+                  >
+                    <span style={timeCell}>{row.at === null ? 'All day' : shownTime(row.time, row.at)}</span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-display-xs)' }}>
+                        {row.title}
+                      </span>
+                      <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
+                        {from}
+                        {row.where ? ` · ${row.where}` : ''}
+                      </span>
+                    </span>
+                  </div>
+                );
+              }
+            }
+          })}
+        </section>
+      ))}
+
+      {total === 0 && (
+        <EmptyState
+          title="Nothing in the next two weeks."
+          body={
+            source === 'all'
+              ? 'Add a course, an action or an appointment and it lands here in date order.'
+              : `Nothing from ${sourceName(source)} in the next two weeks. There may be something under another chip.`
+          }
+          action={
+            source === 'all'
+              ? undefined
+              : { label: 'Show everything', onClick: () => dispatch({ type: 'setCalSource', source: 'all' }) }
+          }
+        />
+      )}
+      <div style={{ height: 22 }} />
+    </div>
+  );
+}
+
 function DateStamp({ mon, day, dow }: { mon: string; day: number; dow: string }) {
   return (
     <>
@@ -2892,6 +3039,7 @@ export function Calendar() {
             { id: 'week', label: wide ? 'Week' : '3 days' },
             { id: 'month', label: 'Month' },
             { id: 'semester', label: 'Semester' },
+            { id: 'agenda', label: 'Agenda' },
           ]}
           value={state.calView}
           onChange={(view) => dispatch({ type: 'setCalView', view })}
@@ -2940,6 +3088,8 @@ export function Calendar() {
         </>
       ) : state.calView === 'semester' ? (
         <SemesterView />
+      ) : state.calView === 'agenda' ? (
+        <AgendaView />
       ) : (
         <MonthView />
       )}
