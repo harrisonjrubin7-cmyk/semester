@@ -1,10 +1,22 @@
 # Handoff integration status
 
-**Automation pass** 15 of 120 (continued program) · **Integration slice** 66 · **Date** 2026-10-10 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `071e679d` · **Latest observed `origin/main`** `071e679d`
+**Automation pass** 16 of 120 (continued program; runner pass 2) · **Integration slice** 67 · **Date** 2026-10-10 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `9633dec4` · **Latest observed `origin/main`** `071e679d`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in current automation pass 16 / integration slice 67
+
+- Current `origin/main` remains `071e679d`, is already the branch base and has no equivalent Advisor Meeting consequence-preview change.
+- **Remove this meeting…** now uses the shared `ActionPreview` to identify the meeting and the agenda, questions, follow-ups and private notes removed from this device. It separately states that already-created shares, other preparations and official advising records remain unchanged.
+- Recovery language matches the current backup contract: a prior device workspace backup can restore meeting structure but intentionally never carries private notes. Account-keyed storage, local deletion, server share revocation/deletion and backup formats are unchanged.
+- Cancel remains the initial focused action and writes nothing. No route, dependency, schema, policy, provider operation or external system changed.
+- The focused rendered assertion was red before implementation. Advisor Meeting, preview, workspace-backup coverage and root-unmount suites pass 30/30.
+- TypeScript, lint, university typecheck and production build pass. The existing four lint warnings and build chunk-size warning remain. Design-system constituent tests pass 78/78, report contracts pass 96/96, design audit has no violations with 86 existing warnings and CSS stays within its ledger.
+- The aggregate report launcher and ordered/shuffled full suites were not run for this bounded content/state-contract slice because shell `npm`/`npx` are unavailable; the last recorded full-suite baseline remains pass 30's 23,872 tests.
+- The required HawkScan preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. No target, DAST result or security pass is claimed.
+- Permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate. The next slice requires another fresh dependency/consequence ranking.
 
 ## Evidence locked in current automation pass 15 / integration slice 66
 

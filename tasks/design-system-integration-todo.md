@@ -1405,3 +1405,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed Advisor Meeting preparation deletion — automation pass 16, integration slice 67
+
+- [x] Fetch current `origin/main` `071e679d`; confirm it has no equivalent Advisor Meeting consequence-preview change and remains the branch base.
+- [x] Re-rank remaining consequence paths and select only device-owned meeting-preparation deletion; keep permanent file purge, broad demo reset and scanner-backed Import outside the mutation.
+- [x] Replace the ad hoc deletion sentence with the shared `ActionPreview`, naming the selected meeting, exact local payload removed, already-created shares and official records that remain unchanged.
+- [x] State the truthful recovery boundary: a prior device workspace backup can restore meeting structure but never the intentionally device-private notes.
+- [x] Preserve initial Cancel focus, no-write cancellation, account-keyed storage, share authority and the existing deletion behavior.
+- [x] Prove the rendered consequence assertion red before implementation, then pass 30/30 focused Advisor Meeting, preview, backup and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and build chunk-size warning.
+- [x] Pass 78/78 design-system constituent tests, 96/96 report contracts, design audit with no violations and the CSS ledger check.
+- [ ] Aggregate design-system report launcher and ordered/shuffled full suites — not run for this bounded content/state-contract slice; shell `npm`/`npx` are unavailable and the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
