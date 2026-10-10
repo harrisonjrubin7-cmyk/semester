@@ -5,10 +5,502 @@
       "code": "capability_not_production_ready",
       "path": "capabilities.registration.readiness.maturity.production_ready",
       "message": "registration.readiness lacks production-ready evidence."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.public-web",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.student-os",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.faculty-os",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.advisor-os",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.registrar-os",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.finance-os",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.student-affairs-os",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.institution-console",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.company-os",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.operations-os",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.applicant-portal",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.guardian-portal",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.alumni-portal",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.employer-portal",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.partner-portal",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.developer-portal",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "workspace_not_operational",
+      "path": "workspaces.community-marketplace",
+      "message": "Operational readiness is false. Activation is disabled. Missing routes evidence. Missing capabilities evidence. Missing workflows evidence. Missing code evidence. Missing tests evidence. Missing deployments evidence. Missing activations evidence. Open gap: Operational implementation and evidence are incomplete."
+    },
+    {
+      "code": "acceptance_case_not_passed",
+      "path": "manifests.semester.acceptance_cases.XA-01",
+      "message": "No registered end-to-end applicant integration evidence. authorized applicant handoff: missing wrong-tenant applicant denial: missing"
+    },
+    {
+      "code": "acceptance_case_not_passed",
+      "path": "manifests.semester.acceptance_cases.XA-02",
+      "message": "No registered end-to-end advising integration evidence. consented advisor review: missing unassigned advisor denial: missing"
+    },
+    {
+      "code": "acceptance_case_not_passed",
+      "path": "manifests.semester.acceptance_cases.XA-03",
+      "message": "No registered end-to-end course release integration evidence. authorized course release: missing unassigned course denial: missing"
+    },
+    {
+      "code": "acceptance_case_not_passed",
+      "path": "manifests.semester.acceptance_cases.XA-04",
+      "message": "SIS and finance integration evidence is absent; registration subflows do not prove the cross-workspace case, and no canonical live route authority is registered. source-aware readiness reconciliation: missing stale or cross-tenant decision denial: missing"
+    },
+    {
+      "code": "acceptance_case_not_passed",
+      "path": "manifests.semester.acceptance_cases.XA-05",
+      "message": "No registered end-to-end protected referral integration evidence. explicitly consented referral view: missing revoked or expired consent denial: missing"
+    },
+    {
+      "code": "acceptance_case_not_passed",
+      "path": "manifests.semester.acceptance_cases.XA-06",
+      "message": "No registered operated tenant handoff evidence. tenant-scoped implementation handoff: missing unapproved production change denial: missing"
+    },
+    {
+      "code": "acceptance_case_not_passed",
+      "path": "manifests.semester.acceptance_cases.XA-07",
+      "message": "No registered end-to-end external integration evidence. approved scoped partner lifecycle: missing revoked credential denial: missing"
+    },
+    {
+      "code": "acceptance_case_not_passed",
+      "path": "manifests.semester.acceptance_cases.XA-08",
+      "message": "No registered end-to-end community or marketplace integration evidence. verified opted-in marketplace action: missing unverified or revoked member denial: missing"
     }
   ],
   "blockedCapabilities": [
     "registration.readiness"
+  ],
+  "blockedWorkspaces": [
+    "public-web",
+    "student-os",
+    "faculty-os",
+    "advisor-os",
+    "registrar-os",
+    "finance-os",
+    "student-affairs-os",
+    "institution-console",
+    "company-os",
+    "operations-os",
+    "applicant-portal",
+    "guardian-portal",
+    "alumni-portal",
+    "employer-portal",
+    "partner-portal",
+    "developer-portal",
+    "community-marketplace"
+  ],
+  "workspaceDecisions": [
+    {
+      "scope": "public-web",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "student-os",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "faculty-os",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "advisor-os",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "registrar-os",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "finance-os",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "student-affairs-os",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "institution-console",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "company-os",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "operations-os",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "applicant-portal",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "guardian-portal",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "alumni-portal",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "employer-portal",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "partner-portal",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "developer-portal",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    },
+    {
+      "scope": "community-marketplace",
+      "allowed": false,
+      "blockers": [
+        "Operational readiness is false.",
+        "Activation is disabled.",
+        "Missing routes evidence.",
+        "Missing capabilities evidence.",
+        "Missing workflows evidence.",
+        "Missing code evidence.",
+        "Missing tests evidence.",
+        "Missing deployments evidence.",
+        "Missing activations evidence.",
+        "Open gap: Operational implementation and evidence are incomplete."
+      ]
+    }
+  ],
+  "acceptanceCases": [
+    {
+      "id": "XA-01",
+      "status": "blocked",
+      "blockers": [
+        "No registered end-to-end applicant integration evidence.",
+        "authorized applicant handoff: missing",
+        "wrong-tenant applicant denial: missing"
+      ]
+    },
+    {
+      "id": "XA-02",
+      "status": "blocked",
+      "blockers": [
+        "No registered end-to-end advising integration evidence.",
+        "consented advisor review: missing",
+        "unassigned advisor denial: missing"
+      ]
+    },
+    {
+      "id": "XA-03",
+      "status": "blocked",
+      "blockers": [
+        "No registered end-to-end course release integration evidence.",
+        "authorized course release: missing",
+        "unassigned course denial: missing"
+      ]
+    },
+    {
+      "id": "XA-04",
+      "status": "blocked",
+      "blockers": [
+        "SIS and finance integration evidence is absent; registration subflows do not prove the cross-workspace case, and no canonical live route authority is registered.",
+        "source-aware readiness reconciliation: missing",
+        "stale or cross-tenant decision denial: missing"
+      ]
+    },
+    {
+      "id": "XA-05",
+      "status": "blocked",
+      "blockers": [
+        "No registered end-to-end protected referral integration evidence.",
+        "explicitly consented referral view: missing",
+        "revoked or expired consent denial: missing"
+      ]
+    },
+    {
+      "id": "XA-06",
+      "status": "blocked",
+      "blockers": [
+        "No registered operated tenant handoff evidence.",
+        "tenant-scoped implementation handoff: missing",
+        "unapproved production change denial: missing"
+      ]
+    },
+    {
+      "id": "XA-07",
+      "status": "blocked",
+      "blockers": [
+        "No registered end-to-end external integration evidence.",
+        "approved scoped partner lifecycle: missing",
+        "revoked credential denial: missing"
+      ]
+    },
+    {
+      "id": "XA-08",
+      "status": "blocked",
+      "blockers": [
+        "No registered end-to-end community or marketplace integration evidence.",
+        "verified opted-in marketplace action: missing",
+        "unverified or revoked member denial: missing"
+      ]
+    }
   ],
   "registryIssues": []
 }
