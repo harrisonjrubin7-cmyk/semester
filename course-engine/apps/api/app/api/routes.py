@@ -452,6 +452,69 @@ def source_view(
     }
 
 
+@router.get("/citations/{citation_id}/source-view")
+def citation_source_view(
+    citation_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    row = db.execute(
+        select(Citation, SourceChunk, SourceDocument)
+        .join(SourceChunk, Citation.chunk_id == SourceChunk.id)
+        .join(SourceDocument, SourceChunk.document_id == SourceDocument.id)
+        .join(Course, SourceDocument.course_id == Course.id)
+        .where(
+            Citation.id == citation_id,
+            SourceDocument.deleted_at.is_(None),
+            Course.user_id == user.id,
+            Course.deleted_at.is_(None),
+        )
+    ).one_or_none()
+    if not row:
+        raise HTTPException(404, "Citation not found")
+    citation, chunk, document = row
+
+    download_url = None
+    download_path = f"{settings.api_prefix}/files/{document.id}/download"
+    download_headers = {}
+    expires_in_seconds = None
+    if settings.storage_backend != "local":
+        signed_download = storage.presign_get(document.storage_key, expires_in=120)
+        download_url = signed_download.url
+        download_path = None
+        download_headers = signed_download.headers
+        expires_in_seconds = signed_download.expires_in_seconds
+
+    return {
+        "citation": {
+            "id": citation.id,
+            "quote": citation.quote,
+            "quoted_start": citation.quoted_start,
+            "quoted_end": citation.quoted_end,
+            "status": citation.status,
+        },
+        "location": {
+            "page_number": chunk.page_number,
+            "slide_number": chunk.slide_number,
+            "sheet_name": chunk.sheet_name,
+            "cell_range": chunk.cell_range,
+            "start_seconds": chunk.start_seconds,
+            "end_seconds": chunk.end_seconds,
+            "bounding_box": chunk.bounding_box,
+        },
+        "source": {
+            "document_id": document.id,
+            "filename": document.filename,
+            "mime_type": document.mime_type,
+            "sha256": document.sha256,
+            "download_path": download_path,
+            "download_url": download_url,
+            "download_headers": download_headers,
+            "expires_in_seconds": expires_in_seconds,
+        },
+    }
+
+
 @router.get("/files/{file_id}/download")
 def download_file(file_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     doc = db.get(SourceDocument, file_id)

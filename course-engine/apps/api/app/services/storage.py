@@ -53,6 +53,13 @@ class StoredObjectMetadata:
     owner_verified: bool
 
 
+@dataclass(frozen=True)
+class PresignedDownload:
+    url: str
+    headers: dict[str, str]
+    expires_in_seconds: int
+
+
 class ObjectInspectionError(ValueError):
     pass
 
@@ -116,6 +123,31 @@ class ObjectStorage:
                 "ServerSideEncryption": settings.s3_sse,
             },
             ExpiresIn=900,
+        )
+
+    def presign_get(self, key: str, *, expires_in: int = 120) -> PresignedDownload:
+        """Issue the citation viewer's deliberately short-lived original URL."""
+        if expires_in != 120:
+            raise ValueError("Original access must expire after 120 seconds")
+        if self.local:
+            raise ValueError("Local originals use the authenticated download endpoint")
+        if not settings.s3_expected_bucket_owner:
+            raise ValueError("S3 expected bucket owner is not configured")
+        url = self.client.generate_presigned_url(
+            "get_object",
+            Params={
+                "Bucket": settings.s3_bucket,
+                "Key": key,
+                "ExpectedBucketOwner": settings.s3_expected_bucket_owner,
+            },
+            ExpiresIn=expires_in,
+        )
+        return PresignedDownload(
+            url=url,
+            headers={
+                "x-amz-expected-bucket-owner": settings.s3_expected_bucket_owner,
+            },
+            expires_in_seconds=expires_in,
         )
 
     def inspect(self, key: str) -> StoredObjectMetadata:
