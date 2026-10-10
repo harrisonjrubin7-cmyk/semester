@@ -27,11 +27,11 @@ The gateway path is present in the production runtime, but composition requires 
 
 ## Evaluator caller
 
-The evaluator receives only the tenant, subject, term, minimum acceptable projection version, and a bounded abort signal. The caller also races the adapter promise against the deadline, so an adapter that ignores abort cannot hold the HTTP command open indefinitely. It returns an outcome plus projection version and source observation/freshness times. Expired or future-dated evidence is committed as the completed `stale` outcome rather than being allowed to claim `ready`. A replayed evaluator idempotency key returns the durable completed receipt without calling the source again. The persisted `evaluating` transition is the claim: an overlapping retry receives that pending receipt, while an expired claim moves directly to `reconciling` and fences any late outcome through compare-and-swap. The readiness repository remains the concurrency boundary; no Course Engine lease or integration-worker lease is reused.
+The evaluator receives only the tenant, subject, term, minimum acceptable projection version, and a bounded abort signal. The caller also races the adapter promise against the deadline, so an adapter that ignores abort cannot hold the HTTP command open indefinitely. It returns an outcome plus projection version and source observation/freshness times. Expired or future-dated evidence is committed as the completed `stale` outcome rather than being allowed to claim `ready`. A replayed evaluator idempotency key returns the durable completed receipt without calling the source again. The persisted `evaluating` transition is the claim: an overlapping retry receives that pending receipt, while an expired claim records the source outcome as `unknown` with reason `evaluator_timeout`, then opens reconciliation; both writes are durable and any late outcome is fenced through compare-and-swap. The readiness repository remains the concurrency boundary; no Course Engine lease or integration-worker lease is reused.
 
 ## State path
 
-The normal path is `requested → evaluating → ready | blocked`. Evaluation may instead produce `needs_review`, `unknown`, or `stale`. Those ambiguous states must enter `reconciling` before another evaluation begins. An enforced evaluator deadline also moves `evaluating` directly to `reconciling`, without fabricating a projection version. Leaving `reconciling` starts a new generation and resolves the open reconciliation task; it never silently overwrites the earlier ambiguity.
+The normal path is `requested → evaluating → ready | blocked`. Evaluation may instead produce `needs_review`, `unknown`, or `stale`. Those ambiguous states must enter `reconciling` before another evaluation begins. An enforced evaluator deadline records `evaluating → unknown` with reason `evaluator_timeout`, then moves `unknown → reconciling`. This truthfully records the attempted evaluation without fabricating a source projection version or adding an outcome-free workflow cycle. Leaving `reconciling` starts a new generation and resolves the open reconciliation task; it never silently overwrites the earlier ambiguity.
 
 Known `ready` or `blocked` records may be refreshed through `evaluating` when a newer projection is available. Every evaluated outcome requires a projection version newer than the aggregate's current projection version.
 
@@ -57,7 +57,7 @@ The aggregate returns minimal outbox descriptors for:
 - `registration.readiness_evaluated` only after a source observation produces an outcome;
 - `registration.readiness_reconciliation_requested`.
 
-Payloads contain only evaluation id, term id, and aggregate version. They do not carry holds, prerequisite details, student-entered plan content, or source payloads. The event catalog classifies all three as education records; the request and reconciliation events use audit retention, while evaluated projections use student-record retention.
+Payloads contain only evaluation id, term id, aggregate version, and—only for deadline-derived `unknown` outcomes—the reason `evaluator_timeout`. They do not carry holds, prerequisite details, student-entered plan content, or source payloads. The event catalog classifies all three as education records; the request and reconciliation events use audit retention, while evaluated projections use student-record retention.
 
 ## Persistence adapter behavior
 
