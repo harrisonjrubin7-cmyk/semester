@@ -406,16 +406,28 @@ async function flushValue(
   next: Partial<Persisted> | null,
   nextSeq: number,
   tell: (() => void) | null,
-): Promise<void> {
-  if (!next || !last) return;
+  exact = false,
+): Promise<boolean> {
+  if (!next || !last) return true;
   const before = last;
   const beforeSeq = lastSeq;
-  const writes = writesFor(last, next);
+  /*
+   * Ordinary coalesced writes follow `last`, the state the preceding write is
+   * expected to leave behind. An explicit flush is a durability boundary, so
+   * expectation is not enough: build it from `confirmed`, which moves only
+   * after IndexedDB completes successfully. `flushOnLeave()` can advance
+   * `last` while its out-of-queue transaction is still able to abort.
+   */
+  const base = exact ? (confirmed ?? last) : last;
+  const writes = writesFor(base, next);
   last = next;
   lastSeq = nextSeq;
   // Nothing to write is not something to announce. A tab told to re-read a
   // disk that did not change is the first step of a loop, not an update.
-  if (writes.length === 0) return;
+  if (writes.length === 0) {
+    if (exact) confirmed = next;
+    return true;
+  }
   /*
    * `write` reports a failure by answering false, not by throwing.
    *
@@ -466,7 +478,7 @@ async function flushValue(
     last = before;
     lastSeq = beforeSeq;
     watching?.(true);
-    return;
+    return false;
   }
 
   /*
@@ -477,7 +489,7 @@ async function flushValue(
    * missing. Then nothing is confirmed and the journal stays; the failure
    * already put `last` back, so the next write carries it again.
    */
-  if (before === confirmed) {
+  if (exact || before === confirmed) {
     confirmed = next;
     // Everything the leaving journal held has now landed, or something newer
     // has. Replaying it next load would put an older value over a newer one.
@@ -488,6 +500,7 @@ async function flushValue(
   // has since passed — a browser that made room, or a transaction that lost a
   // race and won the next one.
   watching?.(false);
+  return true;
 }
 
 async function flush(): Promise<void> {
@@ -554,8 +567,11 @@ export function stopWriting(): void {
   }
 }
 
-/** Write whatever is owing right now. For a tab closing, and for tests. */
-export async function flushNow(): Promise<void> {
+/**
+ * Write whatever is owing right now against what is confirmed on disk.
+ * False means the transaction did not land.
+ */
+export async function flushNow(): Promise<boolean> {
   if (timer) {
     clearTimeout(timer);
     timer = null;
@@ -579,8 +595,12 @@ export async function flushNow(): Promise<void> {
   const tell = told;
   pending = null;
   told = null;
-  inFlight = inFlight.then(() => flushValue(next, nextSeq, tell));
+  let landed = false;
+  inFlight = inFlight.then(async () => {
+    landed = await flushValue(next, nextSeq, tell, true);
+  });
   await inFlight;
+  return landed;
 }
 
 /**

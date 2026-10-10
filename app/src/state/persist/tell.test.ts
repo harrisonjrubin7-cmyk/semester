@@ -230,6 +230,28 @@ describe('when the other tabs are told', () => {
     expect(JSON.stringify(write.mock.calls[1][0])).not.toContain('Stale render');
   });
 
+  it('builds an explicit flush from the last confirmed value', async () => {
+    const adopted = [{ id: 'n1', title: 'Adopted account copy' }];
+    prime({ notes: [] });
+
+    // A page-leave write advances speculative `last` before its IndexedDB
+    // transaction answers. The exact flush must still compare against the
+    // confirmed empty database rather than decide there is no work.
+    persist({ notes: adopted } as never);
+    let release: (ok: boolean) => void = () => {};
+    write.mockImplementationOnce(() => new Promise<boolean>((resolve) => { release = resolve; }));
+    flushOnLeave();
+    await vi.waitFor(() => expect(write).toHaveBeenCalledTimes(1));
+
+    persist({ notes: adopted } as never);
+    const exact = flushNow();
+    release(false);
+
+    await expect(exact).resolves.toBe(true);
+    expect(write).toHaveBeenCalledTimes(2);
+    expect(JSON.stringify(write.mock.calls[1][0])).toContain('Adopted account copy');
+  });
+
   it('forgets who to tell when writing stops for good', async () => {
     const told = vi.fn();
     prime({ notes: [] });

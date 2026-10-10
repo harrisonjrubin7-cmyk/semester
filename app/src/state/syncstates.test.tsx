@@ -32,7 +32,7 @@ class Stale extends Error {
 const pull = vi.fn();
 const push = vi.fn();
 const persist = vi.fn();
-const flushNow = vi.fn(async () => {});
+const flushNow = vi.fn(async () => true);
 let db = true;
 
 vi.mock('../lib/cloud', () => ({
@@ -127,6 +127,7 @@ beforeEach(async () => {
   push.mockReset();
   persist.mockReset();
   flushNow.mockReset();
+  flushNow.mockResolvedValue(true);
   localStorage.clear();
   localStorage.setItem('semester.v1', JSON.stringify({ schemaVersion: 6, seenOnboarding: true, registered: true }));
   localStorage.setItem(SEEN_KEY, JSON.stringify({ state: 's1', courses: {} }));
@@ -182,6 +183,28 @@ describe('an edit goes up on the database path', () => {
     expect(store.state.tasks.map((task) => task.id).sort()).toEqual(['local-task', 'remote-task']);
     expect(JSON.parse(localStorage.getItem(SEEN_KEY) || '{}').state).toBe('account-v2');
     expect(store.asking).toBeNull();
+  });
+
+  it('does not mark an accepted account copy as seen when its durable write fails', async () => {
+    localStorage.removeItem(SEEN_KEY);
+    pull.mockResolvedValue({
+      state: { tasks: [{ id: 'remote', title: 'From the account', done: true, created: 2 }] },
+      courses: [],
+      updated: 2,
+      seen: { state: 'account-v2', courses: {} },
+    });
+    flushNow.mockResolvedValue(false);
+
+    await mount();
+    await wait(3_000);
+    expect(store.asking).not.toBeNull();
+
+    await act(async () => {
+      await store.settle('merge', null);
+    });
+
+    expect(localStorage.getItem(SEEN_KEY)).toBeNull();
+    expect(store.asking).not.toBeNull();
   });
 
   it('pushes after an edit, not only at sign-in', async () => {

@@ -1747,7 +1747,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             : latest.current;
           const adopted = reducer(wiped, { type: 'hydrate', persisted: theirs });
           persistToDb(pickPersisted(adopted), tellOtherTabs);
-          await flushNow();
+          // Do not record rows as seen when the transaction that should make
+          // them durable did not land. The chooser stays open for a retry and
+          // the standing save warning explains why progress cannot continue.
+          if (!(await flushNow())) return;
         }
 
         if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
