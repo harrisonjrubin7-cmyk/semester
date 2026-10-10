@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -15,6 +16,8 @@ class FakeDatabase:
         self.document = document
 
     def scalar(self, _statement):
+        if "upload_completions" in str(_statement):
+            return None
         return self.document
 
 
@@ -37,7 +40,13 @@ class FakeRequest:
 
 def _run_upload(tmp_path: Path, monkeypatch, request: FakeRequest, limit: int = 5):
     target = tmp_path / "objects" / "source.txt"
-    document = SimpleNamespace(course_id="course-id")
+    document = SimpleNamespace(
+        id="document-id",
+        course_id="course-id",
+        size_bytes=5,
+        sha256=hashlib.sha256(b"abcde").hexdigest(),
+        status="uploaded",
+    )
     monkeypatch.setattr(settings, "max_upload_bytes", limit)
     monkeypatch.setattr(routes.storage, "path", lambda _key: target)
     monkeypatch.setattr(routes, "owned_course", lambda *_args: object())
