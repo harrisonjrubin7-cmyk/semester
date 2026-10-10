@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-08 · **Latest observed `origin/main`** `0d8f70b2` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-09 · **Latest observed `origin/main`** `fb1d683d` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -510,6 +510,46 @@ The two focused guards were proved red with the `removeFeed` undo registration t
 
 The required HawkScan loop cannot start because Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset; no target, scan or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate. The next slice requires another fresh dependency and consequence-path ranking.
 
+## Governed Drive folder-hierarchy deletion — automation pass 1, integration slice 52
+
+Current `origin/main` and the branch began this slice together at `3c17385d`; a second pre-control-file fetch found no new commit and no equivalent Drive folder preview. Re-ranking selected custom-folder deletion because it is a bounded device-only consequence whose current mutation and data ownership are explicit. Permanent file purge, the broad same-origin demo reset and scanner-backed Import remain separate.
+
+Deleting a custom Drive folder now opens the existing `ConfirmDialog` and `ActionPreview` before any write. The preview names the selected folder, counts every nested custom folder and affected file, states that the file bytes, course/deadline links, course folders and folders outside the subtree stay unchanged, and explains that the removed hierarchy cannot be restored automatically. Cancel performs no write. Confirmation moves each direct or nested file to the deleted folder's parent before removing the complete folder subtree; a failed file move stops the operation and leaves the hierarchy in place. Closing the dialog before that asynchronous sequence prevents duplicate confirmation.
+
+The guard was proved red against the prior immediate deletion, then 33 focused Drive, folder, ActionPreview and root-unmount tests passed. TypeScript, lint, university typecheck and the production build pass; the build required moving aside the existing generated `dist/` after two `ENOTEMPTY` cleanup races, then completed with the existing chunk-size warning. The four pre-existing lint warnings remain. The design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and 78 token/design contracts pass. The design report regenerates before its aggregate wrapper exits because this shell has no `npm`/`npx`; no aggregate launcher or ordered/shuffled full-suite pass is claimed.
+
+HawkScan remains unavailable (`hawk runtime=false`, `HAWK_API_KEY=false`; the runner also reports no Docker or target host), so no DAST result or security pass is claimed. The next slice requires a fresh ranking of the remaining consequence paths; permanent file purge and the same-origin demo reset remain intentionally separate.
+
+## Recoverable student-created link removal — automation pass 2, integration slice 53
+
+The slice began with `origin/main` `3c17385d`. A final dirty-tree fetch observed `34ac2e1d`; its governed review-resolution workflow changes only the separately governed `course-engine/` MVP and its audit roadmap, with no Links, `removeLink`, shared-Undo, test or integration-control overlap. The dirty branch was not merged or rebased; that new current-repository evidence must be reconciled on the next clean pass. Re-ranking selected the existing student-created link removal because its bounded device mutation is explicit: it removes one `extraLinks` row and that row's corrected `linkUrls` entry while leaving bundled links, other student links and every external site unchanged.
+
+`removeLink` now snapshots only `extraLinks` and `linkUrls` through the existing eight-second Undo contract, restoring the exact student-created row, custom group and corrected address without rolling back unrelated state. The visible `REMOVE` control also has an accessible name that identifies the exact link. No route, shared component, dependency, schema, server operation, provider behavior or external system changed.
+
+The three focused guards were proved red against the prior behavior, then 128 reducer, Links, Undo and root-unmount tests passed. TypeScript, lint, university typecheck and the production build pass with the existing four lint warnings and chunk-size warning. Token/design contracts pass 78/78, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the design report regenerates before its wrapper exits because `npm` is unavailable. Ordered and shuffled full suites were not rerun for this bounded local recovery slice.
+
+The active HawkScan skill stopped at preflight because the Hawk CLI and Docker are absent and `HAWK_APP_HOST` is unset; a local properties file exists but was not read. No target, DAST result or security pass is claimed. Permanent file purge, the broad same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
+
+## Recoverable saved-equation removal — automation pass 3, integration slice 54
+
+The clean branch first merged current `origin/main` `34ac2e1d`; its governed review-resolution work remains inside the separately reconciled Course Engine MVP and contains no saved-equation, shared-Undo or current-screen equivalent. Re-ranking selected the existing Kept formulas removal because it deletes one student-owned `equations` row from device state, has no cascade or external effect, and adjacent device-owned single-row removals already use the repository's eight-second Undo contract.
+
+`deleteEquation` now snapshots only `equations`, restoring the exact formula name, notation, note and course/deadline filing without rolling back calculator work or any unrelated state. The visible Remove action has an accessible name identifying the exact saved equation. No route, shared component, dependency, schema, server operation, provider behavior or external system changed.
+
+The focused regression was proved red against the prior behavior, then 142 Undo, reducer, made-slice and root-unmount tests passed. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. The exact token/design suite passes 78/78, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the design report regenerates. Ordered and shuffled full suites were not rerun for this bounded device-only recovery slice.
+
+The required HawkScan loop stops at preflight: Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST result or security pass is claimed. Permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
+
+## Recoverable committed Study-plan removal — automation pass 4, integration slice 55
+
+Current `origin/main` remains `34ac2e1d`; no equivalent `clearPlan`, shared-Undo or Study-plan recovery work landed. Re-ranking selected the existing **Drop the plan** action because it removes only the student's committed device-local sittings and current live-session pointer, has no course-record or external effect, and both fields are already owned by the persisted Study state.
+
+`clearPlan` now snapshots only `sessions` and `liveSession` through the existing eight-second Undo contract. Undo restores the exact sitting schedule, progress and live-session association without rolling back deadline completion or any unrelated state. The existing Study route and **Drop the plan** control remain unchanged; no new component, dependency, schema, server operation, provider behavior or external system was added.
+
+The guard was proved red against the missing registration, then 152 Undo, reducer, plan and root-unmount tests passed. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. The exact token/design suite passes 78/78, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the design report regenerates. Its aggregate wrapper exits after generation because this shell has no `npm`; ordered and shuffled full suites were not rerun for this bounded recovery slice.
+
+The required HawkScan loop stops at preflight: Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST result or security pass is claimed. Permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
+
 ## What was read
 
 - Root `CLAUDE.md`.
@@ -553,3 +593,103 @@ Main already contains the company-role student-row sweeps, the deliberate decisi
 ## Definition of complete, not met
 
 The source audit still records 57 missing screen rows and 75 missing workflow steps. Pass 5 dispositions the screen rows as 44 missing and in scope, 4 externally blocked, 6 excluded, 1 roadmap-only and 2 consent-bounded existing analogues. Pass 6 dispositions all workflow rows as 241 existing incomplete, 54 missing and in scope, 18 roadmap-only, 2 externally blocked and 4 excluded. Neither pass rewrites the source audit. Role, system, document and execution-stream reconciliation are closed for the identified populations; implementation, UI consumption and release evidence remain open. External gates (institutional UAT, legal review, live connectors, staffing, restore drills, HawkScan) stay open. This document does not say the system is integrated.
+
+## Recoverable course-material removal — automation pass 5, integration slice 56
+
+Current `origin/main` remains `34ac2e1d`; its governed Course Engine review-resolution workflow contains no equivalent current-product `removeUpdate`, course-material Undo or Add Material control change. Re-ranking selected the existing **Already added** removal because it was a device-owned consequence with a known exact boundary, but was split across two reducer dispatches: one removed the `CourseUpdate`, then another removed the deadline ids recorded in `addedItems`. That intermediate state was not atomic and neither half could restore the pair.
+
+The new `removeUpdate` action deletes the selected update and only its recorded added deadlines in one reducer transition. The shared eight-second Undo contract snapshots `updates` and `courses`, restoring the exact material and deadlines while unrelated completion state remains intact. Other updates, other courses, unrelated deadlines and source files are unchanged. The visible **REMOVE** control now has an accessible name containing the material title. The separate Source Locker cascade keeps its existing trash and recovery rules and still uses `deleteUpdate`; no route, shared component, dependency, schema, server operation, provider behavior or external system changed.
+
+The focused reducer guard failed before implementation, then 140 Undo, reducer, Add Material and root-unmount tests passed. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. Token export passes 9/9; the ten token/design/responsive contract files pass 138/138; design audit remains at zero violations with 86 existing warnings; and CSS remains within its ledger. The aggregate npm launchers and report wrapper were not run because this shell has no `npm`/`npx`; ordered and shuffled full suites were not rerun for this bounded device-only slice.
+
+The required HawkScan loop stops at preflight: `hawk` and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST result or security pass is claimed. Permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
+
+## Governed emergency-contact removal — automation pass 6, integration slice 57
+
+Current `origin/main` remains `34ac2e1d`; its governed Course Engine review-resolution work contains no equivalent Support-workspace contact-removal preview. Re-ranking selected the current student's own emergency-contact removal because it immediately erased a name and phone number from the account-scoped device library, while the repository's backup coverage explicitly excludes `semester.support.v1`. That makes a claimed Undo or backup recovery path false.
+
+The existing remove control now opens the shared `ConfirmDialog` and `ActionPreview`. The preview identifies the contact and phone number, says the deletion is limited to this device's Support workspace, preserves other emergency contacts, access notes, routines, continuity choices and official records, and states that recovery requires re-adding details the student still knows. Cancel remains the modal's safe initial action and does not mutate storage. Confirmation removes only the selected contact after a successful guarded device-library write and announces the result. No route, shared component, dependency, schema, server operation, provider behavior or external system changed.
+
+The rendered regression guard failed against the prior immediate deletion, then 14 focused journey and ActionPreview tests passed. TypeScript, lint, university typecheck and production build pass with the existing four lint and chunk-size warnings. Token export passes 9/9; design check contracts pass 69/69; report contracts pass 96/96; design audit remains at zero violations with 86 existing warnings; and CSS stays within its ledger. The design report regenerates, but its aggregate wrapper exits because it invokes unavailable `npx`; no aggregate launcher pass is claimed. Ordered and shuffled full suites were not rerun for this bounded device-only slice.
+
+The required HawkScan loop stops at preflight: `hawk` and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST result or security pass is claimed. Permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
+
+## Recoverable task-step removal — automation pass 7, integration slice 58
+
+The clean branch merged current `origin/main` `e128a526`; its governed system-passport registry contains no `dropStep`, nested-task Undo or current-screen equivalent. Re-ranking selected the existing student-created task-step removal because it immediately deletes a device-owned checklist row, has no server or external effect, and fits the repository's shared eight-second Undo contract.
+
+`dropStep` now snapshots only `tasks` and uses the Undo contract's `onChange` path because removing a nested step does not shrink the top-level task list. Undo restores the exact step text, completion state and order without rolling back unrelated deadline completion. The existing Mine route and already named Remove control are unchanged; no route, shared component, dependency, schema, server operation, provider behavior or external system changed.
+
+The focused guards failed against the prior missing registration, then 126 Undo, reducer and root-unmount tests passed. TypeScript, lint, university typecheck and production build pass with the existing four lint and chunk-size warnings. The exact token/design suite passes 78/78, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the design report regenerates. Its aggregate wrapper exits after generation because this shell has no `npm`; ordered and shuffled full suites were not rerun for this bounded device-only recovery slice.
+
+The required HawkScan loop stops at preflight: the Hawk CLI, Docker runtime and target host are absent. A local credential properties file exists but was not read. No target, DAST result or security pass is claimed. Permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
+
+## Recoverable Semester Mail rule deletion — automation pass 8, integration slice 59
+
+Current `origin/main` `e128a526` is already an ancestor of the branch and contains no equivalent `dropMailRule` Undo registration. Re-ranking selected deletion of a student-created Semester Mail rule because the rule is an account-local search layer: removing it changes no provider mailbox data, writes no historical effects into message marks and has one exact persisted owner field.
+
+`dropMailRule` now enters the shared eight-second Undo path and snapshots only `mailRules`. Undo restores the exact rule and its order without reverting mail read, star, label, folder or snooze actions taken afterward. The existing named delete control, Mail route and rule behavior are unchanged; no route, shared component, dependency, schema, server operation, provider behavior or external system changed.
+
+The pre-implementation guard failed in the two expected places, proving the missing registry entry and snapshot. After implementation, 164 focused Undo, reducer, mailbox and mail-rule tests pass. TypeScript, lint, university typecheck and production build pass with the existing four lint and chunk-size warnings. The 78 token/design contracts pass; design audit remains at zero violations with 86 existing warnings; CSS stays within its ledger; and the design report regenerates unchanged. Its wrapper exits after writing because this shell has no `npm`; ordered and shuffled full suites were not rerun for this bounded state-contract slice.
+
+The required HawkScan skill stopped at preflight: Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the detected local properties file was not read. No live target, DAST result or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
+
+## Recoverable student-entered bill-row removal — automation pass 9, integration slice 60
+
+Current `origin/main` `e128a526` remains an ancestor of the clean branch and contains no `dropCharge`, `dropAid` or `dropPayment` Undo registration. Re-ranking selected the three remove controls on the existing Bill screen as one bounded finance-planning slice: all three operate only on student-entered device state, share the same screen and state owner, and are explicitly separate from the university ledger, official aid decisions and money movement.
+
+Each removal now enters the shared eight-second Undo path with one isolated field: `charges`, `aid` or `payments`. Undo restores the exact row and order for that list without reverting a later change in either of the other two bill lists. The existing Bill route, accessible row-specific remove names, `student_entered` provenance badge, export coverage and official-payment deep-link boundary remain unchanged. No route, UI component, dependency, schema, server operation, provider behavior, university record or external system changed.
+
+The pre-implementation guard failed in the two expected Undo-registry/snapshot assertions. After implementation, 295 focused Undo, reducer, bill arithmetic/provenance/form, export and root-unmount tests pass. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. The 147 token/design contracts pass; design audit remains at zero violations with 86 existing warnings; CSS stays within its ledger; and the design report regenerates with every contract passing. Ordered and shuffled full suites were not rerun for this bounded state-contract slice.
+
+The required HawkScan skill stopped at preflight: `hawk version`, `hawk config --help` and `hawk skills status` cannot run because Hawk is absent; Docker is absent; and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No target, DAST result or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
+
+## Recoverable registrar-date clearing — automation pass 10, integration slice 61
+
+Current `origin/main` `e128a526` remains an ancestor of the clean branch and contains no equivalent `dropTermDate` recovery contract or row-specific Clear name. Re-ranking selected the existing student-managed Registrar sheet because clearing a built-in landmark silently blanks the student's date while clearing a date of their own removes its row, yet both mutations are device state with one exact persisted owner field. Official institutional calendars and registration records remain outside this action.
+
+`dropTermDate` now enters the shared eight-second Undo path and snapshots only `registrar`. It uses `onChange` because a built-in landmark stays in the sheet with blank dates, so list length does not shrink; Undo restores the exact dates or removed custom row and order without reverting later work elsewhere. Each repeated Clear button now has a row-specific accessible name. The existing Registrar route, landmark authority text and device persistence remain unchanged; no shared component, dependency, schema, policy, server operation, provider or external system changed.
+
+The Undo registry assertion failed before implementation. After implementation, 184 focused Undo, reducer, registrar and rendered Registrar tests pass. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. The 78 token/design contracts pass; design audit remains at zero violations with 86 existing warnings; CSS stays within its ledger; and the design report regenerates unchanged. Aggregate npm launchers and ordered/shuffled full suites are not claimed for this bounded state-contract slice.
+
+The required HawkScan skill stopped at preflight: Hawk v6 and Docker are absent, no target host is set, and the detected local credential properties file was not read. No live target, DAST result or security pass is claimed. Permanent file purge, folder-tree deletion, same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
+
+## Recoverable graph-line removal — automation pass 11, integration slice 62
+
+The clean branch merged current `origin/main` `fb1d683d` before selection. Its registration-readiness persistence work touches the institution repository, one migration and supporting reference/control documents; it contains no `dropPlot`, graphing-calculator, shared-Undo or integration-control equivalent. Re-ranking selected removal of one student-authored graph line because it deletes a single persisted `plots` row, has no cascade or external effect, and the row control already names its exact position for assistive technology.
+
+`dropPlot` now snapshots only `plots` through the existing eight-second Undo contract. Undo restores the exact expression, visibility state and list order without reverting later calculator work. The existing Grapher route and row-specific remove control remain unchanged; no route, component, dependency, schema, policy, server operation, provider behavior or external system was added.
+
+The three pre-implementation assertions failed against the missing registration. After implementation, 157 focused Undo, reducer, made-slice and root-unmount tests pass. TypeScript, lint, university typecheck and production build pass; the existing four lint warnings and chunk-size warning remain. Token/design contracts pass 78/78, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the design report regenerates. The aggregate `design-system:check` wrapper cannot complete because this shell has no `npm`; its exact constituents pass. Ordered and shuffled full suites were not rerun for this bounded state-contract slice.
+
+The active HawkScan skill stopped at preflight: Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST result or security pass is claimed. The full integration remains incomplete; graph-wide Clear, permanent file purge, the same-origin demo reset, trusted scanner/extractor runtime, external approvals, deployment and live operation remain separate open gates.
+
+## Recoverable graph-wide clearing — automation pass 12, integration slice 63
+
+Current `origin/main` remains `fb1d683d` and is already an ancestor of the clean pre-slice branch. Re-ranking selected graph-wide Clear because it removes only the current student's persisted graph lines, has no cascade or external effect and shares the same single `plots` authority as one-line removal. Example loading remains a separate `setPlot` action and does not advertise an Undo.
+
+The Clear control now dispatches a dedicated `clearPlots` action registered with the existing eight-second Undo contract. Its snapshot is limited to `plots`, so Undo restores every expression, visibility state and list position without reverting later calculator work. The visible message names the eight-second recovery window. The existing graphing-calculator route, examples and accessible row controls remain unchanged; no route, shared component, dependency, schema, policy, server operation, provider behavior or external system changed.
+
+The four focused assertions failed before implementation. After implementation, Grapher, Undo, reducer, one-graph and root-unmount suites pass 145/145. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. The 78 design-check contracts and 96 report contracts pass; design audit remains at zero violations with 86 existing warnings; CSS stays within its ledger. The report wrapper writes the unchanged report and then exits because `npx` is unavailable, so no aggregate launcher pass is claimed. Ordered and shuffled full suites were not rerun for this bounded state-contract slice.
+
+The required HawkScan skill stopped at preflight: Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and no target can be started. No DAST result or security pass is claimed. Permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate; another fresh dependency/consequence ranking is required for the next slice.
+
+## Recoverable custom-school removal — automation pass 13, integration slice 64
+
+Current `origin/main` remains `fb1d683d` and is already an ancestor of the clean pre-slice branch. Re-ranking selected removal of one student-created school profile because it deletes device-owned configuration only, has no server or external effect and has an exact two-field authority boundary. University-pack removal remains separate because it represents institution-authored snapshot provenance rather than a student-created profile.
+
+`forgetSchool` now enters the shared eight-second Undo path and snapshots only `mySchools` plus `schoolId`. The second field is necessary because removing the active custom profile intentionally falls back to no selected school; Undo restores the exact profile, list order and active selection without reverting unrelated work. The existing School Picker route, row-specific accessible Forget name, device persistence and capability-gated fallback remain unchanged; no route, component, dependency, schema, policy, server operation, provider behavior or external system changed.
+
+The three pre-implementation assertions failed against the missing registry entry and snapshot. After implementation, 217 focused Undo, reducer, school-pack, school-resolution and school-model tests pass. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. Token export passes 9/9, design-check contracts pass 69/69, report contracts pass 96/96, design audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Aggregate npm launchers and report regeneration are not claimed because `npm`/`npx` are unavailable; ordered and shuffled full suites were not rerun for this bounded state-contract slice.
+
+The required HawkScan loop stops at preflight: Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST result or security pass is claimed. University-pack removal, permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
+
+## Recoverable university-pack removal — automation pass 14, integration slice 65
+
+Current `origin/main` remains `fb1d683d` and is already an ancestor of the clean pre-slice branch. Re-ranking selected removal of the currently loaded university file because the reducer proves an exact one-field boundary: `forgetSchoolPack` clears only the device-persisted `schoolPack`, leaves `schoolId` unchanged and falls back to the existing bundled or custom school authority. Import review, file verification and provider/institution authority remain separate.
+
+`forgetSchoolPack` now enters the shared eight-second Undo path and snapshots only `schoolPack`. Undo restores the exact loaded snapshot and import date without reverting a later task completion or changing the selected school. The existing School Pack control, stale-snapshot language, capability fallback and device persistence remain unchanged; no route, component, dependency, schema, policy, server operation, provider behavior or external system changed.
+
+The registry, snapshot and reducer assertions failed before implementation. After implementation, the focused Undo, reducer and school-pack suites pass 165/165. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. Design audit and CSS ledger checks pass, and 148/148 token, design, responsive and root-unmount contracts pass. Ordered and shuffled full suites were not rerun for this bounded state-contract slice.
+
+The required HawkScan loop stops at preflight: `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. No target, DAST result or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
