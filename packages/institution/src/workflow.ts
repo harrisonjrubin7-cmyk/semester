@@ -41,6 +41,66 @@ export type TransitionVerdict<S extends string = string> =
   | { ok: false; reason: string };
 
 /**
+ * Structural problems in a workflow graph, in a stable order suitable for a
+ * registry compiler or an operator-facing import report.
+ *
+ * `transition()` deliberately fails closed at runtime, but it cannot tell the
+ * owner that a definition contains a misspelled target, an unreachable state,
+ * or a branch from which the workflow can never finish. Validate definitions
+ * before publishing them so those mistakes do not become stranded work.
+ */
+export function workflowDefinitionProblems(def: WorkflowDefinition): string[] {
+  const out: string[] = [];
+  const states = Object.keys(def.transitions).sort();
+  const known = new Set(states);
+  const terminals = [...new Set(def.terminal)].sort();
+
+  if (!known.has(def.initial)) out.push(`unknown_initial:${def.initial}`);
+  for (const terminal of terminals) {
+    if (!known.has(terminal)) out.push(`unknown_terminal:${terminal}`);
+    else if (def.transitions[terminal].length > 0) out.push(`terminal_has_exit:${terminal}`);
+  }
+
+  for (const from of states) {
+    for (const to of [...def.transitions[from]].sort()) {
+      if (!known.has(to)) out.push(`unknown_target:${from}:${to}`);
+    }
+  }
+
+  const byCodePoint = (a: string, b: string): number => a < b ? -1 : a > b ? 1 : 0;
+  for (const [from, to] of [...def.exceptional].sort(([a, b], [c, d]) => byCodePoint(a, c) || byCodePoint(b, d))) {
+    if (!known.has(from) || !known.has(to) || !def.transitions[from].includes(to)) {
+      out.push(`unknown_exception:${from}:${to}`);
+    }
+  }
+
+  const reachable = new Set<string>();
+  const queue = known.has(def.initial) ? [def.initial] : [];
+  while (queue.length > 0) {
+    const state = queue.shift()!;
+    if (reachable.has(state)) continue;
+    reachable.add(state);
+    for (const next of def.transitions[state]) if (known.has(next)) queue.push(next);
+  }
+  for (const state of states) if (!reachable.has(state)) out.push(`unreachable:${state}`);
+
+  const canTerminate = new Set(terminals.filter((state) => known.has(state)));
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const state of states) {
+      if (!canTerminate.has(state) && def.transitions[state].some((next) => canTerminate.has(next))) {
+        canTerminate.add(state);
+        changed = true;
+      }
+    }
+  }
+  for (const state of states) if (!canTerminate.has(state)) out.push(`cannot_terminate:${state}`);
+
+  return out;
+}
+
+/**
  * Whether `from → to` is a move this machine allows, and if so whether it is
  * one of its exception paths. Refuses a state the machine does not have as
  * firmly as a move it does not allow: the two look the same from a client

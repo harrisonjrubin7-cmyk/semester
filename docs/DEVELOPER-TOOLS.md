@@ -28,12 +28,13 @@ the directory on exit.
 
 The public [developer-tools topic](https://github.com/topics/developer-tools)
 is volatile, so coverage is recorded against a dated snapshot rather than
-implied to be permanent. On 2026-10-09, the first three topic pages displayed
-60 repository cards covering 59 unique repositories (`voideditor/void`
-appeared on two pages). Every displayed repository is accounted for below.
-ShellCheck closed the standalone-script lint gap; the other page-two and
-page-three repositories did not supply a new Semester product or CI
-requirement.
+implied to be permanent. On 2026-10-09, a refreshed review of the first four
+topic pages displayed 80 repository cards covering 80 unique repositories.
+The ranking changed during the same day: 21 repositories not present in the
+earlier three-page snapshot were reviewed and added below. Every repository in
+the refreshed four-page snapshot is accounted for. ShellCheck closed the
+standalone-script lint gap; the other repositories did not supply a new
+Semester product or CI requirement.
 
 ## Evaluated but not installed
 
@@ -71,6 +72,20 @@ requirement.
 | [Wave Terminal](https://github.com/wavetermdev/waveterm) and [nnn](https://github.com/jarun/nnn) | Terminal and file-manager applications are personal workstation choices, not repository, CI or student-facing dependencies. |
 | [daily.dev](https://github.com/dailydotdev/daily) | A developer news feed is an optional personal information source and has no deterministic build, test or product role. |
 | [Hack](https://github.com/source-foundry/Hack) | A source-code typeface is a workstation preference. Semester's product typography is governed by its design system, so the font does not close a repository or product gap. |
+| [OpenCodex](https://github.com/lidge-jun/opencodex), [Plandex](https://github.com/plandex-ai/plandex) and [Superset](https://github.com/superset-sh/superset) | Agent, model-proxy and orchestration tools overlap Semester's reviewed development environment. They would expand its model credential, execution or repository-data boundary without a measured application or CI requirement. |
+| [Harper](https://github.com/Automattic/harper) | An offline grammar checker could be useful as an optional editor tool, but Semester has no measured prose-lint gate or approved vocabulary and false-positive policy. Installing it repository-wide now would create configuration and maintenance work without a defined release requirement. |
+| [Public API Lists](https://github.com/public-api-lists/public-api-lists) and [FreeDomains](https://github.com/stackryze/FreeDomains) | Discovery lists of public APIs and free services are not authoritative integration, procurement, availability or data-processing evidence. Semester integrations must remain requirement-led and independently reviewed. |
+| [DVC](https://github.com/treeverse/dvc) and [FiftyOne](https://github.com/voxel51/fiftyone) | ML dataset, model and computer-vision workflows do not match Semester's current React/Vite, Supabase and Vercel product architecture or its CI inputs. |
+| [Skaffold](https://github.com/GoogleContainerTools/skaffold), [Kaniko](https://github.com/GoogleContainerTools/kaniko) and [DevPod](https://github.com/loft-sh/devpod) | Kubernetes build/deploy and containerized development-environment tooling does not serve the current Vercel/Supabase deployment path. Kaniko was also archived when evaluated. |
+| [Semantica](https://github.com/semantica-agi/semantica) | A separate knowledge-graph AI platform would duplicate repository-native registries and provenance controls while adding another service, model and data-retention boundary. |
+| [Corsair](https://github.com/corsairdev/corsair) | A managed OAuth and integration platform would handle credentials and user data. It should be considered only for a named provider requirement with security, privacy, tenancy and lifecycle review. |
+| [CCStatusLine](https://github.com/sirmalloc/ccstatusline) and [Codeburn](https://github.com/getagentseal/codeburn) | Agent status and local usage-log tools are personal workstation utilities. Reading local agent state or logs does not provide a deterministic product, build or release gate. |
+| [Zeal](https://github.com/zealdocs/zeal) | Like DevDocs, an offline documentation browser is a workstation choice, not an application or CI dependency. Official documentation remains authoritative. |
+| [Posting](https://github.com/darrenburns/posting) | Like HTTPie, Bruno and Hoppscotch, an API client becomes useful after Semester has a stable published API contract; installing another client does not create or validate that contract. |
+| [ILLA Builder](https://github.com/illacloud/illa-builder) | Another low-code application and internal-tool stack would create a parallel frontend and deployment architecture instead of strengthening Semester's governed product. |
+| [Pyroscope](https://github.com/grafana/pyroscope) | Continuous runtime profiling should follow an observed production performance gap and a telemetry, access and retention review. The current repository has no requirement that justifies adding its collection and storage boundary. |
+| [Fireworks Tech Graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph) | AI-generated architecture diagrams duplicate the repository's Mermaid workflow and would add external model processing plus generated-artifact provenance concerns without a missing diagram requirement. |
+| [Rea](https://github.com/morluto/rea) | An agent for reverse-engineering applications and native binaries has no legitimate Semester product or CI role and would expand the execution, security and legal-review boundary. |
 
 Revisit a deferred tool only when a concrete product or engineering requirement
 exists, and repeat the ownership, licence, provenance, permissions, maintenance,
