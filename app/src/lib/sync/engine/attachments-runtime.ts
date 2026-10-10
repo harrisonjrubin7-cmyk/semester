@@ -13,14 +13,23 @@ export interface OfflineAttachmentRuntime {
 
 export function createAttachmentPolicyPurge(cache: AttachmentCache): (rows: readonly PolicyPurgeRow[]) => Promise<void> {
   return async (rows) => {
-    const owners = [...new Map(rows.map((row) => [`${row.dataClass}\u0000${row.id}`, { dataClass: row.dataClass, id: row.id }])).values()];
+    // Outbox rows describe commands that were removed, not entities that were
+    // removed. Their authored entity (and its attachments) can remain locally.
+    const owners = [...new Map(rows
+      .filter((row) => row.kind === 'entity')
+      .map((row) => [`${row.dataClass}\u0000${row.id}`, { dataClass: row.dataClass, id: row.id }])).values()];
     if (owners.length) await cache.revoke({ owners });
   };
 }
 
 export async function openOfflineAttachmentRuntime(config: OfflineAttachmentRuntimeConfig): Promise<OfflineAttachmentRuntime | undefined> {
+  if (!config.enabled) return undefined;
+  const key = config.dek as Partial<CryptoKey> | undefined;
+  if (!key || key.type !== 'secret' || typeof key.extractable !== 'boolean' || !key.algorithm || !Array.isArray(key.usages)) {
+    throw new TypeError('offline attachment persistence requires a valid encryption key');
+  }
   const persistence = await openAttachmentPersistence(config);
-  if (!persistence) return undefined;
+  if (!persistence) throw new Error('enabled attachment persistence did not open');
   const cache = new AttachmentCache({
     dek: config.dek,
     blobs: persistence.blobs,

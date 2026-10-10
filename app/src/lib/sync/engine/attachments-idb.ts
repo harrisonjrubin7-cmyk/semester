@@ -93,6 +93,11 @@ export async function openAttachmentPersistence(config: AttachmentPersistenceCon
     };
     operation.onupgradeneeded = (event) => {
       const database = operation.result;
+      if (answered) {
+        upgradeError = new Error('cancelled blocked attachment persistence upgrade');
+        operation.transaction?.abort();
+        return;
+      }
       const oldVersion = (event as IDBVersionChangeEvent).oldVersion;
       if (oldVersion === 0) {
         database.createObjectStore(GENERATIONS, { keyPath: 'key' });
@@ -107,6 +112,7 @@ export async function openAttachmentPersistence(config: AttachmentPersistenceCon
           return;
         }
         const generations = database.createObjectStore(GENERATIONS, { keyPath: 'key' });
+        const migratedKeys = new Set<string>();
         const cursor = transaction.objectStore(LEGACY_GENERATIONS).openCursor();
         cursor.onerror = () => {
           upgradeError = new AmbiguousLegacyAttachmentError();
@@ -125,7 +131,14 @@ export async function openAttachmentPersistence(config: AttachmentPersistenceCon
             transaction.abort();
             return;
           }
-          generations.put({ key: scoped(row.scope, file.blobName), scope: row.scope, file: row.file } satisfies StoredGeneration);
+          const key = scoped(row.scope, file.blobName);
+          if (migratedKeys.has(key)) {
+            upgradeError = new AmbiguousLegacyAttachmentError();
+            transaction.abort();
+            return;
+          }
+          migratedKeys.add(key);
+          generations.put({ key, scope: row.scope, file: row.file } satisfies StoredGeneration);
           item.continue();
         };
       }
@@ -203,27 +216,14 @@ export async function openAttachmentPersistence(config: AttachmentPersistenceCon
   return { index, blobs, close: () => { closed = true; database.close(); } };
 }
 
-/** Clear every schema generation, including an ambiguous legacy one, only for explicit device erasure. */
+/** Delete the isolated database, including ambiguous legacy data, only for explicit device erasure. */
 export async function clearOfflineAttachmentPersistence(factory: IDBFactory = globalThis.indexedDB): Promise<void> {
   if (!factory) return;
-  await new Promise<void>((resolve) => {
-    const operation = factory.open(ATTACHMENT_DB);
-    operation.onerror = () => resolve();
-    operation.onsuccess = () => {
-      const database = operation.result;
-      const names = [GENERATIONS, LEGACY_GENERATIONS, BLOBS].filter((name) => database.objectStoreNames.contains(name));
-      if (names.length === 0) {
-        database.close();
-        resolve();
-        return;
-      }
-      const transaction = database.transaction(names, 'readwrite');
-      for (const name of names) transaction.objectStore(name).clear();
-      const done = () => { database.close(); resolve(); };
-      transaction.oncomplete = done;
-      transaction.onerror = done;
-      transaction.onabort = done;
-    };
+  await new Promise<void>((resolve, reject) => {
+    const operation = factory.deleteDatabase(ATTACHMENT_DB);
+    operation.onsuccess = () => resolve();
+    operation.onerror = () => reject(operation.error ?? new Error('offline attachment database deletion failed'));
+    operation.onblocked = () => reject(new Error('offline attachment database deletion was blocked'));
   });
 }
 

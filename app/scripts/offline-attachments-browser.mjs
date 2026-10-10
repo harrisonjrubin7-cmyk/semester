@@ -46,7 +46,7 @@ try {
       contentSha256: 'legacy', scan: 'clean', aclEpoch: 1, fetchedAt: 1, lastReadAt: 1, pinned: false,
       wrappedKey: new Uint8Array([1]), blobName: 'legacy.generation', ...overrides,
     });
-    const seedLegacy = (row) => new Promise((resolve, reject) => {
+    const seedLegacy = (row, extraRows = []) => new Promise((resolve, reject) => {
       const request = indexedDB.open(adapter.ATTACHMENT_DB, 1);
       request.onupgradeneeded = () => {
         request.result.createObjectStore('attachments', { keyPath: 'key' });
@@ -57,6 +57,7 @@ try {
         const database = request.result;
         const transaction = database.transaction(['attachments', 'blobs'], 'readwrite');
         transaction.objectStore('attachments').put(row);
+        for (const extra of extraRows) transaction.objectStore('attachments').put(extra);
         transaction.objectStore('blobs').put({ key: `${scope}\u0000legacy.generation`, scope, bytes: new Uint8Array([7]) });
         transaction.oncomplete = () => { database.close(); resolve(undefined); };
         transaction.onerror = () => reject(transaction.error);
@@ -74,6 +75,13 @@ try {
         transaction.onerror = () => reject(transaction.error);
       };
     });
+
+    // Erasing an absent adapter must not create a malformed empty legacy DB
+    // that blocks a later explicit activation.
+    await adapter.clearOfflineAttachmentPersistence(indexedDB);
+    const afterEmptyErase = await adapter.openAttachmentPersistence({ enabled: true, identity });
+    afterEmptyErase.close();
+    await deleteDatabase();
 
     const first = await adapter.openAttachmentPersistence({ enabled: true, identity });
     const second = await adapter.openAttachmentPersistence({ enabled: true, identity });
@@ -94,6 +102,37 @@ try {
     const other = await adapter.openAttachmentPersistence({ enabled: true, identity: { ...identity, userId: 'synthetic-other' } });
     if ((await other.index.load()).length !== 0 || await other.blobs.get('persistent-generation')) throw new Error('identity scopes shared attachment state');
     reopened.close(); other.close();
+    await deleteDatabase();
+
+    // Duplicate legacy generations must abort instead of collapsing two rows
+    // onto one scoped v2 key and silently losing metadata.
+    const duplicateFile = legacyFile();
+    await seedLegacy(
+      { key: 'legacy-key-a', scope, file: duplicateFile },
+      [{ key: 'legacy-key-b', scope, file: { ...duplicateFile, id: 'other-metadata' } }],
+    );
+    let duplicate = '';
+    try { await adapter.openAttachmentPersistence({ enabled: true, identity }); } catch (error) { duplicate = error?.code ?? error?.name ?? ''; }
+    if (duplicate !== 'ambiguous_legacy_attachment') throw new Error(`duplicate legacy generation was not rejected: ${duplicate}`);
+    const preservedDuplicate = await inspectLegacy();
+    if (preservedDuplicate.version !== 1 || preservedDuplicate.metadata !== 2 || preservedDuplicate.blobs !== 1) throw new Error('duplicate legacy upgrade changed storage');
+    await deleteDatabase();
+
+    // A blocked activation that rejects must not later resume and mutate the
+    // database after its blocker closes.
+    await seedLegacy({ key: `${scope}\u0000legacy-file`, scope, file: legacyFile() });
+    const blocker = await new Promise((resolve, reject) => {
+      const request = indexedDB.open(adapter.ATTACHMENT_DB);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+    let blocked = '';
+    try { await adapter.openAttachmentPersistence({ enabled: true, identity }); } catch (error) { blocked = error?.message ?? ''; }
+    if (!blocked.includes('blocked')) throw new Error(`blocked activation was not rejected: ${blocked}`);
+    blocker.close();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const afterBlocked = await inspectLegacy();
+    if (afterBlocked.version !== 1 || afterBlocked.metadata !== 1 || afterBlocked.blobs !== 1) throw new Error('rejected blocked activation later mutated storage');
     await deleteDatabase();
 
     // Ambiguous v1 rows fail activation and the aborted versionchange leaves
@@ -144,9 +183,9 @@ try {
     });
     recovery.close();
     await deleteDatabase();
-    return { opens, count: ids.length, distinct: new Set(ids).size, ambiguous, interruptedUpgrade: 'recovered', retiredRestart: 'recovered', versionchange: 'closed' };
+    return { opens, count: ids.length, distinct: new Set(ids).size, ambiguous, duplicate, blocked: 'cancelled', interruptedUpgrade: 'recovered', retiredRestart: 'recovered', versionchange: 'closed' };
   }, javascript);
-  assert.deepEqual(result, { opens: 0, count: 24, distinct: 24, ambiguous: 'ambiguous_legacy_attachment', interruptedUpgrade: 'recovered', retiredRestart: 'recovered', versionchange: 'closed' });
+  assert.deepEqual(result, { opens: 0, count: 24, distinct: 24, ambiguous: 'ambiguous_legacy_attachment', duplicate: 'ambiguous_legacy_attachment', blocked: 'cancelled', interruptedUpgrade: 'recovered', retiredRestart: 'recovered', versionchange: 'closed' });
   console.log(JSON.stringify({ browser: 'chromium', indexedDB: 'native', atomicUpdates: 24, upgrades: 'abort-safe', cleanupRestart: 'pass', result: 'pass' }));
 } finally {
   await browser.close();

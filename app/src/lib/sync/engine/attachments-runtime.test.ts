@@ -1,11 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import { AttachmentCache, memoryBlobs, memoryStore, newKey, purgeDisallowedOfflineData, type CachedFile } from '@semester/offline-sync';
-import { createAttachmentPolicyPurge } from './attachments-runtime';
+import { createAttachmentPolicyPurge, openOfflineAttachmentRuntime } from './attachments-runtime';
 
 const NOW = 1_800_000_000_000;
 const entity = (dataClass: string, id: string, value: unknown) => ({ dataClass, id, value, version: 1, phase: 'reconciled', fetchedAt: NOW });
 
 describe('attachment policy cleanup integration', () => {
+  it('rejects an invalid encryption key before opening persistence', async () => {
+    let opens = 0;
+    const factory = { open: () => { opens += 1; throw new Error('storage opened'); } } as unknown as IDBFactory;
+    await expect(openOfflineAttachmentRuntime({
+      enabled: true,
+      identity: { tenantId: 't', userId: 'u', deviceId: 'd' },
+      factory,
+      dek: {} as CryptoKey,
+      now: () => NOW,
+    })).rejects.toThrow(/encryption key/);
+    expect(opens).toBe(0);
+  });
+
   it('removes only the exact source-class owner and preserves authored collisions and pending drafts', async () => {
     let files: CachedFile[] = [];
     const index = {
@@ -15,10 +28,11 @@ describe('attachment policy cleanup integration', () => {
       },
     };
     const cache = new AttachmentCache({ dek: await newKey(), blobs: memoryBlobs(), index, now: () => NOW, scope: { tenantId: 't', userId: 'u', deviceId: 'd' } });
-    const put = (id: string, dataClass: 'grade' | 'personal_plan') => cache.put({ id, tenantId: 't', dataClass, ownerEntityId: 'shared-id', mime: 'text/plain', scan: 'clean', aclEpoch: 1, pinned: false }, new TextEncoder().encode(id));
+    const put = (id: string, dataClass: 'grade' | 'personal_plan' | 'assignment_draft', ownerEntityId = 'shared-id') => cache.put({ id, tenantId: 't', dataClass, ownerEntityId, mime: 'text/plain', scan: 'clean', aclEpoch: 1, pinned: false }, new TextEncoder().encode(id));
     // Seed a prohibited legacy generation directly: current admission rightly
     // refuses creating a new official-grade attachment.
     const authored = await put('authored-file', 'personal_plan');
+    await put('draft-file', 'assignment_draft', 'draft');
     files.unshift({ ...authored, id: 'issued-file', dataClass: 'grade', blobName: 'issued-generation' });
 
     const draft = { ...entity('assignment_draft', 'draft', { body: 'student work' }), phase: 'queued', commandId: 'legacy-command' };
@@ -30,7 +44,7 @@ describe('attachment policy cleanup integration', () => {
     } });
     await purgeDisallowedOfflineData(store, undefined, createAttachmentPolicyPurge(cache));
 
-    expect(files.map((row) => row.id)).toEqual(['authored-file']);
+    expect(files.map((row) => row.id)).toEqual(['draft-file', 'authored-file']);
     expect(await store.entities.get('personal_plan', 'shared-id')).toMatchObject({ value: { budget: 'student plan' } });
     expect(await store.entities.get('assignment_draft', 'draft')).toMatchObject({ value: { body: 'student work' }, phase: 'draft' });
   });
