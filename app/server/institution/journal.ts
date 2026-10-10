@@ -371,8 +371,9 @@ export class ActionJournal implements ActionJournalStore, IdempotencyStore {
           return { kind: 'conflict' };
         }
         if (row.state === 'completed' && row.response_status !== null && row.response_body !== null) {
+          const body = openJournalRow(this.key, row.response_body);
           this.db.exec('COMMIT');
-          return { kind: 'replay', response: { status: row.response_status, body: openJournalRow(this.key, row.response_body) } };
+          return { kind: 'replay', response: { status: row.response_status, body } };
         }
         if (row.lease_until > at) {
           this.db.exec('COMMIT');

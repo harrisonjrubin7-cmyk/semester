@@ -104,4 +104,26 @@ describe('the durable institution idempotency store', () => {
     journal.purge(expired.getTime() + 2_001);
     await acquire(journal, scope(), 'hash-c', new Date(expired.getTime() + 2_001), 1_000, 2_000);
   });
+
+  it('preserves the decryption error when a stored replay body is corrupt', async () => {
+    const first = open();
+    const now = new Date('2026-10-10T00:00:00Z');
+    const leaseId = await acquire(first.journal, scope(), 'hash-a', now);
+    await first.journal.complete(scope(), leaseId, { status: 200, body: { value: 'secret' } }, now);
+    first.journal.close();
+
+    const raw = new DatabaseSync(first.path);
+    raw.prepare("UPDATE idempotency SET response_body='not-valid-ciphertext'").run();
+    raw.close();
+
+    const reopened = open(first.path).journal;
+    let failure: unknown;
+    try {
+      await reopened.begin(scope(), 'hash-a', now, 60_000, 86_400_000);
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure).toBeInstanceOf(Error);
+    expect((failure as Error).message).not.toMatch(/rollback/i);
+  });
 });
