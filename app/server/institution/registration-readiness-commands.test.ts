@@ -35,6 +35,7 @@ function context(overrides: Partial<RequestContext> = {}): RequestContext {
 
 class MemoryReadinessRepository implements RegistrationReadinessRepository {
   readonly rows = new Map<string, RegistrationReadinessEvaluationRecord>();
+  failOnceAtVersion?: number;
 
   async get(tenantId: string, evaluationId: string) {
     const row = this.rows.get(evaluationId);
@@ -51,6 +52,10 @@ class MemoryReadinessRepository implements RegistrationReadinessRepository {
         throw new PlatformError('idempotency_key_reused', 'That Idempotency-Key was already used for a different request.');
       }
       return structuredClone({ record: prior.row, receipt: prior.entry.receipt, event: prior.entry.event, replayed: true });
+    }
+    if (this.failOnceAtVersion === result.record.version) {
+      this.failOnceAtVersion = undefined;
+      throw new Error('synthetic save interruption');
     }
     const current = this.rows.get(result.record.id);
     if (current && !result.replayed && result.record.version !== current.version + 1) {
@@ -230,6 +235,35 @@ describe('registration-readiness evaluator worker', () => {
     });
   });
 
+  it('repairs reconciliation when the ambiguous outcome committed before an interrupted second save', async () => {
+    const evaluator: RegistrationReadinessEvaluator = {
+      evaluate: vi.fn(async () => ({
+        outcome: 'unknown' as const,
+        projectionVersion: 5,
+        sourceObservedAt: '2026-10-10T11:55:00.000Z',
+        freshUntil: '2026-10-10T12:05:00.000Z',
+      })),
+    };
+    const { commands, repository } = rig(evaluator);
+    await commands.start(context(), ['student'], { termId: '2027-spring' });
+    repository.failOnceAtVersion = 4;
+    const workerContext = context({ idempotencyKey: 'readiness-evaluate-interrupted-reconcile' });
+
+    await expect(commands.evaluate(workerContext, ['student'], 'readiness-evaluation-1'))
+      .rejects.toThrow(/synthetic save interruption/i);
+    expect(repository.rows.get('readiness-evaluation-1')).toMatchObject({ state: 'unknown', version: 3 });
+
+    const retry = await commands.evaluate(workerContext, ['student'], 'readiness-evaluation-1');
+
+    expect(retry).toMatchObject({ id: 'readiness-evaluate-interrupted-reconcile', status: 'completed', state: 'unknown' });
+    expect(evaluator.evaluate).toHaveBeenCalledTimes(1);
+    expect(repository.rows.get('readiness-evaluation-1')).toMatchObject({
+      state: 'reconciling',
+      version: 4,
+      reconciliationTasks: [expect.objectContaining({ state: 'open' })],
+    });
+  });
+
   it('rejects projection versions outside the durable database range before outcome persistence', async () => {
     const evaluator: RegistrationReadinessEvaluator = {
       evaluate: vi.fn(async () => ({
@@ -396,7 +430,7 @@ describe('registration-readiness evaluator worker', () => {
       version: 4,
       reconciliationTasks: [expect.objectContaining({ state: 'open' })],
     });
-    expect(persisted?.commandLedger.find((entry) => entry.idempotencyKey === 'readiness-evaluate-timeout:timeout')?.event)
+    expect(persisted?.commandLedger.find((entry) => entry.event.payload.reason === 'evaluator_timeout')?.event)
       .toMatchObject({
         eventType: 'registration.readiness_evaluated',
         payload: { reason: 'evaluator_timeout' },
