@@ -77,7 +77,7 @@
       "buildCommand": "VITE_BASE=/app/ npm run build",
       "routes": [
         {
-          "src": "/app/(.*)",
+          "src": "/(.*)",
           "transforms": [
             {
               "type": "request.path",
@@ -208,19 +208,6 @@
       ]
     }
   },
-  "redirects": [
-    {
-      "source": "/app",
-      "has": [
-        {
-          "type": "host",
-          "value": "(?:(?:www\\.)?semesterintel\\.tech|.*\\.vercel\\.app)"
-        }
-      ],
-      "destination": "/app/",
-      "permanent": true
-    }
-  ],
   "rewrites": [
     {
       "source": "/(.*)",
@@ -280,6 +267,13 @@
       "source": "/lab/(.*)",
       "destination": {
         "service": "workflow-lab"
+      }
+    },
+    {
+      "source": "/app",
+      "destination": {
+        "service": "app",
+        "path": "/"
       }
     },
     {

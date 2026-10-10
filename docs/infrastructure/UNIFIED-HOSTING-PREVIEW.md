@@ -17,9 +17,12 @@ application, API or lab.
 | `semester.website/*` | `company-site`, unchanged |
 | `/api`, `/api/*`, `/api/institution/*`, `/api/productivity/*` | root institution/productivity `api` service |
 | `/lab`, `/lab/*` | `workflow-lab` |
-| `/app` | permanent redirect to `/app/` |
-| `/app/`, `/app/*` | Vite `app`, built with base `/app/` |
+| `/app`, `/app/`, `/app/*` | Vite `app`, built with base `/app/` |
 | `/`, all other paths on the candidate host | `company-site` |
+
+The exact `/app` route resolves the same app entry point without changing the
+separate company-domain rule; generated assets, manifest and worker remain rooted
+at `/app/`.
 
 The protected operations UI remains an application hash route at
 `/app/#/console`. This plan does not treat the separate public FastAPI Course
