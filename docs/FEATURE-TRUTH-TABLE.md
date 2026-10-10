@@ -83,9 +83,9 @@ therefore **violated by design in most student modules**; see the gap register i
 | OIDC SSO | PLANNED | `provider_type` accepts only `saml` | build |
 | SCIM 2.0 | IMPLEMENTED_NOT_RELEASED | `app/server/institution/scim.ts`, off unless `SEMESTER_SCIM=on` | never run against a real IdP; separate gateway service vs ADR 0003 |
 | LTI 1.3 (launch, deep link, AGS) | IMPLEMENTED_NOT_RELEASED — **BLOCKED** | edge `lti` | needs Brightspace registration; NRPS refused; unbound registration answers `allowed-unbound` |
-| SIS / catalog connectors | PLANNED | `ADAPTERS = []` in both registries; test enforces empty | every production adapter needs a school-approved credentialed adapter — **BLOCKED** |
+| SIS / catalog connectors | PARTIAL — BLOCKED | integration tick registers one read-only Canvas course-context adapter; contract, tenant gating and fail-closed credential tests pass | no institution-approved connection, production credential broker, provider sandbox run, reconciliation rehearsal or UAT; institution gateway registry remains empty |
 | Google / Microsoft calendar & files | PARTIAL | client-side PKCE, narrowest scopes list | tokens in `localStorage`; no institution-level connector; broad scopes remain (INT-012) |
-| Canvas | PARTIAL | read-only proxy with student's own token | student-side convenience, not institutional |
+| Canvas | PARTIAL — BLOCKED | student-token proxy plus repository-registered institutional read-only course-context adapter | institutional adapter has not run against a Canvas tenant; production credential broker, approval, activation, monitoring and UAT remain |
 | Institution gateway (records/actions/AI) | MOCK_DEMO | sandbox adapters only | **no production adapters**; every real service answers 503 |
 | Tenant admin console | IMPLEMENTED_NOT_RELEASED | `screens/Console.tsx`, control plane, approvals, break-glass | admin-facing guide missing; permission simulator tab absent (A19) |
 | Content governance / publishing | PARTIAL | `trust_artifacts`, `ListingDesk`, seed campus data | no approval workflow with expiry alerts for tenant content |

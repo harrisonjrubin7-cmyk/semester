@@ -139,7 +139,7 @@ Fetches a calendar link the browser cannot fetch, because calendar servers send 
 
 ## `integration-tick`
 
-The 15-minute integration sync tick: pulls each approved connection that is due and runs any replay an operator has asked for. **Status** IMPLEMENTED_NOT_RELEASED. No truth-table row names it; the row "SIS / catalog connectors" is PLANNED because `ADAPTERS` is empty in [`app/server/integration/registry.ts`](../../app/server/integration/registry.ts), so every tick reports every connection as unregistered.
+The 15-minute integration sync tick: pulls each approved connection that is due and runs any replay an operator has asked for. **Status** IMPLEMENTED_NOT_RELEASED. The registry contains one read-only Canvas course-context adapter. Registration is not activation: without a valid tenant connection, approved scope, production feature, hosted-Instructure origin and connection credential reference it makes no call. The current production composition supplies no credential broker, so even an otherwise activated Canvas connection fails closed before provider access. No real Canvas tenant has been exercised.
 
 - **Request.** `POST` with `Authorization: Bearer <integration_cron_secret>`. No body is read. The caller is the `integration-sync` job in [`supabase/scheduler.sql`](../../supabase/scheduler.sql) at minutes 7, 22, 37 and 52 of every hour, with a 60 second timeout. That job is active in the file; whether it is active in the project is not verified here.
 - **Auth.** The token is compared inside the database by `integration_tick_authorized`, against Vault. No copy of the secret is set on the function.
