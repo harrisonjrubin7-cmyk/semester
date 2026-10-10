@@ -80,10 +80,27 @@ it('compares programs side by side without converting or adding up costs', () =>
   expect(host.textContent).toContain('not converted or added up');
 });
 
-it('removes a program with its courses and steps', () => {
+it('previews a program removal and changes nothing until confirmation', () => {
   act(() => button(/Add a program/).click());
   act(() => button(/Add a course abroad/).click());
   act(() => (host.querySelector('.abroad-steps input') as HTMLInputElement).click());
   act(() => button(/Remove this program/).click());
+
+  const dialog = host.querySelector('[role="dialog"]');
+  expect(dialog?.textContent).toContain('Remove this study abroad program?');
+  expect(dialog?.textContent).toContain('Program 1');
+  expect(dialog?.textContent).toContain('its program details, 1 course match, recorded approval status and stage progress');
+  expect(dialog?.textContent).toContain('Other study abroad programs, official applications, written approval decisions and records held by your school stay unchanged');
+  expect(dialog?.textContent).toContain('Restore only from a device workspace backup created before removal');
+  expect(stored().programs).toHaveLength(1);
+  expect(stored().courses).toHaveLength(1);
+
+  act(() => button(/^Cancel$/).click());
+  expect(stored().programs).toHaveLength(1);
+  expect(stored().courses).toHaveLength(1);
+
+  act(() => button(/Remove this program/).click());
+  act(() => button(/^Remove program$/).click());
   expect(stored()).toEqual({ programs: [], courses: [], steps: {} });
+  expect(host.textContent).toContain('Study abroad program removed from this device. No official record was changed.');
 });

@@ -1586,3 +1586,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep post-reload provider-withdrawal results separate from confirmed local storage removal; do not widen this slice into provider activation or account deletion.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed study-abroad program removal — automation pass 11, integration slice 76
+
+- [x] Start from clean head `a96a5883`; fetch current `origin/main` `b8d685e1`, confirm it is already merged and contains no equivalent Study Abroad program-removal preview or regression guard.
+- [x] Re-rank remaining Phase 3 consequence paths and select only one account-keyed, student-authored study-abroad program; keep course-row removal, official workflows and scanner-backed Import separate.
+- [x] Replace first-press removal with the shared `ConfirmDialog` and `ActionPreview`, naming the program, course matches, recorded approval states and stage progress removed from this device.
+- [x] State that other plans, official applications, written approval decisions and school-held records remain unchanged and that Semester sends no removal request.
+- [x] Preserve initial Cancel focus and no-write cancellation; explicit confirmation uses the unchanged exact-id device-library mutation and adds a truthful completion receipt.
+- [x] State the bounded recovery path: only a device workspace backup made before removal can restore the earlier plan.
+- [x] Prove the focused guard red against the prior immediate deletion, then pass 59/59 focused and adjacent Study Abroad, domain, device-library, backup, preview, modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the six existing lint warnings and build chunk-size warning.
+- [x] Pass 78/78 design-check constituents, 96/96 report contracts, design audit with no new violation and the CSS ledger check.
+- [ ] Aggregate npm design-system launchers — unavailable because this shell has no `npm`/`npx`; exact constituents pass, but no aggregate launcher or regenerated report pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-library slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no target, scan, finding result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep study-abroad course-row removal, official/provider operations and account deletion separate from this device-plan mutation.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

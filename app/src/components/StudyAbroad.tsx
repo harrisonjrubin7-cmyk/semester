@@ -23,8 +23,10 @@ import {
 } from '../lib/abroad';
 import { useDeviceLibrary } from '../lib/device-library';
 import { secondLine } from '../lib/dim';
+import { ConfirmDialog } from './ConfirmDialog';
 import { SourceBadge } from './SourceBadge';
 import { Notice, SectionLabel, Segmented } from './ui';
+import { ActionPreview } from './unity/ActionPreview';
 
 /**
  * Study abroad, as a tab of Pathway: which programme, whether its credit will
@@ -42,7 +44,9 @@ export function StudyAbroad({ storageKey }: { storageKey: string }) {
   const plan = lib.value;
   const [chosen, setChosen] = useState<string>('');
   const [said, setSaid] = useState('');
+  const [removing, setRemoving] = useState<AbroadProgram | null>(null);
   const program = plan.programs.find((p) => p.id === chosen) ?? plan.programs[0];
+  const removingCourses = removing ? plan.courses.filter((course) => course.programId === removing.id) : [];
 
   const setProgram = (id: string, patch: Partial<AbroadProgram>) =>
     lib.update((old) => ({ ...old, programs: old.programs.map((p) => (p.id === id ? { ...p, ...patch } : p)) }));
@@ -121,14 +125,34 @@ export function StudyAbroad({ storageKey }: { storageKey: string }) {
               >
                 Copy course plan
               </button>
-              <button type="button" className="btn btn-ghost" onClick={() => remove(program.id)}>
+              <button type="button" className="btn btn-ghost" onClick={() => setRemoving(program)}>
                 Remove this program
               </button>
             </div>
-            {said && <Notice>{said}</Notice>}
           </>
         )}
+        {said && <Notice>{said}</Notice>}
       </fieldset>
+      {removing ? (
+        <ConfirmDialog
+          title="Remove this study abroad program?"
+          preview={(
+            <ActionPreview
+              subject={removing.name || 'Untitled program'}
+              says={`Removes its program details, ${removingCourses.length} course ${removingCourses.length === 1 ? 'match' : 'matches'}, recorded approval ${removingCourses.length === 1 ? 'status' : 'statuses'} and stage progress from this device.`}
+              doesNotChange="Other study abroad programs, official applications, written approval decisions and records held by your school stay unchanged. Semester sends no removal request."
+              recovery={{ kind: 'none', how: 'Restore only from a device workspace backup created before removal.' }}
+            />
+          )}
+          confirmLabel="Remove program"
+          onCancel={() => setRemoving(null)}
+          onConfirm={() => {
+            if (!remove(removing.id)) return;
+            setRemoving(null);
+            setSaid('Study abroad program removed from this device. No official record was changed.');
+          }}
+        />
+      ) : null}
     </div>
   );
 }
