@@ -290,7 +290,7 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `integration_admin` | `config:view` | — | — |
 | `integration_admin` | `workflow:manage` | — | — |
 | `integration_admin` | `workflow:view` | — | — |
-| `implementation_manager` | `tenant:implement` | — | — |
+| `implementation_manager` | `tenant:implement` | — | `console-tenant-operations.check.sql` |
 | `implementation_manager` | `console:operate` | — | `capabilities.check.sql`<br>`console-control-plane.check.sql`<br>`projection-foundation.check.sql` |
 | `implementation_manager` | `migration:manage` | — | — |
 | `implementation_manager` | `migration:view` | — | — |

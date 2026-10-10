@@ -1401,6 +1401,9 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // The service-only registration-readiness store emits the command's minimized event in the save transaction.
       // No route or worker calls that store yet, so this is repository evidence rather than a mounted producer.
       'supabase/migrations/20261009160000_registration_readiness_store.sql',
+      // The service-only shared operations producer emits minimized open/transition events.
+      // No production migration application or operator UI availability is implied here.
+      'supabase/migrations/20261010030720_operations_work_items.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);
