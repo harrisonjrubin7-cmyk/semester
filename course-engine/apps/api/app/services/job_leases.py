@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import and_, exists, or_, select, update
+from sqlalchemy import and_, exists, not_, or_, select, update
 from sqlalchemy.orm import Session
 
 from app.models.entities import (
@@ -15,6 +15,7 @@ from app.models.entities import (
     Course,
     JobStatus,
     SourceDocument,
+    StudyAsset,
     User,
 )
 
@@ -152,7 +153,7 @@ def revoke_job(
         .where(
             BackgroundJob.id == job_id,
             BackgroundJob.course_id == course_id,
-            BackgroundJob.status != JobStatus.completed,
+            BackgroundJob.status.not_in((JobStatus.completed, JobStatus.failed)),
             BackgroundJob.revoked_at.is_(None),
         )
         .values(
@@ -167,6 +168,39 @@ def revoke_job(
     if commit:
         db.commit()
     return bool(changed)
+
+
+def recovery_candidates(
+    db: Session,
+    now: datetime,
+    limit: int = 100,
+) -> list[tuple[UUID, str]]:
+    """Terminalize deleted-scope leases and return bounded active work to redeliver."""
+    expired = and_(
+        BackgroundJob.status == JobStatus.running,
+        BackgroundJob.revoked_at.is_(None),
+        BackgroundJob.lease_expires_at <= now,
+    )
+    db.execute(
+        update(BackgroundJob)
+        .where(expired, not_(_active_scope()))
+        .values(
+            status=JobStatus.failed,
+            error="Job scope was deleted",
+            revoked_at=now,
+            lease_owner=None,
+            lease_expires_at=None,
+            heartbeat_at=None,
+        )
+    )
+    rows = db.execute(
+        select(BackgroundJob.id, BackgroundJob.job_type)
+        .where(expired, _active_scope())
+        .order_by(BackgroundJob.created_at)
+        .limit(limit)
+    ).all()
+    db.commit()
+    return [(row.id, row.job_type) for row in rows]
 
 
 def update_job_progress(
@@ -219,7 +253,17 @@ def _active_scope():
             )
         ),
     )
-    return and_(active_course, active_document)
+    active_target = or_(
+        BackgroundJob.target_id.is_(None),
+        exists(
+            select(StudyAsset.id).where(
+                StudyAsset.id == BackgroundJob.target_id,
+                StudyAsset.course_id == BackgroundJob.course_id,
+                StudyAsset.deleted_at.is_(None),
+            )
+        ),
+    )
+    return and_(active_course, active_document, active_target)
 
 
 def _current_lease(lease: JobLease, now: datetime):

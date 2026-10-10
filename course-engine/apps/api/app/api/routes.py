@@ -507,11 +507,12 @@ def cancel_job(job_id: UUID, user: User = Depends(get_current_user), db: Session
     if not job:
         raise HTTPException(404)
     owned_course(db, user, job.course_id)
-    if job.status == JobStatus.completed:
-        raise HTTPException(409, "Completed jobs cannot be cancelled")
-    if job.revoked_at is None:
-        revoke_job(db, job.id, job.course_id, datetime.now(UTC), "Cancelled by user")
-        db.refresh(job)
+    if job.revoked_at is not None:
+        return serialize(job)
+    if job.status in (JobStatus.completed, JobStatus.failed):
+        raise HTTPException(409, "Terminal jobs cannot be cancelled")
+    revoke_job(db, job.id, job.course_id, datetime.now(UTC), "Cancelled by user")
+    db.refresh(job)
     return serialize(job)
 
 
@@ -663,7 +664,7 @@ def asset(asset_id: UUID, user: User = Depends(get_current_user), db: Session = 
 @router.patch("/study-assets/{asset_id}")
 def patch_asset(asset_id: UUID, payload: AssetPatch, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     row = db.get(StudyAsset, asset_id)
-    if not row: raise HTTPException(404)
+    if not row or row.deleted_at: raise HTTPException(404)
     owned_course(db, user, row.course_id)
     changes = payload.model_dump(exclude_unset=True)
     if changes.get("status") == ReviewStatus.confirmed.value:
@@ -686,7 +687,9 @@ def patch_asset(asset_id: UUID, payload: AssetPatch, user: User = Depends(get_cu
 @router.post("/study-assets/{asset_id}/regenerate", status_code=202)
 def regenerate(asset_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     row = db.scalar(
-        select(StudyAsset).where(StudyAsset.id == asset_id).with_for_update()
+        select(StudyAsset)
+        .where(StudyAsset.id == asset_id, StudyAsset.deleted_at.is_(None))
+        .with_for_update()
     )
     if not row: raise HTTPException(404)
     owned_course(db, user, row.course_id)
@@ -704,7 +707,9 @@ def regenerate(asset_id: UUID, user: User = Depends(get_current_user), db: Sessi
 @router.delete("/study-assets/{asset_id}", status_code=204)
 def delete_asset(asset_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     row = db.scalar(
-        select(StudyAsset).where(StudyAsset.id == asset_id).with_for_update()
+        select(StudyAsset)
+        .where(StudyAsset.id == asset_id, StudyAsset.deleted_at.is_(None))
+        .with_for_update()
     )
     if not row: raise HTTPException(404)
     owned_course(db, user, row.course_id)
@@ -725,7 +730,7 @@ def delete_asset(asset_id: UUID, user: User = Depends(get_current_user), db: Ses
             "Study asset deleted",
             commit=False,
         )
-    db.delete(row)
+    row.deleted_at = datetime.now(UTC)
     db.commit()
 
 

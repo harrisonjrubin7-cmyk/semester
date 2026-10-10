@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import tempfile
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from threading import Event, Thread
 from uuid import UUID, uuid4
 
 from celery import Celery
@@ -27,6 +29,8 @@ from app.services.job_leases import (
     claim_job,
     commit_job,
     fail_job,
+    heartbeat_job,
+    recovery_candidates,
     update_job_progress,
 )
 from app.services.malware import DevelopmentMalwareScanner
@@ -46,10 +50,43 @@ celery.conf.beat_schedule = {
 }
 storage = ObjectStorage()
 JOB_LEASE_TTL = timedelta(minutes=5)
+JOB_HEARTBEAT_INTERVAL_SECONDS = JOB_LEASE_TTL.total_seconds() / 3
 
 
 def utc_now() -> datetime:
     return datetime.now(UTC)
+
+
+@contextmanager
+def maintain_job_lease(lease):
+    """Renew a lease from an independent session while work may block."""
+    stopped = Event()
+
+    def run() -> None:
+        while not stopped.wait(JOB_HEARTBEAT_INTERVAL_SECONDS):
+            heartbeat_db = SessionLocal()
+            try:
+                if not heartbeat_job(
+                    heartbeat_db,
+                    lease,
+                    utc_now(),
+                    JOB_LEASE_TTL,
+                ):
+                    return
+            finally:
+                heartbeat_db.close()
+
+    thread = Thread(
+        target=run,
+        name=f"job-heartbeat-{getattr(lease, 'job_id', 'unknown')}",
+        daemon=True,
+    )
+    thread.start()
+    try:
+        yield
+    finally:
+        stopped.set()
+        thread.join(timeout=max(1.0, JOB_HEARTBEAT_INTERVAL_SECONDS))
 
 
 @celery.task(name="recover_upload_dispatches")
@@ -94,16 +131,7 @@ def recover_expired_jobs() -> dict:
     """Redeliver work abandoned by a worker after its lease expires."""
     db = SessionLocal()
     try:
-        jobs = db.execute(
-            select(BackgroundJob.id, BackgroundJob.job_type)
-            .where(
-                BackgroundJob.status == JobStatus.running,
-                BackgroundJob.revoked_at.is_(None),
-                BackgroundJob.lease_expires_at <= utc_now(),
-            )
-            .order_by(BackgroundJob.created_at)
-            .limit(100)
-        ).all()
+        jobs = recovery_candidates(db, utc_now())
     finally:
         db.close()
 
@@ -274,6 +302,8 @@ def extract_document(job_id: str) -> dict:
         db.close()
         return result
     job = db.get(BackgroundJob, parsed_job_id)
+    heartbeat_guard = maintain_job_lease(lease)
+    heartbeat_guard.__enter__()
     document = db.get(SourceDocument, job.document_id)
     try:
         if not update_job_progress(
@@ -370,6 +400,7 @@ def extract_document(job_id: str) -> dict:
             raise
         return {"status": "lease_lost"}
     finally:
+        heartbeat_guard.__exit__(None, None, None)
         db.close()
 
 
@@ -437,6 +468,8 @@ def generate_study_asset(job_id: str) -> dict:
         db.close()
         return result
     job = db.get(BackgroundJob, parsed_job_id)
+    heartbeat_guard = maintain_job_lease(lease)
+    heartbeat_guard.__enter__()
     try:
         if not update_job_progress(db, lease, utc_now(), JOB_LEASE_TTL, 10):
             return {"status": "lease_lost"}
@@ -529,4 +562,5 @@ def generate_study_asset(job_id: str) -> dict:
             raise
         return {"status": "lease_lost"}
     finally:
+        heartbeat_guard.__exit__(None, None, None)
         db.close()
