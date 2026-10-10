@@ -176,14 +176,19 @@ def recovery_candidates(
     limit: int = 100,
 ) -> list[tuple[UUID, str]]:
     """Terminalize deleted-scope leases and return bounded active work to redeliver."""
-    expired = and_(
+    expired_running = and_(
         BackgroundJob.status == JobStatus.running,
         BackgroundJob.revoked_at.is_(None),
         BackgroundJob.lease_expires_at <= now,
     )
+    inactive_recoverable = and_(
+        BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
+        BackgroundJob.revoked_at.is_(None),
+        not_(_active_scope()),
+    )
     db.execute(
         update(BackgroundJob)
-        .where(expired, not_(_active_scope()))
+        .where(inactive_recoverable)
         .values(
             status=JobStatus.failed,
             error="Job scope was deleted",
@@ -195,7 +200,7 @@ def recovery_candidates(
     )
     rows = db.execute(
         select(BackgroundJob.id, BackgroundJob.job_type)
-        .where(expired, _active_scope())
+        .where(expired_running, _active_scope())
         .order_by(BackgroundJob.created_at)
         .limit(limit)
     ).all()

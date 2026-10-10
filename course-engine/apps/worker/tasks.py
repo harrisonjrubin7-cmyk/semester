@@ -61,20 +61,26 @@ def utc_now() -> datetime:
 def maintain_job_lease(lease):
     """Renew a lease from an independent session while work may block."""
     stopped = Event()
+    lost = Event()
 
     def run() -> None:
         while not stopped.wait(JOB_HEARTBEAT_INTERVAL_SECONDS):
             heartbeat_db = SessionLocal()
             try:
-                if not heartbeat_job(
+                current = heartbeat_job(
                     heartbeat_db,
                     lease,
                     utc_now(),
                     JOB_LEASE_TTL,
-                ):
-                    return
+                )
+            except Exception:
+                lost.set()
+                return
             finally:
                 heartbeat_db.close()
+            if not current:
+                lost.set()
+                return
 
     thread = Thread(
         target=run,
@@ -83,7 +89,7 @@ def maintain_job_lease(lease):
     )
     thread.start()
     try:
-        yield
+        yield lost
     finally:
         stopped.set()
         thread.join(timeout=max(1.0, JOB_HEARTBEAT_INTERVAL_SECONDS))
@@ -303,9 +309,11 @@ def extract_document(job_id: str) -> dict:
         return result
     job = db.get(BackgroundJob, parsed_job_id)
     heartbeat_guard = maintain_job_lease(lease)
-    heartbeat_guard.__enter__()
-    document = db.get(SourceDocument, job.document_id)
+    heartbeat_started = False
     try:
+        lease_lost = heartbeat_guard.__enter__()
+        heartbeat_started = True
+        document = db.get(SourceDocument, job.document_id)
         if not update_job_progress(
             db,
             lease,
@@ -371,6 +379,8 @@ def extract_document(job_id: str) -> dict:
                 "metadata_json": metadata,
             })
         result = {"chunks": len(materialized_rows)}
+        if lease_lost.is_set():
+            return {"status": "lease_lost"}
         completed = commit_job(
             db,
             lease,
@@ -400,7 +410,8 @@ def extract_document(job_id: str) -> dict:
             raise
         return {"status": "lease_lost"}
     finally:
-        heartbeat_guard.__exit__(None, None, None)
+        if heartbeat_started:
+            heartbeat_guard.__exit__(None, None, None)
         db.close()
 
 
@@ -469,8 +480,10 @@ def generate_study_asset(job_id: str) -> dict:
         return result
     job = db.get(BackgroundJob, parsed_job_id)
     heartbeat_guard = maintain_job_lease(lease)
-    heartbeat_guard.__enter__()
+    heartbeat_started = False
     try:
+        lease_lost = heartbeat_guard.__enter__()
+        heartbeat_started = True
         if not update_job_progress(db, lease, utc_now(), JOB_LEASE_TTL, 10):
             return {"status": "lease_lost"}
         evidence = db.execute(
@@ -484,6 +497,7 @@ def generate_study_asset(job_id: str) -> dict:
             )
             .limit(50)
         ).all()
+        db.commit()
         if not evidence:
             raise ValueError("No confirmed citation-linked evidence is available")
         asset_type = job.job_type.split(":", 1)[1]
@@ -527,6 +541,8 @@ def generate_study_asset(job_id: str) -> dict:
         )
         asset_id = existing_id or uuid4()
         result = {**job.result, "asset_id": str(asset_id)}
+        if lease_lost.is_set():
+            return {"status": "lease_lost"}
         completed = commit_job(
             db,
             lease,
@@ -562,5 +578,6 @@ def generate_study_asset(job_id: str) -> dict:
             raise
         return {"status": "lease_lost"}
     finally:
-        heartbeat_guard.__exit__(None, None, None)
+        if heartbeat_started:
+            heartbeat_guard.__exit__(None, None, None)
         db.close()

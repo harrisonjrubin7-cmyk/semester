@@ -536,7 +536,7 @@ def review_item(item_id: UUID, payload: ReviewPatch, user: User = Depends(get_cu
         except (KeyError, TypeError, ValueError) as exc:
             raise HTTPException(409, "Study asset review target is invalid") from exc
         asset = db.get(StudyAsset, asset_id)
-        if not asset or asset.course_id != item.course_id:
+        if not asset or asset.deleted_at or asset.course_id != item.course_id:
             raise HTTPException(409, "Study asset review target is unavailable")
         if asset.generation_version != reviewed_version:
             raise HTTPException(409, "Study asset review is stale")
@@ -736,7 +736,7 @@ def delete_asset(asset_id: UUID, user: User = Depends(get_current_user), db: Ses
 
 def _export(asset_id: UUID, fmt: str, user: User, db: Session):
     row = db.get(StudyAsset, asset_id)
-    if not row: raise HTTPException(404)
+    if not row or row.deleted_at: raise HTTPException(404)
     owned_course(db, user, row.course_id)
     if row.status != ReviewStatus.confirmed:
         raise HTTPException(409, "Study asset must be confirmed before export")
