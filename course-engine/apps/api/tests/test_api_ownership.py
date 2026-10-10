@@ -7,7 +7,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.core.database import Base, get_db
 from app.main import app
-from app.models.entities import ReviewItem, SourceChunk, SourceDocument
+from app.models.entities import Citation, ReviewItem, SourceChunk, SourceDocument
 
 
 def test_course_ownership_boundary_returns_not_found_for_other_user():
@@ -61,16 +61,31 @@ def test_course_ownership_boundary_returns_not_found_for_other_user():
             )
             session.add(document)
             session.flush()
-            session.add(SourceChunk(
+            chunk = SourceChunk(
                 document_id=document.id,
                 chunk_index=0,
                 content="Office hours are Tuesday at 2 PM.",
                 content_type="paragraph",
                 page_number=3,
+                sheet_name="Schedule",
+                cell_range="B4:C4",
+                start_seconds=12.5,
+                end_seconds=18.75,
+                bounding_box={"x": 10, "y": 20, "width": 30, "height": 40},
                 confidence=0.98,
-            ))
+            )
+            session.add(chunk)
+            session.flush()
+            citation = Citation(
+                chunk_id=chunk.id,
+                quote="Office hours are Tuesday at 2 PM.",
+                quoted_start=0,
+                quoted_end=33,
+            )
+            session.add(citation)
             session.commit()
             document_id = document.id
+            citation_id = citation.id
 
         source = client.get(f"/api/v1/files/{document_id}/source-view", headers=first_headers)
         assert source.status_code == 200
@@ -80,6 +95,55 @@ def test_course_ownership_boundary_returns_not_found_for_other_user():
         assert source.json()["has_more"] is False
         assert client.get(f"/api/v1/files/{document_id}/source-view", headers=second_headers).status_code == 404
         assert client.get(f"/api/v1/files/{document_id}/source-view").status_code == 401
+
+        citation_source = client.get(
+            f"/api/v1/citations/{citation_id}/source-view",
+            headers=first_headers,
+        )
+        assert citation_source.status_code == 200
+        assert citation_source.json() == {
+            "citation": {
+                "id": str(citation_id),
+                "quote": "Office hours are Tuesday at 2 PM.",
+                "quoted_start": 0,
+                "quoted_end": 33,
+                "status": "needs_review",
+            },
+            "location": {
+                "page_number": 3,
+                "slide_number": None,
+                "sheet_name": "Schedule",
+                "cell_range": "B4:C4",
+                "start_seconds": 12.5,
+                "end_seconds": 18.75,
+                "bounding_box": {"x": 10, "y": 20, "width": 30, "height": 40},
+            },
+            "source": {
+                "document_id": str(document_id),
+                "filename": "syllabus.pdf",
+                "mime_type": "application/pdf",
+                "sha256": "a" * 64,
+                "download_path": f"/api/v1/files/{document_id}/download",
+                "download_url": None,
+                "download_headers": {},
+                "expires_in_seconds": None,
+            },
+        }
+        foreign_citation = client.get(
+            f"/api/v1/citations/{citation_id}/source-view",
+            headers=second_headers,
+        )
+        unknown_citation = client.get(
+            f"/api/v1/citations/{UUID(int=0)}/source-view",
+            headers=second_headers,
+        )
+        assert foreign_citation.status_code == 404
+        assert foreign_citation.json() == unknown_citation.json() == {
+            "detail": "Citation not found",
+        }
+        assert client.get(
+            f"/api/v1/citations/{citation_id}/source-view",
+        ).status_code == 401
 
         with testing_session() as session:
             review = ReviewItem(
@@ -104,7 +168,6 @@ def test_course_ownership_boundary_returns_not_found_for_other_user():
         assert resolved.json()["status"] == "confirmed"
         assert resolved.json()["payload"] == {"due_date": "2026-10-22"}
         assert resolved.json()["resolution_note"] == "Checked against page 4"
-
         calendar_payload = {
             "title": "Midterm",
             "event_type": "exam",
