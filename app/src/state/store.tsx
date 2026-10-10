@@ -906,6 +906,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [review, setReview] = useState<Conflict[]>(readReview);
   /** When this device last asked the account for its copy. See the focus pull below. */
   const pulledAt = useRef(0);
+  /** One pull at a time; auth, focus and reconnect can otherwise overlap. */
+  const refreshing = useRef(false);
   const refresh = useCallback(async (): Promise<string> => {
     const base = { cloud: cloudConfigured, signedIn: Boolean(account), took: false, courses: 0, error: '', at: 0 };
     if (!account) {
@@ -918,6 +920,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSync((s) => ({ ...s, status: unpushed() ? 'queued' : 'offline', error: '' }));
       return refreshSaid({ ...base, error: 'No connection. This device will catch up when it is back.' }, Date.now());
     }
+    /*
+     * Signing in can produce both the current-session answer and an auth
+     * change, while focus/reconnect may arrive beside either. Two refreshes
+     * applying the same remote copy do not merely duplicate traffic: the
+     * first can release the persistence fence while the second is awaiting
+     * IndexedDB, letting a pre-pull render queue behind it and remove the
+     * rows that just landed. The push path already has the same one-flight
+     * rule; pulls need it for the same ordering reason.
+     */
+    if (refreshing.current) return 'Semester is already syncing.';
+    refreshing.current = true;
     setSync((s) => ({ ...s, status: 'syncing', error: '' }));
     pulledAt.current = Date.now();
     try {
@@ -1088,6 +1101,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const { said: error } = explainSync(e);
       setSync({ status: 'error', at: 0, error });
       return refreshSaid({ ...base, error }, Date.now());
+    } finally {
+      refreshing.current = false;
     }
   }, [account]);
 
