@@ -310,7 +310,7 @@ paths:
                   pattern: '^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$'
       responses:
         '202':
-          description: The durable requested receipt, or the same receipt for an exact retry.
+          description: The durable requested receipt with the evaluationId required by the follow-up route, or the same response for an exact retry.
           content:
             application/json:
               schema:
@@ -360,7 +360,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RegistrationReadinessReceipt'
         '202':
-          description: The durable receipt when evaluation remains in progress.
+          description: The durable pending claim for an overlapping exact retry, or a reconciliation receipt after the enforced evaluator deadline.
           content:
             application/json:
               schema:
@@ -1021,8 +1021,11 @@ components:
   schemas:
     RegistrationReadinessReceipt:
       type: object
-      required: [id, status, state, recordVersion, recordedAt, correlationId]
+      required: [evaluationId, id, status, state, recordVersion, recordedAt, correlationId]
       properties:
+        evaluationId:
+          type: string
+          description: Aggregate identifier used in the follow-up evaluate route. This is distinct from id, which is the command idempotency key.
         id:
           type: string
         status:
