@@ -284,6 +284,7 @@ export class RegistrationReadinessCommands implements RegistrationReadinessComma
       at: this.now().toISOString(),
     });
     record = moved.record;
+    if (moved.replayed) return commandReceipt(id, moved.receipt);
 
     const controller = new AbortController();
     let deadlineReached = false;
