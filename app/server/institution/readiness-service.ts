@@ -43,7 +43,11 @@ export interface TransitionRegistrationReadinessCommand {
  * compare-and-swap, receipt, audit and outbox transaction.
  */
 export class RegistrationReadinessService {
-  constructor(private readonly repository: RegistrationReadinessRepository) {}
+  private readonly repository: RegistrationReadinessRepository;
+
+  constructor(repository: RegistrationReadinessRepository) {
+    this.repository = repository;
+  }
 
   async start(command: StartRegistrationReadinessCommand): Promise<ReadinessWorkflowResult> {
     const result = startRegistrationReadinessEvaluation({
