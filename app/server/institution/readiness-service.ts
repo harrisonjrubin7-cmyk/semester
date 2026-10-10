@@ -3,6 +3,7 @@ import {
   transitionRegistrationReadinessEvaluation,
   type RegistrationReadinessEvaluationRecord,
   type RegistrationReadinessEvaluationState,
+  type ReadinessTransitionReason,
   type ReadinessWorkflowResult,
 } from '../../../packages/institution/src/readiness-workflow.ts';
 
@@ -28,6 +29,7 @@ export interface TransitionRegistrationReadinessCommand {
   expectedVersion: number;
   targetState: RegistrationReadinessEvaluationState;
   projectionVersion?: number;
+  reason?: ReadinessTransitionReason;
   correlationId: string;
   idempotencyKey: string;
   at: string;
@@ -71,6 +73,7 @@ export class RegistrationReadinessService {
       expectedVersion: command.expectedVersion,
       targetState: command.targetState,
       ...(command.projectionVersion === undefined ? {} : { projectionVersion: command.projectionVersion }),
+      ...(command.reason === undefined ? {} : { reason: command.reason }),
       correlationId: command.correlationId,
       idempotencyKey: command.idempotencyKey,
       at: command.at,
