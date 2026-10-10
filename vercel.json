@@ -74,19 +74,7 @@
     "app": {
       "root": "app",
       "framework": "vite",
-      "buildCommand": "VITE_BASE=/app/ npm run build",
-      "routes": [
-        {
-          "src": "/(.*)",
-          "transforms": [
-            {
-              "type": "request.path",
-              "op": "set",
-              "args": "/$1"
-            }
-          ]
-        }
-      ],
+      "buildCommand": "VITE_BASE=/app/ npm run build:hosting",
       "headers": [
         {
           "source": "/(.*)",
@@ -208,6 +196,19 @@
       ]
     }
   },
+  "redirects": [
+    {
+      "source": "/app",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?:(?:www\\.)?semesterintel\\.tech|.*\\.vercel\\.app)"
+        }
+      ],
+      "destination": "/app/",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
@@ -270,17 +271,9 @@
       }
     },
     {
-      "source": "/app",
+      "source": "/app/(.*)",
       "destination": {
-        "service": "app",
-        "path": "/"
-      }
-    },
-    {
-      "source": "^/app/(?<path>.*)$",
-      "destination": {
-        "service": "app",
-        "path": "/$path"
+        "service": "app"
       }
     },
     {

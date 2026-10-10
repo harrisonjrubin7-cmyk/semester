@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:hosting": "tsc -b && vite build --outDir dist/app",
     "budgets": "node scripts/budgets.ts",
     "lint": "oxlint --max-warnings=25 src && node scripts/styles.mjs && node scripts/labels.mjs && node scripts/terms.mjs",
     "lint:styles": "node scripts/styles.mjs",
