@@ -822,6 +822,7 @@ const MOCKS_MODULES = [
   'src/state/review.test.tsx',
   'src/state/deletions.test.tsx',
   'src/components/WaitingSends.test.tsx',
+  'src/lib/classmates-writes.test.ts',
 ]
 
 export default defineConfig(({ command, mode }) => {

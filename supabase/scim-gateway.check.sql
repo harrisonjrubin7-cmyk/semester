@@ -101,16 +101,22 @@ begin
   select count(*) into n from public.scim_gateway_credential(gen_random_uuid());
   perform pg_temp.counted('an unknown id returns nothing', n, 0);
   wrote := public.scim_gateway_record_refusal('scim-gw', revoked_cred, 'req-revoked', 'User', 401, 'revoked');
+  -- The gateway calls service-only RPCs. Inspect their effects as the test
+  -- owner; that does not require exposing internal audit tables to the key.
+  reset role;
   select count(*) into n from public.provisioning_audit_event where credential_id = revoked_cred and request_id = 'req-revoked';
   perform pg_temp.counted('a refusal from a revoked credential is recorded', n, 1);
+  set local role service_role;
 
   member := public.scim_gateway_provision_user('scim-gw', cred, 'req-1', 'ext-1', 'Ada@Scim-GW.example', 'Ada', true);
   again := public.scim_gateway_provision_user('scim-gw', cred, 'req-1', 'ext-1', 'Ada@Scim-GW.example', 'Ada', true);
   if member is distinct from again then raise exception 'FAILED: a replayed request id made a second membership'; end if;
   raise notice 'ok  a replayed request id returns the same membership';
 
+  reset role;
   select count(*) into n from public.scim_external_identity where tenant_id = 'scim-gw' and user_name = 'ada@scim-gw.example';
   perform pg_temp.counted('the user name is stored lower-cased, as the private function does', n, 1);
+  set local role service_role;
 
   if not pg_temp.refused_as('service_role',
        format('select public.scim_gateway_provision_user(%L, %L, %L, %L, %L, null, true)', 'scim-gw', other_cred, 'req-x', 'ext-x', 'x@scim-gw.example')) then
@@ -118,11 +124,14 @@ begin
   end if;
   raise notice 'ok  a credential cannot provision into a tenant it does not belong to';
 
+  set local role service_role;
   perform public.scim_gateway_replace_group('scim-gw', cred, 'req-2', 'unmapped-group', 'Unmapped', array['ext-1']);
+  reset role;
   select count(*) into n from public.provisioning_audit_event where tenant_id = 'scim-gw' and request_id = 'req-2' and outcome = 'unknown_group';
   perform pg_temp.counted('an unmapped group is recorded as unknown and grants nothing', n, 1);
   select count(*) into n from public.institution_membership where id = member and roles <> '{}';
   perform pg_temp.counted('and the member''s roles are unchanged', n, 0);
+  set local role service_role;
 
   -- ── Refusals: recorded once, never over an accepted event ──────────────
 
@@ -132,10 +141,12 @@ begin
   if wrote then raise exception 'FAILED: a second refusal for one request id was written'; end if;
   wrote := public.scim_gateway_record_refusal('scim-gw', cred, 'req-1', 'User', 503, 'late failure');
   if wrote then raise exception 'FAILED: a refusal overwrote an accepted event'; end if;
+  reset role;
   select count(*) into n from public.provisioning_audit_event where tenant_id = 'scim-gw' and request_id in ('req-1', 'req-3');
   perform pg_temp.counted('one event per request id, the first one', n, 2);
   select count(*) into n from public.provisioning_audit_event where request_id = 'req-1' and outcome = 'accepted';
   perform pg_temp.counted('and req-1 is still the accepted one', n, 1);
+  set local role service_role;
 
   if not pg_temp.refused_as('service_role',
        format('select public.scim_gateway_record_refusal(%L, %L, %L, %L, 400, %L)', 'scim-gw', other_cred, 'req-4', 'User', 'x')) then

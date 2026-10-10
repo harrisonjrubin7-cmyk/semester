@@ -993,6 +993,16 @@ returns text language sql stable as $$
        and n.nspname not like 'pg_temp%'
        and p.prosecdef
        and not pg_temp.from_extension(p.oid)
+       -- Supabase's webhook wrapper is a platform-owned trigger function,
+       -- invoked through CREATE TRIGGER rather than an application RPC.
+       -- Match its full identity; never exempt a whole schema or all triggers.
+       and not (
+         n.nspname = 'supabase_functions'
+         and p.proname = 'http_request'
+         and p.pronargs = 0
+         and p.prorettype = 'pg_catalog.trigger'::regtype
+         and pg_get_userbyid(p.proowner) = 'supabase_functions_admin'
+       )
        and (has_function_privilege('anon', p.oid, 'execute')
          or has_function_privilege('authenticated', p.oid, 'execute'))
        and not exists (

@@ -558,6 +558,13 @@ jobs:
           fi
           "/usr/lib/postgresql/$want/bin/pg_config" --version
 
+      # Fresh projects do not inherit the legacy fixture's blanket table
+      # grants. Check the exact approved caller boundaries independently.
+      - name: Check explicit client grants
+        env:
+          SEMESTER_CHECK_TABLE_GRANTS: explicit
+        run: supabase/check.sh explicit-client-grants
+
       # With a second pass. Every migration is applied again on top of the built
       # schema, which must come out byte-for-byte the same, before any suite
       # runs — so the suites below check the schema a single pass builds, and a
