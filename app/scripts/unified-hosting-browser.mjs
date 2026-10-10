@@ -345,6 +345,16 @@ try {
     consumed: share.body === 'synthetic syllabus',
   };
 
+  // The persisted store and route modules finish booting after DOMContentLoaded.
+  // Let that online boot settle before taking the performance snapshot, or
+  // late startup chunks would never be part of the durable-readiness proof.
+  await page.waitForFunction(
+    () => (document.body?.innerText || '').trim().length > 100,
+    undefined,
+    { timeout: 30_000 },
+  );
+  await page.waitForLoadState('networkidle', { timeout: 30_000 });
+
   // warm() posts asynchronously to the worker. Do not infer readiness from
   // registration: prove every same-origin startup resource used by this page
   // is durable before taking the browser offline.
