@@ -8,6 +8,7 @@ import {
 import type {
   ReadinessEvaluationReceipt,
   RegistrationReadinessEvaluationState,
+  RegistrationReadinessEvaluationRecord,
 } from '../../../packages/institution/src/readiness-workflow.ts';
 import {
   RegistrationReadinessService,
@@ -180,7 +181,7 @@ export class RegistrationReadinessCommands implements RegistrationReadinessComma
     context: RequestContext,
     roles: readonly UniversityRole[],
     input: unknown,
-  ): Promise<ReadinessEvaluationReceipt> {
+  ): Promise<RegistrationReadinessCommandReceipt> {
     this.evaluator();
     requireStudent(context, roles);
     const idempotencyKey = requireCommandKey(context);
@@ -198,6 +199,43 @@ export class RegistrationReadinessCommands implements RegistrationReadinessComma
       at,
     });
     return commandReceipt(evaluationId, result.receipt);
+  }
+
+  private async reconcileTimedOut(
+    context: RequestContext,
+    evaluationId: string,
+    idempotencyKey: string,
+    record: RegistrationReadinessEvaluationRecord,
+  ): Promise<RegistrationReadinessCommandReceipt> {
+    let current = record;
+    const timeoutKey = `${idempotencyKey}:timeout`;
+    if (current.state === 'evaluating') {
+      const timedOut = await this.dependencies.service.transition({
+        evaluationId,
+        tenantId: context.tenantId,
+        expectedVersion: current.version,
+        targetState: 'unknown',
+        reason: 'evaluator_timeout',
+        correlationId: context.correlationId,
+        idempotencyKey: timeoutKey,
+        at: this.now().toISOString(),
+      });
+      current = timedOut.record;
+    }
+    const timeoutRecorded = current.commandLedger.some((item) => item.idempotencyKey === timeoutKey);
+    if (current.state !== 'unknown' || !timeoutRecorded) {
+      throw new PlatformError('conflict', 'This evaluation must be reconciled before it can run again.');
+    }
+    const reconciling = await this.dependencies.service.transition({
+      evaluationId,
+      tenantId: context.tenantId,
+      expectedVersion: current.version,
+      targetState: 'reconciling',
+      correlationId: context.correlationId,
+      idempotencyKey: `${idempotencyKey}:reconcile`,
+      at: this.now().toISOString(),
+    });
+    return commandReceipt(evaluationId, reconciling.receipt);
   }
 
   async evaluate(
@@ -220,24 +258,14 @@ export class RegistrationReadinessCommands implements RegistrationReadinessComma
     const evaluatingKey = `${idempotencyKey}:evaluating`;
     const evaluatingEntry = record.commandLedger.find((item) => item.idempotencyKey === evaluatingKey);
     if (evaluatingEntry) {
-      if (record.state !== 'evaluating') {
-        throw new PlatformError('conflict', 'This evaluation must be reconciled before it can run again.');
+      if (record.state === 'evaluating') {
+        const claimedAt = Date.parse(evaluatingEntry.receipt.recordedAt);
+        const claimAge = this.now().getTime() - claimedAt;
+        if (Number.isFinite(claimedAt) && claimAge < this.timeoutMs) {
+          return commandReceipt(id, evaluatingEntry.receipt);
+        }
       }
-      const claimedAt = Date.parse(evaluatingEntry.receipt.recordedAt);
-      const claimAge = this.now().getTime() - claimedAt;
-      if (Number.isFinite(claimedAt) && claimAge < this.timeoutMs) {
-        return commandReceipt(id, evaluatingEntry.receipt);
-      }
-      const recovered = await this.dependencies.service.transition({
-        evaluationId: id,
-        tenantId: context.tenantId,
-        expectedVersion: record.version,
-        targetState: 'reconciling',
-        correlationId: context.correlationId,
-        idempotencyKey: `${idempotencyKey}:timeout`,
-        at: this.now().toISOString(),
-      });
-      return commandReceipt(id, recovered.receipt);
+      return await this.reconcileTimedOut(context, id, idempotencyKey, record);
     }
 
     if (!['requested', 'ready', 'blocked'].includes(record.state)) {
@@ -279,16 +307,7 @@ export class RegistrationReadinessCommands implements RegistrationReadinessComma
       ]);
     } catch (error) {
       if (!deadlineReached && !(error instanceof EvaluatorDeadlineError)) throw error;
-      const timedOut = await this.dependencies.service.transition({
-        evaluationId: id,
-        tenantId: context.tenantId,
-        expectedVersion: record.version,
-        targetState: 'reconciling',
-        correlationId: context.correlationId,
-        idempotencyKey: `${idempotencyKey}:timeout`,
-        at: this.now().toISOString(),
-      });
-      return commandReceipt(id, timedOut.receipt);
+      return await this.reconcileTimedOut(context, id, idempotencyKey, record);
     } finally {
       if (timer !== undefined) clearTimeout(timer);
     }
