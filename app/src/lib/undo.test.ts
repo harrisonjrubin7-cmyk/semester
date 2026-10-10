@@ -88,6 +88,10 @@ describe('which actions can be taken back', () => {
       label: 'University file removed',
       fields: ['schoolPack'],
     });
+    expect(undoableFor('forgetCards')).toEqual({
+      label: 'Study evidence cleared',
+      fields: ['reviews', 'answers'],
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
@@ -185,6 +189,11 @@ describe('the snapshot', () => {
   it('keeps only the loaded university file', () => {
     const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.forgetSchoolPack, AT);
     expect(Object.keys(took.was)).toEqual(['schoolPack']);
+  });
+
+  it('keeps the study evidence and confidence history together', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.forgetCards, AT);
+    expect(Object.keys(took.was)).toEqual(['reviews', 'answers']);
   });
 
   it('carries the label and the moment', () => {

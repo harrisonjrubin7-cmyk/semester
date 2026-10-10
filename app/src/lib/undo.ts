@@ -123,6 +123,8 @@ export const UNDOABLE: Record<string, Undoable> = {
   dropPlot: { label: 'Graph line removed', fields: ['plots'] },
   clearPlots: { label: 'Graph cleared', fields: ['plots'] },
   clearPlan: { label: 'Study plan dropped', fields: ['sessions', 'liveSession'] },
+  // The card-level undo stays cleared; restoring it would offer a second, stale rewind.
+  forgetCards: { label: 'Study evidence cleared', fields: ['reviews', 'answers'] },
   // Student-entered planning rows, never the school's ledger or a money movement.
   dropCharge: { label: 'Charge removed', fields: ['charges'] },
   dropAid: { label: 'Aid entry removed', fields: ['aid'] },

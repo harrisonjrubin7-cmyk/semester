@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { reducer } from './reducer';
 import { DEFAULT_PERSISTED, initialEphemeral, type QuizQuestion, type State } from './shape';
 import { directoryOf } from '../lib/look';
+import { score } from '../lib/review';
 import type { Session } from '../lib/sessions';
 
 /**
@@ -1120,6 +1121,38 @@ describe('taking it back', () => {
     const back = reducer(ticked, { type: 'undo' });
     expect(back.schoolPack).toEqual(schoolPack);
     expect(back.schoolId).toBe(s.schoolId);
+    expect(back.done['deadline-1']).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores cleared study evidence without reviving a stale card undo', () => {
+    const key = 'econ:opportunity-cost';
+    const review = score(undefined, true, 1_788_000_000_000);
+    const answer = {
+      key,
+      courseId: 'econ',
+      got: true,
+      sure: 'know' as const,
+      at: 1_788_000_000_000,
+    };
+    const s: State = {
+      ...blank(),
+      reviews: { [key]: review },
+      answers: [answer],
+      lastAnswer: { key, was: null, got: true },
+    };
+
+    const gone = reducer(s, { type: 'forgetCards', keys: [key] });
+    expect(gone.reviews).toEqual({});
+    expect(gone.answers).toEqual([]);
+    expect(gone.lastAnswer).toBeNull();
+    expect(gone.undone?.label).toBe('Study evidence cleared');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.reviews).toEqual(s.reviews);
+    expect(back.answers).toEqual(s.answers);
+    expect(back.lastAnswer).toBeNull();
     expect(back.done['deadline-1']).toBe(true);
     expect(back.undone).toBeNull();
   });
