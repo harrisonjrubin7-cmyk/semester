@@ -35,7 +35,7 @@ describe('root vercel.json services carry what each folder file says', () => {
         'const server = createVercelApiServer();\n' +
         'server.listen(Number(process.env.PORT ?? 3000));\n',
     );
-    expect(root.rewrites.slice(1, 6)).toEqual([
+    expect(root.rewrites.slice(1, 7)).toEqual([
       { source: '/api/institution', destination: { service: 'api' } },
       { source: '/api/institution/(.*)', destination: { service: 'api' } },
       { source: '/api/productivity', destination: { service: 'api' } },
@@ -48,7 +48,7 @@ describe('root vercel.json services carry what each folder file says', () => {
       has: [{ type: 'host', value: '(www\\.)?semester\\.website' }],
       destination: { service: 'company-site' },
     });
-    expect(root.rewrites.slice(6, 8)).toEqual([
+    expect(root.rewrites.slice(7, 9)).toEqual([
       { source: '/lab', destination: { service: 'workflow-lab' } },
       { source: '/lab/(.*)', destination: { service: 'workflow-lab' } },
     ]);
