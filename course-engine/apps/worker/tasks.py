@@ -329,7 +329,9 @@ def extract_document(job_id: str) -> dict:
             lease,
             utc_now(),
             str(exc),
-            lambda session: _commit_extraction_failure(session, job.document_id, str(exc)),
+            lambda session, error=str(exc): _commit_extraction_failure(
+                session, job.document_id, error
+            ),
         )
         if failed:
             raise
@@ -483,11 +485,11 @@ def generate_study_asset(job_id: str) -> dict:
             lease,
             utc_now(),
             str(exc),
-            lambda session: session.add(ReviewItem(
+            lambda session, error=str(exc): session.add(ReviewItem(
                 course_id=lease.course_id,
                 item_type="generation_failed",
                 title="Study asset could not be generated",
-                payload={"error": str(exc)},
+                payload={"error": error},
             )),
         )
         if failed:
