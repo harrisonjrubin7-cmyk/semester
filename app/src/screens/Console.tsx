@@ -29,6 +29,7 @@ import { Views, readViews, type SavedView } from '../components/console/Views';
 import { CommandCenter } from '../components/console/CommandCenter';
 import { SupportQueue } from '../components/console/SupportQueue';
 import { TenantOperations } from '../components/console/TenantOperations';
+import { OperationsInbox } from '../components/console/OperationsInbox';
 import { PrivacyRequests } from '../components/console/PrivacyRequests';
 import { IntegrationHealth } from '../components/console/IntegrationHealth';
 import { ReleaseIncidents } from '../components/console/ReleaseIncidents';
@@ -255,6 +256,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
         {tab === 'breakglass' && <BreakGlass {...viewProps} />}
         {tab === 'audit' && <Audit {...viewProps} />}
         {tab === 'tenant-operations' && <TenantOperations {...viewProps} now={now} />}
+        {tab === 'inbox' && <OperationsInbox {...viewProps} />}
         {tab === 'privacy' && <PrivacyRequests {...viewProps} />}
         {tab === 'integration-health' && <IntegrationHealth {...viewProps} />}
         {tab === 'release-incidents' && <ReleaseIncidents {...viewProps} />}

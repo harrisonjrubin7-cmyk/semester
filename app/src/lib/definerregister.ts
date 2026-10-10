@@ -267,6 +267,8 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['office_desk_actions', 'admin', ['auth.uid()', 'private.may_publish']],
   ['open_help_request', 'self-service', ['auth.uid()', 'private.answers_for']],
   ['open_support_ticket', 'self-service', ['auth.uid()']],
+  ['ops_operations_inbox', 'admin', ['auth.uid()', 'private.has_capability', 'private.work_item_allowed']],
+  ['ops_transition_work_item', 'admin', ['auth.uid()', 'private.work_item_allowed']],
   ['productivity_readiness_aggregate', 'admin', ['auth.uid()', "'admin'=any(m.roles)", 'if owners<10']],
   ['propose_offboarding', 'admin', ['auth.uid()', 'private.is_app_admin', 'private.has_capability']],
   ['publish_course_guidance', 'admin', ['auth.uid()', 'private.course_publisher']],
@@ -459,6 +461,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * historical snapshot.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261010030720_operations_work_items.sql',
+    functions: ['ops_operations_inbox', 'ops_transition_work_item'],
+  },
   {
     file: '20261009001500_course_material_retention_policy.sql',
     functions: ['publish_course_material_retention_policy'],

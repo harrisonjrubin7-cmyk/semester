@@ -240,6 +240,8 @@
    "private.roster_snapshot",
    "private.roster_staged_row",
    "private.site_lead_hits",
+   "private.work_item",
+   "private.work_item_event",
    "provider_event_inbox",
    "registration_completions",
    "registration_holds",
