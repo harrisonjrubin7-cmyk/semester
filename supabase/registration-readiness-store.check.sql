@@ -126,6 +126,23 @@ begin
   perform pg_temp.counted('an exact replay wrote no second outbox event',
     (select count(*) from private.domain_outbox_events where aggregate_id = 'eval-1'), 1);
 
+  -- The additive RPC migration can be applied before the new server during a rolling deploy.
+  perform public.registration_readiness_save(
+    'readiness-a', 0, '["requested"]',
+    pg_temp.result('eval-legacy', 'readiness-a', 1, 'requested', 1, null,
+      'legacy-request-1', 'request-legacy-01', 'registration.readiness_requested',
+      '2026-10-09T15:00:00.000Z')
+  );
+  perform public.registration_readiness_save(
+    'readiness-a', 1, '["evaluating",null]',
+    pg_temp.result('eval-legacy', 'readiness-a', 2, 'evaluating', 1, null,
+      'legacy-evaluate-1', 'request-legacy-02', 'registration.readiness_evaluated',
+      '2026-10-09T15:01:00.000Z')
+  );
+  perform pg_temp.counted('the rolling RPC accepts the legacy evaluating event',
+    (select count(*) from private.registration_readiness_evaluations
+      where id = 'eval-legacy' and state = 'evaluating' and version = 2), 1);
+
   perform pg_temp.refuses('an idempotency key reused for another command', format(
     'select public.registration_readiness_save(%L, 0, %L, %L::jsonb)',
     'readiness-a', '["other"]', pg_temp.result('eval-1', 'readiness-a', 1, 'requested', 1, null,
@@ -179,7 +196,7 @@ begin
   ));
   perform public.registration_readiness_save(
     'readiness-a', 3, '["reconciling",null]',
-    pg_temp.result('eval-1', 'readiness-a', 4, 'reconciling', 1, 1,
+    pg_temp.result('eval-1', 'readiness-a', 4, 'reconciling', 1, null,
       'reconcile-1', 'request-51234567', 'registration.readiness_reconciliation_requested',
       '2026-10-09T15:03:00.000Z', tasks)
   );
@@ -193,7 +210,7 @@ begin
   ));
   perform public.registration_readiness_save(
     'readiness-a', 4, '["evaluating",null]',
-    pg_temp.result('eval-1', 'readiness-a', 5, 'evaluating', 2, 1,
+    pg_temp.result('eval-1', 'readiness-a', 5, 'evaluating', 2, null,
       'evaluate-2', 'request-61234567', 'registration.readiness_requested',
       '2026-10-09T15:04:00.000Z', tasks)
   );
