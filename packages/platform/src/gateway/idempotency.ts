@@ -49,8 +49,8 @@ export type BeginOutcome =
 
 export interface IdempotencyStore {
   begin(scope: IdempotencyScope, requestHash: string, now: Date, leaseMs: number, ttlMs: number): Promise<BeginOutcome>;
-  complete(scope: IdempotencyScope, leaseId: string, response: StoredResponse, now: Date): Promise<void>;
-  release(scope: IdempotencyScope, leaseId: string): Promise<void>;
+  complete(scope: IdempotencyScope, leaseId: string, response: StoredResponse, now: Date): Promise<boolean>;
+  release(scope: IdempotencyScope, leaseId: string): Promise<boolean>;
 }
 
 export const IDEMPOTENCY_LEASE_MS = 60_000;
@@ -88,15 +88,18 @@ export class MemoryIdempotencyStore implements IdempotencyStore {
     return { kind: 'started', leaseId };
   }
 
-  async complete(scope: IdempotencyScope, leaseId: string, response: StoredResponse, now: Date): Promise<void> {
+  async complete(scope: IdempotencyScope, leaseId: string, response: StoredResponse, now: Date): Promise<boolean> {
     const row = this.rows.get(idOf(scope));
-    if (!row || row.leaseId !== leaseId) return;
+    if (!row || row.leaseId !== leaseId) return false;
     this.rows.set(idOf(scope), { ...row, state: 'completed', response, leaseUntil: now.getTime() });
+    return true;
   }
 
-  async release(scope: IdempotencyScope, leaseId: string): Promise<void> {
+  async release(scope: IdempotencyScope, leaseId: string): Promise<boolean> {
     const id = idOf(scope);
-    if (this.rows.get(id)?.leaseId === leaseId) this.rows.delete(id);
+    if (this.rows.get(id)?.leaseId !== leaseId) return false;
+    this.rows.delete(id);
+    return true;
   }
 }
 
@@ -145,16 +148,20 @@ export async function withIdempotency<T>(
     return { value: stored.body as T, replayed: true };
   }
 
+  let value: T;
   try {
-    const value = await fn();
-    await store.complete(scope, begun.leaseId, { status: 200, body: value }, deps.clock.now());
-    return { value, replayed: false };
+    value = await fn();
   } catch (e) {
     if (isPlatformError(e) && isDeterministicRefusal(e)) {
-      await store.complete(scope, begun.leaseId, { status: e.status, body: { code: e.code, message: e.message } }, deps.clock.now());
+      const owned = await store.complete(scope, begun.leaseId, { status: e.status, body: { code: e.code, message: e.message } }, deps.clock.now());
+      if (!owned) throw new PlatformError('idempotency_in_progress', 'This request lost its idempotency lease. Retry with the same key.');
     } else {
-      await store.release(scope, begun.leaseId);
+      const owned = await store.release(scope, begun.leaseId);
+      if (!owned) throw new PlatformError('idempotency_in_progress', 'This request lost its idempotency lease. Retry with the same key.');
     }
     throw e;
   }
+  const owned = await store.complete(scope, begun.leaseId, { status: 200, body: value }, deps.clock.now());
+  if (!owned) throw new PlatformError('idempotency_in_progress', 'This request lost its idempotency lease. Retry with the same key.');
+  return { value, replayed: false };
 }

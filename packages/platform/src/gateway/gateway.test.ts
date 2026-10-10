@@ -172,7 +172,7 @@ describe('idempotency', () => {
     const takeover = await withIdempotency(store, { clock: c }, ctx(TENANT_A, 'p'), 'x.y', {}, async () => 3);
     expect(takeover.value).toBe(3);
     release();
-    await first;
+    await expect(first).rejects.toMatchObject({ code: 'idempotency_in_progress', status: 409 });
     const replay = await withIdempotency(store, { clock: c }, ctx(TENANT_A, 'p'), 'x.y', {}, async () => 4);
     expect(replay).toEqual({ value: 3, replayed: true });
   });

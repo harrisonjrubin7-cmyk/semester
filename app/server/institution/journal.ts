@@ -413,10 +413,10 @@ export class ActionJournal implements ActionJournalStore, IdempotencyStore {
     }
   }
 
-  async complete(scope: IdempotencyScope, leaseId: string, response: StoredResponse, now: Date): Promise<void> {
+  async complete(scope: IdempotencyScope, leaseId: string, response: StoredResponse, now: Date): Promise<boolean> {
     if (JSON.stringify(response.body) === undefined) throw new Error('An idempotency response must be JSON-serialisable.');
     const body = sealJournalRow(this.key, response.body);
-    this.db.prepare(
+    const result = this.db.prepare(
       `UPDATE idempotency
           SET state='completed',response_status=?,response_body=?,lease_until=?
         WHERE tenant=? AND actor=? AND command=? AND idempotency_key=? AND lease_id=?`,
@@ -430,12 +430,14 @@ export class ActionJournal implements ActionJournalStore, IdempotencyStore {
       scope.key,
       leaseId,
     );
+    return result.changes === 1;
   }
 
-  async release(scope: IdempotencyScope, leaseId: string): Promise<void> {
-    this.db.prepare(
+  async release(scope: IdempotencyScope, leaseId: string): Promise<boolean> {
+    const result = this.db.prepare(
       'DELETE FROM idempotency WHERE tenant=? AND actor=? AND command=? AND idempotency_key=? AND lease_id=?',
     ).run(scope.tenantId, scope.actorId, scope.command, scope.key, leaseId);
+    return result.changes === 1;
   }
 
   /**

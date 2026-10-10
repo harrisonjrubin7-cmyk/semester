@@ -81,16 +81,16 @@ describe('the durable institution idempotency store', () => {
 
     const afterLease = new Date(now.getTime() + 60_001);
     const successorLease = await acquire(journal, scope(), 'hash-a', afterLease);
-    await journal.complete(scope(), firstLease, { status: 200, body: { winner: 'stale' } }, afterLease);
-    await journal.release(scope(), firstLease);
+    expect(await journal.complete(scope(), firstLease, { status: 200, body: { winner: 'stale' } }, afterLease)).toBe(false);
+    expect(await journal.release(scope(), firstLease)).toBe(false);
     expect(await journal.begin(scope(), 'hash-a', afterLease, 60_000, 86_400_000)).toMatchObject({ kind: 'in_progress' });
-    await journal.complete(scope(), successorLease, { status: 200, body: { winner: 'successor' } }, afterLease);
+    expect(await journal.complete(scope(), successorLease, { status: 200, body: { winner: 'successor' } }, afterLease)).toBe(true);
     expect(await journal.begin(scope(), 'hash-a', afterLease, 60_000, 86_400_000)).toEqual({
       kind: 'replay',
       response: { status: 200, body: { winner: 'successor' } },
     });
 
-    await journal.release(otherScope, otherLease);
+    expect(await journal.release(otherScope, otherLease)).toBe(true);
     await acquire(journal, otherScope, 'hash-b', afterLease);
   });
 
