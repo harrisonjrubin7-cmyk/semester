@@ -11,6 +11,8 @@ const source = await readFile(new URL('../src/lib/sync/engine/attachments-idb.ts
 const javascript = stripTypeScriptTypes(source, { mode: 'transform' });
 const policySource = await readFile(new URL('../../packages/offline-sync/src/policy.ts', import.meta.url), 'utf8');
 const policyJavascript = stripTypeScriptTypes(policySource, { mode: 'transform' });
+const vaultSource = await readFile(new URL('../../packages/offline-sync/src/vault.ts', import.meta.url), 'utf8');
+const vaultJavascript = stripTypeScriptTypes(vaultSource, { mode: 'transform' });
 const server = createServer((_req, res) => {
   res.writeHead(200, { 'content-type': 'text/html', 'cache-control': 'no-store' });
   res.end('<!doctype html><title>synthetic offline attachment adapter</title>');
@@ -23,11 +25,14 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME_BIN ?
 try {
   const page = await browser.newPage();
   await page.goto(`http://127.0.0.1:${address.port}/`);
-  const result = await page.evaluate(async ({ code, policyCode }) => {
+  const result = await page.evaluate(async ({ code, policyCode, vaultCode }) => {
     const policyUrl = URL.createObjectURL(new Blob([policyCode], { type: 'text/javascript' }));
     const moduleUrl = URL.createObjectURL(new Blob([code.replaceAll("'@semester/offline-sync'", `'${policyUrl}'`)], { type: 'text/javascript' }));
+    const vaultUrl = URL.createObjectURL(new Blob([vaultCode.replaceAll("'./policy.ts'", `'${policyUrl}'`)], { type: 'text/javascript' }));
     const adapter = await import(moduleUrl);
+    const { AttachmentCache, newKey } = await import(vaultUrl);
     URL.revokeObjectURL(moduleUrl);
+    URL.revokeObjectURL(vaultUrl);
     URL.revokeObjectURL(policyUrl);
 
     let opens = 0;
@@ -173,6 +178,32 @@ try {
     migrated.close();
     await deleteDatabase();
 
+    // Exercise the real cache/adapter retirement ordering: fail after the
+    // retired marker commits, close like a crash, then retry idempotently.
+    const interrupted = await adapter.openAttachmentPersistence({ enabled: true, identity });
+    let failDelete = true;
+    const flakyBlobs = {
+      put: (...args) => interrupted.blobs.put(...args),
+      get: (...args) => interrupted.blobs.get(...args),
+      delete: async (...args) => {
+        if (failDelete) { failDelete = false; throw new Error('synthetic interruption after retirement'); }
+        return interrupted.blobs.delete(...args);
+      },
+    };
+    const dek = await newKey(false);
+    const interruptedCache = new AttachmentCache({ dek, blobs: flakyBlobs, index: interrupted.index, now: () => 1, scope: identity });
+    const interruptedRow = await interruptedCache.put({ id: 'retry-file', tenantId: identity.tenantId, dataClass: 'course_content', ownerEntityId: 'retry-owner', mime: 'text/plain', scan: 'clean', aclEpoch: 1, pinned: false }, new TextEncoder().encode('retry bytes'));
+    let interruptedError = '';
+    try { await interruptedCache.revoke({ owners: [{ dataClass: 'course_content', id: 'retry-owner' }] }); } catch (error) { interruptedError = error?.message ?? ''; }
+    if (!interruptedError.includes('synthetic interruption') || !(await interrupted.index.load())[0]?.retired) throw new Error('real revoke did not persist retirement before interruption');
+    interrupted.close();
+    const retryPersistence = await adapter.openAttachmentPersistence({ enabled: true, identity });
+    const retryCache = new AttachmentCache({ dek, blobs: retryPersistence.blobs, index: retryPersistence.index, now: () => 2, scope: identity });
+    if (await retryCache.revoke({ owners: [{ dataClass: 'course_content', id: 'retry-owner' }] }) !== 1) throw new Error('real revoke retry did not report the retired generation');
+    if ((await retryPersistence.index.load()).length !== 0 || await retryPersistence.blobs.get(interruptedRow.blobName)) throw new Error('real revoke retry left metadata or ciphertext');
+    retryPersistence.close();
+    await deleteDatabase();
+
     // Persist the cleanup obligation before deletion, close like a crash, and
     // finish it after restart without targeting another generation.
     const crash = await adapter.openAttachmentPersistence({ enabled: true, identity });
@@ -196,7 +227,7 @@ try {
     recovery.close();
     await deleteDatabase();
     return { opens, count: ids.length, distinct: new Set(ids).size, ambiguous, duplicate, unknownClass, blocked: 'cancelled', interruptedUpgrade: 'recovered', retiredRestart: 'recovered', versionchange: 'closed' };
-  }, { code: javascript, policyCode: policyJavascript });
+  }, { code: javascript, policyCode: policyJavascript, vaultCode: vaultJavascript });
   assert.deepEqual(result, { opens: 0, count: 24, distinct: 24, ambiguous: 'ambiguous_legacy_attachment', duplicate: 'ambiguous_legacy_attachment', unknownClass: 'ambiguous_legacy_attachment', blocked: 'cancelled', interruptedUpgrade: 'recovered', retiredRestart: 'recovered', versionchange: 'closed' });
   console.log(JSON.stringify({ browser: 'chromium', indexedDB: 'native', atomicUpdates: 24, upgrades: 'abort-safe', cleanupRestart: 'pass', result: 'pass' }));
 } finally {
