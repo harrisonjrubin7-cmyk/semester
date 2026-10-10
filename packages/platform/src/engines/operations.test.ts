@@ -1,57 +1,88 @@
 import { describe, expect, it } from 'vitest';
 import { PlatformError } from '../gateway/errors.ts';
 import { TENANT_A, TENANT_B, harness } from '../testing/memory.ts';
-import { claimWorkItem, openWorkItem, reopenWorkItem, resolveWorkItem } from './operations.ts';
+import { MemoryOperationsWorkItemStore, OperationsWorkItemRuntime, type OpenWorkItemInput } from './operations.ts';
 
 const h = harness([]);
 const at = (minute: number) => new Date(`2026-10-10T02:${String(minute).padStart(2, '0')}:00Z`);
 const ctx = (tenant = TENANT_A, actor = 'operator-a') => h.context(tenant, actor);
-const opened = () => openWorkItem(ctx(), {
-  id: 'work-1',
+const input = (id = 'work-1'): OpenWorkItemInput => ({
+  id,
   kind: 'registration_readiness.referral',
   subject: { type: 'registration_readiness', id: 'evaluation-1' },
   sourceRef: 'event:registration-readiness-17',
   purpose: 'Resolve an authoritative-data mismatch before registration.',
   priority: 'high',
-}, at(10));
+});
+const setup = () => {
+  let now = at(10);
+  const runtime = new OperationsWorkItemRuntime(
+    new MemoryOperationsWorkItemStore(),
+    { now: () => now },
+    (request) => request.actor.personId.startsWith('operator-'),
+  );
+  return { runtime, setTime: (next: Date) => { now = next; } };
+};
 
 describe('operations work items', () => {
-  it('opens a tenant-scoped item with an append-only origin entry', () => {
-    const item = opened();
+  it('opens a tenant-scoped item with required provenance and an immutable origin entry', async () => {
+    const { runtime } = setup();
+    const item = await runtime.open(ctx(), input());
     expect(item).toMatchObject({ tenantId: TENANT_A, state: 'open', version: 1 });
     expect(item.history).toEqual([{ action: 'opened', actorId: 'operator-a', at: at(10).toISOString() }]);
+    expect(Object.isFrozen(item)).toBe(true);
+    expect(Object.isFrozen(item.history)).toBe(true);
   });
 
-  it('one operator claims an item at the version they read', () => {
-    const claimed = claimWorkItem(ctx(), opened(), 1, at(11));
-    expect(claimed).toMatchObject({ state: 'claimed', assignedTo: 'operator-a', version: 2 });
-    expect(() => claimWorkItem(ctx(TENANT_A, 'operator-b'), claimed, 1, at(12))).toThrowError(expect.objectContaining({ code: 'conflict' }));
+  it('uses store compare-and-swap so exactly one concurrent claimant wins', async () => {
+    const { runtime, setTime } = setup();
+    await runtime.open(ctx(), input('work-race'));
+    setTime(at(11));
+    const attempts = await Promise.allSettled([
+      runtime.claim(ctx(TENANT_A, 'operator-a'), 'work-race', 1),
+      runtime.claim(ctx(TENANT_A, 'operator-b'), 'work-race', 1),
+    ]);
+    expect(attempts.filter((attempt) => attempt.status === 'fulfilled')).toHaveLength(1);
+    expect((attempts.find((attempt) => attempt.status === 'rejected') as PromiseRejectedResult).reason).toMatchObject({ code: 'conflict' });
   });
 
-  it('hides foreign-tenant items and only the assignee may resolve', () => {
-    const claimed = claimWorkItem(ctx(), opened(), 1, at(11));
-    expect(() => claimWorkItem(ctx(TENANT_B, 'operator-b'), claimed, 2, at(12))).toThrowError(expect.objectContaining({ code: 'not_found' }));
-    expect(() => resolveWorkItem(ctx(TENANT_A, 'operator-b'), claimed, 2, { code: 'reconciled', summary: 'Matched the SIS record.', receiptRef: 'receipt-1' }, at(12)))
-      .toThrowError(expect.objectContaining({ code: 'forbidden' }));
+  it('hides foreign-tenant items and denies an unauthorized same-tenant actor', async () => {
+    const { runtime } = setup();
+    await runtime.open(ctx(), input());
+    await expect(runtime.load(ctx(TENANT_B, 'operator-b'), 'work-1')).rejects.toMatchObject({ code: 'not_found' });
+    await expect(runtime.claim(ctx(TENANT_A, 'student-a'), 'work-1', 1)).rejects.toMatchObject({ code: 'forbidden' });
+    expect((await runtime.load(ctx(), 'work-1')).state).toBe('open');
   });
 
-  it('requires a durable resolution receipt, then can reopen with a reason without erasing history', () => {
-    const claimed = claimWorkItem(ctx(), opened(), 1, at(11));
-    expect(() => resolveWorkItem(ctx(), claimed, 2, { code: 'reconciled', summary: 'Matched.', receiptRef: ' ' }, at(12)))
-      .toThrowError(expect.objectContaining({ code: 'validation_failed' }));
-    const resolved = resolveWorkItem(ctx(), claimed, 2, { code: 'reconciled', summary: 'Matched the SIS record.', receiptRef: 'receipt-1' }, at(12));
-    expect(resolved).toMatchObject({ state: 'resolved', version: 3, resolution: { receiptRef: 'receipt-1' } });
-    expect(() => reopenWorkItem(ctx(), resolved, 3, ' ', at(13))).toThrowError(expect.objectContaining({ code: 'validation_failed' }));
-    const reopened = reopenWorkItem(ctx(), resolved, 3, 'The authoritative record changed.', at(13));
+  it('only the assignee resolves with a durable receipt; reopen preserves that receipt in immutable history', async () => {
+    const { runtime, setTime } = setup();
+    await runtime.open(ctx(), input());
+    setTime(at(11));
+    await runtime.claim(ctx(), 'work-1', 1);
+    setTime(at(12));
+    await expect(runtime.resolve(ctx(TENANT_A, 'operator-b'), 'work-1', 2, { code: 'reconciled', summary: 'Matched.', receiptRef: 'receipt-1' }))
+      .rejects.toMatchObject({ code: 'forbidden' });
+    await expect(runtime.resolve(ctx(), 'work-1', 2, { code: 'reconciled', summary: 'Matched.', receiptRef: ' ' }))
+      .rejects.toMatchObject({ code: 'validation_failed' });
+    const resolved = await runtime.resolve(ctx(), 'work-1', 2, { code: 'reconciled', summary: 'Matched the SIS record.', receiptRef: 'receipt-1' });
+    setTime(at(13));
+    await expect(runtime.reopen(ctx(), 'work-1', 3, ' ')).rejects.toMatchObject({ code: 'validation_failed' });
+    const reopened = await runtime.reopen(ctx(), 'work-1', 3, 'The authoritative record changed.');
     expect(reopened).toMatchObject({ state: 'open', version: 4 });
     expect(reopened).not.toHaveProperty('assignedTo');
     expect(reopened).not.toHaveProperty('resolution');
     expect(reopened.history.map((entry) => entry.action)).toEqual(['opened', 'claimed', 'resolved', 'reopened']);
+    expect(reopened.history[2]?.resolution).toEqual({ code: 'reconciled', summary: 'Matched the SIS record.', receiptRef: 'receipt-1' });
+    expect(Object.isFrozen(reopened.history[2]?.resolution)).toBe(true);
+    expect(resolved.resolution?.receiptRef).toBe('receipt-1');
   });
 
-  it('refuses incomplete provenance instead of opening an untraceable item', () => {
-    expect(() => openWorkItem(ctx(), {
-      id: 'work-2', kind: 'support.referral', subject: { type: 'student', id: 'student-1' }, sourceRef: '', purpose: 'Help', priority: 'normal',
-    }, at(10))).toThrow(PlatformError);
+  it('refuses malformed provenance and backdated transitions as platform validation errors', async () => {
+    const { runtime, setTime } = setup();
+    await expect(runtime.open(ctx(), { ...input(), subject: undefined } as unknown as OpenWorkItemInput))
+      .rejects.toBeInstanceOf(PlatformError);
+    await runtime.open(ctx(), input());
+    setTime(at(9));
+    await expect(runtime.claim(ctx(), 'work-1', 1)).rejects.toMatchObject({ code: 'validation_failed' });
   });
 });
