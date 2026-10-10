@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { createProductionInstitutionRuntime, environmentJournalKey, exactAppOrigin } from './runtime.ts';
+import {
+  createProductionInstitutionRuntime,
+  environmentJournalKey,
+  exactAppOrigin,
+  registrationReadinessEnabled,
+} from './runtime.ts';
 
 describe('production institution runtime', () => {
   it('requires one exact secure browser origin', () => {
@@ -20,5 +25,12 @@ describe('production institution runtime', () => {
       SEMESTER_JOURNAL_KEY: 'ab'.repeat(32),
       SEMESTER_AUTH_URL: 'https://project.supabase.co',
     })).toThrow(/Production requires/);
+  });
+
+  it('keeps the registration-readiness command boundary off unless the exact server switch is on', () => {
+    expect(registrationReadinessEnabled({})).toBe(false);
+    expect(registrationReadinessEnabled({ SEMESTER_REGISTRATION_READINESS: 'true' })).toBe(false);
+    expect(registrationReadinessEnabled({ SEMESTER_REGISTRATION_READINESS: 'ON' })).toBe(false);
+    expect(registrationReadinessEnabled({ SEMESTER_REGISTRATION_READINESS: 'on' })).toBe(true);
   });
 });

@@ -88,6 +88,7 @@ All endpoints except `/health` require `Authorization: Bearer <Semester Auth acc
 | `GET /health` | Version and service name; no school records. |
 | `GET /status` | Verified institution, roles and per-service connection/permission status. |
 | `GET /records?area=...&search=...&cursor=...` | Adapter-paginated records scoped to the person. |
+| `POST /v1/registration-readiness/evaluations` | Default-off student-self command. Requires a UUID `Idempotency-Key`; derives tenant and student from the verified session, persists a pending evaluation receipt, and performs no registration write. |
 | `POST /actions/prepare` | Validate action fields and source record version; save a ten-minute, user-bound review. Does not submit anything. |
 | `POST /actions/commit` | Requires `reviewId` and `confirmed: true`; rechecks access, version and displayed terms, then atomically claims the operation. |
 | `POST /actions/reconcile` | Looks up a previous operation by review ID without performing it again. |

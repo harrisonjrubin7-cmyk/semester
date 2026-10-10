@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   UNIVERSITY_AREAS,
+  decide,
   isRefusal,
   groundsFor,
   isUniversityArea,
@@ -8,6 +9,7 @@ import {
   parseAction,
   validateActionFields,
   type ActionInput,
+  type AuthorizationRequest,
   type PolicyEnvironment,
   type UniversityArea,
   type UniversityIdentity,
@@ -27,6 +29,7 @@ import type { IntelligenceService } from './intelligence.ts';
 import type { PublicSsoConfig } from './membership.ts';
 import { MemoryRateLimiter, type RateLimiter } from './rate-limit.ts';
 import type { ReadinessResult } from './readiness.ts';
+import type { RegistrationReadinessService } from './readiness-service.ts';
 
 /**
  * The gateway: everything that is the same whichever university it is.
@@ -93,6 +96,8 @@ interface Config {
   loadSsoConfig?: () => Promise<PublicSsoConfig | null>;
   rateLimiter?: RateLimiter;
   readiness?: () => Promise<ReadinessResult>;
+  /** Default-off command boundary; production composition supplies it only when explicitly enabled. */
+  registrationReadiness?: Pick<RegistrationReadinessService, 'start'>;
   telemetry?: (event: GatewayTelemetryEvent) => void | Promise<void>;
   /**
    * Read-only mode: every write is refused with a 503 `read_only` that says
@@ -121,6 +126,7 @@ export interface GatewayTelemetryEvent {
 const TELEMETRY_ROUTES = new Set([
   '/health', '/health/live', '/health/ready', '/v1/auth/config',
   '/v1/intelligence/policy', '/v1/intelligence/respond',
+  '/v1/registration-readiness/evaluations',
   '/status', '/records', '/actions/prepare', '/actions/commit', '/actions/reconcile',
 ]);
 
@@ -194,6 +200,8 @@ const REVIEW_MINUTES = 10;
  * bound it was meant to mirror.
  */
 export const MAX_BODY = 128_000;
+const COMMAND_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const TERM_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 
 export function createGateway(config: Config) {
   /*
@@ -232,7 +240,7 @@ export function createGateway(config: Config) {
       headers.set('Access-Control-Expose-Headers', 'X-Request-Id, X-Correlation-Id');
     }
     if (request.method === 'OPTIONS') {
-      headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Correlation-Id');
+      headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, Idempotency-Key, X-Correlation-Id');
       headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       return new Response(null, { status: 204, headers });
     }
@@ -374,6 +382,75 @@ export function createGateway(config: Config) {
           ? await config.intelligence.respond(context.request!, who, value)
           : await config.intelligence.confirm(who, decodeURIComponent(intelligenceConfirm![1]), value);
         return Response.json(response.body, { status: response.status, headers });
+      }
+
+      if (request.method === 'POST' && path === '/v1/registration-readiness/evaluations') {
+        if (!config.registrationReadiness) {
+          fail(503, 'Registration readiness is not enabled for this deployment.', 'readiness_not_configured');
+        }
+        if (!request.headers.get('content-type')?.startsWith('application/json')) fail(415, 'Send JSON.');
+        const idempotencyKey = request.headers.get('idempotency-key') || '';
+        if (!COMMAND_UUID.test(idempotencyKey)) fail(400, 'Send a UUID Idempotency-Key for this request.');
+
+        const text = await request.text();
+        if (Buffer.byteLength(text) > MAX_BODY) fail(413, 'Request is too large.');
+        let value: unknown;
+        try {
+          value = JSON.parse(text);
+        } catch {
+          fail(400, 'Invalid JSON.');
+        }
+        if (!value || typeof value !== 'object' || Array.isArray(value)) fail(400, 'Send a registration-readiness request.');
+        const input = value as Record<string, unknown>;
+        if (Object.keys(input).some((key) => key !== 'termId')) {
+          fail(400, 'Only termId may be supplied; account and institution come from your verified session.');
+        }
+        if (typeof input.termId !== 'string' || !TERM_ID.test(input.termId)) fail(400, 'Choose a valid term.');
+
+        const authorization: AuthorizationRequest = {
+          actor: { id: who.userId, type: 'user', authenticatedAt: new Date(now).toISOString() },
+          tenant: { id: who.institutionId, environment: config.environment ?? 'production', verifiedBy: 'membership' },
+          action: 'registration.readiness.request',
+          resource: {
+            type: 'registration_readiness_evaluation',
+            id: idempotencyKey,
+            ownerId: who.userId,
+            classification: 'education_record',
+            attributes: { tenantId: who.institutionId, termId: input.termId },
+          },
+          context: {
+            membershipIds: [`${who.institutionId}:${who.userId}`],
+            roleGrants: who.roles.map((role) => ({ role, scopeKind: 'tenant', scopeId: who.institutionId })),
+            capabilities: who.roles.includes('student') ? ['registration.readiness.request'] : [],
+            consentGrants: [],
+            featureFlags: [],
+            policyVersions: { registration: '1' },
+            idempotencyKey,
+            correlationId,
+          },
+        };
+        const decision = decide(authorization, now);
+        if (!decision.allow) fail(403, decision.userMessage, decision.reasonCode, decision.userAction);
+        if (decision.obligations.length !== 1 || decision.obligations[0]?.type !== 'audit'
+          || decision.obligations[0].eventType !== 'registration.readiness_requested') {
+          fail(503, 'Registration readiness authorization could not be enforced.', 'authorization_obligation_unmet');
+        }
+
+        const result = await config.registrationReadiness.start({
+          evaluationId: idempotencyKey,
+          tenantId: who.institutionId,
+          subjectId: who.userId,
+          requestedBy: who.userId,
+          termId: input.termId,
+          correlationId,
+          idempotencyKey,
+          at: new Date(now).toISOString(),
+        });
+        return Response.json({
+          evaluationId: result.record.id,
+          receipt: result.receipt,
+          replayed: result.replayed,
+        }, { status: 202, headers });
       }
 
       /** The adapter for an area, if it exists and currently permits this. */

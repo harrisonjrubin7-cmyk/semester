@@ -8,8 +8,13 @@ import { PostgresIntelligenceActionStore } from './intelligence-action-store.ts'
 import { createInstitutionIntelligenceRuntime } from './intelligence-runtime.ts';
 import { institutionReadiness } from './readiness.ts';
 import { createProductionScim, withScim } from './scim-route.ts';
+import { PostgresRegistrationReadinessRepository } from './readiness-repository.ts';
+import { RegistrationReadinessService } from './readiness-service.ts';
 
 export type InstitutionEnvironment = Record<string, string | undefined>;
+
+export const registrationReadinessEnabled = (env: InstitutionEnvironment): boolean =>
+  env.SEMESTER_REGISTRATION_READINESS === 'on';
 
 export function exactAppOrigin(env: InstitutionEnvironment): string {
   const origin = env.SEMESTER_APP_ORIGIN || '';
@@ -45,6 +50,9 @@ export function createProductionInstitutionRuntime(env: InstitutionEnvironment) 
   const journal = new PostgresActionJournal({ url: authUrl, serviceKey, encryptionKey: key });
   const rateLimiter = new PostgresRateLimiter({ url: authUrl, serviceKey });
   const actionStore = new PostgresIntelligenceActionStore({ url: authUrl, serviceKey, encryptionKey: key });
+  const registrationReadiness = registrationReadinessEnabled(env)
+    ? new RegistrationReadinessService(new PostgresRegistrationReadinessRepository({ url: authUrl, serviceKey }))
+    : undefined;
   const membershipResolver = createMembershipResolver(
     supabaseMembershipDirectory(authUrl, serviceKey),
     async (event) => console.info(JSON.stringify({ event: 'institution.authorization', ...event })),
@@ -81,6 +89,7 @@ export function createProductionInstitutionRuntime(env: InstitutionEnvironment) 
     journal,
     rateLimiter,
     intelligence,
+    ...(registrationReadiness ? { registrationReadiness } : {}),
     readiness: () => institutionReadiness({
       journal,
       monitoringConfigured: env.SEMESTER_MONITORING_READY === '1',

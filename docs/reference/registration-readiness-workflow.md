@@ -1,14 +1,16 @@
 # Registration-readiness evaluation workflow
 
-> **Type:** reference · **Audience:** implementers · **Owner:** `data` · **Truth:** held · **Reviewed:** 2026-10-09 · **Held by:** `packages/institution/src/readiness-workflow.test.ts`
+> **Type:** reference · **Audience:** implementers · **Owner:** `data` · **Truth:** held · **Reviewed:** 2026-10-10 · **Held by:** `packages/institution/src/readiness-workflow.test.ts`
 
-Status: repository contract, service-only Postgres persistence adapter, and server orchestration service. No HTTP route or worker calls the service yet, and no live SIS connection or official registration write is activated by these modules.
+Status: repository contract, service-only Postgres persistence adapter, server orchestration service, and a default-off student request route. No evaluator worker or source-aware projection route exists yet, and no live SIS connection or official registration write is activated by these modules.
 
 `packages/institution/src/readiness-workflow.ts` defines the aggregate rules that the durable readiness repository preserves. `app/server/institution/readiness-service.ts` loads the tenant-bound aggregate and applies those rules, `app/server/institution/readiness-repository.ts` is the service-only persistence adapter, and `supabase/migrations/20261009160000_registration_readiness_store.sql` is its transactional store. They sit between the source-aware projection and future HTTP or worker adoption so callers and SQL cannot each invent different retry behavior.
 
 ## Server orchestration boundary
 
-The service accepts tenant, subject, requester, correlation, and idempotency values explicitly. A future route must derive them from verified server context; the service does not accept a browser session or authorize a person. A future evaluator worker may use the same boundary with its own verified service identity.
+The service accepts tenant, subject, requester, correlation, and idempotency values explicitly. `POST /v1/registration-readiness/evaluations` derives tenant, subject, and requester from the verified student session; the request body may contain only `termId`. A UUID `Idempotency-Key` is also the evaluation id, so an HTTP retry addresses the same aggregate instead of minting a duplicate. A future evaluator worker may use the same service boundary with its own verified service identity.
+
+The route is absent from production composition unless `SEMESTER_REGISTRATION_READINESS=on` exactly. It authorizes `registration.readiness.request`, permits only a student requesting their own evaluation, and returns the receipt plus evaluation id—not the internal command ledger or source records. Read-only mode refuses it with the gateway's shared `503 read_only` response before parsing the command.
 
 For transitions, the service loads by tenant plus evaluation id before it applies the pure state machine. A missing record and a record owned by another tenant therefore have the same result. Invalid or stale transitions fail before `save`; accepted transitions are still protected by the database compare-and-swap in case two callers raced after the load.
 
@@ -55,4 +57,4 @@ The store now:
 5. keeps reconciliation work service-only; a later query surface must authorize an assigned advisor or registrar relationship before exposing it;
 6. documents forward rollback order and has database-negative tests for cross-tenant reads and writes.
 
-The adapter is repository implementation evidence only. It has not been configured in a deployed runtime, called by an HTTP route or worker, exercised against a live institution, or used for an official registration write. Those remain separate gates.
+The route and adapter are repository implementation evidence only. They have not been configured in a deployed runtime, called by a production client or worker, exercised against a live institution, or used for an official registration write. Those remain separate gates.

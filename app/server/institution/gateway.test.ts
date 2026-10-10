@@ -18,6 +18,8 @@ import { ActionJournal, type ActionJournalStore, type SavedReview } from './jour
 import type { RateLimiter } from './rate-limit.ts';
 import type { GatewayTelemetryEvent } from './gateway.ts';
 import type { ReadinessResult } from './readiness.ts';
+import { startRegistrationReadinessEvaluation } from '../../../packages/institution/src/readiness-workflow.ts';
+import type { StartRegistrationReadinessCommand } from './readiness-service.ts';
 
 /**
  * The refusals, exercised against a real journal on a real file.
@@ -97,12 +99,14 @@ function fixture({
   readiness,
   telemetry,
   readOnly,
+  readinessWorkflow,
 }: {
   asynchronous?: boolean;
   rateLimiter?: RateLimiter;
   readiness?: () => Promise<ReadinessResult>;
   telemetry?: (event: GatewayTelemetryEvent) => void | Promise<void>;
   readOnly?: () => boolean;
+  readinessWorkflow?: { start(command: StartRegistrationReadinessCommand): Promise<ReturnType<typeof startRegistrationReadinessEvaluation>> } | null;
 } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'semester-gateway-'));
   dirs.push(dir);
@@ -121,6 +125,22 @@ function fixture({
   let executedIdempotencyKey: string | undefined;
   let mode = 'ok';
   let reviewTitle = 'Submit coursework';
+  const readinessCommands: StartRegistrationReadinessCommand[] = [];
+  const workflow = readinessWorkflow === null ? undefined : readinessWorkflow ?? {
+    start: async (command: StartRegistrationReadinessCommand) => {
+      readinessCommands.push(command);
+      return startRegistrationReadinessEvaluation({
+        id: command.evaluationId,
+        tenantId: command.tenantId,
+        subjectId: command.subjectId,
+        termId: command.termId,
+        requestedBy: command.requestedBy,
+        correlationId: command.correlationId,
+        idempotencyKey: command.idempotencyKey,
+        at: command.at,
+      });
+    },
+  };
 
   const record: UniversityRecord = {
     id: 'paper',
@@ -202,6 +222,7 @@ function fixture({
     readiness,
     telemetry,
     readOnly,
+    registrationReadiness: workflow,
   });
 
   const input: ActionInput = {
@@ -251,6 +272,7 @@ function fixture({
       membershipRoles = roles;
     },
     intelligenceConfirmedRoles: () => intelligenceConfirmedRoles,
+    readinessCommands: () => structuredClone(readinessCommands),
     version: (v: string) => {
       version = v;
     },
@@ -262,6 +284,77 @@ function fixture({
     },
   };
 }
+
+describe('registration-readiness command boundary', () => {
+  const idempotencyKey = '018f0d36-7b9a-7cc3-bdc2-7c6b7da34e21';
+
+  it('derives tenant, subject and requester from the verified student and returns only the receipt boundary', async () => {
+    const events: GatewayTelemetryEvent[] = [];
+    const f = fixture({ telemetry: (event) => { events.push(event); } });
+    const response = await f.request(
+      '/v1/registration-readiness/evaluations',
+      { termId: '2027-spring' },
+      { 'idempotency-key': idempotencyKey, 'x-correlation-id': 'registration-request-0001' },
+    );
+
+    expect(response.status).toBe(202);
+    expect(await response.json()).toMatchObject({
+      evaluationId: idempotencyKey,
+      replayed: false,
+      receipt: { id: idempotencyKey, state: 'requested', status: 'pending', recordVersion: 1 },
+    });
+    expect(f.readinessCommands()).toEqual([expect.objectContaining({
+      evaluationId: idempotencyKey,
+      tenantId: 'school-a',
+      subjectId: 'student-a',
+      requestedBy: 'student-a',
+      termId: '2027-spring',
+      correlationId: 'registration-request-0001',
+      idempotencyKey,
+    })]);
+    expect(events[0]).toMatchObject({ route: '/v1/registration-readiness/evaluations', status: 202 });
+  });
+
+  it('rejects client identity fields and malformed idempotency before calling the service', async () => {
+    const f = fixture();
+    const identity = await f.request(
+      '/v1/registration-readiness/evaluations',
+      { termId: '2027-spring', tenantId: 'school-b', subjectId: 'student-b' },
+      { 'idempotency-key': idempotencyKey },
+    );
+    expect(identity.status).toBe(400);
+    expect(f.readinessCommands()).toEqual([]);
+
+    const malformed = await f.request(
+      '/v1/registration-readiness/evaluations',
+      { termId: '2027-spring' },
+      { 'idempotency-key': 'not-a-uuid' },
+    );
+    expect(malformed.status).toBe(400);
+    expect(f.readinessCommands()).toEqual([]);
+  });
+
+  it('refuses non-students and stays unavailable when the default-off runtime is not configured', async () => {
+    const f = fixture();
+    f.identity({ userId: 'advisor-a', institutionId: 'school-a', roles: ['advisor'] });
+    const forbidden = await f.request(
+      '/v1/registration-readiness/evaluations',
+      { termId: '2027-spring' },
+      { 'idempotency-key': idempotencyKey },
+    );
+    expect(forbidden.status).toBe(403);
+    expect(f.readinessCommands()).toEqual([]);
+
+    const off = fixture({ readinessWorkflow: null });
+    const unavailable = await off.request(
+      '/v1/registration-readiness/evaluations',
+      { termId: '2027-spring' },
+      { 'idempotency-key': idempotencyKey },
+    );
+    expect(unavailable.status).toBe(503);
+    expect((await unavailable.json()).error.code).toBe('readiness_not_configured');
+  });
+});
 
 describe('university gateway boundaries', () => {
   it('publishes only the approved sign-in label and discovery domain without requiring a session', async () => {

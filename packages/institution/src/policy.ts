@@ -107,6 +107,11 @@ export const POLICY_ACTIONS = {
     auditEvent: 'registration.readiness_viewed',
     classificationCeiling: 'education_record',
   },
+  'registration.readiness.request': {
+    description: 'A student requests a tenant-bound evaluation of their own registration readiness.',
+    auditEvent: 'registration.readiness_requested',
+    classificationCeiling: 'education_record',
+  },
   'registration.override.request': {
     description: 'A student asks the registrar\'s office to review an exception to a registration condition.',
     auditEvent: 'registration.override_requested',
@@ -270,6 +275,25 @@ const RULES: Record<PolicyAction, Rule> = {
       { type: 'limit_fields', allowlist: READINESS_FIELDS[relationship] },
       { type: 'cite_sources' },
     );
+  },
+
+  /*
+   * A readiness request starts an evaluation; it does not register, override,
+   * or change an institutional record. The authenticated student may request
+   * only their own record, in their verified tenant, for a named term. The
+   * idempotency key is mandatory because the durable command boundary uses it
+   * as the evaluation id, making a retried HTTP request converge on one row.
+   */
+  'registration.readiness.request': ({ request, has }) => {
+    const { actor, tenant, resource, context } = request;
+    const a = resource.attributes ?? {};
+    if (actor.type !== 'user') return deny('actor_not_person', 'A readiness evaluation is requested by the student, not by a service.');
+    if (!has('registration.readiness.request')) return deny('capability_missing', 'Your role cannot request a registration-readiness evaluation.');
+    if (a.tenantId !== tenant.id) return deny('cross_tenant', 'This record belongs to a different institution.');
+    if (!resource.ownerId || resource.ownerId !== actor.id) return deny('not_owner', 'Only the student can request their own registration-readiness evaluation.');
+    if (!context.idempotencyKey) return deny('idempotency_missing', 'A request needs a command id so a retry cannot create another evaluation.');
+    if (!nonEmptyString(a.termId)) return deny('request_incomplete', 'Name the term to evaluate.');
+    return allow({ type: 'audit', eventType: POLICY_ACTIONS['registration.readiness.request'].auditEvent });
   },
 
   /*

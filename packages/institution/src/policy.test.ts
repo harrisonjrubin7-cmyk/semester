@@ -471,7 +471,7 @@ describe('tasks and calendar', () => {
 
 // ── Registration readiness and overrides ──────────────────────────────────
 
-const reg = (action: 'registration.readiness.view' | 'registration.override.request' | 'registration.override.approve') => {
+const reg = (action: 'registration.readiness.view' | 'registration.readiness.request' | 'registration.override.request' | 'registration.override.approve') => {
   const base: AuthorizationRequest = {
     actor: { id: 'student-a', type: 'user', authenticatedAt: later(-5), mfaLevel: 'standard' },
     tenant: { id: 'school-a', environment: 'production', verifiedBy: 'membership' },
@@ -482,6 +482,11 @@ const reg = (action: 'registration.readiness.view' | 'registration.override.requ
       policyVersions: { registration: '1' }, correlationId,
     },
   };
+  if (action === 'registration.readiness.request') {
+    base.resource.id = '018f0d36-7b9a-7cc3-bdc2-7c6b7da34e21';
+    base.resource.attributes = { tenantId: 'school-a', termId: '2027-spring' };
+    base.context.idempotencyKey = '018f0d36-7b9a-7cc3-bdc2-7c6b7da34e21';
+  }
   if (action === 'registration.override.request') {
     base.resource.attributes = { tenantId: 'school-a', courseId: 'cs201', termId: '2026-fall' };
     base.context.purpose = 'the prerequisite was completed at another school';
@@ -565,6 +570,28 @@ describe('registration.readiness.view', () => {
   });
 });
 
+describe('registration.readiness.request', () => {
+  it('allows a student to request their own evaluation with an atomic audit obligation', () => {
+    const d = decide(reg('registration.readiness.request'), NOW);
+    expect(d.allow && d.obligations).toEqual([{ type: 'audit', eventType: 'registration.readiness_requested' }]);
+  });
+
+  it('refuses a foreign tenant, another subject, a missing term, or a request without an idempotency key', () => {
+    const r = reg('registration.readiness.request');
+    refused(withAttrs(r, { tenantId: 'school-b' }), 'cross_tenant');
+    refused({ ...r, resource: { ...r.resource, ownerId: 'student-b' } }, 'not_owner');
+    refused(withAttrs(r, { termId: '' }), 'request_incomplete');
+    refused({ ...r, context: { ...r.context, idempotencyKey: undefined } }, 'idempotency_missing');
+  });
+
+  it('does not let an advisor, registrar, service, or role without the capability request for the student', () => {
+    const r = reg('registration.readiness.request');
+    refused({ ...r, actor: { id: 'advisor-1', type: 'user', authenticatedAt: later(-1) } }, 'not_owner');
+    refused({ ...r, actor: { ...r.actor, type: 'service' } }, 'actor_not_person');
+    refused({ ...r, context: { ...r.context, capabilities: [] } }, 'capability_missing');
+  });
+});
+
 describe('registration.override.request', () => {
   it('allows the student to ask, with an audit and a human review: the control', () => {
     const d = decide(reg('registration.override.request'), NOW);
@@ -644,7 +671,7 @@ describe('registration.override.approve', () => {
 describe('the three registration actions in the vocabulary', () => {
   it('each names an audit event the event vocabulary knows, and sits at the education-record ceiling', async () => {
     const { isEventType } = await import('./events.ts');
-    for (const action of ['registration.readiness.view', 'registration.override.request', 'registration.override.approve'] as const) {
+    for (const action of ['registration.readiness.view', 'registration.readiness.request', 'registration.override.request', 'registration.override.approve'] as const) {
       expect(isEventType(POLICY_ACTIONS[action].auditEvent), action).toBe(true);
       expect(POLICY_ACTIONS[action].classificationCeiling).toBe('education_record');
     }

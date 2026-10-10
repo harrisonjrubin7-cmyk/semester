@@ -231,6 +231,18 @@ account safety state and image posts:
 **Rollback.** Unset the variable, or set it to `off`. Nothing persists
 because a flag was on: the domain functions refuse at call time.
 
+### Registration-readiness request boundary
+
+| Side | Switch | On | What it does |
+| --- | --- | --- | --- |
+| Institution gateway | `SEMESTER_REGISTRATION_READINESS` | exactly `on` | Composes the service-only repository and enables `POST /v1/registration-readiness/evaluations`. Any other value leaves the route unavailable with `503 readiness_not_configured`. |
+
+- **Owner:** `product-registration`.
+- **Type:** server environment, default off. This enables an evaluation request and receipt only; it does not enable SIS reads, registration writes, a tenant, or a pilot cohort.
+- **Rollback:** unset the variable or set it to any value other than `on`, then redeploy the gateway. Existing evaluations and audit/outbox evidence remain; new requests are refused.
+- **Dependencies before activation:** approved tenant/data scope, the source-aware evaluator and projection route, owned staff/operations work, support coverage, target-environment evidence, and a separately approved cohort activation.
+- **Tests:** `app/server/institution/runtime.test.ts`, `app/server/institution/gateway.test.ts`, and `packages/institution/src/policy.test.ts`.
+
 ### Read-only mode (`app/src/lib/readonly.ts`, `app/server/institution/start.ts`)
 
 The one switch that stops the ordinary sync, for the window `ROLLBACK.md` and
