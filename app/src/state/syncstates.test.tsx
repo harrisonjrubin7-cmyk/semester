@@ -146,6 +146,34 @@ afterEach(async () => {
 });
 
 describe('an edit goes up on the database path', () => {
+  it('makes an automatic pull durable before recording the account copy as seen', async () => {
+    const remote = {
+      id: 'remote-task', title: 'From the account', date: null, time: '', note: '',
+      courseId: null, done: true, created: 2,
+    };
+    pull.mockResolvedValue({
+      state: { tasks: [remote] },
+      courses: [],
+      updated: 2,
+      seen: { state: 'account-v2', courses: {} },
+    });
+    let seenWhenFlushed = '';
+    flushNow.mockImplementationOnce(async () => {
+      seenWhenFlushed = JSON.parse(localStorage.getItem(SEEN_KEY) || '{}').state ?? '';
+    });
+
+    await mount();
+    await wait(3_000);
+
+    const written = persist.mock.calls.find(([value]) => (
+      value as { tasks?: { id: string }[] }
+    ).tasks?.some((task) => task.id === remote.id))?.[0] as { tasks?: { id: string }[] } | undefined;
+    expect(written?.tasks?.map((task) => task.id)).toContain(remote.id);
+    expect(flushNow).toHaveBeenCalled();
+    expect(seenWhenFlushed).toBe('s1');
+    expect(store.asking).toBeNull();
+  });
+
   it('makes an accepted account copy durable before recording it as seen', async () => {
     const local = {
       id: 'local-task', title: 'Already here', date: null, time: '', note: '',

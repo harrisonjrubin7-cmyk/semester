@@ -1018,6 +1018,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          * `removedThere`.
          */
         const gone = removedThere(here, theirs as Record<string, unknown>, agreedOn);
+        /*
+         * An ordinary pull takes a newer account copy without showing the
+         * first-sign-in question. That path needs the same ordering as an
+         * explicit adoption: the merged records must be on disk before
+         * `seen` says this version has already been taken.
+         * Otherwise a route change or reload between the dispatch and the
+         * persistence effect strands the device with the new stamp and none
+         * of the account rows.
+         */
+        if (dbAvailable()) {
+          let durable = latest.current;
+          if (Object.keys(gone).length > 0) durable = reducer(durable, { type: 'dropTicks', removals: gone });
+          if (Object.keys(deletions.dropHere).length > 0) {
+            durable = reducer(durable, { type: 'dropRecords', removals: deletions.dropHere });
+          }
+          durable = reducer(durable, { type: 'hydrate', persisted: taken });
+          persistToDb(pickPersisted(durable), tellOtherTabs);
+          await flushNow();
+        }
         if (Object.keys(gone).length > 0) dispatch({ type: 'dropTicks', removals: gone });
         if (Object.keys(deletions.dropHere).length > 0) dispatch({ type: 'dropRecords', removals: deletions.dropHere });
         dispatch({ type: 'hydrate', persisted: taken });
