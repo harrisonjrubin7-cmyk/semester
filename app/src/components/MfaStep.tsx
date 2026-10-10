@@ -51,7 +51,7 @@ export function MfaStep({
           setFactorId(factors[0].id);
           setFactorType(factors[0].type);
           if (factors[0].type === 'phone') {
-            const started = await challengeMfa(factors[0].id);
+            const started = await challengeMfa(factors[0].id, 'phone');
             if (!live) return;
             setChallengeId(started);
           }
@@ -102,7 +102,7 @@ export function MfaStep({
     setFactorId(factor.id);
     setFactorType(factor.type);
     try {
-      if (factor.type === 'phone') setChallengeId(await challengeMfa(factor.id));
+      if (factor.type === 'phone') setChallengeId(await challengeMfa(factor.id, 'phone'));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not start the second factor.');
     } finally {
@@ -116,7 +116,7 @@ export function MfaStep({
     setError('');
     setCode('');
     try {
-      setChallengeId(await challengeMfa(factorId));
+      setChallengeId(await challengeMfa(factorId, 'phone'));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not send a new verification code.');
     } finally {
@@ -141,7 +141,7 @@ export function MfaStep({
     setBusy(true);
     setError('');
     try {
-      const activeChallenge = challengeId || await challengeMfa(factorId);
+      const activeChallenge = challengeId || await challengeMfa(factorId, factorType);
       await verifyMfa(factorId, activeChallenge, code);
       onVerified();
     } catch (e) {

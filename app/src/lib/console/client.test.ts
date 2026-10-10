@@ -636,6 +636,9 @@ describe('identity', () => {
     expect(auth.mfa.enroll).toHaveBeenCalledWith({ factorType: 'totp', friendlyName: 'Operations console' });
     auth.mfa.challenge.mockResolvedValue({ data: { id: 'ch-1' }, error: null });
     expect(await challengeMfa('f-2')).toBe('ch-1');
+    expect(auth.mfa.challenge).toHaveBeenLastCalledWith({ factorId: 'f-2' });
+    expect(await challengeMfa('p-1', 'phone')).toBe('ch-1');
+    expect(auth.mfa.challenge).toHaveBeenLastCalledWith({ factorId: 'p-1', channel: 'sms' });
     auth.mfa.verify.mockResolvedValue({ data: {}, error: null });
     await verifyMfa('f-2', 'ch-1', '123 456');
     expect(auth.mfa.verify).toHaveBeenCalledWith({ factorId: 'f-2', challengeId: 'ch-1', code: '123456' });

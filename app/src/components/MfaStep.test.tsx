@@ -88,7 +88,7 @@ describe('MfaStep', () => {
     typeCode('123456');
     expect(button('Enrol and verify').disabled).toBe(false);
     await submit();
-    expect(mock.challenge).toHaveBeenCalledWith('f-new');
+    expect(mock.challenge).toHaveBeenCalledWith('f-new', 'totp');
     expect(mock.verify).toHaveBeenCalledWith('f-new', 'ch-1', '123456');
     expect(onVerified).toHaveBeenCalledTimes(1);
   });
@@ -115,7 +115,7 @@ describe('MfaStep', () => {
     expect(button('Verify')).toBeTruthy();
     typeCode('654321');
     await submit();
-    expect(mock.challenge).toHaveBeenCalledWith('f-old');
+    expect(mock.challenge).toHaveBeenCalledWith('f-old', 'totp');
     expect(mock.verify).toHaveBeenCalledWith('f-old', 'ch-1', '654321');
     expect(onVerified).toHaveBeenCalledTimes(1);
   });
@@ -153,7 +153,7 @@ describe('MfaStep', () => {
     mock.factors.mockResolvedValue([{ id: 'phone-1', name: 'Mobile', type: 'phone' }]);
     await render();
     expect(mock.enroll).not.toHaveBeenCalled();
-    expect(mock.challenge).toHaveBeenCalledWith('phone-1');
+    expect(mock.challenge).toHaveBeenCalledWith('phone-1', 'phone');
     expect(host.textContent).toContain('verification code sent to your phone');
     expect((host.querySelector('input') as HTMLInputElement).closest('label')?.textContent).toContain('Code sent to your phone');
     typeCode('246810');
@@ -175,7 +175,7 @@ describe('MfaStep', () => {
       Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set?.call(select, 'phone-2');
       select.dispatchEvent(new Event('change', { bubbles: true }));
     });
-    expect(mock.challenge).toHaveBeenCalledWith('phone-2');
+    expect(mock.challenge).toHaveBeenCalledWith('phone-2', 'phone');
     expect(host.textContent).toContain('verification code sent to your phone');
     typeCode('135790');
     await submit();

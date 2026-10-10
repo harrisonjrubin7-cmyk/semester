@@ -1103,9 +1103,10 @@ export async function enrollTotp(friendlyName = 'Operations console'): Promise<T
   return { factorId: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret, uri: data.totp.uri };
 }
 
-export async function challengeMfa(factorId: string): Promise<string> {
+export async function challengeMfa(factorId: string, factorType: MfaFactor['type'] = 'totp'): Promise<string> {
   const db = await cloud();
-  const { data, error } = await db.auth.mfa.challenge({ factorId });
+  const params = factorType === 'phone' ? { factorId, channel: 'sms' as const } : { factorId };
+  const { data, error } = await db.auth.mfa.challenge(params);
   if (error || !data) throw new Error(message(error, 'Could not start the challenge.'));
   return data.id;
 }
