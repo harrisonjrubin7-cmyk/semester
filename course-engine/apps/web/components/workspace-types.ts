@@ -55,7 +55,7 @@ export type SourceChunk = {
   cell_range?: string | null;
   start_seconds?: number | null;
   end_seconds?: number | null;
-  confidence: number;
+  confidence: number | null;
 };
 
 export type SourceView = {

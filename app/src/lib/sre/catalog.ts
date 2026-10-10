@@ -159,6 +159,7 @@ const ROWS: Row[] = [
 
   // ── Delivery pipelines and monitors ───────────────────────────────────────
   ['pipeline:ci', 'CI (the merge gate)', 'pipeline', 'C2', 'platform', '', 'github-pages', 'Nothing ships; production keeps running what it has.', null, 'RB-08', '.github/workflows/ci.yml'],
+  ['pipeline:course-engine', 'Course Engine source gate', 'pipeline', 'C3', 'platform', '', '', 'Course Engine source changes cannot merge; no deployed service is affected.', null, 'RB-08', '.github/workflows/course-engine.yml'],
   ['pipeline:pages', 'Deploy to Pages', 'pipeline', 'C2', 'platform', '', 'github-pages', 'A fix cannot ship by the normal route.', null, 'RB-08', '.github/workflows/pages.yml'],
   ['pipeline:functions', 'Deploy Edge Functions', 'pipeline', 'C2', 'platform', '', 'supabase-edge-runtime', 'A function fix cannot ship by the normal route.', null, 'RB-08', '.github/workflows/functions.yml'],
   ['pipeline:schema-deploy', 'Schema deploy (Supabase Branching, db push)', 'pipeline', 'C1', 'data', '', 'supabase-db', 'Production silently stops receiving migrations; the repository stays green. This failed unseen for three days on 18 September.', null, 'RB-09', 'supabase/DEPLOY.md'],

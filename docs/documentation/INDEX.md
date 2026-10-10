@@ -6,7 +6,7 @@ Every page the documentation system governs, by audience and by kind. The curate
 
 <!-- Rendered from the cards of every governed page by app/src/lib/docs/docindex.test.ts. Edit a page’s card, then run `REGISTERS=write npx vitest run src/lib/docs/docindex.test.ts` from app/. -->
 
-**110 governed pages:** 2 generated from code, 104 held by a test, 4 reviewed by a person only. The last group is the part a reader leans on least, and the part [`docs:stale`](OWNERSHIP-AND-REVIEW.md#cadence) watches.
+**111 governed pages:** 2 generated from code, 105 held by a test, 4 reviewed by a person only. The last group is the part a reader leans on least, and the part [`docs:stale`](OWNERSHIP-AND-REVIEW.md#cadence) watches.
 
 Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed by this system and are not listed here; [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md) says which of them is authoritative for each company control.
 
@@ -169,6 +169,7 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [Role and screen gap analysis](../audit/ROLE_AND_SCREEN_GAP_ANALYSIS.md) | explanation | reviewed | `product` | 2026-10-08 |
 | [System and workflow gap analysis](../audit/SYSTEM_AND_WORKFLOW_GAP_ANALYSIS.md) | explanation | reviewed | `engineering` | 2026-10-08 |
 | [Coding standards](../developers/CODING-STANDARDS.md) | reference | held | `engineering` | 2026-10-04 |
+| [Course Engine CI](../developers/course-engine-ci.md) | reference | held | `engineering` | 2026-10-10 |
 | [How to add a decision record](../developers/HOW-TO-ADD-A-DECISION-RECORD.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add a dependency](../developers/HOW-TO-ADD-A-DEPENDENCY.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add a route to the institution gateway](../developers/HOW-TO-ADD-A-GATEWAY-ROUTE.md) | how-to | held | `engineering` | 2026-10-04 |
@@ -292,6 +293,7 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | Page | Type | Held how | Owner | Reviewed |
 | --- | --- | --- | --- | --- |
 | [Coding standards](../developers/CODING-STANDARDS.md) | reference | held | `engineering` | 2026-10-04 |
+| [Course Engine CI](../developers/course-engine-ci.md) | reference | held | `engineering` | 2026-10-10 |
 | [Contributor documentation](../developers/README.md) | reference | held | `engineering` | 2026-10-04 |
 | [Repository map](../developers/REPO-MAP.md) | reference | held | `engineering` | 2026-10-04 |
 | [Ownership, review and versioning](OWNERSHIP-AND-REVIEW.md) | reference | held | `engineering` | 2026-10-04 |

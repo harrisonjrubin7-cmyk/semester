@@ -96,7 +96,7 @@ class SourceChunk(Base, TimestampMixin):
     start_seconds: Mapped[float | None] = mapped_column(Float)
     end_seconds: Mapped[float | None] = mapped_column(Float)
     bounding_box: Mapped[dict[str, Any] | None] = mapped_column(JSON)
-    confidence: Mapped[float] = mapped_column(Float, default=1.0)
+    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
 
@@ -107,7 +107,7 @@ class Citation(Base, TimestampMixin):
     quote: Mapped[str] = mapped_column(Text)
     quoted_start: Mapped[int | None] = mapped_column(Integer)
     quoted_end: Mapped[int | None] = mapped_column(Integer)
-    status: Mapped[ReviewStatus] = mapped_column(Enum(ReviewStatus), default=ReviewStatus.confirmed)
+    status: Mapped[ReviewStatus] = mapped_column(Enum(ReviewStatus), default=ReviewStatus.needs_review)
 
 
 class CourseUnit(Base, TimestampMixin):
