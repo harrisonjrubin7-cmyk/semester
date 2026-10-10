@@ -103,9 +103,10 @@ describe('README', () => {
     expect(listed.sort()).toEqual([...dirs].sort());
   });
 
-  it('says plainly how little has adopted it: the gateway\'s envelope and context, and no route uses commands, policy or engines', () => {
-    expect(flat(readme)).toMatch(/adopted by one surface so far/i);
-    expect(flat(readme)).toContain('no route uses commands, policy, idempotency or any engine yet');
+  it('says plainly what has adopted it and that no route uses commands, policy or engines', () => {
+    expect(flat(readme)).toMatch(/partially adopted by the institution surface/i);
+    expect(flat(readme)).toContain("browser's university client uses the shared SDK");
+    expect(flat(readme)).toMatch(/no route uses commands, policy or any engine yet/i);
   });
 
   it('says how it relates to the constitution and the target-architecture pack, and both exist', () => {
@@ -202,7 +203,10 @@ describe('TRACEABILITY', () => {
   const page = read('docs/platform/TRACEABILITY.md');
   it('maps all ten mission items, and every test it names exists', () => {
     for (let i = 1; i <= 10; i++) expect(page).toMatch(new RegExp(`^\\| ${i} \\|`, 'm'));
-    for (const m of page.matchAll(/`([\w/.-]+\.test\.ts)`/g)) expect(existsSync(join(SRC, m[1])), m[1]).toBe(true);
+    for (const m of page.matchAll(/`([\w/.-]+\.test\.ts)`/g)) {
+      const path = /^(app|packages)\//.test(m[1]) ? at(m[1]) : join(SRC, m[1]);
+      expect(existsSync(path), m[1]).toBe(true);
+    }
   });
   it('lists the preamble\'s required outputs', () => {
     for (const h of ['Assumptions', 'Risks and unresolved questions', 'Files changed or proposed', 'Tests added', 'Accessibility implications', 'Security and privacy implications', 'Operational and runbook implications', 'Traceability matrix updates']) {

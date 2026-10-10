@@ -42,6 +42,8 @@ cd semester
 
 The repository's root `package.json` is the workspace root for `app` and `packages/*` and holds the one lockfile. Install at the root. Product commands still run from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says; the root exposes only the platform-control registry commands (`registry:validate`, `registry:build`, `release:check`, `release:report`, and `platform-control:test`). At the root, plain `npm test` still fails with "Missing script" instead of running the product suite.
 
+When the browser app consumes a workspace package, register that package consistently in `app/tsconfig.app.json`, `app/vite.config.ts`, and `app/src/lib/importgraph.ts`. Package build scripts may use Node built-ins; code under a package's `src/` remains inside the browser-safe leaf boundary unless its architecture explicitly says otherwise.
+
 ## 3. Check main first
 
 Before you read or write any code, do what [`CLAUDE.md`](../../CLAUDE.md) asks. Several sessions work in this repository at once, and the same fix has landed twice.

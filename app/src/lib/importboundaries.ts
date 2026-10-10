@@ -127,6 +127,16 @@ export function checkBoundaries(tree: Tree, options: Options = {}): Violation[] 
         }
       }
 
+      if (zone === 'package-tool') {
+        if (target !== null && target !== 'package-tool' && !(test && target === 'packages')) {
+          out.push({ rule: 'package-tools-are-isolated', file, spec, fix: 'Repository tooling may import only its own modules and Node built-ins. Tests may also exercise workspace packages. Move shared runtime code into a source package instead.' });
+        } else if (r.kind === 'external') {
+          out.push({ rule: 'package-tools-are-isolated', file, spec, fix: 'Repository tooling has no third-party runtime dependencies. Use a Node built-in or declare and review the dependency explicitly.' });
+        } else if (r.kind === 'unresolved') {
+          out.push({ rule: 'package-tools-are-isolated', file, spec, fix: 'This tooling import resolves to no repository file.' });
+        }
+      }
+
       if (zone === 'functions') {
         if (target !== null && target !== 'functions') {
           out.push({ rule: 'functions-are-self-contained', file, spec, fix: 'Edge functions run on Deno and import only each other (`_shared/`), `jsr:` and `npm:`. Share code the other way: the app imports the function module, as its tests do.' });

@@ -19,14 +19,15 @@ async function loadGroup<T>(group: string): Promise<T[]> {
 }
 
 export async function loadRegistry(): Promise<RegistrySnapshot> {
-  const [capabilities, systems, roles, screens, workflows, integrations, controls, documents, tenants, backlog] = await Promise.all([
+  const [capabilities, systems, roles, screens, workflows, integrations, controls, documents, tenants, backlog, manifests, workspaces] = await Promise.all([
     loadGroup<RegistrySnapshot['capabilities'][number]>('capabilities'), loadGroup<RegistrySnapshot['systems'][number]>('systems'),
     loadGroup<RegistrySnapshot['roles'][number]>('roles'), loadGroup<RegistrySnapshot['screens'][number]>('screens'),
     loadGroup<RegistrySnapshot['workflows'][number]>('workflows'), loadGroup<RegistrySnapshot['integrations'][number]>('integrations'),
     loadGroup<RegistrySnapshot['controls'][number]>('controls'), loadGroup<RegistrySnapshot['documents'][number]>('documents'),
     loadGroup<RegistrySnapshot['tenants'][number]>('tenants'), loadGroup<RegistrySnapshot['backlog'][number]>('backlog'),
+    loadGroup<NonNullable<RegistrySnapshot['manifests']>[number]>('manifests'), loadGroup<NonNullable<RegistrySnapshot['workspaces']>[number]>('workspaces'),
   ]);
-  return { capabilities, systems, roles, screens, workflows, integrations, controls, documents, tenants, backlog };
+  return { capabilities, systems, roles, screens, workflows, integrations, controls, documents, tenants, backlog, manifests, workspaces };
 }
 
 export async function writeGenerated(name: string, value: unknown): Promise<void> {

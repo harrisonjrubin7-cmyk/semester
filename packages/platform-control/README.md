@@ -1,6 +1,8 @@
 # Semester platform control
 
-This package is the repository-owned implementation control plane. It turns a bounded slice of the ecosystem catalog into machine-checkable records for capabilities, systems, roles, screens, workflows, integrations, controls, documents, and tenants.
+This package is the repository-owned implementation control plane. It turns a bounded slice of the ecosystem catalog into machine-checkable records for capabilities, systems, roles, screens, workflows, integrations, controls, documents, tenants, and backlog work.
+
+The root manifest also fixes the canonical product domain at `semesterintel.tech` and maps the 13 grouped workspace families to 17 independently governed pilot release scopes. Every scope declares its required operational loop, but remains blocked and activation-disabled until route, capability, workflow, code, test, deployment, and approval evidence is present. A reachable shell is never operational-readiness evidence.
 
 The generated `execution-board.json` is the dependency-ordered P0 delivery board. Every item links to registry keys, names an owner, and keeps missing external or operational proof in explicit blockers.
 
@@ -20,4 +22,4 @@ npm run tenant:create -- --key demo-campus --name "Demo Campus" --owner platform
 
 `tenant:create` creates only a new, unactivated synthetic registry record and refuses production provisioning. It does not create credentials, deploy infrastructure, or activate a tenant.
 
-The first registry slice is `registration.readiness`. Extend the registry one real job loop at a time; do not bulk-mark the larger static catalog as implemented.
+The first implemented registry slice is `registration.readiness`. Extend the registry one real job loop at a time; do not bulk-mark the larger ecosystem roster as implemented.
