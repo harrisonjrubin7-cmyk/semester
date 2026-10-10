@@ -1,5 +1,5 @@
--- LTI bound to the integration control plane: the passback gate walked one
--- gate at a time, the pre-binding behaviour kept, and the launch's context
+-- LTI bound to the integration control plane: the passback gate walks one
+-- gate at a time, unbound passback fails closed, and the launch's context is
 -- recorded only when every condition holds. Run as the Edge Function's
 -- service role, which is who calls these. LOCAL/DISPOSABLE DATABASES ONLY.
 --
@@ -66,7 +66,7 @@ begin
   perform pg_temp.said('the service role can call the gate',
     pg_temp.callable_by('service_role', 'public.lti_passback_decision(text, text)')::text, 'true');
 
-  -- Unbound: the behaviour that shipped on 22 September --------------------
+  -- Unbound: fail closed until an operator binds the registration ----------
 
   perform pg_temp.said('an unbound registration is refused', pg_temp.decide('https://legacy.example', 'c-legacy'), 'registration-unbound');
   perform pg_temp.said('an unknown registration', pg_temp.decide('https://nobody.example', 'x'), 'no-registration');
