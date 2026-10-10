@@ -54,6 +54,34 @@ describe('PrivilegedMfaBoundary', () => {
     expect(leave).toHaveBeenCalledTimes(1);
   });
 
+  it('reports a failed sign-out and leaves the escape action usable', async () => {
+    const leave = vi.fn().mockRejectedValue(new Error('Sign-out service unavailable'));
+    mock.required.mockResolvedValue(true);
+    await act(async () => {
+      root.render(<PrivilegedMfaBoundary subject="operator-1" signOutAccount={leave}><p>Protected app</p></PrivilegedMfaBoundary>);
+    });
+    const signOutButton = [...host.querySelectorAll('button')].find((button) => button.textContent?.includes('Sign out'))!;
+    await act(async () => { signOutButton.click(); });
+    expect(host.querySelector('[role=alert]')?.textContent).toContain('Sign-out service unavailable');
+    expect(signOutButton.disabled).toBe(false);
+  });
+
+  it('does not carry a pending sign-out lock into a different account', async () => {
+    const leave = vi.fn(() => new Promise<void>(() => {}));
+    mock.required.mockResolvedValue(true);
+    await act(async () => {
+      root.render(<PrivilegedMfaBoundary subject="operator-1" signOutAccount={leave}><p>Protected app</p></PrivilegedMfaBoundary>);
+    });
+    const firstButton = [...host.querySelectorAll('button')].find((button) => button.textContent?.includes('Sign out'))!;
+    await act(async () => { firstButton.click(); });
+    expect(firstButton.disabled).toBe(true);
+    await act(async () => {
+      root.render(<PrivilegedMfaBoundary subject="operator-2" signOutAccount={leave}><p>Protected app</p></PrivilegedMfaBoundary>);
+    });
+    const nextButton = [...host.querySelectorAll('button')].find((button) => button.textContent?.includes('Sign out'))!;
+    expect(nextButton.disabled).toBe(false);
+  });
+
   it('passes ordinary and signed-out sessions without an MFA prompt', async () => {
     mock.required.mockResolvedValue(false);
     await render();

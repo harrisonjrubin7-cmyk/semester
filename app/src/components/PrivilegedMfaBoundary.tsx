@@ -25,8 +25,7 @@ export function PrivilegedMfaBoundary({
   signOutAccount?: () => Promise<void>;
 }) {
   const [state, setState] = useState<BoundaryState>({ subject: null, status: 'ready', error: '' });
-  const [leaving, setLeaving] = useState(false);
-  const [leaveError, setLeaveError] = useState('');
+  const [departure, setDeparture] = useState({ subject: null as string | null, busy: false, error: '' });
   const request = useRef(0);
 
   const read = useCallback(async (preserveOnError = false) => {
@@ -76,17 +75,21 @@ export function PrivilegedMfaBoundary({
   };
 
   const leave = async () => {
-    setLeaving(true);
-    setLeaveError('');
+    setDeparture({ subject, busy: true, error: '' });
     try {
       await signOutAccount();
     } catch (e) {
-      setLeaveError(e instanceof Error ? e.message : 'Could not sign out of this account.');
-      setLeaving(false);
+      setDeparture({
+        subject,
+        busy: false,
+        error: e instanceof Error ? e.message : 'Could not sign out of this account.',
+      });
     }
   };
 
   if (!subject) return <>{children}</>;
+  const leaving = departure.subject === subject && departure.busy;
+  const leaveError = departure.subject === subject ? departure.error : '';
   const status: Status = state.subject === subject ? state.status : 'checking';
   if (status === 'ready') return <>{children}</>;
   if (status === 'checking') {
