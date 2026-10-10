@@ -26,6 +26,17 @@ Commands run from `app/` unless noted. Discover the script in `app/package.json`
 | Browser, 390×844, `http://127.0.0.1:5173/#/degree` | seeded `ECON 1020`, source `Added by hand` | Flag off: the row moved from Needs attention to a line that says the code is on the meeting agenda, is not an enrollment, and that nothing was shared. The meeting library held one agenda line, empty notes, and no attached courses. The secret planted on the course was not stored. |
 | Browser, same viewport, `VITE_ADVISOR_MEETING_MODE=production` on port 5174 | same seed | The Advisor meeting tab opened. Agenda item 1 was `ECON 1020 (Fall 2026). Named on this device. Not an enrollment.` Private notes stayed empty. |
 
+## Unmatched named codes
+
+| Command | Working directory | Result |
+| --- | --- | --- |
+| `npx vitest run src/lib/planpreview.test.ts src/components/RegistrationPortal.namedplan.test.tsx src/components/RegistrationPortal.conflicts.test.tsx` | `app/` | Exit 0. 3 files, 15 tests passed. The new tests failed first with `unmatchedNamed is not a function`. |
+| `npx tsc -b` | `app/` | Exit 0. |
+| `npm run lint` | `app/` | Exit 0. |
+| `npm test` | `app/` | Exit 0. 1467 files passed, 1 skipped. 23542 tests passed, 69 skipped. |
+| Browser, 390×844, `#/yes` | named ECON 1020 and PSCI 1104; catalog file contains only ECON 1020 with 18 seats | PSCI 1104 stayed under Courses you named, with the institution, the import day, and “no seat was invented.” ECON 1020 left that list and appeared as section 01 with 18 reported seats. The stored catalog stayed one course and the cart stayed empty. |
+| Same three vitest files, after rebase onto `81dcdabf` | `app/` | Exit 0. 3 files, 15 tests passed. `npx tsc -b` exit 0. `npm run lint` exit 0. The 390px `#/yes` walk was repeated on that commit and the page error list was empty. |
+
 ## Not run
 
 | Check | Why |

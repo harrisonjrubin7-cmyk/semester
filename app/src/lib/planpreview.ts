@@ -73,6 +73,25 @@ export function readPlanDraft(termRaw: string, coursesRaw: string): PlanRead {
  * Empty on purpose: a code the student typed is not a syllabus, a meeting
  * time, or a seat.
  */
+/** The same course, however the file spaces or capitalizes the code. */
+export function courseCodeKey(code: string): string {
+  return code.trim().replace(/\s+/g, ' ').toUpperCase();
+}
+
+/**
+ * Named codes the imported file does not contain.
+ *
+ * A match is a section whose code is the same. The returned rows are the
+ * student's own codes: this does not add a section, a meeting time, or a seat.
+ */
+export function unmatchedNamed<T extends { code: string }>(named: readonly T[], catalog: readonly { code: string }[]): T[] {
+  const present = new Set(catalog.map((course) => courseCodeKey(course.code)).filter(Boolean));
+  return named.filter((course) => {
+    const key = courseCodeKey(course.code);
+    return key.length > 0 && !present.has(key);
+  });
+}
+
 export function coursesForPlan(draft: PlanDraft, taken: Iterable<string> = []): CourseModule[] {
   const ids = [...taken];
   return draft.codes.map((code) => {
