@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-09 · **Latest observed `origin/main`** `e128a526` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-10 · **Latest observed `origin/main`** `9642e983` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -349,5 +349,14 @@ This mapping adds no archive route, role, capability, schema, policy, server ope
 | --- | --- | --- |
 | Stream 01 consequence pattern for deleting student-authored assistant context | `app/src/components/AboutMe.tsx`, `app/src/components/TrustCenter.tsx`, `app/src/lib/aboutme.ts` | Existing but incomplete is narrowed across both reachable entry points. Profile no longer dispatches from the first × press; it and Trust & Data use the shared `ConfirmDialog` plus `ActionPreview` to name the exact line, device and post-sync account effect, non-effects and no-Undo boundary. Cancel writes nothing, confirmation keeps every other fact, and the red-before-green regression is included in 146 focused passing tests. |
 | Assistant-memory export, recovery and provider boundary | `app/src/lib/export.ts`, `app/src/state/store.tsx`, `app/src/lib/workspace-backup.private.test.ts` | Existing and unchanged. Full-data export includes `aboutMe`, so a prior downloaded file retains the old text, but no automatic restore is claimed. Workspace backup continues to exclude assistant memory. The existing in-memory context updates from state; this slice sends no provider prompt or request and changes no model, sync or merge policy. |
+
+This mapping adds no archive route, role, capability, schema, policy, provider operation or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 18 current-product consequence mapping — integration slice 69
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for deleting one private Student Operating workflow item | `app/src/components/StudentOperating.tsx`, `app/src/lib/student-operating.ts`, `app/src/state/slices/notes.ts` | Existing but incomplete is narrowed: **Delete this item** now opens the shared `ConfirmDialog` and `ActionPreview` before the existing selected-entry filter writes `operatingWorkspace`. It identifies the item and workflow kind, device/account-sync effect, unaffected items/preferences/exports/official records and open editor/review boundary. Cancel writes nothing. The red-before-green guard is included in 122 focused passing tests. |
+| Recovery, persistence and external-authority boundary | `app/src/lib/export.ts`, `app/src/state/store.tsx` | Existing and unchanged. The core Semester backup contains `operatingWorkspace`, so a pre-deletion backup can restore the earlier workspace. Deletion creates no share or message, changes no official record and invokes no provider or institution system. |
 
 This mapping adds no archive route, role, capability, schema, policy, provider operation or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.

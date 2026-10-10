@@ -52,6 +52,25 @@ describe('student-owned operating workflow', () => {
     expect(stored.operatingWorkspace).toBeNull();
     expect(host.querySelectorAll('article')).toHaveLength(0);
   });
+  it('previews one saved item before deleting it', () => {
+    act(() => button('Delete this item').click());
+    const dialog = host.querySelector('[role="dialog"]');
+    expect(dialog).toBeTruthy();
+    expect(dialog!.textContent).toContain('Outcome 1');
+    expect(dialog!.textContent).toContain('Deletes this saved workflow item from your private Semester workspace.');
+    expect(dialog!.textContent).toContain('Other workflow items, saved preferences, downloaded exports and official records do not change.');
+    expect(dialog!.textContent).toContain('A Semester data backup made before deletion can restore the earlier workspace.');
+    expect(readOperating(stored.operatingWorkspace).entries).toHaveLength(4);
+    act(() => button('Cancel').click());
+    expect(readOperating(stored.operatingWorkspace).entries).toHaveLength(4);
+    act(() => button('Delete this item').click());
+    act(() => button('Delete item').click());
+    expect(readOperating(stored.operatingWorkspace).entries.map((entry) => entry.title)).toEqual([
+      'Outcome 2',
+      'Outcome 3',
+      'Outcome 4',
+    ]);
+  });
   it('makes human handoff a reviewed draft with no send capability', () => {
     act(() => button('Review blind spots and context').click());
     act(() => button('Prepare human handoff / follow-up draft').click());

@@ -1444,3 +1444,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed Student Operating item deletion — automation pass 18, integration slice 69
+
+- [x] Start from clean head `a6cd4b5e`; fetch `origin/main` `9642e983` and confirm it is already merged and contains no equivalent Student Operating item consequence preview.
+- [x] Re-rank remaining consequence paths and select only one saved private Student Operating item; keep whole-workspace deletion, preference deletion, permanent file purge, broad demo reset and scanner-backed Import separate.
+- [x] Replace first-press item deletion with the shared `ConfirmDialog` and `ActionPreview`, naming the item, workflow kind, device/account-sync effect, unaffected data and already-open editor/review boundary.
+- [x] Preserve the current `operatingWorkspace` JSON authority and exact selected-entry filter; add no route, dependency, schema, policy, provider operation or external-system effect.
+- [x] State the truthful recovery boundary: a core Semester data backup made before deletion can restore the earlier workspace.
+- [x] Prove the focused guard red against immediate deletion, then pass 122/122 Student Operating, domain, ActionPreview, modal, core export/backup and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and build chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design-check contracts, 96/96 report contracts, design audit with zero violations and the CSS ledger.
+- [ ] Aggregate design-system report wrapper — writes the report, then cannot launch its `npx` contract subprocesses in this shell; exact constituents pass, but no aggregate wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded content/state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target or scan can start and no security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep preference deletion, permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

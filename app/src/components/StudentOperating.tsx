@@ -33,6 +33,7 @@ export function StudentOperating() {
   const [draft, setDraft] = useState('');
   const [recipient, setRecipient] = useState('');
   const [deletePending, setDeletePending] = useState(false);
+  const [deletingEntry, setDeletingEntry] = useState<OperatingEntry | null>(null);
   const [calendarStart, setCalendarStart] = useState('');
   const [calendarReviewed, setCalendarReviewed] = useState('');
   const save = (next: OperatingWorkspace) => dispatch({ type: 'setOperatingWorkspace', value: JSON.stringify(next) });
@@ -87,7 +88,23 @@ export function StudentOperating() {
       <button className="bare" onClick={() => save({ ...workspace, entries: workspace.entries.map(x => x.id === e.id ? { ...x, status: 'done' } : x) })}>Mark resolved</button>{' '}
       <button className="bare" onClick={() => { setEntry({ ...e, kind: 'plan', id: crypto.randomUUID(), status: 'planned', reflection: '', submitted: '' }); setNotice('Private copy ready to edit; choose Save to keep it.'); }}>Reuse as plan</button>
     </article>)}
-    <details><summary>All items, including completed and waiting</summary>{workspace.entries.map(e => <p key={e.id}><button className="bare" onClick={() => setEntry({ ...e })}>{e.title} · {e.status}</button>{' '}<button className="bare" onClick={() => save({ ...workspace, entries: workspace.entries.filter(x => x.id !== e.id) })}>Delete this item</button></p>)}</details>
+    <details><summary>All items, including completed and waiting</summary>{workspace.entries.map(e => <p key={e.id}><button className="bare" onClick={() => setEntry({ ...e })}>{e.title} · {e.status}</button>{' '}<button className="bare" aria-label={`Delete ${e.title}`} onClick={() => setDeletingEntry(e)}>Delete this item</button></p>)}</details>
+    {deletingEntry && <ConfirmDialog
+      title="Delete this saved item?"
+      preview={<ActionPreview
+        subject={`${deletingEntry.title} · ${labels[deletingEntry.kind]}`}
+        says="Deletes this saved workflow item from your private Semester workspace. When account sync is enabled, the deletion is saved to your account too."
+        doesNotChange="Other workflow items, saved preferences, downloaded exports and official records do not change. An editor or review already open on this screen stays open."
+        recovery={{ kind: 'none', how: 'A Semester data backup made before deletion can restore the earlier workspace.' }}
+      />}
+      confirmLabel="Delete item"
+      onCancel={() => setDeletingEntry(null)}
+      onConfirm={() => {
+        save({ ...workspace, entries: workspace.entries.filter((item) => item.id !== deletingEntry.id) });
+        setDeletingEntry(null);
+        setNotice('Saved workflow item deleted.');
+      }}
+    />}
     <details open={mode !== 'low'}><summary>Add or edit a private outcome, decision or workflow</summary>
       <form onSubmit={e => { e.preventDefault(); if (!entry.title.trim()) return; save({ ...workspace, entries: [...workspace.entries.filter(x => x.id !== entry.id), { ...entry, title: entry.title.trim() }] }); setEntry(emptyEntry(entry.kind)); setNotice('Saved privately. No reflection becomes a preference automatically.'); }}>
         <label>Workflow<select className="input" value={entry.kind} onChange={e => patch('kind', e.target.value)}>{Object.entries(labels).map(([k,v]) => <option value={k} key={k}>{v}</option>)}</select></label>

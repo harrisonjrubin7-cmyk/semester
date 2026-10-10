@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-09 · **Latest observed `origin/main`** `fb1d683d` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-10 · **Latest observed `origin/main`** `9642e983` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -723,3 +723,13 @@ Profile now opens the shared `ConfirmDialog` and `ActionPreview` before dispatch
 The Profile regression failed against the prior immediate dispatch. After implementation, About Me, Trust Center, ActionPreview, modal, root-unmount, fact sanitization, export and private-workspace-backup suites pass 146/146. TypeScript, lint, university typecheck and production build pass with the existing four lint and chunk-size warnings. Token export passes 9/9, design-check contracts pass 69/69, report contracts pass 96/96, aggregate report generation passes, design audit has no violations with existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun for this bounded content/state-contract slice.
 
 The required HawkScan loop stops at preflight: `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. No target, DAST result or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
+
+## Governed Student Operating item deletion — automation pass 18, integration slice 69
+
+Current `origin/main` is `9642e983` and is already an ancestor of the clean pre-slice branch. Its Course Engine upload-claim and recoverable-calendar changes contain no equivalent Student Operating item preview. Re-ranking selected deletion of one saved private workflow item because the whole workspace already used the shared consequence contract while this narrower account-synced write still happened on the first press. The mutation has one exact `operatingWorkspace` owner and no provider, institution or external-system effect.
+
+Deleting one item now opens the existing `ConfirmDialog` and `ActionPreview`. It names the exact item and workflow kind, explains device and post-sync account removal, preserves other items, preferences, downloaded exports and official records, and states that an already-open editor or review remains open. A core Semester data backup made before deletion can restore the earlier workspace. Cancel starts focused and writes nothing; confirmation uses the existing bounded JSON update and removes only the selected entry.
+
+The new regression failed against the prior immediate write. After implementation, Student Operating, its domain library, ActionPreview, modal, core export/backup and root-unmount coverage pass 122/122. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. Token export passes 9/9, design-check contracts pass 69/69, report contracts pass 96/96, design audit has zero violations with 86 existing warnings and CSS stays within its ledger. The aggregate report wrapper writes its file but cannot launch its `npx` contract subprocesses in this shell, so no aggregate report pass is claimed. Ordered and shuffled full suites were not rerun for this bounded content/state-contract slice.
+
+The required HawkScan loop stops at preflight: `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists but no target can be started. No DAST result or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.

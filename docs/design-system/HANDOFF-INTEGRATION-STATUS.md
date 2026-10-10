@@ -1,10 +1,22 @@
 # Handoff integration status
 
-**Automation pass** 17 of 120 (continued program; runner pass 3) · **Integration slice** 68 · **Date** 2026-10-10 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `55f1edba` · **Latest observed `origin/main`** `9642e983`
+**Automation pass** 18 of 120 (continued program; runner pass 4) · **Integration slice** 69 · **Date** 2026-10-10 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `a6cd4b5e` · **Latest observed `origin/main`** `9642e983`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in current automation pass 18 / integration slice 69
+
+- Current `origin/main` is `9642e983`, already merged into clean slice base `a6cd4b5e`; its Course Engine upload-claim and recoverable-calendar changes contain no equivalent Student Operating item consequence preview.
+- Deleting one saved Student Operating workflow item now opens the shared `ConfirmDialog` and `ActionPreview` before the existing bounded JSON update. It names the exact item and workflow kind, device/account-sync effect, unaffected items/preferences/downloaded exports/official records and the already-open editor/review boundary.
+- Cancel remains the initial focused action and writes nothing. Explicit confirmation removes only the selected `operatingWorkspace` entry. The route, navigation, account-sync authority, JSON schema, exports and official-system boundary remain unchanged; no provider or external system is invoked.
+- Recovery language matches repository evidence: a core Semester data backup made before deletion contains `operatingWorkspace` and can restore the earlier workspace.
+- The focused regression failed against the prior immediate write. Student Operating, its domain library, ActionPreview, modal behavior, core export/backup and root-unmount coverage pass 122/122.
+- TypeScript, lint, university typecheck and production build pass. The existing four lint warnings and build chunk-size warning remain. Token export passes 9/9, design-check contracts pass 69/69, report contracts pass 96/96, design audit has zero violations with 86 existing warnings and CSS stays within its ledger.
+- The aggregate design-system report writes its file but cannot launch its `npx` contract subprocesses in this shell. Its exact contracts pass directly, but no aggregate report pass is claimed. Ordered and shuffled full suites were not rerun; the last recorded full-suite baseline remains pass 30's 23,872 tests.
+- Required HawkScan preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, DAST result or security pass is claimed.
+- Preference deletion, permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate. The next slice requires another fresh dependency/consequence ranking.
 
 ## Evidence locked in current automation pass 17 / integration slice 68
 
