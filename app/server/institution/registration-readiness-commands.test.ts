@@ -42,17 +42,17 @@ class MemoryReadinessRepository implements RegistrationReadinessRepository {
   }
 
   async save(result: ReadinessWorkflowResult) {
-    const current = this.rows.get(result.record.id);
-    if (current && result.record.version === 1) {
-      const wanted = result.record.commandLedger[0];
-      const earlier = current.commandLedger.find((entry) => entry.idempotencyKey === wanted?.idempotencyKey);
-      if (wanted && earlier) {
-        if (earlier.fingerprint !== wanted.fingerprint) {
-          throw new PlatformError('idempotency_key_reused', 'That Idempotency-Key was already used for a different request.');
-        }
-        return structuredClone({ record: current, receipt: earlier.receipt, event: earlier.event, replayed: true });
+    const wanted = result.record.commandLedger.find((entry) => entry.receipt.id === result.receipt.id);
+    const prior = [...this.rows.values()]
+      .map((row) => ({ row, entry: row.commandLedger.find((entry) => entry.idempotencyKey === wanted?.idempotencyKey) }))
+      .find(({ entry }) => entry !== undefined);
+    if (wanted && prior?.entry) {
+      if (prior.row.id !== result.record.id || prior.entry.fingerprint !== wanted.fingerprint) {
+        throw new PlatformError('idempotency_key_reused', 'That Idempotency-Key was already used for a different request.');
       }
+      return structuredClone({ record: prior.row, receipt: prior.entry.receipt, event: prior.entry.event, replayed: true });
     }
+    const current = this.rows.get(result.record.id);
     if (current && !result.replayed && result.record.version !== current.version + 1) {
       throw new Error('compare-and-swap conflict');
     }
@@ -69,7 +69,7 @@ function rig(evaluator?: RegistrationReadinessEvaluator) {
     repository,
     evaluator,
     now: () => new Date(NOW),
-    evaluationIdFor: () => 'readiness-evaluation-1',
+    evaluationIdFor: (_context, _key, termId) => termId === '2027-spring' ? 'readiness-evaluation-1' : 'readiness-evaluation-2',
   });
   return { commands, repository };
 }
