@@ -963,7 +963,7 @@ components:
       name: Idempotency-Key
       in: header
       required: true
-      description: Required on registration-readiness commands and every SCIM request that is not a GET. At most 300 characters; an exact retry replays the durable receipt.
+      description: Required on every SCIM request that is not a GET. At most 300 characters. It is the request id the audit row is keyed on.
       schema:
         type: string
         maxLength: 300
