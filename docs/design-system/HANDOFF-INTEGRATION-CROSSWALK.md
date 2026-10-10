@@ -360,3 +360,12 @@ This mapping adds no archive route, role, capability, schema, policy, provider o
 | Recovery, persistence and external-authority boundary | `app/src/lib/export.ts`, `app/src/state/store.tsx` | Existing and unchanged. The core Semester backup contains `operatingWorkspace`, so a pre-deletion backup can restore the earlier workspace. Deletion creates no share or message, changes no official record and invokes no provider or institution system. |
 
 This mapping adds no archive route, role, capability, schema, policy, provider operation or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 19 current-product consequence mapping — integration slice 70
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for deleting saved Student Operating preferences | `app/src/components/StudentOperating.tsx`, `app/src/lib/student-operating.ts`, `app/src/state/slices/notes.ts` | Existing but incomplete is narrowed: **Delete preferences** now opens the shared `ConfirmDialog` and `ActionPreview` before the existing `operatingWorkspace` JSON write. It identifies the saved term, preference families removed, editor reset, device/account-sync effect and non-effects. Cancel writes nothing; confirmation clears only `manual` and preserves all workflow entries. The red-before-green guard is included in 161 focused passing tests. |
+| Recovery, export and external-authority boundary | `app/src/lib/export.ts`, `app/src/state/store.tsx` | Existing and unchanged. The core Semester backup contains `operatingWorkspace`, so a pre-deletion backup can restore the earlier workspace. Existing downloaded exports remain outside the mutation. Preference deletion creates no share or message, changes no official record and invokes no provider or institution system. |
+
+This mapping adds no archive route, role, capability, schema, policy, provider operation or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.

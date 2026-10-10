@@ -33,6 +33,7 @@ export function StudentOperating() {
   const [draft, setDraft] = useState('');
   const [recipient, setRecipient] = useState('');
   const [deletePending, setDeletePending] = useState(false);
+  const [preferencesDeletePending, setPreferencesDeletePending] = useState(false);
   const [deletingEntry, setDeletingEntry] = useState<OperatingEntry | null>(null);
   const [calendarStart, setCalendarStart] = useState('');
   const [calendarReviewed, setCalendarReviewed] = useState('');
@@ -71,7 +72,25 @@ export function StudentOperating() {
       {(['quiet','noOpportunities','noAnalytics','noStudyBlocks'] as const).map(k => <label key={k} style={{ display: 'block' }}><input type="checkbox" checked={editingManual[k]} onChange={e => preference(k, e.target.checked)} />{({quiet:'Quiet Mode',noOpportunities:'No opportunity prompts',noAnalytics:'No planning analytics',noStudyBlocks:'No automatic study blocks'})[k]}</label>)}
       <ActionButton onClick={() => { setTemporary(editingManual); setNotice('Preferences applied for this visit only; nothing saved.'); }}>Use for this visit only</ActionButton>
       <ActionButton onClick={() => { if (!editingManual.expires || editingManual.expires < today) { setNotice('Choose a valid term-end date before saving.'); return; } save({ ...workspace, manual: editingManual }); setTemporary(null); setNotice('Preferences saved until your selected term end.'); }}>Save for this term</ActionButton>
-      <button className="bare" onClick={() => { save({ ...workspace, manual: null }); setTemporary(null); setEditingManual(defaultManual()); setNotice('Preferences deleted.'); }}>Delete preferences</button>
+      <button className="bare" onClick={() => setPreferencesDeletePending(true)}>Delete preferences</button>
+      {preferencesDeletePending && <ConfirmDialog
+        title="Delete saved preferences?"
+        preview={<ActionPreview
+          subject={`Student Operating preferences · saved until ${workspace.manual?.expires || 'the selected term end'}`}
+          says="Deletes your saved planning style, starter minutes, representation, help, reminder, planning-time and break preferences. The preferences shown in this editor reset to defaults. When account sync is enabled, the deletion is saved to your account too."
+          doesNotChange={`Your ${workspace.entries.length} saved workflow item${workspace.entries.length === 1 ? '' : 's'}, downloaded exports and official records do not change.`}
+          recovery={{ kind: 'none', how: 'A Semester data backup made before deletion can restore the earlier workspace. You can also enter and save new preferences later.' }}
+        />}
+        confirmLabel="Delete saved preferences"
+        onCancel={() => setPreferencesDeletePending(false)}
+        onConfirm={() => {
+          save({ ...workspace, manual: null });
+          setTemporary(null);
+          setEditingManual(defaultManual());
+          setPreferencesDeletePending(false);
+          setNotice('Preferences deleted.');
+        }}
+      />}
     </details>
     {!hidePrompt && <fieldset><legend>How much planning structure would help right now?</legend>{(['low','medium','high','none'] as const).map(v => <button className="pill-soft tap-y" key={v} aria-pressed={structure === v} onClick={() => setStructure(v)}>{v === 'none' ? 'No preference' : v}</button>)}<button className="bare" onClick={() => { setHidePrompt(true); setStructure('none'); }}>Do not ask again this visit</button></fieldset>}
     {hidePrompt && <button className="bare" onClick={() => setHidePrompt(false)}>Change planning structure</button>}

@@ -1464,3 +1464,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep preference deletion, permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed Student Operating preference deletion — automation pass 19, integration slice 70
+
+- [x] Start from clean head `b7c61944` with `origin/main` `9642e983` already merged; inspect final fetched `8c3acf89` and confirm its developer-tools-only change has no Student Operating, test or integration-control overlap.
+- [x] Re-rank remaining consequence paths and select only saved Student Operating preferences; keep whole-workspace deletion, permanent file purge, broad demo reset and scanner-backed Import separate.
+- [x] Replace first-press preference deletion with the shared `ConfirmDialog` and `ActionPreview`, naming the saved term, preference families removed, editor reset, device/account-sync effect, unaffected workflow items/exports/official records and recovery boundary.
+- [x] Preserve the current `operatingWorkspace` JSON authority; confirmation clears only `manual`, resets transient preference state and leaves every saved workflow entry intact.
+- [x] State the truthful recovery boundary: a core Semester data backup made before deletion can restore the earlier workspace, and the student can enter new preferences later.
+- [x] Prove the focused guard red against immediate deletion, then pass 161/161 Student Operating, domain, ActionPreview, modal, core export/backup and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and build chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design-check contracts, 96/96 report contracts, design audit with zero violations and the CSS ledger.
+- [ ] Aggregate design-system report wrapper — writes the report, then cannot launch its `npx` contract subprocesses in this shell; exact constituents pass, but no aggregate wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded content/state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight finds no Hawk CLI or Docker, `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, and the local properties file was not read. `stackhawk.yml` exists, but no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
