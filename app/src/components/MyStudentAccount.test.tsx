@@ -16,6 +16,7 @@ vi.mock('../lib/deliver', () => ({
 import { loadSeed } from '../data/seed';
 import { DEFAULT_SCHOOL_PLAN, DEFAULT_SETTINGS, type AccountEntry, type PaymentPlanRecord } from '../lib/finance/accounts';
 import type { MyAccount, MyAccountApi } from '../lib/finance/mine';
+import { FinanceCommandError, type FinanceCommandReceipt } from '../lib/finance/commands';
 import { STORAGE_KEY } from '../state/shape';
 import { StoreProvider } from '../state/store';
 import { MyStudentAccount } from './MyStudentAccount';
@@ -36,13 +37,17 @@ const ACCOUNT: MyAccount = {
     e({ id: 'c2', kind: 'charge', amount_cents: 450000, effective_on: '2027-01-10', description: 'Spring tuition' }),
   ],
 };
-type Fake = MyAccountApi & { accounts: ReturnType<typeof vi.fn>; askForPlan: ReturnType<typeof vi.fn>; withdrawPlan: ReturnType<typeof vi.fn> };
+type Fake = MyAccountApi & { accounts: ReturnType<typeof vi.fn>; askForPlan: ReturnType<typeof vi.fn>; planReceipt: ReturnType<typeof vi.fn>; withdrawPlan: ReturnType<typeof vi.fn> };
 const api = (accounts: MyAccount[] | Error, over: Partial<MyAccountApi> = {}): Fake => ({
   accounts: vi.fn(async () => {
     if (accounts instanceof Error) throw accounts;
     return accounts;
   }),
-  askForPlan: vi.fn(async () => undefined),
+  askForPlan: vi.fn(async () => ({
+    id: 'plan-receipt', commandKey: 'finance:plan.request:test', action: 'plan.request', status: 'accepted',
+    resourceId: 'plan-new', state: 'proposed', version: 1, recordedAt: '2026-10-01T12:00:00Z',
+  } satisfies FinanceCommandReceipt)),
+  planReceipt: vi.fn(async () => undefined),
   withdrawPlan: vi.fn(async () => undefined),
   ...over,
 }) as Fake;
@@ -186,7 +191,7 @@ describe('MyStudentAccount', () => {
       count.dispatchEvent(new Event('change', { bubbles: true }));
     });
     await act(async () => button('Ask Student Accounts for this plan')!.click());
-    expect(a.askForPlan).toHaveBeenCalledWith('vu', 'S100', 3, '2026-10-01');
+    expect(a.askForPlan).toHaveBeenCalledWith('vu', 'S100', 3, '2026-10-01', expect.stringMatching(/^finance:plan\.request:/));
     // And the account is read again, so the plan asked for is what shows.
     await act(async () => {
       await new Promise((r) => setTimeout(r, 0));
@@ -202,6 +207,32 @@ describe('MyStudentAccount', () => {
       await new Promise((r) => setTimeout(r, 0));
     });
     expect(text()).toMatch(/The first payment is due between today and 30 days from now\./);
+  });
+
+  it('keeps an unknown plan command across refresh and only offers receipt recovery', async () => {
+    const askForPlan = vi.fn(async () => { throw new FinanceCommandError('unknown', 'No answer came back.'); });
+    const recovered = {
+      id: 'plan-recovered', commandKey: 'finance:plan.request:test', action: 'plan.request', status: 'accepted',
+      resourceId: 'plan-new', state: 'proposed', version: 1, recordedAt: '2026-10-01T12:00:00Z',
+    } satisfies FinanceCommandReceipt;
+    const firstApi = api([ACCOUNT], { askForPlan });
+    await render(<MyStudentAccount enabled payUrl="" accountId="me" api={firstApi} today={TODAY} />);
+    await act(async () => button('Ask Student Accounts for this plan')!.click());
+    await act(async () => new Promise((r) => setTimeout(r, 0)));
+    expect((button('Ask Student Accounts for this plan') as HTMLButtonElement).disabled).toBe(true);
+
+    await act(async () => root.unmount());
+    root = createRoot(host);
+    const committedPlan = { ...PLAN, status: 'proposed' as const, decided_at: null };
+    const secondApi = api([{ ...ACCOUNT, plans: [committedPlan] }], { planReceipt: vi.fn(async () => recovered) });
+    await render(<MyStudentAccount enabled payUrl="" accountId="me" api={secondApi} today={TODAY} />);
+    expect(text()).toMatch(/a previous plan request has no confirmed response/);
+    expect(button('Ask Student Accounts for this plan')).toBeUndefined();
+    await act(async () => button('Check for accepted receipt')!.click());
+    await act(async () => new Promise((r) => setTimeout(r, 0)));
+    expect(secondApi.planReceipt).toHaveBeenCalledWith('vu', 'S100', expect.stringMatching(/^finance:plan\.request:/));
+    expect(text()).toMatch(/Accepted — recovered receipt plan-recovered/);
+    expect(askForPlan).toHaveBeenCalledTimes(1);
   });
 
   it('offers nothing to ask for where the school has no plans, or nothing is owed', async () => {

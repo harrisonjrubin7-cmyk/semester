@@ -8,6 +8,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DEFAULT_SCHOOL_PLAN, type Installment, type PaymentPlanRecord, type PlanStatus, type SchoolPlanRules } from './accounts';
 import { refusal } from './api';
+import { submitFinanceCommand, type FinanceCommandReceipt } from './commands';
 
 // Who decided or cancelled a plan is the school's to know; neither screen asks.
 const PLAN = 'id, tenant_id, student_ref, installments, first_due, balance_cents, status, requested_by, requested_at, decided_at, decision_note, cancelled_at, cancel_note';
@@ -54,14 +55,12 @@ export async function planRules(db: SupabaseClient, tenantId: string): Promise<S
 }
 
 /** Asks for a plan. The database reads the balance and writes the schedule; its refusal comes back as it said it. */
-export async function askForPlan(db: SupabaseClient, tenantId: string, studentRef: string, installments: number, firstDue: string): Promise<string> {
-  const { data, error } = await db.from('student_payment_plans')
-    .insert({ tenant_id: tenantId, student_ref: studentRef, installments, first_due: firstDue }).select('id').single();
-  if (error) {
-    if (/student_payment_plans_one_live/.test(error.message)) throw new Error('There is already a plan on this account, asked for or agreed.');
-    throw refusal(error, 'Could not ask for the plan.');
-  }
-  return (data as { id: string }).id;
+export async function askForPlan(
+  db: SupabaseClient, tenantId: string, studentRef: string, installments: number, firstDue: string, commandKey: string,
+): Promise<FinanceCommandReceipt> {
+  return submitFinanceCommand(db, tenantId, studentRef, 'plan.request', commandKey, null, {
+    installments, first_due: firstDue,
+  });
 }
 
 async function setPlan(db: SupabaseClient, id: string, patch: Record<string, unknown>, nobody: string): Promise<void> {

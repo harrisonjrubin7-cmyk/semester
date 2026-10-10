@@ -24,6 +24,10 @@ import { firstDueRange, money, paymentPlan, periodOf, receipt, statementCsv, typ
 import { myAccountApi, myStatement, myView, whatItIs, type MyAccount, type MyAccountApi } from '../lib/finance/mine';
 import { useStore } from '../state/store';
 import { ActionButton, EmptyState, Notice, SectionLabel } from './ui';
+import {
+  FinanceCommandError, forgetPendingFinanceCommand, newFinanceCommandKey, pendingFinanceCommand, rememberPendingFinanceCommand,
+  type FinanceCommandUiState,
+} from '../lib/finance/commands';
 
 export interface MyStudentAccountProps {
   enabled: boolean;
@@ -265,6 +269,10 @@ function PlanSection({ account: a, owed, plan, standing, day, api, userId, onCha
   const [first, setFirst] = useState(day);
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
+  const [command, setCommand] = useState<{ state: FinanceCommandUiState; key: string; text: string } | null>(() => {
+    const key = pendingFinanceCommand(a.tenant_id, a.student_ref, 'plan.request');
+    return key ? { state: 'unknown', key, text: 'Unknown — a previous plan request has no confirmed response. Check for its accepted receipt before asking again.' } : null;
+  });
   const range = firstDueRange(day);
   const last = a.plans.find((p) => p.status === 'rejected' || p.status === 'cancelled');
 
@@ -275,6 +283,27 @@ function PlanSection({ account: a, owed, plan, standing, day, api, userId, onCha
   };
 
   const heading = <h3 style={{ ...body, fontWeight: 600, marginTop: 'var(--sp-5)' }}>Payment plan</h3>;
+  const commandNotice = command && (
+    <div>
+      <Notice alert={command.state !== 'accepted' && command.state !== 'pending'}>{command.text}</Notice>
+      {command.state === 'unknown' && api && (
+        <button type="button" className="btn" onClick={() => {
+          setBusy(true);
+          api.planReceipt(a.tenant_id, a.student_ref, command.key).then((receipt) => {
+            forgetPendingFinanceCommand(a.tenant_id, a.student_ref, 'plan.request');
+            setCommand({ state: 'accepted', key: command.key, text: `Accepted — recovered receipt ${receipt.id}.` });
+            onChanged();
+          }, (error: unknown) => {
+            const state = error instanceof FinanceCommandError ? error.kind : 'unknown';
+            if (state !== 'unknown') forgetPendingFinanceCommand(a.tenant_id, a.student_ref, 'plan.request');
+            setCommand({ state, key: command.key, text: state === 'denied'
+              ? 'Denied — no accepted receipt was available. Review the plan before asking again.'
+              : state === 'conflict' ? `Conflict — ${error instanceof Error ? error.message : 'The command key conflicts.'}` : 'Unknown — receipt recovery still has no answer. Do not ask again yet.' });
+          }).finally(() => setBusy(false));
+        }}>Check for accepted receipt</button>
+      )}
+    </div>
+  );
 
   if (plan && plan.status === 'approved' && standing) {
     const line = standing.state === 'complete'
@@ -291,6 +320,7 @@ function PlanSection({ account: a, owed, plan, standing, day, api, userId, onCha
           the plan is kept, no financial hold applies. Charges posted after it are not part of it.
         </p>
         <Schedule schedule={plan.schedule} standing={standing} label="Your plan" />
+        {commandNotice}
       </section>
     );
   }
@@ -309,6 +339,7 @@ function PlanSection({ account: a, owed, plan, standing, day, api, userId, onCha
             Withdraw this request
           </button>
         )}
+        {commandNotice}
         {said && <Notice alert>{said}</Notice>}
       </section>
     );
@@ -362,15 +393,35 @@ function PlanSection({ account: a, owed, plan, standing, day, api, userId, onCha
           {api && (
             <ActionButton
               tone="primary"
-              disabled={busy}
+              disabled={busy || command?.state === 'unknown' || command?.state === 'pending'}
               style={{ marginTop: 'var(--sp-4)' }}
-              onClick={() => act(api.askForPlan(a.tenant_id, a.student_ref, count, first))}
+              onClick={() => {
+                const key = newFinanceCommandKey('plan.request');
+                rememberPendingFinanceCommand(a.tenant_id, a.student_ref, 'plan.request', key);
+                setBusy(true);
+                setCommand({ state: 'pending', key, text: 'Pending — waiting for an accepted plan receipt.' });
+                api.askForPlan(a.tenant_id, a.student_ref, count, first, key).then((receipt) => {
+                  forgetPendingFinanceCommand(a.tenant_id, a.student_ref, 'plan.request');
+                  setCommand({ state: 'accepted', key, text: `Accepted — receipt ${receipt.id}.` });
+                  onChanged();
+                }, (error: unknown) => {
+                  // The production client classifies transport failures as `unknown`.
+                  // An unclassified rejection is therefore a definite refusal from an
+                  // injected/legacy client, not evidence that the command may have landed.
+                  const state = error instanceof FinanceCommandError ? error.kind : 'denied';
+                  if (state !== 'unknown') forgetPendingFinanceCommand(a.tenant_id, a.student_ref, 'plan.request');
+                  setCommand({ state, key, text: state === 'unknown'
+                    ? 'Unknown — check for the accepted receipt before asking again.'
+                    : `${state === 'conflict' ? 'Conflict' : 'Denied'} — ${error instanceof Error ? error.message : 'The plan request was not accepted.'}` });
+                }).finally(() => setBusy(false));
+              }}
             >
               Ask Student Accounts for this plan
             </ActionButton>
           )}
         </>
       )}
+      {commandNotice}
       {said && <Notice alert>{said}</Notice>}
     </section>
   );

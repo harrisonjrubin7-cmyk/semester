@@ -68,7 +68,6 @@ export const SOURCES: readonly { path: string; title: string; what: string }[] =
     what: 'Twenty architecture priorities — map, domains, canonical model, lineage, reconciliation, connectors, degradation, policy-as-code, privacy operations, security, observability, SLOs, resilience, design system, event bus, flags, risk-based tests, performance, the console and a sandbox — a recommended sequence and the rule every feature must answer.',
   },
 ];
-
 export const READ_ON = '2026-09-29';
 
 /**
@@ -195,6 +194,8 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['edit_community_post', 'self-service', ['auth.uid()']],
   ['end_my_session', 'self-service', ['auth.uid()', 'user_id = $2']],
   ['export_my_data', 'self-service', ['auth.uid()']],
+  ['finance_command', 'financial', ['auth.uid()', 'private.has_capability', 'private.finance_receipt_authorized']],
+  ['finance_command_receipt', 'financial', ['auth.uid()', 'private.finance_receipt_authorized']],
   ['follow_organization', 'self-service', ['auth.uid()']],
   ['forget_my_advisor_shares', 'self-service', ['auth.uid()']],
   ['forget_my_beta', 'self-service', ['auth.uid()', 'private.beta_confirmed_email']],
@@ -462,6 +463,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
   {
+    file: '20261010160000_finance_command_receipts.sql',
+    functions: ['finance_command', 'finance_command_receipt'],
+  },
+  {
     file: '20261009230000_guardian_projection_foundation.sql',
     functions: ['read_guardian_calendar_projection', 'read_guardian_projection_access_history'],
   },
@@ -553,6 +558,7 @@ export const TABLES: readonly (readonly [table: string, disposition: Disposition
   ['private.direct_rate_limit', 'private-internal', 'the direct rate-limit trigger'],
   ['private.domain_event_receipts', 'private-internal', 'the domain outbox consumer'],
   ['private.domain_outbox_events', 'private-internal', 'the domain outbox'],
+  ['private.finance_command_receipts', 'private-internal', 'the student-account finance command seam'],
   ['private.gateway_audit', 'private-internal', 'the university gateway'],
   ['private.gateway_health_probe', 'private-internal', 'the university gateway'],
   ['private.gateway_intelligence_action', 'private-internal', 'the intelligence gateway'],

@@ -35,6 +35,7 @@
         "action.updated",
         "action.completed",
         "plan.updated",
+        "finance.commanded",
         "task.created",
         "task.updated",
         "task.completed",

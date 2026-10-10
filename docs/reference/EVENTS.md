@@ -2,9 +2,9 @@
 
 > **Type:** reference · **Audience:** implementers, partner-developers · **Owner:** `data` · **Truth:** generated · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/platform-reference.test.ts`
 
-This page lists the 65 event types the platform's event envelope allows, the rules that decide whether a value is a valid event, and how the outbox and consumer receipts work; stop reading if you want events you can subscribe to today, because producers are mounted, but nothing outside the repository can subscribe.
+This page lists the 66 event types the platform's event envelope allows, the rules that decide whether a value is a valid event, and how the outbox and consumer receipts work; stop reading if you want events you can subscribe to today, because producers are mounted, but nothing outside the repository can subscribe.
 
-**Status:** PARTIAL — the envelope, the catalog, the validator, the publisher loop, the consumer rule and the two database tables are built and tested. Producers: `app/server/productivity/memory.ts` (builds an in-memory store); `app/server/productivity/service.ts` (calls the library); `packages/platform/src/events/emit.ts` (calls the library); `packages/platform/src/isolation/layers.ts` (builds an in-memory store); `packages/platform/src/testing/memory.ts` (builds an in-memory store); `supabase/migrations/20261004123000_productivity_commands.sql` (inserts into the outbox tables); `supabase/migrations/20261004180000_productivity_reads.sql` (inserts into the outbox tables); `supabase/migrations/20261004191000_productivity_task_carries_the_apps_task.sql` (inserts into the outbox tables); `supabase/migrations/20261008183934_emit_domain_event.sql` (inserts into the outbox tables); `supabase/migrations/20261008190500_projection_outbox_operations.sql` (inserts into the outbox tables); `supabase/migrations/20261008193000_tenant_feature_policy_events.sql` (emits through the SQL helper); `supabase/migrations/20261008230000_tenant_rollout_projection.sql` (emits through the SQL helper); `supabase/migrations/20261009160000_registration_readiness_store.sql` (emits through the SQL helper); `supabase/migrations/20261010140000_registration_readiness_timeout_contract.sql` (emits through the SQL helper). Mounted on a running entry point: `app/api/productivity/[...path].ts`, `app/server/institution/vercel-service.ts`, which answers only when a deployment sets `SEMESTER_PRODUCTIVITY` to on. Callers of `drainOutbox` outside the library: none, so nothing publishes what is written.
+**Status:** PARTIAL — the envelope, the catalog, the validator, the publisher loop, the consumer rule and the two database tables are built and tested. Producers: `app/server/productivity/memory.ts` (builds an in-memory store); `app/server/productivity/service.ts` (calls the library); `packages/platform/src/events/emit.ts` (calls the library); `packages/platform/src/isolation/layers.ts` (builds an in-memory store); `packages/platform/src/testing/memory.ts` (builds an in-memory store); `supabase/migrations/20261004123000_productivity_commands.sql` (inserts into the outbox tables); `supabase/migrations/20261004180000_productivity_reads.sql` (inserts into the outbox tables); `supabase/migrations/20261004191000_productivity_task_carries_the_apps_task.sql` (inserts into the outbox tables); `supabase/migrations/20261008183934_emit_domain_event.sql` (inserts into the outbox tables); `supabase/migrations/20261008190500_projection_outbox_operations.sql` (inserts into the outbox tables); `supabase/migrations/20261008193000_tenant_feature_policy_events.sql` (emits through the SQL helper); `supabase/migrations/20261008230000_tenant_rollout_projection.sql` (emits through the SQL helper); `supabase/migrations/20261009160000_registration_readiness_store.sql` (emits through the SQL helper); `supabase/migrations/20261010140000_registration_readiness_timeout_contract.sql` (emits through the SQL helper); `supabase/migrations/20261010160000_finance_command_receipts.sql` (emits through the SQL helper). Mounted on a running entry point: `app/api/productivity/[...path].ts`, `app/server/institution/vercel-service.ts`, which answers only when a deployment sets `SEMESTER_PRODUCTIVITY` to on. Callers of `drainOutbox` outside the library: none, so nothing publishes what is written.
 
 <!-- Rendered from packages/institution/src/events.ts by app/src/lib/docs/platform-reference.test.ts. Edit the code, then run `REGISTERS=write npx vitest run src/lib/docs/platform-reference.test.ts` from app/. -->
 
@@ -50,7 +50,7 @@ Every event is a `SemesterEvent`. `makeEvent` stamps `eventVersion`, `retentionC
 
 Classifications are ordered `public` < `internal` < `student_private` < `education_record`. Each type's classification below is a floor: a producer may raise it and may not lower it. Retention classes are `operational`, `student_record`, `audit`, `commercial`; a row declares its class so a sweep can apply policy without reading the payload. The durations are policy, in [`RETENTION.md`](../../RETENTION.md), not code.
 
-## The catalog (65 types, 10 groups)
+## The catalog (66 types, 10 groups)
 
 Every type is at version 1. A consumer refuses a type that is not listed. A producer adds its type here in the same change as its first consumer.
 
@@ -75,6 +75,7 @@ Schema: [`student-and-action.schema.json`](schemas/events/student-and-action.sch
 | `action.updated` | 1 | `student_private` | `student_record` |
 | `action.completed` | 1 | `student_private` | `student_record` |
 | `plan.updated` | 1 | `student_private` | `student_record` |
+| `finance.commanded` | 1 | `student_private` | `student_record` |
 
 ### Tasks and calendar
 
@@ -264,7 +265,7 @@ The schemas use draft 2020-12 and are generated from the catalog, one file per g
 | --- | --- | --- |
 | [`envelope.schema.json`](schemas/events/envelope.schema.json) | `urn:semester:events:envelope` | The envelope, and the catalog's type names. |
 | [`identity.schema.json`](schemas/events/identity.schema.json) | `urn:semester:events:identity` | 4 types: the envelope plus each type's constant name and version and the classifications at or above its floor. |
-| [`student-and-action.schema.json`](schemas/events/student-and-action.schema.json) | `urn:semester:events:student-and-action` | 4 types: the envelope plus each type's constant name and version and the classifications at or above its floor. |
+| [`student-and-action.schema.json`](schemas/events/student-and-action.schema.json) | `urn:semester:events:student-and-action` | 5 types: the envelope plus each type's constant name and version and the classifications at or above its floor. |
 | [`tasks-and-calendar.schema.json`](schemas/events/tasks-and-calendar.schema.json) | `urn:semester:events:tasks-and-calendar` | 10 types: the envelope plus each type's constant name and version and the classifications at or above its floor. |
 | [`lms.schema.json`](schemas/events/lms.schema.json) | `urn:semester:events:lms` | 10 types: the envelope plus each type's constant name and version and the classifications at or above its floor. |
 | [`integration.schema.json`](schemas/events/integration.schema.json) | `urn:semester:events:integration` | 6 types: the envelope plus each type's constant name and version and the classifications at or above its floor. |

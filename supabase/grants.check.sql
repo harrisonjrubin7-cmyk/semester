@@ -569,6 +569,17 @@ declare
     -- sibling `erase_account(uuid)` takes an account id and so is
     -- service_role only, and is not here.
     'export_my_data()',
+
+    -- The receipt-safe student-account command seam. Both functions derive
+    -- the actor from auth.uid(); the writer rechecks current finance scope (or
+    -- the exact linked student for plan.request), delegates accounting rules
+    -- to the existing table guards, and atomically records the receipt and
+    -- outbox event. The reader returns only the original actor's receipt while
+    -- that actor still has current authority. The focused disposable suite is
+    -- finance-command-receipts.check.sql.
+    'finance_command(want_tenant text, want_student text, want_action text, want_key text, want_expected_version bigint, want_payload jsonb)',
+    'finance_command_receipt(want_tenant text, want_student text, want_action text, want_key text)',
+
     -- 20260930234000_data_subject_request_intake.sql: derives both subject and
     -- tenant from auth.uid(), accepts only the four bounded request kinds, and
     -- returns an existing open same-kind request instead of duplicating it.

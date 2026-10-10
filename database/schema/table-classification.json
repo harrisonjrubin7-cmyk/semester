@@ -211,6 +211,7 @@
    "private.direct_rate_limit",
    "private.domain_event_receipts",
    "private.domain_outbox_events",
+   "private.finance_command_receipts",
    "private.gateway_audit",
    "private.gateway_health_probe",
    "private.gateway_intelligence_action",

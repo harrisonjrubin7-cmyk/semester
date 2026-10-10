@@ -8,6 +8,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DEFAULT_SETTINGS, type AccountEntry, type AccountRequest, type FinanceSettings, type PaymentPlanRecord, type Proposal, type SchoolPlanRules } from './accounts';
 import { cancelPlan, decidePlan, planRules, plansFor, plansWaiting } from './plans';
+import { recoverFinanceReceipt, submitFinanceCommand, type FinanceCommandAction, type FinanceCommandReceipt } from './commands';
+
+export type { FinanceCommandAction, FinanceCommandReceipt, FinanceCommandUiState } from './commands';
 
 export interface Reconciliation {
   id: string;
@@ -40,9 +43,10 @@ export interface FinanceApi {
   /** The school's provider-backed entries in a month: what a reconciliation compares. */
   periodEntries(tenantId: string, period: string): Promise<AccountEntry[]>;
   reconciliations(tenantId: string, period: string): Promise<Reconciliation[]>;
-  request(tenantId: string, p: Proposal): Promise<string>;
-  decide(id: string, status: 'approved' | 'rejected', note: string): Promise<void>;
-  withdraw(id: string): Promise<void>;
+  request(tenantId: string, p: Proposal, commandKey: string): Promise<FinanceCommandReceipt>;
+  decide(tenantId: string, studentRef: string, id: string, expectedVersion: number, status: 'approved' | 'rejected', note: string, commandKey: string): Promise<FinanceCommandReceipt>;
+  withdraw(tenantId: string, studentRef: string, id: string, expectedVersion: number, commandKey: string): Promise<FinanceCommandReceipt>;
+  receipt(tenantId: string, studentRef: string, action: FinanceCommandAction, commandKey: string): Promise<FinanceCommandReceipt>;
   reconcile(tenantId: string, period: string, c: ReconciliationCounts, sha: string): Promise<void>;
   close(tenantId: string, period: string, note: string): Promise<void>;
   /** Payment plans (`student_payment_plans`): one student's, newest first. */
@@ -113,28 +117,21 @@ export function financeApi(db: SupabaseClient): FinanceApi {
       if (error) throw refusal(error, 'Could not load the reconciliations.');
       return (data ?? []) as Reconciliation[];
     },
-    async request(tenantId, p) {
-      const { data, error } = await db
-        .from('student_account_requests')
-        .insert({
-          tenant_id: tenantId, student_ref: p.student_ref, kind: p.kind, category: p.category, amount_cents: p.amount_cents,
-          description: p.description.trim(), reference_entry_id: p.reference_entry_id, provider_ref: p.provider_ref.trim(), effective_on: p.effective_on,
-        })
-        .select('id')
-        .single();
-      if (error) throw refusal(error, 'Could not make the request.');
-      return (data as { id: string }).id;
+    async request(tenantId, p, commandKey) {
+      return submitFinanceCommand(db, tenantId, p.student_ref, 'request.create', commandKey, null, {
+        kind: p.kind, category: p.category, amount_cents: p.amount_cents, description: p.description.trim(),
+        reference_entry_id: p.reference_entry_id, provider_ref: p.provider_ref.trim(), effective_on: p.effective_on,
+      });
     },
-    async decide(id, status, note) {
-      const { data, error } = await db.from('student_account_requests').update({ status, decision_note: note }).eq('id', id).select('id');
-      if (error) throw refusal(error, 'Could not record the decision.');
-      if (!data || data.length === 0) throw new Error('Your account cannot decide this request.');
+    async decide(tenantId, studentRef, id, expectedVersion, status, note, commandKey) {
+      return submitFinanceCommand(db, tenantId, studentRef, status === 'approved' ? 'request.approve' : 'request.reject', commandKey, expectedVersion, {
+        request_id: id, note: note.trim(),
+      });
     },
-    async withdraw(id) {
-      const { data, error } = await db.from('student_account_requests').update({ status: 'withdrawn' }).eq('id', id).select('id');
-      if (error) throw refusal(error, 'Could not withdraw the request.');
-      if (!data || data.length === 0) throw new Error('Your account cannot withdraw this request.');
+    async withdraw(tenantId, studentRef, id, expectedVersion, commandKey) {
+      return submitFinanceCommand(db, tenantId, studentRef, 'request.withdraw', commandKey, expectedVersion, { request_id: id });
     },
+    receipt: (tenantId, studentRef, action, commandKey) => recoverFinanceReceipt(db, tenantId, studentRef, action, commandKey),
     async reconcile(tenantId, period, c, sha) {
       const { error } = await db.from('student_account_reconciliations').insert({ tenant_id: tenantId, period, ...c, settlement_sha256: sha });
       if (error) throw refusal(error, 'Could not record the reconciliation.');

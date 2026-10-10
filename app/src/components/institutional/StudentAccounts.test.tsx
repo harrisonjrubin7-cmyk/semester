@@ -14,7 +14,8 @@ vi.mock('../../lib/deliver', () => ({
 }));
 
 import { DEFAULT_SCHOOL_PLAN, DEFAULT_SETTINGS, type AccountEntry, type AccountRequest, type PaymentPlanRecord } from '../../lib/finance/accounts';
-import type { FinanceApi, Reconciliation } from '../../lib/finance/api';
+import type { FinanceApi, FinanceCommandReceipt, Reconciliation } from '../../lib/finance/api';
+import { FinanceCommandError } from '../../lib/finance/commands';
 import { StudentAccounts } from './StudentAccounts';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -46,6 +47,7 @@ const PLAN: PaymentPlanRecord = {
 const PLAN_PAY = e({ id: 'e9', kind: 'payment', amount_cents: -30000, effective_on: '2026-10-15', provider_ref: 'pi_plan1', description: 'Plan payment' });
 
 function fake(over: Partial<FinanceApi> = {}, pending: AccountRequest[] = [], recs: Reconciliation[] = []) {
+  const accepted: FinanceCommandReceipt = { id: 'receipt-1', commandKey: 'finance:test:00000001', action: 'request.create', status: 'accepted', resourceId: 'r-new', state: 'proposed', version: 1, recordedAt: '2026-10-10T12:00:00Z' };
   const api = {
     lookup: vi.fn(async () => ({ entries: [CHARGE, PAY], requests: [] as AccountRequest[] })),
     pending: vi.fn(async () => pending),
@@ -53,9 +55,10 @@ function fake(over: Partial<FinanceApi> = {}, pending: AccountRequest[] = [], re
     closed: vi.fn(async () => ['2026-08']),
     periodEntries: vi.fn(async () => [NOV_PAY]),
     reconciliations: vi.fn(async () => recs),
-    request: vi.fn(async () => 'r-new'),
-    decide: vi.fn(async () => undefined),
-    withdraw: vi.fn(async () => undefined),
+    request: vi.fn(async () => accepted),
+    decide: vi.fn(async () => ({ ...accepted, action: 'request.approve' as const, state: 'approved' as const, version: 2 })),
+    withdraw: vi.fn(async () => ({ ...accepted, action: 'request.withdraw' as const, state: 'withdrawn' as const, version: 2 })),
+    receipt: vi.fn(async () => accepted),
     reconcile: vi.fn(async () => undefined),
     close: vi.fn(async () => undefined),
     plans: vi.fn(async () => [] as PaymentPlanRecord[]),
@@ -71,6 +74,7 @@ function fake(over: Partial<FinanceApi> = {}, pending: AccountRequest[] = [], re
 let host: HTMLDivElement;
 let root: Root;
 beforeEach(() => {
+  localStorage.clear();
   host = document.createElement('div');
   document.body.appendChild(host);
   root = createRoot(host);
@@ -79,6 +83,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+  localStorage.clear();
 });
 
 type Who = { viewerId: string; request: boolean; approve: boolean; approveHigh: boolean; close: boolean; read: boolean };
@@ -193,7 +198,62 @@ describe('requesting', () => {
     await click(form.querySelector('button[type="submit"]') as HTMLButtonElement);
     expect(api.request).toHaveBeenCalledWith('vu', expect.objectContaining({
       student_ref: 'S100', kind: 'refund', amount_cents: 150000, reference_entry_id: 'e2', provider_ref: 're_1', description: 'Partial refund',
-    }));
+    }), expect.stringMatching(/^finance:request\.create:/));
+  });
+
+  it('shows an unknown outcome and recovers the accepted receipt instead of blindly resubmitting', async () => {
+    const request = vi.fn(async () => { throw new FinanceCommandError('unknown', 'No answer came back.'); });
+    const receipt = vi.fn(async () => ({ id: 'receipt-recovered' } as FinanceCommandReceipt));
+    const api = fake({ request, receipt });
+    await mount(api, officer);
+    await openAccount();
+    const form = host.querySelector('form[aria-label="Make a request"]')!;
+    type(field(/^Amount/, form), '25');
+    type(field(/^Description/, form), 'Laboratory fee');
+    await click(form.querySelector('button[type="submit"]') as HTMLButtonElement);
+    await settle();
+    expect(form.textContent).toContain('Unknown — no answer came back');
+    expect(request).toHaveBeenCalledTimes(1);
+    expect((form.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBe(true);
+
+    // The unresolved key survives a refresh; the fresh screen offers recovery
+    // and cannot mint a second request key.
+    await act(async () => root.unmount());
+    root = createRoot(host);
+    await mount(api, officer);
+    await openAccount();
+    const refreshed = host.querySelector('form[aria-label="Make a request"]')!;
+    expect(refreshed.textContent).toContain('a previous request has no confirmed response');
+    expect((refreshed.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBe(true);
+    await click([...refreshed.querySelectorAll('button')].find((b) => /Check for accepted receipt/.test(b.textContent ?? '')) as HTMLButtonElement);
+    await settle();
+    expect(receipt).toHaveBeenCalledWith('vu', 'S100', 'request.create', expect.stringMatching(/^finance:request\.create:/));
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(refreshed.textContent).toContain('Accepted — recovered receipt receipt-recovered');
+  });
+
+  it('keeps an unknown withdrawal key across refresh and blocks a second withdrawal', async () => {
+    const own = req({ id: 'withdraw-me', kind: 'charge', amount_cents: 2500, requested_by: OFF1 });
+    const withdraw = vi.fn(async () => { throw new FinanceCommandError('unknown', 'No answer came back.'); });
+    const firstApi = fake({ lookup: vi.fn(async () => ({ entries: [CHARGE, PAY], requests: [own] })), withdraw });
+    await mount(firstApi, officer);
+    await openAccount();
+    await click(button(/^Withdraw$/));
+    await settle();
+    expect((button(/^Withdraw$/) as HTMLButtonElement).disabled).toBe(true);
+
+    await act(async () => root.unmount());
+    root = createRoot(host);
+    const receipt = vi.fn(async () => ({ id: 'withdraw-receipt' } as FinanceCommandReceipt));
+    const secondApi = fake({ lookup: vi.fn(async () => ({ entries: [CHARGE, PAY], requests: [] })), receipt });
+    await mount(secondApi, officer);
+    await openAccount();
+    expect(host.textContent).toContain('a previous withdrawal has no confirmed response');
+    expect(button(/^Withdraw$/)).toBeUndefined();
+    await click(button(/Check for accepted receipt/));
+    await settle();
+    expect(receipt).toHaveBeenCalledWith('vu', 'S100', 'request.withdraw', expect.stringMatching(/^finance:request\.withdraw:/));
+    expect(withdraw).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -215,7 +275,7 @@ describe('deciding', () => {
     expect(items[2].textContent).toContain('This needs a high-value approver, which your account is not.');
     expect(items[0].querySelector('button')?.textContent).toMatch(/Approve/i);
     await act(async () => items[3].querySelector('button')!.click());
-    expect(api.decide).toHaveBeenCalledWith('q4', 'approved', '');
+    expect(api.decide).toHaveBeenCalledWith('vu', 'S100', 'q4', 1, 'approved', '', expect.stringMatching(/^finance:request\.approve:/));
   });
 
   it('offers nothing on the viewer’s own request', async () => {
@@ -223,6 +283,31 @@ describe('deciding', () => {
     await settle();
     const first = host.querySelector('section[aria-label="Requests waiting for a decision"] li')!;
     expect(first.textContent).toContain('You made this request, so someone else decides it.');
+  });
+
+  it('keeps an unknown decision key across refresh and blocks a second decision', async () => {
+    const waiting = [req({ id: 'decision-race', kind: 'charge', amount_cents: 2500, requested_by: OFF1 })];
+    const decide = vi.fn(async () => { throw new FinanceCommandError('unknown', 'No answer came back.'); });
+    const firstApi = fake({ decide }, waiting);
+    await mount(firstApi, { ...officer, viewerId: OFF2 });
+    await settle();
+    await click(button(/^Approve$/));
+    await settle();
+    expect((button(/^Approve$/) as HTMLButtonElement).disabled).toBe(true);
+    expect((button(/^Reject$/) as HTMLButtonElement).disabled).toBe(true);
+
+    await act(async () => root.unmount());
+    root = createRoot(host);
+    const receipt = vi.fn(async () => ({ id: 'decision-receipt' } as FinanceCommandReceipt));
+    const secondApi = fake({ receipt }, []);
+    await mount(secondApi, { ...officer, viewerId: OFF2 });
+    await settle();
+    expect(host.textContent).toContain('a previous decision has no confirmed response');
+    expect(button(/^Approve$/)).toBeUndefined();
+    await click(button(/Check for accepted receipt/));
+    await settle();
+    expect(receipt).toHaveBeenCalledWith('vu', 'S100', 'request.approve', expect.stringMatching(/^finance:request\.approve:/));
+    expect(decide).toHaveBeenCalledTimes(1);
   });
 });
 

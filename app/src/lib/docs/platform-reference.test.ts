@@ -1252,7 +1252,7 @@ describe('EVENTS.md and its schemas (generated)', () => {
     const all = groups.flatMap((g) => g.types);
     expect(new Set(all).size).toBe(all.length);
     expect(diff(all, Object.keys(EVENT_TYPES))).toEqual(NONE);
-    expect(all.length).toBe(65);
+    expect(all.length).toBe(66);
   });
 
   it('every extracted rejection reason has a stated rule, and no rule is orphaned', () => {
@@ -1405,6 +1405,9 @@ describe('EVENTS.md and its schemas (generated)', () => {
       'supabase/migrations/20261009160000_registration_readiness_store.sql',
       // The expansion RPC preserves the same atomic minimized outbox emission while accepting rolling clients.
       'supabase/migrations/20261010140000_registration_readiness_timeout_contract.sql',
+      // The finance receipt seam emits only receipt/resource ids, action, state and version in the command transaction.
+      // The draft migration is not applied and no publisher drains this outbox.
+      'supabase/migrations/20261010160000_finance_command_receipts.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);
