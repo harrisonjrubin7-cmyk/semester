@@ -165,6 +165,12 @@ declare
     -- which re-checks every grant and logs the read.
     'make_family_share(want_categories text[], want_resources text[], want_days integer, want_items jsonb, want_shown_as text)',
     'read_family_share()',
+    -- 20261009230000_guardian_projection_foundation.sql: an online-only,
+    -- minimized calendar read that rechecks a verified guardian link and the
+    -- student's exact live consent before recording the decision. The second
+    -- entry returns only the caller-student's bounded access history.
+    'read_guardian_calendar_projection(wanted_student uuid, wanted_purpose text)',
+    'read_guardian_projection_access_history()',
     -- 20260928308000_support_shares.sql: an athlete shares with one person
     -- holding athletic_academic_support at their school; staff list and read
     -- through functions that re-check that role on every call and log reads.

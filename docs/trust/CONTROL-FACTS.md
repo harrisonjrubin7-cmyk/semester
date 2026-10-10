@@ -12,14 +12,14 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 227 |
+| Migration files | 230 |
 | Tables created in `public` and not later dropped | 342 |
 | … of which enable row-level security in a migration | 342 |
-| Tables created in `private` and not later dropped | 41 |
-| … of which enable row-level security in a migration | 41 |
+| Tables created in `private` and not later dropped | 43 |
+| … of which enable row-level security in a migration | 43 |
 | Tables with no `enable row level security` statement found | 0 |
 | Tables named by at least one literal `create policy` statement | 276 |
-| Tables with RLS found and no literal policy statement | 107 |
+| Tables with RLS found and no literal policy statement | 109 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-148 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+149 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -97,6 +97,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/grants.check.sql` | Which functions a client may call at all. |
 | `supabase/groups.check.sql` | Four people and two groups, without needing four people. |
 | `supabase/gtm.check.sql` | The go-to-market foundation: the rules in app/src/lib/gtm, held by the database. |
+| `supabase/guardian-projection.check.sql` | Guardian projection foundation: relationship + consent + projection. |
 | `supabase/help-requests.check.sql` | Help requests: a student asks a person for help, and nothing else happens. |
 | `supabase/hold-aware-sweeps.check.sql` | School and account holds reaching the AI-runtime and Community sweeps: that a school hold keeps that school's AI metadata and every account's Community rows in it; that an account hold keeps that acc… |
 | `supabase/hold-blind-sweeps.check.sql` | A legal hold reaching the last three sweeps that deleted without asking (20261004150000_holds_reach_the_last_three_sweeps.sql): student tombstones, individual subscribers' financial records, and the… |
@@ -118,7 +119,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/legal-holds.check.sql` | Legal holds (RM-02, RM-05): who may place one and over what, that it is released only by someone else with a reason, that it is never deleted or edited, that a held account cannot be deleted, and tha… |
 | `supabase/listings.check.sql` | Verified listings: who drafts, who publishes, who reads, and https only. |
 | `supabase/lti-capability.check.sql` | Whether an LTI launch's account holds lti:launch at the school, as the launch facts report it. |
-| `supabase/lti-integration.check.sql` | LTI bound to the integration control plane: the passback gate walked one gate at a time, the pre-binding behaviour kept, and the launch's context recorded only when every condition holds. |
+| `supabase/lti-integration.check.sql` | LTI bound to the integration control plane: the passback gate walks one gate at a time, unbound passback fails closed, and the launch's context is recorded only when every condition holds. |
 | `supabase/lti-membership.check.sql` | Joining an LTI launch to an institutional membership. |
 | `supabase/lti.check.sql` | The two tables an LTI launch runs on, and the four ways they are meant to refuse. |
 | `supabase/ltiags.check.sql` | The table a grade finds its way back through, and the ways it refuses. |
@@ -288,14 +289,14 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 229 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 229 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 231 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 231 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 65 |
-| Register rows in category `sharing` | 21 |
+| Register rows in category `sharing` | 23 |
 | Register rows in category `admin` | 88 |
 | Register rows in category `integration` | 6 |
 | Register rows in category `financial` | 3 |

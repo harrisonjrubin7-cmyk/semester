@@ -14,6 +14,42 @@
       "tenant_activated": false,
       "monitored": false
     },
+    "evidence": {
+      "designed": [
+        {
+          "path": "docs/reference/registration-readiness-workflow.md",
+          "kind": "design"
+        }
+      ],
+      "schema": [
+        {
+          "path": "packages/institution/src/readiness.ts",
+          "kind": "code"
+        },
+        {
+          "path": "supabase/migrations/20261009160000_registration_readiness_store.sql",
+          "kind": "schema"
+        },
+        {
+          "path": "supabase/registration-readiness-store.check.sql",
+          "kind": "test"
+        }
+      ],
+      "policies": [
+        {
+          "path": "packages/institution/src/policy.ts",
+          "kind": "code"
+        },
+        {
+          "path": "packages/institution/src/policy.test.ts",
+          "kind": "test"
+        },
+        {
+          "path": "packages/platform/src/tenancy/context.ts",
+          "kind": "code"
+        }
+      ]
+    },
     "highestProvenStage": "policies",
     "nextUnprovenStage": "api"
   }

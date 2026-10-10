@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import base64
+import binascii
 import hashlib
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from uuid import uuid4
 
 import boto3
+from botocore.exceptions import BotoCoreError, ClientError
 
 from app.core.config import settings
 
@@ -16,22 +20,66 @@ ALLOWED_EXTENSIONS = {
 
 MIME_FAMILIES = {
     ".pdf": {"application/pdf"},
+    ".doc": {"application/msword"},
     ".docx": {"application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/zip"},
+    ".rtf": {"application/rtf", "text/rtf"},
+    ".odt": {"application/vnd.oasis.opendocument.text", "application/zip"},
+    ".ppt": {"application/vnd.ms-powerpoint"},
     ".pptx": {"application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/zip"},
+    ".xls": {"application/vnd.ms-excel"},
     ".xlsx": {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/zip"},
     ".zip": {"application/zip", "application/x-zip-compressed"},
-    ".txt": {"text/plain"}, ".md": {"text/plain"}, ".csv": {"text/plain", "text/csv"},
+    ".txt": {"text/plain"}, ".md": {"text/plain", "text/markdown"}, ".csv": {"text/plain", "text/csv"},
     ".jpg": {"image/jpeg"}, ".jpeg": {"image/jpeg"}, ".png": {"image/png"},
+    ".heic": {"image/heic", "image/heif"}, ".webp": {"image/webp"},
+    ".tiff": {"image/tiff"}, ".html": {"text/html"},
+    ".mhtml": {"multipart/related", "message/rfc822"},
+    ".epub": {"application/epub+zip", "application/zip"},
+    ".mp3": {"audio/mpeg"}, ".m4a": {"audio/mp4", "video/mp4"},
+    ".wav": {"audio/wav", "audio/x-wav"}, ".mp4": {"video/mp4"},
+    ".mov": {"video/quicktime"},
 }
 
 
-def validate_upload(filename: str, size_bytes: int) -> None:
+@dataclass(frozen=True)
+class StoredObjectMetadata:
+    backend: str
+    bucket: str | None
+    key: str
+    size_bytes: int
+    content_type: str | None
+    checksum_sha256: str | None
+    encryption: str | None
+    owner_verified: bool
+
+
+class ObjectInspectionError(ValueError):
+    pass
+
+
+def validate_upload(filename: str, size_bytes: int, mime_type: str | None = None) -> None:
     if size_bytes > settings.max_upload_bytes:
         raise ValueError("File exceeds upload limit")
     if Path(filename).suffix.lower() not in ALLOWED_EXTENSIONS:
         raise ValueError("Unsupported file format")
     if Path(filename).name != filename or "\x00" in filename:
         raise ValueError("Unsafe filename")
+    expected_mimes = MIME_FAMILIES.get(Path(filename).suffix.lower())
+    if not expected_mimes:
+        raise ValueError("File format has no verified content-type policy")
+    if (
+        mime_type is not None
+        and mime_type != "application/octet-stream"
+        and mime_type not in expected_mimes
+    ):
+        raise ValueError("Declared content type does not match the file extension")
+
+
+def normalize_upload_mime(filename: str, mime_type: str) -> str:
+    expected_mimes = MIME_FAMILIES[Path(filename).suffix.lower()]
+    if mime_type == "application/octet-stream":
+        return sorted(expected_mimes)[0]
+    return mime_type
 
 
 def storage_key(course_id: str, filename: str) -> str:
@@ -47,7 +95,14 @@ class ObjectStorage:
             aws_access_key_id=settings.s3_access_key, aws_secret_access_key=settings.s3_secret_key,
         )
 
-    def presign_put(self, key: str, mime_type: str) -> str:
+    def presign_put(
+        self,
+        key: str,
+        mime_type: str,
+        *,
+        size_bytes: int,
+        sha256: str,
+    ) -> str:
         if self.local:
             return f"/api/v1/uploads/local/{key}"
         return self.client.generate_presigned_url(
@@ -56,9 +111,55 @@ class ObjectStorage:
                 "Bucket": settings.s3_bucket,
                 "Key": key,
                 "ContentType": mime_type,
+                "ContentLength": size_bytes,
+                "ChecksumSHA256": base64.b64encode(bytes.fromhex(sha256)).decode(),
                 "ServerSideEncryption": settings.s3_sse,
             },
             ExpiresIn=900,
+        )
+
+    def inspect(self, key: str) -> StoredObjectMetadata:
+        if self.local:
+            path = self.path(key)
+            if not path.is_file():
+                raise ValueError("Uploaded object is missing")
+            return StoredObjectMetadata(
+                backend="local",
+                bucket=None,
+                key=key,
+                size_bytes=path.stat().st_size,
+                content_type=validate_actual_mime(path),
+                checksum_sha256=sha256_file(path),
+                encryption=None,
+                owner_verified=True,
+            )
+        if not settings.s3_expected_bucket_owner:
+            raise ValueError("S3 expected bucket owner is not configured")
+        try:
+            response = self.client.head_object(
+                Bucket=settings.s3_bucket,
+                Key=key,
+                ExpectedBucketOwner=settings.s3_expected_bucket_owner,
+                ChecksumMode="ENABLED",
+            )
+            encoded_checksum = response.get("ChecksumSHA256")
+            checksum = (
+                base64.b64decode(encoded_checksum, validate=True).hex()
+                if encoded_checksum
+                else None
+            )
+            size_bytes = int(response["ContentLength"])
+        except (BotoCoreError, ClientError, binascii.Error, KeyError, TypeError, ValueError) as exc:
+            raise ObjectInspectionError("Stored object metadata could not be verified") from exc
+        return StoredObjectMetadata(
+            backend="s3",
+            bucket=settings.s3_bucket,
+            key=key,
+            size_bytes=size_bytes,
+            content_type=response.get("ContentType"),
+            checksum_sha256=checksum,
+            encryption=response.get("ServerSideEncryption"),
+            owner_verified=True,
         )
 
     def path(self, key: str) -> Path:

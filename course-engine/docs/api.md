@@ -2,6 +2,6 @@
 
 FastAPI publishes the full OpenAPI schema at `/docs` and `/openapi.json`. All routes except health, register, and login require `Authorization: Bearer <token>`.
 
-Implemented route groups cover users/authentication, courses, two-step uploads, file lifecycle and classification, review items, conflicts, editable calendar and ICS, study asset generation/lifecycle/exports, card review, quiz attempts, learner progress, and benchmark results. Upload completion creates an asynchronous extraction job; external clients should poll the returned job record once a job endpoint is added or refresh the file list in the MVP.
+Implemented route groups cover users/authentication, courses, two-step uploads, file lifecycle and classification, review items, conflicts, editable calendar and ICS, study asset generation/lifecycle/exports, card review, quiz attempts, learner progress, and benchmark results. Upload completion verifies the stored object before it creates a durable completion receipt and asynchronous extraction job. An identical retry returns the same receipt and job; a retry with different completion data returns `409`. External clients can poll `/jobs/{job_id}`, cancel non-completed work with `POST /jobs/{job_id}/cancel`, or refresh the file list. Job reads and cancellation use the owning course boundary and return `404` across tenants.
 
 The production Google/Outlook layer is intentionally an adapter boundary. No uncertain or conflicting event is synced externally.
