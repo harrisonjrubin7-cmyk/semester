@@ -32,7 +32,10 @@ function request(path: string, body: unknown, headers: Record<string, string> = 
   });
 }
 
-function gateway(commands?: RegistrationReadinessCommandBoundary, refresh = vi.fn(async () => actor)) {
+function gateway(
+  commands?: RegistrationReadinessCommandBoundary,
+  refresh: (identity: UniversityIdentity, token: string) => Promise<UniversityIdentity | null> = vi.fn(async () => actor),
+) {
   return {
     handle: createGateway({
       origin: 'https://semesterintel.tech',
