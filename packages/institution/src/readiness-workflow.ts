@@ -34,7 +34,7 @@ export const REGISTRATION_READINESS_EVALUATION: WorkflowDefinition<RegistrationR
   terminal: [],
   transitions: {
     requested: ['evaluating'],
-    evaluating: ['ready', 'blocked', 'needs_review', 'unknown', 'stale'],
+    evaluating: ['ready', 'blocked', 'needs_review', 'unknown', 'stale', 'reconciling'],
     ready: ['evaluating'],
     blocked: ['evaluating'],
     needs_review: ['reconciling'],
@@ -46,6 +46,7 @@ export const REGISTRATION_READINESS_EVALUATION: WorkflowDefinition<RegistrationR
     ['evaluating', 'needs_review'],
     ['evaluating', 'unknown'],
     ['evaluating', 'stale'],
+    ['evaluating', 'reconciling'],
     ['needs_review', 'reconciling'],
     ['unknown', 'reconciling'],
     ['stale', 'reconciling'],
@@ -145,7 +146,7 @@ const receiptStatus = (state: RegistrationReadinessEvaluationState): ReadinessEv
   REGISTRATION_READINESS_COMPLETED_OUTCOMES.some((outcome) => outcome === state) ? 'completed' : 'pending';
 
 function eventTypeFor(state: RegistrationReadinessEvaluationState): ReadinessWorkflowEventType {
-  if (state === 'requested') return 'registration.readiness_requested';
+  if (state === 'requested' || state === 'evaluating') return 'registration.readiness_requested';
   if (state === 'reconciling') return 'registration.readiness_reconciliation_requested';
   return 'registration.readiness_evaluated';
 }
