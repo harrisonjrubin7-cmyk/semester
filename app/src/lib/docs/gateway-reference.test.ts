@@ -75,7 +75,7 @@ const SRC = {
   entry: 'app/api/institution/[...path].ts',
   provisioning: 'packages/institution/src/provisioning.ts',
   journal: 'app/server/institution/journal.ts',
-  vercel: 'app/vercel.json',
+  vercel: 'vercel.json',
 } as const;
 
 /* ── Reading source text ─────────────────────────────────────────────────── */
@@ -1326,8 +1326,10 @@ describe('the constants a reader would copy', () => {
     const adapterMs = Number(/AbortSignal\.timeout\(([\d_]+)\)/.exec(src(SRC.gateway))?.[1].replace(/_/g, ''));
     expect(auth).toContain(`${adapterMs / 1000} seconds`);
     expect(auth).toContain(`\`${CORRELATION_ID_PATTERN.source}\``);
-    const vercel = JSON.parse(read(SRC.vercel)) as { functions: Record<string, { maxDuration: number }> };
-    expect(auth).toContain(`${vercel.functions['api/institution/[...path].ts'].maxDuration} seconds`);
+    const vercel = JSON.parse(read(SRC.vercel)) as {
+      services: { api: { functions: Record<string, { maxDuration: number }> } };
+    };
+    expect(auth).toContain(`${vercel.services.api.functions['server/institution/vercel-entrypoint.js'].maxDuration} seconds`);
     expect(/requestTimeout = ([\d_]+)/.exec(src(SRC.start))?.[1].replace(/_/g, '')).toBe('30000');
     expect(/headersTimeout = ([\d_]+)/.exec(src(SRC.start))?.[1].replace(/_/g, '')).toBe('10000');
     expect(auth).toContain('requestTimeout');

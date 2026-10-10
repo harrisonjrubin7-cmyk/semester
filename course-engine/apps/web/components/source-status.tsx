@@ -10,6 +10,9 @@ const statuses = {
   offline: { label: "Offline", tone: "danger", icon: CloudOff },
   confirmed: { label: "Confirmed", tone: "success", icon: CheckCircle2 },
   uploaded: { label: "Uploaded", tone: "neutral", icon: CheckCircle2 },
+  quarantined: { label: "Awaiting safety scan", tone: "warning", icon: AlertTriangle },
+  scanning: { label: "Safety scan", tone: "info", icon: Link2 },
+  extracting: { label: "Extracting", tone: "info", icon: Link2 },
   queued: { label: "Processing", tone: "info", icon: Link2 },
   failed: { label: "Processing failed", tone: "danger", icon: AlertTriangle },
 } as const;

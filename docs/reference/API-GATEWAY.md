@@ -736,7 +736,7 @@ The same `createGateway` is composed two ways. What each composition wires diffe
 | Readiness | Journal healthy | The stricter rule [above](#health-and-sign-in-configuration) |
 | Missing configuration | Throws at startup, naming the variable, for a bad `SEMESTER_APP_ORIGIN` or `SEMESTER_JOURNAL_KEY`. Unset Supabase variables do not stop it: nobody can then sign in (`403`) | Every request answers `503` with a flat `{"error": …}` body ([errors outside the envelope](ERRORS.md#errors-outside-the-envelope)) |
 
-The Vercel function has a 30-second ceiling (`app/vercel.json`). The prefix removal, body bound and unavailable answer are in `serveInstitutionRequest` and `institution` in the entry file.
+The public API service has a 30-second function ceiling (`services.api.functions` in root `vercel.json`). The prefix removal, body bound and unavailable answer are in `serveInstitutionRequest` and `institution` in the institution route, which the service entrypoint composes unchanged.
 
 ## Response headers
 

@@ -741,7 +741,8 @@ describe('examples/event-consumer', () => {
 
   it('tracks the bounded producers, the one flagged route, and the absence of a publisher', () => {
     // The guide says the outbox runs in memory only in these examples, and that the one producer in the repository
-    // is reachable from exactly one route, switched off unless a deployment sets SEMESTER_PRODUCTIVITY=on, and
+    // is reachable from exactly one route, composed into the public API service, switched off unless a deployment
+    // sets SEMESTER_PRODUCTIVITY=on, and
     // that nothing publishes what it writes. This fails when any of that stops being true, so that someone
     // revisits the guide in the same change.
     const code: { file: string; text: string }[] = [];
@@ -762,7 +763,7 @@ describe('examples/event-consumer', () => {
       'packages/platform/src/seam/institution.ts',
       'packages/platform/src/testing/memory.ts',
     ]);
-    // Nothing outside the producers' own folders imports them, so no entry point runs them. (packages/platform is the
+    // The Vercel route imports the producer and the public API service composes that route. (packages/platform is the
     // tenancy kernel: it builds events and checks the tenant on a store; only build configuration names it.)
     // These exact consumers take non-event primitives from the platform package. The institution gateway and
     // intelligence path use the error envelope, correlation ids, request context and retrieval contract; the
@@ -783,8 +784,11 @@ describe('examples/event-consumer', () => {
       .filter((c) => /from\s+['"][^'"]*\/(?:productivity|platform)\/[^'"]*['"]/.test(c.text))
       .filter((c) => !(nonEventPlatformFiles.includes(c.file) && !/from\s+['"][^'"]*\/productivity\/[^'"]*['"]/.test(c.text)))
       .map((c) => c.file);
-    expect(mounts, 'something else now imports the productivity service or the platform package').toEqual(['app/api/productivity/[...path].ts']);
-    // The route is off unless the deployment says on: the one entry point that mounts the producer must check the switch first.
+    expect(mounts, 'something else now imports the productivity service or the platform package').toEqual([
+      'app/server/institution/vercel-service.ts',
+      'app/api/productivity/[...path].ts',
+    ]);
+    // The route remains the activation boundary: it must check the switch before it creates the producer runtime.
     expect(read('app/api/productivity/[...path].ts')).toContain('if (!productivityEnabled(process.env)) throw');
     // Nothing publishes: drainOutbox has no caller outside the library.
     expect(code.filter((c) => /\bdrainOutbox\s*\(/.test(c.text)).map((c) => c.file), 'something now calls drainOutbox').toEqual([]);
