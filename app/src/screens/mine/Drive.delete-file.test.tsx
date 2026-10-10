@@ -8,8 +8,10 @@ import { Drive } from './Drive';
 
 const files = vi.hoisted(() => ({
   deleteFile: vi.fn(async () => undefined),
+  purgeTrash: vi.fn(async () => 2),
   listTrash: vi.fn(async () => [
     { id: 'syllabus', name: 'Syllabus.pdf', type: 'application/pdf', size: 2048, added: 1, courseId: 'course-1', folderId: null, starred: false, trashedAt: 2, openedAt: null, itemId: 'deadline-1' },
+    { id: 'notes', name: 'Notes.txt', type: 'text/plain', size: 1024, added: 2, courseId: null, folderId: null, starred: false, trashedAt: 3, openedAt: null, itemId: null },
   ]),
 }));
 
@@ -18,8 +20,9 @@ vi.mock('../../lib/files', () => ({
   addFile: vi.fn(),
   sweepTrash: vi.fn(async () => undefined),
   deleteFile: files.deleteFile,
+  purgeTrash: files.purgeTrash,
   emptyTrash: vi.fn(),
-  formatBytes: (size: number) => `${size} bytes`,
+  formatBytes: (size: number) => size >= 1024 ? `${Math.round(size / 1024)} KB` : `${size} B`,
   listFiles: vi.fn(async () => []),
   listTrash: files.listTrash,
   moveFile: vi.fn(),
@@ -91,7 +94,7 @@ describe('Drive permanent file deletion', () => {
     const dialog = host.querySelector('[role="dialog"]');
     expect(dialog?.textContent).toContain('Delete Syllabus.pdf for good?');
     expect(dialog?.textContent).toContain('the only copy of Syllabus.pdf that Semester keeps on this device');
-    expect(dialog?.textContent).toContain('2048 bytes');
+    expect(dialog?.textContent).toContain('2 KB');
     expect(dialog?.textContent).toContain('course, deadline and note links are not deleted');
     expect(dialog?.textContent).toContain('workspace backup cannot restore these bytes');
     expect(files.deleteFile).not.toHaveBeenCalled();
@@ -117,5 +120,39 @@ describe('Drive permanent file deletion', () => {
     await act(async () => confirm.click());
     expect(files.deleteFile).toHaveBeenCalledTimes(1);
     expect(files.deleteFile).toHaveBeenCalledWith('syllabus');
+  });
+
+  it('previews the exact bulk loss and leaves the bin untouched on cancel', async () => {
+    await click('Empty the bin — 2 files, deleted for good');
+
+    const dialog = host.querySelector('[role="dialog"]');
+    expect(dialog?.textContent).toContain('Empty the bin?');
+    expect(dialog?.textContent).toContain('2 files currently in the bin');
+    expect(dialog?.textContent).toContain('3 KB of stored bytes');
+    expect(dialog?.textContent).toContain('Files added to the bin after this preview opened are not deleted');
+    expect(dialog?.textContent).toContain('Course, deadline and note links are not deleted');
+    expect(dialog?.textContent).toContain('workspace backup cannot restore these bytes');
+    expect(files.purgeTrash).not.toHaveBeenCalled();
+
+    await click('Keep it');
+    expect(files.purgeTrash).not.toHaveBeenCalled();
+  });
+
+  it('requires the bulk phrase and deletes only the files named by the preview', async () => {
+    await click('Empty the bin — 2 files, deleted for good');
+
+    const dialog = host.querySelector('[role="dialog"]') as HTMLElement;
+    const confirm = [...dialog.querySelectorAll('button')].find((candidate) => candidate.textContent?.trim() === 'Delete all') as HTMLButtonElement;
+    expect(confirm.disabled).toBe(true);
+    const input = dialog.querySelector('input') as HTMLInputElement;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, 'EMPTY BIN');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(confirm.disabled).toBe(false);
+
+    await act(async () => confirm.click());
+    expect(files.purgeTrash).toHaveBeenCalledTimes(1);
+    expect(files.purgeTrash).toHaveBeenCalledWith(['syllabus', 'notes']);
   });
 });

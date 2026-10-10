@@ -378,3 +378,12 @@ This mapping adds no archive route, role, capability, schema, policy, provider o
 | File recovery, external-copy and authority boundary | `app/src/lib/files.ts`, `app/src/lib/workspace-backup.ts` | Existing and unchanged. Files in the bin remain device-local; Undo and workspace backup do not contain their bytes. An original or downloaded copy outside Semester is not affected and may be added again. This slice does not empty the bin, change 30-day cleanup, add upload/download authority or claim server/provider storage. |
 
 This mapping adds no archive route, role, capability, schema, policy, server operation, provider behavior or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 7 current-product consequence mapping — integration slice 72
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for permanently emptying device-local file trash | `app/src/screens/mine/Drive.tsx`, `app/src/components/TypeToConfirm.tsx` | Existing but incomplete is narrowed: **Empty the bin** now previews the exact captured file count and stored-byte total, requires **EMPTY BIN**, preserves cancellation and names surviving broken links, external copies and the no-Undo/no-backup boundary. The two rendered assertions were red against first-press deletion and now pass. |
+| Bulk deletion concurrency and recovery boundary | `app/src/lib/files.ts`, `app/src/lib/files.test.ts` | Existing but incomplete is narrowed: `purgeTrash` accepts only the previewed ids, deduplicates them and re-reads each record inside its delete transaction. Files added later are outside the id set; restored files fail the still-binned check. The storage guard was red before the operation existed and proves both exclusions. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation, provider behavior or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.

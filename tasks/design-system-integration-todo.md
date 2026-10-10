@@ -1506,3 +1506,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep bulk empty-bin deletion, automatic retention cleanup and same-origin device erase separate until their broader concurrency, retention and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed bulk bin emptying — automation pass 7, integration slice 72
+
+- [x] Start from current `origin/main` `d20a4d18` already merged; confirm it contains no equivalent bulk-bin consequence preview or exact-snapshot purge operation.
+- [x] Re-rank remaining consequence paths and select only manual bulk emptying of the device-local bin; keep automatic retention cleanup, same-origin device erase and scanner-backed Import separate.
+- [x] Replace first-press `emptyTrash()` with the existing irreversible `TypeToConfirm` flow and require **EMPTY BIN**.
+- [x] Name the exact previewed count and byte total, surviving but unusable course/deadline/note links, unaffected external copies and the no-Undo/no-backup recovery boundary.
+- [x] Capture the previewed ids and add `purgeTrash`, which deduplicates them and deletes only records that are still binned; preserve files restored before confirmation and files binned after the preview opened.
+- [x] Preserve cancellation without writes and the shared Drive failure/refresh boundary; add no route, dependency, schema, policy, server operation or provider effect.
+- [x] Prove three focused assertions red against the prior behavior, then pass 23/23 directly changed and 43/43 adjacent Drive, file, modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and chunk-size warning.
+- [x] Pass 147/147 token/design contracts, design audit with no violations and the CSS ledger check.
+- [ ] Aggregate npm design launchers — unavailable because the shell has no `npm`/`npx`; exact constituents pass, but no aggregate launcher pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep automatic retention cleanup and same-origin device erase separate until their broader retention, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

@@ -288,9 +288,25 @@ export async function deleteFile(id: string): Promise<void> {
 export async function emptyTrash(days = 0, now = Date.now()): Promise<number> {
   const cutoff = now - days * 86_400_000;
   const old = (await listTrash()).filter((f) => (f.trashedAt ?? 0) <= cutoff);
+  return purgeBinned(old.map((file) => file.id), cutoff);
+}
+
+/**
+ * Permanently delete exactly the records shown in a bulk-deletion preview.
+ *
+ * The ids are captured when the preview opens. A file binned in another tab
+ * after that point therefore cannot be swept into a consequence the student
+ * never saw. `deleteIfStillBinned` supplies the other half of the boundary: a
+ * previewed file restored before confirmation is preserved.
+ */
+export async function purgeTrash(ids: readonly string[]): Promise<number> {
+  return purgeBinned(ids, Number.POSITIVE_INFINITY);
+}
+
+async function purgeBinned(ids: readonly string[], cutoff: number): Promise<number> {
   let gone = 0;
-  for (const f of old) {
-    const took = await deleteIfStillBinned(f.id, cutoff);
+  for (const id of new Set(ids)) {
+    const took = await deleteIfStillBinned(id, cutoff);
     if (took) gone += 1;
   }
   // Once for the whole sweep rather than once per file: emptying a bin of
