@@ -11,7 +11,7 @@ import type {
   IdempotencyScope,
   IdempotencyStore,
   StoredResponse,
-} from '../../../packages/platform/src/gateway/idempotency.ts';
+} from '@semester/platform';
 import type { IntelligenceAuditRecord } from './intelligence.ts';
 import {
   assertJournalKey,
