@@ -247,9 +247,13 @@ export class AttachmentCache {
   /** Remove only the exact rows previously observed; a same-id replacement wins. */
   private async revokeObserved(observed: readonly CachedFile[]): Promise<number> {
     const names = new Set(observed.map((row) => row.blobName))
-    // Delete generation-unique blobs first. If deletion is interrupted the
-    // index still retains every retry identity; a same-id replacement uses a
-    // different blob name and is never targeted by this attempt.
+    // Persist the exact generation as owed cleanup before touching its blob.
+    // A crash or failed deletion therefore leaves a durable retired row that
+    // cleanupRetired() can replay without targeting a same-id replacement.
+    await this.d.index.update((current) => ({
+      rows: current.map((row) => names.has(row.blobName) ? { ...row, retired: true } : row),
+      value: undefined,
+    }))
     for (const row of observed) await this.d.blobs.delete(row.blobName)
     await this.d.index.update((current) => {
       const removed = current.filter((row) => names.has(row.blobName))

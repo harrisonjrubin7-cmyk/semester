@@ -1,6 +1,6 @@
 import { backoffDelay, DEFAULT_BACKOFF, retryAt, type BackoffOptions } from './backoff.ts'
 import { hlcNow, type Hlc } from './hlc.ts'
-import { admittedDataClasses, assertQueueable, classifyPersistence, policyFor, type DataClass, type TenantOfflinePolicy } from './policy.ts'
+import { admittedDataClasses, assertQueueable, classifyPersistence, dataClasses, policyFor, type DataClass, type TenantOfflinePolicy } from './policy.ts'
 import { purgeDisallowedOfflineData, type PolicyPurgeRow, type PolicyPurgeResult } from './storage-policy.ts'
 import { PHASE_TO_STATE, TERMINAL_REASONS, type RejectReason, type SyncState } from './status.ts'
 import type { Change, Command, CommandResult, EntityRow, LocalStore, OutboxRow, PullResponse, SyncTransport } from './types.ts'
@@ -92,8 +92,10 @@ export class SyncEngine {
   }
 
   /** Safe at startup and after any tenant-policy change. */
-  enforceStoragePolicy(): Promise<PolicyPurgeResult> {
-    return purgeDisallowedOfflineData(this.d.store, this.d.tenantPolicy, this.d.onPolicyPurge)
+  async enforceStoragePolicy(): Promise<PolicyPurgeResult> {
+    const result = await purgeDisallowedOfflineData(this.d.store, this.d.tenantPolicy, this.d.onPolicyPurge)
+    await this.d.store.flush?.()
+    return result
   }
 
   // ---- writing ----------------------------------------------------------
@@ -192,10 +194,12 @@ export class SyncEngine {
   private async run(): Promise<SyncReport> {
     const report: SyncReport = { acknowledged: 0, rejected: 0, conflicted: 0, pulled: 0 }
     if (this.wiped) return { ...report, stopped: 'wiped' }
-    // Cleanup is a storage invariant, not an authenticated-data operation.
-    await this.enforceStoragePolicy()
     const verdict = this.d.access?.() ?? 'ok'
     if (verdict === 'wipe') return this.wipe('access_expired', report)
+    // Cleanup is a storage invariant, not an authenticated-data operation, but
+    // a mandatory cryptographic wipe has precedence over fallible secondary
+    // cleanup hooks.
+    await this.enforceStoragePolicy()
     if (verdict === 'reauth') return { ...report, stopped: 'reauth' }
 
     await this.expireOld()
@@ -353,7 +357,10 @@ export class SyncEngine {
     const admitted = admittedDataClasses(this.d.tenantPolicy)
     const priorRaw = await store.cursors.get(admissionKey)
     let prior: string[] = []
-    try { prior = priorRaw ? JSON.parse(priorRaw) as string[] : [] } catch { prior = [] }
+    try {
+      const parsed = priorRaw ? JSON.parse(priorRaw) as unknown : []
+      prior = Array.isArray(parsed) && parsed.every((value) => typeof value === 'string' && dataClasses.includes(value as DataClass)) ? parsed : []
+    } catch { prior = [] }
     const expanded = admitted.some((dataClass) => !prior.includes(dataClass))
     const encoded = JSON.stringify(admitted)
     if (priorRaw !== encoded || expanded) {

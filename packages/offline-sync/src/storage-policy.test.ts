@@ -105,6 +105,39 @@ describe('central offline persistence enforcement', () => {
     expect(await store.entities.all()).toEqual([])
   })
 
+  it('removes malformed queue rows without deleting local-only student drafts', async () => {
+    for (const dataClass of ['assignment_draft', 'support_draft', 'ai_draft']) {
+      const draft = { ...entity(dataClass, 'draft'), value: { body: `student-owned-${dataClass}` }, confirmed: undefined, phase: 'queued', commandId: 'command-draft' }
+      const store = memoryStore({ initial: { entities: [draft] as never, outbox: [{ ...command(dataClass, 'draft'), id: 'command-draft' }] as never, cursors: {} } })
+      await purgeDisallowedOfflineData(store)
+      expect(await store.outbox.all(), dataClass).toEqual([])
+      expect(await store.entities.get(dataClass, 'draft'), dataClass).toMatchObject({
+        value: { body: `student-owned-${dataClass}` },
+        phase: 'draft',
+        commandId: undefined,
+      })
+    }
+  })
+
+  it('acknowledges only the cleanup rows passed to an overlapping successful hook', async () => {
+    const store = memoryStore({ initial: { entities: [entity('grade', 'g')] as never, outbox: [], cursors: {} } })
+    let releaseFirst!: () => void
+    let firstStarted!: () => void
+    const started = new Promise<void>((resolve) => { firstStarted = resolve })
+    const release = new Promise<void>((resolve) => { releaseFirst = resolve })
+    const first = purgeDisallowedOfflineData(store, undefined, async () => { firstStarted(); await release })
+    await started
+
+    await store.entities.put(entity('academic_record', 'a') as never)
+    await expect(purgeDisallowedOfflineData(store, undefined, async () => { throw new Error('new cleanup interrupted') })).rejects.toThrow(/interrupted/)
+    releaseFirst()
+    await first
+
+    const replayed: string[][] = []
+    await purgeDisallowedOfflineData(store, undefined, async (rows) => { replayed.push(rows.map((row) => row.id)) })
+    expect(replayed).toEqual([['a']])
+  })
+
   it('preserves student-authored estimates, plans, drafts and their pending work', async () => {
     const authored = [entity('personal_plan', 'financial-plan'), entity('task', 'grade-estimate'), { ...entity('assignment_draft', 'essay'), phase: 'draft' }]
     const store = memoryStore({ initial: { entities: authored as never, outbox: [command('personal_plan', 'financial-plan'), command('task', 'grade-estimate')] as never, cursors: {} } })

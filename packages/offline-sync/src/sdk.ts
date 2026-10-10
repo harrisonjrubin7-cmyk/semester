@@ -157,7 +157,10 @@ export function createOfflineSdk(c: SdkConfig): SemesterOfflineSdk {
   }
   let readiness: Promise<void> | undefined
   const ready = (): Promise<void> => {
-    if (!readiness) readiness = enforce().then(() => undefined).catch((error) => { readiness = undefined; throw error })
+    if (!readiness) {
+      const start = decide().verdict === 'wipe' ? engine.syncOnce().then(() => undefined) : enforce().then(() => undefined)
+      readiness = start.catch((error) => { readiness = undefined; throw error })
+    }
     return readiness
   }
 
