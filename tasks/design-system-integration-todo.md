@@ -1467,12 +1467,13 @@ Documentation only. Application code was not changed after the reset onto `d577a
 
 ## 2026-10-10 governed Student Operating preference deletion — automation pass 19, integration slice 70
 
-- [x] Start from clean head `b7c61944` with `origin/main` `9642e983` already merged; inspect final fetched `8c3acf89` and confirm its developer-tools-only change has no Student Operating, test or integration-control overlap.
+- [x] Start from clean head `b7c61944` with `origin/main` `9642e983` already merged; inspect final fetched `8c3acf89`, confirm its developer-tools-only change has no overlap, then merge it cleanly after slice commit `c8a0cf15` as `2dec7e1a`.
 - [x] Re-rank remaining consequence paths and select only saved Student Operating preferences; keep whole-workspace deletion, permanent file purge, broad demo reset and scanner-backed Import separate.
 - [x] Replace first-press preference deletion with the shared `ConfirmDialog` and `ActionPreview`, naming the saved term, preference families removed, editor reset, device/account-sync effect, unaffected workflow items/exports/official records and recovery boundary.
 - [x] Preserve the current `operatingWorkspace` JSON authority; confirmation clears only `manual`, resets transient preference state and leaves every saved workflow entry intact.
 - [x] State the truthful recovery boundary: a core Semester data backup made before deletion can restore the earlier workspace, and the student can enter new preferences later.
 - [x] Prove the focused guard red against immediate deletion, then pass 161/161 Student Operating, domain, ActionPreview, modal, core export/backup and root-unmount tests.
+- [x] After upstream reconciliation, pass the combined focused set 183/183 and rerun TypeScript successfully.
 - [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and build chunk-size warning.
 - [x] Pass 9/9 token export, 69/69 design-check contracts, 96/96 report contracts, design audit with zero violations and the CSS ledger.
 - [ ] Aggregate design-system report wrapper — writes the report, then cannot launch its `npx` contract subprocesses in this shell; exact constituents pass, but no aggregate wrapper pass is claimed.

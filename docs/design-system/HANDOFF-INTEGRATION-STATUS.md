@@ -8,11 +8,12 @@ Phase 0 reconciliation is complete for the archive populations and includes the 
 
 ## Evidence locked in current automation pass 19 / integration slice 70
 
-- The slice began from clean head `b7c61944` with `origin/main` `9642e983` already merged. A final fetch observed `8c3acf89`; its only change is `docs/DEVELOPER-TOOLS.md`, with no Student Operating, test or integration-control overlap.
+- The slice began from clean head `b7c61944` with `origin/main` `9642e983` already merged. A final fetch observed `8c3acf89`; its only change is `docs/DEVELOPER-TOOLS.md`, with no Student Operating, test or integration-control overlap. After coherent slice commit `c8a0cf15`, that upstream head merged cleanly as `2dec7e1a`.
 - **Delete preferences** now opens the shared `ConfirmDialog` and `ActionPreview` before the existing bounded `operatingWorkspace` write. It names the saved term, the preference families removed, the editor reset, device/account-sync effect, unaffected workflow items/exports/official records and the recovery boundary.
 - Cancel remains the initial focused action and writes nothing. Explicit confirmation clears only `manual`, resets the transient preference editor and preserves all saved workflow entries. The route, navigation, JSON authority, account sync, exports and official-system boundary remain unchanged; no provider or external system is invoked.
 - Recovery language matches repository evidence: a core Semester data backup made before deletion can restore the earlier workspace, and the student can enter new preferences later.
 - The focused regression failed against the prior immediate write. Student Operating, its domain library, ActionPreview, modal accessibility, core export/backup and root-unmount coverage pass 161/161.
+- After upstream reconciliation, the combined focused set passes 183/183 and TypeScript remains green.
 - TypeScript, lint, university typecheck and production build pass. The existing four lint warnings and build chunk-size warning remain. Token export passes 9/9, design-check contracts pass 69/69, report contracts pass 96/96, design audit has zero violations with 86 existing warnings and CSS stays within its ledger.
 - The aggregate design-system report writes its file but cannot launch its `npx` contract subprocesses in this shell. Its exact contracts pass directly, but no aggregate report pass is claimed. Ordered and shuffled full suites were not rerun; the last recorded full-suite baseline remains pass 30's 23,872 tests.
 - Required HawkScan preflight stopped because `hawk` and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the detected local properties file was not read. `stackhawk.yml` exists, but no target, DAST result or security pass is claimed.
