@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID
 
@@ -27,6 +28,7 @@ from app.models.entities import (
     StudyAssetCitation,
     User,
 )
+from app.services.job_leases import claim_job
 
 
 def _worker_module():
@@ -46,6 +48,77 @@ def _database():
     )
     Base.metadata.create_all(engine)
     return sessionmaker(bind=engine, expire_on_commit=False)
+
+
+LEASE_NOW = datetime(2026, 10, 10, 12, 0, tzinfo=UTC)
+LEASE_TTL = timedelta(minutes=5)
+
+
+def test_duplicate_extract_delivery_does_not_enter_scanner(tmp_path: Path, monkeypatch):
+    testing_session = _database()
+    source = tmp_path / "source.txt"
+    source.write_text("Evidence", encoding="utf-8")
+    with testing_session() as session:
+        user = User(email="leased-extract@example.com", password_hash="unused")
+        session.add(user)
+        session.flush()
+        course = Course(user_id=user.id, title="Leased extraction")
+        session.add(course)
+        session.flush()
+        document = SourceDocument(
+            course_id=course.id,
+            filename=source.name,
+            storage_key="courses/leased/originals/source.txt",
+            mime_type="text/plain",
+            size_bytes=source.stat().st_size,
+            sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+        )
+        session.add(document)
+        session.flush()
+        job = BackgroundJob(course_id=course.id, document_id=document.id, job_type="extract")
+        session.add(job)
+        session.commit()
+        assert claim_job(session, job.id, "existing-worker", LEASE_NOW, LEASE_TTL)
+        job_id = job.id
+
+    worker = _worker_module()
+    worker.SessionLocal = testing_session
+    worker.storage = type("Storage", (), {"path": lambda _self, _key: source})()
+    monkeypatch.setattr(worker, "utc_now", lambda: LEASE_NOW, raising=False)
+
+    class ScannerMustNotRun:
+        def scan(self, _path):
+            raise AssertionError("duplicate delivery entered the scanner")
+
+    worker.DevelopmentMalwareScanner = ScannerMustNotRun
+    assert worker.extract_document.run(str(job_id)) == {"status": "leased"}
+
+
+def test_duplicate_generation_delivery_cannot_create_an_asset(monkeypatch):
+    testing_session = _database()
+    with testing_session() as session:
+        user = User(email="leased-generation@example.com", password_hash="unused")
+        session.add(user)
+        session.flush()
+        course = Course(user_id=user.id, title="Leased generation")
+        session.add(course)
+        session.flush()
+        job = BackgroundJob(
+            course_id=course.id,
+            job_type="generate:study_guide",
+            result={"request": {"title": "Should not exist"}},
+        )
+        session.add(job)
+        session.commit()
+        assert claim_job(session, job.id, "existing-worker", LEASE_NOW, LEASE_TTL)
+        job_id = job.id
+
+    worker = _worker_module()
+    worker.SessionLocal = testing_session
+    monkeypatch.setattr(worker, "utc_now", lambda: LEASE_NOW, raising=False)
+    assert worker.generate_study_asset.run(str(job_id)) == {"status": "leased"}
+    with testing_session() as session:
+        assert session.query(StudyAsset).count() == 0
 
 
 def test_unmeasured_extraction_confidence_has_no_numeric_default():
