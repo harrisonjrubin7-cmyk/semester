@@ -1527,3 +1527,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep automatic retention cleanup and same-origin device erase separate until their broader retention, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed automatic bin retention — automation pass 8, integration slice 73
+
+- [x] Start from current `origin/main` `d20a4d18` already merged; confirm it contains no equivalent strict Drive retention read, cleanup receipt or cleanup-failure recovery state.
+- [x] Re-rank the remaining consequence paths and select only automatic 30-day deletion of device-local binned files; keep same-origin device erase and scanner-backed Import separate.
+- [x] Preserve the resilient empty-list contract for ordinary file browsing while making the retention write boundary propagate a refused IndexedDB read instead of reporting zero due.
+- [x] Keep the full 30-day cutoff and transactional still-binned recheck; preserve restored files and files newer than the cutoff.
+- [x] Announce the actual permanently removed count, no-Undo/no-backup recovery boundary and unaffected external copies through the shared polite notice; announce a failed sweep assertively with inspect-and-retry guidance.
+- [x] Prove the two new retention/recovery assertions red against the prior behavior, then pass 39/39 focused and adjacent file, Drive, modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and chunk-size warning.
+- [x] Pass the aggregate design-system check (9 token-export tests and 69 contracts, no new audit/CSS-ledger violation) and the test-backed design report.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only retention slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep same-origin device erase separate until its origin-sharing, provider-revocation, partial-failure and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

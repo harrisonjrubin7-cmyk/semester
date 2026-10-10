@@ -7,6 +7,7 @@ import { StoreProvider } from '../../state/store';
 import { Drive } from './Drive';
 
 const files = vi.hoisted(() => ({
+  sweepTrash: vi.fn(async () => 2),
   deleteFile: vi.fn(async () => undefined),
   purgeTrash: vi.fn(async () => 2),
   listTrash: vi.fn(async () => [
@@ -18,7 +19,7 @@ const files = vi.hoisted(() => ({
 vi.mock('../../lib/files', () => ({
   TRASH_DAYS: 30,
   addFile: vi.fn(),
-  sweepTrash: vi.fn(async () => undefined),
+  sweepTrash: files.sweepTrash,
   deleteFile: files.deleteFile,
   purgeTrash: files.purgeTrash,
   emptyTrash: vi.fn(),
@@ -88,6 +89,25 @@ afterEach(async () => {
 });
 
 describe('Drive permanent file deletion', () => {
+  it('reports automatic retention deletion and gives a failed sweep a recovery path', async () => {
+    expect(host.querySelector('[role="status"]')?.textContent).toContain('permanently removed 2 files');
+    expect(host.querySelector('[role="status"]')?.textContent).toContain('30 days');
+    expect(host.querySelector('[role="status"]')?.textContent).toContain('cannot be restored');
+
+    await act(async () => root.unmount());
+    files.sweepTrash.mockRejectedValueOnce(new Error('storage refused'));
+    root = createRoot(host);
+    await act(async () => root.render(<StoreProvider><Drive /></StoreProvider>));
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const alert = host.querySelector('[role="alert"]');
+    expect(alert?.textContent).toContain('could not finish the 30-day bin cleanup');
+    expect(alert?.textContent).toContain('see what remains');
+  });
+
   it('names the exact irreversible loss and does not delete on the first press or cancel', async () => {
     await click('Delete Syllabus.pdf for good. This cannot be undone.');
 

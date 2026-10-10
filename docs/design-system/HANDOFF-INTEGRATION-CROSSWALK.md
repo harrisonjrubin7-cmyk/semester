@@ -387,3 +387,12 @@ This mapping adds no archive route, role, capability, schema, policy, server ope
 | Bulk deletion concurrency and recovery boundary | `app/src/lib/files.ts`, `app/src/lib/files.test.ts` | Existing but incomplete is narrowed: `purgeTrash` accepts only the previewed ids, deduplicates them and re-reads each record inside its delete transaction. Files added later are outside the id set; restored files fail the still-binned check. The storage guard was red before the operation existed and proves both exclusions. |
 
 This mapping adds no archive route, role, capability, schema, policy, server operation, provider behavior or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 8 current-product consequence mapping — integration slice 73
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 retention and irreversible-consequence state for automatic Drive-bin cleanup | `app/src/screens/mine/Drive.tsx`, `app/src/components/ui.tsx` | Existing but incomplete is narrowed: Drive now announces the actual number of files permanently removed after the 30-day window, names the no-Undo/no-backup boundary and preserves external copies. A cleanup failure uses the shared assertive notice with inspect-and-retry guidance instead of remaining silent. Rendered success and failure assertions were red against the prior screen and now pass. |
+| Strict retention authority, cutoff and concurrent restore safety | `app/src/lib/files.ts`, `app/src/lib/files.test.ts` | Existing but incomplete is narrowed: ordinary browsing retains its resilient empty-list fallback, while cleanup uses a strict IndexedDB read so refusal propagates. Eligibility begins only when the full 30-day window has elapsed, and each candidate is re-read inside its delete transaction; restored and newer files survive. The cutoff and refusal guards pass after failing against the prior contract. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation, provider behavior or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.

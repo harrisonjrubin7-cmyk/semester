@@ -7,6 +7,7 @@ import {
   ChipRow,
   EmptyState,
   FilePick,
+  Notice,
   SectionLabel,
   Segmented,
 } from '../../components/ui';
@@ -138,6 +139,7 @@ export function Drive() {
   const [query, setQuery] = useState('');
   const [busy, setBusy] = useState('');
   const [trouble, setTrouble] = useState('');
+  const [cleaned, setCleaned] = useState(0);
   const [moving, setMoving] = useState<Settled | null>(null);
   /** The folder being nested under another, while the picker is open. */
   const [nesting, setNesting] = useState<Shown | null>(null);
@@ -161,8 +163,19 @@ export function Drive() {
   };
   useEffect(() => {
     // Take out what has been in the bin past its month, then read. `TRASH_DAYS`
-    // was a promise nothing kept until this call existed.
-    void sweepTrash().then(refresh);
+    // was a promise nothing kept until this call existed. A failed strict read
+    // is not "zero due": surface it so the student can inspect and retry.
+    void sweepTrash()
+      .then((removed) => {
+        setCleaned(removed);
+        refresh();
+      })
+      .catch(() => {
+        setTrouble(
+          `Drive could not finish the ${TRASH_DAYS}-day bin cleanup. Open the bin to see what remains, then reopen Drive to try again.`,
+        );
+        refresh();
+      });
     // How full the browser is. Asked once: the number moves slowly, and it is
     // the browser's own estimate rather than a measurement — see `lib/quota.ts`.
     let alive = true;
@@ -396,9 +409,13 @@ export function Drive() {
       />
 
       {trouble !== '' && (
-        <Blueprint style={{ padding: 'var(--sp-5)', marginBottom: 'var(--sp-5)' }}>
-          <div style={{ fontSize: 'var(--type-sm)' }}>{trouble}</div>
-        </Blueprint>
+        <Notice alert style={{ marginTop: 0, marginBottom: 'var(--sp-5)' }}>{trouble}</Notice>
+      )}
+
+      {cleaned > 0 && (
+        <Notice style={{ marginTop: 0, marginBottom: 'var(--sp-5)' }}>
+          Drive permanently removed {cleaned} {cleaned === 1 ? 'file' : 'files'} that had stayed in the bin for {TRASH_DAYS} days. Their stored bytes cannot be restored with Undo or a workspace backup; copies outside Semester are unchanged.
+        </Notice>
       )}
 
       {inDrive && (

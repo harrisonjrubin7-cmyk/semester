@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { atPage, isPdf, purgeTrash, search, settled, TRASH_DAYS, type FileMeta, type Settled } from './files';
+import { atPage, isPdf, purgeTrash, search, settled, sweepTrash, TRASH_DAYS, type FileMeta, type Settled } from './files';
 
 const meta = (over: Partial<FileMeta> = {}): FileMeta => ({
   id: 'f1',
@@ -96,6 +96,29 @@ describe('the bin', () => {
     expect(await purgeTrash(['previewed', 'restored', 'missing', 'previewed'])).toBe(1);
     expect(Object.keys(rows).sort()).toEqual(['later', 'restored']);
   });
+
+  it('automatically removes only files whose full retention window has elapsed', async () => {
+    const day = 86_400_000;
+    const now = 100 * day;
+    const rows = fakeIndexedDB({
+      expired: stored('expired', now - TRASH_DAYS * day),
+      stillHeld: stored('stillHeld', now - TRASH_DAYS * day + 1),
+      restored: stored('restored', null),
+    });
+
+    expect(await sweepTrash(now)).toBe(1);
+    expect(Object.keys(rows).sort()).toEqual(['restored', 'stillHeld']);
+  });
+
+  it('reports a storage failure instead of claiming that zero files expired', async () => {
+    vi.stubGlobal('indexedDB', {
+      open: () => {
+        throw new Error('storage refused');
+      },
+    });
+
+    await expect(sweepTrash()).rejects.toThrow('storage refused');
+  });
 });
 
 afterEach(() => vi.unstubAllGlobals());
@@ -125,9 +148,10 @@ function fakeIndexedDB(rows: Record<string, ReturnType<typeof stored>>) {
               pending.result = read();
               (pending.onsuccess as (() => void) | undefined)?.();
             });
-            return pending as IDBRequest<T>;
+            return pending as unknown as IDBRequest<T>;
           };
           const store = {
+            getAll: () => issue(() => Object.values(rows)),
             get: (id: string) => issue(() => rows[id]),
             delete: (id: string) => issue(() => {
               delete rows[id];

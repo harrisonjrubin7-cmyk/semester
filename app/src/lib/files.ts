@@ -162,11 +162,16 @@ export async function addFile(
  */
 export async function allFiles(): Promise<Settled[]> {
   try {
-    const all = await tx<StoredFile[]>('readonly', (s) => s.getAll() as IDBRequest<StoredFile[]>);
+    const all = await storedFiles();
     return all.map(({ blob: _blob, ...meta }) => settled(meta)).sort((a, b) => b.added - a.added);
   } catch {
     return [];
   }
+}
+
+/** Read every stored record without turning a refused database into an empty one. */
+function storedFiles(): Promise<StoredFile[]> {
+  return tx<StoredFile[]>('readonly', (s) => s.getAll() as IDBRequest<StoredFile[]>);
 }
 
 /**
@@ -287,7 +292,15 @@ export async function deleteFile(id: string): Promise<void> {
  */
 export async function emptyTrash(days = 0, now = Date.now()): Promise<number> {
   const cutoff = now - days * 86_400_000;
-  const old = (await listTrash()).filter((f) => (f.trashedAt ?? 0) <= cutoff);
+  /*
+   * This read must fail closed rather than use `listTrash`. File-list reads
+   * deliberately turn a refused IndexedDB into an empty screen so the rest of
+   * Semester remains usable. Doing that here made a failed retention sweep
+   * indistinguishable from a successful sweep with nothing due, and Drive
+   * could give no recovery guidance. Cleanup is a write boundary, so it keeps
+   * the storage error and lets the caller report it.
+   */
+  const old = (await storedFiles()).filter((f) => f.trashedAt !== null && f.trashedAt !== undefined && f.trashedAt <= cutoff);
   return purgeBinned(old.map((file) => file.id), cutoff);
 }
 
@@ -342,11 +355,7 @@ function deleteIfStillBinned(id: string, cutoff: number): Promise<boolean> {
  * looking at the bin anyway.
  */
 export async function sweepTrash(now = Date.now()): Promise<number> {
-  try {
-    return await emptyTrash(TRASH_DAYS, now);
-  } catch {
-    return 0;
-  }
+  return emptyTrash(TRASH_DAYS, now);
 }
 
 /** Note the moment a file was opened, so the recents list has something to sort by. */
