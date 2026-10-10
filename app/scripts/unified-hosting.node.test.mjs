@@ -45,9 +45,41 @@ function activate(base, present) {
   return Promise.all(waits).then(() => deleted);
 }
 
+function intercepted(path, init = {}) {
+  const listeners = new Map();
+  const self = {
+    location: new URL('https://preview.example/app/sw.js'),
+    addEventListener: (name, handler) => listeners.set(name, handler),
+    skipWaiting: () => Promise.resolve(),
+    registration: { showNotification: () => Promise.resolve() },
+    clients: { claim: () => Promise.resolve(), matchAll: () => Promise.resolve([]), openWindow: () => Promise.resolve(null) },
+  };
+  const caches = {
+    keys: () => Promise.resolve([]),
+    delete: () => Promise.resolve(true),
+    open: () => Promise.resolve({ addAll: () => Promise.resolve(), match: () => Promise.resolve(null), put: () => Promise.resolve() }),
+    match: () => Promise.resolve(null),
+  };
+  new Function('self', 'caches', 'URL', 'Response', 'fetch', read('app/public/sw.js'))(
+    self, caches, URL, Response, () => Promise.reject(new Error('network disabled in routing test')),
+  );
+  let handled = false;
+  listeners.get('fetch')({
+    request: new Request(new URL(path, self.location.origin), init),
+    respondWith: () => { handled = true; },
+    waitUntil: () => {},
+  });
+  return handled;
+}
+
 test('unified routes keep APIs and lab ahead of /app and the company catch-all', () => {
   assert.deepEqual(config.redirects, [
-    { source: '/app', destination: '/app/', permanent: true },
+    {
+      source: '/app',
+      has: [{ type: 'host', value: '(?:(?:www\\.)?semesterintel\\.tech|.*\\.vercel\\.app)' }],
+      destination: '/app/',
+      permanent: true,
+    },
   ]);
   assert.deepEqual(config.rewrites.slice(7), [
     { source: '/lab', destination: { service: 'workflow-lab' } },
@@ -56,6 +88,10 @@ test('unified routes keep APIs and lab ahead of /app and the company catch-all',
     { source: '/(.*)', destination: { service: 'company-site' } },
   ]);
   assert.equal(config.services.app.buildCommand, 'VITE_BASE=/app/ npm run build');
+  assert.deepEqual(config.services.app.routes, [{
+    src: '/app/(.*)',
+    transforms: [{ type: 'request.path', op: 'set', args: '/$1' }],
+  }]);
 });
 
 test('semester.website remains an earlier company-site host rule', () => {
@@ -87,6 +123,14 @@ test('root and unsupported nested workers never sweep CacheStorage', async () =>
   assert.deepEqual(await activate('/nested/app/', present), []);
 });
 
+test('the /app worker never handles root APIs or personalized request shapes', () => {
+  assert.equal(intercepted('/api/institution/health'), false);
+  assert.equal(intercepted('/api/productivity/items'), false);
+  assert.equal(intercepted('/app/data.json?student=1'), false);
+  assert.equal(intercepted('/app/data.json', { headers: { Authorization: 'Bearer synthetic' } }), false);
+  assert.equal(intercepted('/app/assets/app.js'), true);
+});
+
 test('download controls address only media caches from the two supported scopes', () => {
   const downloads = read('app/src/lib/downloads.ts');
   assert.match(downloads, /scope-\(\?:app\|semester\)-media/);
@@ -97,6 +141,7 @@ test('the canonical company host opts into /app without changing semester.websit
   const site = read('company-site/site.js');
   assert.ok(site.includes('semesterintel\\.tech'));
   assert.match(site, /\/app\//);
+  assert.match(site, /startsWith\("demo\/"\)/);
   assert.match(site, /installed app/i);
   assert.match(site, /account/i);
 });

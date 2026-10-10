@@ -75,6 +75,18 @@
       "root": "app",
       "framework": "vite",
       "buildCommand": "VITE_BASE=/app/ npm run build",
+      "routes": [
+        {
+          "src": "/app/(.*)",
+          "transforms": [
+            {
+              "type": "request.path",
+              "op": "set",
+              "args": "/$1"
+            }
+          ]
+        }
+      ],
       "headers": [
         {
           "source": "/(.*)",
@@ -199,6 +211,12 @@
   "redirects": [
     {
       "source": "/app",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?:(?:www\\.)?semesterintel\\.tech|.*\\.vercel\\.app)"
+        }
+      ],
       "destination": "/app/",
       "permanent": true
     }

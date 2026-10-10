@@ -441,6 +441,12 @@ self.addEventListener('fetch', (event) => {
   // show an incident list from before the incident.
   if (request.cache === 'no-store') return;
 
+  // A path-scoped worker still sees every request made by pages it controls,
+  // including same-origin root APIs. Only app-owned, anonymous, unparameterized
+  // resources are eligible for offline handling. API or personalized responses
+  // must never enter CacheStorage or be replayed across sessions.
+  if (!url.pathname.startsWith(BASE) || url.search || request.headers.has('authorization')) return;
+
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request).catch(() =>

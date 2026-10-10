@@ -3,9 +3,16 @@
   const UNIFIED_HOST=/(^|\.)semesterintel\.tech$/i.test(location.hostname);
   const APP_BASE=UNIFIED_HOST?`${location.origin}/app/`:LEGACY_APP_BASE;
   const APP=`${APP_BASE}#/signup`;
-  const appHref=href=>UNIFIED_HOST&&href.indexOf(LEGACY_APP_BASE)===0
-    ? APP_BASE+href.slice(LEGACY_APP_BASE.length)
-    : href;
+  const appHref=href=>{
+    const legacyPath=href.indexOf(LEGACY_APP_BASE)===0
+      ? href.slice(LEGACY_APP_BASE.length)
+      : "";
+    // The fictional, no-account demo is a separate Pages build. Until an
+    // equivalent isolated service is explicitly added here, preserve it.
+    return UNIFIED_HOST&&legacyPath&&!legacyPath.startsWith("demo/")
+      ? APP_BASE+legacyPath
+      : href;
+  };
 
   if(UNIFIED_HOST){
     document.querySelectorAll(`a[href^="${LEGACY_APP_BASE}"]`).forEach(link=>{

@@ -9,7 +9,9 @@ const config = JSON.parse(readFileSync(join(repo, 'vercel.json'), 'utf8')) as {
 };
 
 function serviceFor(path: string, host = 'www.semesterintel.tech'): string {
-  if (path === '/app') return config.redirects?.find((rule) => rule.source === path)?.destination ?? '';
+  if (path === '/app' && !/semester\.website$/i.test(host)) {
+    return config.redirects?.find((rule) => rule.source === path)?.destination ?? '';
+  }
   for (const rule of config.rewrites) {
     if (rule.has && !/semester\.website$/i.test(host)) continue;
     const pattern = new RegExp(`^${rule.source.replace('/(.*)', '(?:/.*)?').replace('(.*)', '.*')}$`);
@@ -34,7 +36,7 @@ describe('unified Semester host routing', () => {
   });
 
   it('keeps the separate company domain on the company service at every path', () => {
-    for (const path of ['/', '/app/', '/api/institution/health', '/lab']) {
+    for (const path of ['/', '/app', '/app/', '/api/institution/health', '/lab']) {
       expect(serviceFor(path, 'www.semester.website')).toBe('company-site');
     }
   });
