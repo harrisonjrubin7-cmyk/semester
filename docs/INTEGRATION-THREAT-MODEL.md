@@ -36,8 +36,9 @@ kill switches · the classification floor.
 | T28 | A connection approved but not switched on by its school still syncs | The worker requires the adapter's connector flag in `production` for the school | `worker.test.ts` (found by Codex on #779) |
 | T29 | One connection's import overwrites another's student record | Reference identity includes the connection | `integration-control-plane.check.sql`, `worker.test.ts` (found by Codex on #779) |
 | T30 | Anyone who finds the `integration-tick` function makes the service role run syncs | Bearer token checked by the database against `integration_cron_secret` in Vault (SHA-256 digests compared; service role only); 503 when it cannot check, never a yes; POST only; the answer is counts, never a school or connection | `integration-tick-auth.check.sql`, `integrationtick.test.ts` |
-| T31 | A mock adapter reaches production through the scheduler | The live registry is empty and its test refuses a mock or two adapters claiming one connection; `runSync` refuses a mock without `allowMock`, which the endpoint never passes | `registry.test.ts`, `worker.test.ts` |
+| T31 | A mock adapter reaches production through the scheduler | Registry preflight refuses a mock or two adapters claiming one connection; `runSync` refuses a mock without `allowMock`, which the endpoint never passes | `registry.test.ts`, `worker.test.ts` |
 | T32 | A connection that keeps failing floods dead letters, or retries forever | Attempts are counted from consecutive failed runs, whatever the status; after the fifth the connection is held until an operator replays it, and an unreadable hold pulls nothing | `tick.test.ts` |
+| T33 | A Canvas connection is used for SSRF or leases another connection's credential | The database accepts only a bare HTTPS origin; the adapter further restricts it to hosted `instructure.com`, refuses cross-origin/path pagination, and the live runtime leases only the connection row's tenant-bound pointer | `canvas-read-adapter.test.ts`, `tick.test.ts`, `provider-client.test.ts`, `integration-control-plane.check.sql` |
 | T13 | A mock adapter mistaken for a real connector | `mock: true` in the declaration; named "Mock LMS"; not in any registry | review |
 
 ## Phase 7 review
@@ -60,6 +61,9 @@ Re-read against what now exists, including the worker that holds the service rol
   code path that uses it must follow the same rules — review any new one against `worker.ts`.
 - **Webhook signature validation** is provider-specific and not yet implemented; the endpoint that receives a webhook
   must verify it before calling `runSync`. No such endpoint exists yet.
+- **Canvas has not been provider-validated.** The adapter is contract-tested with synthetic responses only. The Edge
+  runtime has no production credential broker, and no institutional connection, sandbox run, reconciliation rehearsal,
+  monitoring evidence or customer UAT exists. Registration must not be reported as a live integration.
 - **Grade passback on unbound registrations** remains instructor-gated and stoppable only by global kill switches until each registration is bound (D-1). The Edge Function reads a *missing* gate function as "unbound" during a deploy window; any other error refuses.
 - **`tenant_policy_audit_event` stores old/new rows as JSON.** Integration rows are stripped of the credential
   pointer and cursor; other columns (names, scope keys) are configuration, not student data.

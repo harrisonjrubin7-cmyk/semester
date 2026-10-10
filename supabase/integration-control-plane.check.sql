@@ -147,8 +147,9 @@ begin
 
   perform pg_temp.expect_allowed('an integration admin adds a connection at their school', integ,
     $q$insert into public.integration_connections (tenant_id, provider_domain, provider_name, connection_name,
-         authentication_type, credentials_reference, owner_account_id)
-       values ('icp-a', 'lms', 'Canvas', 'Canvas (sandbox)', 'lti_1_3', 'vault:icp-a/canvas', auth.uid())$q$);
+         provider_base_url, authentication_type, credentials_reference, owner_account_id)
+       values ('icp-a', 'lms', 'Canvas', 'Canvas (sandbox)', 'https://icp-a.instructure.com',
+               'lti_1_3', 'vault:icp-a/canvas', auth.uid())$q$);
   select id, public_id, status into conn, conn_pub, st from public.integration_connections where tenant_id = 'icp-a';
   if st <> 'disconnected' then raise exception 'FAILED: a new connection is %, not disconnected', st; end if;
   raise notice 'ok  a new connection is born disconnected';
@@ -163,10 +164,16 @@ begin
     -- Built at runtime so no key-shaped literal is committed for scanners.
     format($q$insert into public.integration_connections (tenant_id, provider_domain, provider_name, connection_name, credentials_reference)
        values ('icp-a', 'sis', 'Banner', 'Banner', %L)$q$, 'sk_' || 'live_' || repeat('x', 24)));
+  perform pg_temp.expect_rejected('a provider URL with a path',
+    format('update public.integration_connections set provider_base_url = %L where id = %L',
+      'https://icp-a.instructure.com/api/v1', conn));
+  perform pg_temp.expect_rejected('a non-HTTPS provider URL',
+    format('update public.integration_connections set provider_base_url = %L where id = %L',
+      'http://icp-a.instructure.com', conn));
   perform pg_temp.expect_refused('reading the credential pointer, even as the integration admin', integ,
     'select credentials_reference from public.integration_connections');
   perform pg_temp.counted('the integration admin reads the rest of the connection',
-    pg_temp.seen(integ, 'select id, status, public_id from public.integration_connections'), 1);
+    pg_temp.seen(integ, 'select id, status, public_id, provider_base_url from public.integration_connections'), 1);
   perform pg_temp.expect_refused('setting status directly, bypassing approval', integ,
     format('update public.integration_connections set status = %L where id = %L', 'healthy', conn));
   perform pg_temp.expect_refused('approving one''s own connection by a direct update', integ,

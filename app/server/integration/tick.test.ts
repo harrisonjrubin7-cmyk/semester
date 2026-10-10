@@ -12,9 +12,10 @@ import type { AdapterDeclaration } from '../../src/lib/integration/adapter.ts';
 import { LeaseBroker, memoryBackend, type VaultAuditEvent } from '../../src/lib/integration/vault.ts';
 import { OAuthError, type TokenRecord, type TokenStore } from '../../src/lib/integration/oauth.ts';
 import { GuardRefusal, ProviderHttpError, providerRuntime, type CredentialServices } from '../../src/lib/integration/provider-client.ts';
+import { CANVAS_READ_ADAPTER } from '../../../packages/platform/src/canvas-read-adapter.ts';
 import type { CallAuth } from './tick.ts';
 import { fakeDb, type Row, type Tables } from './fakedb.ts';
-import { TICK_MINUTES, adapterFor, cadenceMinutes, intervalMinutes, isDue, tick, type PullRequest, type RegisteredAdapter } from './tick.ts';
+import { TICK_MINUTES, adapterFor, cadenceMinutes, connectionIssue, intervalMinutes, isDue, tick, type PullRequest, type RegisteredAdapter } from './tick.ts';
 
 const NOW = new Date('2026-09-27T12:00:00Z');
 const ago = (minutes: number) => new Date(NOW.getTime() - minutes * 60_000).toISOString();
@@ -77,6 +78,20 @@ describe('when a connection is due', () => {
     expect(adapterFor([a], { ...row, provider_domain: 'lms' })).toBeNull();
     expect(adapterFor([a, { ...a }], row)).toBeNull();
   });
+
+  it('requires complete connection-scoped configuration before a live adapter is eligible', () => {
+    const configured = {
+      tenant_id: 'northstar',
+      provider_base_url: 'https://northstar.instructure.com',
+      authentication_type: 'api_key',
+      credentials_reference: 'vault:tenants/northstar/canvas',
+    };
+    expect(connectionIssue(CANVAS_READ_ADAPTER, configured)).toBeNull();
+    expect(connectionIssue(CANVAS_READ_ADAPTER, { ...configured, authentication_type: 'oauth2' })).toMatch(/authentication/);
+    expect(connectionIssue(CANVAS_READ_ADAPTER, { ...configured, credentials_reference: null })).toMatch(/credential/);
+    expect(connectionIssue(CANVAS_READ_ADAPTER, { ...configured, credentials_reference: 'vault:platform/canvas' })).toMatch(/tenant namespace/);
+    expect(connectionIssue(CANVAS_READ_ADAPTER, { ...configured, provider_base_url: 'https://evil.test' })).toMatch(/origin/);
+  });
 });
 
 describe('the tick', () => {
@@ -112,6 +127,19 @@ describe('the tick', () => {
     const t = world([connection('a'), connection('b')]);
     const s = await run(t, []);
     expect(s).toMatchObject({ ran: 0, skipped: { 'no registered adapter': 2 } });
+    expect(t.integration_sync_runs).toEqual([]);
+  });
+
+  it('does not open a run or call a live provider when connection configuration is invalid', async () => {
+    const t = world([connection('canvas', {
+      tenant_id: 'vu', provider_domain: 'lms', provider_name: 'Canvas', provider_product: 'Canvas LMS',
+      authentication_type: 'api_key', credentials_reference: 'vault:tenants/vu/canvas', provider_base_url: 'https://evil.test',
+    })], {
+      tenant_feature_policy: [{ tenant_id: 'vu', capability: 'integration.lms_lti', state: 'production' }],
+      integration_scopes: [{ connection_id: 'canvas', scope_key: 'scope.lms.course_context_read', approved: true, expires_at: null }],
+    });
+    const s = await run(t, [CANVAS_READ_ADAPTER]);
+    expect(s).toMatchObject({ ran: 0, skipped: { 'connection configuration invalid': 1 } });
     expect(t.integration_sync_runs).toEqual([]);
   });
 

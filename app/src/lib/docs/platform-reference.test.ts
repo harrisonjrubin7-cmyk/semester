@@ -408,6 +408,11 @@ const PLATFORM_NON_EVENT_IMPORTERS = [
   'app/server/course-sources/contract.ts',
   'app/server/institution/intelligence-repository.ts',
   'app/server/institution/intelligence.ts',
+  // The integration registry imports only the Canvas adapter, and the provider
+  // client imports only the shared HTTP-error type. Neither reaches the event
+  // emitter or mounts a publisher.
+  'app/server/integration/registry.ts',
+  'app/src/lib/integration/provider-client.ts',
   'app/server/productivity/http.ts',
   'app/server/productivity/service.ts',
 ];
