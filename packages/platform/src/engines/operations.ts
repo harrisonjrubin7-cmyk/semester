@@ -38,7 +38,7 @@ export interface OperationsWorkItemStore {
   put(item: OperationsWorkItem, expectedVersion: number): Promise<boolean>;
 }
 
-export type WorkItemAction = 'open' | 'claim' | 'resolve' | 'reopen';
+export type WorkItemAction = 'open' | 'read' | 'claim' | 'resolve' | 'reopen';
 export type OperationsWorkItemAuthorizer = (
   ctx: RequestContext,
   action: WorkItemAction,
@@ -80,25 +80,25 @@ export class OperationsWorkItemRuntime {
   }
 
   async load(ctx: RequestContext, id: string): Promise<OperationsWorkItem> {
-    const item = await this.store.get(ctx.tenantId, id);
-    if (!item) throw new PlatformError('not_found', 'We could not find that work item.');
-    return freezeItem(item);
+    const item = await this.loadStored(ctx, id);
+    await this.requireAuthorized(ctx, 'read', item);
+    return item;
   }
 
   async claim(ctx: RequestContext, id: string, expectedVersion: number): Promise<OperationsWorkItem> {
-    const current = await this.load(ctx, id);
+    const current = await this.loadStored(ctx, id);
     await this.requireAuthorized(ctx, 'claim', current);
     return this.save(claimWorkItem(ctx, current, expectedVersion, this.clock.now()), current.version);
   }
 
   async resolve(ctx: RequestContext, id: string, expectedVersion: number, resolution: { code: string; summary: string; receiptRef: string }): Promise<OperationsWorkItem> {
-    const current = await this.load(ctx, id);
+    const current = await this.loadStored(ctx, id);
     await this.requireAuthorized(ctx, 'resolve', current);
     return this.save(resolveWorkItem(ctx, current, expectedVersion, resolution, this.clock.now()), current.version);
   }
 
   async reopen(ctx: RequestContext, id: string, expectedVersion: number, reason: string): Promise<OperationsWorkItem> {
-    const current = await this.load(ctx, id);
+    const current = await this.loadStored(ctx, id);
     await this.requireAuthorized(ctx, 'reopen', current);
     return this.save(reopenWorkItem(ctx, current, expectedVersion, reason, this.clock.now()), current.version);
   }
@@ -106,6 +106,12 @@ export class OperationsWorkItemRuntime {
   private async save(next: OperationsWorkItem, expectedVersion: number): Promise<OperationsWorkItem> {
     if (!(await this.store.put(next, expectedVersion))) throw changed();
     return freezeItem(next);
+  }
+
+  private async loadStored(ctx: RequestContext, id: string): Promise<OperationsWorkItem> {
+    const item: unknown = await this.store.get(ctx.tenantId, id);
+    if (!item) throw missing();
+    return validateStoredItem(item, ctx.tenantId, id);
   }
 
   private async requireAuthorized(ctx: RequestContext, action: WorkItemAction, item?: OperationsWorkItem): Promise<void> {
@@ -131,8 +137,13 @@ function openWorkItem(
   }
   const at = instant(now);
   return freezeItem({
-    ...input,
+    id: input.id,
     tenantId: ctx.tenantId,
+    kind: input.kind,
+    subject: { type: input.subject.type, id: input.subject.id },
+    sourceRef: input.sourceRef,
+    purpose: input.purpose,
+    priority: input.priority,
     state: 'open',
     version: 1,
     createdAt: at,
@@ -213,6 +224,10 @@ function changed(): PlatformError {
   return new PlatformError('conflict', 'This work item changed while you were looking at it. Reload and try again.');
 }
 
+function missing(): PlatformError {
+  return new PlatformError('not_found', 'We could not find that work item.');
+}
+
 function instant(value: Date, notBefore?: string): string {
   if (!(value instanceof Date) || !Number.isFinite(value.getTime())) throw new PlatformError('validation_failed', 'The work item time is not valid.');
   const at = value.toISOString();
@@ -239,4 +254,50 @@ function freezeItem(item: OperationsWorkItem): OperationsWorkItem {
   Object.freeze(item.subject);
   if (item.resolution) Object.freeze(item.resolution);
   return Object.freeze(item);
+}
+
+function validateStoredItem(value: unknown, tenantId: string, id: string): OperationsWorkItem {
+  if (!value || typeof value !== 'object') throw corrupt();
+  const item = value as Partial<OperationsWorkItem>;
+  // Scope and identity are checked before structure, state, version, or policy so a bad adapter cannot become a tenant oracle.
+  if (item.tenantId !== tenantId || item.id !== id) throw missing();
+  if (!isText(item.kind) || !isText(item.sourceRef) || !isText(item.purpose)
+    || !item.subject || !isText(item.subject.type) || !isText(item.subject.id)
+    || !WORK_ITEM_PRIORITIES.some((priority) => priority === item.priority)
+    || !['open', 'claimed', 'resolved'].includes(item.state ?? '')
+    || !Number.isInteger(item.version) || (item.version ?? 0) < 1
+    || !isInstant(item.createdAt) || !isInstant(item.updatedAt)
+    || Date.parse(item.updatedAt) < Date.parse(item.createdAt)
+    || !Array.isArray(item.history) || item.history.length !== item.version) throw corrupt();
+
+  let previous = -Infinity;
+  for (const entry of item.history) {
+    if (!entry || !['opened', 'claimed', 'resolved', 'reopened'].includes(entry.action)
+      || !isText(entry.actorId) || !isInstant(entry.at) || Date.parse(entry.at) < previous
+      || (entry.reason !== undefined && !isText(entry.reason))
+      || (entry.resolution !== undefined && !validResolution(entry.resolution))) throw corrupt();
+    previous = Date.parse(entry.at);
+  }
+  const last = item.history.at(-1)!;
+  const stateFor = last.action === 'claimed' ? 'claimed' : last.action === 'resolved' ? 'resolved' : 'open';
+  if (item.history[0]?.action !== 'opened' || item.createdAt !== item.history[0].at
+    || item.updatedAt !== last.at || item.state !== stateFor) throw corrupt();
+  if (item.state === 'open' && (item.assignedTo !== undefined || item.resolution !== undefined)) throw corrupt();
+  if (item.state === 'claimed' && (!isText(item.assignedTo) || item.resolution !== undefined)) throw corrupt();
+  if (item.state === 'resolved' && (!isText(item.assignedTo) || !validResolution(item.resolution))) throw corrupt();
+  return freezeItem(item as OperationsWorkItem);
+}
+
+function validResolution(value: unknown): value is { code: string; summary: string; receiptRef: string } {
+  if (!value || typeof value !== 'object') return false;
+  const resolution = value as Partial<{ code: string; summary: string; receiptRef: string }>;
+  return isText(resolution.code) && isText(resolution.summary) && isText(resolution.receiptRef);
+}
+
+function isInstant(value: unknown): value is string {
+  return typeof value === 'string' && Number.isFinite(Date.parse(value));
+}
+
+function corrupt(): PlatformError {
+  return new PlatformError('internal', 'The work item record could not be read safely.');
 }

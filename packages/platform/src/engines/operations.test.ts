@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PlatformError } from '../gateway/errors.ts';
 import { TENANT_A, TENANT_B, harness } from '../testing/memory.ts';
-import { MemoryOperationsWorkItemStore, OperationsWorkItemRuntime, type OpenWorkItemInput } from './operations.ts';
+import { MemoryOperationsWorkItemStore, OperationsWorkItemRuntime, type OpenWorkItemInput, type OperationsWorkItemStore } from './operations.ts';
 
 const h = harness([]);
 const at = (minute: number) => new Date(`2026-10-10T02:${String(minute).padStart(2, '0')}:00Z`);
@@ -50,6 +50,7 @@ describe('operations work items', () => {
     const { runtime } = setup();
     await runtime.open(ctx(), input());
     await expect(runtime.load(ctx(TENANT_B, 'operator-b'), 'work-1')).rejects.toMatchObject({ code: 'not_found' });
+    await expect(runtime.load(ctx(TENANT_A, 'student-a'), 'work-1')).rejects.toMatchObject({ code: 'forbidden' });
     await expect(runtime.claim(ctx(TENANT_A, 'student-a'), 'work-1', 1)).rejects.toMatchObject({ code: 'forbidden' });
     expect((await runtime.load(ctx(), 'work-1')).state).toBe('open');
   });
@@ -84,5 +85,29 @@ describe('operations work items', () => {
     await runtime.open(ctx(), input());
     setTime(at(9));
     await expect(runtime.claim(ctx(), 'work-1', 1)).rejects.toMatchObject({ code: 'validation_failed' });
+  });
+
+  it('constructs an allowlisted open record and rejects poisoned adapter output before authorization', async () => {
+    const { runtime } = setup();
+    const made = await runtime.open(ctx(), { ...input(), assignedTo: 'forged', resolution: { code: 'forged' }, extra: 'forged' } as unknown as OpenWorkItemInput);
+    expect(made).not.toHaveProperty('assignedTo');
+    expect(made).not.toHaveProperty('resolution');
+    expect(made).not.toHaveProperty('extra');
+
+    let authorized = false;
+    const poisoned = {
+      get: async () => ({ ...made, tenantId: TENANT_B }),
+      put: async () => true,
+    } as OperationsWorkItemStore;
+    const foreign = new OperationsWorkItemRuntime(poisoned, { now: () => at(11) }, () => { authorized = true; return true; });
+    await expect(foreign.load(ctx(), made.id)).rejects.toMatchObject({ code: 'not_found' });
+    expect(authorized).toBe(false);
+
+    const malformed = {
+      get: async () => ({ ...made, history: undefined }),
+      put: async () => true,
+    } as unknown as OperationsWorkItemStore;
+    const corrupt = new OperationsWorkItemRuntime(malformed, { now: () => at(11) }, () => true);
+    await expect(corrupt.load(ctx(), made.id)).rejects.toMatchObject({ code: 'internal' });
   });
 });
