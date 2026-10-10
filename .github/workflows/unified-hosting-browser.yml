@@ -1,0 +1,71 @@
+name: Unified hosting browser contracts
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/unified-hosting-browser.yml'
+      - 'app/package.json'
+      - 'app/index.html'
+      - 'app/public/manifest.webmanifest'
+      - 'app/public/sw.js'
+      - 'app/scripts/unified-hosting-browser.mjs'
+      - 'app/src/lib/warm.ts'
+      - 'app/src/main.tsx'
+      - 'app/vite.config.ts'
+      - 'vercel.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unified-hosting-browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser-contracts:
+    name: ${{ matrix.browser }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install repository dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build the /app artifact
+        run: npm run build:hosting --workspace app
+
+      - name: Install Playwright outside the repository tree
+        env:
+          BROWSER: ${{ matrix.browser }}
+        run: |
+          mkdir -p /tmp/unified-hosting-browser
+          cd /tmp/unified-hosting-browser
+          npm init -y
+          npm install --no-save playwright
+          npx playwright install --with-deps "$BROWSER"
+
+      - name: Exercise path-scoped storage, cache, offline and share contracts
+        env:
+          HOSTING_BROWSER_ENGINE: ${{ matrix.browser }}
+          HOSTING_PLAYWRIGHT: /tmp/unified-hosting-browser/node_modules/playwright
+        run: node app/scripts/unified-hosting-browser.mjs
+
+      - name: Keep browser evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: unified-hosting-browser-${{ matrix.browser }}-${{ github.sha }}
+          path: artifacts/unified-hosting-browser-${{ matrix.browser }}.json
+          if-no-files-found: warn
+          retention-days: 30

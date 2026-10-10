@@ -1,0 +1,315 @@
+import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import { createRequire } from 'node:module';
+import { extname, resolve, sep } from 'node:path';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+
+const engine = process.env.HOSTING_BROWSER_ENGINE || 'chromium';
+const playwrightPath = process.env.HOSTING_PLAYWRIGHT;
+const playwright = playwrightPath
+  ? createRequire(import.meta.url)(playwrightPath)
+  : await import('playwright');
+const browserType = playwright[engine];
+assert.ok(browserType, `unsupported Playwright browser: ${engine}`);
+
+const dist = resolve(process.cwd(), 'app/dist');
+const appIndex = resolve(dist, 'app/index.html');
+await stat(appIndex);
+
+const types = new Map([
+  ['.css', 'text/css; charset=utf-8'],
+  ['.html', 'text/html; charset=utf-8'],
+  ['.js', 'text/javascript; charset=utf-8'],
+  ['.json', 'application/json; charset=utf-8'],
+  ['.png', 'image/png'],
+  ['.svg', 'image/svg+xml'],
+  ['.webmanifest', 'application/manifest+json; charset=utf-8'],
+]);
+
+const server = createServer(async (request, response) => {
+  const url = new URL(request.url || '/', 'http://127.0.0.1');
+  if (url.pathname === '/__seed') {
+    response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    response.end('<!doctype html><title>Seed</title>');
+    return;
+  }
+  if (url.pathname === '/api/synthetic') {
+    response.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
+    response.end(JSON.stringify({ source: 'origin-server', authorization: request.headers.authorization || null }));
+    return;
+  }
+  if (url.pathname === '/app') {
+    response.writeHead(308, { location: '/app/' });
+    response.end();
+    return;
+  }
+
+  let pathname = url.pathname;
+  if (pathname === '/app/' || (pathname.startsWith('/app/') && !extname(pathname))) {
+    pathname = '/app/index.html';
+  }
+  const candidate = resolve(dist, `.${pathname}`);
+  if (!candidate.startsWith(`${dist}${sep}`)) {
+    response.writeHead(400);
+    response.end('bad path');
+    return;
+  }
+  try {
+    const body = await readFile(candidate);
+    response.writeHead(200, { 'content-type': types.get(extname(candidate)) || 'application/octet-stream' });
+    response.end(body);
+  } catch {
+    response.writeHead(404);
+    response.end('not found');
+  }
+});
+
+await new Promise((resolveListen, rejectListen) => {
+  server.once('error', rejectListen);
+  server.listen(0, '127.0.0.1', resolveListen);
+});
+const address = server.address();
+assert.ok(address && typeof address === 'object');
+const origin = `http://127.0.0.1:${address.port}`;
+const appUrl = `${origin}/app/`;
+
+let browser;
+let context;
+let page;
+const evidence = { engine, origin, checks: {}, capabilities: {} };
+const artifact = `artifacts/unified-hosting-browser-${engine}.json`;
+
+async function saveEvidence() {
+  await mkdir('artifacts', { recursive: true });
+  await writeFile(artifact, `${JSON.stringify(evidence, null, 2)}\n`);
+}
+
+async function readSyntheticDb() {
+  return page.evaluate(() => new Promise((resolveRead, rejectRead) => {
+    const request = indexedDB.open('semester-hosting-contract-v1');
+    request.onerror = () => rejectRead(request.error);
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction('records', 'readonly');
+      const get = tx.objectStore('records').getAll();
+      get.onerror = () => rejectRead(get.error);
+      get.onsuccess = () => resolveRead(get.result);
+      tx.oncomplete = () => db.close();
+    };
+  }));
+}
+
+try {
+  browser = await browserType.launch({ headless: true });
+  evidence.browserVersion = browser.version();
+  context = await browser.newContext({ serviceWorkers: 'allow' });
+  page = await context.newPage();
+
+  // Seed the same origin before the /app worker exists. These are synthetic
+  // authored/pending sentinels, not production account or offline-policy rows.
+  await page.goto(`${origin}/__seed`);
+  await page.evaluate(async () => {
+    localStorage.setItem('semester.contract.authored', 'student-authored-plan');
+    localStorage.setItem('semester.contract.pending', 'pending-outbox-item');
+    const db = await new Promise((resolveOpen, rejectOpen) => {
+      const request = indexedDB.open('semester-hosting-contract-v1', 1);
+      request.onupgradeneeded = () => request.result.createObjectStore('records', { keyPath: 'id' });
+      request.onerror = () => rejectOpen(request.error);
+      request.onsuccess = () => resolveOpen(request.result);
+    });
+    await new Promise((resolveTx, rejectTx) => {
+      const tx = db.transaction('records', 'readwrite');
+      const store = tx.objectStore('records');
+      store.put({ id: 'authored', value: 'student-authored-plan' });
+      store.put({ id: 'pending', value: 'pending-outbox-item' });
+      tx.oncomplete = resolveTx;
+      tx.onerror = () => rejectTx(tx.error);
+      tx.onabort = () => rejectTx(tx.error);
+    });
+    db.close();
+
+    const cacheNames = [
+      'semester-v0-shell',
+      'semester-v0-scope-app-shell',
+      'semester-v0-scope-nested%2Fapp-shell',
+      'semester-shared',
+      'unrelated-cache',
+    ];
+    for (const name of cacheNames) {
+      const cache = await caches.open(name);
+      await cache.put(`/synthetic/${encodeURIComponent(name)}`, new Response(name));
+    }
+    const shared = await caches.open('semester-shared');
+    await shared.put('./legacy-shared', new Response('legacy-share-sentinel'));
+  });
+
+  await page.goto(appUrl, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  if (!await page.evaluate(() => Boolean(navigator.serviceWorker.controller))) {
+    await page.reload({ waitUntil: 'domcontentloaded' });
+  }
+  await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+  await page.waitForFunction(async () => !(await caches.keys()).includes('semester-v0-scope-app-shell'));
+
+  const manifest = await page.evaluate(async () => {
+    const response = await fetch('./manifest.webmanifest');
+    const body = await response.json();
+    const here = location.href;
+    const fileAction = new URL(body.file_handlers[0].action, here);
+    const protocol = new URL(body.protocol_handlers[0].url.replace('%s', 'today'), here);
+    return {
+      status: response.status,
+      start: new URL(body.start_url, here).pathname,
+      scope: new URL(body.scope, here).pathname,
+      id: new URL(body.id, here).pathname,
+      share: new URL(body.share_target.action, here).pathname,
+      fileAction: `${fileAction.pathname}${fileAction.search}`,
+      protocol: `${protocol.pathname}${protocol.search}`,
+    };
+  });
+  assert.deepEqual(manifest, {
+    status: 200,
+    start: '/app/',
+    scope: '/app/',
+    id: '/app/',
+    share: '/app/share',
+    fileAction: '/app/?screen=import',
+    protocol: '/app/?screen=today',
+  });
+  evidence.checks.manifest = manifest;
+
+  const worker = await page.evaluate(async () => {
+    const registration = await navigator.serviceWorker.ready;
+    return {
+      scope: new URL(registration.scope).pathname,
+      script: new URL(registration.active.scriptURL).pathname,
+      controlled: Boolean(navigator.serviceWorker.controller),
+    };
+  });
+  assert.deepEqual(worker, { scope: '/app/', script: '/app/sw.js', controlled: true });
+  evidence.checks.worker = worker;
+
+  const cachesAfterActivation = await page.evaluate(() => caches.keys());
+  assert.ok(!cachesAfterActivation.includes('semester-v0-scope-app-shell'));
+  for (const preserved of [
+    'semester-v0-shell',
+    'semester-v0-scope-nested%2Fapp-shell',
+    'semester-shared',
+    'unrelated-cache',
+  ]) assert.ok(cachesAfterActivation.includes(preserved), `${preserved} must survive /app activation`);
+  assert.ok(cachesAfterActivation.includes('semester-v1-scope-app-shell'));
+  evidence.checks.cacheIsolation = cachesAfterActivation.sort();
+
+  const storageBeforeOffline = {
+    authored: await page.evaluate(() => localStorage.getItem('semester.contract.authored')),
+    pending: await page.evaluate(() => localStorage.getItem('semester.contract.pending')),
+    db: await readSyntheticDb(),
+  };
+  assert.equal(storageBeforeOffline.authored, 'student-authored-plan');
+  assert.equal(storageBeforeOffline.pending, 'pending-outbox-item');
+  assert.deepEqual(storageBeforeOffline.db, [
+    { id: 'authored', value: 'student-authored-plan' },
+    { id: 'pending', value: 'pending-outbox-item' },
+  ]);
+  evidence.checks.storageAfterActivation = storageBeforeOffline;
+
+  const api = await page.evaluate(async () => {
+    const response = await fetch('/api/synthetic?student=1', {
+      headers: { Authorization: 'Bearer synthetic-only' },
+    });
+    return { status: response.status, body: await response.json() };
+  });
+  assert.deepEqual(api, {
+    status: 200,
+    body: { source: 'origin-server', authorization: 'Bearer synthetic-only' },
+  });
+  evidence.checks.rootApiBypass = api;
+
+  const share = await page.evaluate(async () => {
+    const form = new FormData();
+    form.append('file', new File(['synthetic syllabus'], 'Econ 1010 – Syllabus.pdf', { type: 'application/pdf' }));
+    const response = await fetch('/app/share', { method: 'POST', body: form });
+    const cache = await caches.open('semester-shared');
+    const hit = await cache.match('./__shared');
+    const legacy = await cache.match('./legacy-shared');
+    return {
+      responsePath: new URL(response.url).pathname,
+      responseSearch: new URL(response.url).search,
+      name: hit ? decodeURIComponent(hit.headers.get('x-shared-name') || '') : null,
+      type: hit?.headers.get('x-shared-type') || null,
+      body: hit ? await hit.text() : null,
+      legacy: legacy ? await legacy.text() : null,
+    };
+  });
+  assert.deepEqual(share, {
+    responsePath: '/app/',
+    responseSearch: '?screen=import&shared=1',
+    name: 'Econ 1010 – Syllabus.pdf',
+    type: 'application/pdf',
+    body: 'synthetic syllabus',
+    legacy: 'legacy-share-sentinel',
+  });
+  evidence.checks.multipartShare = share;
+
+  // warm() posts asynchronously to the worker. Do not infer readiness from
+  // registration: prove every same-origin startup resource used by this page
+  // is durable before taking the browser offline.
+  const warmedAssets = await page.evaluate(() => {
+    const wanted = /\.(js|mjs|css|woff2?|svg|json|webmanifest)$/i;
+    return [...new Set(
+      performance
+        .getEntriesByType('resource')
+        .map((entry) => entry.name.split('?')[0])
+        .filter((url) => url.startsWith(`${location.origin}/app/`) && wanted.test(new URL(url).pathname)),
+    )];
+  });
+  assert.ok(warmedAssets.length > 0, 'the production page must load at least one warmable asset');
+  await page.waitForFunction(async (urls) => {
+    const cache = await caches.open('semester-v1-scope-app-shell');
+    const hits = await Promise.all(urls.map((url) => cache.match(url, { ignoreVary: true })));
+    return hits.every(Boolean);
+  }, warmedAssets);
+  evidence.checks.warmedAssets = warmedAssets.map((url) => new URL(url).pathname).sort();
+
+  await context.setOffline(true);
+  await page.goto(`${appUrl}?screen=study`, { waitUntil: 'domcontentloaded' });
+  assert.equal(await page.title(), 'Semester');
+  assert.ok((await page.locator('body').innerText()).trim().length > 100);
+  evidence.checks.offlineQueryRelaunch = true;
+
+  const storageOffline = {
+    authored: await page.evaluate(() => localStorage.getItem('semester.contract.authored')),
+    pending: await page.evaluate(() => localStorage.getItem('semester.contract.pending')),
+    db: await readSyntheticDb(),
+  };
+  assert.deepEqual(storageOffline, storageBeforeOffline);
+  evidence.checks.storageAfterOfflineRelaunch = storageOffline;
+  await context.setOffline(false);
+
+  evidence.capabilities = await page.evaluate(async () => {
+    const registration = await navigator.serviceWorker.ready;
+    return {
+      cacheStorage: 'caches' in window,
+      indexedDb: 'indexedDB' in window,
+      launchQueue: 'launchQueue' in window,
+      pushManager: Boolean(registration.pushManager),
+      beforeInstallPromptObservableOnlyWithBrowserPolicy: true,
+    };
+  });
+
+  await saveEvidence();
+  console.log(`unified hosting browser contract passed (${engine})`);
+  console.log(`evidence: ${artifact}`);
+} catch (error) {
+  evidence.error = {
+    name: error instanceof Error ? error.name : 'Error',
+    message: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : undefined,
+  };
+  await saveEvidence().catch(() => {});
+  throw error;
+} finally {
+  await context?.close().catch(() => {});
+  await browser?.close().catch(() => {});
+  await new Promise((resolveClose) => server.close(resolveClose));
+}
