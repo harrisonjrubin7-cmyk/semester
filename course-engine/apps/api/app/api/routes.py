@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -16,6 +16,7 @@ from app.core.security import create_access_token, get_current_user, hash_passwo
 from app.models.entities import (
     BackgroundJob,
     CalendarEvent,
+    Citation,
     Conflict,
     Course,
     LearnerProgress,
@@ -24,6 +25,7 @@ from app.models.entities import (
     SourceChunk,
     SourceDocument,
     StudyAsset,
+    StudyAssetCitation,
     StudyExport,
     User,
 )
@@ -45,6 +47,11 @@ from app.schemas import (
     UserOut,
 )
 from app.services.calendar import build_ics
+from app.services.citations import (
+    UnsupportedCitationError,
+    canonicalize_study_asset_citations,
+    validate_study_asset_content,
+)
 from app.services.exports import export_flashcards_pdf, export_guide_docx, export_guide_pdf
 from app.services.storage import ObjectStorage, storage_key, validate_upload
 
@@ -61,6 +68,78 @@ def owned_course(db: Session, user: User, course_id: UUID) -> Course:
 
 def serialize(row) -> dict:
     return {column.name: getattr(row, column.name) for column in row.__table__.columns}
+
+
+def _citation_label(document: SourceDocument, chunk: SourceChunk) -> str:
+    archive_member = (chunk.metadata_json or {}).get("archive_member")
+    source_name = (
+        f"{document.filename} › {archive_member}"
+        if isinstance(archive_member, str) and archive_member.strip()
+        else document.filename
+    )
+    location = (
+        f"p. {chunk.page_number}" if chunk.page_number is not None else
+        f"slide {chunk.slide_number}" if chunk.slide_number is not None else
+        f"{chunk.sheet_name} {chunk.cell_range}" if chunk.sheet_name else
+        f"{chunk.start_seconds:.0f}s" if chunk.start_seconds is not None else
+        "source"
+    )
+    return f"{source_name}, {location}"
+
+
+def current_asset_citations(
+    db: Session,
+    asset: StudyAsset,
+) -> tuple[set[UUID], dict[str, dict[str, str]]]:
+    linked = set(db.scalars(
+        select(StudyAssetCitation.citation_id).where(
+            StudyAssetCitation.study_asset_id == asset.id,
+        )
+    ).all())
+    approved_rows = db.execute(
+        select(Citation, SourceChunk, SourceDocument)
+        .join(StudyAssetCitation, StudyAssetCitation.citation_id == Citation.id)
+        .join(SourceChunk, Citation.chunk_id == SourceChunk.id)
+        .join(SourceDocument, SourceChunk.document_id == SourceDocument.id)
+        .where(
+            StudyAssetCitation.study_asset_id == asset.id,
+            Citation.status == ReviewStatus.confirmed,
+            SourceDocument.course_id == asset.course_id,
+            SourceDocument.deleted_at.is_(None),
+        )
+    ).all()
+    approved = {citation.id for citation, _chunk, _document in approved_rows}
+    if not linked or approved != linked:
+        raise UnsupportedCitationError("Study asset citations are no longer approved")
+    catalog = {
+        str(citation.id): {
+            "label": _citation_label(document, chunk),
+            "quote": citation.quote,
+        }
+        for citation, chunk, document in approved_rows
+    }
+    return approved, catalog
+
+
+def invalidate_citation_dependents(db: Session, citation: Citation) -> None:
+    assets = db.scalars(
+        select(StudyAsset)
+        .join(StudyAssetCitation, StudyAssetCitation.study_asset_id == StudyAsset.id)
+        .where(StudyAssetCitation.citation_id == citation.id)
+    ).all()
+    for asset in assets:
+        asset.status = ReviewStatus.needs_review
+        db.add(ReviewItem(
+            course_id=asset.course_id,
+            item_type="stale_study_asset",
+            title=f"Regenerate {asset.title}",
+            payload={
+                "asset_id": str(asset.id),
+                "generation_version": asset.generation_version,
+                "citation_id": str(citation.id),
+            },
+        ))
+    db.execute(delete(StudyAssetCitation).where(StudyAssetCitation.citation_id == citation.id))
 
 
 @router.post("/auth/register", response_model=TokenResponse, status_code=201)
@@ -283,6 +362,62 @@ def review_item(item_id: UUID, payload: ReviewPatch, user: User = Depends(get_cu
     item = db.get(ReviewItem, item_id)
     if not item: raise HTTPException(404)
     owned_course(db, user, item.course_id)
+    if item.item_type == "generated_study_asset":
+        if payload.corrected_payload is not None:
+            raise HTTPException(400, "Edit the study asset before reviewing it")
+        try:
+            asset_id = UUID(item.payload["asset_id"])
+            reviewed_version = int(item.payload["generation_version"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise HTTPException(409, "Study asset review target is invalid") from exc
+        asset = db.get(StudyAsset, asset_id)
+        if not asset or asset.course_id != item.course_id:
+            raise HTTPException(409, "Study asset review target is unavailable")
+        if asset.generation_version != reviewed_version:
+            raise HTTPException(409, "Study asset review is stale")
+        if payload.status == ReviewStatus.confirmed.value:
+            try:
+                allowed_citations, citation_catalog = current_asset_citations(db, asset)
+                validate_study_asset_content(asset.asset_type, asset.content, allowed_citations)
+            except UnsupportedCitationError as exc:
+                raise HTTPException(422, str(exc)) from exc
+            asset.content = canonicalize_study_asset_citations(
+                asset.asset_type,
+                asset.content,
+                citation_catalog,
+            )
+        asset.status = ReviewStatus(payload.status)
+    elif item.item_type == "extracted_evidence":
+        try:
+            chunk_id = UUID(item.payload["chunk_id"])
+            citation_id = UUID(item.payload["citation_id"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise HTTPException(409, "Extracted evidence review target is invalid") from exc
+        chunk = db.get(SourceChunk, chunk_id)
+        citation = db.get(Citation, citation_id)
+        document = db.get(SourceDocument, chunk.document_id) if chunk else None
+        if (
+            not chunk
+            or not citation
+            or citation.chunk_id != chunk.id
+            or not document
+            or document.course_id != item.course_id
+        ):
+            raise HTTPException(409, "Extracted evidence review target is unavailable")
+        if payload.corrected_payload is not None:
+            corrected_content = payload.corrected_payload.get("content")
+            if not isinstance(corrected_content, str) or not corrected_content.strip():
+                raise HTTPException(400, "Corrected extracted evidence requires non-empty content")
+            chunk.content = corrected_content
+            citation.quote = corrected_content[:1000]
+            item.payload = {**item.payload, "correction": payload.corrected_payload}
+        if payload.corrected_payload is not None or citation.status != ReviewStatus(payload.status):
+            invalidate_citation_dependents(db, citation)
+        citation.status = ReviewStatus(payload.status)
+        item.status = ReviewStatus(payload.status)
+        item.resolution_note = payload.resolution_note
+        db.commit()
+        return serialize(item)
     item.status = ReviewStatus(payload.status); item.resolution_note = payload.resolution_note
     if payload.corrected_payload is not None: item.payload = payload.corrected_payload
     db.commit(); return serialize(item)
@@ -366,8 +501,22 @@ def patch_asset(asset_id: UUID, payload: AssetPatch, user: User = Depends(get_cu
     row = db.get(StudyAsset, asset_id)
     if not row: raise HTTPException(404)
     owned_course(db, user, row.course_id)
-    for key, value in payload.model_dump(exclude_unset=True).items(): setattr(row, key, ReviewStatus(value) if key == "status" else value)
-    row.generation_version += 1; db.commit(); return serialize(row)
+    changes = payload.model_dump(exclude_unset=True)
+    if changes.get("status") == ReviewStatus.confirmed.value:
+        raise HTTPException(409, "Confirm the current version through its review item")
+    content_changed = "title" in changes or "content" in changes
+    for key, value in changes.items():
+        setattr(row, key, ReviewStatus(value) if key == "status" else value)
+    if content_changed:
+        row.generation_version += 1
+        row.status = ReviewStatus.needs_review
+        db.add(ReviewItem(
+            course_id=row.course_id,
+            item_type="generated_study_asset",
+            title=f"Review {row.title}",
+            payload={"asset_id": str(row.id), "generation_version": row.generation_version},
+        ))
+    db.commit(); return serialize(row)
 
 
 @router.post("/study-assets/{asset_id}/regenerate", status_code=202)
@@ -392,11 +541,31 @@ def _export(asset_id: UUID, fmt: str, user: User, db: Session):
     row = db.get(StudyAsset, asset_id)
     if not row: raise HTTPException(404)
     owned_course(db, user, row.course_id)
+    if row.status != ReviewStatus.confirmed:
+        raise HTTPException(409, "Study asset must be confirmed before export")
+    try:
+        allowed_citations, citation_catalog = current_asset_citations(db, row)
+        validate_study_asset_content(row.asset_type, row.content, allowed_citations)
+        export_content = canonicalize_study_asset_citations(
+            row.asset_type,
+            row.content,
+            citation_catalog,
+        )
+    except UnsupportedCitationError as exc:
+        row.status = ReviewStatus.needs_review
+        db.add(ReviewItem(
+            course_id=row.course_id,
+            item_type="generated_study_asset",
+            title=f"Review {row.title}",
+            payload={"asset_id": str(row.id), "generation_version": row.generation_version},
+        ))
+        db.commit()
+        raise HTTPException(409, str(exc)) from exc
     output = settings.local_storage_path / "exports" / f"{row.id}-v{row.generation_version}.{fmt}"
-    citations = row.content.get("citations", {})
-    if fmt == "pdf": export_guide_pdf(row.title, row.content, citations, output)
-    elif fmt == "docx": export_guide_docx(row.title, row.content, citations, output)
-    else: export_flashcards_pdf(row.content.get("cards", []), output)
+    citations = export_content["citations"]
+    if fmt == "pdf": export_guide_pdf(row.title, export_content, citations, output)
+    elif fmt == "docx": export_guide_docx(row.title, export_content, citations, output)
+    else: export_flashcards_pdf(export_content.get("cards", []), output)
     record = StudyExport(study_asset_id=row.id, format=fmt, storage_key=str(output), generation_version=row.generation_version)
     db.add(record); db.commit(); return FileResponse(output, filename=output.name)
 
