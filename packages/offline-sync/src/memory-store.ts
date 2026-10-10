@@ -93,6 +93,7 @@ export function memoryStore(opts: MemoryStoreOptions = {}): LocalStore & { snaps
     cursors: {
       async get(s) { return cursors.get(s) },
       async set(s, v) { cursors.set(s, v); changed() },
+      async remove(s) { cursors.delete(s); changed() },
     },
   }
 }

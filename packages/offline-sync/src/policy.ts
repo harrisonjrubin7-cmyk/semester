@@ -161,10 +161,16 @@ export class OfflinePolicyError extends Error {
 }
 
 export function policyFor(dataClass: string): DataClassPolicy {
-  const p = (DATA_CLASSES as Record<string, DataClassPolicy>)[dataClass]
+  const own = Object.prototype.hasOwnProperty.call(DATA_CLASSES, dataClass)
+  const p = own ? (DATA_CLASSES as Record<string, DataClassPolicy>)[dataClass] : undefined
   // An unknown class is refused, not defaulted: a default is a guess about authority.
-  if (!p) throw new OfflinePolicyError(dataClass, 'unknown_class')
+  if (!p || typeof p !== 'object' || !('cache' in p) || !('write' in p)) throw new OfflinePolicyError(dataClass, 'unknown_class')
   return p
+}
+
+/** Stable admission set persisted beside a feed cursor to detect policy expansion. */
+export function admittedDataClasses(tenant: TenantOfflinePolicy = NO_OPT_IN): DataClass[] {
+  return dataClasses.filter((dataClass) => classifyPersistence(dataClass, tenant).allowed).sort()
 }
 
 /** Throws unless the engine may queue this class (automatically or after a confirming tap). */

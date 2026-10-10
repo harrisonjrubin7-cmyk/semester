@@ -1,6 +1,6 @@
 import { backoffDelay, DEFAULT_BACKOFF, retryAt, type BackoffOptions } from './backoff.ts'
 import { hlcNow, type Hlc } from './hlc.ts'
-import { assertQueueable, classifyPersistence, policyFor, type DataClass, type TenantOfflinePolicy } from './policy.ts'
+import { admittedDataClasses, assertQueueable, classifyPersistence, policyFor, type DataClass, type TenantOfflinePolicy } from './policy.ts'
 import { purgeDisallowedOfflineData, type PolicyPurgeRow, type PolicyPurgeResult } from './storage-policy.ts'
 import { PHASE_TO_STATE, TERMINAL_REASONS, type RejectReason, type SyncState } from './status.ts'
 import type { Change, Command, CommandResult, EntityRow, LocalStore, OutboxRow, PullResponse, SyncTransport } from './types.ts'
@@ -192,11 +192,12 @@ export class SyncEngine {
   private async run(): Promise<SyncReport> {
     const report: SyncReport = { acknowledged: 0, rejected: 0, conflicted: 0, pulled: 0 }
     if (this.wiped) return { ...report, stopped: 'wiped' }
+    // Cleanup is a storage invariant, not an authenticated-data operation.
+    await this.enforceStoragePolicy()
     const verdict = this.d.access?.() ?? 'ok'
     if (verdict === 'wipe') return this.wipe('access_expired', report)
     if (verdict === 'reauth') return { ...report, stopped: 'reauth' }
 
-    await this.enforceStoragePolicy()
     await this.expireOld()
     const stop = (await this.reconcile(report)) ?? (await this.push(report)) ?? (await this.pull(report))
     if (stop) return stop.stopped === 'revoked' ? this.wipe('revoked', { ...report, ...stop }) : { ...report, ...stop }
@@ -348,6 +349,19 @@ export class SyncEngine {
   private async pull(report: SyncReport): Promise<Partial<SyncReport> | null> {
     const { store, transport, identity } = this.d
     const scope = `${identity.tenantId}:${identity.userId}`
+    const admissionKey = `__offline_policy_admission__:${scope}`
+    const admitted = admittedDataClasses(this.d.tenantPolicy)
+    const priorRaw = await store.cursors.get(admissionKey)
+    let prior: string[] = []
+    try { prior = priorRaw ? JSON.parse(priorRaw) as string[] : [] } catch { prior = [] }
+    const expanded = admitted.some((dataClass) => !prior.includes(dataClass))
+    const encoded = JSON.stringify(admitted)
+    if (priorRaw !== encoded || expanded) {
+      await store.transaction(async () => {
+        if (expanded && await store.cursors.get(scope)) await store.cursors.set(scope, '')
+        await store.cursors.set(admissionKey, encoded)
+      })
+    }
     // While a snapshot is arriving: every record it names, so what is *not* named can be dropped at the end.
     let named: Set<string> | null = null
     for (let page = 0; page < 1000; page++) {

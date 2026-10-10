@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { SyncEngine } from '@semester/offline-sync';
+import { purgeDisallowedOfflineData, SyncEngine } from '@semester/offline-sync';
 import { fakeIndexedDB } from '../fakeidb';
 import { fakeTaskRows } from './fake-rows';
 import { store } from '../../idb';
@@ -15,6 +15,40 @@ beforeEach(() => vi.stubGlobal('indexedDB', fakeIndexedDB()));
 afterEach(() => vi.unstubAllGlobals());
 
 describe('the engine store on disk', () => {
+  it('persists a content-free purge retry journal atomically with primary deletion', async () => {
+    const first = await openEngineStore(idbSnapshotPort('u1'));
+    await first.entities.put({ dataClass: 'grade', id: 'official', value: { score: 90 }, confirmed: { score: 90 }, version: 1, phase: 'reconciled', fetchedAt: NOW });
+    await first.flush();
+    await expect(purgeDisallowedOfflineData(first, undefined, async () => { throw new Error('attachment cleanup unavailable'); })).rejects.toThrow(/attachment cleanup unavailable/);
+    await first.flush();
+
+    const restarted = await openEngineStore(idbSnapshotPort('u1'));
+    expect(await restarted.entities.all()).toEqual([]);
+    const calls: unknown[] = [];
+    await purgeDisallowedOfflineData(restarted, undefined, async (rows) => { calls.push(rows); });
+    expect(calls).toHaveLength(1);
+    expect(JSON.stringify(calls)).not.toContain('score');
+    await restarted.flush();
+    const acknowledged = await openEngineStore(idbSnapshotPort('u1'));
+    expect(Object.keys(acknowledged.snapshot().cursors).filter((key) => key.includes('purge'))).toEqual([]);
+  });
+
+  it('keeps primary data when the durable journal transaction aborts', async () => {
+    const first = await openEngineStore(idbSnapshotPort('u1'));
+    await first.entities.put({ dataClass: 'grade', id: 'official', value: { score: 90 }, confirmed: { score: 90 }, version: 1, phase: 'reconciled', fetchedAt: NOW });
+    await first.flush();
+    const set = first.cursors.set;
+    first.cursors.set = async (key, value) => {
+      if (key.includes('purge')) throw new Error('synthetic transaction abort');
+      await set(key, value);
+    };
+    await expect(purgeDisallowedOfflineData(first, undefined, async () => undefined)).rejects.toThrow(/transaction abort/);
+    expect(await first.entities.get('grade', 'official')).toBeDefined();
+    await first.flush();
+    const restarted = await openEngineStore(idbSnapshotPort('u1'));
+    expect(await restarted.entities.get('grade', 'official')).toBeDefined();
+  });
+
   it('survives closing the app: an edit made offline is still queued, with its key, and goes up after a restart', async () => {
     const rows = fakeTaskRows();
     const transport = tasksTransport(rows, { now: () => NOW });

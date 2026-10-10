@@ -23,6 +23,46 @@ function make(o: Partial<SdkConfig> = {}) {
 }
 
 describe('the SDK read model', () => {
+  it('purges prohibited data at readiness even when the session requires reauthentication', async () => {
+    const store = memoryStore({ initial: { entities: [{ dataClass: 'grade', id: 'g', value: { score: 90 }, confirmed: { score: 90 }, version: 1, phase: 'reconciled', fetchedAt: NOW }] as never, outbox: [], cursors: {} } })
+    const staleLease: LeaseState = { grant: { deviceId: 'd', tenantId: 't1', userId: 'u1', issuedAt: NOW, hardExpiresAt: NOW + 90 * DAY, policyVersion: '1', permissionEpoch: 0, accessTokenTtlMs: 900_000 }, verifiedAt: NOW - 8 * DAY, highWaterWall: NOW, lastActiveAt: NOW }
+    const { sdk } = make({ store, lease: staleLease })
+    await sdk.ready()
+    expect(await store.entities.all()).toEqual([])
+    expect((await sdk.sync()).stopped).toBe('reauth')
+  })
+
+  it('notifies subscribers when explicit enforcement changes visible state', async () => {
+    const store = memoryStore({ initial: { entities: [{ dataClass: 'grade', id: 'g', value: {}, version: 1, phase: 'reconciled', fetchedAt: NOW }] as never, outbox: [], cursors: {} } })
+    const { sdk } = make({ store })
+    let notifications = 0
+    sdk.onChange(() => { notifications++ })
+    await sdk.enforceStoragePolicy()
+    expect(notifications).toBe(1)
+  })
+
+  it('notifies after primary deletion even when dependent cleanup fails', async () => {
+    const store = memoryStore({ initial: { entities: [{ dataClass: 'grade', id: 'g', value: {}, version: 1, phase: 'reconciled', fetchedAt: NOW }] as never, outbox: [], cursors: {} } })
+    const { sdk } = make({ store, onPolicyPurge: async () => { throw new Error('secondary cleanup failed') } })
+    let notifications = 0
+    sdk.onChange(() => { notifications++ })
+    await expect(sdk.enforceStoragePolicy()).rejects.toThrow(/secondary cleanup failed/)
+    expect(await store.entities.all()).toEqual([])
+    expect(notifications).toBe(1)
+  })
+
+  it('does not durably rewrite a clean store for point or list reads', async () => {
+    let commits = 0
+    const store = memoryStore({ initial: { entities: [{ dataClass: 'task', id: 't', value: {}, version: 1, phase: 'reconciled', fetchedAt: NOW }] as never, outbox: [], cursors: {} }, onCommit: async () => { commits++ } })
+    const { sdk } = make({ store })
+    await sdk.ready()
+    const afterReadiness = commits
+    await sdk.read('task', 't')
+    await sdk.list('task')
+    await store.flush()
+    expect(commits).toBe(afterReadiness)
+  })
+
   it('cannot return a value without its state and the words for it', async () => {
     const { sdk } = make()
     const v = await sdk.write({ dataClass: 'task', entityId: 'T', op: 'create', payload: { title: 'x' } })

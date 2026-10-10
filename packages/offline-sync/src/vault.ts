@@ -204,7 +204,7 @@ export class AttachmentCache {
     if (freshness(r.dataClass, r.fetchedAt, this.d.now(), this.d.tenant ?? NO_OPT_IN) === 'expired') {
       // Expiry includes a class or tenant-policy change. Erase the bytes and
       // wrapped key before refusing the read, rather than waiting for sweep.
-      await this.revoke({ ids: [r.id] })
+      await this.revokeObserved([r])
       throw new AttachmentError('expired')
     }
     const sealed = await this.d.blobs.get(r.blobName)
@@ -217,24 +217,36 @@ export class AttachmentCache {
       throw new AttachmentError('integrity_failed')
     }
     if ((await sha256Hex(bytes)) !== r.contentSha256) throw new AttachmentError('integrity_failed')
-    await this.d.index.save(rows.map((x) => (x.id === id ? { ...x, lastReadAt: this.d.now() } : x)))
+    const current = await this.d.index.load()
+    const observed = current.find((x) => x.id === id)
+    if (observed && observed.blobName === r.blobName && observed.contentSha256 === r.contentSha256) {
+      await this.d.index.save(current.map((x) => (x.id === id ? { ...x, lastReadAt: this.d.now() } : x)))
+    }
     return bytes
+  }
+
+  /** Remove only the exact rows previously observed; a same-id replacement wins. */
+  private async revokeObserved(observed: readonly CachedFile[]): Promise<number> {
+    const current = await this.d.index.load()
+    const exact = new Set(observed.map((row) => `${row.id}\u0000${row.blobName}\u0000${row.contentSha256}`))
+    const gone = current.filter((row) => exact.has(`${row.id}\u0000${row.blobName}\u0000${row.contentSha256}`))
+    for (const row of observed) await this.d.blobs.delete(row.blobName)
+    if (gone.length) await this.d.index.save(current.filter((row) => !gone.includes(row)))
+    return gone.length
   }
 
   /** Erase by file id, by owning entity (membership removed), or everything. Bytes and wrapped key both go. */
   async revoke(match: { ids?: string[]; ownerEntityIds?: string[]; all?: boolean }): Promise<number> {
     const rows = await this.d.index.load()
     const gone = rows.filter((r) => match.all || match.ids?.includes(r.id) || match.ownerEntityIds?.includes(r.ownerEntityId))
-    for (const r of gone) await this.d.blobs.delete(r.blobName)
-    await this.d.index.save(rows.filter((r) => !gone.includes(r)))
-    return gone.length
+    return this.revokeObserved(gone)
   }
 
   /** Drop everything past its class's freshness limit; pinning protects against eviction, not expiry. */
   async sweep(): Promise<number> {
     const rows = await this.d.index.load()
     const stale = rows.filter((r) => freshness(r.dataClass, r.fetchedAt, this.d.now(), this.d.tenant ?? NO_OPT_IN) === 'expired')
-    return this.revoke({ ids: stale.map((r) => r.id) })
+    return this.revokeObserved(stale)
   }
 
   async usage(): Promise<{ used: number; limit: number; files: number }> {

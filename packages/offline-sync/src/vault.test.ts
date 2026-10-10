@@ -44,6 +44,63 @@ describe('key wrapping and sealing', () => {
 })
 
 describe('attachment cache', () => {
+  it('does not delete a concurrent valid replacement when expiring an observed row', async () => {
+    const blobs = memoryBlobs()
+    let rows: CachedFile[] = []
+    let now = NOW
+    let replaceDuringLoad = false
+    let c: AttachmentCache
+    const index = {
+      load: async () => {
+        const observed = structuredClone(rows)
+        if (replaceDuringLoad) {
+          replaceDuringLoad = false
+          await c.put(meta('file'), bytes('new file'))
+        }
+        return observed
+      },
+      save: async (next: CachedFile[]) => { rows = structuredClone(next) },
+    }
+    c = new AttachmentCache({ dek: await newKey(), blobs, index, now: () => now, scope: { tenantId: 't', userId: 'u', deviceId: 'd' } })
+    const old = await c.put(meta('file'), bytes('old file'))
+    now += 15 * 24 * HOUR
+    replaceDuringLoad = true
+    await expect(c.read('file', { aclEpoch: 1 })).rejects.toMatchObject({ why: 'expired' })
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.blobName).not.toBe(old.blobName)
+    expect(blobs.names()).toEqual([rows[0]!.blobName])
+  })
+
+  it('lets a same-id replacement win revoke and sweep interleavings', async () => {
+    for (const operation of ['revoke', 'sweep'] as const) {
+      const blobs = memoryBlobs()
+      let rows: CachedFile[] = []
+      let now = NOW
+      let replaceDuringLoad = false
+      let c: AttachmentCache
+      const index = {
+        load: async () => {
+          const observed = structuredClone(rows)
+          if (replaceDuringLoad) {
+            replaceDuringLoad = false
+            await c.put(meta('file'), bytes(`new-${operation}`))
+          }
+          return observed
+        },
+        save: async (next: CachedFile[]) => { rows = structuredClone(next) },
+      }
+      c = new AttachmentCache({ dek: await newKey(), blobs, index, now: () => now, scope: { tenantId: 't', userId: 'u', deviceId: 'd' } })
+      const old = await c.put(meta('file'), bytes(`old-${operation}`))
+      if (operation === 'sweep') now += 15 * 24 * HOUR
+      replaceDuringLoad = true
+      if (operation === 'revoke') await c.revoke({ ids: ['file'] })
+      else await c.sweep()
+      expect(rows, operation).toHaveLength(1)
+      expect(rows[0]?.blobName, operation).not.toBe(old.blobName)
+      expect(blobs.names(), operation).toEqual([rows[0]!.blobName])
+    }
+  })
+
   it('stores ciphertext only, and reads the plaintext back', async () => {
     const { c, blobs } = await cache()
     await c.put(meta('f1'), bytes('lecture notes'))

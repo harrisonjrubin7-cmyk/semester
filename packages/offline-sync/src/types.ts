@@ -71,6 +71,7 @@ export interface LocalStore {
   cursors: {
     get(scope: string): Promise<string | undefined>
     set(scope: string, value: string): Promise<void>
+    remove(scope: string): Promise<void>
   }
 }
 
