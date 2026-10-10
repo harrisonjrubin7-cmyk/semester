@@ -276,6 +276,8 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['raise_my_data_subject_request', 'self-service', ['auth.uid()']],
   ['read_advisor_share', 'sharing', ['auth.uid()']],
   ['read_family_share', 'sharing', ['auth.uid()']],
+  ['read_guardian_calendar_projection', 'sharing', ['auth.uid()', 'private.is_minor']],
+  ['read_guardian_projection_access_history', 'sharing', ['auth.uid()']],
   ['read_privacy_request_detail', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed']],
   ['read_shared_accommodation', 'sharing', ['auth.uid()']],
   ['read_support_case_signals', 'sharing', ['auth.uid()', 'private.assert_fresh_mfa', 'private.subject_has_capability', 'private.support_agent', 'private.support_consent_active', 'public.read_support_signals']],
@@ -459,6 +461,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * historical snapshot.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261009230000_guardian_projection_foundation.sql',
+    functions: ['read_guardian_calendar_projection', 'read_guardian_projection_access_history'],
+  },
   {
     file: '20261009001500_course_material_retention_policy.sql',
     functions: ['publish_course_material_retention_policy'],

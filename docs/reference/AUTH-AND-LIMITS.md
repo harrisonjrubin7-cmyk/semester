@@ -289,7 +289,7 @@ curl -s 'http://127.0.0.1:8787/health/live' \
 | Cursor | 500 characters | `cursor` on `/records`; longer values are cut. |
 | Review lifetime | 10 minutes | From prepare to commit. |
 | Adapter call | 20 seconds | Each request gives its adapters one abort signal that fires 20 seconds after the request reached the route stage. |
-| Vercel function | 30 seconds | `maxDuration` in `app/vercel.json`. |
+| Vercel function | 30 seconds | `services.api.functions` in root `vercel.json`, on the public API service entrypoint. |
 | Standalone server | `requestTimeout` 30 s, `headersTimeout` 10 s | `start.ts`. It listens on `127.0.0.1` only. |
 | Standalone port | 8787 | Default of `SEMESTER_GATEWAY_PORT`. |
 

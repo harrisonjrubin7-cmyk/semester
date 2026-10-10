@@ -40,6 +40,14 @@ services:
     env_file: ../.env
     volumes: ["../apps/api/app:/app/app", "../apps/worker:/app/worker", "../data:/data"]
     depends_on: [api, redis]
+  dispatcher:
+    build:
+      context: ..
+      dockerfile: apps/worker/Dockerfile
+    command: celery -A worker.tasks.celery beat --loglevel=INFO
+    env_file: ../.env
+    volumes: ["../apps/api/app:/app/app", "../apps/worker:/app/worker", "../data:/data"]
+    depends_on: [api, redis]
   web:
     build:
       context: ../apps/web

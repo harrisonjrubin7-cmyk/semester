@@ -33,6 +33,7 @@ import type { CallAuth, ProviderClient } from './provider-client.ts';
 export interface ContractPullRequest {
   connectionPublicId: string;
   tenantId: string;
+  providerBaseUrl?: string;
   cursor: Record<string, unknown>;
   trigger: 'scheduled' | 'replay';
 }
@@ -97,7 +98,13 @@ export async function runContract(subject: ContractSubject, options: ContractOpt
   check('live_not_mock', !(options.live && d.mock), 'a mock cannot be registered as a live adapter');
 
   const request = (cursor: Record<string, unknown>): ContractPullRequest =>
-    ({ connectionPublicId: CONNECTION, tenantId: TENANT, cursor, trigger: 'scheduled' });
+    ({
+      connectionPublicId: CONNECTION,
+      tenantId: TENANT,
+      providerBaseUrl: 'https://contract.instructure.com',
+      cursor,
+      trigger: 'scheduled',
+    });
 
   // A client that records its use. An adapter that never calls it has made its
   // provider calls some other way, round the guard, the vault and OAuth.

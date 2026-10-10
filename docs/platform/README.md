@@ -8,11 +8,13 @@ layer; observability; a reference implementation; a client SDK; and the tests
 that hold the boundaries.**
 
 Code: [`packages/platform`](../../packages/platform/package.json) (`@semester/platform`).
-Status: **new and additive; partially adopted by the institution surface.** Since
-MIGRATION phase 1 the institution gateway builds its refusals, correlation ids and
-a request context through it, and the browser's university client uses the shared
-SDK for correlation, keyed writes and safe retries. No route uses commands, policy
-or any engine yet; [`MIGRATION.md`](MIGRATION.md) is the path from what runs today.
+Status: **new and additive; adopted by three narrow surfaces so far.** Since MIGRATION
+phase 1 the institution gateway builds its refusals, correlation ids and a request
+context through it, and the browser's university client uses the shared SDK for
+correlation, keyed writes and safe retries. The integration sync worker also
+registers the read-only Canvas course adapter and shares its provider-error contract
+through this package. No route uses commands, policy, or idempotency yet, and no
+other engine is mounted; [`MIGRATION.md`](MIGRATION.md) is the path from what runs today.
 It is built from the audit's requirement that *the identity–policy–audit spine
 comes first, because every later domain depends on it*, and it reuses, rather
 than replaces, what main already had: the policy decision point, the event
@@ -165,7 +167,7 @@ The full, tested version is [`reference/tasks.ts`](../../packages/platform/src/r
 
 ## Running it
 
-From `app/` (the repository root has no scripts; see `CLAUDE.md`):
+From `app/` (the repository root has platform-control orchestration, not these app gates; see `CLAUDE.md`):
 
 ```bash
 npx vitest run ../packages/platform/src   # the platform's own suite

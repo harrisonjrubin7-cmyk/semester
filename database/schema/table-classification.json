@@ -217,6 +217,8 @@
    "private.gateway_intelligence_audit",
    "private.gateway_rate_limit",
    "private.gateway_review",
+   "private.guardian_calendar_projections",
+   "private.guardian_projection_access_events",
    "private.integration_simulation_runs",
    "private.ledger_chain",
    "private.ledger_chain_key",
