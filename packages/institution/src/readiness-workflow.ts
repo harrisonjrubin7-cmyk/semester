@@ -261,7 +261,7 @@ export function transitionRegistrationReadinessEvaluation(
     if (command.projectionVersion === undefined && !(command.targetState === 'unknown' && command.reason === 'evaluator_timeout')) {
       throw new Error('An evaluated readiness outcome requires a projection version.');
     }
-    if (current.projectionVersion !== undefined && command.projectionVersion <= current.projectionVersion) {
+    if (command.projectionVersion !== undefined && current.projectionVersion !== undefined && command.projectionVersion <= current.projectionVersion) {
       throw new Error(`Readiness projection version must be newer than ${current.projectionVersion}.`);
     }
   }
