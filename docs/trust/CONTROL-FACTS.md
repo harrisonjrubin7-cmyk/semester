@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 230 |
+| Migration files | 232 |
 | Tables created in `public` and not later dropped | 342 |
 | … of which enable row-level security in a migration | 342 |
 | Tables created in `private` and not later dropped | 43 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-149 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+150 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -140,6 +140,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/payment-inbox.check.sql` | The payment-rail registry and the verified-event inbox (20261006090000_payment_rails_and_event_inbox, D-1319). |
 | `supabase/privacy-case-actions.check.sql` | Privacy case lifecycle, holds, approvals and certificates. |
 | `supabase/privacy-case-workspace.check.sql` | Scoped, identity-minimized privacy queue. |
+| `supabase/privileged-mfa.check.sql` | Platform administrators and support agents do not carry capabilities until the current JWT proves MFA. |
 | `supabase/productivity-commands.check.sql` | The storage half of the productivity command API: that the commit function is atomic, idempotent, gapless and refuses a stale writer; that row-level security lets a person read their own live rows in… |
 | `supabase/productivity.check.sql` | Include owner isolation, optimistic revisions, tenant membership, aggregate suppression, and account-link preservation in the standard policy harness. |
 | `supabase/projection-foundation.check.sql` | The projection tables and the outbox's claim columns (backlog P1-01). |
@@ -289,8 +290,8 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 231 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 231 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 232 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 232 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
@@ -301,7 +302,7 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 | Register rows in category `integration` | 6 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |
-| Register rows in category `read-helper` | 31 |
+| Register rows in category `read-helper` | 32 |
 
 **How counted.** The register rows are imported from the data module. The derived set repeats the register test's method: the winning `create function` in `public` for each name across migrations in filename order, kept when it says `security definer`, intersected with the names in the allowlist of `supabase/grants.check.sql`.
 

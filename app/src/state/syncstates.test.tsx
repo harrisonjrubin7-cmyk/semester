@@ -31,6 +31,8 @@ class Stale extends Error {
 
 const pull = vi.fn();
 const push = vi.fn();
+const persist = vi.fn();
+const flushNow = vi.fn(async () => true);
 let db = true;
 
 vi.mock('../lib/cloud', () => ({
@@ -51,8 +53,8 @@ vi.mock('../lib/cloud', () => ({
 // which path the store believes it is on.
 vi.mock('./persist', () => ({
   available: () => db,
-  persist: () => {},
-  flushNow: async () => {},
+  persist: (...args: unknown[]) => persist(...args),
+  flushNow: () => flushNow(),
   flushOnLeave: () => {},
   whileWriting: () => {},
   load: async () => null,
@@ -123,6 +125,9 @@ beforeEach(async () => {
   db = true;
   pull.mockReset();
   push.mockReset();
+  persist.mockReset();
+  flushNow.mockReset();
+  flushNow.mockResolvedValue(true);
   localStorage.clear();
   localStorage.setItem('semester.v1', JSON.stringify({ schemaVersion: 6, seenOnboarding: true, registered: true }));
   localStorage.setItem(SEEN_KEY, JSON.stringify({ state: 's1', courses: {} }));
@@ -142,6 +147,162 @@ afterEach(async () => {
 });
 
 describe('an edit goes up on the database path', () => {
+  it('keeps auth and focus refreshes in one pull at a time', async () => {
+    let release: (value: ReturnType<typeof snapshot>) => void = () => {};
+    pull.mockImplementationOnce(() => new Promise<ReturnType<typeof snapshot>>((resolve) => { release = resolve; }));
+
+    await mount();
+    await wait(500);
+    expect(pull).toHaveBeenCalledOnce();
+
+    await expect(store.refresh()).resolves.toBe('Semester is already syncing.');
+    expect(pull).toHaveBeenCalledOnce();
+
+    await act(async () => {
+      release(snapshot('s1'));
+      await Promise.resolve();
+    });
+  });
+
+  it('makes an automatic pull durable before recording the account copy as seen', async () => {
+    const remote = {
+      id: 'remote-task', title: 'From the account', date: null, time: '', note: '',
+      courseId: null, done: true, created: 2,
+    };
+    pull.mockResolvedValue({
+      state: { tasks: [remote] },
+      courses: [],
+      updated: 2,
+      seen: { state: 'account-v2', courses: {} },
+    });
+    let seenWhenFlushed = '';
+    flushNow.mockImplementationOnce(async () => {
+      seenWhenFlushed = JSON.parse(localStorage.getItem(SEEN_KEY) || '{}').state ?? '';
+      return true;
+    });
+
+    await mount();
+    await wait(3_000);
+
+    const written = persist.mock.calls.find(([value]) => (
+      value as { tasks?: { id: string }[] }
+    ).tasks?.some((task) => task.id === remote.id))?.[0] as { tasks?: { id: string }[] } | undefined;
+    expect(written?.tasks?.map((task) => task.id)).toContain(remote.id);
+    expect(flushNow).toHaveBeenCalled();
+    expect(seenWhenFlushed).toBe('s1');
+    expect(store.asking).toBeNull();
+  });
+
+  it('does not queue a pre-pull render behind an automatic durable write', async () => {
+    const remote = {
+      id: 'remote-task', title: 'From the account', date: null, time: '', note: '',
+      courseId: null, done: true, created: 2,
+    };
+    pull.mockResolvedValue({
+      state: { tasks: [remote] },
+      courses: [],
+      updated: 2,
+      seen: { state: 'account-v2', courses: {} },
+    });
+    let release: (landed: boolean) => void = () => {};
+    flushNow.mockImplementationOnce(() => new Promise<boolean>((resolve) => { release = resolve; }));
+
+    await mount();
+    await wait(3_000);
+
+    const exact = persist.mock.calls.findIndex(([value]) => (
+      value as { tasks?: { id: string }[] }
+    ).tasks?.some((task) => task.id === remote.id));
+    expect(exact).toBeGreaterThanOrEqual(0);
+    expect(
+      persist.mock.calls.slice(exact + 1).every(([value]) => (
+        value as { tasks?: { id: string }[] }
+      ).tasks?.some((task) => task.id === remote.id)),
+      'a render queued the empty pre-pull copy after the exact remote write',
+    ).toBe(true);
+
+    await act(async () => {
+      release(true);
+      await Promise.resolve();
+    });
+  });
+
+  it('does not mark an automatic account pull as seen when its durable write fails', async () => {
+    pull.mockResolvedValue({
+      state: { tasks: [{ id: 'remote', title: 'From the account', done: true, created: 2 }] },
+      courses: [],
+      updated: 2,
+      seen: { state: 'account-v2', courses: {} },
+    });
+    flushNow.mockResolvedValue(false);
+
+    await mount();
+    await wait(3_000);
+
+    expect(JSON.parse(localStorage.getItem(SEEN_KEY) || '{}').state).not.toBe('account-v2');
+    expect(store.state.tasks.some((task) => task.id === 'remote')).toBe(true);
+  });
+
+  it('makes an accepted account copy durable before recording it as seen', async () => {
+    const local = {
+      id: 'local-task', title: 'Already here', date: null, time: '', note: '',
+      courseId: null, done: false, created: 1,
+    };
+    const remote = {
+      id: 'remote-task', title: 'From the account', date: null, time: '', note: '',
+      courseId: null, done: true, created: 2,
+    };
+    localStorage.setItem(
+      'semester.v1',
+      JSON.stringify({ schemaVersion: 6, seenOnboarding: true, registered: true, tasks: [local] }),
+    );
+    localStorage.removeItem(SEEN_KEY);
+    pull.mockResolvedValue({
+      state: { tasks: [remote] },
+      courses: [],
+      updated: 2,
+      seen: { state: 'account-v2', courses: {} },
+    });
+
+    await mount();
+    await wait(3_000);
+    expect(store.asking).not.toBeNull();
+    persist.mockClear();
+
+    await act(async () => {
+      await store.settle('merge', null);
+    });
+
+    const written = persist.mock.calls.at(-1)?.[0] as { tasks?: { id: string }[] } | undefined;
+    expect(written?.tasks?.map((task) => task.id).sort()).toEqual(['local-task', 'remote-task']);
+    expect(flushNow).toHaveBeenCalledOnce();
+    expect(store.state.tasks.map((task) => task.id).sort()).toEqual(['local-task', 'remote-task']);
+    expect(JSON.parse(localStorage.getItem(SEEN_KEY) || '{}').state).toBe('account-v2');
+    expect(store.asking).toBeNull();
+  });
+
+  it('does not mark an accepted account copy as seen when its durable write fails', async () => {
+    localStorage.removeItem(SEEN_KEY);
+    pull.mockResolvedValue({
+      state: { tasks: [{ id: 'remote', title: 'From the account', done: true, created: 2 }] },
+      courses: [],
+      updated: 2,
+      seen: { state: 'account-v2', courses: {} },
+    });
+    flushNow.mockResolvedValue(false);
+
+    await mount();
+    await wait(3_000);
+    expect(store.asking).not.toBeNull();
+
+    await act(async () => {
+      await expect(store.settle('merge', null)).rejects.toThrow('could not be saved');
+    });
+
+    expect(localStorage.getItem(SEEN_KEY)).toBeNull();
+    expect(store.asking).not.toBeNull();
+  });
+
   it('pushes after an edit, not only at sign-in', async () => {
     await mount();
     await wait(3_000);

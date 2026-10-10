@@ -16,7 +16,7 @@ create or replace function pg_temp.error_as(who uuid, statement text)
 returns text language plpgsql as $$
 begin
   perform set_config('request.jwt.claims',
-    json_build_object('sub', who::text, 'role', 'authenticated')::text, true);
+    json_build_object('sub', who::text, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   execute 'set local role authenticated';
   execute statement;
   execute 'reset role';
@@ -72,7 +72,7 @@ begin
   -- An auto-claimed school profile is still individual beta until a signed,
   -- currently effective institutional order form covers the school.
   perform set_config('request.jwt.claims',
-    json_build_object('sub', tenant_who::text, 'role', 'authenticated')::text, true);
+    json_build_object('sub', tenant_who::text, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   set local role authenticated;
   snapshot_ticket := public.open_support_ticket(
     'how_to', 'Domain membership', 'This is still an individual-beta ticket.', '{}'::jsonb, false);
@@ -91,7 +91,7 @@ begin
     (contract_id, billing_account, 'order_form', 'signed', now(), now() - interval '1 day');
 
   perform set_config('request.jwt.claims',
-    json_build_object('sub', tenant_who::text, 'role', 'authenticated')::text, true);
+    json_build_object('sub', tenant_who::text, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   set local role authenticated;
   snapshot_ticket := public.open_support_ticket(
     'how_to', 'Deployment snapshot', 'Preserve the signed deployment that covered this ticket.', '{}'::jsonb, false);
@@ -167,7 +167,7 @@ begin
   returning id into tenant_hold_id;
 
   perform set_config('request.jwt.claims',
-    json_build_object('sub', tenant_who::text, 'role', 'authenticated')::text, true);
+    json_build_object('sub', tenant_who::text, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   set local role authenticated;
   perform public.leave_school();
   reset role;
@@ -233,7 +233,7 @@ begin
      'Historical tenant was not snapshotted.', 'high', 'resolved', now() + interval '1 day');
 
   perform set_config('request.jwt.claims',
-    json_build_object('sub', legacy_who::text, 'role', 'authenticated')::text, true);
+    json_build_object('sub', legacy_who::text, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   set local role authenticated;
   perform public.leave_school();
   reset role;

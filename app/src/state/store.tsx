@@ -47,6 +47,7 @@ import { CHECK_EVERY_MS, WRITE_FAILED, room, roomLine } from '../lib/quota';
 import {
   available as dbAvailable,
   whileWriting,
+  flushNow,
   flushOnLeave,
   load as loadFromDb,
   persist as persistToDb,
@@ -581,6 +582,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    */
   const fromOtherTab = useRef(false);
 
+  /**
+   * A pull or first-sign-in adoption is writing its exact merged snapshot.
+   *
+   * React may still commit an earlier render while that IndexedDB transaction
+   * is in flight. Letting the ordinary persistence effect accept that render
+   * queues the pre-pull snapshot after the exact write and deletes the rows
+   * that just arrived. The guarded paths below write their complete snapshot
+   * themselves, so the effect must stay out until that durability boundary
+   * settles.
+   */
+  const applyingRemote = useRef(false);
+
   const [asking, setAsking] = useState<{
     sides: Sides;
     say: string;
@@ -602,6 +615,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
      * stop being normal. See `state/persist/`.
      */
     if (dbAvailable()) {
+      if (applyingRemote.current) return;
       // Whether this write is allowed to tell anyone, decided now and spent
       // by the write itself: a run caused by taking another tab's change
       // still writes — the merge may have kept something of this tab's own —
@@ -892,6 +906,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [review, setReview] = useState<Conflict[]>(readReview);
   /** When this device last asked the account for its copy. See the focus pull below. */
   const pulledAt = useRef(0);
+  /** One pull at a time; auth, focus and reconnect can otherwise overlap. */
+  const refreshing = useRef(false);
   const refresh = useCallback(async (): Promise<string> => {
     const base = { cloud: cloudConfigured, signedIn: Boolean(account), took: false, courses: 0, error: '', at: 0 };
     if (!account) {
@@ -904,6 +920,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSync((s) => ({ ...s, status: unpushed() ? 'queued' : 'offline', error: '' }));
       return refreshSaid({ ...base, error: 'No connection. This device will catch up when it is back.' }, Date.now());
     }
+    /*
+     * Signing in can produce both the current-session answer and an auth
+     * change, while focus/reconnect may arrive beside either. Two refreshes
+     * applying the same remote copy do not merely duplicate traffic: the
+     * first can release the persistence fence while the second is awaiting
+     * IndexedDB, letting a pre-pull render queue behind it and remove the
+     * rows that just landed. The push path already has the same one-flight
+     * rule; pulls need it for the same ordering reason.
+     */
+    if (refreshing.current) return 'Semester is already syncing.';
+    refreshing.current = true;
     setSync((s) => ({ ...s, status: 'syncing', error: '' }));
     pulledAt.current = Date.now();
     try {
@@ -1017,9 +1044,44 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          * `removedThere`.
          */
         const gone = removedThere(here, theirs as Record<string, unknown>, agreedOn);
-        if (Object.keys(gone).length > 0) dispatch({ type: 'dropTicks', removals: gone });
-        if (Object.keys(deletions.dropHere).length > 0) dispatch({ type: 'dropRecords', removals: deletions.dropHere });
+        /*
+         * An ordinary pull takes a newer account copy without showing the
+         * first-sign-in question. That path needs the same ordering as an
+         * explicit adoption: the merged records must be on disk before
+         * `seen` says this version has already been taken.
+         * Otherwise a route change or reload between the dispatch and the
+         * persistence effect strands the device with the new stamp and none
+         * of the account rows.
+         */
+        const database = dbAvailable();
+        if (database) applyingRemote.current = true;
+        let durable = latest.current;
+        if (Object.keys(gone).length > 0) {
+          durable = reducer(durable, { type: 'dropTicks', removals: gone });
+          dispatch({ type: 'dropTicks', removals: gone });
+        }
+        if (Object.keys(deletions.dropHere).length > 0) {
+          durable = reducer(durable, { type: 'dropRecords', removals: deletions.dropHere });
+          dispatch({ type: 'dropRecords', removals: deletions.dropHere });
+        }
+        durable = reducer(durable, { type: 'hydrate', persisted: taken });
+        /*
+         * Dispatch before the first await. A render already scheduled by the
+         * sync-status update must not hand the persistence effect the stale
+         * pre-pull copy while the explicit write below is in flight; that
+         * later queued write would delete the rows this transaction just put.
+         */
         dispatch({ type: 'hydrate', persisted: taken });
+        try {
+          if (database) {
+            persistToDb(pickPersisted(durable), tellOtherTabs);
+            if (!(await flushNow())) {
+              throw new Error('The account copy could not be saved on this device.');
+            }
+          }
+        } finally {
+          if (database) applyingRemote.current = false;
+        }
         markSeen(remote.seen);
         // The version both sides now agree on is the account's — including
         // for the fields held back, whose difference here is still to go up,
@@ -1039,6 +1101,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const { said: error } = explainSync(e);
       setSync({ status: 'error', at: 0, error });
       return refreshSaid({ ...base, error }, Date.now());
+    } finally {
+      refreshing.current = false;
     }
   }, [account]);
 
@@ -1685,7 +1749,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * on the button.
    */
   const settle = useCallback(
-    (choice: Choice, backup: string | null) => {
+    async (choice: Choice, backup: string | null) => {
       if (!asking) return;
       const { remote } = asking;
       if (backup) {
@@ -1715,12 +1779,54 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // account's copy too, and records its own stamps when it does.
         markSeen(remote.seen);
       } else {
-        if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
         const theirs = {
           ...(remote.state as Partial<Persisted>),
           courses: remote.courses.map((c) => c.data as CourseModule),
         };
+
+        /*
+         * Make the adoption durable before recording that this device has
+         * seen the account copy.
+         *
+         * The choice used to dispatch the merge, stamp `seen`, and dismiss
+         * the question in one React event. A route transition could unmount
+         * that render after the stamp and dismissal were written but before
+         * the effect had handed the merged records to IndexedDB. On the next
+         * pull the durable stamp then said the missing rows had already been
+         * taken, stranding the second device without them. CI caught the exact
+         * state: the question disappeared, `Synced` was visible, and the
+         * named task did not exist in the device database.
+         *
+         * Reduce the same actions here to get the exact persisted shape the
+         * UI is about to receive, write it through the ordinary coalescing
+         * writer, and wait for it to land. Only then may `markSeen` make the
+         * account version authoritative. The localStorage fallback remains on
+         * its synchronous effect path; this closes the asynchronous database
+         * window without introducing a second localStorage writer.
+         */
+        const database = dbAvailable();
+        if (database) applyingRemote.current = true;
+        const wiped = choice === 'cloud'
+          ? reducer(latest.current, { type: 'wipeLocalForAdopt' })
+          : latest.current;
+        const adopted = reducer(wiped, { type: 'hydrate', persisted: theirs });
+        if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
+        // As in an automatic pull above, make every render after this point
+        // carry the adopted copy before yielding to the asynchronous writer.
         dispatch({ type: 'hydrate', persisted: theirs });
+        try {
+          if (database) {
+            persistToDb(pickPersisted(adopted), tellOtherTabs);
+            // Do not record rows as seen when the transaction that should make
+            // them durable did not land. The chooser stays open for a retry and
+            // the standing save warning explains why progress cannot continue.
+            if (!(await flushNow())) {
+              throw new Error('The account copy could not be saved on this device.');
+            }
+          }
+        } finally {
+          if (database) applyingRemote.current = false;
+        }
         markSeen(remote.seen);
         // The first version this device and the account agree on.
         writeBase(baseOf(forLegacy(theirs as Record<string, unknown>)));
@@ -1878,4 +1984,3 @@ export function useStore(): Store {
   if (!store) throw new Error('useStore must be used inside StoreProvider');
   return store;
 }
-

@@ -206,6 +206,52 @@ describe('when the other tabs are told', () => {
     expect(write).toHaveBeenCalledOnce();
   });
 
+  it('flushes the exact captured value when a later render writes while it waits', async () => {
+    let release: (ok: boolean) => void = () => {};
+    write.mockImplementationOnce(() => new Promise<boolean>((resolve) => { release = resolve; }));
+    prime({ notes: [] });
+
+    persist({ notes: [{ id: 'n1', title: 'Earlier write' }] } as never);
+    const earlier = flushNow();
+    await vi.waitFor(() => expect(write).toHaveBeenCalledTimes(1));
+
+    persist({ notes: [{ id: 'n1', title: 'Adopted account copy' }] } as never);
+    const adopted = flushNow();
+    // This is the stale render that used to replace the adoption before its
+    // queued `flush` had a chance to read the shared `pending` slot.
+    persist({ notes: [{ id: 'n1', title: 'Stale render' }] } as never);
+
+    release(true);
+    await earlier;
+    await adopted;
+
+    expect(write).toHaveBeenCalledTimes(2);
+    expect(JSON.stringify(write.mock.calls[1][0])).toContain('Adopted account copy');
+    expect(JSON.stringify(write.mock.calls[1][0])).not.toContain('Stale render');
+  });
+
+  it('builds an explicit flush from the last confirmed value', async () => {
+    const adopted = [{ id: 'n1', title: 'Adopted account copy' }];
+    prime({ notes: [] });
+
+    // A page-leave write advances speculative `last` before its IndexedDB
+    // transaction answers. The exact flush must still compare against the
+    // confirmed empty database rather than decide there is no work.
+    persist({ notes: adopted } as never);
+    let release: (ok: boolean) => void = () => {};
+    write.mockImplementationOnce(() => new Promise<boolean>((resolve) => { release = resolve; }));
+    flushOnLeave();
+    await vi.waitFor(() => expect(write).toHaveBeenCalledTimes(1));
+
+    persist({ notes: adopted } as never);
+    const exact = flushNow();
+    release(false);
+
+    await expect(exact).resolves.toBe(true);
+    expect(write).toHaveBeenCalledTimes(2);
+    expect(JSON.stringify(write.mock.calls[1][0])).toContain('Adopted account copy');
+  });
+
   it('forgets who to tell when writing stops for good', async () => {
     const told = vi.fn();
     prime({ notes: [] });
