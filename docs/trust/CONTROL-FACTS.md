@@ -14,9 +14,9 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | --- | --- |
 | Migration files | 230 |
 | Tables created in `public` and not later dropped | 342 |
-| … of which enable row-level security in a migration | 343 |
+| … of which enable row-level security in a migration | 342 |
 | Tables created in `private` and not later dropped | 44 |
-| … of which enable row-level security in a migration | 43 |
+| … of which enable row-level security in a migration | 44 |
 | Tables with no `enable row level security` statement found | 0 |
 | Tables named by at least one literal `create policy` statement | 276 |
 | Tables with RLS found and no literal policy statement | 110 |
