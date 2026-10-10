@@ -402,12 +402,11 @@ export function whileWriting(fn: ((failing: boolean) => void) | null): void {
   watching = fn;
 }
 
-async function flush(): Promise<void> {
-  const next = pending;
-  const nextSeq = pendingSeq;
-  const tell = told;
-  pending = null;
-  told = null;
+async function flushValue(
+  next: Partial<Persisted> | null,
+  nextSeq: number,
+  tell: (() => void) | null,
+): Promise<void> {
   if (!next || !last) return;
   const before = last;
   const beforeSeq = lastSeq;
@@ -491,6 +490,15 @@ async function flush(): Promise<void> {
   watching?.(false);
 }
 
+async function flush(): Promise<void> {
+  const next = pending;
+  const nextSeq = pendingSeq;
+  const tell = told;
+  pending = null;
+  told = null;
+  await flushValue(next, nextSeq, tell);
+}
+
 /** What the app last read or wrote, so the first diff has something to be against. */
 export function prime(state: Partial<Persisted>): void {
   last = state;
@@ -552,7 +560,26 @@ export async function flushNow(): Promise<void> {
     clearTimeout(timer);
     timer = null;
   }
-  inFlight = inFlight.then(flush);
+  /*
+   * Capture the exact owed value before waiting behind an earlier write.
+   *
+   * Calling `inFlight.then(flush)` used to defer reading `pending` until the
+   * earlier transaction finished. A render during that wait could call
+   * `persist()` again and replace the value the caller explicitly asked to
+   * flush. Account adoption hit exactly that race: the accepted remote copy
+   * was queued, a stale pre-adoption render replaced it, and `flushNow()`
+   * resolved even though the remote task had never reached IndexedDB.
+   *
+   * A later call remains pending for its own turn. This one writes the value
+   * that was owing at the instant `flushNow()` was called, in order behind
+   * any transaction already in flight.
+   */
+  const next = pending;
+  const nextSeq = pendingSeq;
+  const tell = told;
+  pending = null;
+  told = null;
+  inFlight = inFlight.then(() => flushValue(next, nextSeq, tell));
   await inFlight;
 }
 
