@@ -277,7 +277,9 @@ export function OperationsInbox({
                   </Notice>
                 )}
                 {mutationError && conflict(mutationError) && (
-                  <button type="button" className="btn btn-primary" onClick={refresh}>Reload authoritative version</button>
+                  <div role="status" aria-label="An authoritative reload action is available.">
+                    <button type="button" className="btn btn-primary" onClick={refresh}>Reload authoritative version</button>
+                  </div>
                 )}
 
                 {item.allowedActions.includes('claim') && (
