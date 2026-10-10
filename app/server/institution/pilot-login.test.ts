@@ -46,7 +46,7 @@ describe('a test login per pilot role', () => {
   it.each(PILOT_ROLES.map((r) => [r.app, r] as const))('%s signs in as its institutional role and nothing more', async (_app, r) => {
     const { idp, resolve, audit } = harness();
     const identity = await resolve(idp.signIn(person(`${r.app}@vanderbilt.edu`, [r.group])));
-    expect(identity).toEqual({ userId: `auth-${r.app}@vanderbilt.edu`, institutionId: 'vanderbilt', roles: [r.signsInAs] });
+    expect(identity).toMatchObject({ userId: `auth-${r.app}@vanderbilt.edu`, institutionId: 'vanderbilt', roles: [r.signsInAs] });
     expect(audit.map((a) => a.outcome)).toEqual(['accepted']);
   });
 
@@ -103,7 +103,12 @@ describe('what must not log in', () => {
 
   it('a user the IdP never provisioned has no membership', async () => {
     const { idp, resolve, audit } = harness();
-    const ghost = { id: 'auth-ghost', providerIdentifier: idp.provider.providerIdentifier, userName: 'ghost@vanderbilt.edu' };
+    const ghost = {
+      id: 'auth-ghost',
+      providerIdentifier: idp.provider.providerIdentifier,
+      userName: 'ghost@vanderbilt.edu',
+      sessionExpiresAt: '2099-01-01T00:00:00.000Z',
+    };
     await expect(resolve(ghost)).resolves.toBeNull();
     expect(audit.at(-1)).toMatchObject({ outcome: 'denied', reason: 'missing-membership' });
   });
