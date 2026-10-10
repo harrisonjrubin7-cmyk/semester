@@ -608,6 +608,12 @@ declare
     -- demos by default and never accepts a tenant id from the caller.
     'console_tenant_operations(include_demo boolean)',
 
+    -- The shared tenant-scoped operations inbox. The read derives every row
+    -- from the caller's exact-school domain capability; the transition also
+    -- performs the atomic version/state/assignee checks in the database.
+    'ops_operations_inbox(want_item uuid, want_mine boolean)',
+    'ops_transition_work_item(want_item uuid, want_action text, want_version bigint, want_reason text, want_resolution_code text, want_resolution_summary text, want_receipt_ref text)',
+
     -- The first query-side contract over the private tenant projections. It
     -- checks platform console or exact-school tenant configuration authority,
     -- bounds entitlement pagination, and computes freshness from private
