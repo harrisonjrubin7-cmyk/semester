@@ -104,5 +104,25 @@ def test_course_ownership_boundary_returns_not_found_for_other_user():
         assert resolved.json()["status"] == "confirmed"
         assert resolved.json()["payload"] == {"due_date": "2026-10-22"}
         assert resolved.json()["resolution_note"] == "Checked against page 4"
+
+        calendar_payload = {
+            "title": "Midterm",
+            "event_type": "exam",
+            "event_date": "2026-10-20",
+            "status": "confirmed",
+        }
+        calendar_event = client.post(
+            f"/api/v1/courses/{course_id}/calendar-events",
+            json=calendar_payload,
+            headers=first_headers,
+        )
+        assert calendar_event.status_code == 201
+        event_id = calendar_event.json()["id"]
+        edited_payload = {**calendar_payload, "title": "Final exam", "event_date": "2026-10-21"}
+        assert client.patch(f"/api/v1/calendar-events/{event_id}", json=edited_payload, headers=second_headers).status_code == 404
+        edited = client.patch(f"/api/v1/calendar-events/{event_id}", json=edited_payload, headers=first_headers)
+        assert edited.status_code == 200
+        assert edited.json()["title"] == "Final exam"
+        assert edited.json()["event_date"] == "2026-10-21"
     finally:
         app.dependency_overrides.clear()

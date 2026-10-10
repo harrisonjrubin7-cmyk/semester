@@ -150,6 +150,11 @@ describe('headings a student names', () => {
 });
 
 describe('re-filing a link you already added', () => {
+  it('names removal for the exact student-created link', async () => {
+    await mount([link('Landlord', 'Housing')]);
+    expect(host.querySelector('button[aria-label="Remove Landlord link"]')).toBeTruthy();
+  });
+
   it('moves it to the group typed, and leaves the address alone', async () => {
     await mount([link('Landlord', 'Housing'), link('Gym', 'Housing')]);
     expect(under('Housing')).toEqual(['Landlord', 'Gym']);

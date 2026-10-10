@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { reducer } from './reducer';
 import { DEFAULT_PERSISTED, initialEphemeral, type QuizQuestion, type State } from './shape';
 import { directoryOf } from '../lib/look';
+import { score } from '../lib/review';
+import type { Session } from '../lib/sessions';
 
 /**
  * The reducer, tested at last.
@@ -792,6 +794,366 @@ describe('taking it back', () => {
     const back = reducer(gone, { type: 'undo' });
     expect(back.feeds).toEqual(s.feeds);
     expect(back.feedEvents).toEqual(s.feedEvents);
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores a student-created link together with its corrected address', () => {
+    const s: State = {
+      ...blank(),
+      extraLinks: [
+        { id: 'landlord', name: 'Landlord', url: 'https://old.example.edu', hint: '', note: '', group: 'Housing' },
+        { id: 'gym', name: 'Gym', url: 'https://gym.example.edu', hint: '', note: '' },
+      ],
+      linkUrls: {
+        landlord: 'https://rent.example.edu',
+        gym: 'https://gym.example.edu',
+      },
+    };
+
+    const gone = reducer(s, { type: 'removeLink', id: 'landlord' });
+    expect(gone.extraLinks.map((link) => link.id)).toEqual(['gym']);
+    expect(gone.linkUrls).toEqual({ gym: 'https://gym.example.edu' });
+    expect(gone.undone?.label).toBe('Link removed');
+
+    const back = reducer(gone, { type: 'undo' });
+    expect(back.extraLinks).toEqual(s.extraLinks);
+    expect(back.linkUrls).toEqual(s.linkUrls);
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores one saved equation without reverting unrelated work', () => {
+    const s: State = {
+      ...blank(),
+      equations: [
+        { id: 'elasticity', name: 'Elasticity', latex: 'a/b', note: 'Chapter 4', courseId: 'econ', itemId: null, created: 1 },
+        { id: 'mean', name: 'Mean', latex: 'x/n', note: '', courseId: null, itemId: null, created: 2 },
+      ],
+    };
+
+    const gone = reducer(s, { type: 'deleteEquation', id: 'elasticity' });
+    expect(gone.equations.map((equation) => equation.id)).toEqual(['mean']);
+    expect(gone.undone?.label).toBe('Equation removed');
+
+    const edited = reducer(gone, { type: 'writeMaths', text: '2+2' });
+    const back = reducer(edited, { type: 'undo' });
+    expect(back.equations).toEqual(s.equations);
+    expect(back.mathWorking).toBe('2+2');
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores one graph line without reverting later calculator work', () => {
+    const s: State = {
+      ...blank(),
+      plots: [
+        { id: 'demand', text: 'y = 10 - x', on: true },
+        { id: 'supply', text: 'y = x + 2', on: false },
+      ],
+    };
+
+    const gone = reducer(s, { type: 'dropPlot', id: 'demand' });
+    expect(gone.plots).toEqual([{ id: 'supply', text: 'y = x + 2', on: false }]);
+    expect(gone.undone?.label).toBe('Graph line removed');
+
+    const worked = reducer(gone, { type: 'writeMaths', text: '10 - x = x + 2' });
+    const back = reducer(worked, { type: 'undo' });
+    expect(back.plots).toEqual(s.plots);
+    expect(back.mathWorking).toBe('10 - x = x + 2');
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores a cleared graph without reverting later calculator work', () => {
+    const s: State = {
+      ...blank(),
+      plots: [
+        { id: 'demand', text: 'y = 10 - x', on: true },
+        { id: 'supply', text: 'y = x + 2', on: false },
+      ],
+    };
+
+    const gone = reducer(s, { type: 'clearPlots' });
+    expect(gone.plots).toEqual([]);
+    expect(gone.undone?.label).toBe('Graph cleared');
+
+    const worked = reducer(gone, { type: 'writeMaths', text: '10 - x = x + 2' });
+    const back = reducer(worked, { type: 'undo' });
+    expect(back.plots).toEqual(s.plots);
+    expect(back.mathWorking).toBe('10 - x = x + 2');
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores a dropped study plan without reverting unrelated work', () => {
+    const sessions: Session[] = [
+      {
+        id: 'study-econ',
+        courseId: 'econ',
+        index: 1,
+        name: 'Elasticity',
+        code: 'ECON 1020',
+        minutes: 30,
+        on: '2026-10-09',
+        startedAt: 10,
+        answered: 2,
+        cards: 8,
+      },
+    ];
+    const s: State = { ...blank(), sessions, liveSession: 'study-econ' };
+
+    const gone = reducer(s, { type: 'clearPlan' });
+    expect(gone.sessions).toEqual([]);
+    expect(gone.liveSession).toBeNull();
+    expect(gone.undone?.label).toBe('Study plan dropped');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.sessions).toEqual(s.sessions);
+    expect(back.liveSession).toBe('study-econ');
+    expect(back.done['deadline-1']).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores removed course material together with the deadlines it added', () => {
+    const keptItem = { id: 'existing', title: 'Existing deadline' };
+    const addedItem = { id: 'from-reading', title: 'Reading response' };
+    const course = {
+      course: { id: 'econ', code: 'ECON 1020', title: 'Economics', term: '2026FA' },
+      items: [keptItem, addedItem],
+      schedule: [],
+      guide: { code: 'ECON 1020', units: [] },
+    } as unknown as State['courses'][number];
+    const update = {
+      id: 'reading-seven',
+      courseId: 'econ',
+      unit: null,
+      title: 'Reading 7',
+      source: 'reading-7.pdf',
+      body: '',
+      cards: [],
+      terms: [],
+      fileIds: [],
+      addedItems: ['from-reading'],
+      created: 1,
+    } as State['updates'][number];
+    const s: State = { ...blank(), courses: [course], updates: [update] };
+
+    const gone = reducer(s, { type: 'removeUpdate', id: update.id });
+    expect(gone.updates).toEqual([]);
+    expect(gone.courses[0].items).toEqual([keptItem]);
+    expect(gone.undone?.label).toBe('Course material removed');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'existing' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.updates).toEqual([update]);
+    expect(back.courses).toEqual([course]);
+    expect(back.done.existing).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores a removed task step without reverting unrelated work', () => {
+    const task = {
+      id: 'midterm-review',
+      title: 'Review for the midterm',
+      date: null,
+      time: '',
+      note: '',
+      done: false,
+      created: 1,
+      courseId: 'econ',
+      steps: [
+        { id: 'outline', text: 'Outline chapters', done: true },
+        { id: 'practice', text: 'Take a practice exam', done: false },
+      ],
+    } as State['tasks'][number];
+    const s: State = { ...blank(), tasks: [task] };
+
+    const gone = reducer(s, { type: 'dropStep', id: task.id, stepId: 'practice' });
+    expect(gone.tasks[0].steps).toEqual([task.steps?.[0]]);
+    expect(gone.undone?.label).toBe('Step removed');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.tasks).toEqual([task]);
+    expect(back.done['deadline-1']).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores a deleted mail rule without reverting a later message mark', () => {
+    const rule = {
+      id: 'course-mail',
+      name: 'Course mail',
+      when: 'course:econ',
+      label: 'ECON 1020',
+      created: 1,
+    } as State['mailRules'][number];
+    const kept = {
+      id: 'newsletters',
+      name: 'Newsletters',
+      when: 'from:noreply',
+      folder: 'archive',
+      created: 2,
+    } as State['mailRules'][number];
+    const s: State = { ...blank(), mailRules: [rule, kept] };
+
+    const gone = reducer(s, { type: 'dropMailRule', id: rule.id });
+    expect(gone.mailRules).toEqual([kept]);
+    expect(gone.undone?.label).toBe('Mail rule deleted');
+
+    const marked = reducer(gone, { type: 'markMail', ids: ['message-1'], mark: { read: true } });
+    const back = reducer(marked, { type: 'undo' });
+    expect(back.mailRules).toEqual([rule, kept]);
+    expect(back.mailMarks['message-1']).toEqual({ read: true });
+    expect(back.undone).toBeNull();
+  });
+
+  it.each([
+    {
+      action: 'dropCharge' as const,
+      field: 'charges' as const,
+      label: 'Charge removed',
+      rows: [
+        { id: 'tuition', term: '2026FA', what: 'Tuition', kind: 'tuition' as const, cents: 320000, at: 1 },
+        { id: 'housing', term: '2026FA', what: 'Housing', kind: 'housing' as const, cents: 180000, at: 2 },
+      ],
+    },
+    {
+      action: 'dropAid' as const,
+      field: 'aid' as const,
+      label: 'Aid entry removed',
+      rows: [
+        { id: 'grant', term: '2026FA', what: 'Need-based grant', kind: 'grant' as const, cents: 90000, pending: false, at: 1 },
+        { id: 'scholarship', term: '2026FA', what: 'Scholarship', kind: 'scholarship' as const, cents: 50000, pending: true, at: 2 },
+      ],
+    },
+    {
+      action: 'dropPayment' as const,
+      field: 'payments' as const,
+      label: 'Payment record removed',
+      rows: [
+        { id: 'first', term: '2026FA', what: 'First instalment', cents: 70000, on: '2026-08-15', at: 1 },
+        { id: 'second', term: '2026FA', what: 'Second instalment', cents: 70000, on: '2026-09-15', at: 2 },
+      ],
+    },
+  ])('restores one student-entered bill row without reverting the other bill lists: $field', ({ action, field, label, rows }) => {
+    const otherCharge = { id: 'fees', term: '2026FA', what: 'Fees', kind: 'fees' as const, cents: 10000, at: 3 };
+    const otherAid = { id: 'loan', term: '2026FA', what: 'Student loan', kind: 'loan' as const, cents: 10000, pending: true, at: 3 };
+    const otherPayment = { id: 'deposit', term: '2026FA', what: 'Deposit', cents: 10000, on: '2026-07-15', at: 3 };
+    const s: State = {
+      ...blank(),
+      charges: field === 'charges' ? rows as State['charges'] : [otherCharge],
+      aid: field === 'aid' ? rows as State['aid'] : [otherAid],
+      payments: field === 'payments' ? rows as State['payments'] : [otherPayment],
+    };
+
+    const gone = reducer(s, { type: action, id: rows[0].id });
+    expect(gone[field]).toEqual([rows[1]]);
+    expect(gone.undone?.label).toBe(label);
+
+    const changedElsewhere = field === 'charges'
+      ? reducer(gone, { type: 'addAid', aid: { term: '2026FA', what: 'New grant', kind: 'grant', cents: 5000, pending: true } })
+      : reducer(gone, { type: 'addCharge', charge: { term: '2026FA', what: 'Books', kind: 'other', cents: 5000 } });
+    const back = reducer(changedElsewhere, { type: 'undo' });
+    expect(back[field]).toEqual(rows);
+    if (field === 'charges') expect(back.aid).toHaveLength(2);
+    else expect(back.charges).toHaveLength(2);
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores a cleared registrar landmark without reverting unrelated work', () => {
+    const s = reducer(blank(), {
+      type: 'setTermDate',
+      id: 'classes-begin',
+      iso: '2026-08-24',
+      until: '',
+    });
+
+    const gone = reducer(s, { type: 'dropTermDate', id: 'classes-begin' });
+    expect(gone.registrar.find((date) => date.id === 'classes-begin')?.iso).toBe('');
+    expect(gone.undone?.label).toBe('Registrar date cleared');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.registrar).toEqual(s.registrar);
+    expect(back.done['deadline-1']).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores a student-created school profile and its active selection', () => {
+    const school = {
+      id: 'my-college',
+      name: 'My College',
+      verified: false,
+      capabilities: { mealPlan: 'none', housing: false, campusMap: false },
+      data: {},
+    } satisfies State['mySchools'][number];
+    const s: State = { ...blank(), mySchools: [school], schoolId: school.id };
+
+    const gone = reducer(s, { type: 'forgetSchool', id: school.id });
+    expect(gone.mySchools).toEqual([]);
+    expect(gone.schoolId).toBe('');
+    expect(gone.undone?.label).toBe('School profile removed');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.mySchools).toEqual([school]);
+    expect(back.schoolId).toBe(school.id);
+    expect(back.done['deadline-1']).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores a removed university file without reverting unrelated work', () => {
+    const schoolPack: NonNullable<State['schoolPack']> = {
+      school: {
+        id: 'my-college',
+        name: 'My College',
+        verified: false,
+        capabilities: { mealPlan: 'none', housing: false, campusMap: false },
+        data: {},
+      },
+      importedAt: '2026-10-09',
+    };
+    const s: State = { ...blank(), schoolPack, schoolId: schoolPack.school.id };
+
+    const gone = reducer(s, { type: 'forgetSchoolPack' });
+    expect(gone.schoolPack).toBeNull();
+    expect(gone.schoolId).toBe(s.schoolId);
+    expect(gone.undone?.label).toBe('University file removed');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.schoolPack).toEqual(schoolPack);
+    expect(back.schoolId).toBe(s.schoolId);
+    expect(back.done['deadline-1']).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores cleared study evidence without reviving a stale card undo', () => {
+    const key = 'econ:opportunity-cost';
+    const review = score(undefined, true, 1_788_000_000_000);
+    const answer = {
+      key,
+      courseId: 'econ',
+      got: true,
+      sure: 'know' as const,
+      at: 1_788_000_000_000,
+    };
+    const s: State = {
+      ...blank(),
+      reviews: { [key]: review },
+      answers: [answer],
+      lastAnswer: { key, was: null, got: true },
+    };
+
+    const gone = reducer(s, { type: 'forgetCards', keys: [key] });
+    expect(gone.reviews).toEqual({});
+    expect(gone.answers).toEqual([]);
+    expect(gone.lastAnswer).toBeNull();
+    expect(gone.undone?.label).toBe('Study evidence cleared');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.reviews).toEqual(s.reviews);
+    expect(back.answers).toEqual(s.answers);
+    expect(back.lastAnswer).toBeNull();
+    expect(back.done['deadline-1']).toBe(true);
     expect(back.undone).toBeNull();
   });
 
