@@ -121,8 +121,11 @@ function completedReplay(
   key: string,
 ): ReadinessEvaluationReceipt | null {
   if (!record) return null;
-  const entry = record.commandLedger.find((item) => item.idempotencyKey === `${key}:outcome`);
-  return entry?.receipt ?? null;
+  for (const suffix of ['outcome', 'reconcile'] as const) {
+    const entry = record.commandLedger.find((item) => item.idempotencyKey === `${key}:${suffix}`);
+    if (entry) return entry.receipt;
+  }
+  return null;
 }
 
 function commandReceipt(
