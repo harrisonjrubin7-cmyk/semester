@@ -403,7 +403,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/reconcile' \
 
 **Telemetry.** After every response the gateway builds one `institution.request` event and passes it to the `telemetry` callback if there is one. A failing callback is ignored and never changes the response. The Vercel runtime supplies a callback that writes the event as a JSON line to the process log. `start.ts` supplies none. The event fields are `event`, `requestId`, `correlationId`, `method`, `route`, `status`, `durationMs` and `errorClass` (`none` below 400, `client` for 400 to 499, `server` from 500). `route` is one of a fixed set, so a client cannot put its own text into a log line:
 
-`/health`, `/health/live`, `/health/ready`, `/v1/auth/config`, `/v1/intelligence/policy`, `/v1/intelligence/respond`, `/status`, `/records`, `/actions/prepare`, `/actions/commit`, `/actions/reconcile`, `/v1/intelligence/actions/:id/confirm`, and `/unmatched` for everything else.
+`/health`, `/health/live`, `/health/ready`, `/v1/auth/config`, `/v1/intelligence/policy`, `/v1/intelligence/respond`, `/v1/registration-readiness/evaluations`, `/status`, `/records`, `/actions/prepare`, `/actions/commit`, `/actions/reconcile`, `/v1/intelligence/actions/:id/confirm`, `/v1/registration-readiness/evaluations/:id/evaluate`, and `/unmatched` for everything else.
 
 The event carries no token, no body and no record content.
 
