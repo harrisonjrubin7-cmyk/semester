@@ -112,6 +112,18 @@ describe('Postgres registration-readiness repository', () => {
     });
   });
 
+  it('maps database compare-and-swap races to a command conflict', async () => {
+    const fake = fakeClient();
+    const repository = new PostgresRegistrationReadinessRepository({ client: fake.client });
+    fake.fail({ code: 'SC409', message: 'The readiness evaluation moved.', details: 'private data' });
+
+    await expect(repository.save(started)).rejects.toMatchObject({
+      code: 'conflict',
+      status: 409,
+      message: 'Registration readiness changed while this command was running.',
+    });
+  });
+
   it('fails closed without leaking database details and requires a server client', async () => {
     expect(() => new PostgresRegistrationReadinessRepository({})).toThrow(/server-only Supabase service client/i);
     const fake = fakeClient();
