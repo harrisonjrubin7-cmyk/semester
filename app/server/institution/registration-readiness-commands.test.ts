@@ -215,7 +215,7 @@ describe('registration-readiness evaluator worker', () => {
     expect(evaluator.evaluate).not.toHaveBeenCalled();
   });
 
-  it('returns the pending durable claim to an overlapping retry without invoking the source twice', async () => {
+  it('serializes simultaneous exact retries on the durable claim without invoking the source twice', async () => {
     let release!: (value: {
       outcome: 'ready';
       projectionVersion: number;
@@ -241,9 +241,8 @@ describe('registration-readiness evaluator worker', () => {
     const workerContext = context({ idempotencyKey: 'readiness-evaluate-concurrent' });
 
     const first = commands.evaluate(workerContext, ['student'], 'readiness-evaluation-1');
-    await started;
     const retry = commands.evaluate(workerContext, ['student'], 'readiness-evaluation-1');
-    await Promise.resolve();
+    await started;
     release({
       outcome: 'ready',
       projectionVersion: 10,
