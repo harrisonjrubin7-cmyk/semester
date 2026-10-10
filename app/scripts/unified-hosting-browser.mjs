@@ -262,6 +262,18 @@ try {
   assert.ok(cachesAfterActivation.includes('semester-v1-scope-app-shell'));
   evidence.checks.cacheIsolation = cachesAfterActivation.sort();
 
+  const legacyShareAfterActivation = await page.evaluate(async () => {
+    const cache = await caches.open('semester-shared');
+    const hit = await cache.match('/legacy-shared');
+    return hit ? await hit.text() : null;
+  });
+  assert.equal(
+    legacyShareAfterActivation,
+    'legacy-share-sentinel',
+    'activation must preserve existing shared-cache entries',
+  );
+  evidence.checks.legacyShareAfterActivation = legacyShareAfterActivation;
+
   const storageBeforeOffline = {
     authored: await page.evaluate(() => localStorage.getItem('semester.contract.authored')),
     pending: await page.evaluate(() => localStorage.getItem('semester.contract.pending')),
@@ -356,7 +368,11 @@ try {
   await context.setOffline(true);
   await page.goto(`${appUrl}?screen=study`, { waitUntil: 'domcontentloaded' });
   assert.equal(await page.title(), 'Semester');
-  assert.ok((await page.locator('body').innerText()).trim().length > 100);
+  await page.waitForFunction(
+    () => (document.body?.innerText || '').trim().length > 100,
+    undefined,
+    { timeout: 15_000 },
+  );
   evidence.checks.offlineQueryRelaunch = true;
 
   const storageOffline = {
