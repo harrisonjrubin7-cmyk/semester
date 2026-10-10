@@ -368,11 +368,27 @@ try {
   await context.setOffline(true);
   await page.goto(`${appUrl}?screen=study`, { waitUntil: 'domcontentloaded' });
   assert.equal(await page.title(), 'Semester');
-  await page.waitForFunction(
-    () => (document.body?.innerText || '').trim().length > 100,
-    undefined,
-    { timeout: 15_000 },
-  );
+  try {
+    await page.waitForFunction(
+      () => (document.body?.innerText || '').trim().length > 100,
+      undefined,
+      { timeout: 15_000 },
+    );
+  } catch (error) {
+    const offlineDiagnostics = await page.evaluate(async () => ({
+      url: location.href,
+      body: (document.body?.innerText || '').slice(0, 1_000),
+      controller: navigator.serviceWorker.controller?.scriptURL || null,
+      caches: await caches.keys(),
+    }));
+    throw new Error(
+      `offline /app relaunch did not render: ${JSON.stringify({
+        offlineDiagnostics,
+        runtimeEvents: runtimeEvents.slice(-50),
+      })}`,
+      { cause: error },
+    );
+  }
   evidence.checks.offlineQueryRelaunch = true;
 
   const storageOffline = {
