@@ -1,9 +1,9 @@
+import { createHash } from 'node:crypto';
 import type { UniversityRole } from '../../../packages/institution/src/index.ts';
 import {
   PlatformError,
   isIdempotencyKey,
-  type IdSource,
-  type RequestContext,
+   type RequestContext,
 } from '../../../packages/platform/src/index.ts';
 import type {
   ReadinessEvaluationReceipt,
@@ -60,7 +60,7 @@ export interface RegistrationReadinessCommandDependencies {
   repository: RegistrationReadinessRepository;
   evaluator?: RegistrationReadinessEvaluator;
   now?: () => Date;
-  ids?: IdSource;
+  evaluationIdFor?: (context: RequestContext, idempotencyKey: string) => string;
   timeoutMs?: number;
 }
 
@@ -128,12 +128,21 @@ function completedReplay(
  */
 export class RegistrationReadinessCommands implements RegistrationReadinessCommandBoundary {
   private readonly now: () => Date;
-  private readonly ids: IdSource;
+  private readonly evaluationIdFor: (context: RequestContext, idempotencyKey: string) => string;
   private readonly timeoutMs: number;
 
   constructor(private readonly dependencies: RegistrationReadinessCommandDependencies) {
     this.now = dependencies.now ?? (() => new Date());
-    this.ids = dependencies.ids ?? { next: () => crypto.randomUUID() };
+    this.evaluationIdFor = dependencies.evaluationIdFor ?? ((context, key) => {
+      const digest = createHash('sha256')
+        .update(context.tenantId)
+        .update('\0')
+        .update(context.actor.personId)
+        .update('\0')
+        .update(key)
+        .digest('hex');
+      return `readiness:${digest.slice(0, 40)}`;
+    });
     this.timeoutMs = dependencies.timeoutMs ?? 20_000;
   }
 
@@ -155,7 +164,7 @@ export class RegistrationReadinessCommands implements RegistrationReadinessComma
     const { termId } = parseStart(input);
     const at = this.now().toISOString();
     const result = await this.dependencies.service.start({
-      evaluationId: requireBoundedId(this.ids.next('readiness-evaluation'), 'Evaluation id'),
+      evaluationId: requireBoundedId(this.evaluationIdFor(context, idempotencyKey), 'Evaluation id'),
       tenantId: context.tenantId,
       subjectId: context.actor.personId,
       termId,
