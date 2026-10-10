@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ActionPreview } from '../components/unity/ActionPreview';
 import { Notice, SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { ReasonHint, REASON_MIN } from '../components/community/Escalation';
@@ -180,6 +182,7 @@ function VolunteerCard({ v, history, onDone }: { v: RosterEntry; history: Volunt
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [confirmRevoke, setConfirmRevoke] = useState(false);
   const stage = volunteerStage(v);
   const revoked = v.status === 'revoked';
 
@@ -248,7 +251,7 @@ function VolunteerCard({ v, history, onDone }: { v: RosterEntry; history: Volunt
                 Send back to calibration
               </button>
             )}
-            <button type="button" className="btn btn-secondary" disabled={!ready} onClick={() => act('revoke', `${v.handle}’s access is revoked.`)}>
+            <button type="button" className="btn btn-secondary" disabled={!ready} onClick={() => setConfirmRevoke(true)}>
               Revoke
             </button>
           </div>
@@ -259,6 +262,27 @@ function VolunteerCard({ v, history, onDone }: { v: RosterEntry; history: Volunt
           )}
         </>
       )}
+
+      {confirmRevoke ? (
+        <ConfirmDialog
+          title={`Revoke ${v.handle}’s volunteer access?`}
+          preview={
+            <ActionPreview
+              subject={v.handle}
+              says="Their volunteer moderation access ends immediately and every unanswered task currently assigned to them is removed from their queue."
+              exactly={<>The reason “{reason.trim()}” is kept with the revocation event in the volunteer programme history.</>}
+              doesNotChange="Their answered reviews and programme history remain. Other volunteers, moderation cases, and school settings stay unchanged."
+              recovery={{ kind: 'none', how: 'A revoked volunteer cannot be sent back to calibration.' }}
+            />
+          }
+          confirmLabel="Revoke access"
+          onCancel={() => setConfirmRevoke(false)}
+          onConfirm={() => {
+            setConfirmRevoke(false);
+            act('revoke', `${v.handle}’s access is revoked.`);
+          }}
+        />
+      ) : null}
 
       {history.length > 0 && (
         <details>

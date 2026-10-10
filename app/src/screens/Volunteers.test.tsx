@@ -156,10 +156,20 @@ describe('Volunteers', () => {
     expect(mock.manage).toHaveBeenCalledWith('u1', 'recalibrate', 'missed three controls on scams');
   });
 
-  it('revokes with a reason, and a revoked volunteer has no actions left', async () => {
+  it('previews revocation consequences before the server write, and a revoked volunteer has no actions left', async () => {
     await render();
     type(card('maya').querySelector('textarea') as HTMLTextAreaElement, 'shared a case outside the queue');
     await act(async () => button(card('maya'), 'Revoke')!.click());
+    expect(mock.manage).not.toHaveBeenCalled();
+    const dialog = host.querySelector('[role="dialog"]') as HTMLElement;
+    expect(dialog.textContent).toContain('Their volunteer moderation access ends immediately');
+    expect(dialog.textContent).toContain('every unanswered task currently assigned to them is removed');
+    expect(dialog.textContent).toContain('Their answered reviews and programme history remain');
+    expect(dialog.textContent).toContain('A revoked volunteer cannot be sent back to calibration');
+    await act(async () => button(dialog, 'Cancel')!.click());
+    expect(mock.manage).not.toHaveBeenCalled();
+    await act(async () => button(card('maya'), 'Revoke')!.click());
+    await act(async () => button(host.querySelector('[role="dialog"]') as HTMLElement, 'Revoke access')!.click());
     expect(mock.manage).toHaveBeenCalledWith('u1', 'revoke', 'shared a case outside the queue');
     act(() => root.unmount());
     root = createRoot(host);

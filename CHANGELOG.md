@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Revoking volunteer access shows the consequences first
+
+Senior Trust & Safety reviewers now see a preview before revoking a student volunteer. It names the volunteer, says their moderation access ends immediately, identifies the unanswered assigned tasks that will leave their queue, shows the reason that will be kept in programme history, and says the action cannot be undone by sending them back to calibration. Cancel changes nothing; the existing server operation runs only after **Revoke access** is confirmed. Other volunteers, moderation cases, completed reviews and school settings are unchanged.
+
 ### Courses you type stay on this device, and you can put them on a meeting agenda
 
 On first run, **Build your registration plan** takes a term and course codes. They stay on this device. While no catalog is imported, the Term plan lists them and says each one is not a section, a seat, or an enrollment. On My Path, registration readiness has a **Courses you named** row. **Add to my meeting** puts each code and term on your own advisor-meeting agenda. Nothing else from your record is copied, and nothing is sent to an advisor. If this build has advisor meetings turned on, that opens the Advisor meeting tab; otherwise the row says the codes are on your agenda. Naming a course does not register you, and you do not have to do anything if you have not named one.
