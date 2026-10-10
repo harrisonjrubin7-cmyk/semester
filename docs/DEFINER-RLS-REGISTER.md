@@ -53,12 +53,12 @@ The current register also includes 28 callable definers whose current definition
 | --- | --- | --- |
 | self-service | 65 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
 | sharing | 21 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
-| admin | 88 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
+| admin | 90 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 3 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
 | read-helper | 31 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 229 | |
+| **total** | 231 | |
 
 ### self-service (65)
 
@@ -156,7 +156,7 @@ The current register also includes 28 callable definers whose current definition
 | `trust_room_grant` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 | `trust_room_revoke` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 
-### admin (88)
+### admin (90)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
