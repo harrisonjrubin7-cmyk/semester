@@ -1783,7 +1783,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           // Do not record rows as seen when the transaction that should make
           // them durable did not land. The chooser stays open for a retry and
           // the standing save warning explains why progress cannot continue.
-          if (!(await flushNow())) return;
+          if (!(await flushNow())) {
+            throw new Error('The account copy could not be saved on this device.');
+          }
         }
         markSeen(remote.seen);
         // The first version this device and the account agree on.

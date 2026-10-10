@@ -245,7 +245,7 @@ describe('an edit goes up on the database path', () => {
     expect(store.asking).not.toBeNull();
 
     await act(async () => {
-      await store.settle('merge', null);
+      await expect(store.settle('merge', null)).rejects.toThrow('could not be saved');
     });
 
     expect(localStorage.getItem(SEEN_KEY)).toBeNull();
