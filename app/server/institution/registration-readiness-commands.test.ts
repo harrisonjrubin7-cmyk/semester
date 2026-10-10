@@ -282,10 +282,9 @@ describe('registration-readiness evaluator worker', () => {
       'readiness-evaluation-1',
     )).rejects.toThrow(/invalid observation/i);
 
-    expect(repository.rows.get('readiness-evaluation-1')).toMatchObject({
-      state: 'evaluating',
-      projectionVersion: undefined,
-    });
+    const persisted = repository.rows.get('readiness-evaluation-1');
+    expect(persisted).toMatchObject({ state: 'evaluating' });
+    expect(persisted).not.toHaveProperty('projectionVersion');
   });
 
   it('makes another subject indistinguishable from a missing evaluation and never calls the source', async () => {
