@@ -176,6 +176,40 @@ describe('an edit goes up on the database path', () => {
     expect(store.asking).toBeNull();
   });
 
+  it('does not queue a pre-pull render behind an automatic durable write', async () => {
+    const remote = {
+      id: 'remote-task', title: 'From the account', date: null, time: '', note: '',
+      courseId: null, done: true, created: 2,
+    };
+    pull.mockResolvedValue({
+      state: { tasks: [remote] },
+      courses: [],
+      updated: 2,
+      seen: { state: 'account-v2', courses: {} },
+    });
+    let release: (landed: boolean) => void = () => {};
+    flushNow.mockImplementationOnce(() => new Promise<boolean>((resolve) => { release = resolve; }));
+
+    await mount();
+    await wait(3_000);
+
+    const exact = persist.mock.calls.findIndex(([value]) => (
+      value as { tasks?: { id: string }[] }
+    ).tasks?.some((task) => task.id === remote.id));
+    expect(exact).toBeGreaterThanOrEqual(0);
+    expect(
+      persist.mock.calls.slice(exact + 1).every(([value]) => (
+        value as { tasks?: { id: string }[] }
+      ).tasks?.some((task) => task.id === remote.id)),
+      'a render queued the empty pre-pull copy after the exact remote write',
+    ).toBe(true);
+
+    await act(async () => {
+      release(true);
+      await Promise.resolve();
+    });
+  });
+
   it('does not mark an automatic account pull as seen when its durable write fails', async () => {
     pull.mockResolvedValue({
       state: { tasks: [{ id: 'remote', title: 'From the account', done: true, created: 2 }] },
