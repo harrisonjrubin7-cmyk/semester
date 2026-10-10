@@ -20,7 +20,7 @@
     "reconciling": ["evaluating"]
   },
   "idempotency": "Every command requires an idempotency key and replays the recorded receipt.",
-  "retry_policy": "Ambiguous results enter reconciliation before a new evaluation generation.",
+  "retry_policy": "Ambiguous results enter reconciliation before a new evaluation generation. Expired evaluator claims first record unknown, then enter reconciliation.",
   "escalation_role": "operations",
   "runbook": "docs/reference/registration-readiness-workflow.md",
   "evidence": ["packages/institution/src/readiness-workflow.ts", "packages/institution/src/readiness-workflow.test.ts"]

@@ -109,7 +109,7 @@ The gateway allows one origin: the value of `SEMESTER_APP_ORIGIN`. Never `*`, be
 
 - A request whose `Origin` matches gets `Access-Control-Allow-Origin: <that origin>` and `Access-Control-Expose-Headers: X-Request-Id, X-Correlation-Id`.
 - A request whose `Origin` differs is refused before anything else.
-- A preflight (`OPTIONS`, any path) adds `Access-Control-Allow-Headers: Authorization, Content-Type, X-Correlation-Id` and `Access-Control-Allow-Methods: GET, POST, OPTIONS`.
+- A preflight (`OPTIONS`, any path) adds `Access-Control-Allow-Headers: Authorization, Content-Type, Idempotency-Key, X-Correlation-Id` and `Access-Control-Allow-Methods: GET, POST, OPTIONS`.
 - There is no `Access-Control-Allow-Credentials`, no `Access-Control-Max-Age` and no cookie. The token travels in the `Authorization` header.
 - `Vary: Origin` is always set.
 
@@ -158,7 +158,7 @@ curl -s -X OPTIONS 'http://127.0.0.1:8787/records' \
 **Response** `204` No Content
 
 ```http
-access-control-allow-headers: Authorization, Content-Type, X-Correlation-Id
+access-control-allow-headers: Authorization, Content-Type, Idempotency-Key, X-Correlation-Id
 access-control-allow-methods: GET, POST, OPTIONS
 access-control-allow-origin: http://localhost:5173
 access-control-expose-headers: X-Request-Id, X-Correlation-Id
@@ -403,7 +403,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/reconcile' \
 
 **Telemetry.** After every response the gateway builds one `institution.request` event and passes it to the `telemetry` callback if there is one. A failing callback is ignored and never changes the response. The Vercel runtime supplies a callback that writes the event as a JSON line to the process log. `start.ts` supplies none. The event fields are `event`, `requestId`, `correlationId`, `method`, `route`, `status`, `durationMs` and `errorClass` (`none` below 400, `client` for 400 to 499, `server` from 500). `route` is one of a fixed set, so a client cannot put its own text into a log line:
 
-`/health`, `/health/live`, `/health/ready`, `/v1/auth/config`, `/v1/intelligence/policy`, `/v1/intelligence/respond`, `/status`, `/records`, `/actions/prepare`, `/actions/commit`, `/actions/reconcile`, `/v1/intelligence/actions/:id/confirm`, and `/unmatched` for everything else.
+`/health`, `/health/live`, `/health/ready`, `/v1/auth/config`, `/v1/intelligence/policy`, `/v1/intelligence/respond`, `/v1/registration-readiness/evaluations`, `/status`, `/records`, `/actions/prepare`, `/actions/commit`, `/actions/reconcile`, `/v1/intelligence/actions/:id/confirm`, `/v1/registration-readiness/evaluations/:id/evaluate`, and `/unmatched` for everything else.
 
 The event carries no token, no body and no record content.
 
