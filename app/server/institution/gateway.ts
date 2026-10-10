@@ -126,6 +126,7 @@ export interface GatewayTelemetryEvent {
 const TELEMETRY_ROUTES = new Set([
   '/health', '/health/live', '/health/ready', '/v1/auth/config',
   '/v1/intelligence/policy', '/v1/intelligence/respond',
+  '/v1/registration-readiness/evaluations',
   '/status', '/records', '/actions/prepare', '/actions/commit', '/actions/reconcile',
 ]);
 
