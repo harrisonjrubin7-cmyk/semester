@@ -97,6 +97,8 @@ describe('capability exposure resolver', () => {
       expect(item.valueMeasures.every((measure) =>
         measure.collection === 'device-local-or-approved-aggregate' &&
         measure.evidenceStatus === 'measurement-requirement-not-live-result')).toBe(true);
+      const capability = CAPABILITY_DEFINITIONS.find(({ id }) => id === item.capabilityId)!;
+      expect(item.valueMeasures[0]?.definition).toContain(capability.acceptance.join(' '));
       expect(item.requiredOperationalChecks).toEqual(OPERATIONAL_READINESS_CHECKS);
       expect(item.dataAuthorities.length).toBeGreaterThan(0);
       expect(item.securityClassifications.length).toBeGreaterThan(0);

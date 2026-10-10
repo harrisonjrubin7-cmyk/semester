@@ -397,9 +397,19 @@ async function journey(label, viewport) {
       // unobstructed; bypassing those checks would let a mobile UI regression
       // pass even though a student could not make the adoption choice.
       const keepBoth = ask.getByRole('button', { name: /^keep both$/i });
-      await keepBoth.scrollIntoViewIfNeeded({ timeout: WAIT });
-      await keepBoth.click({ timeout: SETTLE });
-      await ask.waitFor({ state: 'hidden', timeout: WAIT });
+      try {
+        await keepBoth.scrollIntoViewIfNeeded({ timeout: WAIT });
+        await keepBoth.click({ timeout: SETTLE });
+        await ask.waitFor({ state: 'hidden', timeout: WAIT });
+      } catch (error) {
+        // The account pull can finish between the visibility probe above and
+        // this actionability check. In that case React removes the question
+        // and there is no decision left to click. Only accept that exact
+        // race; a dialog that remains on screen must still expose a normally
+        // reachable control, and its original Playwright error stays fatal.
+        if (await ask.isVisible().catch(() => false)) throw error;
+        notes.push(`${label}: the adoption question resolved before its control was reached`);
+      }
     }
     expect(await visible(other.getByText('Signed in', { exact: true })), 'signing in on the second device did not reach "Signed in"');
     expect(
