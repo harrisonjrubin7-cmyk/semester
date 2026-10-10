@@ -16,7 +16,7 @@ Exit: merge review, complete browser journey tests, run DAST in a credentialed e
 ## Phase 1 — Student core
 
 1. Extend the protected source viewer from location-labeled chunks to exact bounding-box highlighting and correction actions. Owner-scoped source inspection, focus management, and protected original download are implemented.
-2. Extend the implemented review resolution UI with calendar editing, consequence preview, and undo. Confirm, reject, correction payload, optional decision note, and owner isolation are implemented.
+2. Review resolution and calendar editing are implemented with confirm/reject/correction decisions, optional notes, owner isolation, consequence preview, unspecified-time preservation, and one-step session undo. Durable cross-session undo remains a later enhancement.
 3. Add worker polling/cancellation and failure recovery.
 4. Complete Cards, Read, Quiz, and Doc interactions against real stored asset shapes.
 5. Run browser accessibility, responsive, visual-regression, and end-to-end tests.
