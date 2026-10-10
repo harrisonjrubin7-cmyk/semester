@@ -5,6 +5,7 @@ import os
 import threading
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from uuid import uuid4
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -46,7 +47,8 @@ def _database(tmp_path: Path):
 
 def _job(session_factory, *, with_document: bool = True):
     with session_factory() as db:
-        user = User(email="lease@example.com", password_hash="unused")
+        unique = uuid4()
+        user = User(email=f"lease-{unique}@example.com", password_hash="unused")
         db.add(user)
         db.flush()
         course = Course(user_id=user.id, title="Lease test")
@@ -57,7 +59,7 @@ def _job(session_factory, *, with_document: bool = True):
             document = SourceDocument(
                 course_id=course.id,
                 filename="source.txt",
-                storage_key="courses/lease/originals/source.txt",
+                storage_key=f"courses/lease/originals/{unique}.txt",
                 mime_type="text/plain",
                 size_bytes=4,
                 sha256="a" * 64,
