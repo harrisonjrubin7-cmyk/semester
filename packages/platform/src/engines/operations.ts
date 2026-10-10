@@ -180,7 +180,7 @@ function resolveWorkItem(
     throw new PlatformError('validation_failed', 'A resolution code, summary, and durable receipt reference are required.');
   }
   const at = instant(now, item.updatedAt);
-  const recorded = { ...resolution };
+  const recorded = { code: resolution.code, summary: resolution.summary, receiptRef: resolution.receiptRef };
   return freezeItem({
     ...item,
     state: 'resolved',
@@ -271,27 +271,75 @@ function validateStoredItem(value: unknown, tenantId: string, id: string): Opera
     || !Array.isArray(item.history) || item.history.length !== item.version) throw corrupt();
 
   let previous = -Infinity;
+  let previousAction: WorkItemHistoryEntry['action'] | undefined;
+  let latestClaimActor: string | undefined;
+  const history: WorkItemHistoryEntry[] = [];
   for (const entry of item.history) {
     if (!entry || !['opened', 'claimed', 'resolved', 'reopened'].includes(entry.action)
       || !isText(entry.actorId) || !isInstant(entry.at) || Date.parse(entry.at) < previous
       || (entry.reason !== undefined && !isText(entry.reason))
       || (entry.resolution !== undefined && !validResolution(entry.resolution))) throw corrupt();
+    const expected = previousAction === undefined ? 'opened'
+      : previousAction === 'opened' || previousAction === 'reopened' ? 'claimed'
+        : previousAction === 'claimed' ? 'resolved' : 'reopened';
+    if (entry.action !== expected) throw corrupt();
+    if (entry.action === 'resolved') {
+      if (!entry.resolution || entry.reason !== undefined || entry.actorId !== latestClaimActor) throw corrupt();
+    } else if (entry.action === 'reopened') {
+      if (!entry.reason || entry.resolution !== undefined) throw corrupt();
+    } else if (entry.reason !== undefined || entry.resolution !== undefined) throw corrupt();
+    if (entry.action === 'claimed') latestClaimActor = entry.actorId;
+    history.push({
+      action: entry.action,
+      actorId: entry.actorId,
+      at: entry.at,
+      ...(entry.reason !== undefined ? { reason: entry.reason } : {}),
+      ...(entry.resolution !== undefined ? { resolution: canonicalResolution(entry.resolution) } : {}),
+    });
     previous = Date.parse(entry.at);
+    previousAction = entry.action;
   }
-  const last = item.history.at(-1)!;
+  const last = history.at(-1)!;
   const stateFor = last.action === 'claimed' ? 'claimed' : last.action === 'resolved' ? 'resolved' : 'open';
-  if (item.history[0]?.action !== 'opened' || item.createdAt !== item.history[0].at
+  if (item.createdAt !== history[0]!.at
     || item.updatedAt !== last.at || item.state !== stateFor) throw corrupt();
   if (item.state === 'open' && (item.assignedTo !== undefined || item.resolution !== undefined)) throw corrupt();
-  if (item.state === 'claimed' && (!isText(item.assignedTo) || item.resolution !== undefined)) throw corrupt();
-  if (item.state === 'resolved' && (!isText(item.assignedTo) || !validResolution(item.resolution))) throw corrupt();
-  return freezeItem(item as OperationsWorkItem);
+  if (item.state === 'claimed' && (item.assignedTo !== latestClaimActor || item.resolution !== undefined)) throw corrupt();
+  if (item.state === 'resolved' && (item.assignedTo !== latestClaimActor || !validResolution(item.resolution)
+    || !sameResolution(item.resolution, last.resolution))) throw corrupt();
+  return freezeItem({
+    id,
+    tenantId,
+    kind: item.kind,
+    subject: { type: item.subject.type, id: item.subject.id },
+    sourceRef: item.sourceRef,
+    purpose: item.purpose,
+    priority: item.priority,
+    state: item.state,
+    version: item.version,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+    ...(item.assignedTo !== undefined ? { assignedTo: item.assignedTo } : {}),
+    ...(item.resolution !== undefined ? { resolution: canonicalResolution(item.resolution) } : {}),
+    history,
+  });
 }
 
 function validResolution(value: unknown): value is { code: string; summary: string; receiptRef: string } {
   if (!value || typeof value !== 'object') return false;
   const resolution = value as Partial<{ code: string; summary: string; receiptRef: string }>;
   return isText(resolution.code) && isText(resolution.summary) && isText(resolution.receiptRef);
+}
+
+function canonicalResolution(value: { code: string; summary: string; receiptRef: string }): { code: string; summary: string; receiptRef: string } {
+  return { code: value.code, summary: value.summary, receiptRef: value.receiptRef };
+}
+
+function sameResolution(
+  left: { code: string; summary: string; receiptRef: string },
+  right: { code: string; summary: string; receiptRef: string } | undefined,
+): boolean {
+  return right !== undefined && left.code === right.code && left.summary === right.summary && left.receiptRef === right.receiptRef;
 }
 
 function isInstant(value: unknown): value is string {

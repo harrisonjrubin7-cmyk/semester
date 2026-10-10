@@ -109,5 +109,25 @@ describe('operations work items', () => {
     } as unknown as OperationsWorkItemStore;
     const corrupt = new OperationsWorkItemRuntime(malformed, { now: () => at(11) }, () => true);
     await expect(corrupt.load(ctx(), made.id)).rejects.toMatchObject({ code: 'internal' });
+
+    const claimed = await runtime.claim(ctx(), made.id, 1);
+    const receipt = { code: 'reconciled', summary: 'Matched.', receiptRef: 'receipt-2' };
+    const resolved = await runtime.resolve(ctx(), made.id, 2, receipt);
+    const noHistoryReceipt = {
+      get: async () => ({ ...resolved, history: resolved.history.map((entry) => entry.action === 'resolved' ? { action: entry.action, actorId: entry.actorId, at: entry.at } : entry) }),
+      put: async () => true,
+    } as unknown as OperationsWorkItemStore;
+    await expect(new OperationsWorkItemRuntime(noHistoryReceipt, { now: () => at(11) }, () => true).load(ctx(), made.id))
+      .rejects.toMatchObject({ code: 'internal' });
+
+    const extraFields = {
+      get: async () => ({ ...resolved, extra: 'adapter-secret', subject: { ...resolved.subject, extra: 'nested-secret' }, resolution: { ...resolved.resolution!, extra: 'nested-secret' } }),
+      put: async () => true,
+    } as unknown as OperationsWorkItemStore;
+    const cleaned = await new OperationsWorkItemRuntime(extraFields, { now: () => at(11) }, () => true).load(ctx(), made.id);
+    expect(cleaned).not.toHaveProperty('extra');
+    expect(cleaned.subject).not.toHaveProperty('extra');
+    expect(cleaned.resolution).not.toHaveProperty('extra');
+    expect(claimed.assignedTo).toBe('operator-a');
   });
 });
