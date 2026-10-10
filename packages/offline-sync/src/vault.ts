@@ -272,10 +272,13 @@ export class AttachmentCache {
   /** Erase by file id, by owning entity (membership removed), or everything. Bytes and wrapped key both go. */
   async revoke(match: { ids?: string[]; ownerEntityIds?: string[]; all?: boolean }): Promise<number> {
     const matches = (row: CachedFile) => match.all || match.ids?.includes(row.id) || match.ownerEntityIds?.includes(row.ownerEntityId)
-    const retired = await this.cleanupRetired()
+    // A prior interrupted call may already have made the row logically retired.
+    // Count it when this invocation completes its owed blob deletion so callers
+    // observe the cleanup they requested, not a misleading zero.
+    const retried = (await this.cleanupRetired()).filter(matches).length
     const rows = await this.d.index.load()
     const gone = rows.filter(matches)
-    return retired.filter(matches).length + await this.revokeObserved(gone)
+    return retried + await this.revokeObserved(gone)
   }
 
   /** Drop everything past its class's freshness limit; pinning protects against eviction, not expiry. */
