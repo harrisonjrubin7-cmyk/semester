@@ -226,6 +226,17 @@ function fixture({
       }),
     );
 
+  const preflight = async () => gateway(
+    new Request('http://local/actions/commit', {
+      method: 'OPTIONS',
+      headers: {
+        origin: 'http://localhost:5173',
+        'access-control-request-method': 'POST',
+        'access-control-request-headers': 'authorization, content-type, x-correlation-id, idempotency-key',
+      },
+    }),
+  );
+
   const prepare = async () => {
     const result = await request('/actions/prepare', input);
     expect(result.status).toBe(200);
@@ -238,6 +249,7 @@ function fixture({
     path,
     input,
     request,
+    preflight,
     prepare,
     calls: () => calls,
     executedIdempotencyKey: () => executedIdempotencyKey,
@@ -395,6 +407,15 @@ describe('university gateway boundaries', () => {
     f.identity(null);
     expect((await f.request('/status')).status).toBe(403);
     expect((await f.request('/status', undefined, { origin: 'https://elsewhere.test' })).status).toBe(403);
+  });
+
+  it('allows the SDK idempotency header through the browser preflight', async () => {
+    const response = await fixture().preflight();
+    expect(response.status).toBe(204);
+    expect(response.headers.get('access-control-allow-origin')).toBe('http://localhost:5173');
+    expect(response.headers.get('access-control-allow-methods')).toBe('GET, POST, OPTIONS');
+    expect(response.headers.get('access-control-allow-headers'))
+      .toBe('Authorization, Content-Type, X-Correlation-Id, Idempotency-Key');
   });
 
   it('keeps unconfigured services unavailable without inventing records', async () => {
