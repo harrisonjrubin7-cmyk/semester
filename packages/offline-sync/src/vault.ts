@@ -132,7 +132,11 @@ export interface AttachmentCacheDeps {
   dek: CryptoKey
   blobs: BlobStore
   /** Persisted inside the encrypted database; here, anything that survives a restart. */
-  index: { load(): Promise<CachedFile[]>; save(rows: CachedFile[]): Promise<void> }
+  index: {
+    load(): Promise<CachedFile[]>
+    /** Atomic across every cache instance backed by this index. */
+    update<T>(change: (rows: CachedFile[]) => { rows: CachedFile[]; value: T }): Promise<T>
+  }
   now: () => number
   quota?: QuotaPolicy
   tenant?: TenantOfflinePolicy
@@ -166,32 +170,42 @@ export class AttachmentCache {
     if (!this.quota.allowedMime.includes(meta.mime)) throw new AttachmentError('type_not_allowed')
     if (bytes.length > this.quota.maxFileBytes) throw new AttachmentError('too_large')
 
-    let rows = await this.d.index.load()
-    rows = rows.filter((r) => r.id !== meta.id)
     const sha = await sha256Hex(bytes)
     const fek = await newKey()
     const sealed = await seal(fek, bytes, this.aad(meta.id, sha))
-    rows = await this.makeRoom(rows, sealed.length)
     const t = this.d.now()
-    const blobName = `${meta.id}.${sha.slice(0, 12)}`
+    const generation = [...rand(8)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+    const blobName = `${meta.id}.${sha.slice(0, 12)}.${generation}`
     await this.d.blobs.put(blobName, sealed)
     const row: CachedFile = { ...meta, size: sealed.length, contentSha256: sha, fetchedAt: t, lastReadAt: t, wrappedKey: await wrapKey(fek, this.d.dek, this.aad(meta.id, sha)), blobName }
-    await this.d.index.save([...rows, row])
+    let removed: CachedFile[]
+    try {
+      removed = await this.d.index.update((current) => {
+        const replaced = current.filter((candidate) => candidate.id === meta.id)
+        const room = this.makeRoom(current.filter((candidate) => candidate.id !== meta.id), sealed.length)
+        return { rows: [...room.rows, row], value: [...replaced, ...room.evicted] }
+      })
+    } catch (error) {
+      await this.d.blobs.delete(blobName)
+      throw error
+    }
+    for (const old of removed) if (old.blobName !== blobName) await this.d.blobs.delete(old.blobName)
     return row
   }
 
   /** Evict least-recently-read, unpinned files until `need` bytes fit. Never touches pinned ones. */
-  private async makeRoom(rows: CachedFile[], need: number): Promise<CachedFile[]> {
+  private makeRoom(rows: CachedFile[], need: number): { rows: CachedFile[]; evicted: CachedFile[] } {
     let used = rows.reduce((n, r) => n + r.size, 0)
     const out = [...rows]
+    const evicted: CachedFile[] = []
     for (const r of [...rows].filter((x) => !x.pinned).sort((a, b) => a.lastReadAt - b.lastReadAt)) {
       if (used + need <= this.quota.totalBytes) break
-      await this.d.blobs.delete(r.blobName)
       out.splice(out.indexOf(r), 1)
+      evicted.push(r)
       used -= r.size
     }
     if (used + need > this.quota.totalBytes) throw new AttachmentError('quota_full')
-    return out
+    return { rows: out, evicted }
   }
 
   /** Decrypt and verify. Anything stale, revoked, unclean or altered is refused, never served. */
@@ -217,21 +231,21 @@ export class AttachmentCache {
       throw new AttachmentError('integrity_failed')
     }
     if ((await sha256Hex(bytes)) !== r.contentSha256) throw new AttachmentError('integrity_failed')
-    const current = await this.d.index.load()
-    const observed = current.find((x) => x.id === id)
-    if (observed && observed.blobName === r.blobName && observed.contentSha256 === r.contentSha256) {
-      await this.d.index.save(current.map((x) => (x.id === id ? { ...x, lastReadAt: this.d.now() } : x)))
-    }
+    await this.d.index.update((current) => ({
+      rows: current.map((candidate) => candidate.blobName === r.blobName ? { ...candidate, lastReadAt: this.d.now() } : candidate),
+      value: undefined,
+    }))
     return bytes
   }
 
   /** Remove only the exact rows previously observed; a same-id replacement wins. */
   private async revokeObserved(observed: readonly CachedFile[]): Promise<number> {
-    const current = await this.d.index.load()
-    const exact = new Set(observed.map((row) => `${row.id}\u0000${row.blobName}\u0000${row.contentSha256}`))
-    const gone = current.filter((row) => exact.has(`${row.id}\u0000${row.blobName}\u0000${row.contentSha256}`))
+    const names = new Set(observed.map((row) => row.blobName))
+    const gone = await this.d.index.update((current) => {
+      const removed = current.filter((row) => names.has(row.blobName))
+      return { rows: current.filter((row) => !names.has(row.blobName)), value: removed }
+    })
     for (const row of observed) await this.d.blobs.delete(row.blobName)
-    if (gone.length) await this.d.index.save(current.filter((row) => !gone.includes(row)))
     return gone.length
   }
 

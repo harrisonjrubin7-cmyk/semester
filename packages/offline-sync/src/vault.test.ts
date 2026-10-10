@@ -6,6 +6,14 @@ const HOUR = 3_600_000
 const bytes = (s: string) => new TextEncoder().encode(s)
 const text = (b: Uint8Array) => new TextDecoder().decode(b)
 const meta = (id: string, o: Partial<Parameters<AttachmentCache['put']>[0]> = {}) => ({ id, tenantId: 't', dataClass: 'course_content' as const, ownerEntityId: 'course-1', mime: 'application/pdf', scan: 'clean' as const, aclEpoch: 1, pinned: false, ...o })
+const indexFor = (read: () => CachedFile[], write: (rows: CachedFile[]) => void) => ({
+  load: async () => structuredClone(read()),
+  update: async <T>(change: (rows: CachedFile[]) => { rows: CachedFile[]; value: T }) => {
+    const result = change(structuredClone(read()))
+    write(structuredClone(result.rows))
+    return result.value
+  },
+})
 
 async function cache(o: { quota?: Partial<typeof DEFAULT_QUOTA>; tenant?: { optIn: never[] } } = {}) {
   const t = { now: NOW }
@@ -14,7 +22,7 @@ async function cache(o: { quota?: Partial<typeof DEFAULT_QUOTA>; tenant?: { optI
   const dek = await newKey()
   const c = new AttachmentCache({
     dek, blobs, now: () => t.now, quota: { ...DEFAULT_QUOTA, ...o.quota },
-    index: { load: async () => rows, save: async (r) => { rows = r } },
+    index: indexFor(() => rows, (next) => { rows = next }),
     scope: { tenantId: 't', userId: 'u', deviceId: 'd' },
   })
   return { c, t, blobs, rows: () => rows, dek }
@@ -44,7 +52,7 @@ describe('key wrapping and sealing', () => {
 })
 
 describe('attachment cache', () => {
-  it('does not delete a concurrent valid replacement when expiring an observed row', async () => {
+  it('does not delete a concurrent same-content replacement when expiring an observed row', async () => {
     const blobs = memoryBlobs()
     let rows: CachedFile[] = []
     let now = NOW
@@ -55,11 +63,11 @@ describe('attachment cache', () => {
         const observed = structuredClone(rows)
         if (replaceDuringLoad) {
           replaceDuringLoad = false
-          await c.put(meta('file'), bytes('new file'))
+          await c.put(meta('file'), bytes('old file'))
         }
         return observed
       },
-      save: async (next: CachedFile[]) => { rows = structuredClone(next) },
+      update: indexFor(() => rows, (next) => { rows = next }).update,
     }
     c = new AttachmentCache({ dek: await newKey(), blobs, index, now: () => now, scope: { tenantId: 't', userId: 'u', deviceId: 'd' } })
     const old = await c.put(meta('file'), bytes('old file'))
@@ -87,7 +95,7 @@ describe('attachment cache', () => {
           }
           return observed
         },
-        save: async (next: CachedFile[]) => { rows = structuredClone(next) },
+        update: indexFor(() => rows, (next) => { rows = next }).update,
       }
       c = new AttachmentCache({ dek: await newKey(), blobs, index, now: () => now, scope: { tenantId: 't', userId: 'u', deviceId: 'd' } })
       const old = await c.put(meta('file'), bytes(`old-${operation}`))
@@ -99,6 +107,31 @@ describe('attachment cache', () => {
       expect(rows[0]?.blobName, operation).not.toBe(old.blobName)
       expect(blobs.names(), operation).toEqual([rows[0]!.blobName])
     }
+  })
+
+  it('preserves a replacement written after atomic index removal but before blob cleanup', async () => {
+    const raw = memoryBlobs()
+    let rows: CachedFile[] = []
+    let replaceOnDelete = false
+    let c: AttachmentCache
+    const blobs = {
+      put: raw.put,
+      get: raw.get,
+      delete: async (name: string) => {
+        if (replaceOnDelete) {
+          replaceOnDelete = false
+          await c.put(meta('file'), bytes('same content'))
+        }
+        await raw.delete(name)
+      },
+    }
+    c = new AttachmentCache({ dek: await newKey(), blobs, index: indexFor(() => rows, (next) => { rows = next }), now: () => NOW, scope: { tenantId: 't', userId: 'u', deviceId: 'd' } })
+    const old = await c.put(meta('file'), bytes('same content'))
+    replaceOnDelete = true
+    expect(await c.revoke({ ids: ['file'] })).toBe(1)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.blobName).not.toBe(old.blobName)
+    expect(raw.names()).toEqual([rows[0]!.blobName])
   })
 
   it('stores ciphertext only, and reads the plaintext back', async () => {
@@ -181,14 +214,14 @@ describe('attachment cache', () => {
   it('cannot be read with a different database key — destroying the key destroys the cache', async () => {
     const { c, blobs, rows, t } = await cache()
     await c.put(meta('f'), bytes('x'))
-    const c2 = new AttachmentCache({ dek: await newKey(), blobs, now: () => t.now, index: { load: async () => rows(), save: async () => {} }, scope: { tenantId: 't', userId: 'u', deviceId: 'd' } })
+    const c2 = new AttachmentCache({ dek: await newKey(), blobs, now: () => t.now, index: indexFor(rows, () => {}), scope: { tenantId: 't', userId: 'u', deviceId: 'd' } })
     await expect(c2.read('f', { aclEpoch: 1 })).rejects.toBeInstanceOf(AttachmentError)
   })
 
   it('will not read a blob moved to another device, user or tenant (bound by context)', async () => {
     const { c, blobs, rows, dek, t } = await cache()
     await c.put(meta('f'), bytes('x'))
-    const moved = new AttachmentCache({ dek, blobs, now: () => t.now, index: { load: async () => rows(), save: async () => {} }, scope: { tenantId: 't', userId: 'someone-else', deviceId: 'd' } })
+    const moved = new AttachmentCache({ dek, blobs, now: () => t.now, index: indexFor(rows, () => {}), scope: { tenantId: 't', userId: 'someone-else', deviceId: 'd' } })
     await expect(moved.read('f', { aclEpoch: 1 })).rejects.toMatchObject({ why: 'integrity_failed' })
   })
 })

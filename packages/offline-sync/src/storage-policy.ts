@@ -94,14 +94,12 @@ export async function purgeDisallowedOfflineData(
         if (entity) await store.entities.put(entity)
         else await store.entities.remove(key.slice(0, split), key.slice(split + 1))
       }
-      if (onPurged && pending.length) await store.cursors.set(JOURNAL, JSON.stringify(pending))
+      if (pending.length) await store.cursors.set(JOURNAL, JSON.stringify(pending))
     })
   }
 
   if (onPurged && pending.length) {
     await onPurged(pending)
-    await store.transaction(async () => { await store.cursors.remove(JOURNAL) })
-  } else if (!onPurged && prior.length) {
     await store.transaction(async () => { await store.cursors.remove(JOURNAL) })
   }
 

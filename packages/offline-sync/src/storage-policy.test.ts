@@ -70,6 +70,16 @@ describe('central offline persistence enforcement', () => {
     expect(Object.keys(restarted.snapshot().cursors).filter((key) => key.includes('purge'))).toEqual([])
   })
 
+  it('retains retry identity until a cleanup hook is configured and succeeds', async () => {
+    const store = memoryStore({ initial: { entities: [entity('grade', 'g')] as never, outbox: [], cursors: {} } })
+    await purgeDisallowedOfflineData(store)
+    expect(Object.keys(store.snapshot().cursors).some((key) => key.includes('purge'))).toBe(true)
+    const seen: unknown[] = []
+    await purgeDisallowedOfflineData(store, undefined, async (rows) => { seen.push(rows) })
+    expect(seen).toHaveLength(1)
+    expect(Object.keys(store.snapshot().cursors).filter((key) => key.includes('purge'))).toEqual([])
+  })
+
   it('replays the whole idempotent journal after partial dependent cleanup', async () => {
     const store = memoryStore({ initial: { entities: [entity('grade', 'g'), entity('academic_record', 'a')] as never, outbox: [], cursors: {} } })
     const seen: string[][] = []
