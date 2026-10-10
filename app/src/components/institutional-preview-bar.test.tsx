@@ -115,7 +115,7 @@ describe('institutional preview bar', () => {
     }
   });
 
-  it('still reloads if part of the erase is refused', async () => {
+  it('does not reload or claim a reset if part of the erase is refused', async () => {
     vi.mocked(eraseDevice).mockRejectedValueOnce(new Error('storage refused'));
     const reload = vi.fn();
     const original = window.location;
@@ -126,7 +126,10 @@ describe('institutional preview bar', () => {
       await act(async () => reset?.click());
       const confirm = [...host.querySelectorAll('button')].find((b) => b.textContent === 'Yes, erase and start the sample again');
       await act(async () => confirm?.click());
-      expect(reload).toHaveBeenCalledTimes(1);
+      expect(reload).not.toHaveBeenCalled();
+      expect(host.querySelector('[role="alert"]')?.textContent).toContain('The browser did not erase everything');
+      expect(host.textContent).toContain('Close other Semester tabs, then try again.');
+      expect(host.textContent).toContain('Reset the sample');
     } finally {
       Object.defineProperty(window, 'location', { value: original, configurable: true, writable: true });
     }

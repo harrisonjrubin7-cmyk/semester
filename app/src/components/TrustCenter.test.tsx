@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadSeed } from '../data/seed';
 import type { ShareRow } from '../lib/advisor-shares';
+import * as erase from '../lib/erase';
 import { STORAGE_KEY } from '../state/shape';
 import { StoreProvider, useStore } from '../state/store';
 
@@ -134,6 +135,37 @@ describe('with trust_center off', () => {
     await render(<Me trustCenter semesterWrapped={false} />);
     await act(async () => button(/^Trust & data/).click());
     expect(seen!.screen).toBe('privacy');
+  });
+
+  it('keeps the device-erase screen open with recovery guidance when erasure is incomplete', async () => {
+    const reload = vi.fn();
+    const original = window.location;
+    Object.defineProperty(window, 'location', { value: { ...original, reload }, configurable: true, writable: true });
+    const eraseSpy = vi.spyOn(erase, 'eraseDevice').mockRejectedValueOnce(new Error('storage refused'));
+    try {
+      await render(<Privacy trustCenter={false} />);
+      const eraseButtons = [...host.querySelectorAll('button')].filter((candidate) => candidate.textContent?.trim() === 'Erase from this device');
+      expect(eraseButtons).toHaveLength(2);
+      await act(async () => eraseButtons[1].click());
+      await settle(() => document.querySelector('[role="dialog"]') !== null);
+      const confirm = document.querySelector('[role="dialog"]')!;
+      const input = confirm.querySelector('input')!;
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, 'ERASE');
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      await act(async () => button(/^Erase it$/, confirm).click());
+      await settle(() => host.querySelector('[role="alert"]') !== null);
+      expect(eraseSpy).toHaveBeenCalledTimes(1);
+      expect(reload).not.toHaveBeenCalled();
+      expect(host.querySelector('[role="alert"]')?.textContent).toContain('The browser did not erase everything');
+      expect(text()).toContain('Close other Semester tabs, then try again.');
+      const retry = [...host.querySelectorAll<HTMLButtonElement>('button')].filter((candidate) => candidate.textContent?.trim() === 'Erase from this device').at(-1)!;
+      expect(retry.disabled).toBe(false);
+    } finally {
+      eraseSpy.mockRestore();
+      Object.defineProperty(window, 'location', { value: original, configurable: true, writable: true });
+    }
   });
 });
 

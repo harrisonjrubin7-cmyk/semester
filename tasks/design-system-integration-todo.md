@@ -1546,3 +1546,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep same-origin device erase separate until its origin-sharing, provider-revocation, partial-failure and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 device-erase caller recovery — automation pass 9, integration slice 74
+
+- [x] Start from current `origin/main` `d20a4d18`, already merged into the branch; confirm no equivalent rejected-erase recovery path landed.
+- [x] Reconcile existing device-erase boundaries: Semester-only same-origin keys, provider withdrawal before token removal, typed confirmation and explicit account non-effect remain current authority.
+- [x] Make Privacy reload only after a resolved erase; on rejection, remain open, announce the incomplete wipe assertively, re-enable retry and preserve the account boundary.
+- [x] Make institutional sample reset reload only after a resolved erase; on rejection, retain the current sample and stop claiming a reset.
+- [x] Prove both caller guards red against the prior unconditional reload, then pass 40/40 focused Privacy, sample-reset, erase, revocation and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and chunk-size warning.
+- [x] Pass 9/9 token-export tests, 69/69 design-check contracts, 96/96 report contracts, design audit with zero violations and the CSS ledger check.
+- [ ] Aggregate npm design-system launchers — unavailable because this shell has no `npm`/`npx`; exact constituents pass and no aggregate launcher result is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded caller-state slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — the active skill stops at preflight because Hawk v6 and Docker are absent, `HAWK_API_KEY` / `HAWK_APP_HOST` are unset and no target is running. `stackhawk.yml` exists, but no scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Add truthful per-store completion evidence before classifying a swallowed unavailable-store clear as success; keep post-reload provider-revocation results separate from device storage.
+- [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

@@ -396,3 +396,11 @@ This mapping adds no archive route, role, capability, schema, policy, server ope
 | Strict retention authority, cutoff and concurrent restore safety | `app/src/lib/files.ts`, `app/src/lib/files.test.ts` | Existing but incomplete is narrowed: ordinary browsing retains its resilient empty-list fallback, while cleanup uses a strict IndexedDB read so refusal propagates. Eligibility begins only when the full 30-day window has elapsed, and each candidate is re-read inside its delete transaction; restored and newer files survive. The cutoff and refusal guards pass after failing against the prior contract. |
 
 This mapping adds no archive route, role, capability, schema, policy, server operation, provider behavior or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 9 current-product consequence mapping — integration slice 74
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Device erase, same-origin isolation and controlled reset | `app/src/lib/erase.ts`, `app/src/screens/Privacy.tsx`, `app/src/components/InstitutionalPreviewBar.tsx` | **Existing but incomplete.** The core remains Semester-prefix scoped and attempts provider withdrawal before token removal. Both callers now reload only on resolution and expose an assertive close-other-tabs-and-retry state on rejection, so neither claims an incomplete wipe or sample reset succeeded. Focused caller/core/revocation/root guards pass 40/40. Per-store completion receipts and post-reload provider results remain open. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation, provider configuration or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
