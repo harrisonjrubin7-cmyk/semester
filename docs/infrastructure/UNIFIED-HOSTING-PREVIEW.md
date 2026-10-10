@@ -67,6 +67,14 @@ This preview performs no localStorage or IndexedDB reset, account deletion,
 database switch, data copy, credential change, OAuth callback change or
 permission change.
 
+Two separate offline-data changes are explicit review dependencies, not changes
+to absorb into this routing draft: PR #1427 proposes an offline purge, while
+PR #1386 covers broader adoption and IndexedDB durability work. Before any
+cutover, review both exact heads together with this candidate and demonstrate
+that student-authored plans, local data and their rollback paths remain intact.
+This draft does not edit their store or adoption paths and does not authorize
+either purge behavior or migration behavior.
+
 ## Installed-app and PWA limits
 
 The company page on the candidate host shows an explicit installed-app and

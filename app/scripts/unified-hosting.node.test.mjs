@@ -109,4 +109,7 @@ test('the preview runbook keeps data continuity and PWA limits explicit', () => 
   assert.match(runbook, /no automatic/i);
   assert.match(runbook, /multipart/i);
   assert.match(runbook, /iOS\/Safari/i);
+  assert.match(runbook, /#1427/);
+  assert.match(runbook, /#1386/);
+  assert.match(runbook, /student-authored/i);
 });
