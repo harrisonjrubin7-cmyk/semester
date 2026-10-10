@@ -42,6 +42,7 @@ create table if not exists private.guardian_calendar_projections (
     check ((invalidated_at is null) = (invalidated_reason is null)),
   unique (consent_grant_id, resource_id)
 );
+alter table private.guardian_calendar_projections enable row level security;
 
 create index if not exists guardian_calendar_projection_reader_idx
   on private.guardian_calendar_projections (guardian_id, student_id, expires_at)
@@ -72,6 +73,7 @@ create table if not exists private.guardian_projection_access_events (
       and cardinality(fields_returned) = 0)
   )
 );
+alter table private.guardian_projection_access_events enable row level security;
 
 create index if not exists guardian_projection_access_student_idx
   on private.guardian_projection_access_events (student_id, read_at desc);
