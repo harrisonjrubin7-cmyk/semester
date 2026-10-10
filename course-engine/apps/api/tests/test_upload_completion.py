@@ -6,6 +6,7 @@ import inspect
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
@@ -18,7 +19,7 @@ from app.core.database import Base, get_db
 from app.main import app
 from app.models.entities import BackgroundJob, Course, SourceDocument, User
 from app.schemas import UploadComplete
-from app.services.storage import ObjectStorage
+from app.services.storage import ObjectInspectionError, ObjectStorage
 
 
 def _database(tmp_path):
@@ -49,7 +50,7 @@ def _runtime(tmp_path, monkeypatch):
     monkeypatch.setattr(
         routes.celery_client,
         "send_task",
-        lambda name, args: sent.append((name, args)),
+        lambda name, args, **kwargs: sent.append((name, args, kwargs)),
     )
     client = TestClient(app)
     registered = client.post(
@@ -124,7 +125,11 @@ def test_completion_verifies_local_object_and_is_durably_idempotent(tmp_path, mo
         assert second.json()["job"]["id"] == first.json()["job"]["id"]
         with runtime.sessions() as session:
             assert session.scalar(select(func.count()).select_from(BackgroundJob)) == 1
-        assert runtime.sent == [("extract_document", [first.json()["job"]["id"]])]
+        assert runtime.sent == [(
+            "extract_document",
+            [first.json()["job"]["id"]],
+            {"task_id": first.json()["job"]["id"]},
+        )]
     finally:
         app.dependency_overrides.clear()
         runtime.engine.dispose()
@@ -150,6 +155,80 @@ def test_completion_rejects_conflicting_retry_payload(tmp_path, monkeypatch):
         runtime.engine.dispose()
 
 
+def test_completion_retry_dispatches_same_job_after_broker_failure(tmp_path, monkeypatch):
+    runtime = _runtime(tmp_path, monkeypatch)
+    try:
+        content = b"review this source"
+        initiated = _initiate(runtime, content)
+        _upload(runtime, initiated, content)
+        attempts = []
+
+        def flaky_send(name, args, **kwargs):
+            attempts.append((name, args, kwargs))
+            if len(attempts) == 1:
+                raise RuntimeError("broker unavailable")
+
+        monkeypatch.setattr(routes.celery_client, "send_task", flaky_send)
+        with pytest.raises(RuntimeError, match="broker unavailable"):
+            _complete(runtime, initiated["document_id"])
+
+        retried = _complete(runtime, initiated["document_id"])
+
+        assert retried.status_code == 200
+        assert attempts[0] == attempts[1]
+        with runtime.sessions() as session:
+            assert session.scalar(select(func.count()).select_from(BackgroundJob)) == 1
+    finally:
+        app.dependency_overrides.clear()
+        runtime.engine.dispose()
+
+
+def test_completed_local_original_cannot_be_overwritten(tmp_path, monkeypatch):
+    runtime = _runtime(tmp_path, monkeypatch)
+    try:
+        original = b"review this source"
+        initiated = _initiate(runtime, original)
+        _upload(runtime, initiated, original)
+        assert _complete(runtime, initiated["document_id"]).status_code == 200
+
+        replay = runtime.client.put(
+            initiated["upload_url"],
+            content=b"different material",
+            headers=runtime.headers,
+        )
+
+        assert replay.status_code == 409
+        assert routes.storage.path(initiated["storage_key"]).read_bytes() == original
+    finally:
+        app.dependency_overrides.clear()
+        runtime.engine.dispose()
+
+
+def test_completion_rejects_content_outside_declared_extension_family(tmp_path, monkeypatch):
+    runtime = _runtime(tmp_path, monkeypatch)
+    try:
+        content = b"plain text, not an HTML document"
+        initiated = runtime.client.post(
+            f"/api/v1/courses/{runtime.course_id}/uploads/initiate",
+            json={
+                "filename": "source.html",
+                "size_bytes": len(content),
+                "mime_type": "text/html",
+                "sha256": hashlib.sha256(content).hexdigest(),
+            },
+            headers=runtime.headers,
+        ).json()
+        _upload(runtime, initiated, content)
+
+        rejected = _complete(runtime, initiated["document_id"])
+
+        assert rejected.status_code == 409
+        assert runtime.sent == []
+    finally:
+        app.dependency_overrides.clear()
+        runtime.engine.dispose()
+
+
 @pytest.mark.parametrize(
     ("declared_size", "declared_sha"),
     [
@@ -169,13 +248,16 @@ def test_completion_rejects_local_size_or_checksum_mismatch(
             declared_size=declared_size,
             sha256=declared_sha,
         )
-        _upload(runtime, initiated, content)
+        rejected_upload = runtime.client.put(
+            initiated["upload_url"], content=content, headers=runtime.headers
+        )
+        assert rejected_upload.status_code == 409
 
         rejected = _complete(runtime, initiated["document_id"])
 
         assert rejected.status_code == 409
         with runtime.sessions() as session:
-            document = session.get(SourceDocument, initiated["document_id"])
+            document = session.get(SourceDocument, UUID(initiated["document_id"]))
             assert document.status == "uploaded"
             assert session.scalar(select(func.count()).select_from(BackgroundJob)) == 0
         assert runtime.sent == []
@@ -236,7 +318,7 @@ def test_simultaneous_completion_creates_one_receipt_and_job(tmp_path, monkeypat
         content = b"review this source"
         initiated = _initiate(runtime, content)
         with runtime.sessions() as session:
-            document = session.get(SourceDocument, initiated["document_id"])
+            document = session.get(SourceDocument, UUID(initiated["document_id"]))
             user_id = session.scalar(select(Course.user_id).where(Course.id == document.course_id))
             document_id = document.id
             course_id = document.course_id
@@ -304,6 +386,7 @@ class FakeS3Client:
 
 
 def test_s3_adapter_pins_owner_and_reads_server_metadata(monkeypatch):
+    monkeypatch.setattr(settings, "s3_expected_bucket_owner", "123456789012")
     client = FakeS3Client()
     adapter = object.__new__(ObjectStorage)
     adapter.local = False
@@ -320,6 +403,21 @@ def test_s3_adapter_pins_owner_and_reads_server_metadata(monkeypatch):
     }
     assert metadata.checksum_sha256 == "a" * 64
     assert metadata.owner_verified is True
+
+
+def test_s3_adapter_normalizes_malformed_provider_metadata(monkeypatch):
+    monkeypatch.setattr(settings, "s3_expected_bucket_owner", "123456789012")
+    client = FakeS3Client()
+    client.head_object = lambda **_kwargs: {
+        "ContentLength": 18,
+        "ChecksumSHA256": "not-base64!",
+    }
+    adapter = object.__new__(ObjectStorage)
+    adapter.local = False
+    adapter.client = client
+
+    with pytest.raises(ObjectInspectionError, match="could not be verified"):
+        adapter.inspect("courses/course-id/originals/source.txt")
 
 
 def test_s3_presign_binds_declared_size_content_and_checksum():

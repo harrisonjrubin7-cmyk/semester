@@ -284,5 +284,24 @@ class BackgroundJob(Base, TimestampMixin):
     result: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
 
+class UploadCompletion(Base, TimestampMixin):
+    __tablename__ = "upload_completions"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("source_documents.id", ondelete="CASCADE"), unique=True
+    )
+    course_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("courses.id", ondelete="CASCADE"), index=True
+    )
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("background_jobs.id", ondelete="CASCADE"), unique=True
+    )
+    payload_fingerprint: Mapped[str] = mapped_column(String(64))
+    verified_metadata: Mapped[dict[str, Any]] = mapped_column(JSON)
+    dispatch_status: Mapped[str] = mapped_column(String(24), default="pending")
+    dispatch_claimed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    dispatched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 Index("ix_calendar_course_date", CalendarEvent.course_id, CalendarEvent.event_date)
 Index("ix_asset_course_type", StudyAsset.course_id, StudyAsset.asset_type)

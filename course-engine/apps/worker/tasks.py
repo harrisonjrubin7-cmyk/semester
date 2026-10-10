@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import tempfile
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID
 
 from celery import Celery
-from sqlalchemy import delete, select
+from sqlalchemy import and_, delete, or_, select
 
 from app.core.config import settings
 from app.core.database import SessionLocal
@@ -20,12 +21,57 @@ from app.models.entities import (
     SourceDocument,
     StudyAsset,
     StudyAssetCitation,
+    UploadCompletion,
 )
 from app.services.malware import DevelopmentMalwareScanner
 from app.services.storage import ObjectStorage, sha256_file, validate_actual_mime
+from app.services.upload_dispatch import dispatch_upload_completion
 
 celery = Celery("course_engine", broker=settings.redis_url, backend=settings.redis_url)
+celery.conf.beat_schedule = {
+    "recover-upload-dispatches": {
+        "task": "recover_upload_dispatches",
+        "schedule": 60.0,
+    },
+}
 storage = ObjectStorage()
+
+
+@celery.task(name="recover_upload_dispatches")
+def recover_upload_dispatches() -> dict:
+    """Republish pending or abandoned completion outbox rows."""
+    cutoff = datetime.now(UTC) - timedelta(minutes=5)
+    db = SessionLocal()
+    try:
+        receipt_ids = db.scalars(
+            select(UploadCompletion.id)
+            .where(
+                UploadCompletion.dispatched_at.is_(None),
+                or_(
+                    UploadCompletion.dispatch_status == "pending",
+                    and_(
+                        UploadCompletion.dispatch_status == "dispatching",
+                        UploadCompletion.dispatch_claimed_at < cutoff,
+                    ),
+                ),
+            )
+            .order_by(UploadCompletion.created_at)
+            .limit(100)
+        ).all()
+    finally:
+        db.close()
+
+    dispatched = 0
+    failed = 0
+    for receipt_id in receipt_ids:
+        db = SessionLocal()
+        try:
+            dispatched += int(dispatch_upload_completion(db, receipt_id, celery))
+        except Exception:
+            failed += 1
+        finally:
+            db.close()
+    return {"dispatched": dispatched, "failed": failed}
 
 
 def invalidate_document_assets(db, document: SourceDocument) -> None:
@@ -68,11 +114,12 @@ def extract_document(job_id: str) -> dict:
         return job.result
     document = db.get(SourceDocument, job.document_id)
     try:
-        job.status = JobStatus.running; job.progress = 5; document.status = "extracting"; db.commit()
+        job.status = JobStatus.running; job.progress = 5; document.status = "scanning"; db.commit()
         path = storage.path(document.storage_key)
         DevelopmentMalwareScanner().scan(path)
         if sha256_file(path) != document.sha256:
             raise ValueError("Uploaded object checksum does not match the initiated upload")
+        document.status = "extracting"; job.progress = 10; db.commit()
         document.metadata_json = {**document.metadata_json, "detected_mime_type": validate_actual_mime(path)}
         paths = [path]
         if path.suffix.lower() == ".zip":
