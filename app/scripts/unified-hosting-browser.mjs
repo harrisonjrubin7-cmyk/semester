@@ -46,6 +46,21 @@ const server = createServer(async (request, response) => {
             .then(() => self.skipWaiting())
         );
       });
+      self.addEventListener('message', (event) => {
+        event.waitUntil((async () => {
+          const cache = await caches.open('semester-shared');
+          const keys = await cache.keys();
+          const hit = await cache.match('/legacy-shared');
+          event.ports[0].postMessage({
+            entries: keys.map((request) => ({ url: request.url, method: request.method })),
+            present: Boolean(hit),
+            bytes: hit ? (await hit.clone().arrayBuffer()).byteLength : null,
+            contentType: hit ? hit.headers.get('content-type') : null,
+            vary: hit ? hit.headers.get('vary') : null,
+            body: hit ? await hit.text() : null,
+          });
+        })());
+      });
     `);
     return;
   }
@@ -240,12 +255,25 @@ try {
         resolveActivated();
       });
     });
+    const workerView = await new Promise((resolveView, rejectView) => {
+      const channel = new MessageChannel();
+      const timeout = setTimeout(
+        () => rejectView(new Error('legacy fixture worker probe timed out')),
+        10_000,
+      );
+      channel.port1.onmessage = (event) => {
+        clearTimeout(timeout);
+        resolveView(event.data);
+      };
+      registration.active.postMessage({ type: 'inspect-shared-cache' }, [channel.port2]);
+    });
     const cache = await caches.open('semester-shared');
     const keys = await cache.keys();
     const absolute = new URL('/legacy-shared', location.href).href;
     const hit = await cache.match(absolute);
     return {
       workerScope: registration.scope,
+      workerView,
       entries: keys.map((request) => ({ url: request.url, method: request.method })),
       present: Boolean(hit),
       bytes: hit ? (await hit.clone().arrayBuffer()).byteLength : null,
@@ -256,7 +284,16 @@ try {
   });
   evidence.checks.sharedCacheFromLegacyWorker = legacyWorkerSeed;
   assert.equal(legacyWorkerSeed.workerScope, `${origin}/legacy/`);
-  assert.equal(legacyWorkerSeed.present, true, 'legacy worker must durably seed the shared entry');
+  assert.equal(
+    legacyWorkerSeed.workerView.body,
+    'legacy-share-sentinel',
+    `legacy worker must read its exact shared entry: ${JSON.stringify(legacyWorkerSeed)}`,
+  );
+  assert.equal(
+    legacyWorkerSeed.present,
+    true,
+    `page must see the legacy worker's shared entry: ${JSON.stringify(legacyWorkerSeed)}`,
+  );
   assert.equal(legacyWorkerSeed.registrationRetained, true);
 
   evidence.timings = { appNavigationStartedAt: Date.now() };
