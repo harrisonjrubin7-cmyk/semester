@@ -212,7 +212,7 @@ export function startRegistrationReadinessEvaluation(input: StartRegistrationRea
     ...base,
     commandLedger: [{
       idempotencyKey: input.idempotencyKey,
-      fingerprint: JSON.stringify(['requested', input.subjectId, input.termId]),
+      fingerprint: JSON.stringify(['requested']),
       receipt,
       event,
     }],
