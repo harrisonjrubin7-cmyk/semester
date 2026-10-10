@@ -1549,11 +1549,11 @@ Documentation only. Application code was not changed after the reset onto `d577a
 
 ## 2026-10-10 device-erase caller recovery — automation pass 9, integration slice 74
 
-- [x] Start from current `origin/main` `d20a4d18`, already merged into the branch; confirm no equivalent rejected-erase recovery path landed.
+- [x] Start with `origin/main` `d20a4d18` already merged; after slice commit `70883874`, inspect and merge final `f7dba6e6`, whose institution-idempotency and classified-offline-storage work adds erase-core attachment coverage but no equivalent caller recovery path.
 - [x] Reconcile existing device-erase boundaries: Semester-only same-origin keys, provider withdrawal before token removal, typed confirmation and explicit account non-effect remain current authority.
 - [x] Make Privacy reload only after a resolved erase; on rejection, remain open, announce the incomplete wipe assertively, re-enable retry and preserve the account boundary.
 - [x] Make institutional sample reset reload only after a resolved erase; on rejection, retain the current sample and stop claiming a reset.
-- [x] Prove both caller guards red against the prior unconditional reload, then pass 40/40 focused Privacy, sample-reset, erase, revocation and root-unmount tests.
+- [x] Prove both caller guards red against the prior unconditional reload, pass 40/40 focused Privacy, sample-reset, erase, revocation and root-unmount tests, then pass 45/45 on the merged head including classified-attachment erase coverage.
 - [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and chunk-size warning.
 - [x] Pass 9/9 token-export tests, 69/69 design-check contracts, 96/96 report contracts, design audit with zero violations and the CSS ledger check.
 - [ ] Aggregate npm design-system launchers — unavailable because this shell has no `npm`/`npx`; exact constituents pass and no aggregate launcher result is claimed.
