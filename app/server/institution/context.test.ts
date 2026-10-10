@@ -52,6 +52,12 @@ describe('the gateway identity as a request context', () => {
     expect(contextFor(req({ 'x-request-id': 'attacker' }), who, IDS).requestId).toBe('req-from-the-gateway');
   });
 
+  it('validates and carries the SDK idempotency key without requiring one on reads', () => {
+    expect(contextFor(req(), who, IDS).idempotencyKey).toBeUndefined();
+    expect(contextFor(req({ 'idempotency-key': 'commit-key-00000001' }), who, IDS).idempotencyKey).toBe('commit-key-00000001');
+    expect(code(() => contextFor(req({ 'idempotency-key': 'too-short' }), who, IDS))).toBe('invalid_request');
+  });
+
   it('refuses, rather than passes through, an identity whose ids are outside the platform alphabet', () => {
     expect(code(() => contextFor(req(), { ...who, institutionId: 'has space' }, IDS))).toBe('tenant_unresolved');
     expect(code(() => contextFor(req(), { ...who, userId: 'a/b' }, IDS))).toBe('unauthenticated');
@@ -119,5 +125,13 @@ describe('the gateway selected active context', () => {
       directory: directory(),
       selection: { membershipId: 'membership-northstar-student', workspace: 'student' },
     }, IDS))).toBe('tenant_mismatch');
+  });
+
+  it('carries the same validated idempotency key into a selected context', () => {
+    const ctx = contextForSelection(req({ 'idempotency-key': 'selected-key-000001' }), who, {
+      directory: directory(),
+      selection: { membershipId: 'membership-northstar-student', workspace: 'student' },
+    }, IDS);
+    expect(ctx.idempotencyKey).toBe('selected-key-000001');
   });
 });
