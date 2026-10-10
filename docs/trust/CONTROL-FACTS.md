@@ -15,11 +15,11 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | Migration files | 228 |
 | Tables created in `public` and not later dropped | 342 |
 | … of which enable row-level security in a migration | 342 |
-| Tables created in `private` and not later dropped | 41 |
-| … of which enable row-level security in a migration | 41 |
+| Tables created in `private` and not later dropped | 43 |
+| … of which enable row-level security in a migration | 43 |
 | Tables with no `enable row level security` statement found | 0 |
 | Tables named by at least one literal `create policy` statement | 276 |
-| Tables with RLS found and no literal policy statement | 107 |
+| Tables with RLS found and no literal policy statement | 109 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -97,6 +97,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/grants.check.sql` | Which functions a client may call at all. |
 | `supabase/groups.check.sql` | Four people and two groups, without needing four people. |
 | `supabase/gtm.check.sql` | The go-to-market foundation: the rules in app/src/lib/gtm, held by the database. |
+| `supabase/guardian-projection.check.sql` | Guardian projection foundation: relationship + consent + projection. |
 | `supabase/help-requests.check.sql` | Help requests: a student asks a person for help, and nothing else happens. |
 | `supabase/hold-aware-sweeps.check.sql` | School and account holds reaching the AI-runtime and Community sweeps: that a school hold keeps that school's AI metadata and every account's Community rows in it; that an account hold keeps that acc… |
 | `supabase/hold-blind-sweeps.check.sql` | A legal hold reaching the last three sweeps that deleted without asking (20261004150000_holds_reach_the_last_three_sweeps.sql): student tombstones, individual subscribers' financial records, and the… |
@@ -289,14 +290,14 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 230 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 230 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 232 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 232 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 65 |
-| Register rows in category `sharing` | 21 |
+| Register rows in category `sharing` | 23 |
 | Register rows in category `admin` | 88 |
 | Register rows in category `integration` | 6 |
 | Register rows in category `financial` | 3 |
