@@ -22,6 +22,9 @@ function failed(operation: string, cause: unknown): never {
   ) {
     throw new PlatformError('idempotency_key_reused', 'That Idempotency-Key was already used for a different request.');
   }
+  if (database?.code === 'SC409') {
+    throw new PlatformError('conflict', 'Registration readiness changed while this command was running.');
+  }
   throw new Error(`Registration readiness could not ${operation}.`, { cause });
 }
 
