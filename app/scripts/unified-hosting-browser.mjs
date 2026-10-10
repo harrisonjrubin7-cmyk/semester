@@ -39,10 +39,12 @@ const server = createServer(async (request, response) => {
       'service-worker-allowed': '/legacy/',
     });
     response.end(`
+      const sharedKey = () =>
+        new Request(new URL('/legacy-shared', self.location.origin).href, { method: 'GET' });
       self.addEventListener('install', (event) => {
         event.waitUntil(
           caches.open('semester-shared')
-            .then((cache) => cache.put('/legacy-shared', new Response('legacy-share-sentinel')))
+            .then((cache) => cache.put(sharedKey(), new Response('legacy-share-sentinel')))
             .then(() => self.skipWaiting())
         );
       });
@@ -50,10 +52,10 @@ const server = createServer(async (request, response) => {
         event.waitUntil((async () => {
           const cache = await caches.open('semester-shared');
           const beforeKeys = await cache.keys();
-          const beforeHit = await cache.match('/legacy-shared');
-          await cache.put('/legacy-shared', new Response('legacy-share-sentinel'));
+          const beforeHit = await cache.match(sharedKey());
+          await cache.put(sharedKey(), new Response('legacy-share-sentinel'));
           const keys = await cache.keys();
-          const hit = await cache.match('/legacy-shared');
+          const hit = await cache.match(sharedKey());
           event.ports[0].postMessage({
             before: {
               entries: beforeKeys.map((request) => ({ url: request.url, method: request.method })),
