@@ -19,7 +19,7 @@ import {
 const BOUNDED_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 const EVALUATOR_OUTCOMES = ['ready', 'blocked', 'needs_review', 'unknown'] as const;
 type EvaluatorOutcome = (typeof EVALUATOR_OUTCOMES)[number];
-type ReadinessCommandPhase = 'start' | 'evaluating' | 'outcome' | 'timeout' | 'invalid' | 'reconcile';
+type ReadinessCommandPhase = 'start' | 'evaluating' | 'outcome' | 'timeout' | 'reconcile';
 const POSTGRES_INTEGER_MAX = 2_147_483_647;
 
 function internalCommandKey(clientKey: string, phase: ReadinessCommandPhase): string {
@@ -221,7 +221,7 @@ export class RegistrationReadinessCommands implements RegistrationReadinessComma
     reason: ReadinessTransitionReason,
   ): Promise<RegistrationReadinessCommandReceipt> {
     let current = record;
-    const failureKey = internalCommandKey(idempotencyKey, reason === 'evaluator_timeout' ? 'timeout' : 'invalid');
+    const failureKey = internalCommandKey(idempotencyKey, 'timeout');
     if (current.state === 'evaluating') {
       const timedOut = await this.dependencies.service.transition({
         evaluationId,
@@ -344,7 +344,7 @@ export class RegistrationReadinessCommands implements RegistrationReadinessComma
       || !Number.isFinite(Date.parse(observation.sourceObservedAt))
       || !Number.isFinite(Date.parse(observation.freshUntil))
     ) {
-      return await this.reconcileFailedEvaluation(context, id, idempotencyKey, record, 'evaluator_invalid_observation');
+      throw new Error('Registration readiness evaluator returned an invalid observation.');
     }
 
     const now = this.now();
