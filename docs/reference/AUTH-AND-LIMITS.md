@@ -158,7 +158,7 @@ curl -s -X OPTIONS 'http://127.0.0.1:8787/records' \
 **Response** `204` No Content
 
 ```http
-access-control-allow-headers: Authorization, Content-Type, X-Correlation-Id
+access-control-allow-headers: Authorization, Content-Type, Idempotency-Key, X-Correlation-Id
 access-control-allow-methods: GET, POST, OPTIONS
 access-control-allow-origin: http://localhost:5173
 access-control-expose-headers: X-Request-Id, X-Correlation-Id

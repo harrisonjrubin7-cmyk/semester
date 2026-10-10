@@ -232,7 +232,7 @@ export function createGateway(config: Config) {
       headers.set('Access-Control-Expose-Headers', 'X-Request-Id, X-Correlation-Id');
     }
     if (request.method === 'OPTIONS') {
-      headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Correlation-Id');
+      headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, Idempotency-Key, X-Correlation-Id');
       headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       return new Response(null, { status: 204, headers });
     }
