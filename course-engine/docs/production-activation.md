@@ -21,7 +21,7 @@ This is an operator gate, not an instruction to activate Course Engine from a de
 - [ ] Build immutable API, worker, and web artifacts from the same approved SHA and publish an SBOM/vulnerability result.
 - [ ] Remove `alembic upgrade head` from the long-running API startup command. Run migrations as a separately approved, single-run release job.
 - [ ] Rehearse upgrade and downgrade on a production-shaped PostgreSQL snapshot; record duration, locks, row counts, and rollback decision points.
-- [ ] Verify `0003_upload_completion` exists before enabling the new completion route. Do not start mixed old/new API workers across that schema boundary.
+- [ ] Verify `0004_background_job_leases` exists before enabling leased workers. Do not start mixed old/new API workers across that schema boundary.
 - [ ] Define application rollback separately from schema rollback; preserve completion receipts and originals during either rollback.
 
 ## Security and processing
@@ -34,9 +34,9 @@ This is an operator gate, not an instruction to activate Course Engine from a de
 
 ## Reliability and observability
 
-- [ ] Add and verify the separate worker-leasing/fencing/recovery design before claiming exactly-once extraction. Completion deduplication alone does not fence duplicate workers.
+- [ ] Verify the worker-leasing/fencing/recovery implementation on the approved artifact under duplicate delivery, worker crash, lease expiry, cancellation, and deletion. Do not claim exactly-once provider effects.
 - [ ] Define recovery for committed jobs whose broker dispatch is interrupted; exercise the recovery path without duplicating a completion receipt.
-- [ ] Run exactly one monitored Celery beat dispatcher for `recover_upload_dispatches`; alert on pending or `dispatching` receipts older than five minutes.
+- [ ] Run exactly one monitored Celery beat dispatcher for `recover_upload_dispatches` and `recover_expired_jobs`; alert on pending or `dispatching` receipts and expired leases.
 - [ ] Load-test concurrent initiations/completions, uploads at the configured boundary, queue saturation, and large safe archives using synthetic data.
 - [ ] Dashboard API latency/error rate, completion rejection reasons, quarantine age, scan/extraction duration, queue age/depth, worker failures, database health, and object-store errors.
 

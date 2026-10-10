@@ -25,6 +25,7 @@ from app.models.entities import (
     Citation,
     Conflict,
     Course,
+    JobStatus,
     LearnerProgress,
     ReviewItem,
     ReviewStatus,
@@ -60,6 +61,7 @@ from app.services.citations import (
     validate_study_asset_content,
 )
 from app.services.exports import export_flashcards_pdf, export_guide_docx, export_guide_pdf
+from app.services.job_leases import revoke_job
 from app.services.storage import (
     MIME_FAMILIES,
     ObjectStorage,
@@ -499,6 +501,21 @@ def get_job(job_id: UUID, user: User = Depends(get_current_user), db: Session = 
     return serialize(job)
 
 
+@router.post("/jobs/{job_id}/cancel")
+def cancel_job(job_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    job = db.get(BackgroundJob, job_id)
+    if not job:
+        raise HTTPException(404)
+    owned_course(db, user, job.course_id)
+    if job.revoked_at is not None:
+        return serialize(job)
+    if job.status in (JobStatus.completed, JobStatus.failed):
+        raise HTTPException(409, "Terminal jobs cannot be cancelled")
+    revoke_job(db, job.id, job.course_id, datetime.now(UTC), "Cancelled by user")
+    db.refresh(job)
+    return serialize(job)
+
+
 @router.get("/courses/{course_id}/review-items")
 def review_items(course_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     owned_course(db, user, course_id)
@@ -519,7 +536,7 @@ def review_item(item_id: UUID, payload: ReviewPatch, user: User = Depends(get_cu
         except (KeyError, TypeError, ValueError) as exc:
             raise HTTPException(409, "Study asset review target is invalid") from exc
         asset = db.get(StudyAsset, asset_id)
-        if not asset or asset.course_id != item.course_id:
+        if not asset or asset.deleted_at or asset.course_id != item.course_id:
             raise HTTPException(409, "Study asset review target is unavailable")
         if asset.generation_version != reviewed_version:
             raise HTTPException(409, "Study asset review is stale")
@@ -647,7 +664,7 @@ def asset(asset_id: UUID, user: User = Depends(get_current_user), db: Session = 
 @router.patch("/study-assets/{asset_id}")
 def patch_asset(asset_id: UUID, payload: AssetPatch, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     row = db.get(StudyAsset, asset_id)
-    if not row: raise HTTPException(404)
+    if not row or row.deleted_at: raise HTTPException(404)
     owned_course(db, user, row.course_id)
     changes = payload.model_dump(exclude_unset=True)
     if changes.get("status") == ReviewStatus.confirmed.value:
@@ -669,10 +686,19 @@ def patch_asset(asset_id: UUID, payload: AssetPatch, user: User = Depends(get_cu
 
 @router.post("/study-assets/{asset_id}/regenerate", status_code=202)
 def regenerate(asset_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    row = db.get(StudyAsset, asset_id)
+    row = db.scalar(
+        select(StudyAsset)
+        .where(StudyAsset.id == asset_id, StudyAsset.deleted_at.is_(None))
+        .with_for_update()
+    )
     if not row: raise HTTPException(404)
     owned_course(db, user, row.course_id)
-    job = BackgroundJob(course_id=row.course_id, job_type=f"regenerate:{row.asset_type}", result={"asset_id": str(row.id)})
+    job = BackgroundJob(
+        course_id=row.course_id,
+        target_id=row.id,
+        job_type=f"regenerate:{row.asset_type}",
+        result={"asset_id": str(row.id)},
+    )
     db.add(job); db.commit(); db.refresh(job)
     celery_client.send_task("generate_study_asset", args=[str(job.id)])
     return serialize(job)
@@ -680,14 +706,37 @@ def regenerate(asset_id: UUID, user: User = Depends(get_current_user), db: Sessi
 
 @router.delete("/study-assets/{asset_id}", status_code=204)
 def delete_asset(asset_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    row = db.get(StudyAsset, asset_id)
+    row = db.scalar(
+        select(StudyAsset)
+        .where(StudyAsset.id == asset_id, StudyAsset.deleted_at.is_(None))
+        .with_for_update()
+    )
     if not row: raise HTTPException(404)
-    owned_course(db, user, row.course_id); db.delete(row); db.commit()
+    owned_course(db, user, row.course_id)
+    jobs = db.scalars(
+        select(BackgroundJob).where(
+            BackgroundJob.course_id == row.course_id,
+            BackgroundJob.target_id == row.id,
+            BackgroundJob.status != JobStatus.completed,
+            BackgroundJob.revoked_at.is_(None),
+        )
+    ).all()
+    for job in jobs:
+        revoke_job(
+            db,
+            job.id,
+            row.course_id,
+            datetime.now(UTC),
+            "Study asset deleted",
+            commit=False,
+        )
+    row.deleted_at = datetime.now(UTC)
+    db.commit()
 
 
 def _export(asset_id: UUID, fmt: str, user: User, db: Session):
     row = db.get(StudyAsset, asset_id)
-    if not row: raise HTTPException(404)
+    if not row or row.deleted_at: raise HTTPException(404)
     owned_course(db, user, row.course_id)
     if row.status != ReviewStatus.confirmed:
         raise HTTPException(409, "Study asset must be confirmed before export")

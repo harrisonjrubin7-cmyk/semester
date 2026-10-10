@@ -116,6 +116,23 @@ def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed(
             for constraint in inspect(connection).get_unique_constraints("upload_completions")
         }
         assert {("document_id",), ("job_id",)} <= completion_uniques
+        job_columns = {
+            column["name"] for column in inspect(connection).get_columns("background_jobs")
+        }
+        assert {
+            "target_id",
+            "lease_owner",
+            "lease_generation",
+            "lease_expires_at",
+            "heartbeat_at",
+            "attempt_count",
+            "revoked_at",
+        } <= job_columns
+        job_indexes = {
+            tuple(index["column_names"])
+            for index in inspect(connection).get_indexes("background_jobs")
+        }
+        assert ("target_id",) in job_indexes
 
         _migrate(connection, command.downgrade, "0001_initial")
         assert not _confidence_nullable(connection)
@@ -142,7 +159,7 @@ def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed(
         expected_revision = (
             "0002_review_first_confidence"
             if engine.dialect.name == "sqlite"
-            else "0003_upload_completion"
+            else "0004_background_job_leases"
         )
         assert MigrationContext.configure(connection).get_current_revision() == expected_revision
         assert connection.scalar(
