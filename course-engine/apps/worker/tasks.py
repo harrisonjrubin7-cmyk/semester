@@ -39,6 +39,10 @@ celery.conf.beat_schedule = {
         "task": "recover_upload_dispatches",
         "schedule": 60.0,
     },
+    "recover-expired-jobs": {
+        "task": "recover_expired_jobs",
+        "schedule": 60.0,
+    },
 }
 storage = ObjectStorage()
 JOB_LEASE_TTL = timedelta(minutes=5)
@@ -83,6 +87,35 @@ def recover_upload_dispatches() -> dict:
         finally:
             db.close()
     return {"dispatched": dispatched, "failed": failed}
+
+
+@celery.task(name="recover_expired_jobs")
+def recover_expired_jobs() -> dict:
+    """Redeliver work abandoned by a worker after its lease expires."""
+    db = SessionLocal()
+    try:
+        jobs = db.execute(
+            select(BackgroundJob.id, BackgroundJob.job_type)
+            .where(
+                BackgroundJob.status == JobStatus.running,
+                BackgroundJob.revoked_at.is_(None),
+                BackgroundJob.lease_expires_at <= utc_now(),
+            )
+            .order_by(BackgroundJob.created_at)
+            .limit(100)
+        ).all()
+    finally:
+        db.close()
+
+    redelivered = 0
+    for job_id, job_type in jobs:
+        if job_type == "extract":
+            celery.send_task("extract_document", args=[str(job_id)])
+            redelivered += 1
+        elif job_type.startswith(("generate:", "regenerate:")):
+            celery.send_task("generate_study_asset", args=[str(job_id)])
+            redelivered += 1
+    return {"redelivered": redelivered}
 
 
 def invalidate_document_assets(db, document: SourceDocument) -> None:

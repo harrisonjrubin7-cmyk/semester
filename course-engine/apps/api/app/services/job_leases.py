@@ -144,6 +144,8 @@ def revoke_job(
     course_id: UUID,
     now: datetime,
     reason: str,
+    *,
+    commit: bool = True,
 ) -> bool:
     changed = db.execute(
         update(BackgroundJob)
@@ -162,7 +164,8 @@ def revoke_job(
             heartbeat_at=None,
         )
     ).rowcount
-    db.commit()
+    if commit:
+        db.commit()
     return bool(changed)
 
 
