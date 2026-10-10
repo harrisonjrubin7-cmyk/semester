@@ -413,6 +413,23 @@ def list_files(course_id: UUID, user: User = Depends(get_current_user), db: Sess
     return [serialize(x) for x in db.scalars(select(SourceDocument).where(SourceDocument.course_id == course_id, SourceDocument.deleted_at.is_(None)).order_by(SourceDocument.created_at.desc())).all()]
 
 
+@router.get("/courses/{course_id}/jobs")
+def list_jobs(
+    course_id: UUID,
+    limit: int = Query(default=100, ge=1, le=200),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    owned_course(db, user, course_id)
+    jobs = db.scalars(
+        select(BackgroundJob)
+        .where(BackgroundJob.course_id == course_id)
+        .order_by(BackgroundJob.created_at.desc())
+        .limit(limit)
+    ).all()
+    return [serialize(job) for job in jobs]
+
+
 @router.get("/files/{file_id}")
 def get_file(file_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     doc = db.get(SourceDocument, file_id)

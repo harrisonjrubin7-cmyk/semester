@@ -104,6 +104,57 @@ def test_job_cancellation_is_owner_scoped_idempotent_and_terminal():
         app.dependency_overrides.clear()
 
 
+def test_course_job_feed_is_owner_scoped_and_newest_first():
+    testing_session = _database()
+    now = datetime.now(UTC)
+    with testing_session() as session:
+        owner = User(email="jobs-owner@example.com", password_hash="unused")
+        outsider = User(email="jobs-outsider@example.com", password_hash="unused")
+        session.add_all([owner, outsider])
+        session.flush()
+        course = Course(user_id=owner.id, title="Job feed")
+        session.add(course)
+        session.flush()
+        older = BackgroundJob(
+            course_id=course.id,
+            job_type="extract",
+            status=JobStatus.completed,
+            created_at=now - timedelta(minutes=1),
+        )
+        newer = BackgroundJob(
+            course_id=course.id,
+            job_type="extract",
+            status=JobStatus.running,
+            progress=42,
+            created_at=now,
+        )
+        session.add_all([older, newer])
+        session.commit()
+        owner_id, outsider_id, course_id = owner.id, outsider.id, course.id
+        older_id, newer_id = older.id, newer.id
+
+    def override_db():
+        with testing_session() as session:
+            yield session
+
+    app.dependency_overrides[get_db] = override_db
+    try:
+        client = TestClient(app)
+        owner_headers = {"Authorization": f"Bearer {create_access_token(owner_id)}"}
+        outsider_headers = {"Authorization": f"Bearer {create_access_token(outsider_id)}"}
+        assert client.get(
+            f"/api/v1/courses/{course_id}/jobs", headers=outsider_headers
+        ).status_code == 404
+        response = client.get(
+            f"/api/v1/courses/{course_id}/jobs", headers=owner_headers
+        )
+        assert response.status_code == 200
+        assert [row["id"] for row in response.json()] == [str(newer_id), str(older_id)]
+        assert response.json()[0]["progress"] == 42
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_deleting_study_asset_revokes_its_inflight_regeneration():
     testing_session = _database()
     with testing_session() as session:
