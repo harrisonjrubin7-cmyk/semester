@@ -42,17 +42,22 @@ export interface RegistrationReadinessEvaluator {
   evaluate(request: RegistrationReadinessEvaluationRequest): Promise<RegistrationReadinessEvaluation>;
 }
 
+export interface RegistrationReadinessCommandReceipt extends ReadinessEvaluationReceipt {
+  /** Aggregate identifier used by the follow-up evaluate route; receipt.id remains the command idempotency key. */
+  evaluationId: string;
+}
+
 export interface RegistrationReadinessCommandBoundary {
   start(
     context: RequestContext,
     roles: readonly UniversityRole[],
     input: unknown,
-  ): Promise<ReadinessEvaluationReceipt>;
+  ): Promise<RegistrationReadinessCommandReceipt>;
   evaluate(
     context: RequestContext,
     roles: readonly UniversityRole[],
     evaluationId: string,
-  ): Promise<ReadinessEvaluationReceipt>;
+  ): Promise<RegistrationReadinessCommandReceipt>;
 }
 
 export interface RegistrationReadinessCommandDependencies {
@@ -119,6 +124,20 @@ function completedReplay(
   return entry?.receipt ?? null;
 }
 
+function commandReceipt(
+  evaluationId: string,
+  receipt: ReadinessEvaluationReceipt,
+): RegistrationReadinessCommandReceipt {
+  return { evaluationId, ...receipt };
+}
+
+class EvaluatorDeadlineError extends Error {
+  constructor() {
+    super('Registration readiness evaluator exceeded its deadline.');
+    this.name = 'EvaluatorDeadlineError';
+  }
+}
+
 /**
  * HTTP-safe command boundary and bounded evaluator caller.
  *
@@ -167,8 +186,9 @@ export class RegistrationReadinessCommands implements RegistrationReadinessComma
     const idempotencyKey = requireCommandKey(context);
     const { termId } = parseStart(input);
     const at = this.now().toISOString();
+    const evaluationId = requireBoundedId(this.evaluationIdFor(context, idempotencyKey, termId), 'Evaluation id');
     const result = await this.dependencies.service.start({
-      evaluationId: requireBoundedId(this.evaluationIdFor(context, idempotencyKey, termId), 'Evaluation id'),
+      evaluationId,
       tenantId: context.tenantId,
       subjectId: context.actor.personId,
       termId,
@@ -177,14 +197,14 @@ export class RegistrationReadinessCommands implements RegistrationReadinessComma
       idempotencyKey,
       at,
     });
-    return result.receipt;
+    return commandReceipt(evaluationId, result.receipt);
   }
 
   async evaluate(
     context: RequestContext,
     roles: readonly UniversityRole[],
     evaluationId: string,
-  ): Promise<ReadinessEvaluationReceipt> {
+  ): Promise<RegistrationReadinessCommandReceipt> {
     const evaluator = this.evaluator();
     requireStudent(context, roles);
     const idempotencyKey = requireCommandKey(context);
@@ -195,33 +215,84 @@ export class RegistrationReadinessCommands implements RegistrationReadinessComma
     }
 
     const replay = completedReplay(record, idempotencyKey);
-    if (replay) return replay;
+    if (replay) return commandReceipt(id, replay);
 
     const evaluatingKey = `${idempotencyKey}:evaluating`;
-    const alreadyEvaluating = record.commandLedger.some((item) => item.idempotencyKey === evaluatingKey);
-    if (!alreadyEvaluating) {
-      if (!['requested', 'ready', 'blocked'].includes(record.state)) {
+    const evaluatingEntry = record.commandLedger.find((item) => item.idempotencyKey === evaluatingKey);
+    if (evaluatingEntry) {
+      if (record.state !== 'evaluating') {
         throw new PlatformError('conflict', 'This evaluation must be reconciled before it can run again.');
       }
-      const moved = await this.dependencies.service.transition({
+      const claimedAt = Date.parse(evaluatingEntry.receipt.recordedAt);
+      const claimAge = this.now().getTime() - claimedAt;
+      if (Number.isFinite(claimedAt) && claimAge < this.timeoutMs) {
+        return commandReceipt(id, evaluatingEntry.receipt);
+      }
+      const recovered = await this.dependencies.service.transition({
         evaluationId: id,
         tenantId: context.tenantId,
         expectedVersion: record.version,
-        targetState: 'evaluating',
+        targetState: 'reconciling',
         correlationId: context.correlationId,
-        idempotencyKey: evaluatingKey,
+        idempotencyKey: `${idempotencyKey}:timeout`,
         at: this.now().toISOString(),
       });
-      record = moved.record;
+      return commandReceipt(id, recovered.receipt);
     }
 
-    const observation = await evaluator.evaluate({
+    if (!['requested', 'ready', 'blocked'].includes(record.state)) {
+      throw new PlatformError('conflict', 'This evaluation must be reconciled before it can run again.');
+    }
+    const moved = await this.dependencies.service.transition({
+      evaluationId: id,
       tenantId: context.tenantId,
-      subjectId: context.actor.personId,
-      termId: record.termId,
-      minimumProjectionVersion: (record.projectionVersion ?? 0) + 1,
-      signal: AbortSignal.timeout(this.timeoutMs),
+      expectedVersion: record.version,
+      targetState: 'evaluating',
+      correlationId: context.correlationId,
+      idempotencyKey: evaluatingKey,
+      at: this.now().toISOString(),
     });
+    record = moved.record;
+
+    const controller = new AbortController();
+    let deadlineReached = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<never>((_resolve, reject) => {
+      timer = setTimeout(() => {
+        deadlineReached = true;
+        reject(new EvaluatorDeadlineError());
+        controller.abort();
+      }, this.timeoutMs);
+    });
+
+    let observation: RegistrationReadinessEvaluation;
+    try {
+      observation = await Promise.race([
+        evaluator.evaluate({
+          tenantId: context.tenantId,
+          subjectId: context.actor.personId,
+          termId: record.termId,
+          minimumProjectionVersion: (record.projectionVersion ?? 0) + 1,
+          signal: controller.signal,
+        }),
+        deadline,
+      ]);
+    } catch (error) {
+      if (!deadlineReached && !(error instanceof EvaluatorDeadlineError)) throw error;
+      const timedOut = await this.dependencies.service.transition({
+        evaluationId: id,
+        tenantId: context.tenantId,
+        expectedVersion: record.version,
+        targetState: 'reconciling',
+        correlationId: context.correlationId,
+        idempotencyKey: `${idempotencyKey}:timeout`,
+        at: this.now().toISOString(),
+      });
+      return commandReceipt(id, timedOut.receipt);
+    } finally {
+      if (timer !== undefined) clearTimeout(timer);
+    }
+
     if (
       !evaluatorOutcome(observation.outcome)
       || !Number.isSafeInteger(observation.projectionVersion)
@@ -246,6 +317,6 @@ export class RegistrationReadinessCommands implements RegistrationReadinessComma
       idempotencyKey: `${idempotencyKey}:outcome`,
       at: now.toISOString(),
     });
-    return completed.receipt;
+    return commandReceipt(id, completed.receipt);
   }
 }
