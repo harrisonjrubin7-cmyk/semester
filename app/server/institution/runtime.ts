@@ -8,8 +8,19 @@ import { PostgresIntelligenceActionStore } from './intelligence-action-store.ts'
 import { createInstitutionIntelligenceRuntime } from './intelligence-runtime.ts';
 import { institutionReadiness } from './readiness.ts';
 import { createProductionScim, withScim } from './scim-route.ts';
+import { PostgresRegistrationReadinessRepository } from './readiness-repository.ts';
+import { RegistrationReadinessService } from './readiness-service.ts';
+import {
+  RegistrationReadinessCommands,
+  type RegistrationReadinessEvaluator,
+} from './registration-readiness-commands.ts';
 
 export type InstitutionEnvironment = Record<string, string | undefined>;
+
+export interface InstitutionRuntimeDependencies {
+  /** Approved, tenant-bound source adapter. Omission keeps every readiness command unavailable. */
+  registrationReadinessEvaluator?: RegistrationReadinessEvaluator;
+}
 
 export function exactAppOrigin(env: InstitutionEnvironment): string {
   const origin = env.SEMESTER_APP_ORIGIN || '';
@@ -34,7 +45,10 @@ export function environmentJournalKey(env: InstitutionEnvironment): Buffer {
  * gateways. Every mutable boundary is Supabase-backed; there is no filesystem
  * journal, process-local action queue or process-local request counter.
  */
-export function createProductionInstitutionRuntime(env: InstitutionEnvironment) {
+export function createProductionInstitutionRuntime(
+  env: InstitutionEnvironment,
+  dependencies: InstitutionRuntimeDependencies = {},
+) {
   const authUrl = env.SEMESTER_AUTH_URL || '';
   const authKey = env.SEMESTER_AUTH_PUBLIC_KEY || '';
   const serviceKey = env.SEMESTER_AUTH_SERVICE_KEY || '';
@@ -72,6 +86,16 @@ export function createProductionInstitutionRuntime(env: InstitutionEnvironment) 
   // gateway so a half-configured SCIM stops the runtime rather than the first
   // provisioning request.
   const scim = createProductionScim(env, { url: authUrl, serviceKey });
+  const readinessRepository = dependencies.registrationReadinessEvaluator
+    ? new PostgresRegistrationReadinessRepository({ url: authUrl, serviceKey })
+    : undefined;
+  const registrationReadiness = dependencies.registrationReadinessEvaluator && readinessRepository
+    ? new RegistrationReadinessCommands({
+        service: new RegistrationReadinessService(readinessRepository),
+        repository: readinessRepository,
+        evaluator: dependencies.registrationReadinessEvaluator,
+      })
+    : undefined;
   return withScim(createGateway({
     origin: exactAppOrigin(env),
     institutionName: env.SEMESTER_INSTITUTION_NAME || 'Your university',
@@ -81,6 +105,7 @@ export function createProductionInstitutionRuntime(env: InstitutionEnvironment) 
     journal,
     rateLimiter,
     intelligence,
+    registrationReadiness,
     readiness: () => institutionReadiness({
       journal,
       monitoringConfigured: env.SEMESTER_MONITORING_READY === '1',
