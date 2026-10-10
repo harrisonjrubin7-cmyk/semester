@@ -251,11 +251,11 @@ export class AttachmentCache {
     // index still retains every retry identity; a same-id replacement uses a
     // different blob name and is never targeted by this attempt.
     for (const row of observed) await this.d.blobs.delete(row.blobName)
-    const gone = await this.d.index.update((current) => {
+    await this.d.index.update((current) => {
       const removed = current.filter((row) => names.has(row.blobName))
       return { rows: current.filter((row) => !names.has(row.blobName)), value: removed }
     })
-    return gone.length
+    return observed.length
   }
 
   private async cleanupRetired(): Promise<void> {

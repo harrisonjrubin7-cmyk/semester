@@ -5,13 +5,14 @@ import { fakeTaskRows } from './fake-rows';
 import { store } from '../../idb';
 import { eraseVaults, idbStorage } from '../../vault/idb';
 import { openVault, VaultError, type Identity, type Vault } from '../../vault/vault';
-import { clearEngineStore, idbSnapshotPort, openEngineStore, sealedSnapshotPort, type SnapshotPort } from './persistent';
+import { clearEngineStore, idbSnapshotPort, openEngineStore, sealedSnapshotPort } from './persistent';
 import { tasksTransport } from './tasks-transport';
 
 const NOW = 1_800_000_000_000;
 const identity = { tenantId: 'self', userId: 'u1', deviceId: 'a' };
 
-beforeEach(() => vi.stubGlobal('indexedDB', fakeIndexedDB()));
+let fake: ReturnType<typeof fakeIndexedDB>;
+beforeEach(() => { fake = fakeIndexedDB(); vi.stubGlobal('indexedDB', fake); });
 afterEach(() => vi.unstubAllGlobals());
 
 describe('the engine store on disk', () => {
@@ -38,24 +39,9 @@ describe('the engine store on disk', () => {
     const first = await openEngineStore(durable);
     await first.entities.put({ dataClass: 'grade', id: 'official', value: { score: 90 }, confirmed: { score: 90 }, version: 1, phase: 'reconciled', fetchedAt: NOW });
     await first.flush();
-    const aborting: SnapshotPort = {
-      load: durable.load,
-      save: async (json) => {
-        await new Promise<void>((resolve) => {
-          const open = indexedDB.open('semester-engine', 1);
-          open.onsuccess = () => {
-            const db = open.result;
-            const tx = db.transaction('snapshots', 'readwrite');
-            tx.objectStore('snapshots').put({ id: 'tasks:u1', json });
-            tx.onabort = () => { db.close(); resolve(); };
-            tx.abort();
-          };
-        });
-        throw new Error('synthetic IndexedDB transaction abort');
-      },
-    };
-    const attempted = await openEngineStore(aborting);
-    await purgeDisallowedOfflineData(attempted, undefined, async () => undefined);
+    const attempted = await openEngineStore(durable);
+    fake.abortNextWrite();
+    await purgeDisallowedOfflineData(attempted);
     await expect(attempted.flush()).rejects.toThrow(/transaction abort/);
     const restarted = await openEngineStore(durable);
     expect(await restarted.entities.get('grade', 'official')).toBeDefined();

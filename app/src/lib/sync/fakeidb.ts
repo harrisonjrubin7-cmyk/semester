@@ -2,6 +2,7 @@
 /** Just enough IndexedDB for `lib/idb.ts`: named databases that outlive a connection. */
 export function fakeIndexedDB() {
   const dbs = new Map<string, Map<string, Map<string, unknown>>>();
+  let abortNextWrite = false;
   const request = <T,>(result: () => T) => {
     const req = { result: undefined as T, error: null, onsuccess: null as null | (() => void), onerror: null as null | (() => void) };
     queueMicrotask(() => {
@@ -11,6 +12,7 @@ export function fakeIndexedDB() {
     return req;
   };
   return {
+    abortNextWrite() { abortNextWrite = true; },
     open(name: string) {
       const req: { result: unknown; error: null; onupgradeneeded: null | (() => void); onsuccess: null | (() => void); onerror: null | (() => void) } =
         { result: undefined, error: null, onupgradeneeded: null, onsuccess: null, onerror: null };
@@ -41,7 +43,14 @@ export function fakeIndexedDB() {
                 getAll: () => request(() => [...working.values()]),
                 get: (id: string) => request(() => working.get(id)),
                 getAllKeys: () => request(() => [...working.keys()]),
-                put: (v: { id: string }) => request(() => (working.set(v.id, structuredClone(v)), v.id)),
+                put: (v: { id: string }) => request(() => {
+                  working.set(v.id, structuredClone(v));
+                  if (abortNextWrite) {
+                    abortNextWrite = false;
+                    queueMicrotask(() => t.abort());
+                  }
+                  return v.id;
+                }),
                 delete: (id: string) => request(() => void working.delete(id)),
                 clear: () => request(() => void working.clear()),
               }),
