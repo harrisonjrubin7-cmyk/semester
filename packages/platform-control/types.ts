@@ -78,6 +78,28 @@ export interface PlatformManifest extends RegistryRecord {
   canonical_domain: string;
   workspace_families: string[];
   pilot_release_scopes: string[];
+  acceptance_gate_ids: string[];
+  acceptance_cases: AcceptanceCaseRegistration[];
+}
+
+export type AcceptanceControlStatus = 'missing' | 'blocked' | 'failed' | 'passed';
+export interface AcceptanceControl {
+  name: string;
+  polarity: 'positive' | 'negative';
+  status: AcceptanceControlStatus;
+  evidence_refs: string[];
+}
+
+export interface AcceptanceCaseRegistration {
+  id: string;
+  name: string;
+  scopes: string[];
+  capability_keys: string[];
+  system_keys: string[];
+  route_ids: string[];
+  status: 'blocked' | 'failed' | 'passed';
+  controls: AcceptanceControl[];
+  gaps: string[];
 }
 
 export interface WorkspaceOperationalLoop {
@@ -102,6 +124,22 @@ export interface WorkspaceEvidenceRefs {
   activations: string[];
 }
 
+export type WorkspaceEvidenceKind = 'source' | 'test' | 'operating';
+export interface WorkspaceEvidenceEnvelope {
+  id: string;
+  kind: WorkspaceEvidenceKind;
+  scope: string;
+  revision: string;
+  artifact: { path: string; sha256: string };
+  bindings: { schema: string; config: string; policy: string; environment: string; tenant: string };
+  producer: { name: string; run_id: string; started_at: string; completed_at: string };
+  observed_outcome: 'passed' | 'failed' | 'blocked';
+  reviewer: { name: string; reviewed_at: string };
+  expires_at?: string;
+  acceptance_case_id?: string;
+  acceptance_control?: 'positive' | 'negative';
+}
+
 export interface WorkspaceRecord extends RegistryRecord {
   family: string;
   audience: string;
@@ -112,6 +150,8 @@ export interface WorkspaceRecord extends RegistryRecord {
   activation: 'disabled' | 'approved' | 'active';
   required_loop: WorkspaceOperationalLoop;
   refs: WorkspaceEvidenceRefs;
+  /** Evidence is empty/absent until a reviewed, revision-bound envelope is collected for this leaf. */
+  evidence_envelopes?: WorkspaceEvidenceEnvelope[];
   gaps: string[];
 }
 
