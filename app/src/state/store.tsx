@@ -47,6 +47,7 @@ import { CHECK_EVERY_MS, WRITE_FAILED, room, roomLine } from '../lib/quota';
 import {
   available as dbAvailable,
   whileWriting,
+  flushNow,
   flushOnLeave,
   load as loadFromDb,
   persist as persistToDb,
@@ -1685,7 +1686,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * on the button.
    */
   const settle = useCallback(
-    (choice: Choice, backup: string | null) => {
+    async (choice: Choice, backup: string | null) => {
       if (!asking) return;
       const { remote } = asking;
       if (backup) {
@@ -1715,11 +1716,41 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // account's copy too, and records its own stamps when it does.
         markSeen(remote.seen);
       } else {
-        if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
         const theirs = {
           ...(remote.state as Partial<Persisted>),
           courses: remote.courses.map((c) => c.data as CourseModule),
         };
+
+        /*
+         * Make the adoption durable before recording that this device has
+         * seen the account copy.
+         *
+         * The choice used to dispatch the merge, stamp `seen`, and dismiss
+         * the question in one React event. A route transition could unmount
+         * that render after the stamp and dismissal were written but before
+         * the effect had handed the merged records to IndexedDB. On the next
+         * pull the durable stamp then said the missing rows had already been
+         * taken, stranding the second device without them. CI caught the exact
+         * state: the question disappeared, `Synced` was visible, and the
+         * named task did not exist in the device database.
+         *
+         * Reduce the same actions here to get the exact persisted shape the
+         * UI is about to receive, write it through the ordinary coalescing
+         * writer, and wait for it to land. Only then may `markSeen` make the
+         * account version authoritative. The localStorage fallback remains on
+         * its synchronous effect path; this closes the asynchronous database
+         * window without introducing a second localStorage writer.
+         */
+        if (dbAvailable()) {
+          const wiped = choice === 'cloud'
+            ? reducer(latest.current, { type: 'wipeLocalForAdopt' })
+            : latest.current;
+          const adopted = reducer(wiped, { type: 'hydrate', persisted: theirs });
+          persistToDb(pickPersisted(adopted), tellOtherTabs);
+          await flushNow();
+        }
+
+        if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
         dispatch({ type: 'hydrate', persisted: theirs });
         markSeen(remote.seen);
         // The first version this device and the account agree on.
@@ -1878,4 +1909,3 @@ export function useStore(): Store {
   if (!store) throw new Error('useStore must be used inside StoreProvider');
   return store;
 }
-
