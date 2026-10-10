@@ -169,6 +169,12 @@ describe('with trust_center on', () => {
     expect(text(remembered)).toContain('“I work twenty hours a week”');
     await act(async () => button(/^Forget…$/, remembered).click());
     expect(seen!.aboutMe.map((f) => f.id)).toEqual(['f1', 'f2']);
+    const preview = dialog()!.querySelector('.action-preview');
+    expect(preview).not.toBeNull();
+    expect(text(preview!)).toContain('Semester stops using this line straight away on this device and, once it syncs, on your account.');
+    expect(text(preview!)).toContain('Your other remembered lines, conversations, notes and plans stay unchanged.');
+    expect(text(preview!)).toContain('This can’t be undone. You can add the line again if you still know it.');
+    expect(document.activeElement?.textContent).toBe('Cancel');
     await act(async () => button(/^Forget$/, dialog()!).click());
     expect(seen!.aboutMe.map((f) => f.id)).toEqual(['f2']);
   });

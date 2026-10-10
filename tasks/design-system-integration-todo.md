@@ -1424,3 +1424,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed remembered-line deletion — automation pass 17, integration slice 68
+
+- [x] Begin from `origin/main` `071e679d`; inspect final fetched `9642e983` and confirm its separate Course Engine upload/calendar work contains no equivalent Profile remembered-line preview, test or integration-control change.
+- [x] Re-rank remaining consequence paths and select only one student-authored assistant-context line; keep conversation deletion, permanent file purge, broad demo reset and scanner-backed Import outside the mutation.
+- [x] Replace Profile's immediate × deletion with the shared `ConfirmDialog` and `ActionPreview`; bring the existing Trust & Data confirmation onto the same structured contract.
+- [x] Name the exact line, immediate device effect, account effect after sync, unchanged remembered lines/conversations/notes/plans and lack of automatic Undo.
+- [x] State the truthful recovery boundary: the student may re-add text they still know, and a data export downloaded before deletion retains the earlier copy without becoming an automatic restore claim.
+- [x] Preserve initial Cancel focus and no-write cancellation; confirmation dispatches the unchanged `setAboutMe` update containing every other fact.
+- [x] Prove the new Profile guard red against immediate deletion, then pass 146/146 About Me, Trust Center, ActionPreview, modal, root-unmount, fact, export and private-backup tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and build chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design-check contracts, 96/96 report contracts, aggregate report generation, design audit with no violations and the CSS ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded content/state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

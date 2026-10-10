@@ -342,3 +342,12 @@ This mapping adds no archive route, role, capability, schema, policy, server ope
 | Recovery, account isolation and share-authority boundary | `app/src/lib/workspace-backup.ts`, `app/src/lib/workspace-backup.coverage.test.ts`, `app/src/lib/advisor-shares.ts` | Existing and unchanged. Advisor Meeting storage remains account-keyed. A prior device workspace backup can restore the meeting structure but intentionally excludes private notes, so the preview does not promise full recovery. Already-created shares remain separately revocable/deletable server records; local preparation deletion does not revoke them or change official records. |
 
 This mapping adds no archive route, role, capability, schema, policy, server operation or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 17 current-product consequence mapping — integration slice 68
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for deleting student-authored assistant context | `app/src/components/AboutMe.tsx`, `app/src/components/TrustCenter.tsx`, `app/src/lib/aboutme.ts` | Existing but incomplete is narrowed across both reachable entry points. Profile no longer dispatches from the first × press; it and Trust & Data use the shared `ConfirmDialog` plus `ActionPreview` to name the exact line, device and post-sync account effect, non-effects and no-Undo boundary. Cancel writes nothing, confirmation keeps every other fact, and the red-before-green regression is included in 146 focused passing tests. |
+| Assistant-memory export, recovery and provider boundary | `app/src/lib/export.ts`, `app/src/state/store.tsx`, `app/src/lib/workspace-backup.private.test.ts` | Existing and unchanged. Full-data export includes `aboutMe`, so a prior downloaded file retains the old text, but no automatic restore is claimed. Workspace backup continues to exclude assistant memory. The existing in-memory context updates from state; this slice sends no provider prompt or request and changes no model, sync or merge policy. |
+
+This mapping adds no archive route, role, capability, schema, policy, provider operation or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.

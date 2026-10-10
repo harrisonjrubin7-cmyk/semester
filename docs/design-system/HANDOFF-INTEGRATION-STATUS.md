@@ -1,10 +1,22 @@
 # Handoff integration status
 
-**Automation pass** 16 of 120 (continued program; runner pass 2) · **Integration slice** 67 · **Date** 2026-10-10 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `9633dec4` · **Latest observed `origin/main`** `071e679d`
+**Automation pass** 17 of 120 (continued program; runner pass 3) · **Integration slice** 68 · **Date** 2026-10-10 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `55f1edba` · **Latest observed `origin/main`** `9642e983`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in current automation pass 17 / integration slice 68
+
+- The slice began from `origin/main` `071e679d`. A final dirty-tree fetch observed `9642e983`; its upload-claim hardening and recoverable calendar editing are confined to the separately reconciled Course Engine MVP and contain no equivalent Profile remembered-line preview, test or integration-control change. Clean-branch reconciliation follows the coherent slice commit.
+- Deleting one student-authored **What Semester should know about me** line from Profile now opens the shared `ConfirmDialog` and `ActionPreview` before any write. The existing Trust & Data entry point now uses the same structured preview.
+- Both surfaces name the exact line, state that Semester stops using it immediately on this device and after sync on the account, preserve other remembered lines, conversations, notes and plans, and state that the deletion has no Undo. A student may re-add a line they still know; a data export downloaded before deletion retains its earlier copy but is not represented as an automatic restore.
+- Cancel remains the initial focused action and dispatches nothing. Explicit confirmation sends the unchanged bounded `setAboutMe` update containing every other fact. The existing core persistence, account-sync merge authority, full-data export and assistant-context hold path are unchanged; no provider call, prompt, route, dependency, schema, policy or external system changed.
+- The new Profile regression failed against the prior immediate deletion. About Me, Trust Center, ActionPreview, modal, root-unmount, fact sanitization, export and private-workspace-backup suites pass 146/146.
+- TypeScript, lint, university typecheck and production build pass. The existing four lint warnings and build chunk-size warning remain. Token export passes 9/9, design-check contracts pass 69/69, report contracts pass 96/96, the aggregate report writes successfully, design audit has no violations with existing warnings and CSS stays within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded content/state-contract slice; the last recorded full-suite baseline remains pass 30's 23,872 tests.
+- Required HawkScan preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. No target, DAST result or security pass is claimed.
+- Permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate. The next slice requires another fresh dependency/consequence ranking.
 
 ## Evidence locked in current automation pass 16 / integration slice 67
 
