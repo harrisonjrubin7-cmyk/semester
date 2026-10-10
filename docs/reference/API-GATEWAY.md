@@ -6,7 +6,7 @@ This page lists every route the institution gateway answers, what each takes and
 
 **Status:** MOCK_DEMO. The shipped adapter registry is empty, so every service that needs an adapter answers `503 adapter_not_configured`. The sandbox adapters answer only when the standalone server is started with `SEMESTER_SANDBOX_INSTITUTION=1`. The gateway is listed as MOCK_DEMO ("sandbox adapters only, no production adapters") in the [feature truth table](../FEATURE-TRUTH-TABLE.md). Nothing on this page lets you read or change a real student record today.
 
-Related pages: [authentication, CORS, limits and environment variables](AUTH-AND-LIMITS.md), [every error code](ERRORS.md), [the SCIM surface](SCIM-API.md), and the machine-readable [OpenAPI file](openapi/institution-gateway.openapi.yaml).
+Related pages: [authentication, CORS, limits and environment variables](AUTH-AND-LIMITS.md), [every error code](ERRORS.md), the [registration-readiness workflow](registration-readiness-workflow.md), [the SCIM surface](SCIM-API.md), and the machine-readable [OpenAPI file](openapi/institution-gateway.openapi.yaml).
 
 ## How the examples on this page were made
 
@@ -45,6 +45,8 @@ Methods other than `GET` and `POST` answer `405 method_not_supported`, except `O
 | GET | `/v1/intelligence/policy` | Bearer | Semester Intelligence policy state for the caller. |
 | POST | `/v1/intelligence/respond` | Bearer | A governed model response over approved sources. |
 | POST | `/v1/intelligence/actions/{id}/confirm` | Bearer | Confirms an action the model proposed. |
+| POST | `/v1/registration-readiness/evaluations` | Bearer + idempotency key | Starts the caller's own term evaluation. |
+| POST | `/v1/registration-readiness/evaluations/{id}/evaluate` | Bearer + idempotency key | Evaluates approved evidence for that durable evaluation. |
 | GET | `/scim/v2/ServiceProviderConfig` | SCIM credential | SCIM discovery. |
 | GET | `/scim/v2/Schemas` | SCIM credential | SCIM discovery. |
 | GET | `/scim/v2/ResourceTypes` | SCIM credential | SCIM discovery. |
@@ -69,6 +71,7 @@ Methods other than `GET` and `POST` answer `405 method_not_supported`, except `O
 | `/status` | Answers. Every area shows `not-configured` unless an adapter is installed for the caller's institution. |
 | `/records`, `/actions/*` | `503 adapter_not_configured` for every area, unless the sandbox is on and the caller's institution is `sandbox`. |
 | `/v1/intelligence/*` | `503 policy-disabled` when the gateway has no intelligence service. When one is configured, `/respond` and `/policy` follow the tenant policy. `/confirm` cannot produce a receipt in the shipped runtime: it answers `502 authoritative-readback-required` ([why](#intelligence-routes)). |
+| `/v1/registration-readiness/evaluations*` | `503 unavailable` in the shipped runtime because no approved evaluator is injected. The boundary is default-off; when an evaluator is supplied, it revalidates current membership, permits only a student's own scope, requires an idempotency key, and records durable receipts ([workflow](registration-readiness-workflow.md)). |
 | `/scim/v2/*` | Off unless `SEMESTER_SCIM=on` on the Vercel runtime. Never run against a real identity provider ([SCIM](SCIM-API.md)). |
 
 ## Health and sign-in configuration
