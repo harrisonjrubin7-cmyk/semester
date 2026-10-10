@@ -1,5 +1,23 @@
 (function(){
-  const APP="https://harrisonjrubin7-cmyk.github.io/semester/#/signup";
+  const LEGACY_APP_BASE="https://harrisonjrubin7-cmyk.github.io/semester/";
+  const UNIFIED_HOST=/(^|\.)semesterintel\.tech$/i.test(location.hostname);
+  const APP_BASE=UNIFIED_HOST?`${location.origin}/app/`:LEGACY_APP_BASE;
+  const APP=`${APP_BASE}#/signup`;
+  const appHref=href=>UNIFIED_HOST&&href.indexOf(LEGACY_APP_BASE)===0
+    ? APP_BASE+href.slice(LEGACY_APP_BASE.length)
+    : href;
+
+  if(UNIFIED_HOST){
+    document.querySelectorAll(`a[href^="${LEGACY_APP_BASE}"]`).forEach(link=>{
+      link.href=appHref(link.href);
+    });
+    const notice=document.createElement("div");
+    notice.className="banner";
+    notice.setAttribute("role","region");
+    notice.setAttribute("aria-label","Installed app migration notice");
+    notice.innerHTML='The Semester application is moving to <a href="/app/">/app/</a>. If you installed the earlier root app, keep it until you have signed in at the new address and confirmed your account, saved work and offline files. This preview does not migrate accounts or device storage automatically; <a href="#contact" data-topic="support">contact support</a> before removing the old app.';
+    document.querySelector(".banner")?.insertAdjacentElement("afterend",notice);
+  }
   const runtimeRules=new Map();let runtimeRuleId=0;
   function runtimeStyle(key,declarations){
     if(runtimeRules.has(key))return runtimeRules.get(key);
@@ -195,7 +213,8 @@
 
   // ---------- experience ----------
   let xpStep=0;
-  const xpSteps=JSON.parse(document.getElementById("xp-walkthrough-data").textContent);
+  const xpSteps=JSON.parse(document.getElementById("xp-walkthrough-data").textContent)
+    .map(step=>({...step,route:appHref(step.route)}));
   const xpMobile=window.matchMedia("(max-width:600px)");
   function xpRender(){
     const st=xpSteps[xpStep];
@@ -1146,7 +1165,6 @@ const exampleRow = (scale = 1) => ({
     sendLead({route:"request_invite",name:val("ri-name"),email:val("ri-email"),organization:val("ri-school"),role:val("ri-role"),message:val("ri-use"),fields:{school:val("ri-school")},form:rif,ok,err})});
 
   // ---------- live status: checked from this browser ----------
-  const APP_BASE="https://harrisonjrubin7-cmyk.github.io/semester/";
   const SB_URL="https://lzrqvlugnawcgywkhqlz.supabase.co",SB_KEY="sb_publishable_aU09VKFZdGCrO-RM_rVzMQ_j17FqKRj";
   const PROBES=[{name:"The app",detail:"the page students open",url:APP_BASE},{name:"Sign-in and saved work",detail:"accounts and sync",url:SB_URL+"/auth/v1/health",headers:{apikey:SB_KEY}},{name:"Product status page",detail:"the app's own status page",url:APP_BASE+"status.html"}];
   function probe(c){const ctrl=typeof AbortController==="function"?new AbortController():null;const timer=setTimeout(()=>{if(ctrl)ctrl.abort()},8000);
@@ -1529,7 +1547,7 @@ const exampleRow = (scale = 1) => ({
       return{subject:"Student Council application: "+n,body:`Name: ${n}\nSchool: ${$("cm-a-school").value.trim()||"(not given)"}\nI'm a: ${val("cm-type")}\n\nThe one thing I'd fix first:\n${w}\n\nI confirm I'm 18 or older.`,ok:"Your email app should open with your application filled in. We reply within a week."}});
 
     // community page content
-    const W=[["1 · 10 seconds","Subscribe on YouTube","Get the Shorts, the Sunday Reset and the build log as they go up.",[`${CH}?sub_confirmation=1`,"Subscribe",1]],["1 · 10 seconds","Follow on Instagram","Campus-life posts, study tips and first looks, plus Stories you can answer.",["https://www.instagram.com/semester_app/","Follow @semester_app",1]],["1 · 10 seconds","Follow on LinkedIn","Build updates for staff, faculty, partners and anyone hiring students.",["https://www.linkedin.com/company/semester-app/","Follow Semester",1]],["2 · 2 minutes","Ask or suggest a video","Send the question you wish someone had answered for you. The best ones become episodes.",["#watch","Request a video"]],["3 · 30 minutes a month","Try Semester and tell us","Use the free app with your real classes, then tell us what confused you.",["https://harrisonjrubin7-cmyk.github.io/semester/#/signup","Start planning free",1]],["4 · An hour a month","Join the Student Council","Test features early, pick topics and hold us to our word.",["#student-council","Apply"]]];
+    const W=[["1 · 10 seconds","Subscribe on YouTube","Get the Shorts, the Sunday Reset and the build log as they go up.",[`${CH}?sub_confirmation=1`,"Subscribe",1]],["1 · 10 seconds","Follow on Instagram","Campus-life posts, study tips and first looks, plus Stories you can answer.",["https://www.instagram.com/semester_app/","Follow @semester_app",1]],["1 · 10 seconds","Follow on LinkedIn","Build updates for staff, faculty, partners and anyone hiring students.",["https://www.linkedin.com/company/semester-app/","Follow Semester",1]],["2 · 2 minutes","Ask or suggest a video","Send the question you wish someone had answered for you. The best ones become episodes.",["#watch","Request a video"]],["3 · 30 minutes a month","Try Semester and tell us","Use the free app with your real classes, then tell us what confused you.",[APP,"Start planning free",1]],["4 · An hour a month","Join the Student Council","Test features early, pick topics and hold us to our word.",["#student-council","Apply"]]];
     const cw=$("cm-ways");if(cw)cw.innerHTML=W.map(x=>`<div><span class="n">${esc2(x[0])}</span><h3>${esc2(x[1])}</h3><p>${esc2(x[2])}</p><a class="btn btn-ghost btn-sm" href="${x[3][0]}"${x[3][2]?' target="_blank" rel="noopener"':""}>${esc2(x[3][1])}</a></div>`).join("");
     const RIT=[["Sunday","Sunday Reset","Plan the week in 15 minutes, together. Video on YouTube, with a live version once the Council is running."],["Midweek","Fixes drop","A new Short that solves one problem."],["Friday","Build log","What shipped this week, what's switched off, and what we got wrong."],["Monthly","Council call","Student Council members review what's next and vote on video topics."]];
     const cr=$("cm-rituals");if(cr)cr.innerHTML=RIT.map(x=>`<li><span class="when">${esc2(x[0])}</span><b>${esc2(x[1])}</b><p>${esc2(x[2])}</p></li>`).join("");

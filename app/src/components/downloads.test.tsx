@@ -130,7 +130,7 @@ describe('what has been downloaded', () => {
 
   it('names a course the way the rest of the app names it, and sizes it', async () => {
     give({
-      'semester-v1-media': [
+      'semester-v1-scope-semester-media': [
         { url: at('/semester/audio/lessons/psci/unit-0.mp3'), bytes: 2 * 1024 * 1024 },
         { url: at('/semester/audio/lessons/psci/unit-1.mp3'), bytes: 2 * 1024 * 1024 },
         { url: at('/semester/decks/psci.pptx'), bytes: 1024 * 1024 },
@@ -147,14 +147,14 @@ describe('what has been downloaded', () => {
     // The sample can be switched off while its recordings are still cached,
     // and then nothing in the catalogue can name them.
     give({
-      'semester-v1-media': [{ url: at('/semester/audio/lessons/bus/unit-0.mp3'), bytes: 1_000 }],
+      'semester-v1-scope-semester-media': [{ url: at('/semester/audio/lessons/bus/unit-0.mp3'), bytes: 1_000 }],
     });
     await mount();
     expect(host.textContent).toContain('BUS');
   });
 
   it('names the ceiling it is held under', async () => {
-    give({ 'semester-v1-media': [{ url: at('/semester/decks/psci.pptx'), bytes: 1_000 }] });
+    give({ 'semester-v1-scope-semester-media': [{ url: at('/semester/decks/psci.pptx'), bytes: 1_000 }] });
     await mount();
     expect(host.textContent).toContain('150 MB');
     expect(host.textContent).toContain('played least recently makes way');
@@ -168,7 +168,7 @@ describe('what has been downloaded', () => {
      * the same betrayal in a smaller coat.
      */
     give({
-      'semester-v1-media': [
+      'semester-v1-scope-semester-media': [
         { url: at('/semester/decks/psci.pptx'), bytes: 1_000 },
         {
           url: at('/semester/__media-ledger'),
@@ -208,7 +208,7 @@ describe('what has been downloaded', () => {
 
   it('says nothing about shedding when nothing has been shed', async () => {
     give({
-      'semester-v1-media': [
+      'semester-v1-scope-semester-media': [
         { url: at('/semester/decks/psci.pptx'), bytes: 1_000 },
         { url: at('/semester/__media-ledger'), bytes: 200, body: { played: {}, shed: null } },
       ],
@@ -218,7 +218,7 @@ describe('what has been downloaded', () => {
   });
 
   it('says what is not in here, which is everything of yours', async () => {
-    give({ 'semester-v1-media': [{ url: at('/semester/decks/psci.pptx'), bytes: 1_000 }] });
+    give({ 'semester-v1-scope-semester-media': [{ url: at('/semester/decks/psci.pptx'), bytes: 1_000 }] });
     await mount();
     expect(host.textContent).toContain('Nothing of yours is in here');
     // And the one case where clearing is not free, said before the press.
@@ -230,7 +230,7 @@ describe('clearing it', () => {
   it('empties the cache, and the screen agrees afterwards', async () => {
     const stores = give({
       'semester-v1-shell': [{ url: at('/semester/index.html'), bytes: 4_000 }],
-      'semester-v1-media': [{ url: at('/semester/audio/psci-podcast.mp3'), bytes: 9 * 1024 * 1024 }],
+      'semester-v1-scope-semester-media': [{ url: at('/semester/audio/psci-podcast.mp3'), bytes: 9 * 1024 * 1024 }],
     });
 
     await mount();
@@ -238,7 +238,7 @@ describe('clearing it', () => {
 
     await press('Clear all');
 
-    expect(stores.has('semester-v1-media')).toBe(false);
+    expect(stores.has('semester-v1-scope-semester-media')).toBe(false);
     // The shell is what makes the app open with no signal. It stays.
     expect(stores.has('semester-v1-shell')).toBe(true);
     expect(host.textContent).toBe('');
@@ -246,7 +246,7 @@ describe('clearing it', () => {
 
   it('clears one course and leaves the other playable', async () => {
     give({
-      'semester-v1-media': [
+      'semester-v1-scope-semester-media': [
         { url: at('/semester/audio/lessons/psci/unit-0.mp3'), bytes: 3 * 1024 * 1024 },
         { url: at('/semester/audio/lessons/econ/unit-0.mp3'), bytes: 1024 * 1024 },
       ],
@@ -270,7 +270,7 @@ describe('clearing it', () => {
      * Found by opening the screen in a browser.
      */
     give({
-      'semester-v1-media': [
+      'semester-v1-scope-semester-media': [
         { url: at('/semester/audio/lessons/psci/unit-0.mp3'), bytes: 2_000 },
         { url: at('/semester/handouts/somebody-elses-notes.txt'), bytes: 9_000 },
       ],
@@ -283,7 +283,7 @@ describe('clearing it', () => {
   });
 
   it('reports a refusal rather than redrawing as though it worked', async () => {
-    give({ 'semester-v1-media': [{ url: at('/semester/decks/psci.pptx'), bytes: 1_000 }] }, true);
+    give({ 'semester-v1-scope-semester-media': [{ url: at('/semester/decks/psci.pptx'), bytes: 1_000 }] }, true);
 
     await mount();
     await press('Clear all');

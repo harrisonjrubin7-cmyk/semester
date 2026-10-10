@@ -33,9 +33,11 @@ const BASE = new URL('./', self.location).pathname;
  * each other's assets even though their registrations are separate. Preserve
  * the established root names, and namespace every non-root build by its base.
  */
-const CACHE_VERSION = BASE === '/'
-  ? VERSION
-  : `${VERSION}-${BASE.replace(/^\/+|\/+$/g, '').replace(/[^a-z0-9._-]+/gi, '-')}`;
+// encodeURIComponent is one-to-one for path segments: `/a/b/` becomes
+// `a%2Fb`, not the same token as `/a-b/`. The former character-flattening
+// scheme made those two scopes share CacheStorage names.
+const SCOPE_TOKEN = BASE === '/' ? '' : encodeURIComponent(BASE.replace(/^\/+|\/+$/g, ''));
+const CACHE_VERSION = SCOPE_TOKEN ? `${VERSION}-scope-${SCOPE_TOKEN}` : VERSION;
 const SHELL = `${CACHE_VERSION}-shell`;
 const MEDIA = `${CACHE_VERSION}-media`;
 
@@ -222,13 +224,23 @@ self.addEventListener('message', (event) => {
  * away a share that was opened and never collected, which `lib/shared.ts`
  * treats as somebody else's file this device is still holding.
  */
-const KEEP_CACHES = (key) => key.startsWith(VERSION) || key === SHARE_CACHE;
+const CLEANABLE_SCOPE = BASE === '/app/'
+  ? 'app'
+  : BASE === '/semester/'
+    ? 'semester'
+    : '';
+const OWN_SCOPE_CACHE = CLEANABLE_SCOPE
+  ? new RegExp(`^semester-v\\d+-scope-${CLEANABLE_SCOPE}-(?:shell|media)$`)
+  : null;
+const CURRENT_SCOPE_PREFIX = CLEANABLE_SCOPE ? `${VERSION}-scope-${CLEANABLE_SCOPE}-` : '';
+const OWN_OLD_CACHE = (key) =>
+  Boolean(OWN_SCOPE_CACHE?.test(key)) && !key.startsWith(CURRENT_SCOPE_PREFIX);
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => !KEEP_CACHES(k)).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter(OWN_OLD_CACHE).map((key) => caches.delete(key))))
       .then(() => self.clients.claim()),
   );
 });

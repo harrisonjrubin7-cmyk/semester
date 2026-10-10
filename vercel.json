@@ -74,6 +74,7 @@
     "app": {
       "root": "app",
       "framework": "vite",
+      "buildCommand": "VITE_BASE=/app/ npm run build",
       "headers": [
         {
           "source": "/(.*)",
@@ -195,6 +196,13 @@
       ]
     }
   },
+  "redirects": [
+    {
+      "source": "/app",
+      "destination": "/app/",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
@@ -257,9 +265,15 @@
       }
     },
     {
-      "source": "/(.*)",
+      "source": "/app/(.*)",
       "destination": {
         "service": "app"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "company-site"
       }
     }
   ]
