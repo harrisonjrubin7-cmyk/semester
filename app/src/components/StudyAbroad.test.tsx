@@ -104,3 +104,32 @@ it('previews a program removal and changes nothing until confirmation', () => {
   expect(stored()).toEqual({ programs: [], courses: [], steps: {} });
   expect(host.textContent).toContain('Study abroad program removed from this device. No official record was changed.');
 });
+
+it('previews one course-match removal and preserves the rest of the plan until confirmation', () => {
+  act(() => button(/Add a program/).click());
+  act(() => button(/Add a course abroad/).click());
+  set(field(/Course abroad/), 'European Politics');
+  set(field(/Counts at home as/), 'POLS 240');
+  set(field(/Where it stands/), 'pre-approved');
+  set(field(/Recorded from/), 'Department email, 8 Oct');
+
+  act(() => button(/Remove course 1/).click());
+
+  const dialog = host.querySelector('[role="dialog"]');
+  expect(dialog?.textContent).toContain('Remove this course match?');
+  expect(dialog?.textContent).toContain('European Politics → POLS 240');
+  expect(dialog?.textContent).toContain('3 credits, your recorded Pre-approved status and its source note');
+  expect(dialog?.textContent).toContain('The study abroad program, its stage progress, other course matches and records held by your school stay unchanged');
+  expect(dialog?.textContent).toContain('Restore only from a device workspace backup created before removal');
+  expect(document.activeElement).toBe(button(/^Cancel$/));
+  expect(stored().courses).toHaveLength(1);
+
+  act(() => button(/^Cancel$/).click());
+  expect(stored().courses).toHaveLength(1);
+
+  act(() => button(/Remove course 1/).click());
+  act(() => button(/^Remove course match$/).click());
+  expect(stored().programs).toHaveLength(1);
+  expect(stored().courses).toEqual([]);
+  expect(host.textContent).toContain('Course match removed from this device. No official approval or school record was changed.');
+});

@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 10 of 120 · **Integration slice** 75 · **Date** 2026-10-10 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `481f6d7d` · **Latest observed `origin/main`** `b8d685e1`
+**Automation pass** 12 of 120 · **Integration slice** 77 · **Date** 2026-10-10 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `b01e1d45` · **Latest observed `origin/main`** `a607200c`
 
 ## State
 
@@ -845,3 +845,13 @@ Current `origin/main` remains `b8d685e1` and is already included in clean branch
 The regression assertion failed against the old immediate-removal behavior. After implementation, 59/59 focused and adjacent tests pass across Study Abroad, its domain reader, device-library persistence, workspace backup coverage, the shared preview/modal and root cleanup. TypeScript, lint, university typecheck and production build pass; the six existing lint warnings and build chunk-size warning remain. The design-check constituents pass 78/78, report contracts pass 96/96, and design audit/CSS introduce no ledger violation. The aggregate npm wrappers and ordered/shuffled full suites were not run in this npm-less shell.
 
 HawkScan remains an open release gate. Mandatory preflight reports no Hawk runtime, no Docker runtime, no `HAWK_API_KEY` and no `HAWK_APP_HOST`; no target, scan, finding result or security pass is claimed. This local commit does not prove deployment, provider activation, official study-abroad workflow integration, institutional acceptance, legal review or production readiness. Safe in-scope work remains, so the program continues.
+
+## Automation pass 12 update — governed study-abroad course-match removal (slice 77)
+
+Slice selection started with `origin/main` `b8d685e1` already included in clean base `b01e1d45`; it contained no equivalent course-match removal preview or regression guard. The final dirty-tree fetch observed `a607200c`; its privileged-MFA, account-pull and release-gate work changes none of this slice's six files and adds no equivalent course-match flow. The earliest dependency-ready consequence path was the existing **Remove course** action, which previously deleted the student-entered host/home match, credit amount, recorded approval state and source note on first press.
+
+The action now uses the repository's shared `ConfirmDialog` and `ActionPreview`. It identifies the exact host-to-home match and its affected planning evidence, distinguishes the unchanged program, stage progress, other matches and school-held records, and says Semester sends no removal request. Cancel receives initial focus and writes nothing. Explicit confirmation preserves the existing exact-id account-keyed device-library mutation and announces a device-only receipt. A device workspace backup created before removal remains the only represented restore path.
+
+The new regression failed against the prior immediate deletion. After implementation, 76/76 focused and adjacent tests pass across Study Abroad, its domain reader, device-library persistence, workspace backup coverage, the shared preview, modal accessibility and root cleanup. TypeScript, lint, university typecheck and production build pass; the six existing lint warnings and build chunk-size warning remain. Token export and design-check constituents pass 78/78, report contracts pass 96/96, the report artifact remains unchanged, and design audit/CSS add no ledger violation. The aggregate `design-system:check` launcher cannot start its hardcoded `npm` subprocess in this shell, and ordered/shuffled full suites were not rerun.
+
+HawkScan remains open after the required preflight: Hawk and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and no target, scan, finding result or security pass exists. No route, dependency, schema, policy, server operation, provider configuration, deployment or external system changed. Official study-abroad operations, institutional acceptance, legal review and production readiness remain separate gates; safe in-scope work remains.

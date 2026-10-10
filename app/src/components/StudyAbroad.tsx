@@ -100,6 +100,7 @@ export function StudyAbroad({ storageKey }: { storageKey: string }) {
               onAdd={() => lib.update((old) => ({ ...old, courses: [...old.courses, newCourse(program.id)] }))}
               onChange={setCourse}
               onRemove={(id) => lib.update((old) => ({ ...old, courses: old.courses.filter((c) => c.id !== id) }))}
+              onRemoved={() => setSaid('Course match removed from this device. No official approval or school record was changed.')}
             />
             <Stages
               plan={plan}
@@ -225,13 +226,16 @@ function Courses({
   onAdd,
   onChange,
   onRemove,
+  onRemoved,
 }: {
   plan: AbroadPlan;
   program: AbroadProgram;
   onAdd: () => void;
   onChange: (id: string, patch: Partial<CourseMatch>) => void;
-  onRemove: (id: string) => void;
+  onRemove: (id: string) => boolean;
+  onRemoved: () => void;
 }) {
+  const [removing, setRemoving] = useState<CourseMatch | null>(null);
   const rows = plan.courses.filter((c) => c.programId === program.id);
   const picture = creditPicture(plan, program.id);
   return (
@@ -290,7 +294,7 @@ function Courses({
                 <input className="input" maxLength={ABROAD_LIMITS.text} value={c.from} onChange={(e) => onChange(c.id, { from: e.target.value })} style={input} />
               </label>
               <p style={small}>{APPROVAL_MEANING[c.status]}</p>
-              <button type="button" className="btn btn-ghost" onClick={() => onRemove(c.id)}>
+              <button type="button" className="btn btn-ghost" onClick={() => setRemoving(c)}>
                 Remove course {i + 1}
               </button>
             </fieldset>
@@ -302,6 +306,26 @@ function Courses({
           Add a course abroad
         </button>
       )}
+      {removing ? (
+        <ConfirmDialog
+          title="Remove this course match?"
+          preview={(
+            <ActionPreview
+              subject={`${removing.host || 'Unnamed course abroad'} → ${removing.counts || 'No home-course match'}`}
+              says={`Removes ${formatNumber(removing.credits)} ${removing.credits === 1 ? 'credit' : 'credits'}, your recorded ${APPROVAL_TEXT[removing.status]} status${removing.from ? ' and its source note' : ''} from this device.`}
+              doesNotChange="The study abroad program, its stage progress, other course matches and records held by your school stay unchanged. Semester sends no removal request."
+              recovery={{ kind: 'none', how: 'Restore only from a device workspace backup created before removal.' }}
+            />
+          )}
+          confirmLabel="Remove course match"
+          onCancel={() => setRemoving(null)}
+          onConfirm={() => {
+            if (!onRemove(removing.id)) return;
+            setRemoving(null);
+            onRemoved();
+          }}
+        />
+      ) : null}
     </section>
   );
 }

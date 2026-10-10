@@ -1607,3 +1607,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep study-abroad course-row removal, official/provider operations and account deletion separate from this device-plan mutation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed study-abroad course-match removal — automation pass 12, integration slice 77
+
+- [x] Start from clean head `b01e1d45`; fetch selection-time `origin/main` `b8d685e1` and confirm it is already merged with no equivalent course-match removal preview or guard. Inspect final `a607200c`; its privileged-MFA/account-pull work changes none of the six slice files and adds no equivalent flow.
+- [x] Re-rank remaining Phase 3 consequence paths and select only one student-entered study-abroad course match; keep official/provider operations and scanner-backed Import separate.
+- [x] Replace first-press removal with the shared `ConfirmDialog` and `ActionPreview`, naming the host/home match, credits, recorded approval status and source note removed from this device.
+- [x] State that the program, its stage progress, other course matches and school-held records remain unchanged and that Semester sends no removal request.
+- [x] Preserve initial Cancel focus and no-write cancellation; explicit confirmation uses the unchanged exact-id account-keyed device-library mutation and adds a truthful completion receipt.
+- [x] State the bounded recovery path: only a device workspace backup made before removal can restore the earlier match.
+- [x] Prove the focused guard red against the prior immediate deletion, then pass 76/76 focused and adjacent Study Abroad, domain, device-library, backup, preview, modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the six existing lint warnings and build chunk-size warning.
+- [x] Pass 78/78 token/design-check constituents, 96/96 report contracts, design audit with no new violation and the CSS ledger check; the report artifact remains unchanged.
+- [ ] Aggregate `design-system:check` launcher — cannot start because it hardcodes unavailable `npm`; its exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-library slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no target, scan, finding result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official study-abroad operations, provider changes and account deletion separate from this device-plan mutation.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
