@@ -112,7 +112,7 @@ await new Promise((resolveListen, rejectListen) => {
 });
 const address = server.address();
 assert.ok(address && typeof address === 'object');
-const origin = `http://127.0.0.1:${address.port}`;
+// WebKit's CacheStorage is not durable for service-worker writes on the numeric\n// loopback host in its Linux test shell. localhost is also a trustworthy\n// loopback origin and exercises the same hosted path/scoping contract.\nconst origin = `http://localhost:${address.port}`;
 const appUrl = `${origin}/app/`;
 
 let browser;
