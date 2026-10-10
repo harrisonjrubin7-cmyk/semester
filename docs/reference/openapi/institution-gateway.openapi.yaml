@@ -295,7 +295,7 @@ paths:
       summary: Starts a durable registration-readiness evaluation for the current student's own term.
       parameters:
         - $ref: '#/components/parameters/CorrelationId'
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RegistrationReadinessIdempotencyKey'
       requestBody:
         required: true
         content:
@@ -338,7 +338,7 @@ paths:
       summary: Evaluates approved evidence for the current student's durable evaluation.
       parameters:
         - $ref: '#/components/parameters/CorrelationId'
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/RegistrationReadinessIdempotencyKey'
         - name: id
           in: path
           required: true
@@ -949,6 +949,16 @@ components:
       schema:
         type: string
         pattern: '^[A-Za-z0-9._:-]{8,128}$'
+    RegistrationReadinessIdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: A platform-safe key required on every registration-readiness command. An exact retry replays the durable receipt.
+      schema:
+        type: string
+        pattern: '^[A-Za-z0-9._:-]{16,128}$'
+        minLength: 16
+        maxLength: 128
     IdempotencyKey:
       name: Idempotency-Key
       in: header
