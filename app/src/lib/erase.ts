@@ -7,6 +7,7 @@ import { clearVersions } from './docversions';
 import { clearOutbox } from './sync/outbox';
 import { eraseVaults } from './vault/idb';
 import { clearEngineStore } from './sync/engine/persistent';
+import { clearOfflineAttachmentPersistence } from './sync/engine/attachments-idb';
 import { clearShared } from './shared';
 import { clearHistory } from './history/history';
 
@@ -75,6 +76,8 @@ export const DATABASES = [
   'semester-vault',
   // The engine's queue and rows for personal tasks (`lib/sync/engine`): unsent edits are somebody's writing.
   'semester-engine',
+  // Default-off server attachment cache. Never aliases the student's own Files or vault databases.
+  'semester-offline-attachments',
 ];
 
 /** What was actually removed, so the screen can say so rather than assume. */
@@ -166,6 +169,7 @@ export async function eraseDevice(): Promise<Erased> {
   await clearOutbox().catch(() => undefined);
   await eraseVaults();
   await clearEngineStore().catch(() => undefined);
+  await clearOfflineAttachmentPersistence().catch(() => undefined);
   await clearHistory().catch(() => undefined);
 
   // Not a database: the service worker leaves a shared file in a Cache
