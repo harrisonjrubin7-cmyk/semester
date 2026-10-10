@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 2 of 120 (continued program) · **Integration slice** 52 · **Date** 2026-10-09 · **Branch** `codex/handoff-integration-slice-52` · **Slice base** `69d1b583` · **Latest observed `origin/main`** `69d1b583`
+**Automation pass** 2 of 120 (continued program) · **Integration slice** 52 · **Date** 2026-10-10 · **Branch** `codex/handoff-integration-slice-52` · **Slice base** `69d1b583` · **Latest observed `origin/main`** `98741d45`
 
 ## State
 
@@ -8,7 +8,7 @@ Phase 0 reconciliation is complete for the archive populations and includes the 
 
 ## Evidence locked in current automation pass 2 / integration slice 52
 
-- The slice starts from post-merge `origin/main` `69d1b583`. The open read-only Canvas integration pull request owns nearby Connect work, so this slice avoids that surface and changes only the senior-reviewer volunteer card and its focused test.
+- The slice started from post-merge `origin/main` `69d1b583` and now includes current `origin/main` `98741d45`. The intervening Canvas, guardian-projection, registration-readiness, Vercel and Course Engine work merged cleanly and does not overlap the senior-reviewer volunteer card or its focused test. The Canvas integration work owns nearby Connect code, so this slice avoids that surface.
 - Revoking a volunteer now opens the shared `ConfirmDialog` and `ActionPreview` before the existing `manage_volunteer` RPC. The preview names the volunteer, immediate access loss, removal of unanswered assigned tasks, the retained reason and history, unaffected volunteers/cases/settings and the fact that a revoked volunteer cannot be recalibrated.
 - Cancel performs no RPC. Only explicit **Revoke access** confirmation invokes the unchanged senior-reviewer-authorized operation with the exact volunteer id and typed reason; server authorization, audit event, completed review history and failure reporting remain unchanged.
 - The focused guard proves the RPC is not called before confirmation or after cancel, then confirms the original call arguments after explicit confirmation. All 11 Volunteers tests pass, the two changed files pass Oxlint and the diff has no whitespace errors.
