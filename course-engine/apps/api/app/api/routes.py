@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
@@ -239,9 +242,25 @@ async def local_upload(
         raise HTTPException(404)
     owned_course(db, user, document.course_id)
     path = storage.path(key)
-    body = await request.body()
-    if len(body) > settings.max_upload_bytes: raise HTTPException(413, "File too large")
-    path.write_bytes(body)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.uploading-", dir=path.parent
+    )
+    temporary_path = Path(temporary_name)
+    received = 0
+    try:
+        with os.fdopen(descriptor, "wb") as destination:
+            async for chunk in request.stream():
+                received += len(chunk)
+                if received > settings.max_upload_bytes:
+                    raise HTTPException(413, "File too large")
+                destination.write(chunk)
+            destination.flush()
+            os.fsync(destination.fileno())
+        os.replace(temporary_path, path)
+    except BaseException:
+        temporary_path.unlink(missing_ok=True)
+        raise
 
 
 @router.post("/courses/{course_id}/uploads/complete")
