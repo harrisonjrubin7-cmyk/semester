@@ -47,6 +47,25 @@ interface StoredBlob {
   bytes: Uint8Array;
 }
 
+function isCachedFile(value: unknown): value is CachedFile {
+  if (!value || typeof value !== 'object') return false;
+  const file = value as Partial<CachedFile>;
+  return [file.id, file.tenantId, file.dataClass, file.ownerEntityId, file.mime, file.contentSha256, file.blobName]
+    .every((field) => typeof field === 'string' && field.length > 0)
+    && [file.size, file.aclEpoch, file.fetchedAt, file.lastReadAt].every((field) => typeof field === 'number' && Number.isFinite(field) && field >= 0)
+    && ['clean', 'pending', 'infected', 'unscannable'].includes(String(file.scan))
+    && typeof file.pinned === 'boolean'
+    && file.wrappedKey instanceof Uint8Array
+    && file.wrappedKey.byteLength > 0
+    && (file.retired === undefined || typeof file.retired === 'boolean');
+}
+
+function tenantInScope(scope: string): string | undefined {
+  const parts = scope.split('|');
+  if (parts.length !== 3 || parts.some((part) => part.length === 0)) return undefined;
+  try { return decodeURIComponent(parts[0]); } catch { return undefined; }
+}
+
 function scopeOf(identity: AttachmentIdentity): string {
   const parts = [identity.tenantId, identity.userId, identity.deviceId];
   if (parts.some((part) => typeof part !== 'string' || part.length === 0)) throw new TypeError('attachment persistence requires a current identity scope');
@@ -125,8 +144,8 @@ export async function openAttachmentPersistence(config: AttachmentPersistenceCon
             return;
           }
           const row = item.value as Partial<StoredGeneration> | undefined;
-          const file = row?.file as Partial<CachedFile> | undefined;
-          if (!row || typeof row.scope !== 'string' || row.scope.length === 0 || !file || typeof file.blobName !== 'string' || file.blobName.length === 0) {
+          const file = row?.file;
+          if (!row || typeof row.scope !== 'string' || !isCachedFile(file) || tenantInScope(row.scope) !== file.tenantId) {
             upgradeError = new AmbiguousLegacyAttachmentError();
             transaction.abort();
             return;
@@ -138,8 +157,21 @@ export async function openAttachmentPersistence(config: AttachmentPersistenceCon
             return;
           }
           migratedKeys.add(key);
-          generations.put({ key, scope: row.scope, file: row.file } satisfies StoredGeneration);
-          item.continue();
+          const legacyBlob = transaction.objectStore(BLOBS).get(key) as IDBRequest<StoredBlob | undefined>;
+          legacyBlob.onerror = () => {
+            upgradeError = new AmbiguousLegacyAttachmentError();
+            transaction.abort();
+          };
+          legacyBlob.onsuccess = () => {
+            const blob = legacyBlob.result;
+            if (!blob || blob.key !== key || blob.scope !== row.scope || !(blob.bytes instanceof Uint8Array)) {
+              upgradeError = new AmbiguousLegacyAttachmentError();
+              transaction.abort();
+              return;
+            }
+            generations.put({ key, scope: row.scope!, file: structuredClone(file) } satisfies StoredGeneration);
+            item.continue();
+          };
         };
       }
     };
