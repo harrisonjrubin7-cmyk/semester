@@ -57,11 +57,15 @@ describe('attachment cache', () => {
     let rows: CachedFile[] = []
     let now = NOW
     let replaceDuringLoad = false
+    let loads = 0
     let c: AttachmentCache
     const index = {
       load: async () => {
         const observed = structuredClone(rows)
-        if (replaceDuringLoad) {
+        loads += 1
+        // read() first checks for unfinished retired cleanup, then observes the
+        // active generation. Replace only after that operation-level snapshot.
+        if (replaceDuringLoad && loads === 2) {
           replaceDuringLoad = false
           await c.put(meta('file'), bytes('old file'))
         }
@@ -72,6 +76,7 @@ describe('attachment cache', () => {
     c = new AttachmentCache({ dek: await newKey(), blobs, index, now: () => now, scope: { tenantId: 't', userId: 'u', deviceId: 'd' } })
     const old = await c.put(meta('file'), bytes('old file'))
     now += 15 * 24 * HOUR
+    loads = 0
     replaceDuringLoad = true
     await expect(c.read('file', { aclEpoch: 1 })).rejects.toMatchObject({ why: 'expired' })
     expect(rows).toHaveLength(1)
@@ -85,11 +90,15 @@ describe('attachment cache', () => {
       let rows: CachedFile[] = []
       let now = NOW
       let replaceDuringLoad = false
+      let loads = 0
       let c: AttachmentCache
       const index = {
         load: async () => {
           const observed = structuredClone(rows)
-          if (replaceDuringLoad) {
+          loads += 1
+          // revoke()/sweep() first replay retired cleanup, then take the
+          // generation-specific snapshot that this race needs to replace.
+          if (replaceDuringLoad && loads === 2) {
             replaceDuringLoad = false
             await c.put(meta('file'), bytes(`new-${operation}`))
           }
@@ -100,6 +109,7 @@ describe('attachment cache', () => {
       c = new AttachmentCache({ dek: await newKey(), blobs, index, now: () => now, scope: { tenantId: 't', userId: 'u', deviceId: 'd' } })
       const old = await c.put(meta('file'), bytes(`old-${operation}`))
       if (operation === 'sweep') now += 15 * 24 * HOUR
+      loads = 0
       replaceDuringLoad = true
       if (operation === 'revoke') await c.revoke({ ids: ['file'] })
       else await c.sweep()
