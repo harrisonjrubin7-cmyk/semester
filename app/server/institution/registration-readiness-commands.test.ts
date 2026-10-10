@@ -177,7 +177,7 @@ describe('registration-readiness evaluator worker', () => {
   it('records stale instead of claiming readiness from expired source evidence', async () => {
     const evaluator: RegistrationReadinessEvaluator = {
       evaluate: vi.fn(async () => ({
-        outcome: 'ready',
+        outcome: 'ready' as const,
         projectionVersion: 4,
         sourceObservedAt: '2026-10-10T11:00:00.000Z',
         freshUntil: '2026-10-10T11:30:00.000Z',
