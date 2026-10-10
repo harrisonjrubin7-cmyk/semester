@@ -194,6 +194,7 @@ export const WORKSPACE_ALIASES: Readonly<Record<string, string>> = {
   '@semester/institution': 'packages/institution/src/index.ts',
   '@semester/offline-sync': 'packages/offline-sync/src/index.ts',
   '@semester/platform': 'packages/platform/src/index.ts',
+  '@semester/platform-control': 'packages/platform-control/src/index.ts',
 };
 
 const CODE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.js', '.jsx'];

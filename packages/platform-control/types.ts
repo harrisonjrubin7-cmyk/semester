@@ -69,6 +69,47 @@ export interface BacklogItem {
   blockers: string[];
 }
 
+export interface PlatformManifest extends RegistryRecord {
+  canonical_domain: string;
+  workspace_families: string[];
+  pilot_release_scopes: string[];
+}
+
+export interface WorkspaceOperationalLoop {
+  actor: string;
+  record: string;
+  action: string;
+  consequence_preview: string;
+  command: string;
+  event: string;
+  receipt: string;
+  support: string;
+  revoke_or_rollback: string;
+}
+
+export interface WorkspaceEvidenceRefs {
+  routes: string[];
+  capabilities: string[];
+  workflows: string[];
+  code: string[];
+  tests: string[];
+  deployments: string[];
+  activations: string[];
+}
+
+export interface WorkspaceRecord extends RegistryRecord {
+  family: string;
+  audience: string;
+  data_classification: string;
+  support_queue: string;
+  pilot_required: boolean;
+  operational_ready: boolean;
+  activation: 'disabled' | 'approved' | 'active';
+  required_loop: WorkspaceOperationalLoop;
+  refs: WorkspaceEvidenceRefs;
+  gaps: string[];
+}
+
 export interface RegistrySnapshot {
   capabilities: CapabilityRecord[];
   systems: RegistryRecord[];
@@ -80,6 +121,10 @@ export interface RegistrySnapshot {
   documents: RegistryRecord[];
   tenants: RegistryRecord[];
   backlog: BacklogItem[];
+  /** Optional while focused validator tests construct bounded snapshots. Full registry validation requires one manifest. */
+  manifests?: PlatformManifest[];
+  /** Optional while focused validator tests construct bounded snapshots. Full registry validation requires the pilot scope roster. */
+  workspaces?: WorkspaceRecord[];
 }
 
 export interface ValidationIssue {

@@ -225,4 +225,22 @@ describe('reading a gateway refusal', () => {
     const { gatewayError } = await import('./university');
     expect((gatewayError({ error: { code: 'x', message: 'm', retryable: 'true' } }, 'sent-00000001').cause as { retryable: boolean }).retryable).toBe(false);
   });
+
+  it('does not let an unknown gateway action become a client instruction', async () => {
+    const { gatewayError } = await import('./university');
+    expect(gatewayError({ error: { code: 'x', message: 'm', user_action: { label: 'Run', kind: 'execute_script' } } }, 'sent-00000001').cause).not.toHaveProperty('userAction');
+  });
+
+  it('normalises an older refusal only at the university migration boundary', async () => {
+    const { normaliseGatewayErrorBody } = await import('./university');
+    expect(normaliseGatewayErrorBody({ message: 'Older refusal.' }, 'sent-00000001')).toEqual({
+      error: {
+        code: 'error',
+        message: 'Older refusal.',
+        correlation_id: 'sent-00000001',
+        retryable: false,
+      },
+      message: 'Older refusal.',
+    });
+  });
 });
