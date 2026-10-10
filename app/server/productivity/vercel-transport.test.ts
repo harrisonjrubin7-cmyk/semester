@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { serveProductivityRequest } from '../../api/productivity/[...path].ts';
+import productivity, { serveProductivityRequest } from '../../api/productivity/[...path].ts';
 import { MAX_BODY_BYTES } from './http.ts';
 
 function request(url: string, body = '', method = body ? 'POST' : 'GET'): IncomingMessage {
@@ -22,6 +22,19 @@ function response() {
 }
 
 describe('Vercel productivity transport', () => {
+  it('returns structured 503 JSON instead of 404 or app HTML when disabled', async () => {
+    vi.stubEnv('SEMESTER_PRODUCTIVITY', 'off');
+    const { res, state } = response();
+
+    await productivity(request('/api/productivity/v1/tasks'), res);
+
+    expect(state.status).toBe(503);
+    expect(state.headers['Content-Type']).toBe('application/json');
+    expect(JSON.parse(state.body.toString()).error).toMatchObject({ code: 'unavailable', retryable: true });
+    expect(state.body.toString()).not.toContain('<html');
+    vi.unstubAllEnvs();
+  });
+
   it('strips only the deployment prefix and preserves query, method and headers', async () => {
     const seen: Request[] = [];
     const { res, state } = response();
