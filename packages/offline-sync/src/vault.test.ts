@@ -166,6 +166,23 @@ describe('attachment cache', () => {
     expect(raw.names()).toEqual([])
   })
 
+  it('durably marks the exact generation retired before deleting its blob', async () => {
+    const raw = memoryBlobs()
+    let rows: CachedFile[] = []
+    const blobs = {
+      put: raw.put,
+      get: raw.get,
+      delete: async (name: string) => {
+        expect(rows.find((row) => row.blobName === name)?.retired).toBe(true)
+        await raw.delete(name)
+      },
+    }
+    const c = new AttachmentCache({ dek: await newKey(), blobs, index: indexFor(() => rows, (next) => { rows = next }), now: () => NOW, scope: { tenantId: 't', userId: 'u', deviceId: 'd' } })
+    await c.put(meta('file'), bytes('protected'))
+    expect(await c.revoke({ ids: ['file'] })).toBe(1)
+    expect(rows).toEqual([])
+  })
+
   it('retains durable cleanup identity when replacement cleanup is interrupted', async () => {
     const raw = memoryBlobs()
     let rows: CachedFile[] = []

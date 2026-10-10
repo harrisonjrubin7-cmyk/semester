@@ -63,6 +63,34 @@ describe('the SDK read model', () => {
     expect(commits).toBe(afterReadiness)
   })
 
+  it('waits for durable policy cleanup before readiness resolves', async () => {
+    let persisted!: () => void
+    let release!: () => void
+    const started = new Promise<void>((resolve) => { persisted = resolve })
+    const blocked = new Promise<void>((resolve) => { release = resolve })
+    const store = memoryStore({
+      initial: { entities: [{ dataClass: 'grade', id: 'g', value: {}, version: 1, phase: 'reconciled', fetchedAt: NOW }] as never, outbox: [], cursors: {} },
+      onCommit: async () => { persisted(); await blocked },
+    })
+    const { sdk } = make({ store })
+    let ready = false
+    const waiting = sdk.ready().then(() => { ready = true })
+    await started
+    await Promise.resolve()
+    expect(ready).toBe(false)
+    release()
+    await waiting
+    expect(ready).toBe(true)
+  })
+
+  it('executes a mandatory wipe even when the policy cleanup hook throws', async () => {
+    const store = memoryStore({ initial: { entities: [{ dataClass: 'grade', id: 'g', value: {}, version: 1, phase: 'reconciled', fetchedAt: NOW }] as never, outbox: [], cursors: {} } })
+    const expired: LeaseState = { grant: { deviceId: 'd', tenantId: 't1', userId: 'u1', issuedAt: NOW - 100 * DAY, hardExpiresAt: NOW - 1, policyVersion: '1', permissionEpoch: 0, accessTokenTtlMs: 900_000 }, verifiedAt: NOW - 100 * DAY, highWaterWall: NOW, lastActiveAt: NOW }
+    const { sdk, log } = make({ store, lease: expired, onPolicyPurge: async () => { throw new Error('secondary cleanup failed') } })
+    await expect(sdk.sync()).resolves.toMatchObject({ stopped: 'wiped' })
+    expect(log).toEqual(expect.arrayContaining(['key', 'cred', 'db', 'files', 'tomb:access_expired']))
+  })
+
   it('cannot return a value without its state and the words for it', async () => {
     const { sdk } = make()
     const v = await sdk.write({ dataClass: 'task', entityId: 'T', op: 'create', payload: { title: 'x' } })

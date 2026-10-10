@@ -391,6 +391,20 @@ describe('revocation', () => {
 })
 
 describe('the cursor', () => {
+  it('repairs a valid-JSON but invalid admission marker before pulling', async () => {
+    const store = memoryStore()
+    await store.cursors.set('__offline_policy_admission__:t:u', '{}')
+    let pulls = 0
+    const transport: SyncTransport = {
+      push: async () => ({ kind: 'results', results: [] }),
+      status: async () => ({ kind: 'results', results: [] }),
+      pull: async () => { pulls++; return { kind: 'changes', changes: [], nextCursor: '1', hasMore: false } },
+    }
+    await new SyncEngine({ store, transport, identity: { tenantId: 't', userId: 'u', deviceId: 'd' }, now: () => NOW, newId: () => 'id' }).syncOnce()
+    expect(pulls).toBe(1)
+    expect(JSON.parse((await store.cursors.get('__offline_policy_admission__:t:u'))!)).toBeInstanceOf(Array)
+  })
+
   it('consumes but never persists inherited Object property names from the server feed', async () => {
     const store = memoryStore()
     const transport: SyncTransport = {

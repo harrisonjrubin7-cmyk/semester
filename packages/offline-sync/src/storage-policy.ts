@@ -38,7 +38,11 @@ function mergeRows(left: readonly PolicyPurgeRow[], right: readonly PolicyPurgeR
   return [...new Map([...left, ...right].map((row) => [keyOf(row), row])).values()]
 }
 
-function restoredEntity(entity: EntityRow): EntityRow | undefined {
+function repairedEntity(entity: EntityRow, write: ReturnType<typeof policyFor>['write']): EntityRow | undefined {
+  // Draft-mode rows are the student's local source of truth. A legacy queue
+  // row is malformed, but the draft itself must not be treated as an
+  // unconfirmed server projection.
+  if (write === 'draft') return { ...entity, phase: 'draft', commandId: undefined }
   if (entity.confirmed === undefined) return undefined
   return { ...entity, value: entity.confirmed, phase: 'reconciled', commandId: undefined }
 }
@@ -53,7 +57,6 @@ export async function purgeDisallowedOfflineData(
   tenant: TenantOfflinePolicy = NO_OPT_IN,
   onPurged?: (rows: readonly PolicyPurgeRow[]) => Promise<void>,
 ): Promise<PolicyPurgeResult> {
-  const prior = readJournal(await store.cursors.get(JOURNAL))
   const entities = await store.entities.all()
   const outbox = await store.outbox.all()
   const rows: PolicyPurgeRow[] = []
@@ -70,8 +73,9 @@ export async function purgeDisallowedOfflineData(
 
   for (const command of outbox) {
     let allowed = false
+    let write: ReturnType<typeof policyFor>['write'] | undefined
     try {
-      const write = policyFor(String(command.dataClass)).write
+      write = policyFor(String(command.dataClass)).write
       allowed = write === 'auto' || write === 'held-send'
     } catch {
       // Unknown classifications fail closed.
@@ -81,12 +85,16 @@ export async function purgeDisallowedOfflineData(
     const persistence = classifyPersistence(String(command.dataClass), tenant)
     rows.push({ kind: 'outbox', dataClass: String(command.dataClass), id: command.entityId, why: persistence.allowed ? 'offline_write_prohibited' : persistence.why })
     const entity = entities.find((candidate) => candidate.dataClass === command.dataClass && candidate.id === command.entityId)
-    if (entity && classifyPersistence(String(entity.dataClass), tenant).allowed) repairs.set(`${entity.dataClass}\u0000${entity.id}`, restoredEntity(entity))
+    if (entity && write && classifyPersistence(String(entity.dataClass), tenant).allowed) repairs.set(`${entity.dataClass}\u0000${entity.id}`, repairedEntity(entity, write))
   }
 
-  const pending = mergeRows(prior, rows)
+  let pending: PolicyPurgeRow[]
   if (rows.length) {
-    await store.transaction(async () => {
+    pending = await store.transaction(async () => {
+      // Read and merge the journal inside the same primary-deletion
+      // transaction so an overlapping purge cannot overwrite retry identity.
+      const current = readJournal(await store.cursors.get(JOURNAL))
+      const next = mergeRows(current, rows)
       for (const row of entityRemovals) await store.entities.remove(row.dataClass, row.id)
       for (const id of commandRemovals) await store.outbox.remove(id)
       for (const [key, entity] of repairs) {
@@ -94,13 +102,21 @@ export async function purgeDisallowedOfflineData(
         if (entity) await store.entities.put(entity)
         else await store.entities.remove(key.slice(0, split), key.slice(split + 1))
       }
-      if (pending.length) await store.cursors.set(JOURNAL, JSON.stringify(pending))
+      if (next.length) await store.cursors.set(JOURNAL, JSON.stringify(next))
+      return next
     })
-  }
+  } else pending = readJournal(await store.cursors.get(JOURNAL))
 
   if (onPurged && pending.length) {
     await onPurged(pending)
-    await store.transaction(async () => { await store.cursors.remove(JOURNAL) })
+    await store.transaction(async () => {
+      // Acknowledge only what this hook actually received. Entries appended by
+      // another purge while the hook was running remain durable for retry.
+      const acknowledged = new Set(pending.map(keyOf))
+      const remaining = readJournal(await store.cursors.get(JOURNAL)).filter((row) => !acknowledged.has(keyOf(row)))
+      if (remaining.length) await store.cursors.set(JOURNAL, JSON.stringify(remaining))
+      else await store.cursors.remove(JOURNAL)
+    })
   }
 
   return {
