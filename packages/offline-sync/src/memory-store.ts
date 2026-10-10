@@ -24,7 +24,7 @@ export interface MemoryStoreOptions {
   /** Start from what was last written down. */
   initial?: StoreSnapshot
   /**
-   * Called with the whole state after each committed change — once per outermost transaction, once per write
+   * Called with the whole state after each committed change — once per transaction, once per write
    * made outside one — never after a rollback. Calls are serialised, so a slow write cannot be overtaken by a
    * later one. A failure is kept and reported by `flush`, not thrown into the engine mid-sync.
    */
@@ -37,8 +37,11 @@ export function memoryStore(opts: MemoryStoreOptions = {}): LocalStore & { snaps
   const key = (c: string, id: string) => `${c}\u0000${id}`
   let entities = new Map<string, EntityRow>((opts.initial?.entities ?? []).map((e) => [key(e.dataClass, e.id), e]))
   let cursors = new Map<string, string>(Object.entries(opts.initial?.cursors ?? {}))
-  let depth = 0
+  let transactionActive = false
+  let transactionTail: Promise<void> = Promise.resolve()
   let writing: Promise<void> = Promise.resolve()
+  let dirty: { snapshot: StoreSnapshot; version: number } | undefined
+  let nextVersion = 0
   let failure: unknown
 
   const snapshot = (): StoreSnapshot => ({
@@ -46,10 +49,25 @@ export function memoryStore(opts: MemoryStoreOptions = {}): LocalStore & { snaps
     entities: [...entities.values()].map((e) => structuredClone(e)),
     cursors: Object.fromEntries(cursors),
   })
+  const enqueue = (pending: { snapshot: StoreSnapshot; version: number }) => {
+    writing = writing.then(async () => {
+      try {
+        await opts.onCommit!(pending.snapshot)
+        if (dirty?.version === pending.version) {
+          dirty = undefined
+          failure = undefined
+        }
+      } catch (err) {
+        if (dirty?.version === pending.version) failure = err
+      }
+    })
+  }
   const changed = () => {
-    if (depth > 0 || !opts.onCommit) return
-    const s = snapshot()
-    writing = writing.then(() => opts.onCommit!(s)).catch((e: unknown) => { failure = e })
+    if (transactionActive || !opts.onCommit) return
+    const pending = { snapshot: snapshot(), version: ++nextVersion }
+    dirty = pending
+    failure = undefined
+    enqueue(pending)
   }
 
   return {
@@ -57,11 +75,18 @@ export function memoryStore(opts: MemoryStoreOptions = {}): LocalStore & { snaps
     async flush() {
       await writing
       if (failure !== undefined) { const f = failure; failure = undefined; throw f }
+      if (dirty) {
+        enqueue(dirty)
+        await writing
+        if (failure !== undefined) { const f = failure; failure = undefined; throw f }
+      }
     },
     async transaction(fn) {
-      if (depth++ > 0) {
-        try { return await fn() } finally { depth-- }
-      }
+      let release!: () => void
+      const previous = transactionTail
+      transactionTail = new Promise<void>((resolve) => { release = resolve })
+      await previous
+      transactionActive = true
       const snap = { o: new Map(outbox), e: new Map(entities), c: new Map(cursors) }
       let ok = false
       try {
@@ -74,8 +99,9 @@ export function memoryStore(opts: MemoryStoreOptions = {}): LocalStore & { snaps
         cursors = snap.c
         throw err
       } finally {
-        depth--
+        transactionActive = false
         if (ok) changed()
+        release()
       }
     },
     outbox: {
@@ -93,6 +119,7 @@ export function memoryStore(opts: MemoryStoreOptions = {}): LocalStore & { snaps
     cursors: {
       async get(s) { return cursors.get(s) },
       async set(s, v) { cursors.set(s, v); changed() },
+      async remove(s) { cursors.delete(s); changed() },
     },
   }
 }
