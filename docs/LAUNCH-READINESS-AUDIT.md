@@ -20,17 +20,15 @@ docs for a written refusal.
 
 ## Findings the council should see first
 
-1. **LTI grade passback is off by default only for LTI registrations bound
-   to a school.** #779 added `public.lti_passback_decision`
-   (`20260927180000_lti_integration_binding.sql`). Its global `kill.writeback`
-   switch stops passback for every registration. A registration bound to a
-   school also needs `writeback.lms_grade_passback` at `production`, and that
-   flag defaults off. An **unbound** registration is answered
-   `allowed-unbound`. That includes every registration made before this date.
-   For those, passback still depends only on the instructor placing a graded
-   link in Brightspace (`lib/ltiscore.ts`) and on `LTI_PRIVATE_KEY` being set.
-   Before a pilot, bind the pilot's registration to its school or engage
-   `kill.writeback`. This change records the gap and does not fix it.
+1. **LTI grade passback fails closed until a registration is bound to a
+   school.** #779 added `public.lti_passback_decision`
+   (`20260927180000_lti_integration_binding.sql`); the additive
+   `20261010174500_lti_passback_requires_binding.sql` closes its legacy
+   unbound bypass. Global kill switches still take precedence. A bound
+   registration also needs both LTI and grade-passback flags at `production`,
+   an approved write-capable connection, an unexpired score-publish scope, and
+   no applicable kill switch. An unbound registration returns
+   `registration-unbound` and no score is signed or sent.
 2. **The command asks to "preserve Today · My Path · Search · Plan · Me".
    That navigation does not exist.** It is the target in
    `docs/expansion/Semester-Master-Implementation-Brief-v2.md` (lines 167 and
@@ -89,7 +87,7 @@ docs for a written refusal.
 | SCIM 2.0 | Partial | Finding 4 |
 | LTI 1.3 launch, deep linking, AGS | Present | `supabase/functions/lti/`, `_shared/ltideeplink.ts`, `_shared/ltiags.ts`; `lti`, `ltiidentity` and `ltiags` check suites |
 | LTI Names and Roles (roster) | Refused | `_shared/ltikey.ts`, asserted by `lib/ltikey.test.ts` |
-| Grade passback default | Partial: gated for bound registrations, `allowed-unbound` otherwise | Finding 1 |
+| Grade passback default | Present, fail-closed: unbound registrations return `registration-unbound`; bound registrations require every gate | Finding 1 |
 | Account linking | Partial | LTI link via ticket (`20260921160100_lti_identity.sql`). Linking by email match is refused in the same file as "account takeover with extra steps". **Unlink is absent** |
 | Tenant discovery | Partial | Email-domain hint (`lib/schoolclaim.ts`, `lib/findschool.ts`), selector (`findschool.ts`). One SSO domain per deployment. No tenant URL |
 | Per-tenant flags | Present | Registry and evaluator `lib/flags.ts`, held to `docs/FEATURE-FLAG-REGISTRY.md` by a test; state in `tenant_feature_policy` / `feature_state()`. Build-time flags in `lib/experience-flags.ts` |

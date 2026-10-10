@@ -7,23 +7,14 @@
  * and answers with a word. This file only reads that word, so there is one
  * place the rule lives and it is the one with a check suite on it.
  *
- * ## The one case that is allowed through on an error
- *
- * Edge Functions deploy after CI on main; migrations are applied separately.
- * For the minutes between the two, this code can run against a database that
- * does not have the function yet. Refusing then would switch off the grade
- * passback that has worked since 22 September for every school, for a reason
- * no instructor could see. So a *missing function* answers as the database
- * would have answered for every registration before binding existed:
- * `allowed-unbound`. Any other error refuses — a gate that cannot be read is
- * closed.
+ * The gate is fail-closed. A missing decision function and an unbound
+ * registration both refuse passback: deployment order cannot grant access
+ * that the current database policy has not positively approved.
  */
 
 export type GateVerdict =
   | { ok: true; bound: boolean }
   | { ok: false; reason: string; detail: string };
-
-const MISSING = /does not exist|schema cache|could not find the function/i;
 
 export function passbackVerdict(
   data: unknown,
@@ -31,11 +22,9 @@ export function passbackVerdict(
 ): GateVerdict {
   if (error) {
     const message = error.message ?? '';
-    if (MISSING.test(message)) return { ok: true, bound: false };
     return { ok: false, reason: 'gate-failed', detail: message || 'The passback gate could not be read.' };
   }
   if (data === 'allowed') return { ok: true, bound: true };
-  if (data === 'allowed-unbound') return { ok: true, bound: false };
   const word = typeof data === 'string' && /^[a-z-]{1,60}$/.test(data) ? data : 'gate-unreadable';
   return { ok: false, reason: 'passback-off', detail: word };
 }

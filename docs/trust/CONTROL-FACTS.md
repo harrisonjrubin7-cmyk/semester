@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 231 |
+| Migration files | 232 |
 | Tables created in `public` and not later dropped | 342 |
 | … of which enable row-level security in a migration | 342 |
 | Tables created in `private` and not later dropped | 43 |
@@ -119,7 +119,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/legal-holds.check.sql` | Legal holds (RM-02, RM-05): who may place one and over what, that it is released only by someone else with a reason, that it is never deleted or edited, that a held account cannot be deleted, and tha… |
 | `supabase/listings.check.sql` | Verified listings: who drafts, who publishes, who reads, and https only. |
 | `supabase/lti-capability.check.sql` | Whether an LTI launch's account holds lti:launch at the school, as the launch facts report it. |
-| `supabase/lti-integration.check.sql` | LTI bound to the integration control plane: the passback gate walked one gate at a time, the pre-binding behaviour kept, and the launch's context recorded only when every condition holds. |
+| `supabase/lti-integration.check.sql` | LTI bound to the integration control plane: the passback gate walks one gate at a time, unbound passback fails closed, and the launch's context is recorded only when every condition holds. |
 | `supabase/lti-membership.check.sql` | Joining an LTI launch to an institutional membership. |
 | `supabase/lti.check.sql` | The two tables an LTI launch runs on, and the four ways they are meant to refuse. |
 | `supabase/ltiags.check.sql` | The table a grade finds its way back through, and the ways it refuses. |

@@ -168,7 +168,7 @@ The company site's forms, one endpoint for every route in `cta_routes`. **Status
 
 ## `lti`
 
-LTI 1.3 launch, deep linking and grade passback for a Brightspace registration. **Status** IMPLEMENTED_NOT_RELEASED, and BLOCKED (truth-table rows "LTI 1.3 (launch, deep link, AGS)" and "LTI 1.3 launch validation": never launched from a real platform, not 1EdTech-certified, needs Brightspace registration, NRPS refused, an unbound registration answers `allowed-unbound`).
+LTI 1.3 launch, deep linking and grade passback for a Brightspace registration. **Status** IMPLEMENTED_NOT_RELEASED, and BLOCKED (truth-table rows "LTI 1.3 (launch, deep link, AGS)" and "LTI 1.3 launch validation": never launched from a real platform, not 1EdTech-certified, needs Brightspace registration, NRPS refused, and the database can answer `allowed-unbound` for an unbound registration). The route treats that legacy database verdict as a refusal; no unbound registration may pass back a score.
 
 The caller is a browser arriving from the LMS, so there is no Supabase session. What authenticates a launch is the platform's signed `id_token`, checked against the keys the registration names and then claim by claim.
 
@@ -180,7 +180,7 @@ The caller is a browser arriving from the LMS, so there is no Supabase session. 
 | `/score` | `POST` | Called by the signed-in app with `{code, given, max}`. Looks up the caller's recorded line item, asks `lti_passback_decision` whether passback is allowed, signs a client assertion with `LTI_PRIVATE_KEY`, gets a token from the platform and posts the score. Answers `{"reported": true, "course"}` or `{"reported": false, "reason"}`. |
 
 - **Responses.** A refused launch is an HTML page with a reference code, and the status is 400, 401 (bad header, signature or claims), 403 (not an instructor for placement, or school access not active), 405 (launch not `POST`), 500 or 503. Any other path is a 404 page. `/score` answers 401 without a valid session, 405 for non-`POST`, and 400 for a body that is not JSON; every other refusal is `{"reported": false, "reason"}` with status 200 by default, or 400, 500, 502 or 503 for particular reasons (for example `no-key` is 503 and `token-refused` is 502).
-- **Gating.** A first launch provisions an account on a synthesized address that cannot receive mail; attaching an existing account is never automatic and goes through a ticket (`adopt_lti_identity`). Membership and entitlement checks use `lti_launch_membership` and `lti_launch_entitlement_facts`. Passback needs the bound registration's decision to be `allowed` or `allowed-unbound`.
+- **Gating.** A first launch provisions an account on a synthesized address that cannot receive mail; attaching an existing account is never automatic and goes through a ticket (`adopt_lti_identity`). Membership and entitlement checks use `lti_launch_membership` and `lti_launch_entitlement_facts`. Passback proceeds only when the database positively returns `allowed`; `allowed-unbound`, a missing decision function and every gate-read error refuse before the route signs or sends anything.
 - **Source.** [`index.ts`](../../supabase/functions/lti/index.ts), [`_shared/lti.ts`](../../supabase/functions/_shared/lti.ts), [`_shared/ltiverify.ts`](../../supabase/functions/_shared/ltiverify.ts), [`_shared/ltiags.ts`](../../supabase/functions/_shared/ltiags.ts), [`lti.test.ts`](../../app/src/lib/lti.test.ts), [`ltiags.test.ts`](../../app/src/lib/ltiags.test.ts).
 
 ## `productivity-sourcecheck`
