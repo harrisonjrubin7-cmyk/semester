@@ -25,6 +25,7 @@ export const SCOPE_FAMILY: Readonly<Record<(typeof PILOT_RELEASE_SCOPES)[number]
 
 const REF_GROUPS = ['routes', 'capabilities', 'workflows', 'code', 'tests', 'deployments', 'activations'] as const;
 const LOOP_FIELDS = ['actor', 'record', 'action', 'consequence_preview', 'command', 'event', 'receipt', 'support', 'revoke_or_rollback'] as const;
+const EVIDENCE_BINDING_FIELDS = ['schema', 'config', 'policy', 'environment', 'tenant'] as const;
 const ACCEPTANCE_CASE_IDS = ['XA-01', 'XA-02', 'XA-03', 'XA-04', 'XA-05', 'XA-06', 'XA-07', 'XA-08'] as const;
 const COMPLETION_GATE_IDS = Array.from({ length: 18 }, (_, index) => `FC-${String(index + 1).padStart(2, '0')}`);
 const ACCEPTANCE_CASE_SCOPES: Record<string, readonly string[]> = {
@@ -233,7 +234,7 @@ export async function validateWorkspaceEvidence(snapshot: RegistrySnapshot, cont
       if (!object(evidence.artifact) || typeof evidence.artifact.path !== 'string' || !evidence.artifact.path.trim() || !/^[0-9a-f]{64}$/i.test(evidence.artifact.sha256)) {
         issues.push({ code: 'invalid_evidence_artifact', path: `${path}.artifact`, message: 'Evidence requires a repository-relative path and SHA-256.' }); valid = false;
       }
-      if (!object(evidence.bindings) || ['schema', 'config', 'policy', 'environment', 'tenant'].some((field) => typeof evidence.bindings[field] !== 'string' || !(evidence.bindings[field] as string).trim())) {
+      if (!object(evidence.bindings) || EVIDENCE_BINDING_FIELDS.some((field) => typeof evidence.bindings[field] !== 'string' || !evidence.bindings[field].trim())) {
         issues.push({ code: 'missing_evidence_binding', path: `${path}.bindings`, message: 'Evidence must bind schema, config, policy, environment, and tenant.' }); valid = false;
       } else {
         const environments: Record<string, string[]> = { source: ['repository'], test: ['ci', 'staging'], operating: ['staging', 'production'] };
