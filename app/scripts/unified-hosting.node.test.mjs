@@ -98,7 +98,7 @@ test('unified routes keep APIs and lab ahead of /app and the company catch-all',
   assert.deepEqual(config.rewrites.slice(7), [
     { source: '/lab', destination: { service: 'workflow-lab' } },
     { source: '/lab/(.*)', destination: { service: 'workflow-lab' } },
-    { source: '/app/(.*)', destination: { service: 'app' } },
+    { source: '/app/(.*)', destination: { service: 'app', path: '/$1' } },
     { source: '/(.*)', destination: { service: 'company-site' } },
   ]);
   assert.equal(config.services.app.buildCommand, 'VITE_BASE=/app/ npm run build');

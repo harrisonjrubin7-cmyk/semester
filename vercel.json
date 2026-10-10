@@ -285,7 +285,8 @@
     {
       "source": "/app/(.*)",
       "destination": {
-        "service": "app"
+        "service": "app",
+        "path": "/$1"
       }
     },
     {

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 const repo = join(__dirname, '..', '..', '..');
 const config = JSON.parse(readFileSync(join(repo, 'vercel.json'), 'utf8')) as {
   redirects?: Array<{ source: string; destination: string; permanent: boolean }>;
-  rewrites: Array<{ source: string; has?: unknown[]; destination: { service: string } }>;
+  rewrites: Array<{ source: string; has?: unknown[]; destination: { service: string; path?: string } }>;
 };
 
 function serviceFor(path: string, host = 'www.semesterintel.tech'): string {
