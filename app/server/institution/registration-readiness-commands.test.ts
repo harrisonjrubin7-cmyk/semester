@@ -230,7 +230,7 @@ describe('registration-readiness evaluator worker', () => {
     });
   });
 
-  it('bounds projection versions and reconciles an invalid evaluator observation', async () => {
+  it('rejects projection versions outside the durable database range before outcome persistence', async () => {
     const evaluator: RegistrationReadinessEvaluator = {
       evaluate: vi.fn(async () => ({
         outcome: 'ready' as const,
@@ -242,21 +242,16 @@ describe('registration-readiness evaluator worker', () => {
     const { commands, repository } = rig(evaluator);
     await commands.start(context(), ['student'], { termId: '2027-spring' });
 
-    const result = await commands.evaluate(
+    await expect(commands.evaluate(
       context({ idempotencyKey: 'readiness-evaluate-invalid-projection' }),
       ['student'],
       'readiness-evaluation-1',
-    );
+    )).rejects.toThrow(/invalid observation/i);
 
-    expect(result).toMatchObject({ status: 'pending', state: 'reconciling' });
     expect(repository.rows.get('readiness-evaluation-1')).toMatchObject({
-      state: 'reconciling',
+      state: 'evaluating',
       projectionVersion: undefined,
-      reconciliationTasks: [expect.objectContaining({ state: 'open' })],
     });
-    expect(repository.rows.get('readiness-evaluation-1')?.commandLedger
-      .find((entry) => entry.event.payload.reason === 'evaluator_invalid_observation'))
-      .toBeDefined();
   });
 
   it('makes another subject indistinguishable from a missing evaluation and never calls the source', async () => {
