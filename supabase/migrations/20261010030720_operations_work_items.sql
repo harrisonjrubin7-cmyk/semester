@@ -2,8 +2,10 @@
 --
 -- Merging this file to main may automatically apply it to the canonical
 -- Supabase project. Do not merge without explicit production-SQL approval.
--- It creates tables, indexes, functions and narrow service/authenticated grants;
--- it creates no tenant rows, role grants, schedules, credentials or live worker.
+-- It creates tables, indexes, functions and narrow service/authenticated grants.
+-- It installs a readiness-task trigger and conditionally backfills existing open
+-- readiness tasks into tenant-scoped work-item, event, audit and outbox rows.
+-- It creates no tenant/school identity, role grants, schedules, credentials or worker.
 
 create table if not exists private.work_item (
   id                  uuid primary key default gen_random_uuid(),
