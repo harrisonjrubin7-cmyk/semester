@@ -158,6 +158,7 @@ create or replace function private.open_work_item(
 returns uuid language plpgsql volatile security definer set search_path = '' as $$
 declare
   made uuid;
+  existing private.work_item;
   correlation text := coalesce(want_correlation, 'work-item:' || gen_random_uuid()::text);
 begin
   if want_tenant is null or want_kind is null or want_subject_type is null
@@ -180,9 +181,17 @@ begin
   returning id into made;
 
   if made is null then
-    select w.id into made from private.work_item w
+    select * into strict existing from private.work_item w
      where w.tenant_id = want_tenant and w.kind = want_kind and w.source_ref = want_source_ref;
-    return made;
+    if existing.subject_type is distinct from want_subject_type
+       or existing.subject_id is distinct from want_subject_id
+       or existing.purpose is distinct from want_purpose
+       or existing.priority is distinct from want_priority
+       or existing.required_capability is distinct from want_required_capability then
+      raise exception 'The work-item source key already names a different envelope.'
+        using errcode = '22023';
+    end if;
+    return existing.id;
   end if;
 
   insert into private.work_item_event (work_item_id, tenant_id, version, action, actor_id)
@@ -223,10 +232,10 @@ begin
   if want_item is not null then
     select * into hit from private.work_item w where w.id = want_item;
     if not found then
-      raise exception 'Work item not found.' using errcode = 'P0002';
+      raise exception 'The work item is unavailable in this grant scope.' using errcode = '42501';
     end if;
     if not private.work_item_allowed(hit.tenant_id, hit.required_capability) then
-      raise exception 'The required exact-tenant capability is missing.' using errcode = '42501';
+      raise exception 'The work item is unavailable in this grant scope.' using errcode = '42501';
     end if;
     data := private.work_item_json(hit.id, true);
     perform private.record_audit(hit.tenant_id, 'work_item.read', 'work_item', hit.id::text, 'allowed');
@@ -268,13 +277,15 @@ declare
   correlation text;
 begin
   if want_item is null or want_version is null or want_version < 1
-     or want_action not in ('claim', 'resolve', 'reopen') then
+     or want_action is null or want_action not in ('claim', 'resolve', 'reopen') then
     raise exception 'The work-item transition envelope is malformed.' using errcode = '22023';
   end if;
   select * into current from private.work_item w where w.id = want_item;
-  if not found then raise exception 'Work item not found.' using errcode = 'P0002'; end if;
+  if not found then
+    raise exception 'The work item is unavailable in this grant scope.' using errcode = '42501';
+  end if;
   if not private.work_item_allowed(current.tenant_id, current.required_capability) then
-    raise exception 'The required exact-tenant capability is missing.' using errcode = '42501';
+    raise exception 'The work item is unavailable in this grant scope.' using errcode = '42501';
   end if;
 
   if want_action = 'claim' then
@@ -358,8 +369,13 @@ grant execute on function public.ops_transition_work_item(uuid,text,bigint,text,
 create or replace function private.registration_readiness_work_item()
 returns trigger language plpgsql security definer set search_path = '' as $$
 begin
-  if new.state = 'open' and (tg_op = 'INSERT' or old.state is distinct from new.state) then
-    perform private.open_work_item(
+  if new.state <> 'open' then
+    return new;
+  end if;
+  if tg_op = 'UPDATE' and old.state is not distinct from new.state then
+    return new;
+  end if;
+  perform private.open_work_item(
       new.tenant_id,
       'registration_readiness.referral',
       'registration_readiness',
@@ -370,7 +386,6 @@ begin
       'tenant:implement',
       'readiness-task:' || md5(new.tenant_id || ':' || new.task_id)
     );
-  end if;
   return new;
 end $$;
 revoke all on function private.registration_readiness_work_item() from public, anon, authenticated;

@@ -225,7 +225,8 @@ begin
 end $$;
 
 rollback;
-\n-- Shared operations work items (20261010030720).
+
+-- Shared operations work items (20261010030720).
 -- LOCAL/DISPOSABLE DATABASES ONLY; the transaction is always rolled back.
 
 begin;
@@ -276,6 +277,7 @@ do $$
 declare
   operator_a uuid := pg_temp.newuser('operator-a@work-items.example');
   operator_b uuid := pg_temp.newuser('operator-b@work-items.example');
+  operator_a_peer uuid := pg_temp.newuser('operator-a-peer@work-items.example');
   shell_only uuid := pg_temp.newuser('shell-only@work-items.example');
   school_only uuid := pg_temp.newuser('school-only@work-items.example');
   stranger uuid := pg_temp.newuser('stranger@work-items.example');
@@ -292,12 +294,14 @@ begin
     (operator_a, 'implementation_manager', 'school', 'work-a', 'platform', now()),
     (operator_b, 'implementation_manager', 'platform', '', 'platform', now()),
     (operator_b, 'implementation_manager', 'school', 'work-b', 'platform', now()),
+    (operator_a_peer, 'implementation_manager', 'platform', '', 'platform', now()),
+    (operator_a_peer, 'implementation_manager', 'school', 'work-a', 'platform', now()),
     (shell_only, 'implementation_manager', 'platform', '', 'platform', now()),
     (school_only, 'implementation_manager', 'school', 'work-a', 'platform', now());
 
   insert into ids values
     ('operator_a', operator_a), ('operator_b', operator_b),
-    ('shell_only', shell_only), ('school_only', school_only), ('stranger', stranger);
+    ('operator_a_peer', operator_a_peer), ('shell_only', shell_only), ('school_only', school_only), ('stranger', stranger);
 
   set local role service_role;
   made := private.open_work_item(
@@ -353,6 +357,10 @@ begin
       format('select public.ops_operations_inbox(%L::uuid)', (select v from work where k = 'b'))) then
     raise exception 'FAILED: an exact-school operator opened another tenant work item';
   end if;
+  if not pg_temp.refused((select v from ids where k = 'operator_a'),
+      format('select public.ops_operations_inbox(%L::uuid)', gen_random_uuid())) then
+    raise exception 'FAILED: a nonexistent item disclosed a different authorization result';
+  end if;
 end $$;
 
 do $$
@@ -365,7 +373,7 @@ begin
   payload := public.ops_transition_work_item(item, 'claim', 1);
   if payload#>>'{data,state}' <> 'claimed'
      or payload#>>'{data,version}' <> '2'
-     or payload#>>'{data,assigned_to}' <> actor::text then
+     or payload#>'{data,assigned_to_me}' is distinct from 'true'::jsonb then
     raise exception 'FAILED: claim did not return the committed version: %', payload;
   end if;
   perform pg_temp.nobody();
@@ -379,6 +387,19 @@ begin
       format('select public.ops_transition_work_item(%L::uuid, %L, 2, null, %L, %L, %L)',
         item, 'resolve', 'reconciled', 'Matched the authoritative record.', 'receipt-a')) then
     raise exception 'FAILED: a foreign-tenant operator resolved the item';
+  end if;
+  if not pg_temp.refused((select v from ids where k = 'operator_a_peer'),
+      format('select public.ops_transition_work_item(%L::uuid, %L, 2, null, %L, %L, %L)',
+        item, 'resolve', 'reconciled', 'Matched the authoritative record.', 'receipt-a')) then
+    raise exception 'FAILED: a same-tenant non-assignee resolved the item';
+  end if;
+  if not pg_temp.refused(actor,
+      format('select public.ops_transition_work_item(%L::uuid, null, 2)', item), '22023') then
+    raise exception 'FAILED: a null action did not fail closed';
+  end if;
+  if not pg_temp.refused(actor,
+      format('select public.ops_transition_work_item(%L::uuid, %L, 1)', gen_random_uuid(), 'claim')) then
+    raise exception 'FAILED: a nonexistent transition target disclosed a different authorization result';
   end if;
 
   perform pg_temp.become(actor);
@@ -418,12 +439,21 @@ begin
   );
   second_id := private.open_work_item(
     'work-a', 'registration_readiness.referral', 'registration_readiness', 'evaluation-idempotent',
-    'registration-readiness-task:idempotent', 'Ignored retry text.',
-    'urgent', 'tenant:implement', 'work-items:test:idempotent'
+    'registration-readiness-task:idempotent', 'Resolve the readiness referral.',
+    'normal', 'tenant:implement', 'work-items:test:idempotent:retry'
   );
   if first_id is distinct from second_id then
-    raise exception 'FAILED: a retried source opened two work items';
+    raise exception 'FAILED: an exact semantic retry opened two work items';
   end if;
+  begin
+    perform private.open_work_item(
+      'work-a', 'registration_readiness.referral', 'registration_readiness', 'evaluation-idempotent',
+      'registration-readiness-task:idempotent', 'A different work-item purpose.',
+      'urgent', 'tenant:implement', 'work-items:test:idempotent:conflict'
+    );
+    raise exception 'FAILED: a divergent source-key retry was silently conflated';
+  exception when invalid_parameter_value then null;
+  end;
 
   insert into private.registration_readiness_evaluations (
     id, tenant_id, subject_id, term_id, requested_by, state, version, generation,
