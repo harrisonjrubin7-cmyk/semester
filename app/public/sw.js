@@ -50,9 +50,7 @@ const MEDIA = `${CACHE_VERSION}-media`;
  * alone.
  */
 const SHARE_CACHE = 'semester-shared';
-// WebKit can resolve a relative string in Cache.put without retaining a key.
-// An explicit absolute GET Request is stable across worker and window contexts.
-const SHARE_KEY = new Request(new URL('./__shared', self.location).href, { method: 'GET' });
+const SHARE_KEY = './__shared';
 
 /**
  * How much played media this worker will hold.
