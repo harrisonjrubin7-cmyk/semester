@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { RequestContext } from '../../../packages/platform/src/index.ts';
+import { PlatformError, type RequestContext } from '../../../packages/platform/src/index.ts';
 import {
   RegistrationReadinessCommands,
   type RegistrationReadinessEvaluator,
@@ -46,7 +46,10 @@ class MemoryReadinessRepository implements RegistrationReadinessRepository {
     if (current && result.record.version === 1) {
       const wanted = result.record.commandLedger[0];
       const earlier = current.commandLedger.find((entry) => entry.idempotencyKey === wanted?.idempotencyKey);
-      if (wanted && earlier && earlier.fingerprint === wanted.fingerprint) {
+      if (wanted && earlier) {
+        if (earlier.fingerprint !== wanted.fingerprint) {
+          throw new PlatformError('idempotency_key_reused', 'That Idempotency-Key was already used for a different request.');
+        }
         return structuredClone({ record: current, receipt: earlier.receipt, event: earlier.event, replayed: true });
       }
     }
@@ -115,6 +118,15 @@ describe('registration-readiness command boundary', () => {
     expect(repository.rows.size).toBe(1);
   });
 
+  it('refuses the same start key when the command body changes', async () => {
+    const evaluator: RegistrationReadinessEvaluator = { evaluate: vi.fn() };
+    const { commands } = rig(evaluator);
+    await commands.start(context(), ['student'], { termId: '2027-spring' });
+
+    await expect(commands.start(context(), ['student'], { termId: '2027-fall' }))
+      .rejects.toMatchObject({ code: 'idempotency_key_reused', status: 422 });
+  });
+
   it('requires current student scope, a safe idempotency key and a bounded term', async () => {
     const evaluator: RegistrationReadinessEvaluator = { evaluate: vi.fn() };
     const { commands } = rig(evaluator);
@@ -132,7 +144,7 @@ describe('registration-readiness evaluator worker', () => {
   it('moves a fresh source observation through evaluating to a completed durable outcome', async () => {
     const evaluator: RegistrationReadinessEvaluator = {
       evaluate: vi.fn(async () => ({
-        outcome: 'ready',
+        outcome: 'ready' as const,
         projectionVersion: 8,
         sourceObservedAt: '2026-10-10T11:55:00.000Z',
         freshUntil: '2026-10-10T12:05:00.000Z',
@@ -204,7 +216,7 @@ describe('registration-readiness evaluator worker', () => {
   it('replays a completed worker command without calling the source twice', async () => {
     const evaluator: RegistrationReadinessEvaluator = {
       evaluate: vi.fn(async () => ({
-        outcome: 'blocked',
+        outcome: 'blocked' as const,
         projectionVersion: 9,
         sourceObservedAt: '2026-10-10T11:55:00.000Z',
         freshUntil: '2026-10-10T12:05:00.000Z',
