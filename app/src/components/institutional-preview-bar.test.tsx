@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { eraseDevice } from '../lib/erase';
 import { InstitutionalPreviewBar } from './InstitutionalPreviewBar';
 
-vi.mock('../lib/erase', () => ({ eraseDevice: vi.fn(async () => ({ keys: 0 })) }));
+vi.mock('../lib/erase', () => ({ eraseDevice: vi.fn(async () => ({ keys: 0, stores: [] })) }));
 import { InstitutionalPreviewProvider } from './institutional/PreviewContext';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;

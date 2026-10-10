@@ -160,11 +160,12 @@ export async function openPort(): Promise<Port> {
 }
 
 /** Empties the outbox. Called by Erase device, which must reach every database. */
-export async function clearOutbox(): Promise<void> {
+export async function clearOutbox(): Promise<boolean> {
   try {
     await idbPort().clear();
+    return true;
   } catch {
-    // Nothing was ever stored where it could not be opened.
+    return false;
   }
 }
 

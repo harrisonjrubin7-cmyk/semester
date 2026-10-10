@@ -1565,3 +1565,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Add truthful per-store completion evidence before classifying a swallowed unavailable-store clear as success; keep post-reload provider-revocation results separate from device storage.
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 truthful device-erase completion — automation pass 10, integration slice 75
+
+- [x] Merge current `origin/main` `0b1522dc` into the clean branch as slice base `481f6d7d`; confirm its guardian calendar reader/history contains no equivalent device-erase completion contract. Inspect final `b8d685e1`; its sole net institution-gateway test does not overlap.
+- [x] Preserve Semester-prefix scoping, stop-writing order, provider-withdrawal-before-token-removal, typed confirmation and explicit account non-effect.
+- [x] Verify each prefixed Web Storage removal and return the exact confirmed store list on a complete erase.
+- [x] Attempt every device storage area after either a thrown failure or false completion result, then throw one bounded partial receipt instead of reloading or claiming success.
+- [x] Make the repository database wipe report unavailable-handle and transaction failures; make snapshot, outbox, vault, engine and shared-cache clears return truthful completion.
+- [x] Prove the core regression red against prior swallowed failure; cover thrown and boolean refusals, a silent Web Storage no-op and continued attempts through the final cache.
+- [x] Pass 104/104 focused and adjacent erase, outbox, engine, history, classified-attachment, Privacy, institutional-sample and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the six existing post-merge lint warnings and build chunk-size warning.
+- [x] Pass 9/9 token-export tests, 69/69 direct design contracts, design audit with no new violation and the CSS ledger check.
+- [ ] Aggregate design report wrapper — writes the unchanged report, then exits because this shell has no `npm`; no aggregate wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-storage slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — the active skill stops at mandatory preflight because `hawk` is not installed; no target, scan, finding result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep post-reload provider-withdrawal results separate from confirmed local storage removal; do not widen this slice into provider activation or account deletion.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

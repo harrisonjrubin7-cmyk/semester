@@ -1,10 +1,22 @@
 # Handoff integration status
 
-**Automation pass** 19 of 120 (continued program; runner pass 5) · **Integration slice** 70 · **Date** 2026-10-10 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `b7c61944` · **Latest observed `origin/main`** `8c3acf89`
+**Automation pass** 10 of 120 · **Integration slice** 75 · **Date** 2026-10-10 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `481f6d7d` · **Latest observed `origin/main`** `b8d685e1`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 10 / integration slice 75
+
+- The clean branch merged `origin/main` `0b1522dc` as `481f6d7d` before selection. Its guardian calendar projection reader/history adds no equivalent device-erase completion receipt or storage refusal contract. The final dirty-tree fetch observed `b8d685e1`; its only net change is an institution gateway test, with no device-storage or control-file overlap.
+- `eraseDevice()` now attempts every local storage area even after one refuses access, returns the exact confirmed store list on success and throws `DeviceEraseIncompleteError` with both failed and confirmed areas after a partial erase. `localStorage` and `sessionStorage` keys are counted only after a read-back confirms removal.
+- The repository store wipe now reports transaction error/abort or an unavailable database handle. Snapshot, outbox, vault, engine and shared-cache clear helpers return false instead of converting a refusal into success; existing throwing file, draft and classified-attachment clears and the history boolean join the same aggregator.
+- Privacy and the institutional sample retain the slice-74 caller behavior: they reload only after complete confirmation. A partial result leaves the current surface visible, re-enables retry and does not claim the device or sample reset succeeded. Provider withdrawal remains attempted before token removal, but its post-reload result is a separate external boundary.
+- The core regression failed before implementation when `eraseDevice()` resolved after a refused file store. It now covers thrown failures, boolean refusal, a silent `localStorage.removeItem` no-op and continued attempts through the final shared cache. Eight focused/adjacent files pass 104/104 tests, including the repository history structural guard and root-unmount coverage.
+- TypeScript, lint, university typecheck and production build pass. Lint reports the six existing warnings after the merged guardian slice; the build retains its chunk-size warning. Token export passes 9/9, the direct design-system contracts pass 69/69, design audit adds no violation and CSS remains within its ledger.
+- The aggregate design report writes the unchanged report, then exits because this shell has no `npm`; no aggregate wrapper pass is claimed. Ordered and shuffled full suites were not rerun for this bounded device-storage slice; the last recorded full-suite baseline remains pass 30's 23,872 tests.
+- The active HawkScan skill stopped at mandatory preflight because `hawk` is not installed. No target, scan, finding result or security pass is claimed.
+- No route, dependency, schema, policy, server operation, provider configuration, deployment or external system changed. The next safe slice requires a fresh dependency/consequence ranking; authenticated Import remains blocked on a deployed private scanner/extractor and post-reload provider withdrawal remains separate.
 
 ## Evidence locked in current automation pass 19 / integration slice 70
 
