@@ -31,6 +31,8 @@ class Stale extends Error {
 
 const pull = vi.fn();
 const push = vi.fn();
+const persist = vi.fn();
+const flushNow = vi.fn(async () => {});
 let db = true;
 
 vi.mock('../lib/cloud', () => ({
@@ -51,8 +53,8 @@ vi.mock('../lib/cloud', () => ({
 // which path the store believes it is on.
 vi.mock('./persist', () => ({
   available: () => db,
-  persist: () => {},
-  flushNow: async () => {},
+  persist: (...args: unknown[]) => persist(...args),
+  flushNow: () => flushNow(),
   flushOnLeave: () => {},
   whileWriting: () => {},
   load: async () => null,
@@ -123,6 +125,8 @@ beforeEach(async () => {
   db = true;
   pull.mockReset();
   push.mockReset();
+  persist.mockReset();
+  flushNow.mockReset();
   localStorage.clear();
   localStorage.setItem('semester.v1', JSON.stringify({ schemaVersion: 6, seenOnboarding: true, registered: true }));
   localStorage.setItem(SEEN_KEY, JSON.stringify({ state: 's1', courses: {} }));
@@ -142,6 +146,44 @@ afterEach(async () => {
 });
 
 describe('an edit goes up on the database path', () => {
+  it('makes an accepted account copy durable before recording it as seen', async () => {
+    const local = {
+      id: 'local-task', title: 'Already here', date: null, time: '', note: '',
+      courseId: null, done: false, created: 1,
+    };
+    const remote = {
+      id: 'remote-task', title: 'From the account', date: null, time: '', note: '',
+      courseId: null, done: true, created: 2,
+    };
+    localStorage.setItem(
+      'semester.v1',
+      JSON.stringify({ schemaVersion: 6, seenOnboarding: true, registered: true, tasks: [local] }),
+    );
+    localStorage.removeItem(SEEN_KEY);
+    pull.mockResolvedValue({
+      state: { tasks: [remote] },
+      courses: [],
+      updated: 2,
+      seen: { state: 'account-v2', courses: {} },
+    });
+
+    await mount();
+    await wait(3_000);
+    expect(store.asking).not.toBeNull();
+    persist.mockClear();
+
+    await act(async () => {
+      await store.settle('merge', null);
+    });
+
+    const written = persist.mock.calls.at(-1)?.[0] as { tasks?: { id: string }[] } | undefined;
+    expect(written?.tasks?.map((task) => task.id).sort()).toEqual(['local-task', 'remote-task']);
+    expect(flushNow).toHaveBeenCalledOnce();
+    expect(store.state.tasks.map((task) => task.id).sort()).toEqual(['local-task', 'remote-task']);
+    expect(JSON.parse(localStorage.getItem(SEEN_KEY) || '{}').state).toBe('account-v2');
+    expect(store.asking).toBeNull();
+  });
+
   it('pushes after an edit, not only at sign-in', async () => {
     await mount();
     await wait(3_000);
