@@ -1403,6 +1403,8 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // The service-only registration-readiness store emits the command's minimized event in the save transaction.
       // No route or worker calls that store yet, so this is repository evidence rather than a mounted producer.
       'supabase/migrations/20261009160000_registration_readiness_store.sql',
+      // The expansion RPC preserves the same atomic minimized outbox emission while accepting rolling clients.
+      'supabase/migrations/20261010140000_registration_readiness_timeout_contract.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);
