@@ -59,7 +59,7 @@ jobs:
         env:
           HOSTING_BROWSER_ENGINE: ${{ matrix.browser }}
           HOSTING_PLAYWRIGHT: /tmp/unified-hosting-browser/node_modules/playwright
-        run: node app/scripts/unified-hosting-browser.mjs
+        run: timeout --signal=TERM 3m node app/scripts/unified-hosting-browser.mjs
 
       - name: Keep browser evidence
         if: always()
