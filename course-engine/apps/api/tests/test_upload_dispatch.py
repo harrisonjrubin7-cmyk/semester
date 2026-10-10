@@ -42,6 +42,9 @@ def test_sqlite_reclaims_naive_stale_dispatch_timestamp():
         sender = RecordingSender()
 
         assert dispatch_upload_completion(db, receipt_id, sender) is True
+        # Production bulk updates intentionally bypass the session identity map.
+        # Expire it so this assertion verifies the committed database state.
+        db.expire_all()
         refreshed = db.scalar(
             select(UploadCompletion).where(UploadCompletion.id == receipt_id)
         )
