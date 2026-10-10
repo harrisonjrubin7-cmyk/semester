@@ -58,7 +58,7 @@ describe('Postgres registration-readiness repository', () => {
       args: {
         want_tenant: 'school-a',
         want_expected_version: 0,
-        want_fingerprint: '["requested"]',
+        want_fingerprint: '["requested","student-1","fall-2026"]',
         want_result: started,
       },
     });
@@ -97,6 +97,18 @@ describe('Postgres registration-readiness repository', () => {
     expect(fake.calls.at(-1)).toEqual({
       name: 'registration_readiness_get',
       args: { want_tenant: 'school-b', want_evaluation: 'evaluation-1' },
+    });
+  });
+
+  it('maps only the database idempotency conflict to the public divergent-retry error', async () => {
+    const fake = fakeClient();
+    const repository = new PostgresRegistrationReadinessRepository({ client: fake.client });
+    fake.fail({ code: 'SC409', message: 'The readiness idempotency key was reused for another command.', details: 'private data' });
+
+    await expect(repository.save(started)).rejects.toMatchObject({
+      code: 'idempotency_key_reused',
+      status: 422,
+      message: 'That Idempotency-Key was already used for a different request.',
     });
   });
 
