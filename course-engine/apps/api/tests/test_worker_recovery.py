@@ -110,13 +110,29 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
             lease_generation=1,
             lease_expires_at=now - timedelta(seconds=1),
         )
-        session.add_all([expired_extract, expired_generation, active, revoked, inactive])
+        inactive_queued = BackgroundJob(
+            course_id=course.id,
+            target_id=deleted_target.id,
+            job_type="regenerate:study_guide",
+            status=JobStatus.queued,
+        )
+        session.add_all(
+            [
+                expired_extract,
+                expired_generation,
+                active,
+                revoked,
+                inactive,
+                inactive_queued,
+            ]
+        )
         session.commit()
         expected = {
             ("extract_document", str(expired_extract.id)),
             ("generate_study_asset", str(expired_generation.id)),
         }
         inactive_id = inactive.id
+        inactive_queued_id = inactive_queued.id
 
     worker = _worker_module()
     worker.SessionLocal = testing_session
@@ -133,8 +149,14 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
     with testing_session() as session:
         terminal = session.get(BackgroundJob, inactive_id)
         assert terminal.status == JobStatus.failed
-        assert terminal.revoked_at == now
+        revoked_at = terminal.revoked_at
+        assert revoked_at is not None
+        assert revoked_at.replace(tzinfo=revoked_at.tzinfo or UTC) == now
         assert terminal.error == "Job scope was deleted"
+        queued_terminal = session.get(BackgroundJob, inactive_queued_id)
+        assert queued_terminal.status == JobStatus.failed
+        assert queued_terminal.revoked_at is not None
+        assert queued_terminal.error == "Job scope was deleted"
 
 
 def test_lease_heartbeat_runs_while_worker_operation_is_blocked(monkeypatch):
@@ -158,3 +180,34 @@ def test_lease_heartbeat_runs_while_worker_operation_is_blocked(monkeypatch):
         time.sleep(0.04)
 
     assert len(calls) >= 2
+
+
+def test_lease_heartbeat_surfaces_loss_and_stops_after_body_failure(monkeypatch):
+    worker = _worker_module()
+    monkeypatch.setattr(worker, "JOB_HEARTBEAT_INTERVAL_SECONDS", 0.01, raising=False)
+    calls = []
+
+    class FakeSession:
+        def close(self):
+            pass
+
+    monkeypatch.setattr(worker, "SessionLocal", FakeSession)
+    monkeypatch.setattr(
+        worker,
+        "heartbeat_job",
+        lambda *_args: calls.append("heartbeat") or False,
+        raising=False,
+    )
+    lease = object()
+    with worker.maintain_job_lease(lease) as lost:
+        time.sleep(0.03)
+        assert lost.is_set()
+
+    stopped_at = len(calls)
+    try:
+        with worker.maintain_job_lease(lease):
+            raise RuntimeError("blocked operation failed")
+    except RuntimeError:
+        pass
+    time.sleep(0.03)
+    assert len(calls) == stopped_at

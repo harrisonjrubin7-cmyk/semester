@@ -8,7 +8,15 @@ from sqlalchemy.pool import StaticPool
 from app.core.database import Base, get_db
 from app.core.security import create_access_token
 from app.main import app
-from app.models.entities import BackgroundJob, Course, JobStatus, StudyAsset, User
+from app.models.entities import (
+    BackgroundJob,
+    Course,
+    JobStatus,
+    ReviewItem,
+    ReviewStatus,
+    StudyAsset,
+    User,
+)
 
 
 def _database():
@@ -110,9 +118,17 @@ def test_deleting_study_asset_revokes_its_inflight_regeneration():
             asset_type="study_guide",
             title="Delete me",
             content={"sections": []},
+            status=ReviewStatus.confirmed,
         )
         session.add(asset)
         session.flush()
+        review = ReviewItem(
+            course_id=course.id,
+            item_type="generated_study_asset",
+            title="Review deleted asset",
+            payload={"asset_id": str(asset.id), "generation_version": 1},
+        )
+        session.add(review)
         job = BackgroundJob(
             course_id=course.id,
             target_id=asset.id,
@@ -121,7 +137,7 @@ def test_deleting_study_asset_revokes_its_inflight_regeneration():
         )
         session.add(job)
         session.commit()
-        owner_id, asset_id, job_id = owner.id, asset.id, job.id
+        owner_id, asset_id, job_id, review_id = owner.id, asset.id, job.id, review.id
 
     def override_db():
         with testing_session() as session:
@@ -143,5 +159,13 @@ def test_deleting_study_asset_revokes_its_inflight_regeneration():
             assert revoked.status == JobStatus.failed
             assert revoked.error == "Study asset deleted"
             assert revoked.revoked_at is not None
+        assert client.patch(
+            f"/api/v1/review-items/{review_id}",
+            json={"status": "rejected"},
+            headers=headers,
+        ).status_code == 409
+        assert client.post(
+            f"/api/v1/study-assets/{asset_id}/exports/pdf", headers=headers
+        ).status_code == 404
     finally:
         app.dependency_overrides.clear()
