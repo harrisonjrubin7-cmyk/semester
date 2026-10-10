@@ -28,11 +28,12 @@ the directory on exit.
 
 The public [developer-tools topic](https://github.com/topics/developer-tools)
 is volatile, so coverage is recorded against a dated snapshot rather than
-implied to be permanent. On 2026-10-09, a refreshed review of the first four
-topic pages displayed 80 repository cards covering 80 unique repositories.
+implied to be permanent. On 2026-10-09, a refreshed review of the first five
+topic pages displayed 100 repository cards covering 100 unique repositories.
 The ranking changed during the same day: 21 repositories not present in the
-earlier three-page snapshot were reviewed and added below. Every repository in
-the refreshed four-page snapshot is accounted for. ShellCheck closed the
+earlier three-page snapshot were reviewed in the page-four increment, followed
+by the 20 repositories on page five. Every repository in the refreshed
+five-page snapshot is accounted for. ShellCheck closed the
 standalone-script lint gap; the other repositories did not supply a new
 Semester product or CI requirement.
 
@@ -86,6 +87,21 @@ Semester product or CI requirement.
 | [Pyroscope](https://github.com/grafana/pyroscope) | Continuous runtime profiling should follow an observed production performance gap and a telemetry, access and retention review. The current repository has no requirement that justifies adding its collection and storage boundary. |
 | [Fireworks Tech Graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph) | AI-generated architecture diagrams duplicate the repository's Mermaid workflow and would add external model processing plus generated-artifact provenance concerns without a missing diagram requirement. |
 | [Rea](https://github.com/morluto/rea) | An agent for reverse-engineering applications and native binaries has no legitimate Semester product or CI role and would expand the execution, security and legal-review boundary. |
+| [JSON Hero](https://github.com/triggerdotdev/jsonhero-web) | A standalone JSON explorer duplicates browser developer tools and existing command-line inspection paths. It does not provide a deterministic build, validation or product requirement. |
+| [Omnigent](https://github.com/omnigent-ai/omnigent), [Munder Difflin](https://github.com/HarnessMD/munder-difflin), [Superplane](https://github.com/superplanehq/superplane) and [Sweep](https://github.com/sweepai/sweep) | Agent harness, orchestration and coding-assistant platforms overlap Semester's reviewed development environment and would expand its execution, repository-data or credential boundary without a measured requirement. |
+| [Omni Tools](https://github.com/iib0011/omni-tools) | Like IT Tools and DevToys, a general-purpose web utility collection is a personal workstation choice rather than a repository, CI or student-facing dependency. |
+| [Claude Code Tips](https://github.com/ykdojo/claude-code-tips) and [skill](https://github.com/anbeime/skill) | Tutorials and skill catalogues are discovery material, not auditable dependencies. Each underlying workflow requires individual review; `anbeime/skill` also had no detected licence when evaluated. |
+| [Terragrunt](https://github.com/gruntwork-io/terragrunt) | Semester does not use an OpenTofu/Terraform infrastructure stack. Adding its orchestration layer would create a second infrastructure path rather than strengthen the current Vercel/Supabase deployment evidence. |
+| [Graft](https://github.com/trailhq/Graft) | A code-graph context service would create a persistent derived representation of repository content. Existing repository-native inventories cover the current need; any external indexing requires a data-flow, retention and access review. |
+| [npkill](https://github.com/voidcosmos/npkill) | Interactive deletion of workstation `node_modules` directories is a personal disk-maintenance operation, not a reproducible repository or CI capability. It must not be automated against managed worktrees. |
+| [Worktrunk](https://github.com/max-sixty/worktrunk) | Another worktree manager would overlap the managed worktree lifecycle already supplied by the development environment and has no application or CI role. No licence was detected when evaluated. |
+| [HTTP Prompt](https://github.com/httpie/http-prompt) and [xh](https://github.com/ducaale/xh) | These are additional HTTP/API clients. As with HTTPie, Bruno, Hoppscotch and Posting, installing a client does not create the stable published API contract Semester needs first. |
+| [Karate](https://github.com/karatelabs/karate) | A Java test-automation framework would add a JVM test stack and duplicate the repository's reviewed Vitest, Playwright and load-testing paths without an uncovered acceptance or contract-test requirement. |
+| [WWDC](https://github.com/insidegui/WWDC) | An unofficial macOS conference-video application is a personal learning tool, not a Semester product, build or release dependency. |
+| [FalkorDB](https://github.com/FalkorDB/FalkorDB) | A graph database would create a second persistence architecture outside the governed Supabase/PostgreSQL schema, policies, backup and restore path. |
+| [devenv](https://github.com/cachix/devenv) | A Nix-based developer environment could be reconsidered for a measured reproducibility gap, but adding it now would create a parallel environment definition alongside the validated Node, package-manager and CI setup. |
+| [API Mega List](https://github.com/cporter202/API-mega-list) | Like Public API Lists, an API discovery catalogue is not authoritative integration, security, procurement or availability evidence. No licence was detected when evaluated. |
+| [App Store Connect CLI](https://github.com/rorkai/App-Store-Connect-CLI) | Semester is currently a web application with no iOS, TestFlight or App Store Connect release path, so this automation does not serve its build or deployment requirements. |
 
 Revisit a deferred tool only when a concrete product or engineering requirement
 exists, and repeat the ownership, licence, provenance, permissions, maintenance,

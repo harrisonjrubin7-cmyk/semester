@@ -147,6 +147,16 @@ begin
       'evaluate-1', 'request-21234567', 'registration.readiness_evaluated',
       '2026-10-09T15:01:00.000Z')
   );
+  perform pg_temp.refuses('reconciliation requires a completed evaluation outcome', format(
+    'select public.registration_readiness_save(%L, 2, %L, %L::jsonb)',
+    'readiness-a', '["reconciling",null]', pg_temp.result(
+      'eval-1', 'readiness-a', 3, 'reconciling', 1, null,
+      'reconcile-too-early', 'request-22234567', 'registration.readiness_reconciliation_requested',
+      '2026-10-09T15:01:30.000Z'
+    )::text
+  ), 'cannot move');
+  perform pg_temp.counted('the refused reconciliation did not move the aggregate',
+    (select version from private.registration_readiness_evaluations where id = 'eval-1'), 2);
   perform pg_temp.refuses('a stale aggregate version', format(
     'select public.registration_readiness_save(%L, 1, %L, %L::jsonb)',
     'readiness-a', '["ready",1]', pg_temp.result('eval-1', 'readiness-a', 3, 'ready', 1, 1,

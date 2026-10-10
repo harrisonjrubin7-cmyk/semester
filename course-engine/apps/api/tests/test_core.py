@@ -3,8 +3,16 @@ from uuid import uuid4
 
 import pytest
 
+from app.api.routes import _citation_label
+from app.models.entities import SourceChunk, SourceDocument
 from app.schemas import GuideContent, ReviewPatch
-from app.services.citations import UnsupportedCitationError, deduplicate_flashcards, validate_guide
+from app.services.citations import (
+    UnsupportedCitationError,
+    canonicalize_study_asset_citations,
+    deduplicate_flashcards,
+    validate_guide,
+    validate_study_asset_content,
+)
 from app.services.conflicts import DateFact, find_date_conflicts, normalize_title
 from app.services.dates import parse_explicit_date
 
@@ -45,6 +53,50 @@ def test_flashcard_deduplication_normalizes_case_and_spacing():
     assert len(deduplicate_flashcards(cards)) == 2
 
 
+def test_flashcard_source_labels_are_derived_from_authoritative_citations():
+    citation_id = uuid4()
+    content = {
+        "cards": [{
+            "id": str(uuid4()),
+            "front": "When is the exam?",
+            "back": "December 10",
+            "difficulty": 3,
+            "citation_ids": [str(citation_id)],
+            "source_label": "Fabricated source label",
+        }],
+        "citations": {str(citation_id): {"label": "Also fabricated", "quote": "Wrong"}},
+    }
+    catalog = {
+        str(citation_id): {"label": "Syllabus.pdf, p. 1", "quote": "Final exam: December 10."}
+    }
+
+    canonical = canonicalize_study_asset_citations("flashcards", content, catalog)
+
+    assert canonical["citations"] == catalog
+    assert canonical["cards"][0]["source_label"] == "Syllabus.pdf, p. 1"
+    assert content["cards"][0]["source_label"] == "Fabricated source label"
+
+
+def test_archive_member_is_included_in_authoritative_citation_label():
+    document = SourceDocument(
+        course_id=uuid4(),
+        filename="week-one.zip",
+        storage_key="private/originals/week-one.zip",
+        mime_type="application/zip",
+        size_bytes=100,
+        sha256="a" * 64,
+    )
+    chunk = SourceChunk(
+        document_id=uuid4(),
+        chunk_index=0,
+        content="Lecture text",
+        page_number=2,
+        metadata_json={"archive_member": "slides/lecture.pdf"},
+    )
+
+    assert _citation_label(document, chunk) == "week-one.zip › slides/lecture.pdf, p. 2"
+
+
 def test_assignment_title_normalization():
     assert normalize_title("Essay One") == normalize_title("Essay #1")
 
@@ -52,3 +104,27 @@ def test_assignment_title_normalization():
 def test_review_correction_payload_is_bounded():
     with pytest.raises(ValueError, match="256 KB"):
         ReviewPatch(status="confirmed", corrected_payload={"content": "x" * 256_001})
+
+
+def test_study_asset_approval_rejects_empty_or_unknown_citations():
+    allowed = {uuid4()}
+    with pytest.raises(UnsupportedCitationError, match="no cited sections"):
+        validate_study_asset_content("comprehensive_guide", {"sections": []}, allowed)
+    with pytest.raises(UnsupportedCitationError, match="Unknown citations"):
+        validate_study_asset_content(
+            "flashcards",
+            {"cards": [{
+                "id": uuid4(),
+                "front": "Question",
+                "back": "Answer",
+                "difficulty": 3,
+                "citation_ids": [uuid4()],
+            }]},
+            allowed,
+        )
+    with pytest.raises(UnsupportedCitationError, match="invalid"):
+        validate_study_asset_content(
+            "comprehensive_guide",
+            {"sections": [{"citation_ids": list(allowed)}]},
+            allowed,
+        )

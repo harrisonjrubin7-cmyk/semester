@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import csv
+import shutil
+import stat
+import tempfile
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pymupdf as fitz
 from docx import Document
 from openpyxl import load_workbook
 from pptx import Presentation
 
+from app.core.config import settings
 from app.extractors.base import ExtractedChunk
 from app.services.storage import ALLOWED_EXTENSIONS
 
@@ -67,26 +71,84 @@ def extract_csv(path: Path) -> list[ExtractedChunk]:
 
 def safe_zip_members(path: Path, output_dir: Path) -> list[Path]:
     output_dir = output_dir.resolve()
-    results = []
-    with zipfile.ZipFile(path) as archive:
-        total = 0
-        for info in archive.infolist():
-            total += info.file_size
-            if total > 500 * 1024 * 1024 or info.file_size > 100 * 1024 * 1024:
-                raise ValueError("Archive exceeds safe extraction limits")
-            target = (output_dir / info.filename).resolve()
-            if output_dir not in target.parents or info.is_dir():
-                if info.is_dir():
-                    continue
-                raise ValueError("Unsafe archive path")
-            if target.suffix.lower() not in ALLOWED_EXTENSIONS or target.suffix.lower() == ".zip":
-                continue
-            target.parent.mkdir(parents=True, exist_ok=True)
-            with archive.open(info) as source, target.open("wb") as destination:
-                while block := source.read(1024 * 1024):
-                    destination.write(block)
-            results.append(target)
-    return results
+    if output_dir.exists() and any(output_dir.iterdir()):
+        raise ValueError("Extraction output directory must be empty")
+
+    staging = Path(tempfile.mkdtemp(prefix=".archive-", dir=output_dir.parent))
+    extracted_names: list[PurePosixPath] = []
+    try:
+        try:
+            with zipfile.ZipFile(path) as archive:
+                members = archive.infolist()
+                if len(members) > settings.max_archive_entries:
+                    raise ValueError(
+                        f"Archive contains more than {settings.max_archive_entries} entries"
+                    )
+
+                seen: set[str] = set()
+                expanded = 0
+                for info in members:
+                    member = PurePosixPath(info.filename)
+                    canonical_name = member.as_posix()
+                    if (
+                        member.is_absolute()
+                        or ".." in member.parts
+                        or "\\" in info.filename
+                        or canonical_name in {"", "."}
+                    ):
+                        raise ValueError("Unsafe archive path")
+                    if canonical_name in seen:
+                        raise ValueError(f"Archive contains duplicate member: {canonical_name}")
+                    seen.add(canonical_name)
+                    if stat.S_ISLNK((info.external_attr >> 16) & 0xFFFF):
+                        raise ValueError(f"Archive contains symbolic link: {canonical_name}")
+                    if info.file_size > settings.max_upload_bytes:
+                        raise ValueError(
+                            f"Archive member exceeds {settings.max_upload_bytes} bytes"
+                        )
+                    expanded += info.file_size
+                    if expanded > settings.max_archive_expanded_bytes:
+                        raise ValueError(
+                            "Archive expanded data exceeds "
+                            f"{settings.max_archive_expanded_bytes} bytes"
+                        )
+
+                actual_expanded = 0
+                for info in members:
+                    if info.is_dir():
+                        continue
+                    member = PurePosixPath(info.filename)
+                    suffix = member.suffix.lower()
+                    if suffix not in ALLOWED_EXTENSIONS or suffix == ".zip":
+                        continue
+                    target = staging.joinpath(*member.parts)
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    member_size = 0
+                    with archive.open(info) as source, target.open("xb") as destination:
+                        while block := source.read(1024 * 1024):
+                            member_size += len(block)
+                            actual_expanded += len(block)
+                            if member_size > settings.max_upload_bytes:
+                                raise ValueError(
+                                    f"Archive member exceeds {settings.max_upload_bytes} bytes"
+                                )
+                            if actual_expanded > settings.max_archive_expanded_bytes:
+                                raise ValueError(
+                                    "Archive expanded data exceeds "
+                                    f"{settings.max_archive_expanded_bytes} bytes"
+                                )
+                            destination.write(block)
+                    extracted_names.append(member)
+        except (zipfile.BadZipFile, zipfile.LargeZipFile) as exc:
+            raise ValueError("Invalid ZIP archive") from exc
+
+        if output_dir.exists():
+            output_dir.rmdir()
+        staging.replace(output_dir)
+        return [output_dir.joinpath(*member.parts) for member in extracted_names]
+    except BaseException:
+        shutil.rmtree(staging, ignore_errors=True)
+        raise
 
 
 def extractor_for(path: Path):
