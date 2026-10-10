@@ -91,6 +91,12 @@ describe('classifying a failure', () => {
     expect(failure(new ProviderHttpError(408))).toMatchObject({ category: 'provider_unavailable' });
     expect(failure(new ProviderHttpError(422))).toMatchObject({ category: 'schema_validation', outcome: 'permanent_failure' });
     expect(failure(new ProviderHttpError(404))).toMatchObject({ category: 'schema_validation' });
+    const foreign = Object.assign(new Error('The provider answered 503'), {
+      name: 'ProviderHttpError', status: 503, retryAfterMs: 15_000,
+    });
+    expect(failure(foreign)).toMatchObject({
+      category: 'provider_unavailable', outcome: 'retryable_failure', retryAfterMs: 15_000,
+    });
     expect(failure(new Error('ECONNRESET'))).toMatchObject({ category: 'provider_unavailable', code: 'provider_error', outcome: 'retryable_failure' });
     expect(failure('not even an error')).toMatchObject({ category: 'provider_unavailable' });
   });
@@ -324,6 +330,21 @@ describe('the runtime the tick is handed', () => {
 
     const without = providerRuntime().clientFor(context(apiKeyDeclaration));
     expect(await refuses(without.call(async () => undefined))).toMatchObject({ reason: 'not_configured' });
+  });
+
+  it('requires a connection-scoped credential pointer for live adapters and uses that pointer', async () => {
+    const live = { ...apiKeyDeclaration, mock: false };
+    const alternate = 'vault:tenants/school-a/canvas';
+    const backend = memoryBackend({ [alternate]: { value: 'connection-secret', version: 'v1', rotatedAt } });
+    const credentials = { broker: new LeaseBroker({ backend, now: () => t0, audit: () => undefined }) };
+
+    const missing = providerRuntime({ credentials }).clientFor(context(live));
+    expect(await refuses(missing.call(async () => undefined))).toMatchObject({ reason: 'not_configured' });
+    expect(backend.reads).toEqual([]);
+
+    const scoped = providerRuntime({ credentials }).clientFor({ ...context(live), credentialReference: alternate });
+    await expect(scoped.call(async (auth) => auth.secret)).resolves.toBe('connection-secret');
+    expect(backend.reads).toEqual([alternate]);
   });
 
   it('classifies with the same function the worker would have imported', () => {

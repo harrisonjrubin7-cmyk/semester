@@ -121,6 +121,7 @@ describe('the workspace aliases', () => {
       expect(vite, `${name} is not aliased in vite.config.ts`).toContain(`'${name}'`);
     }
   });
+
 });
 
 describe('each rule can fail', () => {

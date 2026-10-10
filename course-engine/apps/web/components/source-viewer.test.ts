@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatSourceLocation } from "./source-viewer";
+import { formatExtractionConfidence, formatSourceLocation } from "./source-viewer";
 import type { SourceChunk } from "./workspace-types";
 
 const chunk = (overrides: Partial<SourceChunk>): SourceChunk => ({
@@ -21,5 +21,9 @@ describe("source locations", () => {
     expect(formatSourceLocation(chunk({ start_seconds: 65, end_seconds: 130 }))).toBe("1:05–2:10");
     expect(formatSourceLocation(chunk({ start_seconds: null, end_seconds: null }))).toBe("Extract 1");
     expect(formatSourceLocation(chunk({ chunk_index: 2 }))).toBe("Extract 3");
+  });
+
+  it("labels unmeasured extraction confidence without inventing a percentage", () => {
+    expect(formatExtractionConfidence(null)).toBe("Extraction confidence not measured");
   });
 });

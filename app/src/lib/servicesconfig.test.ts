@@ -40,6 +40,7 @@ describe('root vercel.json services carry what each folder file says', () => {
       { source: '/api/institution/(.*)', destination: { service: 'api' } },
       { source: '/api/productivity', destination: { service: 'api' } },
       { source: '/api/productivity/(.*)', destination: { service: 'api' } },
+      { source: '/api', destination: { service: 'api' } },
       { source: '/api/(.*)', destination: { service: 'api' } },
     ]);
     expect(root.rewrites[0]).toEqual({

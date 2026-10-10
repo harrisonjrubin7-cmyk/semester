@@ -18,6 +18,7 @@ Start with [`CONTRIBUTING.md`](../../CONTRIBUTING.md) for the flow, then [`ONBOA
 | --- | --- | --- |
 | [`REPO-MAP.md`](REPO-MAP.md) | reference | What lives in each directory, and the dependency rules a test enforces today. |
 | [`CODING-STANDARDS.md`](CODING-STANDARDS.md) | reference | Each standard, what holds it, and a separate section of proposals that are not in force. |
+| [`course-engine-ci.md`](course-engine-ci.md) | reference | The isolated Course Engine API, migration and web source gate. |
 
 ## Do
 

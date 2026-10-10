@@ -4,6 +4,7 @@ import { MOCK_SIS } from '../../src/lib/integration/mock-sis.ts';
 import { validateAdapterRegistry } from './registry-preflight.ts';
 import { ADAPTERS } from './registry.ts';
 import type { RegisteredAdapter } from './tick.ts';
+import { CANVAS_READ_ADAPTER } from '../../../packages/platform/src/canvas-read-adapter.ts';
 
 const live = (patch: Partial<AdapterDeclaration> = {}): RegisteredAdapter => ({
   declaration: { ...MOCK_SIS, id: 'live_sis', mock: false, ...patch },
@@ -13,6 +14,8 @@ const live = (patch: Partial<AdapterDeclaration> = {}): RegisteredAdapter => ({
 describe('the live adapter registry', () => {
   it('holds no mock, nothing invalid, and no two adapters for one connection', () => {
     expect(validateAdapterRegistry(ADAPTERS)).toEqual([]);
+    expect(ADAPTERS).toEqual([CANVAS_READ_ADAPTER]);
+    expect(ADAPTERS.every(({ declaration }) => declaration.direction === 'read')).toBe(true);
   });
 
   it('accepts distinct valid live claims without changing the input', () => {
