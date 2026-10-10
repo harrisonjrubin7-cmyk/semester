@@ -33,8 +33,8 @@ Counts, so that the shape is visible before the detail:
 
 | | Part A (§46–63) | Part B (§86–128) |
 | --- | --- | --- |
-| Built | 4 | 24 |
-| Partly | 14 | 13 |
+| Built | 4 | 25 |
+| Partly | 14 | 12 |
 | Absent | 3 | 6 |
 | Conflict | 2 | 0 |
 | Cannot run | 1 | — |
@@ -539,7 +539,7 @@ went badly, a deck you are missing more than getting.
 | 91 | Assignment system | Partly | `Item` in `lib/types.ts` — see below |
 | 92 | Assignment subtasks | Partly | `lib/assignment.ts` plans and saves as tasks; no subtask field on an item |
 | 93 | Priority engine | **Built** | `lib/worth.ts`, `lib/revise.ts`, `lib/atrisk.ts` |
-| 94 | Academic calendar | Partly | `screens/Calendar.tsx` — Day, Week, Month, Semester; no Agenda view |
+| 94 | Academic calendar | Built | `screens/Calendar.tsx` — Day, Week, Month, Semester, and Agenda (`lib/agenda.ts`, the next 14 days as a list) |
 | 95 | Semester timeline | Built | the Semester view |
 | 96 | Workload heatmap | **Absent** | nearest is Today's Week tab, `lib/ahead.ts` |
 | 97 | Smart study planner | **Built** | `lib/revise.ts` `planFor`, `lib/sessions.ts` |

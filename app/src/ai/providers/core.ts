@@ -5,6 +5,7 @@ import { forScope, insights } from '../../insights';
 import { factsFrom } from '../../insights/facts';
 import type { Provide, Look } from '../shape';
 import { guideNow, standingNow, startedNow } from '../shape';
+import { AGENDA_DAYS } from '../../lib/agenda';
 
 /**
  * What each screen tells the assistant it is showing.
@@ -152,7 +153,8 @@ export const grades: Provide = (look) => {
 export const calendar: Provide = (look) => {
   const { state, catalog, now } = look;
   const view = state.calView ?? 'month';
-  const days = view === 'day' ? 1 : view === 'week' ? 7 : view === 'month' ? 31 : 200;
+  const days =
+    view === 'day' ? 1 : view === 'week' ? 7 : view === 'month' ? 31 : view === 'agenda' ? AGENDA_DAYS : 200;
 
   const items = datedItems(catalog, now)
     .filter((i) => !i.isPast && i.daysAway <= days)
