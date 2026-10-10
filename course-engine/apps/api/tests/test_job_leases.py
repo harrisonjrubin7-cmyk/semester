@@ -9,7 +9,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.core.database import Base
-from app.models.entities import BackgroundJob, Course, JobStatus, SourceDocument, User
+from app.models.entities import (
+    BackgroundJob,
+    Course,
+    JobStatus,
+    SourceDocument,
+    User,
+)
 from app.services.job_leases import (
     claim_job,
     commit_job,
