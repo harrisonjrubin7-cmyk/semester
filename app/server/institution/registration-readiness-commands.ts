@@ -71,6 +71,16 @@ function requireStudent(context: RequestContext, roles: readonly UniversityRole[
   }
 }
 
+/** Compatibility bridge until PR #1414 carries this header into every gateway context. */
+export function readinessCommandContext(context: RequestContext, request: Request): RequestContext {
+  if (context.idempotencyKey) return context;
+  const key = request.headers.get('idempotency-key');
+  if (!key || !isIdempotencyKey(key)) {
+    throw new PlatformError('invalid_request', 'This action needs a valid Idempotency-Key header.');
+  }
+  return Object.freeze({ ...context, idempotencyKey: key });
+}
+
 function requireCommandKey(context: RequestContext): string {
   if (!context.idempotencyKey || !isIdempotencyKey(context.idempotencyKey)) {
     throw new PlatformError('invalid_request', 'This action needs a valid Idempotency-Key header.');
