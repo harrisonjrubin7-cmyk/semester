@@ -15,7 +15,6 @@ from sqlalchemy.orm import sessionmaker
 from app.api import routes
 from app.core.config import settings
 from app.core.database import Base, get_db
-from app.core.security import create_access_token
 from app.main import app
 from app.models.entities import BackgroundJob, Course, SourceDocument, User
 from app.schemas import UploadComplete
