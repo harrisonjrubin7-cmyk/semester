@@ -14,6 +14,8 @@ import {
 } from './accounts';
 import { refusal } from './api';
 import { askForPlan, plansFor, withdrawPlan } from './plans';
+import type { FinanceCommandReceipt } from './commands';
+import { recoverFinanceReceipt } from './commands';
 
 export interface MyLink {
   tenant_id: string;
@@ -32,7 +34,8 @@ export interface MyAccountApi {
   /** Every school that has linked this account to its student record. */
   accounts(userId: string): Promise<MyAccount[]>;
   /** Asks the school for a plan; the database reads the balance and writes the schedule. */
-  askForPlan(tenantId: string, studentRef: string, installments: number, firstDue: string): Promise<void>;
+  askForPlan(tenantId: string, studentRef: string, installments: number, firstDue: string, commandKey: string): Promise<FinanceCommandReceipt>;
+  planReceipt(tenantId: string, studentRef: string, commandKey: string): Promise<FinanceCommandReceipt>;
   withdrawPlan(id: string): Promise<void>;
 }
 
@@ -85,9 +88,9 @@ export function myAccountApi(db: SupabaseClient): MyAccountApi {
         };
       }));
     },
-    async askForPlan(tenantId, studentRef, installments, firstDue) {
-      await askForPlan(db, tenantId, studentRef, installments, firstDue);
-    },
+    askForPlan: (tenantId, studentRef, installments, firstDue, commandKey) =>
+      askForPlan(db, tenantId, studentRef, installments, firstDue, commandKey),
+    planReceipt: (tenantId, studentRef, commandKey) => recoverFinanceReceipt(db, tenantId, studentRef, 'plan.request', commandKey),
     withdrawPlan: (id) => withdrawPlan(db, id),
   };
 }

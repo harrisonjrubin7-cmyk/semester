@@ -134,10 +134,11 @@ describe('the Security Definer and RLS remediation register', () => {
     const sql = files().map((f) => uncommented(read(`${MIGRATIONS}/${f}`))).join('\n');
     const names = TABLES.map(([t]) => t);
     expect(names).toEqual([...names].sort());
-    expect(new Set(names).size).toBe(SECOND_READING.tables);
+    expect(new Set(names).size).toBe(SECOND_READING.tables + 1);
     expect(READ_TABLES).toBe(45);
-    // The four that arrived between the readings are the ones with a later migration.
-    expect(names.length - READ_TABLES).toBe(4);
+    // Four arrived between the readings; finance command receipts arrived after
+    // that dated snapshot and are held here without rewriting the historical count.
+    expect(names.length - READ_TABLES).toBe(5);
     for (const t of ['private.account_ages', 'public.registration_completions', 'public.registration_holds', 'public.registration_requests']) expect(names, t).toContain(t);
     for (const [table, disposition] of TABLES) {
       const [schema, name] = table.split('.');

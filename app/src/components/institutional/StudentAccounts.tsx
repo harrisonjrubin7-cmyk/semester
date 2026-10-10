@@ -27,6 +27,10 @@ import {
   type AccountCategory, type AccountEntry, type AccountKind, type AccountRequest, type FinanceSettings, type PaymentPlanRecord, type Proposal,
 } from '../../lib/finance/accounts';
 import { financeApi, type FinanceApi, type Reconciliation } from '../../lib/finance/api';
+import {
+  FinanceCommandError, forgetPendingFinanceCommand, newFinanceCommandKey, pendingFinanceCommand, pendingFinanceCommands, rememberPendingFinanceCommand,
+  type FinanceCommandReceipt, type FinanceCommandUiState,
+} from '../../lib/finance/commands';
 import { parseTable, sha256 } from '../../lib/migration/center';
 import { ActionButton, EmptyState, FilePick, Notice, SectionLabel } from '../ui';
 
@@ -160,6 +164,7 @@ function Account({
   const [plans, setPlans] = useState<PaymentPlanRecord[]>([]);
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [note, setNote] = useState('');
+  const [command, setCommand] = useState<{ state: FinanceCommandUiState; key: string; request: Pick<AccountRequest, 'id' | 'tenant_id' | 'student_ref'>; text: string } | null>(null);
   const [period, setPeriod] = useState(periodOf(day));
 
   const fetch = useCallback(
@@ -189,6 +194,12 @@ function Account({
       live = false;
     };
   }, [fetch]);
+  useEffect(() => {
+    if (command) return;
+    const saved = pendingFinanceCommands().find((candidate) => candidate.tenantId === tenantId && candidate.studentRef === studentRef && candidate.action === 'request.withdraw');
+    if (!saved) return;
+    setCommand({ state: 'unknown', key: saved.key, request: { id: saved.resourceId, tenant_id: tenantId, student_ref: studentRef }, text: 'Unknown — a previous withdrawal has no confirmed response. Check for its accepted receipt before trying again.' });
+  }, [command, studentRef, tenantId]);
 
   if (state === 'loading') return <p role="status" style={body}>Loading the account…</p>;
   if (state === 'error') return <Notice alert>{note}</Notice>;
@@ -274,7 +285,22 @@ function Account({
             {mine.map((r) => (
               <li key={r.id} style={{ borderTop: '1px solid var(--app-line)', paddingBlock: 'var(--sp-3)' }}>
                 <span style={{ ...body, display: 'block' }}>{summary(r)}</span>
-                <button type="button" className="bare tappable" onClick={() => api.withdraw(r.id).then(reload).then(onRequested, (e: unknown) => setNote(errorText(e, 'Could not withdraw.')))}>
+                <button type="button" className="bare tappable" onClick={() => {
+                  const key = newFinanceCommandKey('request.withdraw');
+                  rememberPendingFinanceCommand(tenantId, studentRef, 'request.withdraw', key, r.id);
+                  setCommand({ state: 'pending', key, request: r, text: 'Pending — waiting for a withdrawal receipt.' });
+                  api.withdraw(tenantId, studentRef, r.id, 1, key).then(() => reload()).then(() => {
+                    forgetPendingFinanceCommand(tenantId, studentRef, 'request.withdraw', r.id);
+                    setCommand({ state: 'accepted', key, request: r, text: 'Accepted — the request was withdrawn.' });
+                    onRequested();
+                  }, (e: unknown) => {
+                    const state = e instanceof FinanceCommandError ? e.kind : 'unknown';
+                    if (state !== 'unknown') forgetPendingFinanceCommand(tenantId, studentRef, 'request.withdraw', r.id);
+                    setCommand({ state, key, request: r, text: state === 'unknown'
+                      ? 'Unknown — check for the accepted withdrawal receipt before trying again.'
+                      : `${state === 'conflict' ? 'Conflict' : 'Denied'} — ${errorText(e, 'Could not withdraw.')}` });
+                  });
+                }} disabled={command?.state === 'unknown' || command?.state === 'pending'}>
                   Withdraw
                 </button>
               </li>
@@ -282,18 +308,39 @@ function Account({
           </ul>
         </>
       )}
+      {command && (
+        <div>
+          <Notice alert={command.state !== 'accepted' && command.state !== 'pending'}>{command.text}</Notice>
+          {command.state === 'unknown' && (
+            <button type="button" className="btn" onClick={() => api.receipt(tenantId, studentRef, 'request.withdraw', command.key).then(() => reload()).then(() => {
+              forgetPendingFinanceCommand(tenantId, studentRef, 'request.withdraw', command.request.id);
+              setCommand({ ...command, state: 'accepted', text: 'Accepted — recovered the withdrawal receipt.' });
+              onRequested();
+            }, (e: unknown) => {
+              const state = e instanceof FinanceCommandError ? e.kind : 'unknown';
+              if (state !== 'unknown') forgetPendingFinanceCommand(tenantId, studentRef, 'request.withdraw', command.request.id);
+              setCommand({ ...command, state, text: state === 'denied'
+                ? 'Denied — no accepted receipt was available. Review the request before trying again.'
+                : state === 'conflict' ? `Conflict — ${errorText(e, 'The command key conflicts.')}` : 'Unknown — receipt recovery still has no answer. Do not try again yet.' });
+            })}>Check for accepted receipt</button>
+          )}
+        </div>
+      )}
       {note && <Notice alert>{note}</Notice>}
       {request && (
         <RequestForm
+          tenantId={tenantId}
           studentRef={studentRef}
           entries={entries}
           closed={closed}
           settings={settings}
           day={day}
-          onRequest={(p) => api.request(tenantId, p).then(reload).then(() => {
+          onRequest={(p, commandKey) => api.request(tenantId, p, commandKey).then((receipt) => reload().then(() => receipt)).then((receipt) => {
             setNote('');
             onRequested();
+            return receipt;
           })}
+          onRecover={(commandKey) => api.receipt(tenantId, studentRef, 'request.create', commandKey)}
         />
       )}
     </section>
@@ -357,14 +404,16 @@ function StaffPlan({ plans, standing, approve, api, onChanged }: {
 const summary = (r: AccountRequest) => `${r.student_ref} · ${KIND_LABEL[r.kind]} of ${money(r.amount_cents)}, ${r.description}, effective ${r.effective_on}`;
 
 function RequestForm({
-  studentRef, entries, closed, settings, day, onRequest,
+  tenantId, studentRef, entries, closed, settings, day, onRequest, onRecover,
 }: {
+  tenantId: string;
   studentRef: string;
   entries: readonly AccountEntry[];
   closed: readonly string[];
   settings: FinanceSettings;
   day: string;
-  onRequest: (p: Proposal) => Promise<void>;
+  onRequest: (p: Proposal, commandKey: string) => Promise<FinanceCommandReceipt>;
+  onRecover: (commandKey: string) => Promise<FinanceCommandReceipt>;
 }) {
   const [kind, setKind] = useState<AccountKind>('charge');
   const [category, setCategory] = useState<AccountCategory>('tuition');
@@ -374,7 +423,10 @@ function RequestForm({
   const [refId, setRefId] = useState('');
   const [on, setOn] = useState(day);
   const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState('');
+  const [outcome, setOutcome] = useState<{ state: FinanceCommandUiState; key: string; text: string } | null>(() => {
+    const key = pendingFinanceCommand(tenantId, studentRef, 'request.create');
+    return key ? { state: 'unknown', key, text: 'Unknown — a previous request has no confirmed response. Check for its accepted receipt before making another request.' } : null;
+  });
 
   const cats = kind === 'aid_credit' ? AID_CATEGORIES : kind === 'reversal' ? CATEGORIES : CATEGORIES.filter((c) => !AID_CATEGORIES.includes(c));
   const choosable = kind === 'reversal' ? entries.filter((e) => e.kind !== 'reversal') : entries.filter((e) => e.kind === 'payment');
@@ -392,14 +444,24 @@ function RequestForm({
       onSubmit={(e) => {
         e.preventDefault();
         if (problems.length) return;
+        const commandKey = newFinanceCommandKey('request.create');
+        rememberPendingFinanceCommand(tenantId, studentRef, 'request.create', commandKey);
         setBusy(true);
-        setNote('');
-        onRequest(p).then(() => {
+        setOutcome({ state: 'pending', key: commandKey, text: 'Pending — waiting for an accepted receipt.' });
+        onRequest(p, commandKey).then((accepted) => {
+          forgetPendingFinanceCommand(tenantId, studentRef, 'request.create');
           setAmount('');
           setDescription('');
           setProviderRef('');
           setRefId('');
-        }, (err: unknown) => setNote(errorText(err, 'Could not make the request.'))).finally(() => setBusy(false));
+          setOutcome({ state: 'accepted', key: commandKey, text: `Accepted — receipt ${accepted.id}.` });
+        }, (err: unknown) => {
+          const state = err instanceof FinanceCommandError ? err.kind : 'unknown';
+          if (state !== 'unknown') forgetPendingFinanceCommand(tenantId, studentRef, 'request.create');
+          setOutcome({ state, key: commandKey, text: state === 'unknown'
+            ? 'Unknown — no answer came back. Check for the accepted receipt before making another request.'
+            : `${state === 'conflict' ? 'Conflict' : 'Denied'} — ${errorText(err, 'The command was not accepted.')}` });
+        }).finally(() => setBusy(false));
       }}
     >
       <h3 style={h3}>Make a request</h3>
@@ -450,8 +512,35 @@ function RequestForm({
       {(amount || description) && problems.length > 0 && (
         <ul style={{ ...quiet, paddingLeft: 'var(--sp-6)' }}>{problems.map((m) => <li key={m}>{m}</li>)}</ul>
       )}
-      {note && <Notice alert>{note}</Notice>}
-      <button type="submit" className="btn btn-primary btn-block" disabled={busy || problems.length > 0}>{busy ? 'Requesting…' : 'Request'}</button>
+      {outcome && (
+        <div>
+          <Notice alert={outcome.state !== 'accepted' && outcome.state !== 'pending'}>{outcome.text}</Notice>
+          {outcome.state === 'unknown' && (
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                setBusy(true);
+                onRecover(outcome.key).then((accepted) => {
+                  forgetPendingFinanceCommand(tenantId, studentRef, 'request.create');
+                  setOutcome({ state: 'accepted', key: outcome.key, text: `Accepted — recovered receipt ${accepted.id}.` });
+                }, (err: unknown) => {
+                  const state = err instanceof FinanceCommandError ? err.kind : 'unknown';
+                  if (state !== 'unknown') forgetPendingFinanceCommand(tenantId, studentRef, 'request.create');
+                  setOutcome({ state, key: outcome.key, text: state === 'conflict'
+                    ? `Conflict — ${errorText(err, 'The key belongs to another command.')}`
+                    : state === 'denied'
+                      ? 'Denied — no accepted receipt was available to this account. Review the request before resubmitting.'
+                      : 'Unknown — receipt recovery still has no answer. Do not create a new command yet.' });
+                }).finally(() => setBusy(false));
+              }}
+            >
+              Check for accepted receipt
+            </button>
+          )}
+        </div>
+      )}
+      <button type="submit" className="btn btn-primary btn-block" disabled={busy || problems.length > 0 || outcome?.state === 'unknown' || outcome?.state === 'pending'}>{busy ? 'Requesting…' : 'Request'}</button>
     </form>
   );
 }
@@ -459,10 +548,10 @@ function RequestForm({
 // ── The queue ───────────────────────────────────────────────────────────────
 
 function Queue({
-  api, pending, settings, viewerId, approve, approveHigh, onDecided,
+  api, pending, settings, tenantId, viewerId, approve, approveHigh, onDecided,
 }: StudentAccountsProps & { api: FinanceApi; pending: readonly AccountRequest[]; settings: FinanceSettings; onDecided: () => void }) {
-  const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [command, setCommand] = useState<{ state: FinanceCommandUiState; key: string; request: Pick<AccountRequest, 'id' | 'tenant_id' | 'student_ref'>; action: 'request.approve' | 'request.reject'; text: string } | null>(null);
   // The entries a refund or reversal answers, to know who is barred from approving it.
   const [answered, setAnswered] = useState<AccountEntry[]>([]);
   const key = [...new Set(pending.filter((r) => r.reference_entry_id).map((r) => `${r.tenant_id}\u0000${r.student_ref}`))].join('|');
@@ -476,17 +565,62 @@ function Queue({
       live = false;
     };
   }, [api, key]);
+  useEffect(() => {
+    if (command) return;
+    const saved = pendingFinanceCommands().find((candidate) => candidate.tenantId === tenantId
+      && (candidate.action === 'request.approve' || candidate.action === 'request.reject'));
+    if (!saved) return;
+    const action = saved.action as 'request.approve' | 'request.reject';
+    setCommand({
+      state: 'unknown', key: saved.key, action,
+      request: { id: saved.resourceId, tenant_id: saved.tenantId, student_ref: saved.studentRef },
+      text: 'Unknown — a previous decision has no confirmed response. Check for its accepted receipt before deciding again.',
+    });
+  }, [command, tenantId]);
 
-  const act = (work: Promise<void>) => {
+  const decide = (r: AccountRequest, status: 'approved' | 'rejected') => {
+    const action = status === 'approved' ? 'request.approve' : 'request.reject';
+    const key = newFinanceCommandKey(action);
+    rememberPendingFinanceCommand(r.tenant_id, r.student_ref, action, key, r.id);
     setBusy(true);
-    setNote('');
-    work.then(onDecided, (e: unknown) => setNote(errorText(e, 'Could not record the decision.'))).finally(() => setBusy(false));
+    setCommand({ state: 'pending', key, request: r, action, text: 'Pending — waiting for a decision receipt.' });
+    api.decide(r.tenant_id, r.student_ref, r.id, 1, status, '', key).then(() => {
+      forgetPendingFinanceCommand(r.tenant_id, r.student_ref, action, r.id);
+      setCommand({ state: 'accepted', key, request: r, action, text: `Accepted — the request was ${status}.` });
+      onDecided();
+    }, (e: unknown) => {
+      const state = e instanceof FinanceCommandError ? e.kind : 'unknown';
+      if (state !== 'unknown') forgetPendingFinanceCommand(r.tenant_id, r.student_ref, action, r.id);
+      setCommand({ state, key, request: r, action, text: state === 'unknown'
+        ? 'Unknown — check for the accepted decision receipt before trying again.'
+        : `${state === 'conflict' ? 'Conflict' : 'Denied'} — ${errorText(e, 'Could not record the decision.')}` });
+    }).finally(() => setBusy(false));
   };
   return (
     <section aria-label="Requests waiting for a decision" style={{ marginTop: 'var(--sp-6)' }}>
       <h3 style={h3}>Waiting for a decision</h3>
       {!approve && <p style={quiet}>Your account reads these; deciding them needs finance approval.</p>}
-      {note && <Notice alert>{note}</Notice>}
+      {command && (
+        <div>
+          <Notice alert={command.state !== 'accepted' && command.state !== 'pending'}>{command.text}</Notice>
+          {command.state === 'unknown' && (
+            <button type="button" className="btn" onClick={() => {
+              setBusy(true);
+              api.receipt(command.request.tenant_id, command.request.student_ref, command.action, command.key).then(() => {
+                forgetPendingFinanceCommand(command.request.tenant_id, command.request.student_ref, command.action, command.request.id);
+                setCommand({ ...command, state: 'accepted', text: 'Accepted — recovered the decision receipt.' });
+                onDecided();
+              }, (e: unknown) => {
+                const state = e instanceof FinanceCommandError ? e.kind : 'unknown';
+                if (state !== 'unknown') forgetPendingFinanceCommand(command.request.tenant_id, command.request.student_ref, command.action, command.request.id);
+                setCommand({ ...command, state, text: state === 'denied'
+                  ? 'Denied — no accepted receipt was available. Refresh before deciding again.'
+                  : state === 'conflict' ? `Conflict — ${errorText(e, 'The command key conflicts.')}` : 'Unknown — receipt recovery still has no answer. Do not decide again yet.' });
+              }).finally(() => setBusy(false));
+            }}>Check for accepted receipt</button>
+          )}
+        </div>
+      )}
       {pending.length === 0 ? (
         <p style={quiet}>Nothing is waiting.</p>
       ) : (
@@ -506,8 +640,8 @@ function Queue({
                   <p style={quiet}>{why}</p>
                 ) : (
                   <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-3)' }}>
-                    <ActionButton tone="primary" disabled={busy} onClick={() => act(api.decide(r.id, 'approved', ''))}>Approve</ActionButton>
-                    <ActionButton disabled={busy} onClick={() => act(api.decide(r.id, 'rejected', ''))}>Reject</ActionButton>
+                    <ActionButton tone="primary" disabled={busy || command?.state === 'unknown' || command?.state === 'pending'} onClick={() => decide(r, 'approved')}>Approve</ActionButton>
+                    <ActionButton disabled={busy || command?.state === 'unknown' || command?.state === 'pending'} onClick={() => decide(r, 'rejected')}>Reject</ActionButton>
                   </div>
                 ))}
               </li>

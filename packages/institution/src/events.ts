@@ -78,6 +78,7 @@ export const EVENT_TYPES = {
   'action.updated': spec(1, 'student_private', 'student_record'),
   'action.completed': spec(1, 'student_private', 'student_record'),
   'plan.updated': spec(1, 'student_private', 'student_record'),
+  'finance.commanded': spec(1, 'student_private', 'student_record'),
   // Tasks and calendar. Payloads carry ids, versions and the names of the
   // fields that changed, never what they were changed to.
   'task.created': spec(1, 'student_private', 'student_record'),

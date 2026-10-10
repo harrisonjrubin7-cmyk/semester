@@ -316,6 +316,12 @@ for c in "${suites[@]}"; do
     failed=1
   else
     echo "  ✓ $(basename "$c") — $oks checks"
+    hook="${c%.check.sql}.concurrent.sh"
+    if [ -f "$hook" ]; then
+      # shellcheck source=/dev/null
+      . "$hook"
+      echo "  ✓ $(basename "$hook") — concurrent sessions"
+    fi
   fi
 done
 
