@@ -8,6 +8,7 @@ import { SEEN_PREFIX, endedShares, readSeen, readShares, type ShareFrom } from '
 import { recipientLine } from '../lib/sharing';
 import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
+import { GuardianCalendarProjection } from './GuardianProjection';
 
 const NOBODY: Record<string, string> = {};
 
@@ -80,6 +81,7 @@ export function SharedWithYou({ today: suppliedToday }: { today?: string }) {
               </li>
             ))}
           </ul>
+          <GuardianCalendarProjection actorId={account.id} studentId={s.studentId} shownAs={s.shownAs} />
         </article>
       ))}
 

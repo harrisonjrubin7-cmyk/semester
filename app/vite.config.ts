@@ -758,6 +758,8 @@ const MOCKS_MODULES = [
   'src/components/FamilyInvite.test.tsx',
   'src/lib/familyshare.test.ts',
   'src/components/SharedWithYou.test.tsx',
+  'src/components/GuardianProjection.test.tsx',
+  'src/lib/guardianprojection.test.ts',
   'src/components/AthleteShare.test.tsx',
   'src/components/SupportAccess.test.tsx',
   'src/components/GetHelp.test.tsx',
