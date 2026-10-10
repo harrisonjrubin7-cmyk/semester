@@ -1,13 +1,13 @@
-# Verification report — 2026-10-08
+# Verification report — 2026-10-10
 
 ## Passed
 
-- `python -m pytest -q`: 11 passed. Coverage includes authorization/ownership isolation for source inspection and review resolution, bounded correction payloads, unsafe ZIP rejection, citation rejection, conflicting dates, missing time/year behavior, ICS publication filtering, flashcard deduplication, and PDF/DOCX/card export logic.
-- `python -m ruff check app tests`: passed.
+- `python -m pytest -q`: 73 passed with 41 subtests using the documented SQLite migration-test environment. Coverage includes authorization/ownership isolation, review resolution, bounded correction payloads, real migration round trips, concurrent upload completion, worker fencing/recovery, safe archives, citation rejection, dates, ICS, and exports.
+- `python -m ruff check app tests ../worker/tasks.py`: passed.
 - `python -m compileall`: API, worker, scripts, and benchmark modules compile.
 - `pnpm run typecheck`: passed.
 - `pnpm run build`: passed; all 15 course workspace routes compiled.
-- `pnpm test`: 15 frontend tests passed across seven files, including the shell, command-palette focus, source/status vocabulary and locations, review correction validation, operational states, semantic token contracts, and an axe ready-state scan.
+- `pnpm test`: 19 frontend tests passed across eight files, including the shell, command-palette focus, source/status vocabulary and locations, review correction validation, calendar consequence preview/exact undo, operational states, semantic token contracts, and an axe ready-state scan.
 - Rendered smoke check: the built landing route rendered at the default desktop viewport and at 320 px without visible horizontal overflow.
 - `alembic upgrade head`: passed against a clean SQLite verification database.
 - `scripts/seed_demo_course.py`: passed and produced an authenticated demo course.
@@ -35,4 +35,4 @@ Locally generated artifacts (intentionally ignored by Git):
 The responsive shell uses the Semester Ink/Parchment/blue system without gradients or decorative AI imagery. Desktop navigation, labeled mobile tabs, context continuity, command search, reduced motion, forced colors, explicit source statuses, and loading/error/empty/offline states are implemented as reusable components. Automated axe runs exclude color contrast because jsdom has no layout/color engine; real-browser WCAG 2.2 AA contrast verification remains open.
 The upload workspace now opens an owner-scoped, focus-managed source sheet. Extracted chunks retain page, slide, sheet/cell, or media timestamp labels and confidence; exact PDF bounding-box overlays and correction actions remain open.
 
-The Review workspace can now confirm, reject, or correct extracted payloads, records an optional decision note, refreshes course counts, and blocks malformed correction JSON before sending it. Calendar consequence previews and undo remain open.
+The Review workspace can confirm, reject, or correct extracted payloads, records an optional decision note, refreshes course counts, and blocks malformed correction JSON before sending it. The Calendar workspace now previews changed fields and ICS consequences before saving, preserves unspecified times, and offers one-step session undo.
