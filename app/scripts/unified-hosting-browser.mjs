@@ -144,10 +144,20 @@ async function readSyntheticDb() {
 }
 
 try {
-  browser = await browserType.launch({ headless: true });
+  if (engine === 'webkit') {
+    context = await browserType.launchPersistentContext(
+      `/tmp/semester-hosting-webkit-${process.pid}`,
+      { headless: true, serviceWorkers: 'allow' },
+    );
+    browser = context.browser();
+    assert.ok(browser, 'persistent WebKit context must expose its browser');
+    page = context.pages()[0] || await context.newPage();
+  } else {
+    browser = await browserType.launch({ headless: true });
+    context = await browser.newContext({ serviceWorkers: 'allow' });
+    page = await context.newPage();
+  }
   evidence.browserVersion = browser.version();
-  context = await browser.newContext({ serviceWorkers: 'allow' });
-  page = await context.newPage();
   const runtimeEvents = [];
   page.on('console', (message) => runtimeEvents.push(`console:${message.type()}:${message.text()}`));
   page.on('pageerror', (error) => runtimeEvents.push(`pageerror:${error.message}`));
