@@ -21,6 +21,8 @@ export type Event = {
   event_type: string;
   event_date?: string;
   start_at?: string;
+  end_at?: string;
+  all_day?: boolean;
   status: string;
   time_unspecified: boolean;
 };
