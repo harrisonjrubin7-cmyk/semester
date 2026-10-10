@@ -67,6 +67,7 @@ describe('registration readiness evaluation workflow', () => {
     expect(replay.record).toBe(first.record);
     expect(replay.receipt).toEqual(first.receipt);
     expect(replay.event).toEqual(first.event);
+    expect(first.event.eventType).toBe('registration.readiness_requested');
 
     expect(() => transitionRegistrationReadinessEvaluation(first.record, {
       expectedVersion: 2,
@@ -105,6 +106,29 @@ describe('registration readiness evaluation workflow', () => {
     expect(ready.record).toMatchObject({ state: 'ready', version: 3, projectionVersion: 7 });
     expect(ready.receipt).toMatchObject({ status: 'completed', state: 'ready', recordVersion: 3 });
     expect(ready.event.eventType).toBe('registration.readiness_evaluated');
+  });
+
+  it('opens reconciliation directly when an in-flight evaluator times out', () => {
+    const evaluating = transitionRegistrationReadinessEvaluation(start().record, {
+      expectedVersion: 1,
+      targetState: 'evaluating',
+      idempotencyKey: testKey('evaluate'),
+      correlationId: 'corr-0123456789',
+      at: '2026-10-08T20:01:00.000Z',
+    });
+    const timedOut = transitionRegistrationReadinessEvaluation(evaluating.record, {
+      expectedVersion: 2,
+      targetState: 'reconciling',
+      idempotencyKey: testKey('timeout'),
+      correlationId: 'corr-0123456789',
+      at: '2026-10-08T20:02:00.000Z',
+    });
+
+    expect(timedOut.record).toMatchObject({ state: 'reconciling', version: 3 });
+    expect(timedOut.record.reconciliationTasks).toEqual([
+      expect.objectContaining({ state: 'open', generation: 1 }),
+    ]);
+    expect(timedOut.event.eventType).toBe('registration.readiness_reconciliation_requested');
   });
 
   it('requires a newer projection for every evaluated outcome', () => {
