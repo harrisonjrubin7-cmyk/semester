@@ -2,7 +2,7 @@
 -- This source migration is held: merging main auto-applies it to the canonical Supabase project.
 -- It does not activate an evaluator, tenant, provider, or official registration write.
 --
--- Timeout recovery records evaluating -> unknown(reason=evaluator_timeout) without
+-- During a rolling deploy, evaluating accepts both the legacy evaluated event and the new requested event.\n-- Timeout recovery records evaluating -> unknown(reason=evaluator_timeout) without
 -- fabricating a source projection, then the ordinary unknown -> reconciling edge.
 -- The function remains service-role-only and preserves the existing transaction,
 -- advisory locks, tenant checks, CAS, receipts, audit, and outbox behavior.
@@ -170,12 +170,18 @@ begin
   end if;
   if receipt->>'status' is distinct from (
        case when next_state in ('requested', 'evaluating', 'reconciling') then 'pending' else 'completed' end
-     ) or event->>'eventType' is distinct from (
-       case
-         when next_state in ('requested', 'evaluating') then 'registration.readiness_requested'
-         when next_state = 'reconciling' then 'registration.readiness_reconciliation_requested'
-         else 'registration.readiness_evaluated'
-       end
+     ) or (
+       next_state = 'evaluating'
+       and event->>'eventType' not in ('registration.readiness_requested', 'registration.readiness_evaluated')
+     ) or (
+       next_state <> 'evaluating'
+       and event->>'eventType' is distinct from (
+         case
+           when next_state = 'requested' then 'registration.readiness_requested'
+           when next_state = 'reconciling' then 'registration.readiness_reconciliation_requested'
+           else 'registration.readiness_evaluated'
+         end
+       )
      ) then
     raise exception 'The readiness receipt status or event type does not match the state.' using errcode = '22023';
   end if;
