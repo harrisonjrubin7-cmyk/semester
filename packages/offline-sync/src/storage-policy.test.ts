@@ -6,7 +6,6 @@ const entity = (dataClass: string, id: string) => ({
   dataClass, id, value: { secret: `${dataClass}-${id}` }, version: 1,
   phase: 'reconciled', fetchedAt: 1,
 })
-
 const command = (dataClass: string, id: string) => ({
   id: `command-${id}`, tenantId: 't', userId: 'u', deviceId: 'd', dataClass,
   entityId: id, op: 'patch', payload: { secret: dataClass }, baseVersion: 1,
@@ -115,4 +114,3 @@ describe('central offline persistence enforcement', () => {
     expect((await store.outbox.all()).map((row) => row.entityId)).toEqual(['financial-plan', 'grade-estimate'])
   })
 })
-
