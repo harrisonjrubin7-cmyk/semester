@@ -49,15 +49,24 @@ const server = createServer(async (request, response) => {
       self.addEventListener('message', (event) => {
         event.waitUntil((async () => {
           const cache = await caches.open('semester-shared');
+          const beforeKeys = await cache.keys();
+          const beforeHit = await cache.match('/legacy-shared');
+          await cache.put('/legacy-shared', new Response('legacy-share-sentinel'));
           const keys = await cache.keys();
           const hit = await cache.match('/legacy-shared');
           event.ports[0].postMessage({
-            entries: keys.map((request) => ({ url: request.url, method: request.method })),
-            present: Boolean(hit),
-            bytes: hit ? (await hit.clone().arrayBuffer()).byteLength : null,
-            contentType: hit ? hit.headers.get('content-type') : null,
-            vary: hit ? hit.headers.get('vary') : null,
-            body: hit ? await hit.text() : null,
+            before: {
+              entries: beforeKeys.map((request) => ({ url: request.url, method: request.method })),
+              present: Boolean(beforeHit),
+            },
+            after: {
+              entries: keys.map((request) => ({ url: request.url, method: request.method })),
+              present: Boolean(hit),
+              bytes: hit ? (await hit.clone().arrayBuffer()).byteLength : null,
+              contentType: hit ? hit.headers.get('content-type') : null,
+              vary: hit ? hit.headers.get('vary') : null,
+              body: hit ? await hit.text() : null,
+            },
           });
         })());
       });
@@ -285,7 +294,7 @@ try {
   evidence.checks.sharedCacheFromLegacyWorker = legacyWorkerSeed;
   assert.equal(legacyWorkerSeed.workerScope, `${origin}/legacy/`);
   assert.equal(
-    legacyWorkerSeed.workerView.body,
+    legacyWorkerSeed.workerView.after.body,
     'legacy-share-sentinel',
     `legacy worker must read its exact shared entry: ${JSON.stringify(legacyWorkerSeed)}`,
   );
