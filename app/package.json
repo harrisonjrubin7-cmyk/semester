@@ -23,7 +23,7 @@
     "site:build": "node scripts/build-site.mjs",
     "site:preview": "vite preview --outDir dist-site --port 4175 --strictPort",
     "test": "vitest run",
-    "test:hosting": "node --test scripts/unified-hosting.node.test.mjs",
+    "test:hosting": "node --test scripts/unified-hosting.node.mjs",
     "test:watch": "vitest",
     "test:zones": "TZ=America/Chicago vitest run && TZ=Pacific/Kiritimati vitest run",
     "test:shuffle": "vitest run --sequence.shuffle",
