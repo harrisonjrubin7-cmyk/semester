@@ -262,18 +262,20 @@ export class AttachmentCache {
     return observed.length
   }
 
-  private async cleanupRetired(): Promise<void> {
+  private async cleanupRetired(): Promise<CachedFile[]> {
     const rows = await this.d.index.load()
     const retired = rows.filter((row) => row.retired)
     if (retired.length) await this.revokeObserved(retired)
+    return retired
   }
 
   /** Erase by file id, by owning entity (membership removed), or everything. Bytes and wrapped key both go. */
   async revoke(match: { ids?: string[]; ownerEntityIds?: string[]; all?: boolean }): Promise<number> {
-    await this.cleanupRetired()
+    const matches = (row: CachedFile) => match.all || match.ids?.includes(row.id) || match.ownerEntityIds?.includes(row.ownerEntityId)
+    const retired = await this.cleanupRetired()
     const rows = await this.d.index.load()
-    const gone = rows.filter((r) => match.all || match.ids?.includes(r.id) || match.ownerEntityIds?.includes(r.ownerEntityId))
-    return this.revokeObserved(gone)
+    const gone = rows.filter(matches)
+    return retired.filter(matches).length + await this.revokeObserved(gone)
   }
 
   /** Drop everything past its class's freshness limit; pinning protects against eviction, not expiry. */
