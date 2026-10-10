@@ -151,14 +151,34 @@ try {
   });
 
   await page.goto(appUrl, { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(async () => {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    return registrations.some((registration) => (
-      new URL(registration.scope).pathname === '/app/' &&
-      registration.active &&
-      new URL(registration.active.scriptURL).pathname === '/app/sw.js'
-    ));
-  }, undefined, { timeout: 15_000 });
+  try {
+    await page.waitForFunction(async () => {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      return registrations.some((registration) => (
+        new URL(registration.scope).pathname === '/app/' &&
+        registration.active &&
+        new URL(registration.active.scriptURL).pathname === '/app/sw.js'
+      ));
+    }, undefined, { timeout: 15_000 });
+  } catch (error) {
+    const registrationDiagnostics = await page.evaluate(async () => {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      return {
+        readyState: document.readyState,
+        title: document.title,
+        registrations: registrations.map((registration) => ({
+          scope: registration.scope,
+          active: registration.active?.scriptURL || null,
+          installing: registration.installing?.scriptURL || null,
+          waiting: registration.waiting?.scriptURL || null,
+        })),
+      };
+    });
+    throw new Error(
+      `service worker did not become active: ${JSON.stringify({ registrationDiagnostics, runtimeEvents })}`,
+      { cause: error },
+    );
+  }
   if (!await page.evaluate(() => Boolean(navigator.serviceWorker.controller))) {
     await page.reload({ waitUntil: 'domcontentloaded' });
   }
