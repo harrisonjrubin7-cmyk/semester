@@ -208,6 +208,14 @@ describe('an edit goes up on the database path', () => {
       release(true);
       await Promise.resolve();
     });
+    await wait(100);
+
+    expect(
+      persist.mock.calls.slice(exact + 1).every(([value]) => (
+        value as { tasks?: { id: string }[] }
+      ).tasks?.some((task) => task.id === remote.id)),
+      'an effect queued the empty pre-pull copy after the exact write landed',
+    ).toBe(true);
   });
 
   it('does not mark an automatic account pull as seen when its durable write fails', async () => {

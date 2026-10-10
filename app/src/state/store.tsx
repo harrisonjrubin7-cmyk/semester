@@ -593,6 +593,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * settles.
    */
   const applyingRemote = useRef(false);
+  /**
+   * The persisted snapshot that ends a remote-write fence.
+   *
+   * The IndexedDB transaction can finish before React commits the dispatch
+   * that caused it. Clearing `applyingRemote` when the transaction finishes
+   * therefore leaves a small window where an already-scheduled effect can
+   * queue the pre-pull snapshot after the exact write. Keep the fence until
+   * the persistence effect itself sees the adopted snapshot rendered.
+   */
+  const remoteTarget = useRef('');
 
   const [asking, setAsking] = useState<{
     sides: Sides;
@@ -615,7 +625,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
      * stop being normal. See `state/persist/`.
      */
     if (dbAvailable()) {
-      if (applyingRemote.current) return;
+      if (applyingRemote.current) {
+        const target = remoteTarget.current;
+        // This is the one deliberately serialised database render. Reference
+        // equality cannot identify it: the reducer computes the same merge
+        // once for the exact write and once again for React, producing fresh
+        // collection references each time.
+        if (!target || JSON.stringify(picked) !== target) return;
+        applyingRemote.current = false;
+        remoteTarget.current = '';
+      }
       // Whether this write is allowed to tell anyone, decided now and spent
       // by the write itself: a run caused by taking another tab's change
       // still writes — the merge may have kept something of this tab's own —
@@ -1041,7 +1060,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          * of the account rows.
          */
         const database = dbAvailable();
-        if (database) applyingRemote.current = true;
         let durable = latest.current;
         if (Object.keys(gone).length > 0) {
           durable = reducer(durable, { type: 'dropTicks', removals: gone });
@@ -1051,24 +1069,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           durable = reducer(durable, { type: 'dropRecords', removals: deletions.dropHere });
           dispatch({ type: 'dropRecords', removals: deletions.dropHere });
         }
-        durable = reducer(durable, { type: 'hydrate', persisted: taken });
+        const hydrate = { type: 'hydrate', persisted: taken, at: Date.now() } as const;
+        durable = reducer(durable, hydrate);
+        const durablePersisted = pickPersisted(durable);
+        if (database && !sameFields(pickPersisted(latest.current), durablePersisted)) {
+          applyingRemote.current = true;
+          remoteTarget.current = JSON.stringify(durablePersisted);
+        }
+        // A second refresh can start before React commits this dispatch. It
+        // must merge from the adopted copy, not the pre-pull one.
+        latest.current = durable;
         /*
          * Dispatch before the first await. A render already scheduled by the
          * sync-status update must not hand the persistence effect the stale
          * pre-pull copy while the explicit write below is in flight; that
          * later queued write would delete the rows this transaction just put.
          */
-        dispatch({ type: 'hydrate', persisted: taken });
-        try {
-          if (database) {
-            persistToDb(pickPersisted(durable), tellOtherTabs);
-            if (!(await flushNow())) {
-              throw new Error('The account copy could not be saved on this device.');
-            }
+        dispatch(hydrate);
+        if (database) {
+          persistToDb(durablePersisted, tellOtherTabs);
+          if (!(await flushNow())) {
+            throw new Error('The account copy could not be saved on this device.');
           }
-        } finally {
-          if (database) applyingRemote.current = false;
         }
+        // The rendered adopted snapshot releases the fence in the ordinary
+        // persistence effect above. Transaction completion alone is too
+        // early: React may not have committed the dispatch yet.
         markSeen(remote.seen);
         // The version both sides now agree on is the account's — including
         // for the fields held back, whose difference here is still to go up,
@@ -1790,28 +1816,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          * window without introducing a second localStorage writer.
          */
         const database = dbAvailable();
-        if (database) applyingRemote.current = true;
         const wiped = choice === 'cloud'
           ? reducer(latest.current, { type: 'wipeLocalForAdopt' })
           : latest.current;
-        const adopted = reducer(wiped, { type: 'hydrate', persisted: theirs });
+        const hydrate = { type: 'hydrate', persisted: theirs, at: Date.now() } as const;
+        const adopted = reducer(wiped, hydrate);
+        const adoptedPersisted = pickPersisted(adopted);
+        if (database && !sameFields(pickPersisted(latest.current), adoptedPersisted)) {
+          applyingRemote.current = true;
+          remoteTarget.current = JSON.stringify(adoptedPersisted);
+        }
+        latest.current = adopted;
         if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
         // As in an automatic pull above, make every render after this point
         // carry the adopted copy before yielding to the asynchronous writer.
-        dispatch({ type: 'hydrate', persisted: theirs });
-        try {
-          if (database) {
-            persistToDb(pickPersisted(adopted), tellOtherTabs);
-            // Do not record rows as seen when the transaction that should make
-            // them durable did not land. The chooser stays open for a retry and
-            // the standing save warning explains why progress cannot continue.
-            if (!(await flushNow())) {
-              throw new Error('The account copy could not be saved on this device.');
-            }
+        dispatch(hydrate);
+        if (database) {
+          persistToDb(adoptedPersisted, tellOtherTabs);
+          // Do not record rows as seen when the transaction that should make
+          // them durable did not land. The chooser stays open for a retry and
+          // the standing save warning explains why progress cannot continue.
+          if (!(await flushNow())) {
+            throw new Error('The account copy could not be saved on this device.');
           }
-        } finally {
-          if (database) applyingRemote.current = false;
         }
+        // Released only when the rendered persisted state reaches the
+        // adopted snapshot; see the persistence effect above.
         markSeen(remote.seen);
         // The first version this device and the account agree on.
         writeBase(baseOf(forLegacy(theirs as Record<string, unknown>)));
