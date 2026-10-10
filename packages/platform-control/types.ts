@@ -13,7 +13,12 @@ export const MATURITY_STAGES = [
 
 export type MaturityStage = (typeof MATURITY_STAGES)[number];
 export type Maturity = Record<MaturityStage, boolean>;
-export type MaturityEvidence = Partial<Record<MaturityStage, string[]>>;
+export const EVIDENCE_KINDS = [
+  'design', 'schema', 'code', 'test', 'deployment', 'approval', 'activation', 'monitoring',
+] as const;
+export type EvidenceKind = (typeof EVIDENCE_KINDS)[number];
+export interface EvidenceReference { path: string; kind: EvidenceKind }
+export type MaturityEvidence = Partial<Record<MaturityStage, EvidenceReference[]>>;
 
 export interface CapabilityRecord {
   key: string;
