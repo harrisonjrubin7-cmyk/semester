@@ -9,6 +9,8 @@ export function validateWorkflows(snapshot: RegistrySnapshot): ValidationIssue[]
   for (const workflow of [...snapshot.workflows].sort((left, right) => compareOrdinal(left.key, right.key))) {
     const path = `workflows.${workflow.key}`;
     const states = new Set(workflow.states);
+    const transitionTargets = (state: string): string[] =>
+      Object.prototype.hasOwnProperty.call(workflow.transitions, state) ? workflow.transitions[state] : [];
     if (!workflow.owner.trim()) issues.push({ code: 'missing_owner', path, message: 'Workflow requires an owner.' });
     if (!Number.isInteger(workflow.version) || workflow.version < 1) issues.push({ code: 'invalid_version', path: `${path}.version`, message: 'Workflow version must be a positive integer.' });
     if (!workflow.idempotency.trim() || !workflow.retry_policy.trim() || !workflow.escalation_role.trim() || !workflow.runbook.trim()) {
@@ -39,7 +41,7 @@ export function validateWorkflows(snapshot: RegistrySnapshot): ValidationIssue[]
     for (const terminal of [...terminals].sort(compareOrdinal)) {
       if (!states.has(terminal)) {
         issues.push({ code: 'unknown_terminal', path: `${path}.terminal.${terminal}`, message: `Unknown terminal state ${terminal}.` });
-      } else if ((workflow.transitions[terminal] ?? []).length > 0) {
+      } else if (transitionTargets(terminal).length > 0) {
         issues.push({ code: 'terminal_has_exit', path: `${path}.terminal.${terminal}`, message: `Terminal state ${terminal} has an outgoing transition.` });
       }
     }
@@ -48,9 +50,9 @@ export function validateWorkflows(snapshot: RegistrySnapshot): ValidationIssue[]
       for (const target of [...targets].sort(compareOrdinal)) if (!states.has(target)) issues.push({ code: 'unknown_transition_target', path: `${path}.transitions.${from}`, message: `Unknown target state ${target}.` });
     }
     for (const state of [...states].sort(compareOrdinal)) {
-      if (!(state in workflow.transitions)) {
+      if (!Object.prototype.hasOwnProperty.call(workflow.transitions, state)) {
         issues.push({ code: 'missing_transition_source', path: `${path}.transitions.${state}`, message: `State ${state} has no transition entry.` });
-      } else if (workflow.continuous && !workflow.transitions[state].some((target) => states.has(target))) {
+      } else if (workflow.continuous && !transitionTargets(state).some((target) => states.has(target))) {
         issues.push({ code: 'continuous_dead_end', path: `${path}.transitions.${state}`, message: `Continuous state ${state} has no exit.` });
       }
     }
@@ -61,7 +63,7 @@ export function validateWorkflows(snapshot: RegistrySnapshot): ValidationIssue[]
       const state = queue.shift()!;
       if (reachable.has(state)) continue;
       reachable.add(state);
-      for (const target of workflow.transitions[state] ?? []) if (states.has(target)) queue.push(target);
+      for (const target of transitionTargets(state)) if (states.has(target)) queue.push(target);
     }
     for (const state of [...states].sort(compareOrdinal)) {
       if (!reachable.has(state)) issues.push({ code: 'unreachable_state', path: `${path}.states.${state}`, message: `State ${state} is unreachable from ${workflow.initial}.` });
@@ -73,7 +75,7 @@ export function validateWorkflows(snapshot: RegistrySnapshot): ValidationIssue[]
       while (changed) {
         changed = false;
         for (const state of states) {
-          if (!canCompleteCycle.has(state) && (workflow.transitions[state] ?? []).some((target) => canCompleteCycle.has(target))) {
+          if (!canCompleteCycle.has(state) && (transitionTargets(state)).some((target) => canCompleteCycle.has(target))) {
             canCompleteCycle.add(state);
             changed = true;
           }
@@ -84,7 +86,7 @@ export function validateWorkflows(snapshot: RegistrySnapshot): ValidationIssue[]
       }
       const nonOutcomes = new Set([...states].filter((state) => !cycleOutcomes.has(state)));
       const returnsWithoutOutcome = (start: string, current: string, seen: Set<string>): boolean => {
-        for (const target of workflow.transitions[current] ?? []) {
+        for (const target of transitionTargets(current)) {
           if (!nonOutcomes.has(target)) continue;
           if (target === start) return true;
           if (seen.has(target)) continue;
@@ -104,7 +106,7 @@ export function validateWorkflows(snapshot: RegistrySnapshot): ValidationIssue[]
       while (changed) {
         changed = false;
         for (const state of states) {
-          if (!canTerminate.has(state) && (workflow.transitions[state] ?? []).some((target) => canTerminate.has(target))) {
+          if (!canTerminate.has(state) && (transitionTargets(state)).some((target) => canTerminate.has(target))) {
             canTerminate.add(state);
             changed = true;
           }

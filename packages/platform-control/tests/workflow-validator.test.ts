@@ -98,6 +98,18 @@ test('treats a continuous state with only unknown targets as a dead end', () => 
   assert.deepEqual(issues.map(({ code }) => code), ['unknown_transition_target', 'continuous_dead_end']);
 });
 
+test('reports an inherited property name with no own transition entry', () => {
+  const issues = validateWorkflows(snapshot(workflow({
+    continuous: true,
+    terminal: [],
+    cycle_outcomes: ['requested'],
+    states: ['requested', 'constructor'],
+    transitions: { requested: ['requested'] },
+  })));
+  assert.ok(issues.some(({ code, path }) =>
+    code === 'missing_transition_source' && path === 'workflows.registration.request.transitions.constructor'));
+});
+
 test('continuous mode requires declared cycle outcomes reachable from every state', () => {
   const missing = validateWorkflows(snapshot(workflow({
     continuous: true,
