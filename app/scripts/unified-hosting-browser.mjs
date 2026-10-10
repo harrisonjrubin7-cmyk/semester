@@ -156,7 +156,7 @@ try {
       const registrations = await navigator.serviceWorker.getRegistrations();
       return registrations.some((registration) => (
         new URL(registration.scope).pathname === '/app/' &&
-        registration.active &&
+        registration.active?.state === 'activated' &&
         new URL(registration.active.scriptURL).pathname === '/app/sw.js'
       ));
     }, undefined, { timeout: 15_000 });
