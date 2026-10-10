@@ -3,7 +3,7 @@ from __future__ import annotations
 import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from celery import Celery
 from sqlalchemy import and_, delete, or_, select
@@ -23,6 +23,12 @@ from app.models.entities import (
     StudyAssetCitation,
     UploadCompletion,
 )
+from app.services.job_leases import (
+    claim_job,
+    commit_job,
+    fail_job,
+    update_job_progress,
+)
 from app.services.malware import DevelopmentMalwareScanner
 from app.services.storage import ObjectStorage, sha256_file, validate_actual_mime
 from app.services.upload_dispatch import dispatch_upload_completion
@@ -35,6 +41,11 @@ celery.conf.beat_schedule = {
     },
 }
 storage = ObjectStorage()
+JOB_LEASE_TTL = timedelta(minutes=5)
+
+
+def utc_now() -> datetime:
+    return datetime.now(UTC)
 
 
 @celery.task(name="recover_upload_dispatches")
@@ -101,6 +112,110 @@ def invalidate_document_assets(db, document: SourceDocument) -> None:
         ))
 
 
+def _mark_extracting(document: SourceDocument, detected_mime: str) -> None:
+    document.status = "extracting"
+    document.metadata_json = {
+        **document.metadata_json,
+        "detected_mime_type": detected_mime,
+    }
+
+
+def _commit_extraction(
+    db,
+    document_id: UUID,
+    path: Path,
+    materialized_rows: list[dict],
+    unsupported: list[Path],
+) -> None:
+    document = db.get(SourceDocument, document_id)
+    if not document or document.deleted_at:
+        raise RuntimeError("Extraction source was deleted")
+    db.execute(delete(ReviewItem).where(
+        ReviewItem.document_id == document.id,
+        ReviewItem.item_type.in_((
+            "extracted_evidence",
+            "low_confidence_extraction",
+            "unsupported_file",
+            "no_extractable_content",
+        )),
+    ))
+    for unsupported_path in unsupported:
+        db.add(ReviewItem(
+            course_id=document.course_id,
+            document_id=document.id,
+            item_type="unsupported_file",
+            title=f"Cannot extract {unsupported_path.name}",
+            payload={"extension": unsupported_path.suffix},
+        ))
+    invalidate_document_assets(db, document)
+    db.execute(delete(SourceChunk).where(SourceChunk.document_id == document.id))
+    for index, row in enumerate(materialized_rows):
+        source_label = row["source_label"]
+        chunk = SourceChunk(
+            document_id=document.id,
+            chunk_index=index,
+            **{key: value for key, value in row.items() if key != "source_label"},
+        )
+        db.add(chunk)
+        db.flush()
+        citation = Citation(
+            chunk_id=chunk.id,
+            quote=row["content"][:1000],
+            status=ReviewStatus.needs_review,
+        )
+        db.add(citation)
+        db.flush()
+        db.add(ReviewItem(
+            course_id=document.course_id,
+            document_id=document.id,
+            item_type="extracted_evidence",
+            title=f"Review {source_label}",
+            payload={
+                "chunk_id": str(chunk.id),
+                "citation_id": str(citation.id),
+                "confidence": row["confidence"],
+            },
+        ))
+    if document.classification == "other" and materialized_rows:
+        sample = " ".join(row["content"] for row in materialized_rows[:5]).lower()
+        filename = document.filename.lower()
+        if "syllabus" in filename or ("grading" in sample and "schedule" in sample):
+            document.classification = "syllabus"
+        elif "rubric" in filename or "criteria" in sample:
+            document.classification = "rubric"
+        elif "assignment" in filename or "due" in sample:
+            document.classification = "assignment"
+        elif path.suffix.lower() == ".pptx" or "lecture" in filename:
+            document.classification = "lecture"
+        elif "exam" in filename or "study guide" in sample:
+            document.classification = "exam_material"
+        else:
+            document.classification = "reading"
+    if not materialized_rows:
+        db.add(ReviewItem(
+            course_id=document.course_id,
+            document_id=document.id,
+            item_type="no_extractable_content",
+            title=f"No extractable content in {document.filename}",
+            payload={},
+        ))
+    document.status = "needs_review"
+
+
+def _commit_extraction_failure(db, document_id: UUID, error: str) -> None:
+    document = db.get(SourceDocument, document_id)
+    if not document or document.deleted_at:
+        return
+    document.status = "failed"
+    db.add(ReviewItem(
+        course_id=document.course_id,
+        document_id=document.id,
+        item_type="extraction_failed",
+        title=f"Extraction failed for {document.filename}",
+        payload={"error": error},
+    ))
+
+
 @celery.task(name="extract_document")
 def extract_document(job_id: str) -> dict:
     db = SessionLocal()
@@ -112,15 +227,49 @@ def extract_document(job_id: str) -> dict:
     if job.status == JobStatus.completed:
         db.close()
         return job.result
+    lease = claim_job(
+        db,
+        parsed_job_id,
+        f"extract:{uuid4()}",
+        utc_now(),
+        JOB_LEASE_TTL,
+    )
+    if lease is None:
+        db.expire_all()
+        job = db.get(BackgroundJob, parsed_job_id)
+        result = job.result if job and job.status == JobStatus.completed else {"status": "leased"}
+        db.close()
+        return result
+    job = db.get(BackgroundJob, parsed_job_id)
     document = db.get(SourceDocument, job.document_id)
     try:
-        job.status = JobStatus.running; job.progress = 5; document.status = "scanning"; db.commit()
+        if not update_job_progress(
+            db,
+            lease,
+            utc_now(),
+            JOB_LEASE_TTL,
+            5,
+            lambda session: setattr(
+                session.get(SourceDocument, job.document_id), "status", "scanning"
+            ),
+        ):
+            return {"status": "lease_lost"}
         path = storage.path(document.storage_key)
         DevelopmentMalwareScanner().scan(path)
         if sha256_file(path) != document.sha256:
             raise ValueError("Uploaded object checksum does not match the initiated upload")
-        document.status = "extracting"; job.progress = 10; db.commit()
-        document.metadata_json = {**document.metadata_json, "detected_mime_type": validate_actual_mime(path)}
+        detected_mime = validate_actual_mime(path)
+        if not update_job_progress(
+            db,
+            lease,
+            utc_now(),
+            JOB_LEASE_TTL,
+            10,
+            lambda session: _mark_extracting(
+                session.get(SourceDocument, job.document_id), detected_mime
+            ),
+        ):
+            return {"status": "lease_lost"}
         paths = [path]
         if path.suffix.lower() == ".zip":
             temp = tempfile.TemporaryDirectory()
@@ -158,88 +307,74 @@ def extract_document(job_id: str) -> dict:
                 "confidence": row.confidence,
                 "metadata_json": metadata,
             })
-        db.execute(delete(ReviewItem).where(
-            ReviewItem.document_id == document.id,
-            ReviewItem.item_type.in_((
-                "extracted_evidence",
-                "low_confidence_extraction",
-                "unsupported_file",
-                "no_extractable_content",
-            )),
-        ))
-        for unsupported_path in unsupported:
-            db.add(ReviewItem(
-                course_id=document.course_id,
-                document_id=document.id,
-                item_type="unsupported_file",
-                title=f"Cannot extract {unsupported_path.name}",
-                payload={"extension": unsupported_path.suffix},
-            ))
-        invalidate_document_assets(db, document)
-        db.execute(delete(SourceChunk).where(SourceChunk.document_id == document.id))
-        for index, row in enumerate(materialized_rows):
-            source_label = row["source_label"]
-            chunk = SourceChunk(
-                document_id=document.id,
-                chunk_index=index,
-                **{key: value for key, value in row.items() if key != "source_label"},
-            )
-            db.add(chunk); db.flush()
-            citation = Citation(
-                chunk_id=chunk.id,
-                quote=row["content"][:1000],
-                status=ReviewStatus.needs_review,
-            )
-            db.add(citation)
-            db.flush()
-            db.add(ReviewItem(
-                course_id=document.course_id,
-                document_id=document.id,
-                item_type="extracted_evidence",
-                title=f"Review {source_label}",
-                payload={
-                    "chunk_id": str(chunk.id),
-                    "citation_id": str(citation.id),
-                    "confidence": row["confidence"],
-                },
-            ))
-        if document.classification == "other" and materialized_rows:
-            sample = " ".join(row["content"] for row in materialized_rows[:5]).lower()
-            filename = document.filename.lower()
-            if "syllabus" in filename or ("grading" in sample and "schedule" in sample):
-                document.classification = "syllabus"
-            elif "rubric" in filename or "criteria" in sample:
-                document.classification = "rubric"
-            elif "assignment" in filename or "due" in sample:
-                document.classification = "assignment"
-            elif path.suffix.lower() == ".pptx" or "lecture" in filename:
-                document.classification = "lecture"
-            elif "exam" in filename or "study guide" in sample:
-                document.classification = "exam_material"
-            else:
-                document.classification = "reading"
-        if not materialized_rows:
-            db.add(ReviewItem(
-                course_id=document.course_id,
-                document_id=document.id,
-                item_type="no_extractable_content",
-                title=f"No extractable content in {document.filename}",
-                payload={},
-            ))
-        document.status = "needs_review"
-        job.status = JobStatus.completed; job.progress = 100; job.result = {"chunks": len(materialized_rows)}
-        db.commit(); return job.result
+        result = {"chunks": len(materialized_rows)}
+        completed = commit_job(
+            db,
+            lease,
+            utc_now(),
+            result,
+            lambda session: _commit_extraction(
+                session,
+                job.document_id,
+                path,
+                materialized_rows,
+                unsupported,
+            ),
+        )
+        return result if completed else {"status": "lease_lost"}
     except Exception as exc:
         db.rollback()
-        job = db.get(BackgroundJob, parsed_job_id)
-        document = db.get(SourceDocument, job.document_id) if job and job.document_id else None
-        if not job or not document:
+        failed = fail_job(
+            db,
+            lease,
+            utc_now(),
+            str(exc),
+            lambda session: _commit_extraction_failure(session, job.document_id, str(exc)),
+        )
+        if failed:
             raise
-        job.status = JobStatus.failed; job.error = str(exc); document.status = "failed"
-        db.add(ReviewItem(course_id=document.course_id, document_id=document.id, item_type="extraction_failed", title=f"Extraction failed for {document.filename}", payload={"error": str(exc)}))
-        db.commit(); raise
+        return {"status": "lease_lost"}
     finally:
         db.close()
+
+
+def _commit_generation(
+    db,
+    course_id: UUID,
+    asset_id: UUID,
+    existing_target: bool,
+    asset_type: str,
+    request: dict,
+    content: dict,
+    evidence: list,
+) -> None:
+    asset = db.get(StudyAsset, asset_id) if existing_target else None
+    if existing_target and (not asset or asset.deleted_at or asset.course_id != course_id):
+        raise RuntimeError("Study asset generation target was deleted or revoked")
+    if asset:
+        asset.content = content
+        asset.generation_version += 1
+        asset.status = ReviewStatus.needs_review
+    else:
+        asset = StudyAsset(
+            id=asset_id,
+            course_id=course_id,
+            asset_type=asset_type,
+            title=request.get("title") or asset_type.replace("_", " ").title(),
+            content=content,
+            status=ReviewStatus.needs_review,
+        )
+        db.add(asset)
+        db.flush()
+    db.execute(delete(StudyAssetCitation).where(StudyAssetCitation.study_asset_id == asset.id))
+    for citation, _chunk, _document in evidence:
+        db.add(StudyAssetCitation(study_asset_id=asset.id, citation_id=citation.id))
+    db.add(ReviewItem(
+        course_id=course_id,
+        item_type="generated_study_asset",
+        title=f"Review {asset.title}",
+        payload={"asset_id": str(asset.id), "generation_version": asset.generation_version},
+    ))
 
 
 @celery.task(name="generate_study_asset")
@@ -253,10 +388,23 @@ def generate_study_asset(job_id: str) -> dict:
     if job.status == JobStatus.completed:
         db.close()
         return job.result
+    lease = claim_job(
+        db,
+        parsed_job_id,
+        f"generate:{uuid4()}",
+        utc_now(),
+        JOB_LEASE_TTL,
+    )
+    if lease is None:
+        db.expire_all()
+        job = db.get(BackgroundJob, parsed_job_id)
+        result = job.result if job and job.status == JobStatus.completed else {"status": "leased"}
+        db.close()
+        return result
+    job = db.get(BackgroundJob, parsed_job_id)
     try:
-        job.status = JobStatus.running
-        job.progress = 10
-        db.commit()
+        if not update_job_progress(db, lease, utc_now(), JOB_LEASE_TTL, 10):
+            return {"status": "lease_lost"}
         evidence = db.execute(
             select(Citation, SourceChunk, SourceDocument)
             .join(SourceChunk, Citation.chunk_id == SourceChunk.id)
@@ -306,46 +454,44 @@ def generate_study_asset(job_id: str) -> dict:
                 for index, (citation, _chunk, _document) in enumerate(evidence[:12])
             ]
             content = {"sections": sections, "study_questions": [], "source_gaps": [], "citations": citation_catalog}
-        existing_id = job.result.get("asset_id")
-        asset = db.get(StudyAsset, UUID(existing_id)) if existing_id else None
-        if asset:
-            asset.content = content
-            asset.generation_version += 1
-            asset.status = ReviewStatus.needs_review
-        else:
-            request = job.result.get("request", {})
-            asset = StudyAsset(
-                course_id=job.course_id,
-                asset_type=asset_type,
-                title=request.get("title") or asset_type.replace("_", " ").title(),
-                content=content,
-                status=ReviewStatus.needs_review,
-            )
-            db.add(asset)
-            db.flush()
-        db.execute(delete(StudyAssetCitation).where(StudyAssetCitation.study_asset_id == asset.id))
-        for citation, _chunk, _document in evidence:
-            db.add(StudyAssetCitation(study_asset_id=asset.id, citation_id=citation.id))
-        db.add(ReviewItem(
-            course_id=job.course_id,
-            item_type="generated_study_asset",
-            title=f"Review {asset.title}",
-            payload={"asset_id": str(asset.id), "generation_version": asset.generation_version},
-        ))
-        job.status = JobStatus.completed
-        job.progress = 100
-        job.result = {**job.result, "asset_id": str(asset.id)}
-        db.commit()
-        return job.result
+        existing_id = job.target_id or (
+            UUID(job.result["asset_id"]) if job.result.get("asset_id") else None
+        )
+        asset_id = existing_id or uuid4()
+        result = {**job.result, "asset_id": str(asset_id)}
+        completed = commit_job(
+            db,
+            lease,
+            utc_now(),
+            result,
+            lambda session: _commit_generation(
+                session,
+                job.course_id,
+                asset_id,
+                existing_id is not None,
+                asset_type,
+                job.result.get("request", {}),
+                content,
+                evidence,
+            ),
+        )
+        return result if completed else {"status": "lease_lost"}
     except Exception as exc:
         db.rollback()
-        job = db.get(BackgroundJob, parsed_job_id)
-        if not job:
+        failed = fail_job(
+            db,
+            lease,
+            utc_now(),
+            str(exc),
+            lambda session: session.add(ReviewItem(
+                course_id=lease.course_id,
+                item_type="generation_failed",
+                title="Study asset could not be generated",
+                payload={"error": str(exc)},
+            )),
+        )
+        if failed:
             raise
-        job.status = JobStatus.failed
-        job.error = str(exc)
-        db.add(ReviewItem(course_id=job.course_id, item_type="generation_failed", title="Study asset could not be generated", payload={"error": str(exc)}))
-        db.commit()
-        raise
+        return {"status": "lease_lost"}
     finally:
         db.close()
