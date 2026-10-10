@@ -4,7 +4,7 @@ import {
   type UniversityIdentity,
   type UniversityRole,
 } from '../../../packages/institution/src/index.ts';
-import { isId } from '../../../packages/platform/src/tenancy/organization.ts';
+import { isId } from '../../../packages/platform/src/index.ts';
 
 export interface VerifiedAuthUser {
   id: string;
