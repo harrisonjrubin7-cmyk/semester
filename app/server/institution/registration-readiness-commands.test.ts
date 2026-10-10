@@ -43,6 +43,13 @@ class MemoryReadinessRepository implements RegistrationReadinessRepository {
 
   async save(result: ReadinessWorkflowResult) {
     const current = this.rows.get(result.record.id);
+    if (current && result.record.version === 1) {
+      const wanted = result.record.commandLedger[0];
+      const earlier = current.commandLedger.find((entry) => entry.idempotencyKey === wanted?.idempotencyKey);
+      if (wanted && earlier && earlier.fingerprint === wanted.fingerprint) {
+        return structuredClone({ record: current, receipt: earlier.receipt, event: earlier.event, replayed: true });
+      }
+    }
     if (current && !result.replayed && result.record.version !== current.version + 1) {
       throw new Error('compare-and-swap conflict');
     }
@@ -54,13 +61,12 @@ class MemoryReadinessRepository implements RegistrationReadinessRepository {
 function rig(evaluator?: RegistrationReadinessEvaluator) {
   const repository = new MemoryReadinessRepository();
   const service = new RegistrationReadinessService(repository);
-  let sequence = 0;
   const commands = new RegistrationReadinessCommands({
     service,
     repository,
     evaluator,
     now: () => new Date(NOW),
-    ids: { next: () => `readiness-evaluation-${++sequence}` },
+    evaluationIdFor: () => 'readiness-evaluation-1',
   });
   return { commands, repository };
 }
@@ -96,6 +102,17 @@ describe('registration-readiness command boundary', () => {
     });
     expect(result).not.toHaveProperty('record');
     expect(result).not.toHaveProperty('event');
+  });
+
+  it('replays the same start key against the same deterministic aggregate', async () => {
+    const evaluator: RegistrationReadinessEvaluator = { evaluate: vi.fn() };
+    const { commands, repository } = rig(evaluator);
+
+    const first = await commands.start(context(), ['student'], { termId: '2027-spring' });
+    const replay = await commands.start(context(), ['student'], { termId: '2027-spring' });
+
+    expect(replay).toEqual(first);
+    expect(repository.rows.size).toBe(1);
   });
 
   it('requires current student scope, a safe idempotency key and a bounded term', async () => {
