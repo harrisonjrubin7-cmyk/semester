@@ -290,6 +290,96 @@ async function heldDone(page, service, title) {
   return false;
 }
 
+/**
+ * What the signed-in device has actually persisted for one action.
+ *
+ * The sync label describes the last completed account request. It can already
+ * say "Synced" while React is applying the pull and the persistence effect is
+ * still writing its records. Waiting on that label and immediately asking the
+ * screen therefore races the state the journey is meant to prove.
+ *
+ * Ordinary browsers store each task in IndexedDB now. The localStorage read is
+ * the app's supported fallback when IndexedDB is unavailable; it is not used
+ * to paper over an IndexedDB record that exists with the wrong value.
+ */
+async function deviceTask(page, title) {
+  return page.evaluate(async ({ title }) => {
+    const fromLocalStorage = () => {
+      try {
+        const state = JSON.parse(localStorage.getItem('semester.v1') || 'null');
+        const task = state?.tasks?.find((candidate) => candidate?.title === title);
+        return task ? { source: 'localStorage', present: true, done: task.done === true } : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const records = await new Promise((resolve) => {
+      let answered = false;
+      const finish = (value) => {
+        if (answered) return;
+        answered = true;
+        clearTimeout(limit);
+        resolve(value);
+      };
+      const limit = setTimeout(() => finish(null), 1_500);
+      let request;
+      try {
+        request = indexedDB.open('semester-store');
+      } catch {
+        finish(null);
+        return;
+      }
+      request.onerror = () => finish(null);
+      request.onblocked = () => {};
+      request.onsuccess = () => {
+        const database = request.result;
+        if (!database.objectStoreNames.contains('tasks')) {
+          database.close();
+          finish(null);
+          return;
+        }
+        try {
+          const transaction = database.transaction('tasks', 'readonly');
+          const values = transaction.objectStore('tasks').getAll();
+          transaction.oncomplete = () => {
+            database.close();
+            finish(values.result);
+          };
+          transaction.onerror = () => {
+            database.close();
+            finish(null);
+          };
+          transaction.onabort = transaction.onerror;
+        } catch {
+          database.close();
+          finish(null);
+        }
+      };
+    });
+
+    if (Array.isArray(records)) {
+      const task = records.find((candidate) => candidate?.title === title);
+      return task
+        ? { source: 'indexedDB', present: true, done: task.done === true }
+        : { source: 'indexedDB', present: false, done: false };
+    }
+    return fromLocalStorage() ?? { source: 'unavailable', present: false, done: false };
+  }, { title });
+}
+
+/** Wait for the pulled record itself, so a green UI assertion proves the account copy landed. */
+async function deviceHasDoneTask(page, title) {
+  const until = Date.now() + SETTLE;
+  let last = { source: 'unavailable', present: false, done: false };
+  while (Date.now() < until) {
+    last = await deviceTask(page, title);
+    if (last.done) return { ok: true, state: last };
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return { ok: false, state: last };
+}
+
 const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 async function addAction(page, title) {
@@ -415,6 +505,12 @@ async function journey(label, viewport) {
     expect(
       await visible(other.getByRole('status').filter({ hasText: /^Synced/ }), SETTLE),
       'the second device did not finish pulling the account before the sync window closed',
+    );
+    const pulledTask = await deviceHasDoneTask(other, title);
+    expect(
+      pulledTask.ok,
+      `the second device did not persist the account's finished action within ${SETTLE / 1000}s `
+        + `(last state: ${JSON.stringify(pulledTask.state)})`,
     );
     await go(other, '#/mine', 'Personal');
     expect(await visible(other.getByRole('button', { name: done(title) }), SETTLE), 'the second device, signed in, does not show the action as done');
