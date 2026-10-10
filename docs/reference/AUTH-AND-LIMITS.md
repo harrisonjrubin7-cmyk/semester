@@ -109,7 +109,7 @@ The gateway allows one origin: the value of `SEMESTER_APP_ORIGIN`. Never `*`, be
 
 - A request whose `Origin` matches gets `Access-Control-Allow-Origin: <that origin>` and `Access-Control-Expose-Headers: X-Request-Id, X-Correlation-Id`.
 - A request whose `Origin` differs is refused before anything else.
-- A preflight (`OPTIONS`, any path) adds `Access-Control-Allow-Headers: Authorization, Content-Type, X-Correlation-Id` and `Access-Control-Allow-Methods: GET, POST, OPTIONS`.
+- A preflight (`OPTIONS`, any path) adds `Access-Control-Allow-Headers: Authorization, Content-Type, X-Correlation-Id, Idempotency-Key` and `Access-Control-Allow-Methods: GET, POST, OPTIONS`.
 - There is no `Access-Control-Allow-Credentials`, no `Access-Control-Max-Age` and no cookie. The token travels in the `Authorization` header.
 - `Vary: Origin` is always set.
 
