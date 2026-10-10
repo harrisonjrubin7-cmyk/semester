@@ -108,8 +108,6 @@ The current register also includes 28 callable definers whose current definition
 | `note_activity` | `auth.uid()` | `20260921151000_activity.sql` |
 | `open_help_request` | `auth.uid()`, `private.answers_for` | `20260927234000_help_request_reply_on_open.sql` |
 | `open_support_ticket` | `auth.uid()` | `20261008195500_support_ticket_retention.sql` |
-| `ops_operations_inbox` | `auth.uid()`, `private.has_capability`, `private.work_item_allowed` | `20261010030720_operations_work_items.sql` |
-| `ops_transition_work_item` | `auth.uid()`, `private.work_item_allowed` | `20261010030720_operations_work_items.sql` |
 | `raise_my_data_subject_request` | `auth.uid()` | `20260930234000_data_subject_request_intake.sql` |
 | `registration_drop` | `auth.uid()`, `private.registration_school`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
 | `registration_enroll` | `auth.uid()`, `private.registration_school`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
@@ -216,6 +214,8 @@ The current register also includes 28 callable definers whose current definition
 | `move_office_action` | `auth.uid()`, `private.may_publish` | `20260928302000_office_action_feed.sql` |
 | `offboarding_preflight` | `private.is_app_admin`, `private.has_capability` | `20260930200000_school_offboarding.sql` |
 | `office_desk_actions` | `auth.uid()`, `private.may_publish` | `20260928302000_office_action_feed.sql` |
+| `ops_operations_inbox` | `auth.uid()`, `private.has_capability`, `private.work_item_allowed` | `20261010030720_operations_work_items.sql` |
+| `ops_transition_work_item` | `auth.uid()`, `private.work_item_allowed` | `20261010030720_operations_work_items.sql` |
 | `productivity_readiness_aggregate` | `auth.uid()`, `'admin'=any(m.roles)`, `if owners<10` | `20261001153124_productivity_workspace.sql` |
 | `propose_offboarding` | `auth.uid()`, `private.is_app_admin`, `private.has_capability` | `20260930200000_school_offboarding.sql` |
 | `publish_course_guidance` | `auth.uid()`, `private.course_publisher` | `20260928309000_course_studio.sql` |
