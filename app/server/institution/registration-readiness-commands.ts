@@ -127,11 +127,13 @@ function completedReplay(
  * cannot silently fall back to fixtures, an unrelated worker, or stale data.
  */
 export class RegistrationReadinessCommands implements RegistrationReadinessCommandBoundary {
+  private readonly dependencies: RegistrationReadinessCommandDependencies;
   private readonly now: () => Date;
   private readonly evaluationIdFor: (context: RequestContext, idempotencyKey: string, termId: string) => string;
   private readonly timeoutMs: number;
 
-  constructor(private readonly dependencies: RegistrationReadinessCommandDependencies) {
+  constructor(dependencies: RegistrationReadinessCommandDependencies) {
+    this.dependencies = dependencies;
     this.now = dependencies.now ?? (() => new Date());
     this.evaluationIdFor = dependencies.evaluationIdFor ?? ((context, key, termId) => {
       const digest = createHash('sha256')
