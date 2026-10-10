@@ -233,6 +233,12 @@
       }
     },
     {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "api"
+      }
+    },
+    {
       "source": "/lab",
       "destination": {
         "service": "workflow-lab"

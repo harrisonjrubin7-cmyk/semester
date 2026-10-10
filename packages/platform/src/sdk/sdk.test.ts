@@ -69,6 +69,18 @@ describe('SDK client', () => {
     expect(calls).toHaveLength(1);
   });
 
+  it('keeps the server\'s safe user action for the surface to render', async () => {
+    const { client } = make([
+      err(new PlatformError('consent_required', 'Review the sharing choice.', {
+        userAction: { label: 'Review sharing', kind: 'open_screen' },
+      })),
+    ]);
+    await expect(client.get('/shared-record')).rejects.toMatchObject({
+      code: 'consent_required',
+      userAction: { label: 'Review sharing', kind: 'open_screen' },
+    });
+  });
+
   it('does not retry an unknown-outcome 502 — the caller must reconcile', async () => {
     const { client, calls } = make([err(new PlatformError('outcome_uncertain', 'Check before retrying.'))]);
     await expect(client.post('/x', {})).rejects.toMatchObject({ code: 'outcome_uncertain', retryable: false });
@@ -89,6 +101,16 @@ describe('SDK client', () => {
     expect(b.calls[1].headers['idempotency-key']).toBe(b.calls[0].headers['idempotency-key']);
     const c = make([1, 2, 3, 4].map(() => new Error('down')));
     await expect(c.client.get('/x')).rejects.toMatchObject({ code: 'network' });
+  });
+
+  it('does not retry a legacy mutation when its server cannot honor the key yet', async () => {
+    const { client, calls } = make([new Error('socket'), res(200, { duplicated: true })]);
+    await expect(client.post('/legacy-commit', {}, { retryOnNetwork: false })).rejects.toMatchObject({
+      code: 'network',
+      retryable: false,
+    });
+    expect(calls).toHaveLength(1);
+    expect(calls[0].headers['idempotency-key']).toBeTruthy();
   });
 
   it('a caller-supplied key and correlation id are used verbatim (offline queues)', async () => {

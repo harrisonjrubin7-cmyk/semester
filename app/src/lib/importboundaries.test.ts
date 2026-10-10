@@ -149,6 +149,14 @@ describe('each rule can fail', () => {
     expect(rulesIn(check(clean({ 'packages/contract/src/scripts/parser.ts': "import fs from 'node:fs';" })))).toEqual(['packages-are-a-leaf']);
   });
 
+  it('package-tools-are-isolated: Node tooling stays isolated while tests may exercise workspace packages', () => {
+    expect(check(clean({ 'packages/platform-control/scripts/read.ts': "import fs from 'node:fs';" }))).toEqual([]);
+    expect(check(clean({ 'packages/platform-control/tests/contract.test.ts': "import '../../contract/src/index';" }))).toEqual([]);
+    expect(rulesIn(check(clean({ 'packages/platform-control/scripts/contract.ts': "import '../../contract/src/index';" })))).toEqual(['package-tools-are-isolated']);
+    expect(rulesIn(check(clean({ 'packages/platform-control/scripts/leak.ts': "import '../../../app/src/screen';" })))).toEqual(['package-tools-are-isolated']);
+    expect(rulesIn(check(clean({ 'packages/platform-control/scripts/dep.ts': "import z from 'zod';" })))).toEqual(['package-tools-are-isolated']);
+  });
+
   it('functions-are-self-contained: a function importing the app, or a bare specifier', () => {
     expect(rulesIn(check(clean({ 'supabase/functions/x/index.ts': "import '../../../app/src/screen';" })))).toEqual(['functions-are-self-contained']);
     expect(rulesIn(check(clean({ 'supabase/functions/x/index.ts': "import z from 'zod';" })))).toEqual(['functions-are-self-contained']);
