@@ -15,6 +15,28 @@ depends_on = None
 
 
 def upgrade() -> None:
+    inspector = sa.inspect(op.get_bind())
+    expected_columns = {
+        "target_id",
+        "lease_owner",
+        "lease_generation",
+        "lease_expires_at",
+        "heartbeat_at",
+        "attempt_count",
+        "revoked_at",
+    }
+    actual_columns = {
+        column["name"] for column in inspector.get_columns("background_jobs")
+    }
+    existing = actual_columns & expected_columns
+    if existing:
+        target_indexes = {
+            tuple(index["column_names"])
+            for index in inspector.get_indexes("background_jobs")
+        }
+        if existing != expected_columns or ("target_id",) not in target_indexes:
+            raise RuntimeError("Existing background_jobs lease schema is incompatible")
+        return
     op.add_column("background_jobs", sa.Column("target_id", sa.Uuid(), nullable=True))
     op.add_column("background_jobs", sa.Column("lease_owner", sa.String(255), nullable=True))
     op.add_column(
