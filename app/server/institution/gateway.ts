@@ -351,6 +351,7 @@ export function createGateway(config: Config) {
       const readinessStart = path === '/v1/registration-readiness/evaluations';
       const readinessEvaluate = /^\/v1\/registration-readiness\/evaluations\/([^/]+)\/evaluate$/.exec(path);
       if (request.method === 'POST' && (readinessStart || readinessEvaluate)) {
+        context.request = readinessCommandContext(context.request!, request);
         if (!config.registrationReadiness) {
           fail(503, 'Registration readiness is not configured for this university.');
         }
