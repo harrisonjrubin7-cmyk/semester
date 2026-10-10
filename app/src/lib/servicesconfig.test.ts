@@ -53,43 +53,27 @@ describe('root vercel.json services carry what each folder file says', () => {
       { source: '/lab/(.*)', destination: { service: 'workflow-lab' } },
     ]);
     expect(root.rewrites.slice(9)).toEqual([
-      { source: '/app', destination: { service: 'app', path: '/' } },
-      { source: '^/app/(?<path>.*)  });
-
-  it('app: headers and function limits', () => {
-    expect(root.services.app.headers).toEqual(app.headers);
-    expect(root.services.app.functions).toEqual(app.functions);
-    expect(root.services.app.buildCommand).toBe('VITE_BASE=/app/ npm run build');
-    expect(root.services.app.routes).toEqual([
+      { source: '/app/(.*)', destination: { service: 'app' } },
+      { source: '/(.*)', destination: { service: 'company-site' } },
+    ]);
+    expect(root.redirects).toEqual([
       {
-        src: '/(.*)',
-        transforms: [{ type: 'request.path', op: 'set', args: '/$1' }],
+        source: '/app',
+        has: [{ type: 'host', value: '(?:(?:www\\.)?semesterintel\\.tech|.*\\.vercel\\.app)' }],
+        destination: '/app/',
+        permanent: true,
       },
     ]);
   });
 
-  it('company-site: headers and rewrites', () => {
-    expect(root.services['company-site'].headers).toEqual(company.headers);
-    expect(root.services['company-site'].rewrites).toEqual(company.rewrites);
-  });
-
-  it('the app still sends a Content-Security-Policy', () => {
-    const keys = root.services.app.headers.flatMap((rule: { headers: { key: string }[] }) =>
-      rule.headers.map((h) => h.key),
-    );
-    expect(keys).toContain('Content-Security-Policy');
-  });
-});
-, destination: { service: 'app', path: '/$path' } },
-      { source: '/(.*)', destination: { service: 'company-site' } },
-    ]);
-    expect(root.redirects).toBeUndefined();
-  });
-
   it('app: headers and function limits', () => {
     expect(root.services.app.headers).toEqual(app.headers);
     expect(root.services.app.functions).toEqual(app.functions);
-    expect(root.services.app.buildCommand).toBe('VITE_BASE=/app/ npm run build');
+    expect(root.services.app.buildCommand).toBe('VITE_BASE=/app/ npm run build:hosting');
+    expect(root.services.app.routes).toBeUndefined();
+    expect(JSON.parse(readText('app/package.json')).scripts['build:hosting']).toBe(
+      'tsc -b && vite build --outDir dist/app',
+    );
   });
 
   it('company-site: headers and rewrites', () => {

@@ -103,7 +103,10 @@ test('unified routes keep APIs and lab ahead of /app and the company catch-all',
   ]);
   assert.equal(config.services.app.buildCommand, 'VITE_BASE=/app/ npm run build:hosting');
   assert.equal(config.services.app.routes, undefined);
-  assert.equal(JSON.parse(read('app/package.json')).scripts['build:hosting'], 'tsc -b && vite build --outDir dist/app');
+  assert.equal(
+    JSON.parse(read('app/package.json')).scripts['build:hosting'],
+    'tsc -b && vite build --outDir dist/app',
+  );
 });
 
 test('semester.website remains an earlier company-site host rule', () => {
