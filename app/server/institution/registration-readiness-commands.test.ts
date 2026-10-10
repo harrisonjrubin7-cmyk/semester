@@ -291,10 +291,25 @@ describe('registration-readiness evaluator worker', () => {
       state: 'reconciling',
     });
     expect(signal?.aborted).toBe(true);
-    expect(repository.rows.get('readiness-evaluation-1')).toMatchObject({
+    const replay = await commands.evaluate(
+      context({ idempotencyKey: 'readiness-evaluate-timeout' }),
+      ['student'],
+      'readiness-evaluation-1',
+    );
+    expect(replay).toEqual(bounded);
+    expect(evaluator.evaluate).toHaveBeenCalledTimes(1);
+
+    const persisted = repository.rows.get('readiness-evaluation-1');
+    expect(persisted).toMatchObject({
       state: 'reconciling',
+      version: 4,
       reconciliationTasks: [expect.objectContaining({ state: 'open' })],
     });
+    expect(persisted?.commandLedger.find((entry) => entry.idempotencyKey === 'readiness-evaluate-timeout:timeout')?.event)
+      .toMatchObject({
+        eventType: 'registration.readiness_evaluated',
+        payload: { reason: 'evaluator_timeout' },
+      });
   });
 
   it('replays a completed worker command without calling the source twice', async () => {
