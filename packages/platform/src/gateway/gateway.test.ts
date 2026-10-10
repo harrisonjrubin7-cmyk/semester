@@ -173,6 +173,8 @@ describe('idempotency', () => {
     expect(takeover.value).toBe(3);
     release();
     await first;
+    const replay = await withIdempotency(store, { clock: c }, ctx(TENANT_A, 'p'), 'x.y', {}, async () => 4);
+    expect(replay).toEqual({ value: 3, replayed: true });
   });
 
   it('stores deterministic refusals and replays them; releases the key on a failure that may differ next time', async () => {

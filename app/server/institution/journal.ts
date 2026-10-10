@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import type {
   ActionInput,
@@ -5,13 +6,13 @@ import type {
   Review,
   UniversityIdentity,
 } from '../../../packages/institution/src/index.ts';
-import type { IntelligenceAuditRecord } from './intelligence.ts';
 import type {
   BeginOutcome,
   IdempotencyScope,
   IdempotencyStore,
   StoredResponse,
-} from '../../../packages/platform/src/index.ts';
+} from '../../../packages/platform/src/gateway/idempotency.ts';
+import type { IntelligenceAuditRecord } from './intelligence.ts';
 import {
   assertJournalKey,
   journalOperation,
@@ -159,6 +160,7 @@ export class ActionJournal implements ActionJournalStore, IdempotencyStore {
         command TEXT NOT NULL,
         idempotency_key TEXT NOT NULL,
         request_hash TEXT NOT NULL,
+        lease_id TEXT NOT NULL,
         state TEXT NOT NULL CHECK(state IN ('in_progress','completed')),
         response_status INTEGER,
         response_body TEXT,
@@ -350,11 +352,12 @@ export class ActionJournal implements ActionJournalStore, IdempotencyStore {
     this.db.exec('BEGIN IMMEDIATE');
     try {
       const row = this.db.prepare(
-        `SELECT request_hash,state,response_status,response_body,lease_until,expires
+        `SELECT request_hash,lease_id,state,response_status,response_body,lease_until,expires
            FROM idempotency
           WHERE tenant=? AND actor=? AND command=? AND idempotency_key=?`,
       ).get(scope.tenantId, scope.actorId, scope.command, scope.key) as {
         request_hash: string;
+        lease_id: string;
         state: 'in_progress' | 'completed';
         response_status: number | null;
         response_body: string | null;
@@ -369,7 +372,7 @@ export class ActionJournal implements ActionJournalStore, IdempotencyStore {
         }
         if (row.state === 'completed' && row.response_status !== null && row.response_body !== null) {
           this.db.exec('COMMIT');
-          return { kind: 'replay', response: { status: row.response_status, body: JSON.parse(row.response_body) } };
+          return { kind: 'replay', response: { status: row.response_status, body: openJournalRow(this.key, row.response_body) } };
         }
         if (row.lease_until > at) {
           this.db.exec('COMMIT');
@@ -377,13 +380,15 @@ export class ActionJournal implements ActionJournalStore, IdempotencyStore {
         }
       }
 
+      const leaseId = randomUUID();
       this.db.prepare(
         `INSERT INTO idempotency(
-           tenant,actor,command,idempotency_key,request_hash,state,
+           tenant,actor,command,idempotency_key,request_hash,lease_id,state,
            response_status,response_body,lease_until,expires
-         ) VALUES(?,?,?,?,?,'in_progress',NULL,NULL,?,?)
+         ) VALUES(?,?,?,?,?,?,'in_progress',NULL,NULL,?,?)
          ON CONFLICT(tenant,actor,command,idempotency_key) DO UPDATE SET
            request_hash=excluded.request_hash,
+           lease_id=excluded.lease_id,
            state='in_progress',
            response_status=NULL,
            response_body=NULL,
@@ -395,24 +400,25 @@ export class ActionJournal implements ActionJournalStore, IdempotencyStore {
         scope.command,
         scope.key,
         requestHash,
+        leaseId,
         at + leaseMs,
         at + ttlMs,
       );
       this.db.exec('COMMIT');
-      return { kind: 'started' };
+      return { kind: 'started', leaseId };
     } catch (error) {
       this.db.exec('ROLLBACK');
       throw error;
     }
   }
 
-  async complete(scope: IdempotencyScope, response: StoredResponse, now: Date): Promise<void> {
-    const body = JSON.stringify(response.body);
-    if (body === undefined) throw new Error('An idempotency response must be JSON-serialisable.');
+  async complete(scope: IdempotencyScope, leaseId: string, response: StoredResponse, now: Date): Promise<void> {
+    if (JSON.stringify(response.body) === undefined) throw new Error('An idempotency response must be JSON-serialisable.');
+    const body = sealJournalRow(this.key, response.body);
     this.db.prepare(
       `UPDATE idempotency
           SET state='completed',response_status=?,response_body=?,lease_until=?
-        WHERE tenant=? AND actor=? AND command=? AND idempotency_key=?`,
+        WHERE tenant=? AND actor=? AND command=? AND idempotency_key=? AND lease_id=?`,
     ).run(
       response.status,
       body,
@@ -421,13 +427,14 @@ export class ActionJournal implements ActionJournalStore, IdempotencyStore {
       scope.actorId,
       scope.command,
       scope.key,
+      leaseId,
     );
   }
 
-  async release(scope: IdempotencyScope): Promise<void> {
+  async release(scope: IdempotencyScope, leaseId: string): Promise<void> {
     this.db.prepare(
-      'DELETE FROM idempotency WHERE tenant=? AND actor=? AND command=? AND idempotency_key=?',
-    ).run(scope.tenantId, scope.actorId, scope.command, scope.key);
+      'DELETE FROM idempotency WHERE tenant=? AND actor=? AND command=? AND idempotency_key=? AND lease_id=?',
+    ).run(scope.tenantId, scope.actorId, scope.command, scope.key, leaseId);
   }
 
   /**

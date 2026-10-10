@@ -401,6 +401,7 @@ const PLATFORM_NON_EVENT_IMPORTERS = [
   'app/server/institution/adapter.ts',
   'app/server/institution/context.ts',
   'app/server/institution/gateway.ts',
+  'app/server/institution/journal.ts',
   // Course sources reuse only the tenant context, error envelope and file
   // engine through the public package. The intelligence path imports only the
   // platform retrieval/context contract. None calls event primitives or mounts
