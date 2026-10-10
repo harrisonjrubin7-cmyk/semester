@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### The calendar has an Agenda view
+
+**Calendar** now has a fifth segment, **Agenda**, beside Day, Week, Month and Semester. It lists the next 14 days in order, one day under the next, and leaves out days with nothing on them. Deadlines, your own actions, campus events, appointments and entries from connected calendars appear exactly as they do on the day view, under the same source chips. Tap a day's heading to open that day. Nothing to do: your data is unchanged.
+
 ### Privileged platform accounts verify MFA before Semester opens staff tools
 
 An account with a live `platform_admin` or `support_agent` grant now verifies a second factor before Semester mounts any capability-backed tool, including tools outside **Semester Operations**. An enrolled authenticator-app or phone-code factor can be challenged; if neither exists, the step offers authenticator-app enrolment. A failed factor lookup has its own retry. The database also keeps those two grants dormant at `aal1` for capability checks and role-based approval requests. Accounts without either privileged role are unchanged. Production authentication configuration and recovery still require separate operational verification.
