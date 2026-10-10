@@ -605,7 +605,14 @@ begin
   begin
     delete from public.schools where id = 'northerly';
     raise exception 'FAILED: a university with organizations on it was removed anyway';
-  exception when foreign_key_violation then
+  -- Both conditions, because the same refusal has two codes. Postgres 17 —
+  -- what the live project and CI run — reports an `on delete restrict` as
+  -- foreign_key_violation (23503). Postgres 18 reports it as restrict_violation
+  -- (23001), "violates RESTRICT setting of foreign key constraint". Catching
+  -- only the first made this block abort the transaction on 18, which then
+  -- skipped every check below it, so a run on a newer local server read as
+  -- the organizations model being broken when it was the probe.
+  exception when foreign_key_violation or restrict_violation then
     perform pg_temp.ok('a university cannot be removed while it has organizations');
   end;
   alter table public.schools enable trigger refuse_school_delete;
