@@ -391,6 +391,62 @@ describe('revocation', () => {
 })
 
 describe('the cursor', () => {
+  it('repairs a valid-JSON but invalid admission marker before pulling', async () => {
+    const store = memoryStore()
+    await store.cursors.set('__offline_policy_admission__:t:u', '{}')
+    let pulls = 0
+    const transport: SyncTransport = {
+      push: async () => ({ kind: 'results', results: [] }),
+      status: async () => ({ kind: 'results', results: [] }),
+      pull: async () => { pulls++; return { kind: 'changes', changes: [], nextCursor: '1', hasMore: false } },
+    }
+    await new SyncEngine({ store, transport, identity: { tenantId: 't', userId: 'u', deviceId: 'd' }, now: () => NOW, newId: () => 'id' }).syncOnce()
+    expect(pulls).toBe(1)
+    expect(JSON.parse((await store.cursors.get('__offline_policy_admission__:t:u'))!)).toBeInstanceOf(Array)
+  })
+
+  it('consumes but never persists inherited Object property names from the server feed', async () => {
+    const store = memoryStore()
+    const transport: SyncTransport = {
+      push: async () => ({ kind: 'results', results: [] }),
+      status: async () => ({ kind: 'results', results: [] }),
+      pull: async () => ({ kind: 'changes', changes: [{ dataClass: 'toString', id: 'unknown', version: 1, value: { forbidden: true } }], nextCursor: '1', hasMore: false } as never),
+    }
+    await new SyncEngine({ store, transport, identity: { tenantId: 't', userId: 'u', deviceId: 'd' }, now: () => NOW, newId: () => 'id' }).syncOnce()
+    expect(await store.entities.all()).toEqual([])
+  })
+
+  it('rebootstraps when policy newly admits a class without dropping authored pending work', async () => {
+    const store = memoryStore()
+    const cursors: Array<string | undefined> = []
+    const transport: SyncTransport = {
+      push: async () => ({ kind: 'results', results: [] }),
+      status: async () => ({ kind: 'results', results: [] }),
+      pull: async (request) => {
+        cursors.push(request.cursor)
+        return { kind: 'changes', changes: request.cursor ? [] : [{ dataClass: 'billing_summary', id: 'bill', version: 1, value: { balance: 100 } }], nextCursor: '1', hasMore: false, snapshot: !request.cursor } as const
+      },
+    }
+    const deps = { store, transport, identity: { tenantId: 't', userId: 'u', deviceId: 'd' }, now: () => NOW, newId: () => 'pending' }
+    await new SyncEngine(deps).syncOnce()
+    await new SyncEngine({ ...deps, newId: () => 'authored' }).write({ dataClass: 'personal_plan', entityId: 'plan', op: 'create', payload: { estimate: 42 } })
+    await new SyncEngine({ ...deps, tenantPolicy: { optIn: ['billing_summary'] } }).syncOnce()
+    expect(cursors).toEqual([undefined, undefined])
+    expect(await store.entities.get('billing_summary', 'bill')).toBeDefined()
+    expect(await store.entities.get('personal_plan', 'plan')).toMatchObject({ value: { estimate: 42 }, phase: 'queued' })
+    expect(await store.outbox.get('authored')).toBeDefined()
+  })
+
+  it('consumes but never persists grades, transcripts, aid or guardian projections from the server feed', async () => {
+    const r = rig({ tenantPolicy: { optIn: ['grade', 'academic_record', 'financial_aid', 'guardian_projection'] } })
+    for (const dataClass of ['grade', 'academic_record', 'financial_aid', 'guardian_projection'] as const) {
+      r.gw.external(dataClass, dataClass, { protected: dataClass }, hlc(NOW))
+    }
+    await r.sync()
+    expect(await r.store.entities.all()).toEqual([])
+    expect(await r.store.outbox.all()).toEqual([])
+  })
+
   it('pages, remembers where it got to, and does not refetch', async () => {
     const a = rig(); const b = rig({ with: a, device: 'dev-b' })
     for (let i = 0; i < 5; i++) a.gw.external('task', `X${i}`, { n: i }, hlc(NOW))
