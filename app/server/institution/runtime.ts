@@ -86,12 +86,13 @@ export function createProductionInstitutionRuntime(
   // gateway so a half-configured SCIM stops the runtime rather than the first
   // provisioning request.
   const scim = createProductionScim(env, { url: authUrl, serviceKey });
-  const registrationReadiness = dependencies.registrationReadinessEvaluator
+  const readinessRepository = dependencies.registrationReadinessEvaluator
+    ? new PostgresRegistrationReadinessRepository({ url: authUrl, serviceKey })
+    : undefined;
+  const registrationReadiness = dependencies.registrationReadinessEvaluator && readinessRepository
     ? new RegistrationReadinessCommands({
-        service: new RegistrationReadinessService(
-          new PostgresRegistrationReadinessRepository({ url: authUrl, serviceKey }),
-        ),
-        repository: new PostgresRegistrationReadinessRepository({ url: authUrl, serviceKey }),
+        service: new RegistrationReadinessService(readinessRepository),
+        repository: readinessRepository,
         evaluator: dependencies.registrationReadinessEvaluator,
       })
     : undefined;
