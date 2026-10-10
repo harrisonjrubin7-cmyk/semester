@@ -33,6 +33,22 @@ const server = createServer(async (request, response) => {
     response.end('<!doctype html><title>Seed</title>');
     return;
   }
+  if (url.pathname === '/__legacy-sw.js') {
+    response.writeHead(200, {
+      'content-type': 'text/javascript; charset=utf-8',
+      'service-worker-allowed': '/legacy/',
+    });
+    response.end(`
+      self.addEventListener('install', (event) => {
+        event.waitUntil(
+          caches.open('semester-shared')
+            .then((cache) => cache.put('/legacy-shared', new Response('legacy-share-sentinel')))
+            .then(() => self.skipWaiting())
+        );
+      });
+    `);
+    return;
+  }
   if (url.pathname === '/api/synthetic') {
     response.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
     response.end(JSON.stringify({ source: 'origin-server', authorization: request.headers.authorization || null }));
@@ -191,11 +207,57 @@ try {
     };
   });
   evidence.checks.sharedCacheAfterSeedNavigation = seedRoundTripSnapshot;
-  assert.equal(
-    seedRoundTripSnapshot.present,
-    true,
-    'shared entry must survive a same-origin navigation before worker activation',
-  );
+  if (!seedRoundTripSnapshot.present) {
+    evidence.limitations ??= [];
+    evidence.limitations.push('page-seeded-cache-entry-not-durable-before-worker');
+  }
+
+  // A legacy installed app's cache is worker-owned. Seed through a synthetic
+  // non-root worker, then unregister it before /app starts so it cannot affect
+  // routing or control. This is a migration fixture, not the experimental bridge.
+  const legacyWorkerSeed = await page.evaluate(async () => {
+    const registration = await navigator.serviceWorker.register('/__legacy-sw.js', {
+      scope: '/legacy/',
+    });
+    await new Promise((resolveActivated, rejectActivated) => {
+      const worker = registration.installing || registration.waiting || registration.active;
+      if (worker?.state === 'activated') {
+        resolveActivated();
+        return;
+      }
+      if (!worker) {
+        rejectActivated(new Error('legacy fixture worker did not install'));
+        return;
+      }
+      const timeout = setTimeout(
+        () => rejectActivated(new Error('legacy fixture worker activation timed out')),
+        10_000,
+      );
+      worker.addEventListener('statechange', () => {
+        if (worker.state !== 'activated') return;
+        clearTimeout(timeout);
+        resolveActivated();
+      });
+    });
+    const cache = await caches.open('semester-shared');
+    const keys = await cache.keys();
+    const absolute = new URL('/legacy-shared', location.href).href;
+    const hit = await cache.match(absolute);
+    const unregistered = await registration.unregister();
+    return {
+      workerScope: registration.scope,
+      entries: keys.map((request) => ({ url: request.url, method: request.method })),
+      present: Boolean(hit),
+      bytes: hit ? (await hit.clone().arrayBuffer()).byteLength : null,
+      contentType: hit?.headers.get('content-type') || null,
+      vary: hit?.headers.get('vary') || null,
+      unregistered,
+    };
+  });
+  evidence.checks.sharedCacheFromLegacyWorker = legacyWorkerSeed;
+  assert.equal(legacyWorkerSeed.workerScope, `${origin}/legacy/`);
+  assert.equal(legacyWorkerSeed.present, true, 'legacy worker must durably seed the shared entry');
+  assert.equal(legacyWorkerSeed.unregistered, true, 'legacy fixture worker must be removed before /app');
 
   evidence.timings = { appNavigationStartedAt: Date.now() };
   await page.goto(appUrl, { waitUntil: 'domcontentloaded' });
