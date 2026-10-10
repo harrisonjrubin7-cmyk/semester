@@ -5,9 +5,8 @@ import threading
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from app.core.database import Base
 from app.models.entities import BackgroundJob, Course, JobStatus, SourceDocument, User
