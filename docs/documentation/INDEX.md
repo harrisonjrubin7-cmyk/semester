@@ -6,7 +6,7 @@ Every page the documentation system governs, by audience and by kind. The curate
 
 <!-- Rendered from the cards of every governed page by app/src/lib/docs/docindex.test.ts. Edit a page’s card, then run `REGISTERS=write npx vitest run src/lib/docs/docindex.test.ts` from app/. -->
 
-**111 governed pages:** 2 generated from code, 105 held by a test, 4 reviewed by a person only. The last group is the part a reader leans on least, and the part [`docs:stale`](OWNERSHIP-AND-REVIEW.md#cadence) watches.
+**112 governed pages:** 2 generated from code, 106 held by a test, 4 reviewed by a person only. The last group is the part a reader leans on least, and the part [`docs:stale`](OWNERSHIP-AND-REVIEW.md#cadence) watches.
 
 Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed by this system and are not listed here; [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md) says which of them is authoritative for each company control.
 
@@ -133,6 +133,7 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [Gateway error codes](../reference/ERRORS.md) | reference | held | `engineering` | 2026-10-04 |
 | [Event catalog and outbox](../reference/EVENTS.md) | reference | generated | `data` | 2026-10-04 |
 | [Reference](../reference/README.md) | reference | held | `engineering` | 2026-10-04 |
+| [Registration-readiness evaluation workflow](../reference/registration-readiness-workflow.md) | reference | held | `data` | 2026-10-10 |
 | [Registration-readiness evaluation workflow](../reference/registration-readiness-workflow.md) | reference | held | `data` | 2026-10-09 |
 | [Semester Education OS P0–P3 implementation plan](../roadmap/P0-P3-IMPLEMENTATION_PLAN.md) | explanation | reviewed | `product` | 2026-10-08 |
 | [Example: event consumer](../../examples/event-consumer/README.md) | reference | held | `engineering` | 2026-10-04 |
