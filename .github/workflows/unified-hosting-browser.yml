@@ -43,7 +43,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Build the /app artifact
-        run: npm run build:hosting --workspace app
+        run: VITE_BASE=/app/ npm run build:hosting --workspace app
 
       - name: Install Playwright outside the repository tree
         env:
