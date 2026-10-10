@@ -63,11 +63,25 @@ function intercepted(path, init = {}) {
   new Function('self', 'caches', 'URL', 'Response', 'fetch', read('app/public/sw.js'))(
     self, caches, URL, Response, () => Promise.reject(new Error('network disabled in routing test')),
   );
+  const { syntheticMode, ...requestInit } = init;
+  const nativeRequest = new Request(new URL(path, self.location.origin), requestInit);
+  const request = syntheticMode
+    ? {
+        method: nativeRequest.method,
+        url: nativeRequest.url,
+        cache: nativeRequest.cache,
+        mode: syntheticMode,
+        headers: nativeRequest.headers,
+      }
+    : nativeRequest;
   let handled = false;
   listeners.get('fetch')({
-    request: new Request(new URL(path, self.location.origin), init),
-    respondWith: () => { handled = true; },
-    waitUntil: () => {},
+    request,
+    respondWith: (promise) => {
+      handled = true;
+      void Promise.resolve(promise).catch(() => {});
+    },
+    waitUntil: (promise) => { void Promise.resolve(promise).catch(() => {}); },
   });
   return handled;
 }
@@ -127,6 +141,7 @@ test('the /app worker never handles root APIs or personalized request shapes', (
   assert.equal(intercepted('/api/institution/health'), false);
   assert.equal(intercepted('/api/productivity/items'), false);
   assert.equal(intercepted('/app/data.json?student=1'), false);
+  assert.equal(intercepted('/app/?screen=study', { syntheticMode: 'navigate' }), true);
   assert.equal(intercepted('/app/data.json', { headers: { Authorization: 'Bearer synthetic' } }), false);
   assert.equal(intercepted('/app/assets/app.js'), true);
 });

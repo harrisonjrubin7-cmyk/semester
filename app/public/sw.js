@@ -445,7 +445,11 @@ self.addEventListener('fetch', (event) => {
   // including same-origin root APIs. Only app-owned, anonymous, unparameterized
   // resources are eligible for offline handling. API or personalized responses
   // must never enter CacheStorage or be replayed across sessions.
-  if (!url.pathname.startsWith(BASE) || url.search || request.headers.has('authorization')) return;
+  if (
+    !url.pathname.startsWith(BASE)
+    || request.headers.has('authorization')
+    || (url.search && request.mode !== 'navigate')
+  ) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(
