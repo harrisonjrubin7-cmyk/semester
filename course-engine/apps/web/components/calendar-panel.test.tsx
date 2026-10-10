@@ -66,7 +66,7 @@ describe("calendar editing", () => {
     mockedApi.mockResolvedValue(timedEvent);
     renderPanel(timedEvent);
     fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-    expect(screen.getByLabelText("Time")).toHaveValue("12:00");
+    expect(screen.getByLabelText(/^Time/)).toHaveValue("12:00");
     fireEvent.change(screen.getByLabelText("Title"), { target: { value: "Updated midterm" } });
     fireEvent.click(screen.getByRole("button", { name: "Review changes" }));
     fireEvent.click(screen.getByRole("button", { name: "Apply calendar change" }));
@@ -132,7 +132,7 @@ describe("calendar editing", () => {
     renderPanel(timedEvent);
     fireEvent.click(screen.getByRole("button", { name: "Edit" }));
     fireEvent.change(screen.getByLabelText("Date"), { target: { value: "2026-03-08" } });
-    fireEvent.change(screen.getByLabelText("Time"), { target: { value: "02:30" } });
+    fireEvent.change(screen.getByLabelText(/^Time/), { target: { value: "02:30" } });
     fireEvent.click(screen.getByRole("button", { name: "Review changes" }));
     fireEvent.click(screen.getByRole("button", { name: "Apply calendar change" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(/does not exist in the device time zone/i);
