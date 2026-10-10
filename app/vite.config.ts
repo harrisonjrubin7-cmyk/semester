@@ -808,7 +808,6 @@ const MOCKS_MODULES = [
   'src/screens/addmaterial.test.tsx',
   'src/screens/pathway.test.tsx',
   'src/screens/pathwaygrid.test.tsx',
-  'src/screens/mine/Drive.delete-folder.test.tsx',
   'src/screens/solvephoto.test.tsx',
   'src/screens/trustroom.test.tsx',
   'src/screens/university.test.tsx',
