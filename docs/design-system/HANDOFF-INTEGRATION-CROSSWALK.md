@@ -369,3 +369,12 @@ This mapping adds no archive route, role, capability, schema, policy, provider o
 | Recovery, export and external-authority boundary | `app/src/lib/export.ts`, `app/src/state/store.tsx` | Existing and unchanged. The core Semester backup contains `operatingWorkspace`, so a pre-deletion backup can restore the earlier workspace. Existing downloaded exports remain outside the mutation. Preference deletion creates no share or message, changes no official record and invokes no provider or institution system. |
 
 This mapping adds no archive route, role, capability, schema, policy, provider operation or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 6 current-product consequence mapping — integration slice 71
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for permanently deleting one device-local file | `app/src/screens/mine/Drive.tsx`, `app/src/lib/files.ts`, `app/src/components/TypeToConfirm.tsx` | Existing but incomplete is narrowed: **Delete for good** no longer erases the only in-app byte record on its first press. It opens the existing irreversible confirmation, requires the exact file name, names the byte count and explains the surviving-but-broken course/deadline/note links before calling the unchanged single-record IndexedDB delete. Cancellation writes nothing. The regression was red against the prior behavior and is included in 53 focused passing tests. |
+| File recovery, external-copy and authority boundary | `app/src/lib/files.ts`, `app/src/lib/workspace-backup.ts` | Existing and unchanged. Files in the bin remain device-local; Undo and workspace backup do not contain their bytes. An original or downloaded copy outside Semester is not affected and may be added again. This slice does not empty the bin, change 30-day cleanup, add upload/download authority or claim server/provider storage. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation, provider behavior or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.

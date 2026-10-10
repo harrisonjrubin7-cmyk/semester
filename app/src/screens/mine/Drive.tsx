@@ -54,6 +54,7 @@ import {
 import { CoursePicker } from '../../components/CoursePicker';
 import { DeadlinePicker } from '../../components/DeadlinePicker';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { TypeToConfirm } from '../../components/TypeToConfirm';
 import { ActionPreview } from '../../components/unity/ActionPreview';
 import { forLine, nameFor } from '../../lib/forwork';
 
@@ -142,6 +143,8 @@ export function Drive() {
   const [nesting, setNesting] = useState<Shown | null>(null);
   /** The folder hierarchy waiting for a consequence preview before removal. */
   const [deleting, setDeleting] = useState<Shown | null>(null);
+  /** The one binned file waiting for an irreversible typed confirmation. */
+  const [purging, setPurging] = useState<Settled | null>(null);
   /* The file whose deadline is being changed. A second panel rather than a
      second control on every row: the row already carries a star, a Move and a
      Bin, and a fourth button on a 390px phone is the point at which the file's
@@ -581,7 +584,7 @@ export function Drive() {
                 onFile={() => setFiling(file)}
                 onTrash={() => void act(trashFile(file.id))}
                 onRestore={() => void act(restoreFile(file.id))}
-                onPurge={() => void act(deleteFile(file.id))}
+                onPurge={() => setPurging(file)}
               />
             ))}
           </div>
@@ -717,6 +720,26 @@ export function Drive() {
               dispatch({ type: 'deleteFolder', id: folder.id });
               refresh();
             })();
+          }}
+        />
+      )}
+      {purging && (
+        <TypeToConfirm
+          title={`Delete ${purging.name} for good?`}
+          what={[
+            `Deletes the only copy of ${purging.name} that Semester keeps on this device, including its ${formatBytes(purging.size)} of stored bytes.`,
+            'Its course, deadline and note links are not deleted, but they will no longer be able to open this file.',
+            'This does not delete an original or downloaded copy kept outside Semester.',
+            'Semester Undo and workspace backup cannot restore these bytes. You can add another copy later only if you still have one.',
+          ]}
+          want={purging.name}
+          describe="the file name"
+          confirmLabel="Delete for good"
+          onCancel={() => setPurging(null)}
+          onConfirm={() => {
+            const file = purging;
+            setPurging(null);
+            void act(deleteFile(file.id), `The file “${file.name}”`);
           }}
         />
       )}

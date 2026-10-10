@@ -1485,3 +1485,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed one-file permanent deletion — automation pass 6, integration slice 71
+
+- [x] Fetch current `origin/main` `8c3acf89`; confirm it is already merged and contains no equivalent Drive permanent-deletion confirmation or test.
+- [x] Re-rank remaining consequence paths and select only one file already in the device-local bin; keep bulk bin emptying, automatic retention cleanup, same-origin device erase and scanner-backed Import separate.
+- [x] Replace first-press `deleteFile` with the existing irreversible `TypeToConfirm` flow and require the exact file name.
+- [x] Name the exact file, stored-byte count, links that remain but can no longer open it, external copies that remain and the no-Undo/no-backup recovery boundary.
+- [x] Preserve cancellation without writes and the existing single-record IndexedDB deletion, shared Drive failure message and refresh behavior; add no route, dependency, schema, policy, server operation or provider effect.
+- [x] Prove both focused tests red against the prior first-press behavior, then pass 53/53 Drive, files, typed-confirm, modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and chunk-size warning.
+- [x] Pass 9/9 token-export tests, 69/69 design-check contracts and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the CSS ledger.
+- [ ] Aggregate `design-system:check` launcher — cannot start because it hardcodes unavailable `npm`; its exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep bulk empty-bin deletion, automatic retention cleanup and same-origin device erase separate until their broader concurrency, retention and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
