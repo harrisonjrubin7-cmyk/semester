@@ -109,7 +109,7 @@ describe('attachment cache', () => {
     }
   })
 
-  it('preserves a replacement written after atomic index removal but before blob cleanup', async () => {
+  it('preserves a replacement written during generation-specific blob cleanup', async () => {
     const raw = memoryBlobs()
     let rows: CachedFile[] = []
     let replaceOnDelete = false
@@ -132,6 +132,51 @@ describe('attachment cache', () => {
     expect(rows).toHaveLength(1)
     expect(rows[0]?.blobName).not.toBe(old.blobName)
     expect(raw.names()).toEqual([rows[0]!.blobName])
+  })
+
+  it('retains exact retry identity when blob deletion is interrupted', async () => {
+    const raw = memoryBlobs()
+    let rows: CachedFile[] = []
+    let fail = true
+    const blobs = {
+      put: raw.put,
+      get: raw.get,
+      delete: async (name: string) => {
+        if (fail) { fail = false; throw new Error('delete interrupted') }
+        await raw.delete(name)
+      },
+    }
+    const c = new AttachmentCache({ dek: await newKey(), blobs, index: indexFor(() => rows, (next) => { rows = next }), now: () => NOW, scope: { tenantId: 't', userId: 'u', deviceId: 'd' } })
+    const row = await c.put(meta('file'), bytes('protected'))
+    await expect(c.revoke({ ids: ['file'] })).rejects.toThrow(/delete interrupted/)
+    expect(rows.map((candidate) => candidate.blobName)).toEqual([row.blobName])
+    expect(raw.names()).toEqual([row.blobName])
+    expect(await c.revoke({ ids: ['file'] })).toBe(1)
+    expect(rows).toEqual([])
+    expect(raw.names()).toEqual([])
+  })
+
+  it('retains durable cleanup identity when replacement cleanup is interrupted', async () => {
+    const raw = memoryBlobs()
+    let rows: CachedFile[] = []
+    let fail = true
+    const blobs = {
+      put: raw.put,
+      get: raw.get,
+      delete: async (name: string) => {
+        if (fail) { fail = false; throw new Error('replacement cleanup interrupted') }
+        await raw.delete(name)
+      },
+    }
+    const c = new AttachmentCache({ dek: await newKey(), blobs, index: indexFor(() => rows, (next) => { rows = next }), now: () => NOW, scope: { tenantId: 't', userId: 'u', deviceId: 'd' } })
+    const old = await c.put(meta('file'), bytes('old'))
+    await expect(c.put(meta('file'), bytes('new'))).rejects.toThrow(/cleanup interrupted/)
+    expect(rows.filter((row) => row.retired).map((row) => row.blobName)).toEqual([old.blobName])
+    expect(rows.filter((row) => !row.retired)).toHaveLength(1)
+    expect(raw.names()).toHaveLength(2)
+    expect((await c.usage()).files).toBe(1)
+    expect(rows.some((row) => row.retired)).toBe(false)
+    expect(raw.names()).toHaveLength(1)
   })
 
   it('stores ciphertext only, and reads the plaintext back', async () => {
