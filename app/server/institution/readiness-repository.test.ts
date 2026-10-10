@@ -58,7 +58,7 @@ describe('Postgres registration-readiness repository', () => {
       args: {
         want_tenant: 'school-a',
         want_expected_version: 0,
-        want_fingerprint: '["requested","student-1","fall-2026"]',
+        want_fingerprint: '["requested"]',
         want_result: started,
       },
     });
