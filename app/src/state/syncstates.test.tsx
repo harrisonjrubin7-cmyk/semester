@@ -189,7 +189,7 @@ describe('an edit goes up on the database path', () => {
     await wait(3_000);
 
     expect(JSON.parse(localStorage.getItem(SEEN_KEY) || '{}').state).not.toBe('account-v2');
-    expect(store.state.tasks.some((task) => task.id === 'remote')).toBe(false);
+    expect(store.state.tasks.some((task) => task.id === 'remote')).toBe(true);
   });
 
   it('makes an accepted account copy durable before recording it as seen', async () => {

@@ -1027,21 +1027,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          * persistence effect strands the device with the new stamp and none
          * of the account rows.
          */
+        let durable = latest.current;
+        if (Object.keys(gone).length > 0) {
+          durable = reducer(durable, { type: 'dropTicks', removals: gone });
+          dispatch({ type: 'dropTicks', removals: gone });
+        }
+        if (Object.keys(deletions.dropHere).length > 0) {
+          durable = reducer(durable, { type: 'dropRecords', removals: deletions.dropHere });
+          dispatch({ type: 'dropRecords', removals: deletions.dropHere });
+        }
+        durable = reducer(durable, { type: 'hydrate', persisted: taken });
+        /*
+         * Dispatch before the first await. A render already scheduled by the
+         * sync-status update must not hand the persistence effect the stale
+         * pre-pull copy while the explicit write below is in flight; that
+         * later queued write would delete the rows this transaction just put.
+         */
+        dispatch({ type: 'hydrate', persisted: taken });
         if (dbAvailable()) {
-          let durable = latest.current;
-          if (Object.keys(gone).length > 0) durable = reducer(durable, { type: 'dropTicks', removals: gone });
-          if (Object.keys(deletions.dropHere).length > 0) {
-            durable = reducer(durable, { type: 'dropRecords', removals: deletions.dropHere });
-          }
-          durable = reducer(durable, { type: 'hydrate', persisted: taken });
           persistToDb(pickPersisted(durable), tellOtherTabs);
           if (!(await flushNow())) {
             throw new Error('The account copy could not be saved on this device.');
           }
         }
-        if (Object.keys(gone).length > 0) dispatch({ type: 'dropTicks', removals: gone });
-        if (Object.keys(deletions.dropHere).length > 0) dispatch({ type: 'dropRecords', removals: deletions.dropHere });
-        dispatch({ type: 'hydrate', persisted: taken });
         markSeen(remote.seen);
         // The version both sides now agree on is the account's — including
         // for the fields held back, whose difference here is still to go up,
@@ -1762,20 +1770,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          * its synchronous effect path; this closes the asynchronous database
          * window without introducing a second localStorage writer.
          */
+        const wiped = choice === 'cloud'
+          ? reducer(latest.current, { type: 'wipeLocalForAdopt' })
+          : latest.current;
+        const adopted = reducer(wiped, { type: 'hydrate', persisted: theirs });
+        if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
+        // As in an automatic pull above, make every render after this point
+        // carry the adopted copy before yielding to the asynchronous writer.
+        dispatch({ type: 'hydrate', persisted: theirs });
         if (dbAvailable()) {
-          const wiped = choice === 'cloud'
-            ? reducer(latest.current, { type: 'wipeLocalForAdopt' })
-            : latest.current;
-          const adopted = reducer(wiped, { type: 'hydrate', persisted: theirs });
           persistToDb(pickPersisted(adopted), tellOtherTabs);
           // Do not record rows as seen when the transaction that should make
           // them durable did not land. The chooser stays open for a retry and
           // the standing save warning explains why progress cannot continue.
           if (!(await flushNow())) return;
         }
-
-        if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
-        dispatch({ type: 'hydrate', persisted: theirs });
         markSeen(remote.seen);
         // The first version this device and the account agree on.
         writeBase(baseOf(forLegacy(theirs as Record<string, unknown>)));
