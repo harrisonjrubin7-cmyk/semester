@@ -703,7 +703,6 @@ function vercelUncovered(extra: string): string[] {
  * fails if this list and the tree disagree.
  */
 const MOCKS_MODULES = [
-  'src/components/Grapher.clear.test.tsx',
   'src/components/TodayActionCenter.shadow.sources.test.tsx',
   'src/composition/react.mount.test.tsx',
   'src/components/ProductivityPreparation.test.tsx',
@@ -725,6 +724,7 @@ const MOCKS_MODULES = [
   'src/screens/onboardingcounts.test.tsx',
   'src/components/saysomething.test.tsx',
   'src/screens/mentionbadge.test.tsx',
+  'src/screens/mine/Drive.delete-folder.test.tsx',
   'src/components/syncstrip.test.tsx',
   'src/components/waitingrow.test.tsx',
   'src/components/pushstalled.test.tsx',
@@ -749,6 +749,7 @@ const MOCKS_MODULES = [
   'src/components/rework.test.tsx',
   'src/components/room/Talk.test.tsx',
   'src/components/GraduationSimulator.phase-d.test.tsx',
+  'src/components/Grapher.clear.test.tsx',
   'src/components/StudyStudio.test.tsx',
   'src/components/QuizFeedback.test.tsx',
   'src/components/TeachBack.test.tsx',
@@ -774,7 +775,6 @@ const MOCKS_MODULES = [
   'src/lib/support-case-client.test.ts',
   'src/screens/registration.test.tsx',
   'src/screens/me.operations.test.tsx',
-  'src/screens/mine/Drive.delete-folder.test.tsx',
   'src/lib/enrollment/client.test.ts',
   'src/screens/gradebook.test.tsx',
   'src/lib/gradebook/client.test.ts',
