@@ -241,6 +241,10 @@ function isText(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function isPriority(value: unknown): value is WorkItemPriority {
+  return typeof value === 'string' && WORK_ITEM_PRIORITIES.some((priority) => priority === value);
+}
+
 function requiredText(value: unknown, message: string): asserts value is string {
   if (!isText(value)) throw new PlatformError('validation_failed', message);
 }
@@ -261,9 +265,9 @@ function validateStoredItem(value: unknown, tenantId: string, id: string): Opera
   const item = value as Partial<OperationsWorkItem>;
   // Scope and identity are checked before structure, state, version, or policy so a bad adapter cannot become a tenant oracle.
   if (item.tenantId !== tenantId || item.id !== id) throw missing();
+  if (!isPriority(item.priority)) throw corrupt();
   if (!isText(item.kind) || !isText(item.sourceRef) || !isText(item.purpose)
     || !item.subject || !isText(item.subject.type) || !isText(item.subject.id)
-    || !WORK_ITEM_PRIORITIES.some((priority) => priority === item.priority)
     || !['open', 'claimed', 'resolved'].includes(item.state ?? '')
     || !Number.isInteger(item.version) || (item.version ?? 0) < 1
     || !isInstant(item.createdAt) || !isInstant(item.updatedAt)
