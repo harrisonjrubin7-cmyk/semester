@@ -204,3 +204,24 @@ begin
 end $$;
 
 rollback;
+
+
+-- The same tenant-derived console authority must protect the shared operations
+-- inbox. Kept in this suite so the red contract does not create a second queue
+-- or a second tenant-operations evidence family.
+begin;
+
+do $$
+begin
+  if to_regprocedure('public.ops_operations_inbox(uuid,boolean)') is null then
+    raise exception 'FAILED: the durable operations inbox RPC does not exist';
+  end if;
+  if to_regprocedure('public.ops_transition_work_item(uuid,text,bigint,text,text,text,text)') is null then
+    raise exception 'FAILED: the atomic work-item transition RPC does not exist';
+  end if;
+  if to_regprocedure('private.open_work_item(text,text,text,text,text,text,text,text,text)') is null then
+    raise exception 'FAILED: the service-only work-item producer does not exist';
+  end if;
+end $$;
+
+rollback;
