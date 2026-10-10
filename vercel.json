@@ -283,10 +283,10 @@
       }
     },
     {
-      "source": "/app/(.*)",
+      "source": "/app/:path*",
       "destination": {
         "service": "app",
-        "path": "/$1"
+        "path": "/:path*"
       }
     },
     {
