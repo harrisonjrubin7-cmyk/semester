@@ -126,7 +126,7 @@ def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed(
             assert connection.exec_driver_sql("PRAGMA foreign_key_check").all() == []
             connection.rollback()
             assert not connection.in_transaction()
-        assert MigrationContext.configure(connection).get_current_revision() == "0002_review_first_confidence"
+        assert MigrationContext.configure(connection).get_current_revision() == "0003_upload_completion"
         assert connection.scalar(
             select(SourceChunk.confidence).where(SourceChunk.id == unknown_chunk_id)
         ) is None
