@@ -58,7 +58,7 @@ describe('attachment policy cleanup integration', () => {
     } });
     await purgeDisallowedOfflineData(store, undefined, createAttachmentPolicyPurge(cache));
 
-    expect(files.map((row) => row.id)).toEqual(['draft-file', 'authored-file']);
+    expect(files.map((row) => row.id).sort()).toEqual(['authored-file', 'draft-file']);
     expect(await store.entities.get('personal_plan', 'shared-id')).toMatchObject({ value: { budget: 'student plan' } });
     expect(await store.entities.get('assignment_draft', 'draft')).toMatchObject({ value: { body: 'student work' }, phase: 'draft' });
   });
