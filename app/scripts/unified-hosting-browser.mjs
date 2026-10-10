@@ -104,6 +104,13 @@ try {
   evidence.browserVersion = browser.version();
   context = await browser.newContext({ serviceWorkers: 'allow' });
   page = await context.newPage();
+  const runtimeEvents = [];
+  page.on('console', (message) => runtimeEvents.push(`console:${message.type()}:${message.text()}`));
+  page.on('pageerror', (error) => runtimeEvents.push(`pageerror:${error.message}`));
+  page.on('requestfailed', (request) => {
+    runtimeEvents.push(`requestfailed:${request.url()}:${request.failure()?.errorText || 'unknown'}`);
+  });
+  evidence.runtimeEvents = runtimeEvents;
 
   // Seed the same origin before the /app worker exists. These are synthetic
   // authored/pending sentinels, not production account or offline-policy rows.
@@ -144,12 +151,23 @@ try {
   });
 
   await page.goto(appUrl, { waitUntil: 'domcontentloaded' });
-  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.waitForFunction(async () => {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    return registrations.some((registration) => (
+      new URL(registration.scope).pathname === '/app/' &&
+      registration.active &&
+      new URL(registration.active.scriptURL).pathname === '/app/sw.js'
+    ));
+  }, undefined, { timeout: 15_000 });
   if (!await page.evaluate(() => Boolean(navigator.serviceWorker.controller))) {
     await page.reload({ waitUntil: 'domcontentloaded' });
   }
-  await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
-  await page.waitForFunction(async () => !(await caches.keys()).includes('semester-v0-scope-app-shell'));
+  await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller), undefined, { timeout: 15_000 });
+  await page.waitForFunction(
+    async () => !(await caches.keys()).includes('semester-v0-scope-app-shell'),
+    undefined,
+    { timeout: 15_000 },
+  );
 
   const manifest = await page.evaluate(async () => {
     const response = await fetch('./manifest.webmanifest');
@@ -179,10 +197,10 @@ try {
   evidence.checks.manifest = manifest;
 
   const worker = await page.evaluate(async () => {
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await navigator.serviceWorker.getRegistration('/app/');
     return {
-      scope: new URL(registration.scope).pathname,
-      script: new URL(registration.active.scriptURL).pathname,
+      scope: registration ? new URL(registration.scope).pathname : null,
+      script: registration?.active ? new URL(registration.active.scriptURL).pathname : null,
       controlled: Boolean(navigator.serviceWorker.controller),
     };
   });
@@ -287,12 +305,12 @@ try {
   await context.setOffline(false);
 
   evidence.capabilities = await page.evaluate(async () => {
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await navigator.serviceWorker.getRegistration('/app/');
     return {
       cacheStorage: 'caches' in window,
       indexedDb: 'indexedDB' in window,
       launchQueue: 'launchQueue' in window,
-      pushManager: Boolean(registration.pushManager),
+      pushManager: Boolean(registration?.pushManager),
       beforeInstallPromptObservableOnlyWithBrowserPolicy: true,
     };
   });
@@ -311,5 +329,7 @@ try {
 } finally {
   await context?.close().catch(() => {});
   await browser?.close().catch(() => {});
+  server.closeIdleConnections?.();
+  server.closeAllConnections?.();
   await new Promise((resolveClose) => server.close(resolveClose));
 }
