@@ -391,6 +391,38 @@ describe('revocation', () => {
 })
 
 describe('the cursor', () => {
+  it('consumes but never persists inherited Object property names from the server feed', async () => {
+    const store = memoryStore()
+    const transport: SyncTransport = {
+      push: async () => ({ kind: 'results', results: [] }),
+      status: async () => ({ kind: 'results', results: [] }),
+      pull: async () => ({ kind: 'changes', changes: [{ dataClass: 'toString', id: 'unknown', version: 1, value: { forbidden: true } }], nextCursor: '1', hasMore: false } as never),
+    }
+    await new SyncEngine({ store, transport, identity: { tenantId: 't', userId: 'u', deviceId: 'd' }, now: () => NOW, newId: () => 'id' }).syncOnce()
+    expect(await store.entities.all()).toEqual([])
+  })
+
+  it('rebootstraps when policy newly admits a class without dropping authored pending work', async () => {
+    const store = memoryStore()
+    const cursors: Array<string | undefined> = []
+    const transport: SyncTransport = {
+      push: async () => ({ kind: 'results', results: [] }),
+      status: async () => ({ kind: 'results', results: [] }),
+      pull: async (request) => {
+        cursors.push(request.cursor)
+        return { kind: 'changes', changes: request.cursor ? [] : [{ dataClass: 'billing_summary', id: 'bill', version: 1, value: { balance: 100 } }], nextCursor: '1', hasMore: false, snapshot: !request.cursor } as const
+      },
+    }
+    const deps = { store, transport, identity: { tenantId: 't', userId: 'u', deviceId: 'd' }, now: () => NOW, newId: () => 'pending' }
+    await new SyncEngine(deps).syncOnce()
+    await new SyncEngine({ ...deps, newId: () => 'authored' }).write({ dataClass: 'personal_plan', entityId: 'plan', op: 'create', payload: { estimate: 42 } })
+    await new SyncEngine({ ...deps, tenantPolicy: { optIn: ['billing_summary'] } }).syncOnce()
+    expect(cursors).toEqual([undefined, undefined])
+    expect(await store.entities.get('billing_summary', 'bill')).toBeDefined()
+    expect(await store.entities.get('personal_plan', 'plan')).toMatchObject({ value: { estimate: 42 }, phase: 'queued' })
+    expect(await store.outbox.get('authored')).toBeDefined()
+  })
+
   it('consumes but never persists grades, transcripts, aid or guardian projections from the server feed', async () => {
     const r = rig({ tenantPolicy: { optIn: ['grade', 'academic_record', 'financial_aid', 'guardian_projection'] } })
     for (const dataClass of ['grade', 'academic_record', 'financial_aid', 'guardian_projection'] as const) {

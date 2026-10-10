@@ -92,6 +92,8 @@ export interface CachedFile {
   pinned: boolean
   wrappedKey: Uint8Array
   blobName: string
+  /** Blob deletion is owed; retained durably until idempotent cleanup succeeds. */
+  retired?: boolean
 }
 
 export interface QuotaPolicy {
@@ -132,7 +134,11 @@ export interface AttachmentCacheDeps {
   dek: CryptoKey
   blobs: BlobStore
   /** Persisted inside the encrypted database; here, anything that survives a restart. */
-  index: { load(): Promise<CachedFile[]>; save(rows: CachedFile[]): Promise<void> }
+  index: {
+    load(): Promise<CachedFile[]>
+    /** Atomic across every cache instance backed by this index. */
+    update<T>(change: (rows: CachedFile[]) => { rows: CachedFile[]; value: T }): Promise<T>
+  }
   now: () => number
   quota?: QuotaPolicy
   tenant?: TenantOfflinePolicy
@@ -161,50 +167,64 @@ export class AttachmentCache {
   }
 
   async put(meta: Pick<CachedFile, 'id' | 'tenantId' | 'dataClass' | 'ownerEntityId' | 'mime' | 'scan' | 'aclEpoch' | 'pinned'>, bytes: Uint8Array): Promise<CachedFile> {
+    await this.cleanupRetired()
     assertCacheable(meta.dataClass, this.d.tenant ?? NO_OPT_IN)
     if (meta.scan !== 'clean') throw new AttachmentError('scan_not_clean')
     if (!this.quota.allowedMime.includes(meta.mime)) throw new AttachmentError('type_not_allowed')
     if (bytes.length > this.quota.maxFileBytes) throw new AttachmentError('too_large')
 
-    let rows = await this.d.index.load()
-    rows = rows.filter((r) => r.id !== meta.id)
     const sha = await sha256Hex(bytes)
     const fek = await newKey()
     const sealed = await seal(fek, bytes, this.aad(meta.id, sha))
-    rows = await this.makeRoom(rows, sealed.length)
     const t = this.d.now()
-    const blobName = `${meta.id}.${sha.slice(0, 12)}`
+    const generation = [...rand(8)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+    const blobName = `${meta.id}.${sha.slice(0, 12)}.${generation}`
     await this.d.blobs.put(blobName, sealed)
     const row: CachedFile = { ...meta, size: sealed.length, contentSha256: sha, fetchedAt: t, lastReadAt: t, wrappedKey: await wrapKey(fek, this.d.dek, this.aad(meta.id, sha)), blobName }
-    await this.d.index.save([...rows, row])
+    let removed: CachedFile[]
+    try {
+      removed = await this.d.index.update((current) => {
+        const active = current.filter((candidate) => !candidate.retired)
+        const replaced = active.filter((candidate) => candidate.id === meta.id)
+        const room = this.makeRoom(active.filter((candidate) => candidate.id !== meta.id), sealed.length)
+        const retired = [...replaced, ...room.evicted].map((candidate) => ({ ...candidate, retired: true }))
+        return { rows: [...current.filter((candidate) => candidate.retired), ...room.rows, row, ...retired], value: retired }
+      })
+    } catch (error) {
+      await this.d.blobs.delete(blobName)
+      throw error
+    }
+    if (removed.length) await this.revokeObserved(removed)
     return row
   }
 
   /** Evict least-recently-read, unpinned files until `need` bytes fit. Never touches pinned ones. */
-  private async makeRoom(rows: CachedFile[], need: number): Promise<CachedFile[]> {
+  private makeRoom(rows: CachedFile[], need: number): { rows: CachedFile[]; evicted: CachedFile[] } {
     let used = rows.reduce((n, r) => n + r.size, 0)
     const out = [...rows]
+    const evicted: CachedFile[] = []
     for (const r of [...rows].filter((x) => !x.pinned).sort((a, b) => a.lastReadAt - b.lastReadAt)) {
       if (used + need <= this.quota.totalBytes) break
-      await this.d.blobs.delete(r.blobName)
       out.splice(out.indexOf(r), 1)
+      evicted.push(r)
       used -= r.size
     }
     if (used + need > this.quota.totalBytes) throw new AttachmentError('quota_full')
-    return out
+    return { rows: out, evicted }
   }
 
   /** Decrypt and verify. Anything stale, revoked, unclean or altered is refused, never served. */
   async read(id: string, ctx: { aclEpoch: number }): Promise<Uint8Array> {
+    await this.cleanupRetired()
     const rows = await this.d.index.load()
-    const r = rows.find((x) => x.id === id)
+    const r = rows.find((x) => x.id === id && !x.retired)
     if (!r) throw new AttachmentError('not_found')
     if (r.scan !== 'clean') throw new AttachmentError('scan_not_clean')
     if (ctx.aclEpoch > r.aclEpoch) throw new AttachmentError('access_revoked')
     if (freshness(r.dataClass, r.fetchedAt, this.d.now(), this.d.tenant ?? NO_OPT_IN) === 'expired') {
       // Expiry includes a class or tenant-policy change. Erase the bytes and
       // wrapped key before refusing the read, rather than waiting for sweep.
-      await this.revoke({ ids: [r.id] })
+      await this.revokeObserved([r])
       throw new AttachmentError('expired')
     }
     const sealed = await this.d.blobs.get(r.blobName)
@@ -217,28 +237,53 @@ export class AttachmentCache {
       throw new AttachmentError('integrity_failed')
     }
     if ((await sha256Hex(bytes)) !== r.contentSha256) throw new AttachmentError('integrity_failed')
-    await this.d.index.save(rows.map((x) => (x.id === id ? { ...x, lastReadAt: this.d.now() } : x)))
+    await this.d.index.update((current) => ({
+      rows: current.map((candidate) => candidate.blobName === r.blobName ? { ...candidate, lastReadAt: this.d.now() } : candidate),
+      value: undefined,
+    }))
     return bytes
+  }
+
+  /** Remove only the exact rows previously observed; a same-id replacement wins. */
+  private async revokeObserved(observed: readonly CachedFile[]): Promise<number> {
+    const names = new Set(observed.map((row) => row.blobName))
+    // Delete generation-unique blobs first. If deletion is interrupted the
+    // index still retains every retry identity; a same-id replacement uses a
+    // different blob name and is never targeted by this attempt.
+    for (const row of observed) await this.d.blobs.delete(row.blobName)
+    await this.d.index.update((current) => {
+      const removed = current.filter((row) => names.has(row.blobName))
+      return { rows: current.filter((row) => !names.has(row.blobName)), value: removed }
+    })
+    return observed.length
+  }
+
+  private async cleanupRetired(): Promise<void> {
+    const rows = await this.d.index.load()
+    const retired = rows.filter((row) => row.retired)
+    if (retired.length) await this.revokeObserved(retired)
   }
 
   /** Erase by file id, by owning entity (membership removed), or everything. Bytes and wrapped key both go. */
   async revoke(match: { ids?: string[]; ownerEntityIds?: string[]; all?: boolean }): Promise<number> {
+    await this.cleanupRetired()
     const rows = await this.d.index.load()
     const gone = rows.filter((r) => match.all || match.ids?.includes(r.id) || match.ownerEntityIds?.includes(r.ownerEntityId))
-    for (const r of gone) await this.d.blobs.delete(r.blobName)
-    await this.d.index.save(rows.filter((r) => !gone.includes(r)))
-    return gone.length
+    return this.revokeObserved(gone)
   }
 
   /** Drop everything past its class's freshness limit; pinning protects against eviction, not expiry. */
   async sweep(): Promise<number> {
+    await this.cleanupRetired()
     const rows = await this.d.index.load()
     const stale = rows.filter((r) => freshness(r.dataClass, r.fetchedAt, this.d.now(), this.d.tenant ?? NO_OPT_IN) === 'expired')
-    return this.revoke({ ids: stale.map((r) => r.id) })
+    return this.revokeObserved(stale)
   }
 
   async usage(): Promise<{ used: number; limit: number; files: number }> {
+    await this.cleanupRetired()
     const rows = await this.d.index.load()
-    return { used: rows.reduce((n, r) => n + r.size, 0), limit: this.quota.totalBytes, files: rows.length }
+    const active = rows.filter((row) => !row.retired)
+    return { used: active.reduce((n, r) => n + r.size, 0), limit: this.quota.totalBytes, files: active.length }
   }
 }

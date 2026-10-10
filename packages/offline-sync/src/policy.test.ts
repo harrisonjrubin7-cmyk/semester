@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  assertCacheable, assertCrdt, assertQueueable, CRDT_CLASSES, DATA_CLASSES, dataClasses, freshness,
+  assertCacheable, assertCrdt, assertQueueable, classifyPersistence, CRDT_CLASSES, DATA_CLASSES, dataClasses, freshness,
   NEVER_CACHED, NEVER_QUEUED, OfflinePolicyError, policyFor,
 } from './policy.ts'
 
@@ -11,6 +11,13 @@ describe('the offline policy table', () => {
   it('refuses a class it does not know instead of defaulting it', () => {
     expect(() => policyFor('mystery')).toThrow(OfflinePolicyError)
     expect(() => assertQueueable('mystery')).toThrow(/unknown_class/)
+  })
+
+  it('refuses inherited Object property names as unknown classes', () => {
+    for (const dataClass of ['toString', 'constructor', '__proto__']) {
+      expect(classifyPersistence(dataClass), dataClass).toEqual({ allowed: false, why: 'unknown_class' })
+      expect(() => policyFor(dataClass), dataClass).toThrow(/unknown_class/)
+    }
   })
 
   it('never lets a device queue money, permissions, approvals, records, grade changes or registration', () => {
