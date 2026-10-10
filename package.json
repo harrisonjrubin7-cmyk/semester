@@ -2,13 +2,20 @@
   "name": "semester",
   "version": "0.0.0",
   "private": true,
-  "description": "Workspace root. Holds app/ and packages/* as npm workspaces with one lockfile; video/ and pipeline/ keep their own manifests and lockfiles (see docs/target-architecture/09-CONVERSION-PLAN.md, wave C0). Every script runs from app/, not here.",
+  "description": "Workspace root. Holds app/ and packages/* as npm workspaces with one lockfile; video/ and pipeline/ keep their own manifests and lockfiles (see docs/target-architecture/09-CONVERSION-PLAN.md, wave C0). Product scripts run from app/; platform-control scripts run here.",
   "workspaces": [
     "app",
     "packages/*"
   ],
   "engines": {
     "node": ">=22"
+  },
+  "scripts": {
+    "registry:validate": "npm run validate --workspace @semester/platform-control",
+    "registry:build": "npm run build:registry --workspace @semester/platform-control",
+    "release:check": "npm run check:release --workspace @semester/platform-control",
+    "release:report": "npm run report:release --workspace @semester/platform-control",
+    "platform-control:test": "npm test --workspace @semester/platform-control"
   },
   "overrides": {
     "lodash-es": "4.18.1",

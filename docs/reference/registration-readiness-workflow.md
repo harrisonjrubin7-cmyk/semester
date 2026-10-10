@@ -2,9 +2,17 @@
 
 > **Type:** reference · **Audience:** implementers · **Owner:** `data` · **Truth:** held · **Reviewed:** 2026-10-09 · **Held by:** `packages/institution/src/readiness-workflow.test.ts`
 
-Status: repository contract plus a service-only Postgres persistence adapter. No HTTP route or worker uses the adapter, and no live SIS connection or official registration write is activated by this module.
+Status: repository contract, service-only Postgres persistence adapter, and server orchestration service. No HTTP route or worker calls the service yet, and no live SIS connection or official registration write is activated by these modules.
 
-`packages/institution/src/readiness-workflow.ts` defines the aggregate rules that the durable readiness repository preserves. `app/server/institution/readiness-repository.ts` is the server-side port and `supabase/migrations/20261009160000_registration_readiness_store.sql` is its transactional store. They sit between the source-aware projection and future HTTP or worker adoption so callers and SQL cannot each invent different retry behavior.
+`packages/institution/src/readiness-workflow.ts` defines the aggregate rules that the durable readiness repository preserves. `app/server/institution/readiness-service.ts` loads the tenant-bound aggregate and applies those rules, `app/server/institution/readiness-repository.ts` is the service-only persistence adapter, and `supabase/migrations/20261009160000_registration_readiness_store.sql` is its transactional store. They sit between the source-aware projection and future HTTP or worker adoption so callers and SQL cannot each invent different retry behavior.
+
+## Server orchestration boundary
+
+The service accepts tenant, subject, requester, correlation, and idempotency values explicitly. A future route must derive them from verified server context; the service does not accept a browser session or authorize a person. A future evaluator worker may use the same boundary with its own verified service identity.
+
+For transitions, the service loads by tenant plus evaluation id before it applies the pure state machine. A missing record and a record owned by another tenant therefore have the same result. Invalid or stale transitions fail before `save`; accepted transitions are still protected by the database compare-and-swap in case two callers raced after the load.
+
+This layer intentionally does not expose the workflow record as the student-facing checklist. The workflow aggregate records evaluation state and delivery receipts; `packages/institution/src/readiness.ts` defines the source-aware projection governed by `registration.readiness.view`. An HTTP read route needs that projection store and policy decision, not an accidental serialization of the orchestration aggregate.
 
 ## State path
 

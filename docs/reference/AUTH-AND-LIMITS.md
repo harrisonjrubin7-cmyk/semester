@@ -81,6 +81,16 @@ The gateway never trusts anything the client says about who it is. Three facts a
 
 The result is an identity of three fields: `userId`, `institutionId` and `roles`. The institution id picks the adapter, so there is no request input that selects an adapter. `user_metadata` and a stale `app_metadata.semester` role claim play no part. `trustedIdentity` in `auth.ts`, which reads `app_metadata.semester`, is a fixture helper for tests; neither entry point calls it.
 
+The gateway also has an additive `contextForSelection` adapter for a future
+multi-membership flow. It accepts a requested membership and workspace, but derives the
+tenant, person, institution, role-grant identifiers and expiry only from a directory the
+server has already verified. It refuses a directory whose person or institution differs
+from the authenticated identity, and a conflicting `X-Tenant-Id` remains a
+`tenant_mismatch`. The selected membership becomes the request context's membership and
+its expiry caps the request's role grants. No current authentication result supplies the
+directory and session-expiry input, and no route calls this adapter; it is not a live
+workspace-switching API or a client contract.
+
 Both entry points re-run the token check at the moment of a commit (and of an intelligence confirm) and require the same user and institution as before. If the answer changed, the commit is `403 forbidden` ("Your current university access does not permit this action.").
 
 With `SEMESTER_AUTH_URL`, `SEMESTER_AUTH_PUBLIC_KEY` and `SEMESTER_AUTH_SERVICE_KEY` unset, `start.ts` authenticates nobody: a request without a bearer token is `401`, and a request with one is `403`. The Vercel runtime refuses to build without all three and answers `503` to every request ([errors outside the envelope](ERRORS.md#errors-outside-the-envelope)).
@@ -279,7 +289,7 @@ curl -s 'http://127.0.0.1:8787/health/live' \
 | Cursor | 500 characters | `cursor` on `/records`; longer values are cut. |
 | Review lifetime | 10 minutes | From prepare to commit. |
 | Adapter call | 20 seconds | Each request gives its adapters one abort signal that fires 20 seconds after the request reached the route stage. |
-| Vercel function | 30 seconds | `maxDuration` in `app/vercel.json`. |
+| Vercel function | 30 seconds | `services.api.functions` in root `vercel.json`, on the public API service entrypoint. |
 | Standalone server | `requestTimeout` 30 s, `headersTimeout` 10 s | `start.ts`. It listens on `127.0.0.1` only. |
 | Standalone port | 8787 | Default of `SEMESTER_GATEWAY_PORT`. |
 

@@ -1,0 +1,10 @@
+{
+  "key": "semester",
+  "name": "Semester ecosystem",
+  "owner": "platform-governance",
+  "status": "implemented",
+  "evidence": ["packages/platform-control/README.md"],
+  "canonical_domain": "semesterintel.tech",
+  "workspace_families": ["public-web", "student-os", "faculty-os", "advisor-os", "registrar-os", "finance-os", "student-affairs-os", "institution-console", "company-os", "operations-os", "external-portals", "developer-portal", "community-marketplace"],
+  "pilot_release_scopes": ["public-web", "student-os", "faculty-os", "advisor-os", "registrar-os", "finance-os", "student-affairs-os", "institution-console", "company-os", "operations-os", "applicant-portal", "guardian-portal", "alumni-portal", "employer-portal", "partner-portal", "developer-portal", "community-marketplace"]
+}

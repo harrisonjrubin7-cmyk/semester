@@ -16,6 +16,7 @@ export * from './observability/telemetry.ts';
 
 export * from './tenancy/organization.ts';
 export * from './tenancy/context.ts';
+export * from './tenancy/active-context.ts';
 
 export * from './gateway/errors.ts';
 export * from './gateway/headers.ts';
@@ -44,6 +45,7 @@ export * from './engines/flags.ts';
 export * from './engines/entitlements.ts';
 export * from './engines/reporting.ts';
 export * from './engines/integration.ts';
+export * from './engines/operations.ts';
 
 export * from './isolation/layers.ts';
 

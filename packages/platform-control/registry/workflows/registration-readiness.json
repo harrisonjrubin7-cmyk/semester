@@ -1,0 +1,27 @@
+{
+  "key": "registration.readiness.evaluation",
+  "name": "Registration readiness evaluation",
+  "owner": "product-registration",
+  "status": "implemented",
+  "version": 1,
+  "initial": "requested",
+  "terminal": [],
+  "continuous": true,
+  "cycle_outcomes": ["ready", "blocked", "needs_review", "unknown", "stale"],
+  "states": ["requested", "evaluating", "ready", "blocked", "needs_review", "unknown", "stale", "reconciling"],
+  "transitions": {
+    "requested": ["evaluating"],
+    "evaluating": ["ready", "blocked", "needs_review", "unknown", "stale"],
+    "ready": ["evaluating"],
+    "blocked": ["evaluating"],
+    "needs_review": ["reconciling"],
+    "unknown": ["reconciling"],
+    "stale": ["reconciling"],
+    "reconciling": ["evaluating"]
+  },
+  "idempotency": "Every command requires an idempotency key and replays the recorded receipt.",
+  "retry_policy": "Ambiguous results enter reconciliation before a new evaluation generation.",
+  "escalation_role": "operations",
+  "runbook": "docs/reference/registration-readiness-workflow.md",
+  "evidence": ["packages/institution/src/readiness-workflow.ts", "packages/institution/src/readiness-workflow.test.ts"]
+}

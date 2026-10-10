@@ -96,7 +96,7 @@ class SourceChunk(Base, TimestampMixin):
     start_seconds: Mapped[float | None] = mapped_column(Float)
     end_seconds: Mapped[float | None] = mapped_column(Float)
     bounding_box: Mapped[dict[str, Any] | None] = mapped_column(JSON)
-    confidence: Mapped[float] = mapped_column(Float, default=1.0)
+    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
 
@@ -107,7 +107,7 @@ class Citation(Base, TimestampMixin):
     quote: Mapped[str] = mapped_column(Text)
     quoted_start: Mapped[int | None] = mapped_column(Integer)
     quoted_end: Mapped[int | None] = mapped_column(Integer)
-    status: Mapped[ReviewStatus] = mapped_column(Enum(ReviewStatus), default=ReviewStatus.confirmed)
+    status: Mapped[ReviewStatus] = mapped_column(Enum(ReviewStatus), default=ReviewStatus.needs_review)
 
 
 class CourseUnit(Base, TimestampMixin):
@@ -282,6 +282,32 @@ class BackgroundJob(Base, TimestampMixin):
     progress: Mapped[int] = mapped_column(Integer, default=0)
     error: Mapped[str | None] = mapped_column(Text)
     result: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    target_id: Mapped[uuid.UUID | None] = mapped_column(index=True)
+    lease_owner: Mapped[str | None] = mapped_column(String(255))
+    lease_generation: Mapped[int] = mapped_column(Integer, default=0)
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    attempt_count: Mapped[int] = mapped_column(Integer, default=0)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class UploadCompletion(Base, TimestampMixin):
+    __tablename__ = "upload_completions"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("source_documents.id", ondelete="CASCADE"), unique=True
+    )
+    course_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("courses.id", ondelete="CASCADE"), index=True
+    )
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("background_jobs.id", ondelete="CASCADE"), unique=True
+    )
+    payload_fingerprint: Mapped[str] = mapped_column(String(64))
+    verified_metadata: Mapped[dict[str, Any]] = mapped_column(JSON)
+    dispatch_status: Mapped[str] = mapped_column(String(24), default="pending")
+    dispatch_claimed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    dispatched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 Index("ix_calendar_course_date", CalendarEvent.course_id, CalendarEvent.event_date)

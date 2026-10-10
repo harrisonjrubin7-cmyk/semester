@@ -65,8 +65,17 @@ defined in `fallback.ts` (`CONNECTOR_FAMILIES`).
 | Email | none | **student credential** | Mail (`mail`) | OAuth 2 (the student's grant) | A student's mailbox is read with their own grant and they can revoke it; it is not a school connection. A school mail connector would need a domain and a data class |
 | Reporting | none | **not yet modelled** | The student's own export (`export`) | — | Outbound institutional reporting needs a catalog domain, an `approved_write` adapter behind a `writeback.*` flag, and a data-sharing agreement. None exists |
 
-No live adapter is registered. `ADAPTERS` in `app/server/integration/registry.ts` is empty on purpose and this
-change does not touch it.
+One live-code adapter is registered: `canvas_lms_read`, a read-only Canvas course-context pull. Registration only
+makes the adapter eligible. It cannot run until the connection is institution-approved, its feature and scope are
+approved for that tenant, its hosted-Instructure HTTPS origin and tenant-bound credential reference are configured,
+and no kill switch or pause applies. The production Edge composition still has no credential broker configured, so
+an activated connection fails closed before a provider call until operations supplies that service. No university
+Canvas tenant or credential has been exercised; this is repository-ready, not institution-approved or live.
+
+The adapter calls only `GET /api/v1/courses`, follows only same-origin links back to that path, caps each response at
+2 MiB, requires JSON, and maps only course id, name and code as T0 context. Provider writeback is absent. Existing
+control-plane health, retry/dead-letter and operator reconciliation mechanisms apply; automatic deletion
+reconciliation is not inferred from a partial page and still requires a complete provider inventory.
 
 ## Authentication and identity patterns
 
@@ -83,8 +92,9 @@ change does not touch it.
 
 ### Credential vaulting
 
-`credentialsReference` in a declaration is a pointer (`vault:`, `env:`, `secret-manager:`). `LeaseBroker` turns it
-into a secret for one call.
+`credentialsReference` in a declaration describes the adapter requirement. A live pull uses the approved
+connection's `credentials_reference` pointer (`vault:`, `env:`, `secret-manager:`), never a shared registry value.
+`LeaseBroker` turns it into a secret for one call.
 
 1. **Tenant-bound.** The path must be under `tenants/<this tenant>/` or `platform/`. Anything else, and any path
    containing `..` or `//`, is refused before the backend is asked. `sandbox/` is allowed only when the broker is

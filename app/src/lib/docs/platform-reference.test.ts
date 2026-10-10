@@ -408,6 +408,11 @@ const PLATFORM_NON_EVENT_IMPORTERS = [
   'app/server/course-sources/contract.ts',
   'app/server/institution/intelligence-repository.ts',
   'app/server/institution/intelligence.ts',
+  // The integration registry imports only the Canvas adapter, and the provider
+  // client imports only the shared HTTP-error type. Neither reaches the event
+  // emitter or mounts a publisher.
+  'app/server/integration/registry.ts',
+  'app/src/lib/integration/provider-client.ts',
   'app/server/productivity/http.ts',
   'app/server/productivity/service.ts',
 ];
@@ -1365,10 +1370,11 @@ describe('EVENTS.md and its schemas (generated)', () => {
     expect(findEventUses([{ path: 'packages/institution/src/index.ts', text: "export * from './events.ts'" }])).toEqual([]);
   });
 
-  it('the repository has exactly the producers the page lists, none mounted and none published', () => {
+  it('the repository has exactly the producers the page lists, mounted off by default and none published', () => {
     // The productivity command service (PR 1175) builds events, and migration functions write those plus the
     // feature-policy producer's bounded events to the outbox in each command's transaction. One route imports the
-    // productivity producer, switched off unless a deployment sets SEMESTER_PRODUCTIVITY=on; nothing calls drainOutbox.
+    // productivity producer and the public API service composes that route; the route remains switched off unless a
+    // deployment sets SEMESTER_PRODUCTIVITY=on, and nothing calls drainOutbox.
     // When that changes this goes red, and the page's status, the event-consumer guide and the example's README
     // (all of which say "no running code writes to the outbox") are revisited in the same change.
     const uses = repoEventUses();
@@ -1398,7 +1404,10 @@ describe('EVENTS.md and its schemas (generated)', () => {
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);
-    expect(facts.mounts, 'something else now imports the producer').toEqual(['app/api/productivity/[...path].ts']);
+    expect(facts.mounts, 'something else now imports the producer').toEqual([
+      'app/api/productivity/[...path].ts',
+      'app/server/institution/vercel-service.ts',
+    ]);
     expect(read('app/api/productivity/[...path].ts')).toContain('if (!productivityEnabled(process.env)) throw');
     expect(facts.drainCallers, 'something now publishes the outbox').toEqual([]);
   });

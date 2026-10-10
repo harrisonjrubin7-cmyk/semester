@@ -1,0 +1,5 @@
+{
+  "key":"control.tenant-isolation","name":"Tenant context and cross-tenant denial","owner":"platform-security","status":"implemented",
+  "classification":"preventive","test":"packages/platform/src/tenancy/tenancy.test.ts",
+  "evidence":["packages/platform/src/tenancy/context.ts","packages/platform/src/tenancy/tenancy.test.ts","packages/platform/src/isolation/isolation.test.ts"]
+}

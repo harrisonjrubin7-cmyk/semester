@@ -82,7 +82,7 @@ Each phase ends only when its **exit gate** passes. A phase may be shipped alone
   equivalence test green; no new route reads a tenant from a body.
 - *Rollback:* revert the adapter; the old builder is still in git.
 
-**Status (first slice landed, see D-1228).** Done: the gateway's error builder and
+**Status (client adoption slice landed after D-1228).** Done: the gateway's error builder and
 correlation id now come from `@semester/platform`, held by
 `app/server/institution/envelope.test.ts` (the old builder is kept there verbatim as the
 golden; every status default and every specific code in the source is compared
@@ -97,9 +97,24 @@ not carry the gateway's domain codes (`review_expired`, `record_changed`, kebab-
 a client that sends `X-Tenant-Id` disagreeing with its session is now refused
 (`tenant_mismatch`), and an identity whose tenant or user id falls outside the platform's
 id alphabet is refused rather than passed through; every id in the repository's fixtures
-fits. **Not done:** `lib/university.ts` is not on the SDK (it reads three older response
-shapes and mints its own correlation id; moving it is its own change with its own
-equivalence test), the edge functions have not adopted the envelope, and `environment`,
+fits. The shared platform now also has an additive, tested active-context primitive
+(`packages/platform/src/tenancy/active-context.ts`): a requested membership/workspace
+is resolved only from a server-verified directory, its tenant/person/grants cannot be
+client supplied, its expiry is capped by both membership and session, and changing
+membership or workspace requires explicit confirmation. The gateway now has an additive
+`contextForSelection` adapter that rechecks the activated person and institution against
+the authenticated identity, carries the selected membership into `RequestContext`, and
+caps its role grants at the active-context expiry. No production authentication result
+provides the verified directory/session-expiry input yet, and no route or UI calls the
+adapter, so this remains an integration seam—not evidence of live context switching.
+The browser's `lib/university.ts` now uses the shared SDK. Its transport
+preserves the existing secure-origin, no-redirect, no-cookie and timeout rules;
+mutating calls receive one idempotency key per logical call; only safe reads or
+keyed writes retry. The legacy institution commit route opts out of network
+retry until it adopts the shared idempotency store, preserving its
+unknown-outcome-to-reconciliation rule. The two older refusal shapes are translated at this
+migration boundary with a focused equivalence test. **Not done:** the edge
+functions have not adopted the envelope, and `environment`,
 tenant status and `verifiedBy` in the context are approximations the file says so about.
 
 ### Phase 2 — Capability resolution, side by side

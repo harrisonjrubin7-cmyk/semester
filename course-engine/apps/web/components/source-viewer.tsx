@@ -13,11 +13,17 @@ export function formatSourceLocation(chunk: SourceChunk) {
   if (chunk.slide_number) locations.push(`Slide ${chunk.slide_number}`);
   if (chunk.sheet_name) locations.push(chunk.sheet_name);
   if (chunk.cell_range) locations.push(chunk.cell_range);
-  if (chunk.start_seconds !== undefined) {
-    const end = chunk.end_seconds !== undefined ? `–${formatTimestamp(chunk.end_seconds)}` : "";
+  if (typeof chunk.start_seconds === "number") {
+    const end = typeof chunk.end_seconds === "number" ? `–${formatTimestamp(chunk.end_seconds)}` : "";
     locations.push(`${formatTimestamp(chunk.start_seconds)}${end}`);
   }
   return locations.join(" · ") || `Extract ${chunk.chunk_index + 1}`;
+}
+
+export function formatExtractionConfidence(confidence: number | null) {
+  return confidence === null
+    ? "Extraction confidence not measured"
+    : `${Math.round(confidence * 100)}% extraction confidence`;
 }
 
 function formatTimestamp(seconds: number) {
@@ -87,7 +93,7 @@ export function SourceViewer({ fileId, filename, onClose }: { fileId: string; fi
           <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex flex-wrap items-center gap-2"><SourceStatusBadge status={source.data.document.status} /><span className="muted text-xs">{source.data.total} extracted section{source.data.total === 1 ? "" : "s"}</span></div><button className="button button-secondary" disabled={downloading} onClick={() => void downloadOriginal()} type="button"><Download aria-hidden="true" size={17} />{downloading ? "Preparing…" : "Download original"}</button></div>
           {downloadError ? <p className="mt-3 text-sm text-[color:var(--danger)]" role="alert">{downloadError}</p> : null}
           <div className="mt-6 space-y-3">
-            {source.data.chunks.map((chunk) => <article className="panel p-5" key={chunk.id}><div className="flex flex-wrap items-center justify-between gap-2"><p className="mono text-xs font-semibold text-[color:var(--semester-700)]">{formatSourceLocation(chunk)}</p><span className="muted text-xs">{Math.round(chunk.confidence * 100)}% extraction confidence</span></div><p className="mt-3 whitespace-pre-wrap text-sm leading-7">{chunk.content}</p></article>)}
+            {source.data.chunks.map((chunk) => <article className="panel p-5" key={chunk.id}><div className="flex flex-wrap items-center justify-between gap-2"><p className="mono text-xs font-semibold text-[color:var(--semester-700)]">{formatSourceLocation(chunk)}</p><span className="muted text-xs">{formatExtractionConfidence(chunk.confidence)}</span></div><p className="mt-3 whitespace-pre-wrap text-sm leading-7">{chunk.content}</p></article>)}
             {!source.data.chunks.length ? <div className="panel p-6 text-center"><FileSearch aria-hidden="true" className="mx-auto text-[color:var(--text-secondary)]" /><h3 className="mt-3 font-semibold">No extracted text yet</h3><p className="muted mt-2 text-sm">The original is preserved. Processing may still be underway or the file may need review.</p></div> : null}
           </div>
           {source.data.has_more ? <p className="muted mt-4 text-center text-xs">Showing the first {source.data.chunks.length} of {source.data.total} sections.</p> : null}

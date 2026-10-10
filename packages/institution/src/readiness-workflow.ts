@@ -13,6 +13,15 @@ export const REGISTRATION_READINESS_EVALUATION_STATES = [
 ] as const;
 export type RegistrationReadinessEvaluationState = (typeof REGISTRATION_READINESS_EVALUATION_STATES)[number];
 
+/** States that complete one evaluation command before this refreshable aggregate may begin another generation. */
+export const REGISTRATION_READINESS_COMPLETED_OUTCOMES = [
+  'ready',
+  'blocked',
+  'needs_review',
+  'unknown',
+  'stale',
+] as const satisfies readonly RegistrationReadinessEvaluationState[];
+
 /**
  * An evaluation may be refreshed, but ambiguity cannot jump straight back to
  * evaluation. It first becomes an explicit reconciliation task, then starts a
@@ -25,7 +34,7 @@ export const REGISTRATION_READINESS_EVALUATION: WorkflowDefinition<RegistrationR
   terminal: [],
   transitions: {
     requested: ['evaluating'],
-    evaluating: ['ready', 'blocked', 'needs_review', 'unknown', 'stale', 'reconciling'],
+    evaluating: ['ready', 'blocked', 'needs_review', 'unknown', 'stale'],
     ready: ['evaluating'],
     blocked: ['evaluating'],
     needs_review: ['reconciling'],
@@ -37,7 +46,6 @@ export const REGISTRATION_READINESS_EVALUATION: WorkflowDefinition<RegistrationR
     ['evaluating', 'needs_review'],
     ['evaluating', 'unknown'],
     ['evaluating', 'stale'],
-    ['evaluating', 'reconciling'],
     ['needs_review', 'reconciling'],
     ['unknown', 'reconciling'],
     ['stale', 'reconciling'],
@@ -134,7 +142,7 @@ function assertEnvelope(input: { correlationId: string; idempotencyKey: string; 
 }
 
 const receiptStatus = (state: RegistrationReadinessEvaluationState): ReadinessEvaluationReceipt['status'] =>
-  state === 'requested' || state === 'evaluating' || state === 'reconciling' ? 'pending' : 'completed';
+  REGISTRATION_READINESS_COMPLETED_OUTCOMES.some((outcome) => outcome === state) ? 'completed' : 'pending';
 
 function eventTypeFor(state: RegistrationReadinessEvaluationState): ReadinessWorkflowEventType {
   if (state === 'requested') return 'registration.readiness_requested';
@@ -235,10 +243,7 @@ export function transitionRegistrationReadinessEvaluation(
     throw new Error('Readiness projection version must be a positive integer.');
   }
 
-  const outcomeStates: readonly RegistrationReadinessEvaluationState[] = [
-    'ready', 'blocked', 'needs_review', 'unknown', 'stale',
-  ];
-  if (outcomeStates.includes(command.targetState)) {
+  if (REGISTRATION_READINESS_COMPLETED_OUTCOMES.some((outcome) => outcome === command.targetState)) {
     if (command.projectionVersion === undefined) {
       throw new Error('An evaluated readiness outcome requires a projection version.');
     }
