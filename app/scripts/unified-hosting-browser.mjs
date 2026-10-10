@@ -182,7 +182,31 @@ try {
   if (!await page.evaluate(() => Boolean(navigator.serviceWorker.controller))) {
     await page.reload({ waitUntil: 'domcontentloaded' });
   }
-  await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller), undefined, { timeout: 15_000 });
+  try {
+    await page.waitForFunction(
+      () => Boolean(navigator.serviceWorker.controller),
+      undefined,
+      { timeout: 15_000 },
+    );
+  } catch (error) {
+    const controllerDiagnostics = await page.evaluate(async () => {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      return {
+        url: location.href,
+        controller: navigator.serviceWorker.controller?.scriptURL || null,
+        registrations: registrations.map((registration) => ({
+          scope: registration.scope,
+          active: registration.active
+            ? { scriptURL: registration.active.scriptURL, state: registration.active.state }
+            : null,
+        })),
+      };
+    });
+    throw new Error(
+      `activated service worker did not control /app/: ${JSON.stringify({ controllerDiagnostics, runtimeEvents })}`,
+      { cause: error },
+    );
+  }
   await page.waitForFunction(
     async () => !(await caches.keys()).includes('semester-v0-scope-app-shell'),
     undefined,
