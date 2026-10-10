@@ -120,6 +120,18 @@ describe('operations work items', () => {
     await expect(new OperationsWorkItemRuntime(noHistoryReceipt, { now: () => at(11) }, () => true).load(ctx(), made.id))
       .rejects.toMatchObject({ code: 'internal' });
 
+    const invalidSequence = {
+      get: async () => ({
+        ...made,
+        version: 2,
+        updatedAt: at(11).toISOString(),
+        history: [...made.history, { action: 'reopened', actorId: 'operator-a', at: at(11).toISOString(), reason: 'Impossible without a resolution.' }],
+      }),
+      put: async () => true,
+    } as unknown as OperationsWorkItemStore;
+    await expect(new OperationsWorkItemRuntime(invalidSequence, { now: () => at(11) }, () => true).load(ctx(), made.id))
+      .rejects.toMatchObject({ code: 'internal' });
+
     const extraFields = {
       get: async () => ({ ...resolved, extra: 'adapter-secret', subject: { ...resolved.subject, extra: 'nested-secret' }, resolution: { ...resolved.resolution!, extra: 'nested-secret' } }),
       put: async () => true,
