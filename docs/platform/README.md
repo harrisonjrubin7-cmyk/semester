@@ -8,10 +8,11 @@ layer; observability; a reference implementation; a client SDK; and the tests
 that hold the boundaries.**
 
 Code: [`packages/platform`](../../packages/platform/package.json) (`@semester/platform`).
-Status: **new and additive; adopted by one surface so far.** Since MIGRATION phase 1
-the institution gateway builds its refusals, correlation ids and a request context
-through it; no route uses commands, policy, idempotency or any engine yet. Nothing
-else in the running app depends on it; [`MIGRATION.md`](MIGRATION.md) is the path from what runs today.
+Status: **new and additive; partially adopted by the institution surface.** Since
+MIGRATION phase 1 the institution gateway builds its refusals, correlation ids and
+a request context through it, and the browser's university client uses the shared
+SDK for correlation, keyed writes and safe retries. No route uses commands, policy
+or any engine yet; [`MIGRATION.md`](MIGRATION.md) is the path from what runs today.
 It is built from the audit's requirement that *the identity–policy–audit spine
 comes first, because every later domain depends on it*, and it reuses, rather
 than replaces, what main already had: the policy decision point, the event
