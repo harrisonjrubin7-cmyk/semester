@@ -120,6 +120,35 @@ describe('registration-readiness command boundary', () => {
     expect(repository.rows.size).toBe(1);
   });
 
+  it('keeps client start keys disjoint from derived evaluator phase keys', async () => {
+    const evaluator: RegistrationReadinessEvaluator = {
+      evaluate: vi.fn(async () => ({
+        outcome: 'ready' as const,
+        projectionVersion: 1,
+        sourceObservedAt: '2026-10-10T11:55:00.000Z',
+        freshUntil: '2026-10-10T12:05:00.000Z',
+      })),
+    };
+    const { commands } = rig(evaluator);
+    await commands.start(
+      context({ idempotencyKey: 'readiness-evaluate-collision:evaluating' }),
+      ['student'],
+      { termId: '2027-spring' },
+    );
+
+    const result = await commands.evaluate(
+      context({ idempotencyKey: 'readiness-evaluate-collision' }),
+      ['student'],
+      'readiness-evaluation-1',
+    );
+
+    expect(result).toMatchObject({
+      id: 'readiness-evaluate-collision',
+      status: 'completed',
+      state: 'ready',
+    });
+  });
+
   it('refuses the same start key when the command body changes', async () => {
     const evaluator: RegistrationReadinessEvaluator = { evaluate: vi.fn() };
     const { commands } = rig(evaluator);
@@ -195,7 +224,39 @@ describe('registration-readiness evaluator worker', () => {
     );
 
     expect(result).toMatchObject({ status: 'completed', state: 'stale' });
-    expect(repository.rows.get('readiness-evaluation-1')?.state).toBe('stale');
+    expect(repository.rows.get('readiness-evaluation-1')).toMatchObject({
+      state: 'reconciling',
+      reconciliationTasks: [expect.objectContaining({ state: 'open' })],
+    });
+  });
+
+  it('bounds projection versions and reconciles an invalid evaluator observation', async () => {
+    const evaluator: RegistrationReadinessEvaluator = {
+      evaluate: vi.fn(async () => ({
+        outcome: 'ready' as const,
+        projectionVersion: 2_147_483_648,
+        sourceObservedAt: '2026-10-10T11:55:00.000Z',
+        freshUntil: '2026-10-10T12:05:00.000Z',
+      })),
+    };
+    const { commands, repository } = rig(evaluator);
+    await commands.start(context(), ['student'], { termId: '2027-spring' });
+
+    const result = await commands.evaluate(
+      context({ idempotencyKey: 'readiness-evaluate-invalid-projection' }),
+      ['student'],
+      'readiness-evaluation-1',
+    );
+
+    expect(result).toMatchObject({ status: 'pending', state: 'reconciling' });
+    expect(repository.rows.get('readiness-evaluation-1')).toMatchObject({
+      state: 'reconciling',
+      projectionVersion: undefined,
+      reconciliationTasks: [expect.objectContaining({ state: 'open' })],
+    });
+    expect(repository.rows.get('readiness-evaluation-1')?.commandLedger
+      .find((entry) => entry.event.payload.reason === 'evaluator_invalid_observation'))
+      .toBeDefined();
   });
 
   it('makes another subject indistinguishable from a missing evaluation and never calls the source', async () => {
@@ -254,6 +315,42 @@ describe('registration-readiness evaluator worker', () => {
     expect(evaluator.evaluate).toHaveBeenCalledTimes(1);
     expect(firstResult).toMatchObject({ evaluationId: 'readiness-evaluation-1', status: 'completed', state: 'ready' });
     expect(retryResult).toMatchObject({ evaluationId: 'readiness-evaluation-1', status: 'pending', state: 'evaluating' });
+  });
+
+  it('returns conflict when simultaneous different commands race for the same aggregate version', async () => {
+    let release!: () => void;
+    let markStarted!: () => void;
+    const started = new Promise<void>((resolve) => { markStarted = resolve; });
+    const observation = new Promise<void>((resolve) => { release = resolve; });
+    const evaluator: RegistrationReadinessEvaluator = {
+      evaluate: vi.fn(async () => {
+        markStarted();
+        await observation;
+        return {
+          outcome: 'ready' as const,
+          projectionVersion: 12,
+          sourceObservedAt: '2026-10-10T11:55:00.000Z',
+          freshUntil: '2026-10-10T12:05:00.000Z',
+        };
+      }),
+    };
+    const { commands } = rig(evaluator);
+    await commands.start(context(), ['student'], { termId: '2027-spring' });
+
+    const first = commands.evaluate(
+      context({ idempotencyKey: 'readiness-race-a' }), ['student'], 'readiness-evaluation-1',
+    );
+    const second = commands.evaluate(
+      context({ idempotencyKey: 'readiness-race-b' }), ['student'], 'readiness-evaluation-1',
+    );
+    await started;
+    release();
+    const settled = await Promise.allSettled([first, second]);
+
+    expect(evaluator.evaluate).toHaveBeenCalledTimes(1);
+    expect(settled.filter((item) => item.status === 'fulfilled')).toHaveLength(1);
+    const rejected = settled.find((item): item is PromiseRejectedResult => item.status === 'rejected');
+    expect(rejected?.reason).toMatchObject({ code: 'conflict', status: 409 });
   });
 
   it('enforces the evaluator deadline and durably opens reconciliation when the adapter ignores abort', async () => {
