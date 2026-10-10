@@ -27,6 +27,10 @@ import type { IntelligenceService } from './intelligence.ts';
 import type { PublicSsoConfig } from './membership.ts';
 import { MemoryRateLimiter, type RateLimiter } from './rate-limit.ts';
 import type { ReadinessResult } from './readiness.ts';
+import {
+  readinessCommandContext,
+  type RegistrationReadinessCommandBoundary,
+} from './registration-readiness-commands.ts';
 
 /**
  * The gateway: everything that is the same whichever university it is.
@@ -93,6 +97,7 @@ interface Config {
   loadSsoConfig?: () => Promise<PublicSsoConfig | null>;
   rateLimiter?: RateLimiter;
   readiness?: () => Promise<ReadinessResult>;
+  registrationReadiness?: RegistrationReadinessCommandBoundary;
   telemetry?: (event: GatewayTelemetryEvent) => void | Promise<void>;
   /**
    * Read-only mode: every write is refused with a 503 `read_only` that says
@@ -121,12 +126,16 @@ export interface GatewayTelemetryEvent {
 const TELEMETRY_ROUTES = new Set([
   '/health', '/health/live', '/health/ready', '/v1/auth/config',
   '/v1/intelligence/policy', '/v1/intelligence/respond',
+  '/v1/registration-readiness/evaluations',
   '/status', '/records', '/actions/prepare', '/actions/commit', '/actions/reconcile',
 ]);
 
 function telemetryRoute(pathname: string): string {
   if (/^\/v1\/intelligence\/actions\/[^/]+\/confirm$/.test(pathname)) {
     return '/v1/intelligence/actions/:id/confirm';
+  }
+  if (/^\/v1\/registration-readiness\/evaluations\/[^/]+\/evaluate$/.test(pathname)) {
+    return '/v1/registration-readiness/evaluations/:id/evaluate';
   }
   return TELEMETRY_ROUTES.has(pathname) ? pathname : '/unmatched';
 }
@@ -232,7 +241,7 @@ export function createGateway(config: Config) {
       headers.set('Access-Control-Expose-Headers', 'X-Request-Id, X-Correlation-Id');
     }
     if (request.method === 'OPTIONS') {
-      headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Correlation-Id');
+      headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, Idempotency-Key, X-Correlation-Id');
       headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       return new Response(null, { status: 204, headers });
     }
@@ -338,6 +347,50 @@ export function createGateway(config: Config) {
         signal: AbortSignal.timeout(20_000),
         request: contextFor(request, who, ids, config.environment, intelligencePurpose),
       };
+
+      const readinessStart = path === '/v1/registration-readiness/evaluations';
+      const readinessEvaluate = /^\/v1\/registration-readiness\/evaluations\/([^/]+)\/evaluate$/.exec(path);
+      if (request.method === 'POST' && (readinessStart || readinessEvaluate)) {
+        context.request = readinessCommandContext(context.request!, request);
+        if (!config.registrationReadiness) {
+          fail(503, 'Registration readiness is not configured for this university.');
+        }
+        if (!request.headers.get('content-type')?.startsWith('application/json')) fail(415, 'Send JSON.');
+        const text = await request.text();
+        if (Buffer.byteLength(text) > MAX_BODY) fail(413, 'Request is too large.');
+        let body: unknown;
+        try {
+          body = JSON.parse(text);
+        } catch {
+          fail(400, 'Invalid JSON.');
+        }
+        if (!config.refreshIdentity) {
+          fail(503, 'Current university membership cannot be verified.');
+        }
+        const current = await config.refreshIdentity(who, token);
+        if (!current || current.userId !== who.userId || current.institutionId !== who.institutionId) {
+          fail(403, 'Your current university access does not permit this action.');
+        }
+        who = current;
+        context.identity = current;
+        context.request = readinessCommandContext(
+          contextFor(request, current, ids, config.environment),
+          request,
+        );
+        if (readinessStart) {
+          const receipt = await config.registrationReadiness.start(context.request, current.roles, body);
+          return Response.json(receipt, { status: 202, headers });
+        }
+        if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body as Record<string, unknown>).length !== 0) {
+          fail(400, 'The evaluator command does not accept request fields.');
+        }
+        const receipt = await config.registrationReadiness.evaluate(
+          context.request,
+          current.roles,
+          readinessEvaluate![1],
+        );
+        return Response.json(receipt, { status: receipt.status === 'completed' ? 200 : 202, headers });
+      }
 
       const intelligenceConfirm = /^\/v1\/intelligence\/actions\/([^/]+)\/confirm$/.exec(path);
       if (request.method === 'GET' && path === '/v1/intelligence/policy') {

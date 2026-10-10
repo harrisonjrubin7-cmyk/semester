@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { PlatformError } from '../../../packages/platform/src/index.ts';
 import type {
   RegistrationReadinessEvaluationRecord,
   ReadinessWorkflowResult,
@@ -13,6 +14,17 @@ export interface PostgresRegistrationReadinessRepositoryOptions {
 type RpcResult<T> = { data: T; error: unknown };
 
 function failed(operation: string, cause: unknown): never {
+  const database = cause as { code?: unknown; message?: unknown } | null;
+  if (
+    database?.code === 'SC409'
+    && typeof database.message === 'string'
+    && /idempotency key was reused/i.test(database.message)
+  ) {
+    throw new PlatformError('idempotency_key_reused', 'That Idempotency-Key was already used for a different request.');
+  }
+  if (database?.code === 'SC409') {
+    throw new PlatformError('conflict', 'Registration readiness changed while this command was running.');
+  }
   throw new Error(`Registration readiness could not ${operation}.`, { cause });
 }
 

@@ -19,6 +19,7 @@ tags:
   - name: records
   - name: actions
   - name: intelligence
+  - name: registration-readiness
   - name: scim
 security:
   - bearerAuth: []
@@ -282,6 +283,103 @@ paths:
         '413':
           $ref: '#/components/responses/Envelope'
         '415':
+          $ref: '#/components/responses/Envelope'
+        '429':
+          $ref: '#/components/responses/Envelope'
+        '503':
+          $ref: '#/components/responses/Envelope'
+  /v1/registration-readiness/evaluations:
+    post:
+      tags: [registration-readiness]
+      operationId: startRegistrationReadinessEvaluation
+      summary: Starts a durable registration-readiness evaluation for the current student's own term.
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/RegistrationReadinessIdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [termId]
+              additionalProperties: false
+              properties:
+                termId:
+                  type: string
+                  pattern: '^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$'
+      responses:
+        '202':
+          description: The durable requested receipt with the evaluationId required by the follow-up route, or the same response for an exact retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationReadinessReceipt'
+        '400':
+          $ref: '#/components/responses/Envelope'
+        '401':
+          $ref: '#/components/responses/Envelope'
+        '403':
+          $ref: '#/components/responses/Envelope'
+        '413':
+          $ref: '#/components/responses/Envelope'
+        '415':
+          $ref: '#/components/responses/Envelope'
+        '422':
+          $ref: '#/components/responses/Envelope'
+        '429':
+          $ref: '#/components/responses/Envelope'
+        '503':
+          $ref: '#/components/responses/Envelope'
+  /v1/registration-readiness/evaluations/{id}/evaluate:
+    post:
+      tags: [registration-readiness]
+      operationId: evaluateRegistrationReadiness
+      summary: Evaluates approved evidence for the current student's durable evaluation.
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/RegistrationReadinessIdempotencyKey'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        '200':
+          description: A completed outcome receipt, including an exact durable replay.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationReadinessReceipt'
+        '202':
+          description: The durable pending claim for an overlapping exact retry, or a reconciliation receipt after the enforced evaluator deadline.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationReadinessReceipt'
+        '400':
+          $ref: '#/components/responses/Envelope'
+        '401':
+          $ref: '#/components/responses/Envelope'
+        '403':
+          $ref: '#/components/responses/Envelope'
+        '404':
+          $ref: '#/components/responses/Envelope'
+        '409':
+          $ref: '#/components/responses/Envelope'
+        '413':
+          $ref: '#/components/responses/Envelope'
+        '415':
+          $ref: '#/components/responses/Envelope'
+        '422':
           $ref: '#/components/responses/Envelope'
         '429':
           $ref: '#/components/responses/Envelope'
@@ -851,6 +949,16 @@ components:
       schema:
         type: string
         pattern: '^[A-Za-z0-9._:-]{8,128}$'
+    RegistrationReadinessIdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: A platform-safe key required on every registration-readiness command. An exact retry replays the durable receipt.
+      schema:
+        type: string
+        pattern: '^[A-Za-z0-9._:-]{16,128}$'
+        minLength: 16
+        maxLength: 128
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -911,6 +1019,29 @@ components:
           schema:
             $ref: '#/components/schemas/ScimErrorBody'
   schemas:
+    RegistrationReadinessReceipt:
+      type: object
+      required: [evaluationId, id, status, state, recordVersion, recordedAt, correlationId]
+      properties:
+        evaluationId:
+          type: string
+          description: Aggregate identifier used in the follow-up evaluate route. This is distinct from id, which is the command idempotency key.
+        id:
+          type: string
+        status:
+          type: string
+          enum: [pending, completed]
+        state:
+          type: string
+          enum: [requested, evaluating, ready, blocked, needs_review, unknown, stale, reconciling]
+        recordVersion:
+          type: integer
+          minimum: 1
+        recordedAt:
+          type: string
+          format: date-time
+        correlationId:
+          type: string
     ErrorEnvelope:
       type: object
       required: [error, message]

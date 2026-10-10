@@ -147,6 +147,23 @@ afterEach(async () => {
 });
 
 describe('an edit goes up on the database path', () => {
+  it('keeps auth and focus refreshes in one pull at a time', async () => {
+    let release: (value: ReturnType<typeof snapshot>) => void = () => {};
+    pull.mockImplementationOnce(() => new Promise<ReturnType<typeof snapshot>>((resolve) => { release = resolve; }));
+
+    await mount();
+    await wait(500);
+    expect(pull).toHaveBeenCalledOnce();
+
+    await expect(store.refresh()).resolves.toBe('Semester is already syncing.');
+    expect(pull).toHaveBeenCalledOnce();
+
+    await act(async () => {
+      release(snapshot('s1'));
+      await Promise.resolve();
+    });
+  });
+
   it('makes an automatic pull durable before recording the account copy as seen', async () => {
     const remote = {
       id: 'remote-task', title: 'From the account', date: null, time: '', note: '',

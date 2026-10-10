@@ -1113,6 +1113,7 @@ describe('the route set', () => {
     '/health/live', '/health', '/health/ready', '/v1/auth/config', '/status', '/records',
     '/actions/prepare', '/actions/commit', '/actions/reconcile',
     '/v1/intelligence/policy', '/v1/intelligence/respond', '/v1/intelligence/actions/abc/confirm',
+    '/v1/registration-readiness/evaluations', '/v1/registration-readiness/evaluations/abc/evaluate',
     // decoys: near misses that must not route
     '/', '/actions', '/actions/prepare/', '/actions/cancel', '/records/1', '/status/', '/health/x', '/healthz',
     '/v1', '/v1/auth', '/v1/intelligence', '/v1/intelligence/actions', '/v1/intelligence/actions/abc',
@@ -1158,7 +1159,7 @@ describe('the route set', () => {
     const spec = openApiOperations(openApi());
     const gatewaySpec = spec.filter((r) => !r.includes(' /scim/v2/'));
     const scimSpec = spec.filter((r) => r.includes(' /scim/v2/'));
-    expect(gatewaySpec).toHaveLength(12);
+    expect(gatewaySpec).toHaveLength(14);
     expect(scimSpec).toHaveLength(15);
 
     // 1. discovered by driving the real handlers
@@ -1170,6 +1171,7 @@ describe('the route set', () => {
     const paths = new Set([...gatewaySource.matchAll(/path === '(\/[^']+)'/g)].map((m) => m[1]));
     for (const m of gatewaySource.matchAll(/const ACTIONS = \[([^\]]*)\]/g)) for (const p of m[1].matchAll(/'([^']+)'/g)) paths.add(p[1]);
     if (gatewaySource.includes('v1\\/intelligence\\/actions\\/([^/]+)\\/confirm$')) paths.add('/v1/intelligence/actions/{id}/confirm');
+    if (gatewaySource.includes('v1\\/registration-readiness\\/evaluations\\/([^/]+)\\/evaluate$')) paths.add('/v1/registration-readiness/evaluations/{id}/evaluate');
     expect([...paths].sort()).toEqual([...new Set(gatewaySpec.map((r) => r.split(' ')[1]))].sort());
 
     const scimSource = stripComments(read(SRC.scim));
@@ -1423,9 +1425,9 @@ describe('the constants a reader would copy', () => {
     const gatewaySource = src(SRC.gateway);
     const set = /const TELEMETRY_ROUTES = new Set\(\[([^\]]*)\]\)/.exec(gatewaySource)?.[1] ?? '';
     const routes = [...set.matchAll(/'([^']+)'/g)].map((m) => m[1]);
-    expect(routes).toHaveLength(11);
+    expect(routes).toHaveLength(12);
     const doc = section(read(PAGES.auth), '## Telemetry and audit');
-    for (const route of [...routes, '/v1/intelligence/actions/:id/confirm', '/unmatched']) expect(doc, route).toContain(`\`${route}\``);
+    for (const route of [...routes, '/v1/intelligence/actions/:id/confirm', '/v1/registration-readiness/evaluations/:id/evaluate', '/unmatched']) expect(doc, route).toContain(`\`${route}\``);
     const events = new Set([...gatewaySource.matchAll(/audit\(who, [^,]+, '([a-z.]+)'/g)].map((m) => m[1]));
     expect(events.size).toBe(7);
     for (const event of events) expect(doc, event).toContain(`\`${event}\``);
