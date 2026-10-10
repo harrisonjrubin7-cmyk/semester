@@ -77,7 +77,7 @@ test('the full-ecosystem acceptance registry has eight blocked cases with positi
   assert.ok(cases.every((entry) => entry.status === 'blocked'));
   assert.ok(cases.every((entry) => entry.controls.some(({ polarity }) => polarity === 'positive')));
   assert.ok(cases.every((entry) => entry.controls.some(({ polarity }) => polarity === 'negative')));
-  assert.ok(cases.every((entry) => entry.controls.every(({ status }) => status !== 'skipped')));
+  assert.ok(cases.every((entry) => entry.controls.every(({ status }) => String(status) !== 'skipped')));
 });
 
 test('later maturity cannot bypass an earlier unproven stage', async () => {
