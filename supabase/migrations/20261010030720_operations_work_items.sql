@@ -1,7 +1,9 @@
 -- The single durable operations inbox shared by company and institution views.
 --
--- This is source only until an operator explicitly approves and applies it to
--- a Supabase project. It creates no grants, tenants, schedules or live worker.
+-- Merging this file to main may automatically apply it to the canonical
+-- Supabase project. Do not merge without explicit production-SQL approval.
+-- It creates tables, indexes, functions and narrow service/authenticated grants;
+-- it creates no tenant rows, role grants, schedules, credentials or live worker.
 
 create table if not exists private.work_item (
   id                  uuid primary key default gen_random_uuid(),
