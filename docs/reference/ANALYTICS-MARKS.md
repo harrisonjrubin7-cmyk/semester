@@ -60,10 +60,10 @@ The university gateway writes JSON log lines to its process output. They are ser
 
 Notes on `institution.request`:
 
-- `route` is one of the matched routes below, or `/unmatched`. A path outside the set is logged as `/unmatched`, never as the raw path. The confirm route is logged as `/v1/intelligence/actions/:id/confirm`, without the id.
+- `route` is one of the matched routes below, or `/unmatched`. A path outside the set is logged as `/unmatched`, never as the raw path. The confirm route is logged as `/v1/intelligence/actions/:id/confirm`, and readiness evaluation as `/v1/registration-readiness/evaluations/:id/evaluate`, without either id.
 - `errorClass` is `server` for status 500 and above, `client` for 400 and above, otherwise `none`.
 - `requestId` is minted by the gateway; `correlationId` is the client's when well formed, minted otherwise. The audit rows carry the same correlation id.
-- The matched routes are `/health`, `/health/live`, `/health/ready`, `/v1/auth/config`, `/v1/intelligence/policy`, `/v1/intelligence/respond`, `/status`, `/records`, `/actions/prepare`, `/actions/commit` and `/actions/reconcile`.
+- The matched routes are `/health`, `/health/live`, `/health/ready`, `/v1/auth/config`, `/v1/intelligence/policy`, `/v1/intelligence/respond`, `/v1/registration-readiness/evaluations`, `/v1/registration-readiness/evaluations/:id/evaluate`, `/status`, `/records`, `/actions/prepare`, `/actions/commit` and `/actions/reconcile`.
 
 `institution.authorization` names an account and an identity-provider identifier. It is a log line on the gateway's own host, and it is the one line on this page that does.
 
