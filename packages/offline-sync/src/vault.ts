@@ -201,7 +201,12 @@ export class AttachmentCache {
     if (!r) throw new AttachmentError('not_found')
     if (r.scan !== 'clean') throw new AttachmentError('scan_not_clean')
     if (ctx.aclEpoch > r.aclEpoch) throw new AttachmentError('access_revoked')
-    if (freshness(r.dataClass, r.fetchedAt, this.d.now(), this.d.tenant ?? NO_OPT_IN) === 'expired') throw new AttachmentError('expired')
+    if (freshness(r.dataClass, r.fetchedAt, this.d.now(), this.d.tenant ?? NO_OPT_IN) === 'expired') {
+      // Expiry includes a class or tenant-policy change. Erase the bytes and
+      // wrapped key before refusing the read, rather than waiting for sweep.
+      await this.revoke({ ids: [r.id] })
+      throw new AttachmentError('expired')
+    }
     const sealed = await this.d.blobs.get(r.blobName)
     if (!sealed) throw new AttachmentError('not_found')
     let bytes: Uint8Array

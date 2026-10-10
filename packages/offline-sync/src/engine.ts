@@ -1,6 +1,7 @@
 import { backoffDelay, DEFAULT_BACKOFF, retryAt, type BackoffOptions } from './backoff.ts'
 import { hlcNow, type Hlc } from './hlc.ts'
-import { assertQueueable, policyFor, type DataClass, type TenantOfflinePolicy } from './policy.ts'
+import { assertQueueable, classifyPersistence, policyFor, type DataClass, type TenantOfflinePolicy } from './policy.ts'
+import { purgeDisallowedOfflineData, type PolicyPurgeRow, type PolicyPurgeResult } from './storage-policy.ts'
 import { PHASE_TO_STATE, TERMINAL_REASONS, type RejectReason, type SyncState } from './status.ts'
 import type { Change, Command, CommandResult, EntityRow, LocalStore, OutboxRow, PullResponse, SyncTransport } from './types.ts'
 
@@ -19,6 +20,8 @@ export interface EngineDeps {
   onWipe?: (reason: 'revoked' | 'access_expired') => Promise<void>
   /** Rows the caller lost access to: drop cached files that belonged to them. */
   onRevokedRows?: (rows: { dataClass: DataClass; id: string }[]) => Promise<void>
+  /** Policy-purged rows: erase matching attachments, previews and search indexes. */
+  onPolicyPurge?: (rows: readonly PolicyPurgeRow[]) => Promise<void>
   tenantPolicy?: TenantOfflinePolicy
   policyVersion?: () => string
   permissionEpoch?: () => number
@@ -79,12 +82,18 @@ export class SyncEngine {
   /** Crash recovery: a row left `sent` may or may not have arrived. It is ambiguous, not failed. */
   async recover(): Promise<void> {
     const { store } = this.d
+    await this.enforceStoragePolicy()
     await store.transaction(async () => {
       for (const r of await store.outbox.all()) {
         this.seq = Math.max(this.seq, r.seq)
         if (r.phase === 'sent') await store.outbox.put({ ...r, phase: 'pending_reconciliation' })
       }
     })
+  }
+
+  /** Safe at startup and after any tenant-policy change. */
+  enforceStoragePolicy(): Promise<PolicyPurgeResult> {
+    return purgeDisallowedOfflineData(this.d.store, this.d.tenantPolicy, this.d.onPolicyPurge)
   }
 
   // ---- writing ----------------------------------------------------------
@@ -187,6 +196,7 @@ export class SyncEngine {
     if (verdict === 'wipe') return this.wipe('access_expired', report)
     if (verdict === 'reauth') return { ...report, stopped: 'reauth' }
 
+    await this.enforceStoragePolicy()
     await this.expireOld()
     const stop = (await this.reconcile(report)) ?? (await this.push(report)) ?? (await this.pull(report))
     if (stop) return stop.stopped === 'revoked' ? this.wipe('revoked', { ...report, ...stop }) : { ...report, ...stop }
@@ -365,6 +375,10 @@ export class SyncEngine {
 
   private async applyChange(c: Change): Promise<void> {
     const { store, now } = this.d
+    // The server feed is not an authority to broaden device storage. Unknown,
+    // online-only and non-opted-in classes are consumed but never persisted.
+    const decision = classifyPersistence(c.dataClass, this.d.tenantPolicy)
+    if (!decision.allowed) return
     const e = await store.entities.get(c.dataClass, c.id)
     const mine = (await store.outbox.all()).filter((r) => r.dataClass === c.dataClass && r.entityId === c.id)
     if (e && e.version !== null && e.version >= c.version) {

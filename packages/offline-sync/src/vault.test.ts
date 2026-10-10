@@ -64,10 +64,11 @@ describe('attachment cache', () => {
     await expect(c.put(meta('b'), new Uint8Array(100))).rejects.toMatchObject({ why: 'too_large' })
   })
 
-  it('never caches a class the content database must not hold, or an official one without the tenant opting in', async () => {
+  it('never caches grades, transcripts, aid, guardian projections or other prohibited classes', async () => {
     const { c } = await cache()
-    await expect(c.put(meta('p', { dataClass: 'payment' }), bytes('x'))).rejects.toMatchObject({ why: 'not_cacheable' })
-    await expect(c.put(meta('g', { dataClass: 'grade' }), bytes('x'))).rejects.toMatchObject({ why: 'tenant_has_not_opted_in' })
+    for (const dataClass of ['grade', 'academic_record', 'financial_aid', 'guardian_projection', 'payment'] as const) {
+      await expect(c.put(meta(dataClass, { dataClass }), bytes('x')), dataClass).rejects.toMatchObject({ why: 'not_cacheable' })
+    }
   })
 
   it('evicts the least recently read unpinned file to make room, and never a pinned one', async () => {
@@ -94,12 +95,12 @@ describe('attachment cache', () => {
     await expect(c.read('f', { aclEpoch: 2 })).rejects.toMatchObject({ why: 'access_revoked' })
   })
 
-  it('stops serving a file past its freshness limit, even if pinned, and sweeps it', async () => {
+  it('stops serving and immediately purges a file past its freshness limit, even if pinned', async () => {
     const { c, t, blobs } = await cache()
     await c.put(meta('f', { pinned: true }), bytes('x'))
     t.now += 15 * 24 * HOUR
     await expect(c.read('f', { aclEpoch: 1 })).rejects.toMatchObject({ why: 'expired' })
-    expect(await c.sweep()).toBe(1)
+    expect(await c.sweep()).toBe(0)
     expect(blobs.names()).toEqual([])
   })
 

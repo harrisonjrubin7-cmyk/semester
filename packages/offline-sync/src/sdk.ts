@@ -6,6 +6,7 @@ import {
 import { freshness, NO_OPT_IN, policyFor, type DataClass, type Freshness, type TenantOfflinePolicy } from './policy.ts'
 import { STATE_COPY, type SyncState } from './status.ts'
 import type { EntityRow, LocalStore, SyncTransport } from './types.ts'
+import type { PolicyPurgeResult } from './storage-policy.ts'
 
 // ---- what a platform must provide ------------------------------------------
 // One interface per native capability, so iOS, Android and web differ only in
@@ -78,6 +79,8 @@ export interface SemesterOfflineSdk {
   discard(commandId: string): Promise<void>
   sync(): Promise<SyncReport>
   summary(): Promise<SyncSummary>
+  /** Purge rows forbidden by the current central storage policy. */
+  enforceStoragePolicy(): Promise<PolicyPurgeResult>
   access(): AccessDecision
   /** Foreground or biometric success: the person is here. */
   touch(): void
@@ -101,6 +104,7 @@ export interface SdkConfig {
   policyVersion?: () => string
   permissionEpoch?: () => number
   onRevokedRows?: EngineDeps['onRevokedRows']
+  onPolicyPurge?: EngineDeps['onPolicyPurge']
 }
 
 export function createOfflineSdk(c: SdkConfig): SemesterOfflineSdk {
@@ -125,6 +129,7 @@ export function createOfflineSdk(c: SdkConfig): SemesterOfflineSdk {
     policyVersion: c.policyVersion,
     permissionEpoch: c.permissionEpoch,
     onRevokedRows: c.onRevokedRows,
+    onPolicyPurge: c.onPolicyPurge,
     // Sync asks the same question reads do. `locked` still lets a background sync run: the data is not shown.
     access: (): AccessVerdict => {
       const d = decide()
@@ -151,6 +156,7 @@ export function createOfflineSdk(c: SdkConfig): SemesterOfflineSdk {
     async read(dataClass, id) {
       const d = decide()
       if (d.verdict !== 'ok') return { ok: false, why: d }
+      await engine.enforceStoragePolicy()
       const e = await c.store.entities.get(dataClass, id)
       if (!e) return { ok: false, why: { verdict: 'missing' } }
       const v = toView(e)
@@ -160,6 +166,7 @@ export function createOfflineSdk(c: SdkConfig): SemesterOfflineSdk {
     },
     async list(dataClass) {
       if (decide().verdict !== 'ok') return []
+      await engine.enforceStoragePolicy()
       return (await c.store.entities.all()).filter((e) => e.dataClass === dataClass).map(toView).filter((v) => !(v.state === 'synced' && v.freshness === 'expired'))
     },
     async write(input) {
@@ -180,6 +187,7 @@ export function createOfflineSdk(c: SdkConfig): SemesterOfflineSdk {
       return r
     },
     summary: () => engine.summary(),
+    enforceStoragePolicy: () => engine.enforceStoragePolicy(),
     access: decide,
     touch() { lease = { ...observe(lease, c.now()), lastActiveAt: c.now() } },
     verified(grant) { lease = { ...lease, grant: { ...lease.grant, ...grant }, verifiedAt: c.now(), lastActiveAt: c.now() } },

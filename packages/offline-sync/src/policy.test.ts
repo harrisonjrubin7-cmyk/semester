@@ -14,7 +14,7 @@ describe('the offline policy table', () => {
   })
 
   it('never lets a device queue money, permissions, approvals, records, grade changes or registration', () => {
-    for (const c of ['payment', 'ledger_entry', 'permission_grant', 'consent', 'approval', 'grade_change', 'record_amendment', 'registration', 'grade', 'academic_record', 'billing_summary', 'guardian_projection']) {
+    for (const c of ['payment', 'ledger_entry', 'permission_grant', 'consent', 'approval', 'grade_change', 'record_amendment', 'registration', 'grade', 'academic_record', 'financial_aid', 'billing_summary', 'guardian_projection']) {
       expect(() => assertQueueable(c), c).toThrow(/offline_write_prohibited/)
     }
   })
@@ -26,24 +26,24 @@ describe('the offline policy table', () => {
     }
   })
 
-  it('never caches what the contract says never enters the content database', () => {
-    for (const c of ['case_note', 'wellness', 'conduct', 'payment', 'ledger_entry', 'consent', 'guardian_projection', 'approval']) {
+  it('never caches protected official, aid, guardian, safety or control data', () => {
+    for (const c of ['grade', 'academic_record', 'financial_aid', 'guardian_projection', 'case_note', 'wellness', 'conduct', 'payment', 'ledger_entry', 'consent', 'approval']) {
       expect(NEVER_CACHED).toContain(c)
       expect(() => assertCacheable(c, { optIn: dataClasses })).toThrow(/not_cacheable/)
     }
   })
 
-  it('denies official records offline until the tenant opts in, and then only as an expiring read', () => {
-    expect(() => assertCacheable('grade')).toThrow(/tenant_has_not_opted_in/)
-    expect(assertCacheable('grade', { optIn: ['grade'] }).write).toBe('never-queued')
-    expect(freshness('grade', NOW - 25 * HOUR, NOW, { optIn: ['grade'] })).toBe('expired')
-    expect(freshness('grade', NOW - 13 * HOUR, NOW, { optIn: ['grade'] })).toBe('stale')
-    expect(freshness('grade', NOW - 1 * HOUR, NOW, { optIn: ['grade'] })).toBe('current')
+  it('denies remaining official summaries until tenant opt-in, then gives only an expiring read', () => {
+    expect(() => assertCacheable('billing_summary')).toThrow(/tenant_has_not_opted_in/)
+    expect(assertCacheable('billing_summary', { optIn: ['billing_summary'] }).write).toBe('never-queued')
+    expect(freshness('billing_summary', NOW - 25 * HOUR, NOW, { optIn: ['billing_summary'] })).toBe('expired')
+    expect(freshness('billing_summary', NOW - 13 * HOUR, NOW, { optIn: ['billing_summary'] })).toBe('stale')
+    expect(freshness('billing_summary', NOW - 1 * HOUR, NOW, { optIn: ['billing_summary'] })).toBe('current')
   })
 
   it('lets a tenant tighten a limit but never loosen it', () => {
-    expect(freshness('grade', NOW - 2 * HOUR, NOW, { optIn: ['grade'], maxStaleMs: { grade: HOUR } })).toBe('expired')
-    expect(freshness('grade', NOW - 30 * HOUR, NOW, { optIn: ['grade'], maxStaleMs: { grade: 99 * HOUR } })).toBe('expired')
+    expect(freshness('billing_summary', NOW - 2 * HOUR, NOW, { optIn: ['billing_summary'], maxStaleMs: { billing_summary: HOUR } })).toBe('expired')
+    expect(freshness('billing_summary', NOW - 30 * HOUR, NOW, { optIn: ['billing_summary'], maxStaleMs: { billing_summary: 99 * HOUR } })).toBe('expired')
   })
 
   it('has every queueable class say how a same-field disagreement is settled', () => {

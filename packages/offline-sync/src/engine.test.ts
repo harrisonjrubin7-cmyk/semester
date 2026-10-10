@@ -391,6 +391,16 @@ describe('revocation', () => {
 })
 
 describe('the cursor', () => {
+  it('consumes but never persists grades, transcripts, aid or guardian projections from the server feed', async () => {
+    const r = rig({ tenantPolicy: { optIn: ['grade', 'academic_record', 'financial_aid', 'guardian_projection'] } })
+    for (const dataClass of ['grade', 'academic_record', 'financial_aid', 'guardian_projection'] as const) {
+      r.gw.external(dataClass, dataClass, { protected: dataClass }, hlc(NOW))
+    }
+    await r.sync()
+    expect(await r.store.entities.all()).toEqual([])
+    expect(await r.store.outbox.all()).toEqual([])
+  })
+
   it('pages, remembers where it got to, and does not refetch', async () => {
     const a = rig(); const b = rig({ with: a, device: 'dev-b' })
     for (let i = 0; i < 5; i++) a.gw.external('task', `X${i}`, { n: i }, hlc(NOW))
