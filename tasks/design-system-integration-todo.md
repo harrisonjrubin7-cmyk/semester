@@ -1619,6 +1619,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove the focused guard red against the prior immediate deletion, then pass 76/76 focused and adjacent Study Abroad, domain, device-library, backup, preview, modal and root-unmount tests.
 - [x] Pass TypeScript, lint, university typecheck and production build; retain the six existing lint warnings and build chunk-size warning.
 - [x] Pass 78/78 token/design-check constituents, 96/96 report contracts, design audit with no new violation and the CSS ledger check; the report artifact remains unchanged.
+- [x] Commit the coherent slice as `dc4ab398`, merge current `origin/main` `a607200c` cleanly as `b7547bd2`, then pass the same 76/76 focused tests and TypeScript on the merged head.
 - [ ] Aggregate `design-system:check` launcher — cannot start because it hardcodes unavailable `npm`; its exact constituents pass.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded device-library slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
 - [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no target, scan, finding result or security pass is claimed.
