@@ -64,6 +64,7 @@ describe('registration-readiness HTTP commands', () => {
 
   it('refreshes current membership, derives scope server-side and returns the durable start receipt', async () => {
     const start = vi.fn(async () => ({
+      evaluationId: 'readiness-evaluation-1',
       id: 'readiness-command-0001',
       status: 'pending' as const,
       state: 'requested' as const,
@@ -94,7 +95,11 @@ describe('registration-readiness HTTP commands', () => {
       ['student'],
       { termId: '2027-spring' },
     );
-    expect(await response.json()).toMatchObject({ status: 'pending', state: 'requested' });
+    expect(await response.json()).toMatchObject({
+      evaluationId: 'readiness-evaluation-1',
+      status: 'pending',
+      state: 'requested',
+    });
   });
 
   it('refuses a command if current membership no longer authorizes the account', async () => {
@@ -112,6 +117,7 @@ describe('registration-readiness HTTP commands', () => {
 
   it('routes the evaluator caller through the same refreshed self-scoped boundary', async () => {
     const evaluate = vi.fn(async () => ({
+      evaluationId: 'readiness-evaluation-1',
       id: 'readiness-evaluate-0001:outcome',
       status: 'completed' as const,
       state: 'ready' as const,
@@ -140,7 +146,11 @@ describe('registration-readiness HTTP commands', () => {
       ['student'],
       'readiness-evaluation-1',
     );
-    expect(await response.json()).toMatchObject({ status: 'completed', state: 'ready' });
+    expect(await response.json()).toMatchObject({
+      evaluationId: 'readiness-evaluation-1',
+      status: 'completed',
+      state: 'ready',
+    });
   });
 
   it('allows the idempotency header in the exact-origin preflight', async () => {
