@@ -40,6 +40,8 @@ create index if not exists work_item_inbox
 create index if not exists work_item_assignee
   on private.work_item (assigned_to, state, updated_at desc)
   where assigned_to is not null;
+create index if not exists work_item_capability
+  on private.work_item (required_capability);
 
 create table if not exists private.work_item_event (
   id                 bigint generated always as identity primary key,
@@ -71,6 +73,8 @@ create table if not exists private.work_item_event (
 
 create index if not exists work_item_event_history
   on private.work_item_event (work_item_id, version);
+create index if not exists work_item_event_tenant
+  on private.work_item_event (tenant_id);
 
 alter table private.work_item enable row level security;
 alter table private.work_item_event enable row level security;

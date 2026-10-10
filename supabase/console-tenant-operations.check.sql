@@ -272,6 +272,7 @@ end $$;
 create temp table ids (k text primary key, v uuid not null);
 create temp table work (k text primary key, v uuid not null);
 grant select on table ids, work to authenticated;
+grant insert on table work to service_role;
 
 do $$
 declare
