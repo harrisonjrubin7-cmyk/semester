@@ -984,6 +984,238 @@ export async function resolvePrivacyRequest(
   };
 }
 
+// ── shared operations work items ────────────────────────────────────────────
+
+export type OperationsWorkItemState = 'open' | 'claimed' | 'resolved';
+export type OperationsWorkItemPriority = 'normal' | 'high' | 'urgent';
+export type OperationsWorkItemAction = 'claim' | 'resolve' | 'reopen';
+
+export interface OperationsWorkItemResolution {
+  code: string;
+  summary: string;
+  receiptRef: string;
+}
+
+export interface OperationsWorkItemEvent {
+  action: 'opened' | 'claimed' | 'resolved' | 'reopened';
+  version: number;
+  occurredAt: string;
+  byMe: boolean;
+  reason: string | null;
+  resolution: OperationsWorkItemResolution | null;
+}
+
+export interface OperationsWorkItem {
+  id: string;
+  tenantId: string;
+  kind: string;
+  subject: { type: string; id: string };
+  sourceRef: string;
+  purpose: string;
+  priority: OperationsWorkItemPriority;
+  state: OperationsWorkItemState;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  assignedToMe: boolean;
+  resolution: OperationsWorkItemResolution | null;
+  allowedActions: OperationsWorkItemAction[];
+  history: OperationsWorkItemEvent[];
+}
+
+export interface OperationsWorkItemEnvelope<T> {
+  data: T;
+  generatedAt: string;
+  authority: 'authoritative';
+  warnings: string[];
+  requestId: string;
+}
+
+const WORK_ITEM_STATES: OperationsWorkItemState[] = ['open', 'claimed', 'resolved'];
+const WORK_ITEM_PRIORITIES: OperationsWorkItemPriority[] = ['normal', 'high', 'urgent'];
+const WORK_ITEM_ACTIONS: OperationsWorkItemAction[] = ['claim', 'resolve', 'reopen'];
+const WORK_ITEM_EVENTS: OperationsWorkItemEvent['action'][] = ['opened', 'claimed', 'resolved', 'reopened'];
+
+function readResolution(value: unknown): OperationsWorkItemResolution | null {
+  if (value == null) return null;
+  const r = object(value);
+  const code = text(r.code);
+  const summary = text(r.summary);
+  const receiptRef = text(r.receipt_ref);
+  if (!code || !summary || !receiptRef) throw new Error('The work-item response contained an incomplete resolution receipt.');
+  return { code, summary, receiptRef };
+}
+
+export function readOperationsWorkItem(value: unknown, requireHistory = false): OperationsWorkItem {
+  const r = object(value);
+  const subject = object(r.subject);
+  const state = WORK_ITEM_STATES.includes(r.state as OperationsWorkItemState)
+    ? (r.state as OperationsWorkItemState)
+    : null;
+  const priority = WORK_ITEM_PRIORITIES.includes(r.priority as OperationsWorkItemPriority)
+    ? (r.priority as OperationsWorkItemPriority)
+    : null;
+  const createdAt = text(r.created_at);
+  const updatedAt = text(r.updated_at);
+  const allowedValue = r.allowed_actions;
+  const historyValue = r.history;
+  const resolution = readResolution(r.resolution);
+  const actionShapeValid = Array.isArray(allowedValue) && (
+    (state === 'open'
+      && r.assigned_to_me === false
+      && allowedValue.length === 1
+      && allowedValue[0] === 'claim')
+    || (state === 'claimed'
+      && r.assigned_to_me === true
+      && allowedValue.length === 1
+      && allowedValue[0] === 'resolve')
+    || (state === 'claimed'
+      && r.assigned_to_me === false
+      && allowedValue.length === 0)
+    || (state === 'resolved'
+      && allowedValue.length === 1
+      && allowedValue[0] === 'reopen')
+  );
+  if (!text(r.id)
+      || !text(r.tenant_id)
+      || !text(r.kind)
+      || !text(subject.type)
+      || !text(subject.id)
+      || !text(r.source_ref)
+      || !text(r.purpose)
+      || !state
+      || !priority
+      || num(r.version) < 1
+      || !createdAt
+      || Number.isNaN(Date.parse(createdAt))
+      || !updatedAt
+      || Number.isNaN(Date.parse(updatedAt))
+      || typeof r.assigned_to_me !== 'boolean'
+      || !Array.isArray(allowedValue)
+      || allowedValue.some((action) => !WORK_ITEM_ACTIONS.includes(action as OperationsWorkItemAction))
+      || !actionShapeValid
+      || (requireHistory && !Array.isArray(historyValue))
+      || (historyValue != null && !Array.isArray(historyValue))
+      || (state === 'resolved' && resolution === null)
+      || (state !== 'resolved' && resolution !== null)) {
+    throw new Error('The work-item response was incomplete.');
+  }
+  const allowedActions = allowedValue as OperationsWorkItemAction[];
+  const history = (historyValue == null ? [] : rows(historyValue)).map((event): OperationsWorkItemEvent => {
+    const action = WORK_ITEM_EVENTS.includes(event.action as OperationsWorkItemEvent['action'])
+      ? (event.action as OperationsWorkItemEvent['action'])
+      : null;
+    const eventResolution = readResolution(event.resolution);
+    if (!action
+        || num(event.version) < 1
+        || !text(event.occurred_at)
+        || Number.isNaN(Date.parse(text(event.occurred_at)))
+        || typeof event.by_me !== 'boolean'
+        || (action === 'resolved' && eventResolution === null)
+        || (action !== 'resolved' && eventResolution !== null)
+        || (action === 'reopened' && !text(event.reason))) {
+      throw new Error('The work-item history was incomplete.');
+    }
+    return {
+      action,
+      version: num(event.version),
+      occurredAt: text(event.occurred_at),
+      byMe: event.by_me,
+      reason: maybe(event.reason),
+      resolution: eventResolution,
+    };
+  });
+  return {
+    id: text(r.id),
+    tenantId: text(r.tenant_id),
+    kind: text(r.kind),
+    subject: { type: text(subject.type), id: text(subject.id) },
+    sourceRef: text(r.source_ref),
+    purpose: text(r.purpose),
+    priority,
+    state,
+    version: num(r.version),
+    createdAt,
+    updatedAt,
+    assignedToMe: r.assigned_to_me,
+    resolution,
+    allowedActions,
+    history,
+  };
+}
+
+function readOperationsEnvelope<T>(
+  value: unknown,
+  readData: (data: unknown) => T,
+): OperationsWorkItemEnvelope<T> {
+  const envelope = object(value);
+  const freshness = object(envelope.freshness);
+  if (envelope.authority !== 'authoritative'
+      || freshness.status !== 'current'
+      || !text(freshness.generated_at)
+      || !text(envelope.request_id)) {
+    throw new Error('The operations inbox did not return current authoritative evidence.');
+  }
+  return {
+    data: readData(envelope.data),
+    generatedAt: text(freshness.generated_at),
+    authority: 'authoritative',
+    warnings: strings(envelope.warnings),
+    requestId: text(envelope.request_id),
+  };
+}
+
+export function readOperationsWorkItemListEnvelope(value: unknown): OperationsWorkItemEnvelope<OperationsWorkItem[]> {
+  if (!Array.isArray(object(value).data)) throw new Error('The operations inbox returned an invalid list.');
+  return readOperationsEnvelope(value, (data) => rows(data).map((item) => readOperationsWorkItem(item, false)));
+}
+
+export function readOperationsWorkItemDetailEnvelope(value: unknown): OperationsWorkItemEnvelope<OperationsWorkItem> {
+  if (Array.isArray(object(value).data)) throw new Error('The operations inbox returned an invalid detail.');
+  return readOperationsEnvelope(value, (item) => readOperationsWorkItem(item, true));
+}
+
+export async function loadOperationsWorkItems(mine = false): Promise<OperationsWorkItemEnvelope<OperationsWorkItem[]>> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('ops_operations_inbox', { want_item: null, want_mine: mine });
+  if (error) throw new Error(message(error, 'Could not load the operations inbox.'));
+  return readOperationsWorkItemListEnvelope(data);
+}
+
+export async function loadOperationsWorkItem(itemId: string): Promise<OperationsWorkItemEnvelope<OperationsWorkItem>> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('ops_operations_inbox', { want_item: itemId, want_mine: false });
+  if (error) throw new Error(message(error, 'The work item is unavailable in this grant scope.'));
+  return readOperationsWorkItemDetailEnvelope(data);
+}
+
+export interface OperationsWorkItemTransition {
+  itemId: string;
+  action: OperationsWorkItemAction;
+  version: number;
+  reason?: string | null;
+  resolutionCode?: string | null;
+  resolutionSummary?: string | null;
+  receiptRef?: string | null;
+}
+
+export async function transitionOperationsWorkItem(
+  input: OperationsWorkItemTransition,
+): Promise<OperationsWorkItemEnvelope<OperationsWorkItem>> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('ops_transition_work_item', {
+    want_item: input.itemId,
+    want_action: input.action,
+    want_version: input.version,
+    want_reason: input.reason ?? null,
+    want_resolution_code: input.resolutionCode ?? null,
+    want_resolution_summary: input.resolutionSummary ?? null,
+    want_receipt_ref: input.receiptRef ?? null,
+  });
+  if (error) throw new Error(message(error, 'The work-item transition was not recorded.'));
+  return readOperationsWorkItemDetailEnvelope(data);
+}
+
 // ── preferences ────────────────────────────────────────────────────────────
 
 /**
