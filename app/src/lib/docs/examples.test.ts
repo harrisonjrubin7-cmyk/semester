@@ -774,6 +774,7 @@ describe('examples/event-consumer', () => {
       'app/server/institution/adapter.ts',
       'app/server/institution/context.ts',
       'app/server/institution/gateway.ts',
+      'app/server/institution/registration-readiness-commands.ts',
       'app/server/course-sources/contract.ts',
       'app/server/institution/intelligence-repository.ts',
       'app/server/institution/intelligence.ts',
