@@ -12,7 +12,7 @@ import { officialMessages } from '../lib/official-notices';
 import { SourceBadge } from '../components/SourceBadge';
 import { clock, dateToIso } from '../lib/date';
 import { EMPTY_LAUNCHPAD, LAUNCHPAD_PREFIX, openSteps, readLaunchpad, stepsFor } from '../lib/launchpad';
-import { EMPTY_OPPORTUNITIES, deadlines, readOpportunities } from '../lib/opportunities';
+import { EMPTY_OPPORTUNITIES, OPPORTUNITIES_PREFIX, deadlines, readOpportunities } from '../lib/opportunities';
 import {
   CHANNELS,
   EMPTY_PREFS,
@@ -58,7 +58,7 @@ function Workspace({ who }: { who: string }) {
   const predictable = hasMode(state.access, 'predictable');
   const prefsLib = useDeviceLibrary(`semester.hub.v1:${who}`, readHubPrefs, EMPTY_PREFS);
   const launch = useDeviceLibrary(`${LAUNCHPAD_PREFIX}:${who}`, readLaunchpad, EMPTY_LAUNCHPAD);
-  const opps = useDeviceLibrary(`semester.opportunities.v1:${who}`, readOpportunities, EMPTY_OPPORTUNITIES);
+  const opps = useDeviceLibrary(`${OPPORTUNITIES_PREFIX}:${who}`, readOpportunities, EMPTY_OPPORTUNITIES);
   const [tab, setTab] = useState<Tab>('inbox');
   const prefs = prefsLib.value;
   const setPrefs = (patch: Partial<HubPrefs>) => prefsLib.update((old) => ({ ...old, ...patch }));

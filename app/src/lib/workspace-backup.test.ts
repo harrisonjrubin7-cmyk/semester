@@ -418,6 +418,68 @@ describe('the Launchpad workspace', () => {
   });
 });
 
+describe('the Opportunities workspace', () => {
+  const opportunity = {
+    id: 'op-1',
+    kind: 'job',
+    title: 'Library assistant',
+    org: 'Main Library',
+    stage: 'Preparing',
+    deadline: '2026-10-20',
+    source: 'https://example.edu/jobs/1',
+    steps: { find: true },
+    notes: 'Ask about evening shifts.',
+    hoursPerWeek: 8,
+    workStudy: true,
+    evidence: [{ id: 'ev-1', text: 'Helped students find archival sources', approved: true }],
+    references: [],
+    skills: ['Research'],
+  };
+  const workspace = {
+    items: [opportunity],
+    budget: { classes: 15, study: 30, work: 8, commute: 2, caregiving: 0, sleep: 56, other: 10 },
+  };
+
+  it('backs up one account without exporting the private work-study choice', () => {
+    storage.setItem(`semester.opportunities.v1:${ACCOUNT}`, JSON.stringify(workspace));
+    storage.setItem('semester.opportunities.v1:someone-else', JSON.stringify({
+      ...workspace,
+      items: [{ ...opportunity, id: 'other-account-opportunity', title: 'Private other account item' }],
+    }));
+
+    const backup = workspaceBackup(ACCOUNT, storage);
+    expect(backup.records.map((record) => record.kind)).toEqual(['opportunities']);
+    expect(backup.records[0]?.value).toMatchObject({
+      items: [{ id: 'op-1', title: 'Library assistant', notes: 'Ask about evening shifts.' }],
+      budget: { work: 8 },
+    });
+    expect(JSON.stringify(backup)).not.toContain('workStudy');
+    expect(JSON.stringify(backup)).not.toContain('other-account-opportunity');
+    expect(JSON.stringify(backup)).not.toContain('Private other account item');
+  });
+
+  it('restores portable work to the restoring account and keeps that device\'s work-study choice', () => {
+    storage.setItem(`semester.opportunities.v1:${ACCOUNT}`, JSON.stringify(workspace));
+    const backup = workspaceBackup(ACCOUNT, storage);
+    const fresh = new FakeStorage();
+    fresh.setItem('semester.opportunities.v1:acct-2', JSON.stringify({
+      ...workspace,
+      items: [{ ...opportunity, title: 'Older device title', workStudy: true }],
+    }));
+
+    restoreWorkspaces(backup, 'acct-2', fresh);
+    expect(JSON.parse(fresh.getItem('semester.opportunities.v1:acct-2')!)).toMatchObject({
+      items: [{ id: 'op-1', title: 'Library assistant', workStudy: true }],
+      budget: { work: 8 },
+    });
+    expect(fresh.getItem(`semester.opportunities.v1:${ACCOUNT}`)).toBeNull();
+
+    const newDevice = new FakeStorage();
+    restoreWorkspaces(backup, 'acct-3', newDevice);
+    expect(JSON.parse(newDevice.getItem('semester.opportunities.v1:acct-3')!).items[0].workStudy).toBe(false);
+  });
+});
+
 /*
  * The study journal, with an entry in it.
  *

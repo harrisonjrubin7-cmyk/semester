@@ -1924,3 +1924,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
 - [ ] Keep Hub display markers, Opportunities, housing, meals and other unresolved device stores separate until their portability and privacy semantics are explicit.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 recoverable Opportunities workspace — automation pass 2, integration slice 92
+
+- [x] Start from clean required-branch head `bea8e91c6`; confirm selection-time `origin/main` `a4742f6b` is included, inspect Opportunities/workspace-backup history and code for equivalent work, then inspect final `ccf2d45ff` and confirm its account-pull/adoption changes do not overlap the slice.
+- [x] Re-rank the account-scoped Opportunities workspace ahead of mixed-semantics Hub markers and term-keyed campus plans; keep providers, offices and institution records outside this device recovery slice.
+- [x] Add portable opportunity items and the student's time budget to the existing validated account-scoped workspace backup.
+- [x] Remove the private `workStudy` choice from every exported item and preserve the same item's existing choice on the restoring device.
+- [x] Exclude other accounts and remap the validated record only to the restoring account.
+- [x] Export one `OPPORTUNITIES_PREFIX` authority and reuse it across Opportunities, Hub, the soft landing summary and backup code.
+- [x] Prove account selection, private-field redaction and restore preservation red against the former exclusion, then pass 89/89 focused and adjacent backup/privacy/journey tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the build chunk-size warning.
+- [x] Pass 147/147 exact combined design contracts and 96/96 exact report contracts; retain zero audit violations, 86 existing audit warnings and the existing CSS ledger.
+- [ ] Aggregate design-system wrappers — `design-system:check` hardcodes unavailable `npm`; the report writes then exits after invoking unavailable `npx`. Exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-workspace recovery slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file present but unread; no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
+- [ ] Keep Hub preferences/display markers, housing, meals and other unresolved device stores separate until their portability, privacy and term/account semantics are explicit.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

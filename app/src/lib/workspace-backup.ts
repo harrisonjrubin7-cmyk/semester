@@ -37,6 +37,12 @@ import {
   readLaunchpad,
   withoutReflections as withoutLaunchpadReflections,
 } from './launchpad';
+import {
+  keepWorkStudy,
+  OPPORTUNITIES_PREFIX,
+  readOpportunities,
+  withoutWorkStudy,
+} from './opportunities';
 
 /**
  * A backup for the device workspaces the main one does not reach.
@@ -210,6 +216,16 @@ const DEFINITIONS: Record<string, Definition> = {
     scope: 'account',
     read: (v) => withoutLaunchpadReflections(readLaunchpad(v)),
     restore: (incoming, existing) => keepLaunchpadReflections(readLaunchpad(incoming), existing),
+  },
+  // Opportunity work and time planning travel; the work-study choice does
+  // not. Restoring keeps that private choice when the same item is already on
+  // this device and otherwise defaults it to not recorded.
+  opportunities: {
+    label: 'Opportunity tracker and time plan',
+    prefix: OPPORTUNITIES_PREFIX,
+    scope: 'account',
+    read: (v) => withoutWorkStudy(readOpportunities(v)),
+    restore: (incoming, existing) => keepWorkStudy(incoming, existing),
   },
   toolkit: { label: 'Toolkit assignments, research and declarations', prefix: TOOLKIT_PREFIX, scope: 'account', read: readToolkit },
   toolkitData: { label: 'Toolkit data projects', prefix: TOOLKIT_DATA_PREFIX, scope: 'account', read: readDataProjects },
