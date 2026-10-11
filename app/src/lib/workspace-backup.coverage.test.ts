@@ -138,7 +138,7 @@ const STORES: Record<string, 'backed up' | { exempt: string }> = {
   'semester.housing-plan': { exempt: OTHER_MODULE },
   'semester.meal-plan': { exempt: OTHER_MODULE },
   'semester.support.v1': 'backed up',
-  'semester.nil.v1': { exempt: OTHER_MODULE },
+  'semester.nil.v1': { exempt: 'A private payment notebook with payer names, amounts and descriptions (lib/nil.ts). It is deliberately excluded from the general backup; the NIL screen provides its own validated, explicit private export and confirmation-before-replacement restore path.' },
   'semester.toolkit.v1': 'backed up',
   'semester.toolkit-data.v1': 'backed up',
   'semester.hub.v1': 'backed up',

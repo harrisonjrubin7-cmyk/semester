@@ -1990,3 +1990,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
 - [ ] Keep housing and meals separate until their portability, privacy, legacy-key migration and account/term semantics are explicit.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 private NIL record restore — automation pass 5, integration slice 95
+
+- [x] Start from clean required-branch head `4960baab4`; fetch current `origin/main` `ccf2d45ff`, confirm it is already included and inspect exact NIL/export/backup history and code for overlap.
+- [x] Re-rank the explicit NIL export-without-restore gap ahead of housing and meal-plan drafts, whose term-only keys still lack a safe account ownership and legacy migration rule.
+- [x] Keep payer names, payment amounts and descriptions outside the general workspace backup and all server/provider state.
+- [x] Accept one explicit JSON selection, enforce the 3 MB device-library bound and validate the complete record through `readNil` before presenting any mutation.
+- [x] Reuse `ConfirmDialog` and `ActionPreview` to name current/incoming counts, exact replaced fields, unaffected reminders/official records and the pre-export-only recovery boundary.
+- [x] Keep invalid input and Cancel side-effect free; report completion only after the guarded account-keyed device write succeeds.
+- [x] Replace the generic NIL backup exemption with the exact dedicated-export/restore rationale.
+- [x] Prove the journey guard red against the former missing handoff, then pass 57/57 focused NIL, journey, backup-coverage, preview/modal and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the existing build chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design contracts and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [ ] Aggregate design-system report — the artifact regenerates, then the wrapper exits because it hardcodes unavailable `npx`; exact contracts pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace recovery slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` and an unread local properties file exist, but no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
+- [ ] Keep housing and meal-plan backup/migration closed until legacy term-only records have an explicit account ownership and safe migration rule.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
