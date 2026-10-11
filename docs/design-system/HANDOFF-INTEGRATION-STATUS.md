@@ -1,10 +1,20 @@
 # Handoff integration status
 
-**Automation pass** 4 of 120 · **Integration slice** 82 · **Date** 2026-10-11 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `9afd7b4a` · **Latest observed `origin/main`** `bb91c689`
+**Automation pass** 5 of 120 · **Integration slice** 83 · **Date** 2026-10-11 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `63c0319d` · **Latest observed `origin/main`** `51dd47b8`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Current Phase 3 consequence work now also records separate governed removal of a device graduation scenario, its signed-in-account draft and one private Productivity cloud workspace. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 5 / integration slice 83
+
+- The clean required branch starts at `63c0319d`; selection-time `origin/main` `bb91c689` was already an ancestor and exact-history inspection found no equivalent `deleteMyRule` action, reminder-rule Undo registration or regression guard. A final fetch observed `51dd47b8`; its signed-in-device-session component/archive-permission files do not overlap this slice.
+- Removing one student-authored reminder rule now dispatches a dedicated action through the existing eight-second Undo path. Its snapshot contains only `myRules`, so Undo restores the exact rule without reverting later work.
+- Ordinary enable/disable and field edits stay on `setMyRules`; only deletion creates an Undo offer. The existing exact accessible name remains, and shipped reminder defaults, other custom rules, course/deadline records and notification-provider state are unchanged.
+- The UI guard fails against the prior immediate `setMyRules` deletion. The final focused MyRules, reminder arithmetic, Undo, reducer and root-unmount set passes 169/169.
+- TypeScript, lint, university typecheck and production build pass. Lint retains six existing warnings and the build retains its chunk-size warning. Aggregate design-system check and the test-backed report pass through local `npm`/`npx` compatibility shims; token export, audit, CSS and design contracts are green with zero audit violations and 86 existing warnings.
+- HawkScan cannot start: `hawk=false`, `docker=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; committed `stackhawk.yml` exists. No target, DAST result, finding result or security pass is claimed.
+- Ordered and shuffled full suites were not rerun for this bounded device-state slice. No route, shared component, dependency, schema, policy, server operation, provider configuration, deployment, production data or external system changed. Safe in-scope work remains and requires a fresh dependency/consequence ranking.
 
 ## Evidence locked in automation pass 1 / integration slice 79
 

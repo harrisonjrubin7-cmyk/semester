@@ -1732,3 +1732,21 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep whole-account deletion, official advising operations and aggregate-consent changes separate from this one account-share revocation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 reversible custom-reminder deletion — automation pass 5, integration slice 83
+
+- [x] Start from clean required-branch head `63c0319d`; confirm selection-time `origin/main` `bb91c689` is already included, inspect exact reminder-rule and Undo history for overlap, then inspect final `51dd47b8` and confirm its signed-in-device-session files do not overlap.
+- [x] Re-rank the one-row student-authored reminder deletion as the earliest bounded device-state consequence gap; keep provider notification state, course data and broader account actions outside the mutation.
+- [x] Add a dedicated `deleteMyRule` action and register only that action with the existing eight-second Undo path, snapshotting only `myRules`.
+- [x] Preserve ordinary rule edits and enable/disable changes on `setMyRules`, the exact accessible delete name, shipped defaults and every unrelated reminder/course/deadline record.
+- [x] Prove the UI guard red against the prior immediate list replacement, then pass 169/169 focused MyRules, reminder, Undo, reducer and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass aggregate design-system check and the test-backed report through local command compatibility shims; retain zero audit violations, 86 existing warnings and the CSS ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-state slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk=false`, `docker=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge, whole-account deletion, provider state and scanner-backed Import separate from this device-only reminder rule.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

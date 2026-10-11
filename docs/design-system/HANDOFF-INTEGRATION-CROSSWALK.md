@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `bb91c689` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `51dd47b8` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -491,3 +491,14 @@ The regression paths failed against the prior prose-only preview and receipt-les
 | Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. A local properties file exists but was not read; no runnable target, DAST scan, finding result or security pass exists. |
 
 The three regression paths failed against the prior early-close and receipt-less behavior. The final focused/adjacent set passes 59/59; TypeScript, lint, university typecheck and production build pass; aggregate design check and report complete with 9 token tests, 69 design contracts, zero audit violations and no CSS-ledger increase. The locked install audit reports zero dependency vulnerabilities. Selection-time `origin/main` `d44f10f6` is already included and has no equivalent change; final observed `bb91c689` changes only platform-control execution-plan files and does not overlap this slice. No route, dependency, schema, policy, provider configuration, deployment or external system changed.
+
+## Pass 5 delta — reversible custom-reminder deletion (slice 83)
+
+| Reference intent | Current repository authority | Disposition and evidence |
+| --- | --- | --- |
+| Give a student recovery after removing one authored reminder rule | `app/src/components/MyRules.tsx`, `app/src/state/slices/settings.ts`, `app/src/lib/undo.ts` | **Existing but incomplete → existing and verified for one device-held rule deletion.** A dedicated action snapshots only `myRules` and enters the existing eight-second Undo path; Undo restores the exact rule without reverting later unrelated work. |
+| Preserve ordinary editing and accessible operation | `app/src/components/MyRules.tsx`, `app/src/components/MyRules.test.tsx` | **Existing and verified for this slice.** Field edits and enable/disable remain on `setMyRules`, while deletion dispatches only `deleteMyRule`. The control keeps its exact rule-specific accessible name. |
+| Preserve data and authority boundaries | `app/src/lib/myrules.ts`, `app/src/state/shape.ts` | **Existing and unchanged.** The mutation is device state owned by the student. Shipped defaults, other rules, course/deadline records, account data and notification providers are not changed. |
+| Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST scan, finding result or security pass exists. |
+
+The focused UI guard fails against the former immediate list replacement. The final focused/adjacent set passes 169/169; TypeScript, lint, university typecheck, production build, aggregate design check and the test-backed report pass. Selection-time `origin/main` `bb91c689` was already included and contained no equivalent reminder-rule recovery work; final observed `51dd47b8` changes only signed-in-device-session component/archive-permission files and does not overlap. No route, shared component, dependency, schema, policy, server operation, provider configuration, deployment or external system changed.

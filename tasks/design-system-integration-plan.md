@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `bb91c689` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `51dd47b8` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -851,3 +851,11 @@ Both existing callers now use the shared `ActionPreview` to name the immediate a
 The three regression paths failed against prior behavior, then 59/59 focused and adjacent advisor-share, Advisor Meeting, Trust Center, preview, modal, backup-coverage and root-unmount tests passed. TypeScript, lint, university typecheck and production build pass; lint retains six existing warnings and the build retains its chunk-size warning. `design-system:check` passes 9 token tests and 69 contracts with zero audit violations and no CSS-ledger increase; the test-backed design report completes. The locked root install reports zero audited dependency vulnerabilities. Ordered and shuffled full suites were not rerun for this bounded account-share slice.
 
 The required HawkScan loop stops at preflight: `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists and a local properties file was detected without reading it, but no runnable target, scan, finding result or security pass exists. No route, dependency, schema, policy, provider configuration, deployment or external system changed. Safe in-scope work remains; the next slice requires a fresh ranking, while whole-account deletion, official advising operations and authenticated scanner/extractor-backed Import remain separate.
+
+## Reversible custom-reminder deletion — automation pass 5, slice 83
+
+The next dependency-ready consequence gap was the one-row deletion in the existing student-authored reminder editor. It had clear device ownership and no server or provider side effect, but replaced the entire custom-rule list immediately. A dedicated `deleteMyRule` action now routes that removal through the repository's existing eight-second Undo mechanism and snapshots only `myRules`. Ordinary edits remain on `setMyRules`, so changing a rule does not create a misleading destructive-action receipt.
+
+The existing row and accessible delete name are reused; no route, component, dependency, data model or permission surface is added. Undo restores the exact removed rule without reverting later changes outside `myRules`. Shipped defaults, other custom rules, course/deadline data and provider notification state remain untouched.
+
+The UI guard was proved red against the former immediate list replacement. The final focused set passes 169/169, and TypeScript, lint, university typecheck, production build, aggregate design check and the test-backed report pass. A final fetch observed `origin/main` `51dd47b8`; its signed-in-device-session component/archive-permission files do not overlap this slice. HawkScan remains open because Hawk, Docker, API key and app host are all unavailable. The next slice requires a new ranking; permanent purge, whole-account actions, provider state and scanner-backed Import remain separate.
