@@ -311,6 +311,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['request_mentor', 'self-service', ['auth.uid()', 'private.school_of', 'private.in_cohort']],
   ['request_school_membership', 'self-service', ['auth.uid()', 'private.verified_account']],
   ['resolve_privacy_request', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed', 'private.account_is_held']],
+  ['resolve_privileged_access_review_investigation', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['restore_school', 'admin', ['private.offboarding_operator']],
   ['retire_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['reveal_alias_identity', 'moderation', ['auth.uid()', 'private.has_capability']],
@@ -468,7 +469,7 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
   {
     file: '20261011160000_privileged_access_review.sql',
-    functions: ['begin_privileged_access_review', 'complete_privileged_access_review', 'decide_privileged_access_review_item', 'privileged_access_review'],
+    functions: ['begin_privileged_access_review', 'complete_privileged_access_review', 'decide_privileged_access_review_item', 'privileged_access_review', 'resolve_privileged_access_review_investigation'],
   },
   {
     file: '20261009230000_guardian_projection_foundation.sql',

@@ -222,6 +222,7 @@
    "private.integration_simulation_runs",
    "private.privileged_access_review",
    "private.privileged_access_review_decision",
+   "private.privileged_access_review_investigation_resolution",
    "private.privileged_access_review_item",
    "private.privileged_access_review_signoff",
    "private.ledger_chain",

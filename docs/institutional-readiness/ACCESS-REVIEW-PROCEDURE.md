@@ -4,7 +4,7 @@
 | --- | --- |
 | Status | **CONTROLLED PROCEDURE — NO COMPLETED RECURRING CUSTOMER REVIEW** |
 | Owner | Harrison Rubin — company-side IAM coordinator; customer IAM/system/data approvers and independent reviewer unassigned |
-| Evidence date | 2026-10-03 at repository revision `d246a348` |
+| Evidence date | 2026-10-11; implementation proposed in PR #1451 and not yet merged |
 | Source | [`../trust/ACCESS-CONTROL-POLICY.md`](../trust/ACCESS-CONTROL-POLICY.md), [`ROLE-AND-PERMISSION-MATRIX.md`](ROLE-AND-PERMISSION-MATRIX.md), and [`AUDIT-LOGGING-EVIDENCE.md`](AUDIT-LOGGING-EVIDENCE.md) |
 
 ## Purpose and cadence
@@ -17,7 +17,7 @@ Include human, service, provider and integration identities; SSO/SCIM membership
 
 ## Procedure
 
-1. **Authorize the review.** Name period, tenant/environments, systems/data classes, reviewer, independent approvers, due date and evidence channel.
+1. **Authorize the review.** Name period, tenant/environments, systems/data classes, three independently staffed operators (starter, reviewer/resolver and untouched signer), due date and evidence channel. Do not start the repository workflow with fewer than three active operators.
 2. **Freeze inventories.** Export timestamped account, membership, group, role, capability, scope, service credential, privileged access, temporary grant and exception inventories from authoritative sources.
 3. **Reconcile identities.** Match employment/enrollment/vendor/contract state; identify orphan, duplicate, dormant, shared, unknown, suspended and deprovisioned identities without copying unnecessary personal data into the review record.
 4. **Test necessity and scope.** For each access path confirm purpose, owner, minimum capability/resource, data class, environment, start/expiry and authentication strength.
@@ -41,7 +41,7 @@ Include human, service, provider and integration identities; SSO/SCIM membership
 
 ## Evidence state
 
-**Repository evidence.** Scoped roles/capabilities, selected lifecycle/audit/expiry/approval controls and access-policy guidance support a review process. The repository also contains a fresh-MFA, two-person `role_grants` snapshot, decision, revocation and immutable signoff path in `20261011160000_privileged_access_review.sql`, exercised synthetically by `supabase/privileged-access-review.check.sql`.
+**Repository evidence.** Scoped roles/capabilities, selected lifecycle/audit/expiry/approval controls and access-policy guidance support a review process. The repository also contains a fresh-MFA, three-operator, idempotent snapshot of privileged `role_grants`, controlled decision codes, separately verified revocation, append-only investigation resolution and independent immutable signoff in `20261011160000_privileged_access_review.sql`, exercised synthetically by `supabase/privileged-access-review.check.sql`. The workflow exposes pseudonymous subject, grantor and operator references plus captured grant timestamps; it does not expose student-role assignments to the commercial trust role.
 
 **Operational evidence.** No human has run that path against production, and it covers Semester's role-grant table only. No complete provider-console identity/access inventory, customer-approved matrix, recurring review, real remediation record, privileged/service-account reconciliation, staffed backups or customer sign-off is evidenced.
 
