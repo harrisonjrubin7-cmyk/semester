@@ -28,15 +28,10 @@ def upgrade() -> None:
     if INDEX_NAME in {index["name"] for index in inspector.get_indexes("background_jobs")}:
         return
 
-    jobs = sa.table(
+    jobs = sa.Table(
         "background_jobs",
-        sa.column("id", sa.Uuid()),
-        sa.column("document_id", sa.Uuid()),
-        sa.column("job_type", sa.String()),
-        sa.column("status", sa.String()),
-        sa.column("error", sa.Text()),
-        sa.column("revoked_at", sa.DateTime(timezone=True)),
-        sa.column("created_at", sa.DateTime(timezone=True)),
+        sa.MetaData(),
+        autoload_with=bind,
     )
     active = bind.execute(
         sa.select(jobs.c.id, jobs.c.document_id)
