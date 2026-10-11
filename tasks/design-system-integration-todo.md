@@ -1795,3 +1795,26 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep claimed family-grant revocation, whole-account deletion, official family/guardian operations and aggregate-consent changes separate from this unused code.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed claimed-family-access revocation — automation pass 8, integration slice 86
+
+- [x] Start from clean required-branch head `35a00c70`; confirm selection-time `origin/main` `573af52b` is already included, inspect exact family-share history/code for overlap, then inspect final `ec618dea` and confirm its test-runner mock isolation does not overlap.
+- [x] Re-rank claimed family access as the earliest bounded consequence gap; keep unused-code revocation, official guardian links, whole-account deletion and provider/institution operations outside the mutation.
+- [x] Replace the bespoke inline confirmation with the shared `ConfirmDialog` and `ActionPreview`, with Cancel initially focused and no write on the first press or cancellation.
+- [x] Name the person and selected item count, immediate access loss and stored-copy removal, retained family plan/other shares/unused codes/read history, unrecoverable external copies and the no-undo/new-share boundary.
+- [x] Guard repeat confirmation while the request is in flight and preserve the dialog after any provider, receipt or cleanup failure.
+- [x] Require exact returned grant ids and requested revocation timestamps before copy cleanup; require structurally valid returned copy rows before reporting success.
+- [x] Distinguish a refused revocation from a partial result where access ended but stored-copy cleanup remains incomplete and retryable.
+- [x] Preserve existing student-owner RLS, live-grant denial, access history and schema without adding an untested PostgreSQL migration; keep atomic server settlement as a separate hardening dependency.
+- [x] Pass 61/61 focused and adjacent Family, invite, access-overview, ActionPreview/modal and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass 78/78 design-check constituents and 96/96 report contracts with zero audit violations, 86 existing warnings and no CSS-ledger increase.
+- [ ] Aggregate design-system wrappers — no real `npm`/`npx` executable is available in this shell; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-share slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent and `HAWK_API_KEY` / `HAWK_APP_HOST` unset; a local properties file was detected without reading it, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep atomic family-share settlement, whole-account deletion, official family/guardian operations and aggregate-consent changes separate from this client-boundary hardening.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

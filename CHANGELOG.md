@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Stopping a claimed family share now shows the full consequence and waits for receipts
+
+On **Family**, **Stop sharing** now opens the standard consequence preview before changing the account. It says which person's selected family items lose access, that Semester's stored copies are removed, and that the family plan, other people's shares, unused codes and read history remain. It also says copies already saved outside Semester cannot be recalled and that sharing again requires a new confirmed share. Cancel starts focused and writes nothing. Semester reports success only after the account returns the exact revoked grants and removed copies; if access ends but copy cleanup fails, the dialog stays open and says that partial result instead of claiming sharing did not stop.
+
 ### Calling off an unused family share code now asks first
 
 On **Family**, calling off an unused share code now shows what will happen before the account is changed. The preview says the code stops working immediately, claimed family access is unaffected, the family plan and other codes stay unchanged, and a new code can be made later. Cancel starts focused and changes nothing. If the account does not return the exact revoked code, Semester keeps the choice open for retry instead of claiming the code was called off.

@@ -18,15 +18,27 @@ const mock = vi.hoisted(() => {
   });
   const rows: Record<string, unknown>[] = [];
   const reads: Record<string, unknown>[] = [];
-  const overlaps = vi.fn(() => ({ is: () => Promise.resolve({ error: null }) }));
-  const removed = vi.fn(() => Promise.resolve({ error: null }));
+  const grantUpdate = vi.fn();
+  const grantIs = vi.fn(() => {
+    const patch = grantUpdate.mock.calls.at(-1)?.[0] as { revoked_at?: string } | undefined;
+    return Promise.resolve({ data: [{ id: 'grant-1', revoked_at: patch?.revoked_at }], error: null });
+  });
+  const overlaps = vi.fn(() => ({ is: grantIs }));
+  const grantSelect = vi.fn(() => ({ overlaps }));
+  const removed = vi.fn<() => Promise<{ data: { code: string; item_id: string }[] | null; error: { message: string } | null }>>(
+    () => Promise.resolve({ data: [{ code: 'K7M2Q9ZP', item_id: 'bill' }], error: null }),
+  );
+  const removedSelect = vi.fn(() => ({ in: removed }));
   const from = vi.fn((table: string) =>
     table === 'family_access_events'
       ? { select: () => ({ order: () => ({ limit: () => Promise.resolve({ data: reads, error: null }) }) }) }
       : table === 'family_grants'
-        ? { update: () => ({ overlaps }) }
+        ? { update: (patch: unknown) => {
+            grantUpdate(patch);
+            return { select: grantSelect };
+          } }
         : table === 'family_shared_items'
-          ? { delete: () => ({ in: removed }) }
+          ? { delete: () => ({ select: removedSelect }) }
           : {
               select: () => ({ order: () => Promise.resolve({ data: rows, error: null }) }),
               update: (patch: unknown) => {
@@ -35,7 +47,7 @@ const mock = vi.hoisted(() => {
               },
             },
   );
-  return { rpc: vi.fn(), from, update, eq, rows, reads, overlaps, removed, account: { id: 'student' } as { id: string } | null };
+  return { rpc: vi.fn(), from, update, eq, rows, reads, grantUpdate, grantIs, grantSelect, overlaps, removedSelect, removed, account: { id: 'student' } as { id: string } | null };
 });
 vi.mock('../lib/cloud', () => ({ cloudConfigured: true, cloud: () => Promise.resolve({ rpc: mock.rpc, from: mock.from }) }));
 vi.mock('../state/store', () => ({ useStore: () => ({ account: mock.account }) }));
@@ -52,7 +64,11 @@ beforeEach(() => {
   mock.eq.mockClear();
   mock.rows.length = 0;
   mock.reads.length = 0;
+  mock.grantUpdate.mockClear();
+  mock.grantIs.mockClear();
+  mock.grantSelect.mockClear();
   mock.overlaps.mockClear();
+  mock.removedSelect.mockClear();
   mock.removed.mockClear();
   mock.account = { id: 'student' };
   host = document.createElement('div');
@@ -149,7 +165,7 @@ it('previews an unused code revocation and requires a returned-row receipt', asy
   expect(host.querySelector('[role="alert"]')?.textContent).toContain('K7M2Q9ZP can no longer be used');
 });
 
-it('shows the student every time the person opened it, and stops the share only on confirmation', async () => {
+it('previews claimed access revocation and waits for exact server receipts', async () => {
   mock.rows.push({ code: 'K7M2Q9ZP', categories: ['finances'], resource_ids: ['bill'], expires_at: '2099-01-01T00:00:00Z', grant_expires_at: '2099-02-01T00:00:00Z', claimed_at: '2026-09-28T09:00:00Z', revoked_at: null });
   mock.reads.push(
     // Built in local time, so the line reads the same in every zone the suite runs in.
@@ -161,13 +177,28 @@ it('shows the student every time the person opened it, and stops the share only 
   expect(host.querySelector('[aria-label="Times Mom opened what you shared"]')?.textContent).toBe('2026-09-29 18:04 · 1 item');
 
   act(() => button(/Stop sharing with Mom/)!.click());
-  expect(host.textContent).toContain('the same words as when a share runs out');
+  const dialog = host.querySelector('[role="dialog"]');
+  expect(dialog?.textContent).toContain('Mom · 1 family item');
+  expect(dialog?.textContent).toContain('read history stay unchanged');
+  expect(dialog?.textContent).toContain('Copies already saved outside Semester cannot be recalled');
+  expect(dialog?.textContent).toContain('create and confirm a new share later');
+  expect(document.activeElement?.textContent).toBe('Cancel');
   expect(mock.overlaps).not.toHaveBeenCalled();
+  act(() => button(/^Cancel$/)!.click());
+  expect(mock.overlaps).not.toHaveBeenCalled();
+
+  act(() => button(/Stop sharing with Mom/)!.click());
+  mock.removed.mockResolvedValueOnce({ data: null, error: { message: 'cleanup refused' } });
   await act(async () => button(/^Stop sharing$/)!.click());
   // Every item planned for Mom, shared now or before — not just today's plan.
   expect(mock.overlaps).toHaveBeenCalledWith('resource_ids', ['bill']);
   expect(mock.removed).toHaveBeenCalledWith('item_id', ['bill']);
-  expect(host.textContent).toContain('Mom can no longer see what you shared.');
+  expect(host.querySelector('[role="alert"]')?.textContent).toContain('Access ended, but Semester could not remove the stored copies');
+  expect(host.querySelector('[role="dialog"]')).not.toBeNull();
+
+  await act(async () => button(/^Stop sharing$/)!.click());
+  expect(host.querySelector('[role="dialog"]')).toBeNull();
+  expect(host.querySelector('[role="alert"]')?.textContent).toContain('Mom can no longer see what you shared. 1 stored copy was removed.');
 });
 
 it('says a claimed share has not been opened, rather than showing nothing', async () => {
