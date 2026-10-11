@@ -38,7 +38,7 @@ alter table private.privileged_access_review_item
   check (cardinality(capabilities) > 0);
 
 alter table private.privileged_access_review_decision
-  alter column remediation_applied set default false;
+  add column if not exists remediation_applied boolean not null default false;
 alter table private.privileged_access_review_decision
   drop constraint if exists privileged_access_review_decision_reason;
 alter table private.privileged_access_review_decision
