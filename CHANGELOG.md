@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Calling off an unused family share code now asks first
+
+On **Family**, calling off an unused share code now shows what will happen before the account is changed. The preview says the code stops working immediately, claimed family access is unaffected, the family plan and other codes stay unchanged, and a new code can be made later. Cancel starts focused and changes nothing. If the account does not return the exact revoked code, Semester keeps the choice open for retry instead of claiming the code was called off.
+
 ### Revoking an advisor share waits for the account to confirm it
 
 In **Advisor meeting** and **Your data**, revoking a live advisor share now keeps the confirmation open until the account returns the exact updated share. If the share is stale, unavailable or refused, Semester leaves the choice open and says to refresh and retry instead of claiming the advisor lost access. The preview also says that the share and access log stay in the account, meeting preparation and official advising records do not change, and revocation cannot be undone; you can make a new share later.

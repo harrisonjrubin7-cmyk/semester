@@ -1,5 +1,5 @@
 import { dateToIso } from '../lib/date';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cloudConfigured } from '../lib/cloud';
 import type { FamilyItem, FamilyMember } from '../lib/family';
 import {
@@ -14,7 +14,9 @@ import {
 } from '../lib/familyinvites';
 import { localMinute, makeShare, readLog, readsOf, stopSharing, type ReadEvent } from '../lib/familyshare';
 import { useStore } from '../state/store';
+import { ConfirmDialog } from './ConfirmDialog';
 import { SectionLabel } from './ui';
+import { ActionPreview } from './unity/ActionPreview';
 
 /**
  * Turning a finished plan into a share code, on the Preview tab — under the
@@ -31,6 +33,9 @@ export function FamilyInvite({ member, items, today = dateToIso(new Date()) }: {
   const [log, setLog] = useState<ReadEvent[]>([]);
   const [shownAs, setShownAs] = useState('');
   const [stopping, setStopping] = useState(false);
+  const [callingOff, setCallingOff] = useState<InviteRow | null>(null);
+  const [callOffError, setCallOffError] = useState('');
+  const callingOffNow = useRef(false);
   const signedIn = cloudConfigured && !!account;
 
   const refresh = () => {
@@ -199,7 +204,10 @@ export function FamilyInvite({ member, items, today = dateToIso(new Date()) }: {
                   <button
                     type="button"
                     className="btn btn-ghost"
-                    onClick={() => void revokeInvite(c.code).then(refresh, (e: Error) => setSaid(`Could not call it off: ${e.message}`))}
+                    onClick={() => {
+                      setCallOffError('');
+                      setCallingOff(c);
+                    }}
                   >
                     Call off {c.code}
                   </button>
@@ -209,6 +217,44 @@ export function FamilyInvite({ member, items, today = dateToIso(new Date()) }: {
           </ul>
         </>
       )}
+      {callingOff ? (
+        <ConfirmDialog
+          title="Call off this family share code?"
+          preview={
+            <>
+              <ActionPreview
+                subject={callingOff.code}
+                says="This unused code stops working immediately. Anyone who has it will not be able to accept it."
+                doesNotChange="No claimed family access changes. Your family plan, selected share record, read history and other codes stay unchanged."
+                recovery={{ kind: 'none', how: 'You can make a new code later.' }}
+              />
+              {callOffError ? <p role="alert">{callOffError} You can try again or cancel.</p> : null}
+            </>
+          }
+          confirmLabel={busy ? 'Calling off…' : 'Call off code'}
+          onCancel={() => {
+            if (!callingOffNow.current) setCallingOff(null);
+          }}
+          onConfirm={() => {
+            if (callingOffNow.current) return;
+            const pending = callingOff;
+            callingOffNow.current = true;
+            setBusy(true);
+            setCallOffError('');
+            void revokeInvite(pending.code)
+              .then(() => {
+                setCallingOff(null);
+                setSaid(`${pending.code} can no longer be used.`);
+                refresh();
+              })
+              .catch((e: Error) => setCallOffError(e.message))
+              .finally(() => {
+                callingOffNow.current = false;
+                setBusy(false);
+              });
+          }}
+        />
+      ) : null}
     </section>
   );
 }

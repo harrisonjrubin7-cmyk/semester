@@ -1773,3 +1773,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep family-invite revocation, whole-account deletion, official athletics operations and aggregate-consent changes separate from this athletic-support share.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed family share-code revocation — automation pass 7, integration slice 85
+
+- [x] Start from clean required-branch head `8e71b978`; fetch current `origin/main` `573af52b`, confirm it is already included and inspect exact family-invite history/code for overlap.
+- [x] Re-rank one signed-in student's unused family share-code revocation as the earliest bounded account consequence gap; keep claimed family grants, whole-account deletion and institution/provider operations outside the mutation.
+- [x] Put the account write behind the shared `ConfirmDialog` and `ActionPreview`, with Cancel initially focused and no write on the first press or cancellation.
+- [x] Name the exact code, immediate inability to accept it, unchanged claimed access/family plan/share record/read history/other codes and the no-undo/new-code recovery boundary.
+- [x] Guard repeat confirmation while the request is in flight; preserve the dialog and represented code with an assertive retry-or-cancel path after provider or receipt failure.
+- [x] Require the existing account-scoped update to return the exact code and requested revocation timestamp before reporting success; treat empty or mismatched rows as refusal or staleness.
+- [x] Preserve the migration's student-owner RLS, `revoked_at`-only column grant and one-way revocation policy without schema, grant, role or capability change.
+- [x] Prove the two regressions red against prior behavior, then pass 55/55 focused and adjacent Family Invite, family sharing, ActionPreview/modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass 147/147 exact token/design/report-contract constituents with zero audit violations, 86 existing warnings and no CSS-ledger increase; report artifacts remain unchanged.
+- [ ] Aggregate design-system wrappers — no real `npm`/`npx` executable is available in this shell; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-code slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists and a local properties file was not read, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep claimed family-grant revocation, whole-account deletion, official family/guardian operations and aggregate-consent changes separate from this unused code.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

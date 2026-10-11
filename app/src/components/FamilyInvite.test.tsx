@@ -11,7 +11,11 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
  */
 
 const mock = vi.hoisted(() => {
-  const eq = vi.fn(() => Promise.resolve({ error: null }));
+  const update = vi.fn();
+  const eq = vi.fn((_column: string, code: string) => {
+    const patch = update.mock.calls.at(-1)?.[0] as { revoked_at?: string } | undefined;
+    return Promise.resolve({ data: [{ code, revoked_at: patch?.revoked_at }], error: null });
+  });
   const rows: Record<string, unknown>[] = [];
   const reads: Record<string, unknown>[] = [];
   const overlaps = vi.fn(() => ({ is: () => Promise.resolve({ error: null }) }));
@@ -23,9 +27,15 @@ const mock = vi.hoisted(() => {
         ? { update: () => ({ overlaps }) }
         : table === 'family_shared_items'
           ? { delete: () => ({ in: removed }) }
-          : { select: () => ({ order: () => Promise.resolve({ data: rows, error: null }) }), update: () => ({ eq }) },
+          : {
+              select: () => ({ order: () => Promise.resolve({ data: rows, error: null }) }),
+              update: (patch: unknown) => {
+                update(patch);
+                return { select: () => ({ eq }) };
+              },
+            },
   );
-  return { rpc: vi.fn(), from, eq, rows, reads, overlaps, removed, account: { id: 'student' } as { id: string } | null };
+  return { rpc: vi.fn(), from, update, eq, rows, reads, overlaps, removed, account: { id: 'student' } as { id: string } | null };
 });
 vi.mock('../lib/cloud', () => ({ cloudConfigured: true, cloud: () => Promise.resolve({ rpc: mock.rpc, from: mock.from }) }));
 vi.mock('../state/store', () => ({ useStore: () => ({ account: mock.account }) }));
@@ -38,6 +48,7 @@ let host: HTMLDivElement;
 
 beforeEach(() => {
   mock.rpc.mockReset();
+  mock.update.mockClear();
   mock.eq.mockClear();
   mock.rows.length = 0;
   mock.reads.length = 0;
@@ -112,11 +123,30 @@ it('makes nothing until the full confirmation is accepted, then shows the code t
   expect(host.textContent).toContain('Semester sends nothing');
 });
 
-it('lets the student call off a code nobody has used', async () => {
+it('previews an unused code revocation and requires a returned-row receipt', async () => {
   mock.rows.push({ code: 'K7M2Q9ZP', categories: ['finances'], expires_at: '2099-01-01T00:00:00Z', grant_expires_at: '2099-02-01T00:00:00Z', claimed_at: null, revoked_at: null });
   await show('2026-12-15');
-  await act(async () => button(/Call off K7M2Q9ZP/)!.click());
+  act(() => button(/Call off K7M2Q9ZP/)!.click());
+  expect(mock.eq).not.toHaveBeenCalled();
+  expect(host.querySelector('[role="dialog"]')?.textContent).toContain('Anyone who has it will not be able to accept it');
+  expect(host.querySelector('[role="dialog"]')?.textContent).toContain('other codes stay unchanged');
+  expect(host.querySelector('[role="dialog"]')?.textContent).toContain('make a new code later');
+  expect(document.activeElement?.textContent).toBe('Cancel');
+  act(() => button(/^Cancel$/)!.click());
+  expect(mock.eq).not.toHaveBeenCalled();
+  expect(host.querySelector('[role="dialog"]')).toBeNull();
+
+  act(() => button(/Call off K7M2Q9ZP/)!.click());
+
+  mock.eq.mockResolvedValueOnce({ data: [], error: null });
+  await act(async () => button(/^Call off code$/)!.click());
   expect(mock.eq).toHaveBeenCalledWith('code', 'K7M2Q9ZP');
+  expect(host.querySelector('[role="alert"]')?.textContent).toContain('The code was not called off');
+  expect(host.querySelector('[role="dialog"]')).not.toBeNull();
+
+  await act(async () => button(/^Call off code$/)!.click());
+  expect(host.querySelector('[role="dialog"]')).toBeNull();
+  expect(host.querySelector('[role="alert"]')?.textContent).toContain('K7M2Q9ZP can no longer be used');
 });
 
 it('shows the student every time the person opened it, and stops the share only on confirmation', async () => {
