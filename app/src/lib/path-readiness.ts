@@ -28,6 +28,32 @@ export interface PathReadinessItem {
   detail: string;
   state: ReadinessState;
   destination: 'degree' | 'yes';
+  /**
+   * Codes the student named that no section in the imported catalog carries.
+   * Empty on every row but `named`, and empty there too while no catalog is
+   * loaded: with nothing to match against, "unmatched" would be a claim with
+   * no source. A code stays here, visibly, until a later import carries it;
+   * matching never adds a section to the cart. Seats are the official system's.
+   */
+  unmatched: string[];
+}
+
+/** "econ 1020" and "ECON1020" are the same code; a catalog and a student rarely space them alike. */
+const codeKey = (code: string): string => code.replace(/\s+/g, '').toUpperCase();
+
+/** Named codes with no section of the same code in the catalog. Empty when there is no catalog to check. */
+export function unmatchedNamed(named: readonly NamedCourse[], catalog: readonly CatalogCourse[]): string[] {
+  if (!catalog.length) return [];
+  const keys = new Set(catalog.map((course) => codeKey(course.code)));
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const course of named) {
+    const code = course.code.trim();
+    if (!code || keys.has(codeKey(code)) || seen.has(codeKey(code))) continue;
+    seen.add(codeKey(code));
+    out.push(code);
+  }
+  return out;
 }
 
 /**
@@ -38,6 +64,13 @@ export interface PathReadinessItem {
  * registration result remain the official system's decision.
  */
 export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
+  const rows = pathReadinessRows(input);
+  return rows.map((row) => ({ unmatched: [], ...row }));
+}
+
+type Row = Omit<PathReadinessItem, 'unmatched'> & { unmatched?: string[] };
+
+function pathReadinessRows(input: PathReadinessInput): Row[] {
   const plan = readiness(input.registration, input.cart, input.catalog);
   const unchecked = uncheckedSections(input.cart);
   const named = input.namedCourses ?? [];
@@ -46,6 +79,11 @@ export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
   const namedOnAgenda = namedCodes.length > 0 && named
     .filter((course) => course.code.trim())
     .every((course) => agendaTexts.has(namedAgendaText({ code: course.code.trim(), term: course.term })));
+  const unmatched = unmatchedNamed(named, input.catalog);
+  // Visible, and only that: the code is still the student's, still not a section, and the cart is untouched.
+  const unmatchedNote = unmatched.length
+    ? ` ${unmatched.join(', ')} ${unmatched.length === 1 ? 'is' : 'are'} not in the imported catalog${input.institution ? ` from ${input.institution}` : ''}, so ${unmatched.length === 1 ? 'it stays' : 'they stay'} listed here as ${unmatched.length === 1 ? 'a course' : 'courses'} you named until an import carries ${unmatched.length === 1 ? 'it' : 'them'}.`
+    : '';
   const checked = CHECKLIST.filter((item) => input.registration.checks.includes(item.id)).length;
   const latestMeeting = [...input.meetings.meetings].sort((a, b) => b.created - a.created)[0];
   const hasAgenda = Boolean(latestMeeting && (latestMeeting.agenda.length || latestMeeting.questions.length));
@@ -71,8 +109,9 @@ export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
       detail: !namedCodes.length
         ? 'Name the courses you are considering. Naming a course is not an enrollment.'
         : namedOnAgenda
-          ? `${namedCodes.join(', ')} ${namedCodes.length === 1 ? 'is' : 'are'} on your meeting agenda. That is not an enrollment, a section, or a seat. Nothing else from your record was copied, and nothing was shared.`
-          : `${namedCodes.join(', ')} ${namedCodes.length === 1 ? 'is' : 'are'} typed on this device. That is not an enrollment, a section, or a seat.`,
+          ? `${namedCodes.join(', ')} ${namedCodes.length === 1 ? 'is' : 'are'} on your meeting agenda. That is not an enrollment, a section, or a seat. Nothing else from your record was copied, and nothing was shared.${unmatchedNote}`
+          : `${namedCodes.join(', ')} ${namedCodes.length === 1 ? 'is' : 'are'} typed on this device. That is not an enrollment, a section, or a seat.${unmatchedNote}`,
+      unmatched,
       // A typed code is preparation. It is ready once each code is on the student's own agenda, which is still not the school's confirmation.
       state: !namedCodes.length ? 'not_started' : namedOnAgenda ? 'ready' : 'attention',
       destination: 'yes',

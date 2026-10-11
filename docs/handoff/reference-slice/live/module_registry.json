@@ -1,0 +1,290 @@
+[
+  {
+    "module": "Identity",
+    "purpose": "Signup, login, affiliations",
+    "roles": "All users",
+    "screens": "/auth; /onboarding",
+    "tables": "users,memberships,roles,assignments",
+    "workflow": "Verify \u2192 join \u2192 authorize \u2192 review/revoke",
+    "access": "Tenant membership + resource scope"
+  },
+  {
+    "module": "Public acquisition",
+    "purpose": "Positioning, campaigns, conversion",
+    "roles": "Visitor, marketing",
+    "screens": "/; /product; /pricing",
+    "tables": "content,campaigns,leads,consents",
+    "workflow": "Visit \u2192 capture intent \u2192 signup/demo \u2192 attribution",
+    "access": "Public approved content"
+  },
+  {
+    "module": "Personal home",
+    "purpose": "Priorities and action center",
+    "roles": "Student, faculty",
+    "screens": "/app; /app/actions",
+    "tables": "tasks,events,workflow_steps",
+    "workflow": "Discover \u2192 act \u2192 confirm \u2192 refresh",
+    "access": "Owner + assigned actions"
+  },
+  {
+    "module": "Courses/catalog",
+    "purpose": "Learning spaces and academic definitions",
+    "roles": "Student, faculty, registrar",
+    "screens": "/app/courses; /institution/catalog",
+    "tables": "courses,course_versions,terms,sections,enrollments",
+    "workflow": "Catalog \u2192 offer \u2192 enroll \u2192 teach \u2192 complete",
+    "access": "Enrollment/teaching scope"
+  },
+  {
+    "module": "Learning content",
+    "purpose": "Modules, lessons, materials",
+    "roles": "Faculty, enrolled student",
+    "screens": "/app/teaching; /app/content",
+    "tables": "modules,content_items,files",
+    "workflow": "Draft \u2192 review \u2192 publish \u2192 consume \u2192 revise",
+    "access": "Published enrollment or author scope"
+  },
+  {
+    "module": "Assessment",
+    "purpose": "Submission and grades",
+    "roles": "Student, faculty",
+    "screens": "/app/assignments; /app/grades",
+    "tables": "assignments,submissions,grade_entries,revisions",
+    "workflow": "Assign \u2192 submit \u2192 review \u2192 feedback \u2192 publish",
+    "access": "Own work/assigned section"
+  },
+  {
+    "module": "Study/productivity",
+    "purpose": "Notes, plans, practice",
+    "roles": "Individual user",
+    "screens": "/app/study; /app/planner",
+    "tables": "notes,tasks,decks,practice_sessions",
+    "workflow": "Capture \u2192 organize \u2192 practice \u2192 reflect",
+    "access": "Personal ownership + explicit sharing"
+  },
+  {
+    "module": "Degree/registration",
+    "purpose": "Academic path and enrollment",
+    "roles": "Student, advisor, registrar",
+    "screens": "/app/path; /app/registration",
+    "tables": "program_versions,requirements,holds,registration_requests",
+    "workflow": "Evaluate \u2192 plan \u2192 approve/register \u2192 reconcile",
+    "access": "Institution rules; source authority"
+  },
+  {
+    "module": "Communications",
+    "purpose": "Messages and announcements",
+    "roles": "Authorized participants",
+    "screens": "/app/messages",
+    "tables": "conversations,members,messages,announcements",
+    "workflow": "Compose \u2192 deliver \u2192 read \u2192 reply",
+    "access": "Participant/audience scope"
+  },
+  {
+    "module": "Advising/services",
+    "purpose": "Cases, referrals, appointments",
+    "roles": "Student, advisor, staff",
+    "screens": "/app/support; /institution/services",
+    "tables": "cases,appointments,plans,referrals",
+    "workflow": "Intake \u2192 triage \u2192 assign \u2192 resolve \u2192 follow up",
+    "access": "Assigned case + restricted classes"
+  },
+  {
+    "module": "Student finance",
+    "purpose": "Charges, aid and payment state",
+    "roles": "Student, institution finance",
+    "screens": "/app/student-account",
+    "tables": "student_accounts,charges,awards,allocations",
+    "workflow": "Assess \u2192 invoice \u2192 settle \u2192 reconcile \u2192 correct",
+    "access": "Account subject/finance scope"
+  },
+  {
+    "module": "Campus/housing",
+    "purpose": "Campus requests and allocation",
+    "roles": "Student, campus staff",
+    "screens": "/app/campus; /institution/housing",
+    "tables": "resources,bookings,housing_requests,allocations",
+    "workflow": "Request \u2192 check availability \u2192 approve \u2192 fulfill",
+    "access": "Participant/staff scope"
+  },
+  {
+    "module": "Career/credentials",
+    "purpose": "Opportunities and verified outcomes",
+    "roles": "Student, career staff, issuer",
+    "screens": "/app/career; /app/credentials",
+    "tables": "opportunities,applications,credentials,evidence",
+    "workflow": "Discover \u2192 apply \u2192 complete \u2192 verify \u2192 share",
+    "access": "Owner/issuer/consented sharing"
+  },
+  {
+    "module": "Community/marketplace",
+    "purpose": "Communities and governed exchange",
+    "roles": "Members, moderators, merchants",
+    "screens": "/app/community; /app/marketplace",
+    "tables": "groups,listings,orders,reports,appeals",
+    "workflow": "Join/list \u2192 interact/transact \u2192 moderate \u2192 resolve",
+    "access": "Group/product entitlement + moderation"
+  },
+  {
+    "module": "Family/guardian",
+    "purpose": "Explicitly authorized visibility",
+    "roles": "Student, invited guardian",
+    "screens": "/family",
+    "tables": "sharing_grants,revocations,access_events",
+    "workflow": "Grant \u2192 view minimum scope \u2192 revoke/expire",
+    "access": "Verified relationship and explicit grant"
+  },
+  {
+    "module": "AI",
+    "purpose": "Source-aware assistance and actions",
+    "roles": "Authorized users, AI operator",
+    "screens": "/app/assistant; /ops/ai",
+    "tables": "sessions,sources,tool_calls,evaluations",
+    "workflow": "Retrieve \u2192 authorize \u2192 generate \u2192 review/action \u2192 evaluate",
+    "access": "Source permissions + tool policy"
+  },
+  {
+    "module": "Institution admin",
+    "purpose": "Org, roster and configuration",
+    "roles": "Institution administrator",
+    "screens": "/institution",
+    "tables": "units,memberships,settings,access_reviews",
+    "workflow": "Configure \u2192 provision \u2192 review \u2192 offboard",
+    "access": "Institution-scoped admin permissions"
+  },
+  {
+    "module": "CRM/sales",
+    "purpose": "Commercial pipeline",
+    "roles": "Sales, sales engineering",
+    "screens": "/company/sales",
+    "tables": "accounts,contacts,opportunities,activities",
+    "workflow": "Lead \u2192 qualify \u2192 evaluate \u2192 propose \u2192 win/loss",
+    "access": "Company commercial scope"
+  },
+  {
+    "module": "Pricing/contracts",
+    "purpose": "Approved offers and obligations",
+    "roles": "Sales approver, legal, signers",
+    "screens": "/company/quotes; /company/contracts",
+    "tables": "quotes,prices,documents,versions,obligations",
+    "workflow": "Price \u2192 approve \u2192 negotiate \u2192 sign \u2192 activate",
+    "access": "Commercial + document audience"
+  },
+  {
+    "module": "Documents",
+    "purpose": "Versioned evidence and approval",
+    "roles": "Author, reviewer, signing operator",
+    "screens": "/company/documents",
+    "tables": "documents,versions,events,signatures",
+    "workflow": "Draft \u2192 review \u2192 sign \u2192 effective \u2192 supersede/archive",
+    "access": "Implemented general business-document permission model"
+  },
+  {
+    "module": "Implementation/migration",
+    "purpose": "Customer rollout and data movement",
+    "roles": "Delivery, institution data owner",
+    "screens": "/company/implementations",
+    "tables": "projects,mappings,batches,exceptions,acceptance",
+    "workflow": "Discover \u2192 map \u2192 import \u2192 reconcile \u2192 accept \u2192 cut over",
+    "access": "Customer assignment + approved access"
+  },
+  {
+    "module": "Customer success",
+    "purpose": "Adoption and renewal",
+    "roles": "CSM, account owner",
+    "screens": "/company/customers",
+    "tables": "success_plans,health_observations,renewals",
+    "workflow": "Onboard \u2192 measure \u2192 intervene \u2192 review \u2192 renew",
+    "access": "Approved aggregates; no automatic student-record access"
+  },
+  {
+    "module": "Support",
+    "purpose": "Incident/case resolution",
+    "roles": "Support, customer",
+    "screens": "/company/support; /account/support",
+    "tables": "cases,escalations,temporary_grants",
+    "workflow": "Report \u2192 diagnose \u2192 escalate \u2192 resolve \u2192 learn",
+    "access": "Time-limited diagnostic access"
+  },
+  {
+    "module": "Billing/entitlements",
+    "purpose": "Subscriptions and capability enforcement",
+    "roles": "Billing operator, account contact",
+    "screens": "/company/subscriptions; /account",
+    "tables": "subscriptions,entitlements,invoices,credits",
+    "workflow": "Contract \u2192 bill \u2192 reconcile \u2192 apply agreed policy",
+    "access": "Commercial account + approval"
+  },
+  {
+    "module": "Company finance",
+    "purpose": "Native ledger, cash and close",
+    "roles": "Accountant, finance approver",
+    "screens": "/company/finance",
+    "tables": "ledger_accounts,journals,lines,reconciliations",
+    "workflow": "Source event \u2192 balanced posting \u2192 match \u2192 close \u2192 report",
+    "access": "Separated finance authority"
+  },
+  {
+    "module": "People/IT",
+    "purpose": "Workforce and device lifecycle",
+    "roles": "People, manager, IT",
+    "screens": "/company/people; /company/assets",
+    "tables": "employees,candidates,assets,access_requests",
+    "workflow": "Hire \u2192 onboard \u2192 train \u2192 review \u2192 offboard",
+    "access": "Restricted workforce and asset scope"
+  },
+  {
+    "module": "Procurement/vendors",
+    "purpose": "Supplier governance and obligations",
+    "roles": "Budget owner, procurement",
+    "screens": "/company/vendors",
+    "tables": "vendors,orders,reviews,contracts",
+    "workflow": "Request \u2192 assess \u2192 approve \u2192 purchase \u2192 renew/exit",
+    "access": "Budget and procurement approvals"
+  },
+  {
+    "module": "Partnerships/developers",
+    "purpose": "Approved ecosystem interfaces",
+    "roles": "Partner, developer, reviewer",
+    "screens": "/partners; /developers",
+    "tables": "partners,apps,credentials,certifications",
+    "workflow": "Apply \u2192 authorize \u2192 test \u2192 certify \u2192 monitor/revoke",
+    "access": "Scoped app principal; key rotation"
+  },
+  {
+    "module": "Reliability/releases",
+    "purpose": "Safe operation of application",
+    "roles": "Engineer, release approver, SRE",
+    "screens": "/ops",
+    "tables": "services,deployments,incidents,backups",
+    "workflow": "Build \u2192 test \u2192 approve \u2192 deploy \u2192 observe \u2192 recover",
+    "access": "Environment/service-specific authority"
+  },
+  {
+    "module": "Security/privacy",
+    "purpose": "Governance and evidence",
+    "roles": "Security, privacy, auditor",
+    "screens": "/ops/security; /company/governance",
+    "tables": "risks,controls,privacy_cases,evidence,holds",
+    "workflow": "Identify \u2192 assess \u2192 remediate \u2192 verify \u2192 review",
+    "access": "Restricted governance permissions"
+  },
+  {
+    "module": "Webhook/integration",
+    "purpose": "Reliable downstream effects",
+    "roles": "Worker, integration admin, DLQ reviewer",
+    "screens": "/ops/integrations; /ops/dead-letters",
+    "tables": "outbox,endpoints,deliveries,attempts,dlq_decisions",
+    "workflow": "Commit \u2192 claim \u2192 deliver \u2192 retry \u2192 review/replay",
+    "access": "Implemented tenant permissions + trusted worker"
+  },
+  {
+    "module": "Executive/analytics",
+    "purpose": "Operating decisions and metrics",
+    "roles": "Leadership, authorized analyst",
+    "screens": "/company/overview",
+    "tables": "metric_definitions,projections,decisions",
+    "workflow": "Measure \u2192 explain \u2192 decide \u2192 act \u2192 verify",
+    "access": "Governed aggregates and dataset authorization"
+  }
+]

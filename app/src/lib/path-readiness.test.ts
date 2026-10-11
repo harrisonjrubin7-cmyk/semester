@@ -220,3 +220,67 @@ describe('overall readiness', () => {
     expect(overall({ cart: [a, b, noTimes], catalog: [a, b, noTimes] }).state).toBe('blocked');
   });
 });
+
+describe('named courses against an imported catalog', () => {
+  const base: PathReadinessInput = {
+    pathConfigured: false, requirementTotal: 0, cart: [], catalog: [],
+    registration: EMPTY_REGISTRATION_DAY, meetings: EMPTY_MEETINGS, institution: 'Northstar University',
+  };
+
+  it('says which named codes have no section in the imported catalog, and keeps them listed', () => {
+    const items = pathReadiness({
+      ...base,
+      namedCourses: [{ code: 'ECON 1020', term: 'Fall 2026' }, { code: 'A', term: null }],
+      catalog: [course('a', 540, 600)],
+    });
+    const named = items.find((item) => item.id === 'named');
+    expect(named?.unmatched).toEqual(['ECON 1020']);
+    expect(named?.detail).toMatch(/ECON 1020/);
+    expect(named?.detail).toMatch(/not in the imported catalog/i);
+    expect(named?.detail).toMatch(/Northstar University/);
+    // Still a course the student named, still not a seat.
+    expect(named?.detail).toMatch(/not an enrollment, a section, or a seat/i);
+    expect(items.find((item) => item.id === 'courses')?.state).toBe('not_started');
+  });
+
+  it('matches a code regardless of case and spacing, and never claims a match with no catalog', () => {
+    const matched = pathReadiness({ ...base, namedCourses: [{ code: 'a', term: null }], catalog: [course('a', 540, 600)] })
+      .find((item) => item.id === 'named');
+    expect(matched?.unmatched).toEqual([]);
+    expect(matched?.detail).not.toMatch(/not in the imported catalog/i);
+
+    const noCatalog = pathReadiness({ ...base, namedCourses: [{ code: 'ECON 1020', term: null }], catalog: [] })
+      .find((item) => item.id === 'named');
+    expect(noCatalog?.unmatched).toEqual([]);
+    expect(noCatalog?.detail).not.toMatch(/catalog/i);
+  });
+
+  it('stays unmatched until a later import carries the code, without inventing a cart section', () => {
+    const named = [{ code: 'ECON 1020', term: 'Fall 2026' }];
+    const before = pathReadiness({ ...base, namedCourses: named, catalog: [course('a', 540, 600)] });
+    const after = pathReadiness({ ...base, namedCourses: named, catalog: [course('a', 540, 600), course('econ 1020', 600, 660)] });
+    expect(before.find((item) => item.id === 'named')?.unmatched).toEqual(['ECON 1020']);
+    expect(after.find((item) => item.id === 'named')?.unmatched).toEqual([]);
+    // The cart is the student's choice. An import matching a named code adds nothing to it.
+    expect(after.find((item) => item.id === 'courses')?.state).toBe('not_started');
+  });
+
+  it('an unmatched code does not move the agenda state: on the agenda is still ready, and still not a seat', () => {
+    const named = [{ code: 'ECON 1020', term: 'Fall 2026' }];
+    const items = pathReadiness({
+      ...base,
+      namedCourses: named,
+      catalog: [course('a', 540, 600)],
+      meetings: { version: 1, meetings: [{ id: 'm', title: 'Plan', date: null, agenda: [{ id: 'a', text: namedAgendaText({ code: 'ECON 1020', term: 'Fall 2026' }) }], questions: [], attach: { scenario: null, courses: [], followUps: false }, followUps: [], notes: '', created: 1 }] },
+    });
+    const row = items.find((item) => item.id === 'named');
+    expect(row?.state).toBe('ready');
+    expect(row?.unmatched).toEqual(['ECON 1020']);
+    expect(row?.detail).toMatch(/not in the imported catalog/i);
+  });
+
+  it('every other row carries an empty unmatched list, so a renderer can read it without a guard', () => {
+    const items = pathReadiness(base);
+    expect(items.every((item) => Array.isArray(item.unmatched) && item.unmatched.length === 0)).toBe(true);
+  });
+});
