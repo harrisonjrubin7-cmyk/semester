@@ -1860,3 +1860,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep whole-project deletion, broader Toolkit backup coverage, account/institution records and provider operations separate from this one claim mutation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed Research Studio project deletion — automation pass 11, integration slice 89
+
+- [x] Re-rank whole-project deletion as the earliest adjacent bounded consequence gap; keep row removals, original files, account/institution records and provider operations outside the mutation.
+- [x] Reuse `ConfirmDialog` and `ActionPreview` to name the exact source/claim payload, unchanged original files and other projects, and the Toolkit no-backup recovery boundary before any write.
+- [x] Keep Cancel side-effect free and initially focused through the shared modal contract.
+- [x] Require the existing account-keyed device-library write to succeed before closing or reporting completion; preserve the project and dialog for retry after storage refusal.
+- [x] Select the next remaining project after success instead of stranding unchanged work behind a null active id.
+- [x] Show a device-only completion receipt both beside a remaining project and on the empty Research Studio start state.
+- [x] Prove the guard red against the prior incomplete preview, then pass 51/51 focused Toolkit, device-library, backup-coverage, preview and root-lifecycle tests.
+- [x] TypeScript, lint, university typecheck and production build pass; lint retains six existing warnings and build retains the existing chunk-size warning.
+- [x] Design-check constituents pass 78/78; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- [ ] Aggregate design report/check wrappers — the report regenerates, then exits because this shell has no real `npx`; exact contract files are run directly, so no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep broader Toolkit backup coverage, account/institution records, provider operations and whole-account deletion separate from this one device project.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

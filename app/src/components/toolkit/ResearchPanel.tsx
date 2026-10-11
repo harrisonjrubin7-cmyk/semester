@@ -77,18 +77,21 @@ export function ResearchPanel({ library }: { library: Library }) {
 
   if (!project)
     return (
-      <section className="portal-panel" aria-labelledby="rs-title">
-        <h3 id="rs-title">Research Studio</h3>
-        <ol>
-          {STEPS.map((s) => (
-            <li key={s}>{s}</li>
-          ))}
-        </ol>
-        <p className="portal-muted">AI summaries can help you find sources. They are never a source themselves: every entry here is checked against the original you open.</p>
-        <button className="portal-primary" onClick={start}>
-          Start a research project
-        </button>
-      </section>
+      <>
+        <section className="portal-panel" aria-labelledby="rs-title">
+          <h3 id="rs-title">Research Studio</h3>
+          <ol>
+            {STEPS.map((s) => (
+              <li key={s}>{s}</li>
+            ))}
+          </ol>
+          <p className="portal-muted">AI summaries can help you find sources. They are never a source themselves: every entry here is checked against the original you open.</p>
+          <button className="portal-primary" onClick={start}>
+            Start a research project
+          </button>
+        </section>
+        {message && <Notice>{message}</Notice>}
+      </>
     );
 
   const verifiedCount = project.evidence.filter((e) => e.verified).length;
@@ -384,16 +387,23 @@ export function ResearchPanel({ library }: { library: Library }) {
             <ActionPreview
               subject={project.question || 'Untitled research project'}
               says="Deletes this project, its evidence matrix, claims and search plan from this device."
-              doesNotChange="Original sources and files outside Semester stay where they are."
-              recovery={{ kind: 'none' }}
+              exactly={`${project.evidence.length} source${project.evidence.length === 1 ? '' : 's'} · ${project.claims.length} claim${project.claims.length === 1 ? '' : 's'}`}
+              doesNotChange={projects.length > 1
+                ? `Original sources and files outside Semester stay where they are. Your other research project${projects.length === 2 ? '' : 's'} stay${projects.length === 2 ? 's' : ''} unchanged.`
+                : 'Original sources and files outside Semester stay where they are.'}
+              recovery={{ kind: 'none', how: 'This Toolkit workspace is not included in a device workspace backup. Re-enter the question, search plan, sources and claims from the originals if you need them again.' }}
             />
           )}
-          confirmLabel="Delete it"
+          confirmLabel="Delete project"
           onCancel={() => setDeleting(false)}
           onConfirm={() => {
-            library.update((s) => ({ ...s, research: s.research.filter((p) => p.id !== project.id) }));
-            setDeleting(false);
-            setOpenId(null);
+            const id = project.id;
+            const next = projects.find((candidate) => candidate.id !== id);
+            if (library.update((s) => ({ ...s, research: s.research.filter((candidate) => candidate.id !== id) }))) {
+              setDeleting(false);
+              setOpenId(next?.id ?? null);
+              setMessage('Research project deleted from this device.');
+            }
           }}
         />
       ) : null}
