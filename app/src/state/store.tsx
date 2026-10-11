@@ -100,6 +100,7 @@ import { baseForLegacy, forLegacy } from '../lib/sync/engine/ownership';
 import { withEngine } from '../lib/sync/engine/tasks';
 import { useTaskEngine } from './useTaskEngine';
 import {
+  DEFAULT_PERSISTED,
   STORAGE_KEY,
   initialEphemeral,
   loadPersisted,
@@ -1017,11 +1018,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
        * and a dialogue every time would be intolerable. See `lib/adopt.ts`.
        */
       if (hasRemote && seen === null) {
-        const here = countRows(pickPersisted(latest.current));
-        const there = countRows({
-          ...(remote.state as Record<string, unknown>),
-          courses: remote.courses,
-        });
+        const here = countRows(pickPersisted(latest.current), DEFAULT_PERSISTED);
+        const there = countRows(
+          {
+            ...(remote.state as Record<string, unknown>),
+            courses: remote.courses,
+          },
+          DEFAULT_PERSISTED,
+        );
         const both: Sides = {
           cloud: there.rows,
           local: here.rows,
