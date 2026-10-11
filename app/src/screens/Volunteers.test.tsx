@@ -161,16 +161,20 @@ describe('Volunteers', () => {
     type(card('maya').querySelector('textarea') as HTMLTextAreaElement, 'shared a case outside the queue');
     await act(async () => button(card('maya'), 'Revoke')!.click());
     expect(mock.manage).not.toHaveBeenCalled();
-    const dialog = host.querySelector('[role="dialog"]') as HTMLElement;
+    const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
     expect(dialog.textContent).toContain('Their volunteer moderation access ends immediately');
     expect(dialog.textContent).toContain('every unanswered review action currently assigned to them is removed');
     expect(dialog.textContent).toContain('Their answered reviews and programme history remain');
     expect(dialog.textContent).toContain('A revoked volunteer cannot be sent back to calibration');
-    await act(async () => button(dialog, 'Cancel')!.click());
+    expect(button(dialog, 'Revoke access')!.disabled).toBe(true);
+    await act(async () => button(dialog, 'Keep it')!.click());
     expect(mock.manage).not.toHaveBeenCalled();
     await act(async () => button(card('maya'), 'Revoke')!.click());
+    const typedDialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
+    type(typedDialog.querySelector('input')!, 'maya');
+    expect(button(typedDialog, 'Revoke access')!.disabled).toBe(false);
     await act(async () => {
-      button(host.querySelector('[role="dialog"]') as HTMLElement, 'Revoke access')!.click();
+      button(typedDialog, 'Revoke access')!.click();
       await new Promise((resolve) => window.setTimeout(resolve, 0));
     });
     expect(mock.manage).toHaveBeenCalledWith('u1', 'revoke', 'shared a case outside the queue');

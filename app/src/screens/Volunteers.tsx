@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
-import { ConfirmDialog } from '../components/ConfirmDialog';
-import { ActionPreview } from '../components/unity/ActionPreview';
+import { TypeToConfirm } from '../components/TypeToConfirm';
 import { Notice, SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { ReasonHint, REASON_MIN } from '../components/community/Escalation';
@@ -265,17 +264,16 @@ function VolunteerCard({ v, history, onDone }: { v: RosterEntry; history: Volunt
       )}
 
       {confirmRevoke ? (
-        <ConfirmDialog
+        <TypeToConfirm
           title={`Revoke ${v.handle}’s volunteer access?`}
-          preview={
-            <ActionPreview
-              subject={v.handle}
-              says="Their volunteer moderation access ends immediately and every unanswered review action currently assigned to them is removed from their queue."
-              exactly={<>The reason “{reason.trim()}” is kept with the revocation event in the volunteer programme history.</>}
-              doesNotChange="Their answered reviews and programme history remain. Other volunteers, moderation cases, and school settings stay unchanged."
-              recovery={{ kind: 'none', how: 'A revoked volunteer cannot be sent back to calibration.' }}
-            />
-          }
+          what={[
+            'Their volunteer moderation access ends immediately and every unanswered review action currently assigned to them is removed from their queue.',
+            `The reason “${reason.trim()}” is kept with the revocation event in the volunteer programme history.`,
+            'Their answered reviews and programme history remain. Other volunteers, moderation cases, and school settings stay unchanged.',
+            'A revoked volunteer cannot be sent back to calibration.',
+          ]}
+          want={v.handle}
+          describe="the volunteer handle"
           confirmLabel="Revoke access"
           onCancel={() => setConfirmRevoke(false)}
           onConfirm={() => {
