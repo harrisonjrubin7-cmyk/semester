@@ -1,10 +1,11 @@
 from datetime import UTC, datetime, timedelta
 
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.api import routes
 from app.core.database import Base, get_db
 from app.core.security import create_access_token
 from app.main import app
@@ -14,6 +15,7 @@ from app.models.entities import (
     JobStatus,
     ReviewItem,
     ReviewStatus,
+    SourceDocument,
     StudyAsset,
     User,
 )
@@ -40,9 +42,21 @@ def test_job_cancellation_is_owner_scoped_idempotent_and_terminal():
         course = Course(user_id=owner.id, title="Cancellation")
         session.add(course)
         session.flush()
+        document = SourceDocument(
+            course_id=course.id,
+            filename="cancel.txt",
+            storage_key="courses/cancel/originals/cancel.txt",
+            mime_type="text/plain",
+            size_bytes=6,
+            sha256="a" * 64,
+            status="extracting",
+        )
+        session.add(document)
+        session.flush()
         running = BackgroundJob(
             course_id=course.id,
-            job_type="generate:study_guide",
+            document_id=document.id,
+            job_type="extract",
             status=JobStatus.running,
             lease_owner="worker-1",
             lease_generation=1,
@@ -61,7 +75,7 @@ def test_job_cancellation_is_owner_scoped_idempotent_and_terminal():
         )
         session.add_all([running, completed, failed])
         session.commit()
-        owner_id, outsider_id = owner.id, outsider.id
+        owner_id, outsider_id, document_id = owner.id, outsider.id, document.id
         running_id, completed_id, failed_id = running.id, completed.id, failed.id
 
     def override_db():
@@ -100,6 +114,7 @@ def test_job_cancellation_is_owner_scoped_idempotent_and_terminal():
         ).status_code == 409
         with testing_session() as session:
             assert session.get(BackgroundJob, failed_id).error == "Original provider failure"
+            assert session.get(SourceDocument, document_id).status == "failed"
     finally:
         app.dependency_overrides.clear()
 
@@ -115,23 +130,23 @@ def test_course_job_feed_is_owner_scoped_and_newest_first():
         course = Course(user_id=owner.id, title="Job feed")
         session.add(course)
         session.flush()
-        older = BackgroundJob(
-            course_id=course.id,
-            job_type="extract",
-            status=JobStatus.completed,
-            created_at=now - timedelta(minutes=1),
-        )
-        newer = BackgroundJob(
+        older_active = BackgroundJob(
             course_id=course.id,
             job_type="extract",
             status=JobStatus.running,
             progress=42,
+            created_at=now - timedelta(minutes=2),
+        )
+        newer_terminal = BackgroundJob(
+            course_id=course.id,
+            job_type="extract",
+            status=JobStatus.completed,
             created_at=now,
         )
-        session.add_all([older, newer])
+        session.add_all([older_active, newer_terminal])
         session.commit()
         owner_id, outsider_id, course_id = owner.id, outsider.id, course.id
-        older_id, newer_id = older.id, newer.id
+        active_id, terminal_id = older_active.id, newer_terminal.id
 
     def override_db():
         with testing_session() as session:
@@ -146,11 +161,70 @@ def test_course_job_feed_is_owner_scoped_and_newest_first():
             f"/api/v1/courses/{course_id}/jobs", headers=outsider_headers
         ).status_code == 404
         response = client.get(
-            f"/api/v1/courses/{course_id}/jobs", headers=owner_headers
+            f"/api/v1/courses/{course_id}/jobs?limit=1", headers=owner_headers
         )
         assert response.status_code == 200
-        assert [row["id"] for row in response.json()] == [str(newer_id), str(older_id)]
-        assert response.json()[0]["progress"] == 42
+        assert [row["id"] for row in response.json()] == [str(terminal_id), str(active_id)]
+        assert response.json()[1]["progress"] == 42
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_retry_extraction_reuses_active_job_after_dispatch_failure(monkeypatch):
+    testing_session = _database()
+    with testing_session() as session:
+        owner = User(email="retry-owner@example.com", password_hash="unused")
+        session.add(owner)
+        session.flush()
+        course = Course(user_id=owner.id, title="Retry dispatch")
+        session.add(course)
+        session.flush()
+        document = SourceDocument(
+            course_id=course.id,
+            filename="retry.txt",
+            storage_key="courses/retry/originals/retry.txt",
+            mime_type="text/plain",
+            size_bytes=5,
+            sha256="b" * 64,
+            status="failed",
+        )
+        session.add(document)
+        session.commit()
+        owner_id, document_id = owner.id, document.id
+
+    attempts = []
+
+    def flaky_send(name, args, **kwargs):
+        attempts.append((name, args, kwargs))
+        if len(attempts) == 1:
+            raise RuntimeError("broker unavailable")
+
+    monkeypatch.setattr(routes.celery_client, "send_task", flaky_send)
+
+    def override_db():
+        with testing_session() as session:
+            yield session
+
+    app.dependency_overrides[get_db] = override_db
+    try:
+        client = TestClient(app)
+        headers = {"Authorization": f"Bearer {create_access_token(owner_id)}"}
+        try:
+            client.post(f"/api/v1/files/{document_id}/retry-extraction", headers=headers)
+        except RuntimeError as exc:
+            assert str(exc) == "broker unavailable"
+        retried = client.post(
+            f"/api/v1/files/{document_id}/retry-extraction",
+            headers=headers,
+        )
+        assert retried.status_code == 200
+        assert attempts[0] == attempts[1]
+        with testing_session() as session:
+            jobs = session.scalars(
+                select(BackgroundJob).where(BackgroundJob.document_id == document_id)
+            ).all()
+            assert len(jobs) == 1
+            assert str(jobs[0].id) == retried.json()["id"]
     finally:
         app.dependency_overrides.clear()
 
