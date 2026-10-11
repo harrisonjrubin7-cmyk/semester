@@ -47,6 +47,7 @@ const provider: ProviderRecord = {
 };
 
 const membership: MembershipRecord = {
+  id: 'membership-user-1',
   userId: 'user-1',
   tenantId: 'vanderbilt',
   providerId: 'provider-vu',
@@ -58,6 +59,7 @@ const verified = (id = 'user-1') => ({
   id,
   providerIdentifier: 'sso:vanderbilt',
   userName: id === 'user-1' ? 'student@vanderbilt.edu' : 'missing@vanderbilt.edu',
+  sessionExpiresAt: '2099-01-01T00:00:00.000Z',
 });
 
 describe('current institutional membership resolution', () => {
@@ -67,6 +69,8 @@ describe('current institutional membership resolution', () => {
       userId: 'user-1',
       institutionId: 'vanderbilt',
       roles: ['student', 'advisor'],
+      membershipId: 'membership-user-1',
+      sessionExpiresAt: '2099-01-01T00:00:00.000Z',
     });
   });
 
@@ -83,6 +87,7 @@ describe('current institutional membership resolution', () => {
       id: 'user-1',
       providerIdentifier: 'sso:vanderbilt',
       userName: 'student@vanderbilt.edu',
+      sessionExpiresAt: '2099-01-01T00:00:00.000Z',
     })).resolves.not.toBeNull();
     expect(seenUserName).toBe('student@vanderbilt.edu');
   });
@@ -103,6 +108,7 @@ describe('current institutional membership resolution', () => {
       [{ ...membership, status: 'deprovisioned' as const }],
       [membership, { ...membership, roles: ['faculty'] as const }],
       [{ ...membership, roles: ['invented-role'] }],
+      [{ ...membership, id: 'not a platform id' }],
     ]) {
       const resolve = createMembershipResolver(directory([provider], rows));
       await expect(resolve(verified())).resolves.toBeNull();
