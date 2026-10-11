@@ -308,6 +308,15 @@ describe('an edit goes up on the database path', () => {
   });
 
   it('does not mark an accepted account copy as seen when its durable write fails', async () => {
+    localStorage.setItem(
+      'semester.v1',
+      JSON.stringify({
+        schemaVersion: 6,
+        seenOnboarding: true,
+        registered: true,
+        tasks: [{ id: 'local', title: 'Already here', done: false, created: 1 }],
+      }),
+    );
     localStorage.removeItem(SEEN_KEY);
     pull.mockResolvedValue({
       state: { tasks: [{ id: 'remote', title: 'From the account', done: true, created: 2 }] },
@@ -636,6 +645,15 @@ describe('what the review found', () => {
     await wait(3_000); // the session arrives after first paint
     expect(store.review).toEqual([]);
     expect(localStorage.getItem('semester.review')).toBeNull();
+    // An account switch waits for an explicit ownership choice before any
+    // push, even when this account's remote copy has no authored rows.
+    expect(store.asking).not.toBeNull();
+    expect(push).not.toHaveBeenCalled();
+    expect(localStorage.getItem('semester.syncedAs')).toBe('u0');
+
+    await act(async () => store.settle('merge', null));
+    await wait(3_000);
+
     // The first push for this account names its own pulled stamp, never the
     // previous account's sync memory.
     expect((push.mock.calls[0]![4] as { state?: string } | null)?.state).toBe('t1');
