@@ -129,10 +129,17 @@ def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed(
             "revoked_at",
         } <= job_columns
         job_indexes = {
-            tuple(index["column_names"])
+            index["name"]: index
             for index in inspect(connection).get_indexes("background_jobs")
         }
-        assert ("target_id",) in job_indexes
+        assert ("target_id",) in {
+            tuple(index["column_names"]) for index in job_indexes.values()
+        }
+        active_extraction_index = job_indexes[
+            "uq_background_jobs_active_extract_document"
+        ]
+        assert tuple(active_extraction_index["column_names"]) == ("document_id",)
+        assert active_extraction_index["unique"]
 
         _migrate(connection, command.downgrade, "0001_initial")
         assert not _confidence_nullable(connection)
@@ -159,7 +166,7 @@ def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed(
         expected_revision = (
             "0002_review_first_confidence"
             if engine.dialect.name == "sqlite"
-            else "0004_background_job_leases"
+            else "0005_active_extraction_guard"
         )
         assert MigrationContext.configure(connection).get_current_revision() == expected_revision
         assert connection.scalar(

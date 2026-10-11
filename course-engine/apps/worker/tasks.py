@@ -144,10 +144,18 @@ def recover_expired_jobs() -> dict:
     redelivered = 0
     for job_id, job_type in jobs:
         if job_type == "extract":
-            celery.send_task("extract_document", args=[str(job_id)])
+            celery.send_task(
+                "extract_document",
+                args=[str(job_id)],
+                task_id=str(job_id),
+            )
             redelivered += 1
         elif job_type.startswith(("generate:", "regenerate:")):
-            celery.send_task("generate_study_asset", args=[str(job_id)])
+            celery.send_task(
+                "generate_study_asset",
+                args=[str(job_id)],
+                task_id=str(job_id),
+            )
             redelivered += 1
     return {"redelivered": redelivered}
 
@@ -201,6 +209,7 @@ def _commit_extraction(
         ReviewItem.document_id == document.id,
         ReviewItem.item_type.in_((
             "extracted_evidence",
+            "extraction_failed",
             "low_confidence_extraction",
             "unsupported_file",
             "no_extractable_content",

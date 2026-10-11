@@ -147,6 +147,13 @@ def test_extraction_routes_even_high_confidence_evidence_through_review(tmp_path
         )
         session.add(document)
         session.flush()
+        session.add(ReviewItem(
+            course_id=course.id,
+            document_id=document.id,
+            item_type="extraction_failed",
+            title="Extraction failed for syllabus.txt",
+            payload={"error": "old parser failure"},
+        ))
         job = BackgroundJob(course_id=course.id, document_id=document.id, job_type="extract")
         session.add(job)
         session.commit()

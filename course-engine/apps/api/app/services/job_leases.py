@@ -19,6 +19,8 @@ from app.models.entities import (
     User,
 )
 
+QUEUED_RECOVERY_DELAY = timedelta(minutes=5)
+
 
 @dataclass(frozen=True)
 class JobLease:
@@ -176,10 +178,18 @@ def recovery_candidates(
     limit: int = 100,
 ) -> list[tuple[UUID, str]]:
     """Terminalize deleted-scope leases and return bounded active work to redeliver."""
-    expired_running = and_(
-        BackgroundJob.status == JobStatus.running,
+    recoverable = and_(
         BackgroundJob.revoked_at.is_(None),
-        BackgroundJob.lease_expires_at <= now,
+        or_(
+            and_(
+                BackgroundJob.status == JobStatus.running,
+                BackgroundJob.lease_expires_at <= now,
+            ),
+            and_(
+                BackgroundJob.status == JobStatus.queued,
+                BackgroundJob.created_at <= now - QUEUED_RECOVERY_DELAY,
+            ),
+        ),
     )
     inactive_recoverable = and_(
         BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
@@ -200,7 +210,7 @@ def recovery_candidates(
     )
     rows = db.execute(
         select(BackgroundJob.id, BackgroundJob.job_type)
-        .where(expired_running, _active_scope())
+        .where(recoverable, _active_scope())
         .order_by(BackgroundJob.created_at)
         .limit(limit)
     ).all()

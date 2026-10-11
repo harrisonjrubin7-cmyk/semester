@@ -357,28 +357,28 @@ def complete_upload(course_id: UUID, payload: UploadComplete, user: User = Depen
     document.status = "quarantined"
     job = BackgroundJob(course_id=course_id, document_id=document.id, job_type="extract")
     db.add(job)
-    db.flush()
-    receipt = UploadCompletion(
-        course_id=course_id,
-        document_id=document_id,
-        job_id=job.id,
-        payload_fingerprint=fingerprint,
-        verified_metadata={
-            field: getattr(metadata, field)
-            for field in (
-                "backend",
-                "bucket",
-                "key",
-                "size_bytes",
-                "content_type",
-                "checksum_sha256",
-                "encryption",
-                "owner_verified",
-            )
-        },
-    )
-    db.add(receipt)
     try:
+        db.flush()
+        receipt = UploadCompletion(
+            course_id=course_id,
+            document_id=document_id,
+            job_id=job.id,
+            payload_fingerprint=fingerprint,
+            verified_metadata={
+                field: getattr(metadata, field)
+                for field in (
+                    "backend",
+                    "bucket",
+                    "key",
+                    "size_bytes",
+                    "content_type",
+                    "checksum_sha256",
+                    "encryption",
+                    "owner_verified",
+                )
+            },
+        )
+        db.add(receipt)
         db.commit()
     except IntegrityError:
         db.rollback()
@@ -421,12 +421,30 @@ def list_jobs(
     db: Session = Depends(get_db),
 ):
     owned_course(db, user, course_id)
-    jobs = db.scalars(
+    active_statuses = (JobStatus.queued, JobStatus.running)
+    active_jobs = db.scalars(
         select(BackgroundJob)
-        .where(BackgroundJob.course_id == course_id)
+        .where(
+            BackgroundJob.course_id == course_id,
+            BackgroundJob.status.in_(active_statuses),
+            BackgroundJob.revoked_at.is_(None),
+        )
+        .order_by(BackgroundJob.created_at.desc())
+    ).all()
+    recent_terminal_jobs = db.scalars(
+        select(BackgroundJob)
+        .where(
+            BackgroundJob.course_id == course_id,
+            BackgroundJob.status.not_in(active_statuses),
+        )
         .order_by(BackgroundJob.created_at.desc())
         .limit(limit)
     ).all()
+    jobs = sorted(
+        [*active_jobs, *recent_terminal_jobs],
+        key=lambda job: job.created_at,
+        reverse=True,
+    )
     return [serialize(job) for job in jobs]
 
 
@@ -500,12 +518,58 @@ def delete_file(file_id: UUID, user: User = Depends(get_current_user), db: Sessi
 
 @router.post("/files/{file_id}/retry-extraction")
 def retry_file(file_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    doc = db.get(SourceDocument, file_id)
+    doc = db.scalar(
+        select(SourceDocument)
+        .where(SourceDocument.id == file_id, SourceDocument.deleted_at.is_(None))
+        .with_for_update()
+    )
     if not doc: raise HTTPException(404)
     owned_course(db, user, doc.course_id)
+    active_job = db.scalar(
+        select(BackgroundJob)
+        .where(
+            BackgroundJob.document_id == doc.id,
+            BackgroundJob.job_type == "extract",
+            BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
+            BackgroundJob.revoked_at.is_(None),
+        )
+        .order_by(BackgroundJob.created_at.desc())
+        .limit(1)
+    )
+    if active_job:
+        if active_job.status == JobStatus.queued:
+            celery_client.send_task(
+                "extract_document",
+                args=[str(active_job.id)],
+                task_id=str(active_job.id),
+            )
+        return serialize(active_job)
     job = BackgroundJob(course_id=doc.course_id, document_id=doc.id, job_type="extract")
-    doc.status = "queued"; db.add(job); db.commit(); db.refresh(job)
-    celery_client.send_task("extract_document", args=[str(job.id)])
+    doc.status = "queued"
+    db.add(job)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        job = db.scalar(
+            select(BackgroundJob)
+            .where(
+                BackgroundJob.document_id == file_id,
+                BackgroundJob.job_type == "extract",
+                BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
+                BackgroundJob.revoked_at.is_(None),
+            )
+            .order_by(BackgroundJob.created_at.desc())
+            .limit(1)
+        )
+        if not job:
+            raise
+    db.refresh(job)
+    celery_client.send_task(
+        "extract_document",
+        args=[str(job.id)],
+        task_id=str(job.id),
+    )
     return serialize(job)
 
 
@@ -525,12 +589,40 @@ def cancel_job(job_id: UUID, user: User = Depends(get_current_user), db: Session
         raise HTTPException(404)
     owned_course(db, user, job.course_id)
     if job.revoked_at is not None:
+        _restore_cancelled_extraction_document(db, job)
         return serialize(job)
     if job.status in (JobStatus.completed, JobStatus.failed):
         raise HTTPException(409, "Terminal jobs cannot be cancelled")
-    revoke_job(db, job.id, job.course_id, datetime.now(UTC), "Cancelled by user")
+    revoke_job(
+        db,
+        job.id,
+        job.course_id,
+        datetime.now(UTC),
+        "Cancelled by user",
+        commit=False,
+    )
+    _restore_cancelled_extraction_document(db, job)
     db.refresh(job)
     return serialize(job)
+
+
+def _restore_cancelled_extraction_document(db: Session, job: BackgroundJob) -> None:
+    if job.job_type != "extract" or not job.document_id:
+        db.commit()
+        return
+    another_active_job = db.scalar(
+        select(BackgroundJob.id).where(
+            BackgroundJob.document_id == job.document_id,
+            BackgroundJob.id != job.id,
+            BackgroundJob.job_type == "extract",
+            BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
+            BackgroundJob.revoked_at.is_(None),
+        )
+    )
+    document = db.get(SourceDocument, job.document_id)
+    if document and not document.deleted_at and not another_active_job:
+        document.status = "uploaded"
+    db.commit()
 
 
 @router.get("/courses/{course_id}/review-items")

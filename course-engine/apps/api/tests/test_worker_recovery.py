@@ -61,6 +61,16 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
         )
         session.add(document)
         session.flush()
+        queued_document = SourceDocument(
+            course_id=course.id,
+            filename="queued.txt",
+            storage_key="courses/recovery/originals/queued.txt",
+            mime_type="text/plain",
+            size_bytes=8,
+            sha256="b" * 64,
+        )
+        session.add(queued_document)
+        session.flush()
         expired_extract = BackgroundJob(
             course_id=course.id,
             document_id=document.id,
@@ -69,6 +79,19 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
             lease_owner="crashed-extract",
             lease_generation=1,
             lease_expires_at=now - timedelta(seconds=1),
+        )
+        stranded_queued = BackgroundJob(
+            course_id=course.id,
+            document_id=queued_document.id,
+            job_type="extract",
+            status=JobStatus.queued,
+            created_at=now - timedelta(minutes=6),
+        )
+        fresh_queued = BackgroundJob(
+            course_id=course.id,
+            job_type="generate:flashcards",
+            status=JobStatus.queued,
+            created_at=now - timedelta(minutes=4),
         )
         expired_generation = BackgroundJob(
             course_id=course.id,
@@ -119,6 +142,8 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
         session.add_all(
             [
                 expired_extract,
+                stranded_queued,
+                fresh_queued,
                 expired_generation,
                 active,
                 revoked,
@@ -128,8 +153,9 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
         )
         session.commit()
         expected = {
-            ("extract_document", str(expired_extract.id)),
-            ("generate_study_asset", str(expired_generation.id)),
+            ("extract_document", str(expired_extract.id), str(expired_extract.id)),
+            ("extract_document", str(stranded_queued.id), str(stranded_queued.id)),
+            ("generate_study_asset", str(expired_generation.id), str(expired_generation.id)),
         }
         inactive_id = inactive.id
         inactive_queued_id = inactive_queued.id
@@ -141,10 +167,10 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
     monkeypatch.setattr(
         worker.celery,
         "send_task",
-        lambda name, args: sent.append((name, args[0])),
+        lambda name, args, task_id: sent.append((name, args[0], task_id)),
     )
 
-    assert worker.recover_expired_jobs.run() == {"redelivered": 2}
+    assert worker.recover_expired_jobs.run() == {"redelivered": 3}
     assert set(sent) == expected
     with testing_session() as session:
         terminal = session.get(BackgroundJob, inactive_id)
