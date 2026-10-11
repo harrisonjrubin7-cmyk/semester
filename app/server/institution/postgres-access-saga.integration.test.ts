@@ -213,7 +213,7 @@ describe.skipIf(!host)('the access saga runner through PostgresAccessSagaStore, 
     const held = leases.find((l) => l !== null)!;
     await Promise.all(workers.map((w) => w.runner.tick('s-race')));
     expect((await row('s-race')).revision, 'nobody moved it while the lease was held').toBe(0);
-    await held && (await workers[0]!.store.release(held));
+    await workers[0]!.store.release(held);
     expect((await drive(workers[1]!, 's-race')).at(-1)).toBe('ACTIVE');
   });
 
