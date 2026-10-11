@@ -131,17 +131,17 @@ begin
   -- row per requested external channel, and an append-only queued event.
   execute 'set local role service_role';
   select public.publish_notification(
-    'notification-check', student, student, 'academic', 'assignment.changed', 'assignment-42-v1', false,
+    'notification-check', student, student, 'academic', 'assignment.changed', 'dedupe-fixture', false,
     'Assignment updated', 'Review the latest assignment details.', '#/courses/course-42', array['push'], now())
     into notice_id;
   select public.publish_notification(
-    'notification-check', student, student, 'academic', 'assignment.changed', 'assignment-42-v1', false,
+    'notification-check', student, student, 'academic', 'assignment.changed', 'dedupe-fixture', false,
     'Changed text is ignored', 'A duplicate does not rewrite the original.', '#/courses/other', array['push'], now())
     into duplicate_id;
   execute 'reset role';
   if duplicate_id is distinct from notice_id then raise exception 'FAILED: dedupe returned a different inbox id'; end if;
   perform pg_temp.counted('dedupe produces one inbox item',
-    (select count(*) from public.notification_inbox where dedupe_key = 'assignment-42-v1'), 1);
+    (select count(*) from public.notification_inbox where dedupe_key = 'dedupe-fixture'), 1);
   perform pg_temp.counted('dedupe produces one external delivery',
     (select count(*) from public.notification_deliveries where inbox_id = notice_id), 1);
   perform pg_temp.counted('the queued delivery has one initial audit event',
