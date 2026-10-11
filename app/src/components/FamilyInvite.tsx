@@ -1,5 +1,5 @@
 import { dateToIso } from '../lib/date';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cloudConfigured } from '../lib/cloud';
 import type { FamilyItem, FamilyMember } from '../lib/family';
 import {
@@ -12,9 +12,11 @@ import {
   sayClaim,
   type InviteRow,
 } from '../lib/familyinvites';
-import { localMinute, makeShare, readLog, readsOf, stopSharing, type ReadEvent } from '../lib/familyshare';
+import { localMinute, makeShare, readLog, readsOf, StopSharingError, stopSharing, type ReadEvent } from '../lib/familyshare';
 import { useStore } from '../state/store';
+import { ConfirmDialog } from './ConfirmDialog';
 import { SectionLabel } from './ui';
+import { ActionPreview } from './unity/ActionPreview';
 
 /**
  * Turning a finished plan into a share code, on the Preview tab — under the
@@ -31,6 +33,11 @@ export function FamilyInvite({ member, items, today = dateToIso(new Date()) }: {
   const [log, setLog] = useState<ReadEvent[]>([]);
   const [shownAs, setShownAs] = useState('');
   const [stopping, setStopping] = useState(false);
+  const [stopError, setStopError] = useState('');
+  const stoppingNow = useRef(false);
+  const [callingOff, setCallingOff] = useState<InviteRow | null>(null);
+  const [callOffError, setCallOffError] = useState('');
+  const callingOffNow = useRef(false);
   const signedIn = cloudConfigured && !!account;
 
   const refresh = () => {
@@ -145,45 +152,54 @@ export function FamilyInvite({ member, items, today = dateToIso(new Date()) }: {
               ))}
             </ul>
           )}
-          {stopping ? (
-            <div className="family-confirm">
-              <p>
-                Stop sharing with <strong>{name}</strong>? From their next look they see only “This share has ended.”, the
-                same words as when a share runs out. The copies are removed.
-              </p>
-              <div className="portal-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={busy}
-                  onClick={async () => {
-                    setBusy(true);
-                    try {
-                      await stopSharing(theirs);
-                      setSaid(`Stopped. ${name} can no longer see what you shared.`);
-                      setStopping(false);
-                      refresh();
-                    } catch (e) {
-                      setSaid(`Sharing did not stop: ${(e as Error).message}`);
-                    } finally {
-                      setBusy(false);
-                    }
-                  }}
-                >
-                  Stop sharing
-                </button>
-                <button type="button" className="btn btn-ghost" onClick={() => setStopping(false)}>
-                  Keep sharing
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button type="button" className="btn btn-ghost" onClick={() => setStopping(true)}>
+          <button type="button" className="btn btn-ghost" onClick={() => {
+            setStopError('');
+            setStopping(true);
+          }}>
               Stop sharing with {name}
-            </button>
-          )}
+          </button>
         </>
       )}
+
+      {stopping ? (
+        <ConfirmDialog
+          title={`Stop sharing with ${name}?`}
+          preview={
+            <>
+              <ActionPreview
+                subject={`${name} · ${theirs.length} ${theirs.length === 1 ? 'family item' : 'family items'}`}
+                says={`Ends active family access that includes ${theirs.length === 1 ? 'this item' : 'these items'} and removes Semester's stored copies. From the next look, ${name} sees only “This share has ended.”`}
+                doesNotChange="Your family plan, other people's shares, unused codes and read history stay unchanged. Copies already saved outside Semester cannot be recalled."
+                recovery={{ kind: 'none', how: 'You can create and confirm a new share later.' }}
+              />
+              {stopError ? <p role="alert">{stopError} You can refresh, try again or cancel.</p> : null}
+            </>
+          }
+          confirmLabel={busy ? 'Stopping…' : 'Stop sharing'}
+          onCancel={() => {
+            if (!stoppingNow.current) setStopping(false);
+          }}
+          onConfirm={() => {
+            if (stoppingNow.current) return;
+            stoppingNow.current = true;
+            setBusy(true);
+            setStopError('');
+            void stopSharing(theirs)
+              .then((receipt) => {
+                setSaid(`Stopped. ${name} can no longer see what you shared. ${receipt.removedCopies} stored ${receipt.removedCopies === 1 ? 'copy was' : 'copies were'} removed.`);
+                setStopping(false);
+                refresh();
+              })
+              .catch((e: Error) => {
+                setStopError(e instanceof StopSharingError ? e.message : `Sharing did not stop: ${e.message}`);
+              })
+              .finally(() => {
+                stoppingNow.current = false;
+                setBusy(false);
+              });
+          }}
+        />
+      ) : null}
 
       {codes.length > 0 && (
         <>
@@ -199,7 +215,10 @@ export function FamilyInvite({ member, items, today = dateToIso(new Date()) }: {
                   <button
                     type="button"
                     className="btn btn-ghost"
-                    onClick={() => void revokeInvite(c.code).then(refresh, (e: Error) => setSaid(`Could not call it off: ${e.message}`))}
+                    onClick={() => {
+                      setCallOffError('');
+                      setCallingOff(c);
+                    }}
                   >
                     Call off {c.code}
                   </button>
@@ -209,6 +228,44 @@ export function FamilyInvite({ member, items, today = dateToIso(new Date()) }: {
           </ul>
         </>
       )}
+      {callingOff ? (
+        <ConfirmDialog
+          title="Call off this family share code?"
+          preview={
+            <>
+              <ActionPreview
+                subject={callingOff.code}
+                says="This unused code stops working immediately. Anyone who has it will not be able to accept it."
+                doesNotChange="No claimed family access changes. Your family plan, selected share record, read history and other codes stay unchanged."
+                recovery={{ kind: 'none', how: 'You can make a new code later.' }}
+              />
+              {callOffError ? <p role="alert">{callOffError} You can try again or cancel.</p> : null}
+            </>
+          }
+          confirmLabel={busy ? 'Calling off…' : 'Call off code'}
+          onCancel={() => {
+            if (!callingOffNow.current) setCallingOff(null);
+          }}
+          onConfirm={() => {
+            if (callingOffNow.current) return;
+            const pending = callingOff;
+            callingOffNow.current = true;
+            setBusy(true);
+            setCallOffError('');
+            void revokeInvite(pending.code)
+              .then(() => {
+                setCallingOff(null);
+                setSaid(`${pending.code} can no longer be used.`);
+                refresh();
+              })
+              .catch((e: Error) => setCallOffError(e.message))
+              .finally(() => {
+                callingOffNow.current = false;
+                setBusy(false);
+              });
+          }}
+        />
+      ) : null}
     </section>
   );
 }

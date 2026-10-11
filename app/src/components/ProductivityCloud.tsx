@@ -9,6 +9,8 @@ import {
 } from '../lib/productivity-cloud';
 import type { Productivity } from '../lib/productivity';
 import { download } from '../lib/deliver';
+import { ConfirmDialog } from './ConfirmDialog';
+import { ActionPreview } from './unity/ActionPreview';
 
 export function ProductivityCloud({
   who,
@@ -27,6 +29,7 @@ export function ProductivityCloud({
   const [message, setMessage] = useState('');
   const [review, setReview] = useState(false);
   const [metrics, setMetrics] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const run = async (action: () => Promise<void>) => {
     setBusy(true);
     setMessage('');
@@ -34,6 +37,24 @@ export function ProductivityCloud({
       await action();
     } catch (e) {
       setMessage(e instanceof Error ? e.message : 'Cloud operation failed.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const deleteCloudCopy = async () => {
+    if (busy) return;
+    setBusy(true);
+    setMessage('');
+    try {
+      await deleteWorkspace(who);
+      setRemote(null);
+      setReview(false);
+      setLoaded(false);
+      setConfirmDelete(false);
+      setMessage('Cloud copy deleted. Device copy retained.');
+    } catch (e) {
+      const reason = e instanceof Error ? e.message : 'Cloud operation failed.';
+      setMessage(`The cloud copy was not deleted: ${reason} The cloud and device copies shown here are unchanged; retry or cancel.`);
     } finally {
       setBusy(false);
     }
@@ -164,19 +185,27 @@ export function ProductivityCloud({
       )}
       <button
         type="button"
-        disabled={busy || !loaded}
-        onClick={() =>
-          void run(async () => {
-            await deleteWorkspace(who);
-            setRemote(null);
-            setReview(false);
-            setLoaded(false);
-            setMessage('Cloud copy deleted. Device copy retained.');
-          })
-        }
+        disabled={busy || !loaded || !remote}
+        onClick={() => setConfirmDelete(true)}
       >
         Delete my cloud copy
       </button>
+      {confirmDelete && remote ? (
+        <ConfirmDialog
+          title="Delete this cloud copy?"
+          preview={(
+            <ActionPreview
+              subject={`Private cloud workspace, revision ${remote.revision}`}
+              says={`Deletes revision ${remote.revision} of this private workspace from your signed-in account, including ${remote.data.decisions.length} decisions, ${remote.data.captures.length} captures and ${remote.data.drafts.length} drafts.`}
+              doesNotChange="The workspace on this device stays unchanged. Other account data, institution records and downloaded exports stay unchanged."
+              recovery={{ kind: 'none', how: 'Export the reviewed cloud copy before deleting it if you need its exact contents. You can save the current device workspace to the account again later.' }}
+            />
+          )}
+          confirmLabel="Delete cloud copy"
+          onCancel={() => setConfirmDelete(false)}
+          onConfirm={() => void deleteCloudCopy()}
+        />
+      ) : null}
       <button
         type="button"
         disabled={busy || !tenant.trim()}
