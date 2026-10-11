@@ -1,7 +1,7 @@
 import { OfflineRefusal } from '../lib/offline-mode';
 import { KeepForLater } from './WaitingSends';
 import { formatDate } from '../lib/locale';
-import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   EMPTY_MEETINGS,
   LIMITS,
@@ -478,6 +478,9 @@ function SharingPanel({ refresh, onSaid }: { refresh: number; onSaid: (s: string
   const [data, setData] = useState<{ shares: ShareRow[]; events: ShareEvent[] } | null>(null);
   const [error, setError] = useState('');
   const [confirm, setConfirm] = useState<{ row: ShareRow; what: 'revoke' | 'delete' } | null>(null);
+  const [managementError, setManagementError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const acting = useRef(false);
   const [now] = useState(() => Date.now());
   const load = useCallback(() => {
     myShares().then(
@@ -491,16 +494,23 @@ function SharingPanel({ refresh, onSaid }: { refresh: number; onSaid: (s: string
   useEffect(load, [load, refresh]);
 
   const act = async () => {
-    if (!confirm) return;
+    if (!confirm || acting.current) return;
     const { row, what } = confirm;
-    setConfirm(null);
+    acting.current = true;
+    setBusy(true);
+    setManagementError('');
     try {
       if (what === 'revoke') await revokeShare(row.id);
       else await deleteShare(row.id);
+      setConfirm(null);
       onSaid(what === 'revoke' ? `“${row.title}” is revoked. Your advisor can no longer open it.` : `“${row.title}” and its access log are deleted.`);
       load();
     } catch (e) {
-      onSaid(e instanceof Error ? e.message : 'That did not work.');
+      const message = e instanceof Error ? e.message : 'That did not work.';
+      setManagementError(message);
+    } finally {
+      acting.current = false;
+      setBusy(false);
     }
   };
 
@@ -530,11 +540,11 @@ function SharingPanel({ refresh, onSaid }: { refresh: number; onSaid: (s: string
                 {opened.length ? `Opened ${opened.length} ${opened.length === 1 ? 'time' : 'times'}, last on ${day(opened[0].read_at)}.` : 'Not opened yet.'}
                 <span className="course-v2-actions">
                   {st === 'active' ? (
-                    <button type="button" className="balance-button" onClick={() => setConfirm({ row, what: 'revoke' })}>
+                    <button type="button" className="balance-button" onClick={() => { setManagementError(''); setConfirm({ row, what: 'revoke' }); }}>
                       Revoke…
                     </button>
                   ) : null}
-                  <button type="button" className="balance-button" onClick={() => setConfirm({ row, what: 'delete' })}>
+                  <button type="button" className="balance-button" onClick={() => { setManagementError(''); setConfirm({ row, what: 'delete' }); }}>
                     Delete…
                   </button>
                 </span>
@@ -547,15 +557,31 @@ function SharingPanel({ refresh, onSaid }: { refresh: number; onSaid: (s: string
         <ConfirmDialog
           title={confirm.what === 'revoke' ? 'Revoke this share?' : 'Delete this share?'}
           preview={
-            <p>
-              {confirm.what === 'revoke'
-                ? `“${confirm.row.title}” stops opening for your advisor now. It stays in your list, with its access log, until you delete it.`
-                : `“${confirm.row.title}” and its access log are deleted. If it is still open, your advisor loses it too.`}
-            </p>
+            confirm.what === 'revoke' ? (
+              <>
+                <ActionPreview
+                  subject={confirm.row.title}
+                  says="Your advisor loses access to this shared meeting immediately."
+                  doesNotChange="The share and its access log stay in your account. Your meeting preparation, other shares and official advising records stay unchanged."
+                  recovery={{ kind: 'none', how: 'You can make a new share later.' }}
+                />
+                {managementError ? <p role="alert">{managementError} You can try again or cancel.</p> : null}
+              </>
+            ) : (
+              <>
+                <ActionPreview
+                  subject={confirm.row.title}
+                  says="Deletes this advisor share and its access log from your account. If the share is still open, your advisor loses access too."
+                  doesNotChange="Your meeting preparation on this device, other shares and official advising records stay unchanged."
+                  recovery={{ kind: 'none' }}
+                />
+                {managementError ? <p role="alert">{managementError} You can try again or cancel.</p> : null}
+              </>
+            )
           }
-          confirmLabel={confirm.what === 'revoke' ? 'Revoke' : 'Delete'}
+          confirmLabel={busy ? (confirm.what === 'revoke' ? 'Revoking…' : 'Deleting…') : (confirm.what === 'revoke' ? 'Revoke' : 'Delete')}
           onConfirm={() => void act()}
-          onCancel={() => setConfirm(null)}
+          onCancel={() => { if (!acting.current) setConfirm(null); }}
         />
       ) : null}
     </section>
