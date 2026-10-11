@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Operators can compare server role policy with the current design proposals
+
+In **Semester Operations**, an operator with the platform console grant can open **Roles & capabilities**. The read-only workspace lists the roles and capabilities returned by the server beside 51 design proposals, which are clearly marked as proposals rather than active grants or permissions. It has loading, empty, error and retry states, and changing accounts or signing out clears the prior account's result before another protected read can start. Two disputed security-role proposals stay marked as unapproved; the stricter server policy remains in force. Nothing on this screen grants, revokes, activates or exports access, and students see no change.
+
 ### Toolkit work can travel in a device workspace backup
 
 Device workspace backups now include the signed-in account's Toolkit work: assignment workspaces, Research Studio projects, AI-use declarations and the separate Data Studio projects with their original imported data. Restoring checks the entire backup before writing anything and restores those records into the account doing the restore, not the account name from the old device. Research Studio's source, claim and project removal previews now say to create a device workspace backup first if you may need to restore the removed work; without one, it must still be re-entered from the originals.
