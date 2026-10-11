@@ -712,6 +712,8 @@ const MOCKS_MODULES = [
   'src/components/ProductivityWorkspace.test.tsx',
   'src/components/GetHelp.feedback.test.tsx',
   'src/components/MomentPromptSlot.test.tsx',
+  'src/components/MyRules.test.tsx',
+  'src/components/ProductivityCloud.test.tsx',
   'src/screens/behind.lifeevents.test.tsx',
   'src/screens/whatsnew.feedback.test.tsx',
   'src/components/StudyStudio.packs.test.tsx',
