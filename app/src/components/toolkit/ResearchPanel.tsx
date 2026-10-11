@@ -264,7 +264,7 @@ export function ResearchPanel({ library }: { library: Library }) {
               says="Removes this source and detaches it from every claim in this research project."
               exactly={`${removingSource.verified ? 'Verified' : 'Unverified'} source · linked to ${project.claims.filter((claim) => claim.evidence.includes(removingSource.id)).length} claim${project.claims.filter((claim) => claim.evidence.includes(removingSource.id)).length === 1 ? '' : 's'}.`}
               doesNotChange="The research question, search plan, other sources and original files stay unchanged."
-              recovery={{ kind: 'none', how: 'This Toolkit workspace is not included in a device workspace backup. Re-enter the source from the original if you need it again.' }}
+              recovery={{ kind: 'none', how: 'Restore it from a device workspace backup created before removal. Without one, re-enter the source from the original.' }}
             />
           )}
           confirmLabel="Remove source"
@@ -335,7 +335,7 @@ export function ResearchPanel({ library }: { library: Library }) {
               says="Removes this claim and its links to supporting sources from this research project."
               exactly={`${AUDIT_LABEL[audit(removingClaim, project.evidence).status]} · linked to ${removingClaim.evidence.length} source${removingClaim.evidence.length === 1 ? '' : 's'}.`}
               doesNotChange="The linked sources, research question, search plan and other claims stay unchanged."
-              recovery={{ kind: 'none', how: 'This Toolkit workspace is not included in a device workspace backup. Re-enter the claim and reconnect its sources if you need it again.' }}
+              recovery={{ kind: 'none', how: 'Restore it from a device workspace backup created before removal. Without one, re-enter the claim and reconnect its sources.' }}
             />
           )}
           confirmLabel="Remove claim"
@@ -391,7 +391,7 @@ export function ResearchPanel({ library }: { library: Library }) {
               doesNotChange={projects.length > 1
                 ? `Original sources and files outside Semester stay where they are. Your other research project${projects.length === 2 ? '' : 's'} stay${projects.length === 2 ? 's' : ''} unchanged.`
                 : 'Original sources and files outside Semester stay where they are.'}
-              recovery={{ kind: 'none', how: 'This Toolkit workspace is not included in a device workspace backup. Re-enter the question, search plan, sources and claims from the originals if you need them again.' }}
+              recovery={{ kind: 'none', how: 'Restore it from a device workspace backup created before deletion. Without one, re-enter the question, search plan, sources and claims from the originals.' }}
             />
           )}
           confirmLabel="Delete project"

@@ -24,13 +24,17 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Toolkit work can travel in a device workspace backup
+
+Device workspace backups now include the signed-in account's Toolkit work: assignment workspaces, Research Studio projects, AI-use declarations and the separate Data Studio projects with their original imported data. Restoring checks the entire backup before writing anything and restores those records into the account doing the restore, not the account name from the old device. Research Studio's source, claim and project removal previews now say to create a device workspace backup first if you may need to restore the removed work; without one, it must still be re-entered from the originals.
+
 ### Research Studio now explains claim removal before changing a project
 
-In **Research Studio**, **Remove claim** now opens the standard consequence preview before changing the device workspace. It names the claim's current evidence status and linked-source count, says that the claim and its source links will be removed, and keeps the sources, research question, search plan and other claims unchanged. Cancel starts focused and changes nothing. The preview also says that Toolkit work is not included in a device workspace backup, so a removed claim and its source links must be re-entered if they are needed again.
+In **Research Studio**, **Remove claim** now opens the standard consequence preview before changing the device workspace. It names the claim's current evidence status and linked-source count, says that the claim and its source links will be removed, and keeps the sources, research question, search plan and other claims unchanged. Cancel starts focused and changes nothing. The preview says a device workspace backup created before removal can restore it; without one, the claim and its source links must be re-entered.
 
 ### Research Studio now explains source removal before changing a project
 
-In **Research Studio**, **Remove source** now opens the standard consequence preview before changing the device workspace. It says that the evidence row will be removed from the project and detached from every linked claim, while the claim text, research question, search plan, other sources and original files remain. Cancel starts focused and changes nothing. The preview also says that Toolkit work is not included in a device workspace backup, so a removed source must be re-entered from the original.
+In **Research Studio**, **Remove source** now opens the standard consequence preview before changing the device workspace. It says that the evidence row will be removed from the project and detached from every linked claim, while the claim text, research question, search plan, other sources and original files remain. Cancel starts focused and changes nothing. The preview says a device workspace backup created before removal can restore it; without one, the source must be re-entered from the original.
 
 ### Stopping a claimed family share now shows the full consequence and waits for receipts
 

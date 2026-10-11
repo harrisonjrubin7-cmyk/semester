@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `51dd47b8` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `bbf94ea2` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -569,3 +569,16 @@ The regression fails against the former immediate removal. The final focused Too
 | Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. No runnable target, DAST scan, finding result or security pass exists. |
 
 The regression fails against the former incomplete preview. The final focused Toolkit, device-library, backup-coverage, preview and root-lifecycle set passes 51/51, including cancel, refused storage, retry and remaining-project selection; TypeScript, lint, university typecheck and production build pass. Design-check constituents pass 78/78, audit adds no violation and CSS stays within its ledger. Current `origin/main` `ec618dea` is already included and contains no equivalent work. No route, dependency, schema, grant, RLS policy, provider configuration, deployment or external system changed.
+
+## Recoverable Toolkit workspaces — automation pass 12, integration slice 90
+
+| Reference requirement | Current repository evidence | Disposition |
+| --- | --- | --- |
+| Give student-owned Toolkit work a tested recovery path | `app/src/lib/workspace-backup.ts`, `app/src/lib/toolkit/store.ts`, `app/src/lib/workspace-backup.test.ts` | **Existing but incomplete → existing and verified for both Toolkit stores.** The account-scoped Toolkit and Toolkit Data keys now enter the existing validated device-workspace backup and restore into the restoring account. |
+| Reuse one data authority instead of creating a parallel backup schema | `app/src/lib/toolkit/store.ts`, `app/src/components/toolkit/store.ts`, `app/src/lib/toolkit/data.ts` | **Existing and verified.** Keys and the Toolkit reader live below React and are shared by the UI hooks and backup. Data projects reuse `readDataProjects`; no second model or permissive parser was added. |
+| Refuse corrupt recovery files atomically | `app/src/lib/workspace-backup.ts`, `app/src/lib/workspace-backup.test.ts` | **Existing and verified for this slice.** A malformed Toolkit data project rejects the complete restore before either Toolkit record is written. Existing rollback behavior for storage refusal is unchanged. |
+| State recovery honestly before destructive Research Studio actions | `app/src/components/toolkit/ResearchPanel.tsx`, `app/src/components/toolkit/Toolkit.test.tsx` | **Existing but incomplete → existing and verified for source, claim and project removal.** Each preview names a backup created before removal/deletion and explains the manual re-entry fallback when none exists. |
+| Preserve account isolation in exported and restored work | `app/src/lib/workspace-backup.ts`, `app/src/lib/workspace-backup.test.ts` | **Existing and verified for Toolkit.** Export selects only exact account keys, excludes another account's record and remaps the validated records to the restoring account. |
+| Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent, `HAWK_API_KEY` / `HAWK_APP_HOST` are unset and the detected local properties file was not read. No runnable target, DAST scan, finding result or security pass exists. |
+
+The new guards failed against the former backup exclusion and recovery copy. The final focused backup, Toolkit, preview/modal and root-lifecycle set passes 68/68; TypeScript, lint, university typecheck and production build pass. Token export passes 9/9, design-check contracts pass 69/69, report contracts pass 96/96, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Selection-time `origin/main` `ec618dea` was already included; final observed `bbf94ea2` changes production read-only wiring/reference files and contains no equivalent or overlapping work. No route, dependency, schema, grant, RLS policy, server operation, provider configuration, deployment or external system changed.

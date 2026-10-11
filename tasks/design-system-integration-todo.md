@@ -1566,6 +1566,28 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-11 recoverable Toolkit workspaces — automation pass 12, integration slice 90
+
+- [x] Start from clean required-branch head `bb70b1c7`; confirm selection-time `origin/main` `ec618dea` is already included, then inspect final `bbf94ea2` and confirm its production read-only wiring/reference files do not overlap the Toolkit, backup or integration-control slice.
+- [x] Re-rank broader Toolkit backup coverage as the earliest adjacent recovery gap after governing research source, claim and project deletion; keep server ingestion and official academic records outside the slice.
+- [x] Extract Toolkit keys, schema and reader below React so UI persistence and backup validation share one production authority without duplicating the model.
+- [x] Add both account-scoped Toolkit records to the existing device-workspace backup: assignments/research/declarations and the separate raw Data Studio project store.
+- [x] Preserve exact-account export isolation and restore into the restoring account rather than the account named by the source device.
+- [x] Validate both records before any restore write and refuse a malformed data project without partially restoring the valid Toolkit record.
+- [x] Update research source, claim and whole-project consequence previews to name the pre-removal device-workspace backup and the manual re-entry fallback truthfully.
+- [x] Prove coverage, round-trip and preview guards red before implementation, then pass 68/68 focused backup, Toolkit, ActionPreview and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the existing chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design-check contracts and 96/96 report contracts with zero audit violations, 86 existing warnings and no CSS-ledger increase; regenerate the test-backed report through a temporary local shim that is not retained.
+- [ ] Aggregate `design-system:check` wrapper — cannot start its hardcoded `npm` subprocess because this shell exposes only `pnpm`; its exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace recovery slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists and a local properties file was not read, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep whole-account deletion, provider state, official records and external operations separate from this account-scoped device backup.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## 2026-10-10 truthful device-erase completion — automation pass 10, integration slice 75
 
 - [x] Merge current `origin/main` `0b1522dc` into the clean branch as slice base `481f6d7d`; confirm its guardian calendar reader/history contains no equivalent device-erase completion contract. Inspect final `b8d685e1`; its sole net institution-gateway test does not overlap.

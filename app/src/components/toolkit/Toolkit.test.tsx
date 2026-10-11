@@ -208,7 +208,7 @@ it('previews research-source removal and preserves it when cancelled', () => {
   const dialog = host.querySelector('[role="dialog"]')!;
   expect(dialog.textContent).toContain('Removes this source and detaches it from every claim in this research project.');
   expect(dialog.textContent).toContain('The research question, search plan, other sources and original files stay unchanged.');
-  expect(dialog.textContent).toContain('This Toolkit workspace is not included in a device workspace backup.');
+  expect(dialog.textContent).toContain('Restore it from a device workspace backup created before removal.');
   expect(dialog.textContent).toContain('linked to 1 claim.');
   expect(host.querySelectorAll('details.toolkit-evidence')).toHaveLength(1);
 
@@ -257,7 +257,7 @@ it('previews research-claim removal and preserves it when storage refuses the wr
   let dialog = host.querySelector('[role="dialog"]')!;
   expect(dialog.textContent).toContain('Removes this claim and its links to supporting sources from this research project.');
   expect(dialog.textContent).toContain('The linked sources, research question, search plan and other claims stay unchanged.');
-  expect(dialog.textContent).toContain('This Toolkit workspace is not included in a device workspace backup.');
+  expect(dialog.textContent).toContain('Restore it from a device workspace backup created before removal.');
   expect(dialog.textContent).toContain('linked to 1 source.');
   expect(host.textContent).toContain('The evidence supports this conclusion.');
 
@@ -302,7 +302,7 @@ it('keeps a research project represented until device storage confirms deletion'
   let dialog = host.querySelector('[role="dialog"]')!;
   expect(dialog.textContent).toContain('1 source · 1 claim');
   expect(dialog.textContent).toContain('Your other research project');
-  expect(dialog.textContent).toContain('This Toolkit workspace is not included in a device workspace backup.');
+  expect(dialog.textContent).toContain('Restore it from a device workspace backup created before deletion.');
   click('Cancel');
   expect(host.textContent).toContain('The project to remove');
 
