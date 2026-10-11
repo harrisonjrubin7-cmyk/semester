@@ -45,9 +45,11 @@ import { remindersFor } from './reminders';
 import { save, trouble } from '../lib/keep';
 import { CHECK_EVERY_MS, WRITE_FAILED, room, roomLine } from '../lib/quota';
 import {
+  acknowledgeRemoteWrite,
   available as dbAvailable,
   whileWriting,
   flushNow,
+  rollbackRemoteWrite,
   flushOnLeave,
   load as loadFromDb,
   persist as persistToDb,
@@ -593,11 +595,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * settles.
    */
   const applyingRemote = useRef(false);
+  /*
+   * Effects from renders already committed when a remote operation finishes
+   * still run after its fence is released. Number them so those stale effects
+   * cannot queue the pre-remote snapshot behind the exact write.
+   */
+  const persistenceRender = useRef(0);
+  const thisPersistenceRender = ++persistenceRender.current;
+  const skipPersistenceThrough = useRef(0);
+  /** The exact IndexedDB transaction to cancel before a different identity is applied. */
+  const remoteAbort = useRef<AbortController | null>(null);
 
   const [asking, setAsking] = useState<{
     sides: Sides;
     say: string;
     remote: Awaited<ReturnType<typeof pull>>;
+    accountId: string;
+    generation: number;
   } | null>(null);
 
   useEffect(() => {
@@ -615,7 +629,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
      * stop being normal. See `state/persist/`.
      */
     if (dbAvailable()) {
-      if (applyingRemote.current) return;
+      if (applyingRemote.current || thisPersistenceRender <= skipPersistenceThrough.current) return;
       // Whether this write is allowed to tell anyone, decided now and spent
       // by the write itself: a run caused by taking another tab's change
       // still writes — the merge may have kept something of this tab's own —
@@ -730,6 +744,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // ── The account copy ────────────────────────────────────────────────────
   const [account, setAccount] = useState<Account | null>(null);
+  /** The auth identity a pull is allowed to update, and which generation of it. */
+  const currentAccountId = useRef<string | null>(null);
+  const accountGeneration = useRef(0);
+  /** Auth changes wait only while an exact remote snapshot is committing. */
+  const queuedSession = useRef<Session | null | undefined>(undefined);
+  const applySession = useRef<(session: Session | null) => void>(() => {});
+  const finishRemoteWrite = () => {
+    applyingRemote.current = false;
+    const queued = queuedSession.current;
+    if (queued === undefined) return;
+    queuedSession.current = undefined;
+    applySession.current(queued);
+  };
   const [sync, setSync] = useState<{ status: SyncStatus; at: number; error: string }>({
     status: cloudConfigured ? 'signed-out' : 'off',
     at: 0,
@@ -763,7 +790,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!cloudConfigured) return;
-    const take = (s: Session | null) => {
+    const takeNow = (s: Session | null) => {
       /*
        * Which account this device's sync memory belongs to — its stamps, the
        * versions it last agreed, the choices waiting on its review list. All
@@ -782,7 +809,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
         rememberSyncedAs(s.user.id);
       }
-      setAccount(accountOf(s));
+      const next = accountOf(s);
+      const nextId = next?.id ?? null;
+      if (currentAccountId.current !== nextId) {
+        currentAccountId.current = nextId;
+        accountGeneration.current += 1;
+        setAsking(null);
+      }
+      setAccount(next);
       /*
        * Back to where the sign-in was started. Once per page, and taken
        * whether or not it is used, so it cannot move anybody later. Through
@@ -820,6 +854,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          */
         void claimPending().catch(() => {});
       }
+    };
+    applySession.current = takeNow;
+    const take = (s: Session | null) => {
+      if (applyingRemote.current) {
+        queuedSession.current = s;
+        const nextId = accountOf(s)?.id ?? null;
+        if (nextId !== currentAccountId.current) remoteAbort.current?.abort();
+        return;
+      }
+      takeNow(s);
     };
 
     let stop: (() => void) | null = null;
@@ -906,8 +950,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [review, setReview] = useState<Conflict[]>(readReview);
   /** When this device last asked the account for its copy. See the focus pull below. */
   const pulledAt = useRef(0);
-  /** One pull at a time; auth, focus and reconnect can otherwise overlap. */
-  const refreshing = useRef(false);
+  /** One pull per account generation; a new identity must not wait behind the old one. */
+  const refreshing = useRef<{ accountId: string; generation: number } | null>(null);
+  /**
+   * A generation may push only after it has read its account copy once.
+   * Otherwise a slow first pull lets the push timer replace that copy with
+   * this device's empty pre-sign-in state.
+   */
+  const pushReady = useRef<{ accountId: string; generation: number } | null>(null);
+  const [refreshSettled, setRefreshSettled] = useState(0);
   const refresh = useCallback(async (): Promise<string> => {
     const base = { cloud: cloudConfigured, signedIn: Boolean(account), took: false, courses: 0, error: '', at: 0 };
     if (!account) {
@@ -929,12 +980,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
      * rows that just landed. The push path already has the same one-flight
      * rule; pulls need it for the same ordering reason.
      */
-    if (refreshing.current) return 'Semester is already syncing.';
-    refreshing.current = true;
+    const accountId = account.id;
+    const generation = accountGeneration.current;
+    const flight = { accountId, generation };
+    const stillCurrent = () => {
+      const queued = queuedSession.current;
+      const queuedId = queued === undefined ? accountId : (accountOf(queued)?.id ?? null);
+      return currentAccountId.current === accountId &&
+        accountGeneration.current === generation && queuedId === accountId;
+    };
+    const ignored = () =>
+      refreshSaid({ ...base, signedIn: currentAccountId.current !== null }, Date.now());
+    if (
+      refreshing.current?.accountId === accountId &&
+      refreshing.current.generation === generation
+    ) {
+      return 'Semester is already syncing.';
+    }
+    refreshing.current = flight;
     setSync((s) => ({ ...s, status: 'syncing', error: '' }));
     pulledAt.current = Date.now();
+    let showFailedRemote: (() => void) | null = null;
+    let rollbackFailure = false;
     try {
-      const remote = await pull(account.id);
+      const remote = await pull(accountId);
+      if (!stillCurrent()) return ignored();
       const seen = seenRows();
       const hasRemote = remote.state !== null || remote.courses.length > 0;
 
@@ -959,7 +1029,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           localCourses: here.courses,
         };
         if (decide(both).do === 'ask') {
-          setAsking({ sides: both, say: decide(both).say, remote });
+          setAsking({
+            sides: both,
+            say: decide(both).say,
+            remote,
+            accountId,
+            generation,
+          });
           setSync({ status: 'synced', at: Date.now(), error: '' });
           return refreshSaid({ ...base, took: false }, Date.now());
         }
@@ -1053,56 +1129,121 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          * persistence effect strands the device with the new stamp and none
          * of the account rows.
          */
+        if (!stillCurrent()) return ignored();
         const database = dbAvailable();
-        if (database) applyingRemote.current = true;
-        let durable = latest.current;
-        if (Object.keys(gone).length > 0) {
-          durable = reducer(durable, { type: 'dropTicks', removals: gone });
-          dispatch({ type: 'dropTicks', removals: gone });
+        const controller = database ? new AbortController() : null;
+        if (database) {
+          applyingRemote.current = true;
+          remoteAbort.current = controller;
         }
-        if (Object.keys(deletions.dropHere).length > 0) {
-          durable = reducer(durable, { type: 'dropRecords', removals: deletions.dropHere });
-          dispatch({ type: 'dropRecords', removals: deletions.dropHere });
-        }
-        durable = reducer(durable, { type: 'hydrate', persisted: taken });
-        /*
-         * Dispatch before the first await. A render already scheduled by the
-         * sync-status update must not hand the persistence effect the stale
-         * pre-pull copy while the explicit write below is in flight; that
-         * later queued write would delete the rows this transaction just put.
-         */
-        dispatch({ type: 'hydrate', persisted: taken });
+        const applyTaken = (source: typeof latest.current) => {
+          let next = source;
+          if (Object.keys(gone).length > 0) {
+            next = reducer(next, { type: 'dropTicks', removals: gone });
+          }
+          if (Object.keys(deletions.dropHere).length > 0) {
+            next = reducer(next, { type: 'dropRecords', removals: deletions.dropHere });
+          }
+          return reducer(next, { type: 'hydrate', persisted: taken });
+        };
+        const showTaken = () => {
+          if (Object.keys(gone).length > 0) {
+            dispatch({ type: 'dropTicks', removals: gone });
+          }
+          if (Object.keys(deletions.dropHere).length > 0) {
+            dispatch({ type: 'dropRecords', removals: deletions.dropHere });
+          }
+          dispatch({ type: 'hydrate', persisted: taken });
+        };
+        showFailedRemote = showTaken;
+        let source = latest.current;
+        let durable = applyTaken(source);
+        let safeToRelease = !database;
         try {
           if (database) {
-            persistToDb(pickPersisted(durable), tellOtherTabs);
-            if (!(await flushNow())) {
-              throw new Error('The account copy could not be saved on this device.');
+            let crossedCommit = false;
+            for (;;) {
+              persistToDb(pickPersisted(durable), tellOtherTabs);
+              if (
+                !(await flushNow(controller!.signal, pickPersisted(source))) ||
+                controller!.signal.aborted
+              ) {
+                throw new Error('The account copy could not be saved on this device.');
+              }
+              if (!crossedCommit && !stillCurrent()) return ignored();
+              let nextSource = latest.current;
+              if (nextSource !== source) {
+                source = nextSource;
+                durable = applyTaken(source);
+                continue;
+              }
+              /*
+               * Linearization point: no different identity was queued through
+               * the complete remote write. Later auth events wait behind this
+               * operation and are an ordinary switch after it.
+               */
+              if (!crossedCommit) {
+                if (remoteAbort.current === controller) remoteAbort.current = null;
+                crossedCommit = true;
+              }
+              if (!(await acknowledgeRemoteWrite())) {
+                throw new Error('The account copy could not be acknowledged on this device.');
+              }
+              /*
+               * A local edit can arrive while the marker deletion is in
+               * flight. Its normal effect is fenced, so include it in another
+               * exact+journal iteration before stamping the remote version.
+               */
+              nextSource = latest.current;
+              if (nextSource === source) break;
+              source = nextSource;
+              durable = applyTaken(source);
             }
           }
+          skipPersistenceThrough.current = persistenceRender.current;
+          showTaken();
+          showFailedRemote = null;
+          markSeen(remote.seen);
+          // The version both sides now agree on is the account's — including
+          // for the fields held back, whose difference here is still to go up,
+          // and for what this device deleted, which the account still holds
+          // until the push that follows tells it. The untrimmed copy, so that
+          // deletion is still a deletion if that push has to wait.
+          writeBase(baseOf(forLegacy(theirsAll as Record<string, unknown>)));
+          safeToRelease = true;
         } finally {
-          if (database) applyingRemote.current = false;
+          if (database) {
+            if (remoteAbort.current === controller) remoteAbort.current = null;
+            if (!safeToRelease) {
+              safeToRelease = await rollbackRemoteWrite(pickPersisted(latest.current));
+              rollbackFailure = !safeToRelease;
+            }
+            if (safeToRelease) finishRemoteWrite();
+          }
         }
-        markSeen(remote.seen);
-        // The version both sides now agree on is the account's — including
-        // for the fields held back, whose difference here is still to go up,
-        // and for what this device deleted, which the account still holds
-        // until the push that follows tells it. The untrimmed copy, so that
-        // deletion is still a deletion if that push has to wait.
-        writeBase(baseOf(forLegacy(theirsAll as Record<string, unknown>)));
       }
+      pushReady.current = flight;
       setSync({ status: 'synced', at: Date.now(), error: '' });
       return refreshSaid(
         { ...base, took: take, courses: take ? remote.courses.length : 0, at: take ? remote.updated : 0 },
         Date.now(),
       );
     } catch (e) {
+      if (!stillCurrent() && !rollbackFailure) return ignored();
+      if (stillCurrent()) showFailedRemote?.();
+      showFailedRemote = null;
       // The object, not its message: `explainSync` reads PostgREST's `code`
       // and Supabase's `status`, which this line used to drop one step early.
       const { said: error } = explainSync(e);
       setSync({ status: 'error', at: 0, error });
       return refreshSaid({ ...base, error }, Date.now());
     } finally {
-      refreshing.current = false;
+      if (refreshing.current === flight) {
+        refreshing.current = null;
+        // Reconsider a push that waited for this pull. The readiness token
+        // above decides whether a failed pull is allowed to release it.
+        setRefreshSettled((n) => n + 1);
+      }
     }
   }, [account]);
 
@@ -1253,6 +1394,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // edit made with the dialogue on screen was pushed over the account the
     // student was in the middle of being asked about.
     if (asking) return;
+    const ready = pushReady.current;
+    if (
+      !ready ||
+      ready.accountId !== account.id ||
+      ready.generation !== accountGeneration.current
+    ) return;
     /*
      * Read-only mode (`lib/readonly.ts`): this build does not push. The edits
      * are on disk and `unpushed` remembers them, exactly as offline below; the
@@ -1282,6 +1429,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // one — which could put the earlier one back. It waits; the first one
       // landing runs this again (`landed`).
       if (inFlight.current) return;
+      // A focus or token refresh can begin after this timer was scheduled.
+      // Wait for that pull too; its finally block re-runs this effect.
+      if (refreshing.current?.accountId === account.id) return;
       inFlight.current = true;
       const sentAt = editNow.current;
       const { courses, ...rest } = pickPersisted(state);
@@ -1344,7 +1494,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // inside the timer and is deliberately not a dependency — it changes on
     // every navigation, and none of those are worth a write.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, edit, asking, lost, failed, online, landed]);
+  }, [account, edit, asking, lost, failed, online, landed, refreshSettled]);
 
   /*
    * Push without waiting for the next edit: the offline banner asks for this
@@ -1751,7 +1901,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const settle = useCallback(
     async (choice: Choice, backup: string | null) => {
       if (!asking) return;
-      const { remote } = asking;
+      const { remote, accountId, generation } = asking;
+      const promptCurrent = () => {
+        const queued = queuedSession.current;
+        const queuedId = queued === undefined ? accountId : (accountOf(queued)?.id ?? null);
+        return currentAccountId.current === accountId &&
+          accountGeneration.current === generation && queuedId === accountId;
+      };
+      if (!promptCurrent()) {
+        setAsking(null);
+        return;
+      }
       if (backup) {
         try {
           const blob = new Blob([JSON.stringify(pickPersisted(latest.current), null, 2)], {
@@ -1805,32 +1965,80 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          * window without introducing a second localStorage writer.
          */
         const database = dbAvailable();
-        if (database) applyingRemote.current = true;
-        const wiped = choice === 'cloud'
-          ? reducer(latest.current, { type: 'wipeLocalForAdopt' })
-          : latest.current;
-        const adopted = reducer(wiped, { type: 'hydrate', persisted: theirs });
-        if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
-        // As in an automatic pull above, make every render after this point
-        // carry the adopted copy before yielding to the asynchronous writer.
-        dispatch({ type: 'hydrate', persisted: theirs });
+        const controller = database ? new AbortController() : null;
+        if (database) {
+          applyingRemote.current = true;
+          remoteAbort.current = controller;
+        }
+        const adoptFrom = (source: typeof latest.current) => {
+          const wiped = choice === 'cloud'
+            ? reducer(source, { type: 'wipeLocalForAdopt' })
+            : source;
+          return reducer(wiped, { type: 'hydrate', persisted: theirs });
+        };
+        let source = latest.current;
+        let adopted = adoptFrom(source);
+        let safeToRelease = !database;
         try {
           if (database) {
-            persistToDb(pickPersisted(adopted), tellOtherTabs);
-            // Do not record rows as seen when the transaction that should make
-            // them durable did not land. The chooser stays open for a retry and
-            // the standing save warning explains why progress cannot continue.
-            if (!(await flushNow())) {
-              throw new Error('The account copy could not be saved on this device.');
+            let crossedCommit = false;
+            for (;;) {
+              persistToDb(pickPersisted(adopted), tellOtherTabs);
+              // Do not record rows as seen when the transaction that should make
+              // them durable did not land. The chooser stays open for a retry and
+              // the standing save warning explains why progress cannot continue.
+              if (
+                !(await flushNow(controller!.signal, pickPersisted(source))) ||
+                controller!.signal.aborted
+              ) {
+                throw new Error('The account copy could not be saved on this device.');
+              }
+              if (!crossedCommit && !promptCurrent()) return;
+              let nextSource = latest.current;
+              if (nextSource !== source) {
+                source = nextSource;
+                adopted = adoptFrom(source);
+                continue;
+              }
+              if (!crossedCommit) {
+                if (remoteAbort.current === controller) remoteAbort.current = null;
+                crossedCommit = true;
+              }
+              if (!(await acknowledgeRemoteWrite())) {
+                throw new Error('The account copy could not be acknowledged on this device.');
+              }
+              nextSource = latest.current;
+              if (nextSource === source) break;
+              source = nextSource;
+              adopted = adoptFrom(source);
             }
           }
+          skipPersistenceThrough.current = persistenceRender.current;
+          if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
+          dispatch({ type: 'hydrate', persisted: theirs });
+          markSeen(remote.seen);
+          // The first version this device and the account agree on.
+          writeBase(baseOf(forLegacy(theirs as Record<string, unknown>)));
+          safeToRelease = true;
+        } catch (error) {
+          // A queued identity invalidates this chooser. Its abort is expected:
+          // the rollback below restores the authored source before the queued
+          // account is allowed to mount, so do not surface the superseded
+          // chooser's internal save error to the caller.
+          if (!promptCurrent()) return;
+          throw error;
         } finally {
-          if (database) applyingRemote.current = false;
+          if (database) {
+            if (remoteAbort.current === controller) remoteAbort.current = null;
+            if (!safeToRelease) {
+              safeToRelease = await rollbackRemoteWrite(pickPersisted(latest.current));
+            }
+            if (safeToRelease) finishRemoteWrite();
+            else throw new Error('The previous offline copy could not be restored on this device.');
+          }
         }
-        markSeen(remote.seen);
-        // The first version this device and the account agree on.
-        writeBase(baseOf(forLegacy(theirs as Record<string, unknown>)));
       }
+      pushReady.current = { accountId, generation };
       setAsking(null);
     },
     [asking],
