@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { modelFromEnvironment } from '../src/runtime/model.ts';
 import { createRuntime } from '../src/runtime/operator.ts';
 import { payloadHash } from '../src/store/hash.ts';
 import type { EnqueueInput } from '../src/control/scheduler.ts';
@@ -25,7 +26,7 @@ for (let i = 0; i < rest.length; i += 1) {
 const need = (name: string): string => { const value = flags.get(name); if (!value) { console.error(`--${name} is required`); process.exit(2); } return value; };
 const by = () => flags.get('by') ?? process.env.USER ?? 'operator';
 
-const runtime = createRuntime({ repositoryRoot, stateRoot: flags.get('state') ?? defaultStateRoot, environment: (flags.get('environment') as Environment | undefined) ?? 'development', allowHandoffs: flags.get('allow-handoffs') === 'true' });
+const runtime = createRuntime({ repositoryRoot, stateRoot: flags.get('state') ?? defaultStateRoot, environment: (flags.get('environment') as Environment | undefined) ?? 'development', allowHandoffs: flags.get('allow-handoffs') === 'true', model: modelFromEnvironment() });
 const print = (value: unknown) => console.log(JSON.stringify(value, null, 2));
 
 const commands: Record<string, () => Promise<void> | void> = {
@@ -48,7 +49,8 @@ const commands: Record<string, () => Promise<void> | void> = {
   tick                                create this period's scheduled tasks
   kill --reason r [--by who]          engage the kill switch; release-kill lifts it
   release-kill [--by who]
-Options: --state <dir> (default operator/.state or $SEMESTER_OPERATOR_STATE), --environment development|staging|production, --allow-handoffs`);
+Options: --state <dir> (default operator/.state or $SEMESTER_OPERATOR_STATE), --environment development|staging|production, --allow-handoffs
+Model: off unless SEMESTER_OPERATOR_MODEL_KEY is set; SEMESTER_OPERATOR_MODEL (default claude-sonnet-5-5), SEMESTER_OPERATOR_MODEL_URL, SEMESTER_OPERATOR_MODEL_PRICE="in,out" USD per million tokens`);
   },
   status: () => print(runtime.status()),
   agents: () => { for (const agent of runtime.agents) console.log(`${agent.id}  ${agent.key.padEnd(26)} ${agent.suite.padEnd(13)} ${agent.implementation.padEnd(13)} ${agent.taskTypes.join(',')}`); },

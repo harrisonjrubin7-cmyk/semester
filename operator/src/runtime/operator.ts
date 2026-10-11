@@ -134,7 +134,7 @@ export function createRuntime(options: RuntimeOptions): Runtime {
       if (!turn.ok) throw new Error(turn.reason);
       const handler = handlerFor(task.type);
       if (!contract.taskTypes.includes(task.type)) throw new Error(`${contract.id} does not accept task type ${task.type}.`);
-      const report = redact(await handler({ task, tools, store, model, workspaceRoot, repositoryRoot, execution }));
+      const report = redact(await handler({ task, tools, store, model, limiter, workspaceRoot, repositoryRoot, execution }));
       execution = { ...execution, status: report.outcome === 'failed' ? 'failed' : report.outcome === 'blocked' || report.outcome === 'insufficient_evidence' ? 'blocked' : 'succeeded', endedAt: clock.now().toISOString(), usage: limiter.usage(), evidence: [...execution.evidence, ...tools.evidence], report };
       store.saveExecution(execution);
       const next = workerStatus(report.outcome);

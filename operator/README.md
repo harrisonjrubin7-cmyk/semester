@@ -2,7 +2,7 @@
 
 The agent team for the Semester ecosystem and its company workflows: thirty-three bounded responsibilities sharing one runtime, five deterministic control modules that decide what any of them may do, a persistent task model, isolated workspaces, verification evidence, and an operator interface. It builds on the repository's existing implementation control plane, `packages/platform-control`, rather than beside it: the canonical scope is read from that registry, and the demonstration task registers this package in it.
 
-Nothing here is a model. The agents are contracts (prompt, task types, tools, allowed writes, limits, escalation) and, for the first eight, deterministic handlers that execute structured task specs. The model port (`src/runtime/model.ts`) is where the Claude Agent SDK would plug in; it is not installed, no credential is present, and adding either goes through the supply-chain workflow in [`docs/AGENT-TOOLING.md`](../../docs/AGENT-TOOLING.md). Until then a model-backed task is **blocked, not faked**.
+No model runs here by default. The agents are contracts (prompt, task types, tools, allowed writes, limits, escalation). Eight of them have deterministic handlers that execute structured task specs; every other task type runs the **model loop** (`src/runtime/agentloop.ts`): the model replies one JSON object per turn, a tool request or the contract's report, and the loop executes each request through the same policy-gated toolbox a deterministic handler uses. The loop is tested end to end with a scripted model (`tests/agentloop.test.ts`), so the execution path of every model-backed agent has run; what has not run is a live model. The port (`src/runtime/model.ts`) is an HTTP client over Node's built-in `fetch`, no SDK dependency, and it is constructed only when `SEMESTER_OPERATOR_MODEL_KEY` is set in the operator's own environment. Without it a model-backed task is **blocked, not faked**. Supplying a key is a credential decision for an owner (`docs/AGENT-TOOLING.md`); adding the Claude Agent SDK instead goes through the supply-chain workflow.
 
 ## Run it
 
@@ -10,7 +10,7 @@ From the repository root, after `npm ci`:
 
 ```sh
 npm run operator:typecheck        # tsc, NodeNext, erasable syntax only
-npm run operator:test             # 37 tests, node:test, no model, no network
+npm run operator:test             # 49 tests, node:test, no live model, no network (the HTTP port is tested against a local server)
 npm run operator:build            # regenerate generated/ (agents, suites, modules, coverage matrix); CI diffs it
 npm run operator -- help          # the operator interface
 npm run operator -- agents
@@ -19,6 +19,17 @@ npm run operator:demo             # the end-to-end demonstration (needs the pack
 ```
 
 Live state defaults to `operator/.state/` (gitignored) or `$SEMESTER_OPERATOR_STATE`. The demonstration writes to `evidence/demo/state/`, which is committed as the record of that run.
+
+To run model-backed task types, the person operating the process sets, in that process only:
+
+| Variable | Meaning |
+| --- | --- |
+| `SEMESTER_OPERATOR_MODEL_KEY` | The API key. Absent means no model: the loop blocks. A developer's `ANTHROPIC_API_KEY` is deliberately not read. |
+| `SEMESTER_OPERATOR_MODEL` | Model id, default `claude-sonnet-5-5`. |
+| `SEMESTER_OPERATOR_MODEL_URL` | Endpoint override, default `https://api.anthropic.com`. |
+| `SEMESTER_OPERATOR_MODEL_PRICE` | `input,output` in USD per million tokens. Without it cost is recorded as unmetered, never as zero, and the cost ceiling cannot bind. |
+
+The key is sent in one request header and never written to the store, the audit or an evidence item. `run_check` subprocesses get a minimal environment without it. Everything sent to the model, the opening task description and every tool result, passes the same redaction as the audit log.
 
 ## What is implemented and tested
 
@@ -35,17 +46,20 @@ Live state defaults to `operator/.state/` (gitignored) or `$SEMESTER_OPERATOR_ST
 | Ecosystem coverage registry: one row per platform-control record, status derived from evidence and operator tasks | `src/registry/coverage.ts`, `generated/coverage-matrix.{md,json}` | `tests/roster.test.ts` |
 | 33 agent contracts, 12 suites with handoff routes, 17 module agents generated from the registry's pilot release scopes | `src/agents/*.ts`, `generated/agents.md` | `tests/roster.test.ts`, `tests/scheduler.test.ts` |
 | Runtime: claim → limits → workspace → policy-gated tools → handler → evidence → status → audit; handoffs queued only by the scheduler | `src/runtime/operator.ts`, `src/runtime/handlers.ts` | `tests/runtime.test.ts` |
+| Model loop: one JSON action per turn, tool requests executed through the gated toolbox, denials fed back (three block the task), turn and cost budgets spent on every call, malformed output corrected once then failed, a worker's verdict refused, every message to the model redacted | `src/runtime/agentloop.ts` | `tests/agentloop.test.ts`: 12 tests with a scripted model. Removing the outcome check, the message-boundary redaction, the turn spend, the limit tightening or the denial counter turns one test red each. |
+| Model port: Messages API over built-in `fetch`, off unless the operator's own key variable is set, fails closed on an error status | `src/runtime/model.ts` | `tests/agentloop.test.ts` against a local HTTP server; `modelFromEnvironment({})` is `noModel` |
+| Planner-tightened limits: a task may carry lower limits than its contract, never higher | `src/control/scheduler.ts` `tighten` | `tests/agentloop.test.ts` |
 | Operator interface | `scripts/operator.ts` | smoke-run; the commands call the tested runtime |
 
 ## Agent status
 
 | Status | Agents | Meaning |
 | --- | --- | --- |
-| Implemented and tested | A01 coordinator (`plan`, `close`), A02 ecosystem-registry (`coverage.refresh`), A04 architecture-review (`inspect.repository`), A07 frontend-engineer, A10 backend-engineer, A19 repair-engineer (`implement.patch`), A15 test-engineer (`run.checks`), A16 independent-verifier (`verify`), A20 release-controller (`release.prepare`, stops at the approval gate), A33 knowledge-maintainer (`docs.continuation`) | A deterministic handler executes the task type; its execution path runs in `tests/runtime.test.ts` and in the committed demonstration. |
-| Configured but untested | A03, A05, A06, A08, A09, A11, A12, A13, A14, A17, A18, A21, A22, A23, A24, A25, A26, A27, A28, A29, A30, A31, A32, and the model-backed task types of the agents above | The contract exists (prompt, tools, limits, writes, escalation) and the runtime routes the task to the model port, which refuses. Blocked by: no model dependency, no credential. |
-| Blocked by missing tools or authority | A20 `release.execute` (no deployment adapter), A27 `external_send` (no sending adapter), A13 sandbox verification (no provider credential), A18/A21/A25 operational signals (no approved read-only connection), A22 drills (no backup access), A29 (no authorized financial source) | The contract names the adapter or authority it needs; nothing pretends to have it. |
+| Implemented and tested, deterministic | A01 coordinator (`plan`, `close`), A02 ecosystem-registry (`coverage.refresh`), A04 architecture-review (`inspect.repository`), A07 frontend-engineer, A10 backend-engineer, A19 repair-engineer (`implement.patch`), A15 test-engineer (`run.checks`), A16 independent-verifier (`verify`), A20 release-controller (`release.prepare`, stops at the approval gate), A33 knowledge-maintainer (`docs.continuation`) | A deterministic handler executes the task type; its execution path runs in `tests/runtime.test.ts` and in the committed demonstration. |
+| Execution path tested, live model unverified | A03, A05, A06, A08, A09, A11, A12, A13, A14, A17, A18, A21, A22, A23, A24, A25, A26, A27, A28, A29, A30, A31, A32, and `implement.task` on A07, A10, A19 | The task runs the model loop; its path (prompt assembly, tool gating, denial feedback, limits, report validation, redaction, handoffs) runs in `tests/agentloop.test.ts` with a scripted model. No live model has answered: no key is configured, and none is committed. A17 (read-only) and A10 (`implement.task`, worktree) are the two contracts the scripted tests drive. |
+| Blocked by missing tools or authority | A20 `release.execute` (no deployment adapter), A27 `external_send` (no sending adapter), A13 sandbox verification (no provider credential), A18/A21/A25 operational signals (no approved read-only connection), A22 drills (no backup access), A29 (no authorized financial source), `registry_read` and `store_read` inside the model loop (not yet exposed; the deterministic handlers read the registry and the store directly) | The contract names the adapter or authority it needs; nothing pretends to have it. |
 
-A model-backed agent, once a port exists, gets no wider access than its contract: the same policy controller gates every tool call.
+A model-backed agent gets no wider access than its contract: the same policy controller gates every tool call, the model never holds a tool, and a denial is reported to it as a result rather than hidden.
 
 ## The demonstration
 
@@ -75,11 +89,11 @@ Every agent starts in **observe**. A task carries the mode the coordinator grant
 
 ## The supplied documents, reconciled
 
-Two documents arrived with the request. The *Semester agent suite* defines a 12-role suite, the observe/develop/operate modes and the approval record shape; the *automation runner* design adds validated handoff routes between the 12 roles, bounded depth and count, dependency joins and exact-artifact verification. Both are adopted as data: the 33 agents each belong to one of the 12 suites (`src/agents/suites.ts`), handoffs follow the runner's route table, approvals carry the suite document's fields. Their Python/SQLite runtime on the Claude Agent SDK is not adopted: this is a Node workspace, the SDK is not a dependency, and no credential exists. The model port is the place it would attach.
+Two documents arrived with the request. The *Semester agent suite* defines a 12-role suite, the observe/develop/operate modes and the approval record shape; the *automation runner* design adds validated handoff routes between the 12 roles, bounded depth and count, dependency joins and exact-artifact verification. Both are adopted as data: the 33 agents each belong to one of the 12 suites (`src/agents/suites.ts`), handoffs follow the runner's route table, approvals carry the suite document's fields. Their Python/SQLite runtime on the Claude Agent SDK is not adopted: this is a Node workspace, the SDK is not a dependency, and no credential exists. The model port speaks the Messages API directly; the SDK could replace it behind the same interface.
 
 ## Expansion, in order
 
-1. A model port (dependency and credential through the supply-chain workflow), then the configured agents become testable one task type at a time.
+1. A live model run: an owner sets `SEMESTER_OPERATOR_MODEL_KEY` for one operator process and runs one read-only task (A17 `security.review`) under the default $1 ceiling with `SEMESTER_OPERATOR_MODEL_PRICE` set, then records the run under `evidence/`. Until then the model loop is tested, not proven live.
 2. A deployment adapter behind `release_adapter`, with the approval bound to target and artifact hash.
 3. Approved read-only operational connections for A18, A21, A25.
 4. A sending adapter behind `external_send`, drafts first.

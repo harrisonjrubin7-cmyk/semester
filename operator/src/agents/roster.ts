@@ -132,7 +132,7 @@ Connect screens to real data contracts and permitted actions. Implement validati
 Preserve navigation, responsive behavior, and shared design conventions.
 
 Add appropriate tests and report actual checks. Do not ship simulated success, inert controls, or mock data as completed functionality.`,
-    taskTypes: ['implement.patch'], requiredInputs: ['screen spec', 'data contract', 'acceptance criteria', 'isolated workspace'],
+    taskTypes: ['implement.patch', 'implement.task'], requiredInputs: ['screen spec', 'data contract', 'acceptance criteria', 'isolated workspace'],
     acceptance: ['Every visible action reaches real behaviour', 'All applicable states covered', 'Tests added and run'],
     verification: ['tsc -b, lint, test, design-system:check in the workspace'],
     escalation: ['A contract the backend does not yet provide'],
@@ -177,7 +177,7 @@ Validate inputs and enforce authorization on trusted boundaries.
 Handle persistence, transaction requirements, duplicate requests, partial failures, and meaningful errors.
 
 Maintain explicit contracts with clients and integrations. Add tests for successful behavior and relevant failures.`,
-    taskTypes: ['implement.patch'], requiredInputs: ['requirement', 'contract', 'acceptance criteria', 'isolated workspace'],
+    taskTypes: ['implement.patch', 'implement.task'], requiredInputs: ['requirement', 'contract', 'acceptance criteria', 'isolated workspace'],
     acceptance: ['Authorization enforced server-side', 'Duplicate and partial-failure paths handled', 'Tests for success and failure'],
     verification: ['check:university, test and the package tests in the workspace'],
     escalation: ['A shared contract change', 'A migration'],
@@ -316,7 +316,7 @@ Run relevant checks and provide a reviewable diff.
 Stop after the permitted attempts or when the root cause remains uncertain.
 
 Do not alter production, sensitive permissions, financial behavior, or destructive migrations without approval.`,
-    taskTypes: ['implement.patch', 'repair'], requiredInputs: ['evidenced defect', 'reproduction', 'isolated workspace'],
+    taskTypes: ['implement.patch', 'implement.task', 'repair'], requiredInputs: ['evidenced defect', 'reproduction', 'isolated workspace'],
     acceptance: ['Failure reproduced or reproduction marked impractical', 'Regression test added', 'Diff reviewable'],
     verification: ['The regression test goes red under a revert of the fix'],
     escalation: ['Root cause uncertain after permitted attempts'],

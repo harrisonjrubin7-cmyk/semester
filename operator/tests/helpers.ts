@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { PolicySet } from '../types.ts';
+import type { ModelPort, ModelRequest, ModelResponse } from '../src/runtime/model.ts';
 
 export function tempDir(prefix = 'operator-'): string { return mkdtempSync(join(tmpdir(), prefix)); }
 
@@ -38,3 +39,23 @@ export const testPolicy: PolicySet = {
   approvalRequiredFrom: 'high',
   approvalEnvironments: ['staging', 'production'],
 };
+
+/**
+ * A scripted model: each entry is the next reply, as text or as a function
+ * of the request. It records every request so a test can assert what the
+ * model was told. It is a test double, never a port the runtime constructs.
+ */
+export function scriptedModel(script: Array<string | object | ((request: ModelRequest, turn: number) => string | object)>, costUsd?: number): ModelPort & { requests: ModelRequest[] } {
+  const requests: ModelRequest[] = [];
+  return {
+    name: 'scripted', requests,
+    async respond(request): Promise<ModelResponse> {
+      requests.push({ system: request.system, messages: request.messages.map((m) => ({ ...m })) });
+      const turn = requests.length;
+      const entry = script[Math.min(turn, script.length) - 1];
+      if (entry === undefined) throw new Error('scripted model has no reply left');
+      const reply = typeof entry === 'function' ? entry(request, turn) : entry;
+      return { text: typeof reply === 'string' ? reply : JSON.stringify(reply), inputTokens: 10, outputTokens: 5, costUsd };
+    },
+  };
+}

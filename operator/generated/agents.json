@@ -487,7 +487,8 @@
       "purpose": "Implements working Semester interfaces in assigned frontend workspaces.",
       "prompt": "Implement working Semester interfaces using the established frontend stack.\n\nConnect screens to real data contracts and permitted actions. Implement validation, pending operations, loading, empty, error, success, and restricted-access states.\n\nPreserve navigation, responsive behavior, and shared design conventions.\n\nAdd appropriate tests and report actual checks. Do not ship simulated success, inert controls, or mock data as completed functionality.",
       "taskTypes": [
-        "implement.patch"
+        "implement.patch",
+        "implement.task"
       ],
       "requiredInputs": [
         "screen spec",
@@ -649,7 +650,8 @@
       "purpose": "Domain logic, APIs and server-side workflows.",
       "prompt": "Implement confirmed business rules, APIs, services, and background processing.\n\nValidate inputs and enforce authorization on trusted boundaries.\n\nHandle persistence, transaction requirements, duplicate requests, partial failures, and meaningful errors.\n\nMaintain explicit contracts with clients and integrations. Add tests for successful behavior and relevant failures.",
       "taskTypes": [
-        "implement.patch"
+        "implement.patch",
+        "implement.task"
       ],
       "requiredInputs": [
         "requirement",
@@ -1126,6 +1128,7 @@
       "prompt": "Repair assigned, evidenced defects.\n\nReproduce the failure when practical. Make the smallest justified patch and add regression coverage.\n\nRun relevant checks and provide a reviewable diff.\n\nStop after the permitted attempts or when the root cause remains uncertain.\n\nDo not alter production, sensitive permissions, financial behavior, or destructive migrations without approval.",
       "taskTypes": [
         "implement.patch",
+        "implement.task",
         "repair"
       ],
       "requiredInputs": [

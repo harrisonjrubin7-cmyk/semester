@@ -30,39 +30,39 @@ Thirty-three agents, each a bounded responsibility sharing one runtime (`src/run
 
 | ID | Key | Group | Suite | Purpose | Task types | Tools | Allowed writes | Max turns | Max tool calls | Max elapsed | Retries | Cost ceiling |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| A01 | semester-coordinator | coordination | coordinator | Task routing and dependency management for the complete Semester execution program. | plan (model port)<br>review (model port)<br>close (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A02 | ecosystem-registry | coordination | product | Maintains the canonical Semester scope and coverage matrix. | coverage.refresh (deterministic)<br>coverage.gap (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A03 | product-requirements | coordination | product | Turns confirmed goals and feedback into implementation-ready requirements. | requirements.draft (model port)<br>requirements.review (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A04 | architecture-review | coordination | architecture | Inspects technical boundaries and prepares architecture decisions. | inspect.repository (deterministic)<br>architecture.proposal (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A05 | experience-design | experience | frontend | Journeys, navigation, screen specifications and interaction behaviour. | journey.map (model port)<br>screen.spec (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A06 | design-system | experience | frontend | Maintains shared visual tokens and reusable interface patterns. | design.review (model port)<br>component.update (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A07 | frontend-engineer | experience | frontend | Implements working Semester interfaces in assigned frontend workspaces. | implement.patch (deterministic) | read_file, list_files, search, registry_read, store_read, write_file, run_check, git_diff | app/src/**, app/public/** | 15 | 120 | 10 min | 1 | $1 |
-| A08 | accessibility-review | experience | frontend | Reviews affected interfaces and prepares scoped remediation. | a11y.review (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A09 | client-platform | experience | frontend | Confirmed mobile, desktop and device-environment requirements. | platform.assess (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A10 | backend-engineer | backend | backend | Domain logic, APIs and server-side workflows. | implement.patch (deterministic) | read_file, list_files, search, registry_read, store_read, write_file, run_check, git_diff | app/server/**, app/api/**, packages/**, supabase/functions/** | 15 | 120 | 10 min | 1 | $1 |
-| A11 | data-engineer | backend | architecture | Schemas, relationships, queries and migration preparation. | migration.prepare (model port)<br>schema.review (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A12 | identity-permissions | backend | backend | Authentication, memberships, capability checks and tenant isolation. | authz.review (model port)<br>authz.test (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A13 | integration-engineer | backend | integrations | Provider-specific adapters with scoped development credentials. | integration.spec (model port)<br>integration.verify (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A14 | shared-services | backend | integrations | Confirmed search, notifications, files, activity and collaboration capabilities. | service.review (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A01 | semester-coordinator | coordination | coordinator | Task routing and dependency management for the complete Semester execution program. | plan (model loop)<br>review (model loop)<br>close (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A02 | ecosystem-registry | coordination | product | Maintains the canonical Semester scope and coverage matrix. | coverage.refresh (deterministic)<br>coverage.gap (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A03 | product-requirements | coordination | product | Turns confirmed goals and feedback into implementation-ready requirements. | requirements.draft (model loop)<br>requirements.review (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A04 | architecture-review | coordination | architecture | Inspects technical boundaries and prepares architecture decisions. | inspect.repository (deterministic)<br>architecture.proposal (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A05 | experience-design | experience | frontend | Journeys, navigation, screen specifications and interaction behaviour. | journey.map (model loop)<br>screen.spec (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A06 | design-system | experience | frontend | Maintains shared visual tokens and reusable interface patterns. | design.review (model loop)<br>component.update (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A07 | frontend-engineer | experience | frontend | Implements working Semester interfaces in assigned frontend workspaces. | implement.patch (deterministic)<br>implement.task (model loop) | read_file, list_files, search, registry_read, store_read, write_file, run_check, git_diff | app/src/**, app/public/** | 15 | 120 | 10 min | 1 | $1 |
+| A08 | accessibility-review | experience | frontend | Reviews affected interfaces and prepares scoped remediation. | a11y.review (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A09 | client-platform | experience | frontend | Confirmed mobile, desktop and device-environment requirements. | platform.assess (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A10 | backend-engineer | backend | backend | Domain logic, APIs and server-side workflows. | implement.patch (deterministic)<br>implement.task (model loop) | read_file, list_files, search, registry_read, store_read, write_file, run_check, git_diff | app/server/**, app/api/**, packages/**, supabase/functions/** | 15 | 120 | 10 min | 1 | $1 |
+| A11 | data-engineer | backend | architecture | Schemas, relationships, queries and migration preparation. | migration.prepare (model loop)<br>schema.review (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A12 | identity-permissions | backend | backend | Authentication, memberships, capability checks and tenant isolation. | authz.review (model loop)<br>authz.test (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A13 | integration-engineer | backend | integrations | Provider-specific adapters with scoped development credentials. | integration.spec (model loop)<br>integration.verify (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A14 | shared-services | backend | integrations | Confirmed search, notifications, files, activity and collaboration capabilities. | service.review (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
 | A15 | test-engineer | quality | qa | Controlled test runner rather than unrestricted shell execution. | run.checks (deterministic) | read_file, list_files, search, run_check, git_diff, store_read | none | 15 | 60 | 30 min | 1 | $1 |
 | A16 | independent-verifier | quality | qa | Read access to proposed changes and execution evidence. | verify (deterministic) | read_file, list_files, search, git_diff, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A17 | security-privacy-review | quality | repair | Scoped risk reviews and remediation proposals. | security.review (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A18 | incident-investigator | quality | repair | Read-only access to authorized operational signals. | incident.investigate (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A19 | repair-engineer | quality | repair | Isolated editing access, bounded attempts and mandatory verification. | implement.patch (deterministic)<br>repair (deterministic) | read_file, list_files, search, registry_read, store_read, write_file, run_check, git_diff | app/**, packages/**, supabase/functions/** | 15 | 120 | 10 min | 2 | $1 |
-| A20 | release-controller | quality | release | Behind exact-target and exact-artifact approval gates. | release.prepare (deterministic)<br>release.execute (model port) | read_file, list_files, search, store_read, release_adapter | none | 15 | 60 | 10 min | 1 | $1 |
-| A21 | reliability-capacity | quality | capacity | Operational readiness and scheduled capacity analysis. | capacity.review (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A22 | recovery-operator | quality | release | Backup verification and approved recovery drills. | recovery.assess (model port)<br>recovery.drill (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A23 | support-assistant | customer | growth | Issue classification, knowledge retrieval and response drafts. | support.triage (model port)<br>support.draft (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A24 | onboarding-success | customer | growth | Setup guidance, activation analysis and adoption improvements. | onboarding.review (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A25 | analytics | customer | capacity | Read-only access to approved product and business metrics. | analytics.define (model port)<br>analytics.analyze (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A26 | growth-experiments | customer | growth | Evidence-based acquisition, activation, retention and expansion proposals. | experiment.design (model port)<br>experiment.review (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A27 | communications | customer | growth | Approved positioning, documentation and communication drafts. | content.draft (model port) | read_file, list_files, search, registry_read, store_read, external_send | none | 15 | 60 | 10 min | 1 | $1 |
-| A28 | sales-partnerships | customer | growth | Opportunity analysis and proposal preparation. | opportunity.prepare (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A29 | finance-analysis | company | company | Read-only access to explicitly authorized financial information. | finance.summary (model port)<br>finance.forecast (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A30 | business-operations | company | company | Internal planning, ownership tracking and decision preparation. | ops.brief (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A31 | vendor-review | company | company | Service evaluation and procurement preparation. | vendor.evaluate (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A32 | compliance-coordination | company | company | Requirement tracking and professional-review preparation. | compliance.prepare (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A33 | knowledge-maintainer | company | company | Canonical documents and durable execution context. | docs.continuation (deterministic)<br>docs.update (model port) | read_file, list_files, search, registry_read, store_read, write_file | operator/evidence/**, docs/operator/** | 15 | 60 | 10 min | 1 | $1 |
+| A17 | security-privacy-review | quality | repair | Scoped risk reviews and remediation proposals. | security.review (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A18 | incident-investigator | quality | repair | Read-only access to authorized operational signals. | incident.investigate (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A19 | repair-engineer | quality | repair | Isolated editing access, bounded attempts and mandatory verification. | implement.patch (deterministic)<br>implement.task (model loop)<br>repair (deterministic) | read_file, list_files, search, registry_read, store_read, write_file, run_check, git_diff | app/**, packages/**, supabase/functions/** | 15 | 120 | 10 min | 2 | $1 |
+| A20 | release-controller | quality | release | Behind exact-target and exact-artifact approval gates. | release.prepare (deterministic)<br>release.execute (model loop) | read_file, list_files, search, store_read, release_adapter | none | 15 | 60 | 10 min | 1 | $1 |
+| A21 | reliability-capacity | quality | capacity | Operational readiness and scheduled capacity analysis. | capacity.review (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A22 | recovery-operator | quality | release | Backup verification and approved recovery drills. | recovery.assess (model loop)<br>recovery.drill (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A23 | support-assistant | customer | growth | Issue classification, knowledge retrieval and response drafts. | support.triage (model loop)<br>support.draft (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A24 | onboarding-success | customer | growth | Setup guidance, activation analysis and adoption improvements. | onboarding.review (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A25 | analytics | customer | capacity | Read-only access to approved product and business metrics. | analytics.define (model loop)<br>analytics.analyze (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A26 | growth-experiments | customer | growth | Evidence-based acquisition, activation, retention and expansion proposals. | experiment.design (model loop)<br>experiment.review (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A27 | communications | customer | growth | Approved positioning, documentation and communication drafts. | content.draft (model loop) | read_file, list_files, search, registry_read, store_read, external_send | none | 15 | 60 | 10 min | 1 | $1 |
+| A28 | sales-partnerships | customer | growth | Opportunity analysis and proposal preparation. | opportunity.prepare (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A29 | finance-analysis | company | company | Read-only access to explicitly authorized financial information. | finance.summary (model loop)<br>finance.forecast (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A30 | business-operations | company | company | Internal planning, ownership tracking and decision preparation. | ops.brief (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A31 | vendor-review | company | company | Service evaluation and procurement preparation. | vendor.evaluate (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A32 | compliance-coordination | company | company | Requirement tracking and professional-review preparation. | compliance.prepare (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
+| A33 | knowledge-maintainer | company | company | Canonical documents and durable execution context. | docs.continuation (deterministic)<br>docs.update (model loop) | read_file, list_files, search, registry_read, store_read, write_file | operator/evidence/**, docs/operator/** | 15 | 60 | 10 min | 1 | $1 |
 
 ## Contracts
 
@@ -127,7 +127,7 @@ Review worker outputs and require verification evidence before closing tasks. Ro
 Do not treat activity volume as progress. Report completed outcomes, blockers, risks, and the next executable task.
 ```
 
-**Accepted task types.** plan (model port); review (model port); close (model port)
+**Accepted task types.** plan (model loop); review (model loop); close (model loop)
 
 **Required inputs.** goal with source and acceptance criteria; current task state
 
@@ -204,7 +204,7 @@ Identify missing connections and incomplete workflows. Distinguish documented de
 Do not invent catalog entries or silently remove scope. Mark uncertain items as proposed and route consequential questions to the coordinator.
 ```
 
-**Accepted task types.** coverage.refresh (deterministic); coverage.gap (model port)
+**Accepted task types.** coverage.refresh (deterministic); coverage.gap (model loop)
 
 **Required inputs.** platform-control registry; operator task and execution records
 
@@ -281,7 +281,7 @@ Identify dependencies, edge cases, and decisions that affect product behavior.
 Prepare clear specifications for implementation. Do not make unilateral decisions about pricing, official institutional authority, sensitive data use, or major scope expansion.
 ```
 
-**Accepted task types.** requirements.draft (model port); requirements.review (model port)
+**Accepted task types.** requirements.draft (model loop); requirements.review (model loop)
 
 **Required inputs.** goal; source documents; affected registry keys
 
@@ -358,7 +358,7 @@ Identify duplication, coupling, ownership conflicts, and migration risks.
 Produce architecture proposals and decision records. Do not replace frameworks, databases, or infrastructure without the required review and approval.
 ```
 
-**Accepted task types.** inspect.repository (deterministic); architecture.proposal (model port)
+**Accepted task types.** inspect.repository (deterministic); architecture.proposal (model loop)
 
 **Required inputs.** paths or symbols to inspect; question the inspection answers
 
@@ -435,7 +435,7 @@ Identify dead ends, inconsistent terminology, inaccessible flows, and missing cr
 Produce implementable specifications aligned with confirmed requirements. Do not substitute attractive mockups for functional acceptance criteria.
 ```
 
-**Accepted task types.** journey.map (model port); screen.spec (model port)
+**Accepted task types.** journey.map (model loop); screen.spec (model loop)
 
 **Required inputs.** role; registry screens and workflows; design system references
 
@@ -512,7 +512,7 @@ Improve reusable components without unnecessarily fragmenting the interface or i
 Document intended behavior and relevant accessibility requirements. Verify affected component states.
 ```
 
-**Accepted task types.** design.review (model port); component.update (model port)
+**Accepted task types.** design.review (model loop); component.update (model loop)
 
 **Required inputs.** component or token in question; app/src/lib/look.ts and styles/tokens.css
 
@@ -589,7 +589,7 @@ Preserve navigation, responsive behavior, and shared design conventions.
 Add appropriate tests and report actual checks. Do not ship simulated success, inert controls, or mock data as completed functionality.
 ```
 
-**Accepted task types.** implement.patch (deterministic)
+**Accepted task types.** implement.patch (deterministic); implement.task (model loop)
 
 **Required inputs.** screen spec; data contract; acceptance criteria; isolated workspace
 
@@ -666,7 +666,7 @@ Prepare focused fixes or review findings with reproducible evidence.
 Do not claim comprehensive compliance from automated checks alone. State the scope and limitations of verification.
 ```
 
-**Accepted task types.** a11y.review (model port)
+**Accepted task types.** a11y.review (model loop)
 
 **Required inputs.** screens or components under review; app/src/a11y contracts
 
@@ -743,7 +743,7 @@ Distinguish responsive web support from native applications.
 Do not create additional client applications or publish to app stores without confirmed scope and authorization.
 ```
 
-**Accepted task types.** platform.assess (model port)
+**Accepted task types.** platform.assess (model loop)
 
 **Required inputs.** docs/native-platform; docs/CROSS-PLATFORM-FEATURES-REGISTER.md
 
@@ -820,7 +820,7 @@ Handle persistence, transaction requirements, duplicate requests, partial failur
 Maintain explicit contracts with clients and integrations. Add tests for successful behavior and relevant failures.
 ```
 
-**Accepted task types.** implement.patch (deterministic)
+**Accepted task types.** implement.patch (deterministic); implement.task (model loop)
 
 **Required inputs.** requirement; contract; acceptance criteria; isolated workspace
 
@@ -897,7 +897,7 @@ Explain data compatibility, backfill requirements, deployment ordering, and roll
 Do not delete records, apply production migrations, or alter sensitive retention behavior without authorization.
 ```
 
-**Accepted task types.** migration.prepare (model port); schema.review (model port)
+**Accepted task types.** migration.prepare (model loop); schema.review (model loop)
 
 **Required inputs.** entity change; supabase/migrations; RETENTION.md
 
@@ -974,7 +974,7 @@ Test cross-tenant denial and privilege boundaries.
 Never allow self-assignment of privileged access. Do not weaken policies or grant production permissions without explicit approval.
 ```
 
-**Accepted task types.** authz.review (model port); authz.test (model port)
+**Accepted task types.** authz.review (model loop); authz.test (model loop)
 
 **Required inputs.** docs/ROLE-PERMISSION-MATRIX.md; packages/platform/src/tenancy
 
@@ -1051,7 +1051,7 @@ Test available sandbox behavior and label unverified paths.
 Do not connect new vendors, broaden permissions, transmit sensitive records, or purchase services without authorization.
 ```
 
-**Accepted task types.** integration.spec (model port); integration.verify (model port)
+**Accepted task types.** integration.spec (model loop); integration.verify (model loop)
 
 **Required inputs.** app/src/lib/integration/catalog.ts; provider contract
 
@@ -1128,7 +1128,7 @@ Prevent modules from independently recreating incompatible shared behavior.
 Implement only confirmed capabilities and verify their consuming workflows.
 ```
 
-**Accepted task types.** service.review (model port)
+**Accepted task types.** service.review (model loop)
 
 **Required inputs.** registry systems; consuming workflows
 
@@ -1359,7 +1359,7 @@ Prepare narrowly scoped remediation and verification requirements.
 Do not claim legal compliance or conduct intrusive testing outside authorized systems. Escalate sensitive changes for approval.
 ```
 
-**Accepted task types.** security.review (model port)
+**Accepted task types.** security.review (model loop)
 
 **Required inputs.** diff or component under review; docs/SECURITY-THREAT-MODEL.md
 
@@ -1436,7 +1436,7 @@ Create an incident record, identify safe next steps, and route repair work.
 Do not change production while investigating unless a specific approved runbook authorizes the action.
 ```
 
-**Accepted task types.** incident.investigate (model port)
+**Accepted task types.** incident.investigate (model loop)
 
 **Required inputs.** incident report; authorized signals
 
@@ -1515,7 +1515,7 @@ Stop after the permitted attempts or when the root cause remains uncertain.
 Do not alter production, sensitive permissions, financial behavior, or destructive migrations without approval.
 ```
 
-**Accepted task types.** implement.patch (deterministic); repair (deterministic)
+**Accepted task types.** implement.patch (deterministic); implement.task (model loop); repair (deterministic)
 
 **Required inputs.** evidenced defect; reproduction; isolated workspace
 
@@ -1594,7 +1594,7 @@ Execute only approved deployment actions through controlled adapters. Verify dep
 Do not equate build success with deployment success or deployment success with ecosystem completeness.
 ```
 
-**Accepted task types.** release.prepare (deterministic); release.execute (model port)
+**Accepted task types.** release.prepare (deterministic); release.execute (model loop)
 
 **Required inputs.** verified artifact hash; exact target; approval
 
@@ -1673,7 +1673,7 @@ Execute changes only within an approved operating policy.
 A scheduled review does not require scaling. Do not invent provider controls or metrics.
 ```
 
-**Accepted task types.** capacity.review (model port)
+**Accepted task types.** capacity.review (model loop)
 
 **Required inputs.** available metrics; cost evidence
 
@@ -1750,7 +1750,7 @@ Identify missing data, access, configuration, and recovery dependencies.
 Never restore over production or delete backup material without exact authorization.
 ```
 
-**Accepted task types.** recovery.assess (model port); recovery.drill (model port)
+**Accepted task types.** recovery.assess (model loop); recovery.drill (model loop)
 
 **Required inputs.** RESTORE.md; backup evidence
 
@@ -1827,7 +1827,7 @@ Escalate bugs, security concerns, and unresolved cases.
 Do not promise delivery dates, change customer access, issue refunds, or send messages without authorization.
 ```
 
-**Accepted task types.** support.triage (model port); support.draft (model port)
+**Accepted task types.** support.triage (model loop); support.draft (model loop)
 
 **Required inputs.** authorized request; docs/help
 
@@ -1904,7 +1904,7 @@ Distinguish observed adoption problems from hypotheses.
 Do not grant institutional authority, import sensitive records, or alter customer configuration without permission.
 ```
 
-**Accepted task types.** onboarding.review (model port)
+**Accepted task types.** onboarding.review (model loop)
 
 **Required inputs.** docs/ONBOARDING-AND-CONTEXTUAL-HELP.md; adoption evidence
 
@@ -1981,7 +1981,7 @@ Distinguish correlation, hypothesis, and demonstrated effects.
 Protect tenant boundaries and personal information. Provide reproducible calculations and explain limitations.
 ```
 
-**Accepted task types.** analytics.define (model port); analytics.analyze (model port)
+**Accepted task types.** analytics.define (model loop); analytics.analyze (model loop)
 
 **Required inputs.** docs/ANALYTICS-EVENTS.md; approved metric sources
 
@@ -2058,7 +2058,7 @@ Prepare implementation tasks and review results.
 Do not publish, spend, contact users, or expand product scope without authorization.
 ```
 
-**Accepted task types.** experiment.design (model port); experiment.review (model port)
+**Accepted task types.** experiment.design (model loop); experiment.review (model loop)
 
 **Required inputs.** confirmed audience; available evidence
 
@@ -2135,7 +2135,7 @@ Avoid unsupported claims about customers, performance, compliance, outcomes, or 
 Publishing and sending require an approved target and exact content.
 ```
 
-**Accepted task types.** content.draft (model port)
+**Accepted task types.** content.draft (model loop)
 
 **Required inputs.** docs/FEATURE-TRUTH-TABLE.md; ops/claims/README.md
 
@@ -2212,7 +2212,7 @@ Do not invent pipeline activity or make pricing, contractual, integration, or de
 Route external communications and binding terms for approval.
 ```
 
-**Accepted task types.** opportunity.prepare (model port)
+**Accepted task types.** opportunity.prepare (model loop)
 
 **Required inputs.** authorized opportunity information; docs/INSTITUTIONAL-GTM-PLAYBOOK.md
 
@@ -2289,7 +2289,7 @@ Flag unexpected costs and unsupported commitments.
 Do not move money, change billing, purchase services, file taxes, or provide a professional sign-off.
 ```
 
-**Accepted task types.** finance.summary (model port); finance.forecast (model port)
+**Accepted task types.** finance.summary (model loop); finance.forecast (model loop)
 
 **Required inputs.** authorized financial information
 
@@ -2366,7 +2366,7 @@ Identify missing ownership and blocked dependencies.
 Do not impersonate employees, invent approvals, manage people independently, or commit the company externally.
 ```
 
-**Accepted task types.** ops.brief (model port)
+**Accepted task types.** ops.brief (model loop)
 
 **Required inputs.** SEMESTER-OPERATING-SYSTEM.md; docs/operating-model/OPERATING-RHYTHM.md
 
@@ -2441,7 +2441,7 @@ Prepare recommendations and identify approval requirements.
 Do not create accounts, purchase plans, accept terms, or transmit company data without authorization.
 ```
 
-**Accepted task types.** vendor.evaluate (model port)
+**Accepted task types.** vendor.evaluate (model loop)
 
 **Required inputs.** docs/SUBPROCESSORS.md; docs/AGENT-TOOLING.md
 
@@ -2518,7 +2518,7 @@ Do not represent drafts as approved policies, declare compliance without evidenc
 Maintain clear ownership of unresolved requirements.
 ```
 
-**Accepted task types.** compliance.prepare (model port)
+**Accepted task types.** compliance.prepare (model loop)
 
 **Required inputs.** LEGAL-REVIEW-QUEUE.md; docs/trust/EVIDENCE-REGISTER.md
 
@@ -2597,7 +2597,7 @@ Prepare continuation notes that let another execution resume safely.
 Never claim a file was updated unless the change actually occurred.
 ```
 
-**Accepted task types.** docs.continuation (deterministic); docs.update (model port)
+**Accepted task types.** docs.continuation (deterministic); docs.update (model loop)
 
 **Required inputs.** task and execution records; target document path
 

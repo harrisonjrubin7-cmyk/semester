@@ -35,6 +35,8 @@ export interface EnqueueInput {
   dedupeKey?: string;
   parentId?: string;
   depth?: number;
+  /** A coordinator may tighten the agent's contract limits for one task; a value above the contract's is ignored. */
+  limits?: Partial<ExecutionLimits>;
 }
 
 export interface AgentLookup {
@@ -90,8 +92,9 @@ export function createScheduler(store: OperatorStore, clock: Clock, ids: IdFacto
   }
 
   function enqueue(input: EnqueueInput): Task {
-    const limits = agents.limitsFor(input.agentId);
-    if (!limits) throw new Error(`Unknown agent ${input.agentId}.`);
+    const contractLimits = agents.limitsFor(input.agentId);
+    if (!contractLimits) throw new Error(`Unknown agent ${input.agentId}.`);
+    const limits = tighten(contractLimits, input.limits);
     if (!input.title.trim() || input.title.length > 200) throw new Error('A task needs a title of at most 200 characters.');
     if (input.acceptance.length === 0) throw new Error(`Task "${input.title}" needs at least one acceptance criterion.`);
     if (!store.goals().some((goal) => goal.id === input.goalId)) throw new Error(`Unknown goal ${input.goalId}.`);
@@ -207,5 +210,19 @@ export function createScheduler(store: OperatorStore, clock: Clock, ids: IdFacto
       }
       return created;
     },
+  };
+}
+
+/** The contract's limits, lowered where the planner asked for less. Nothing here can raise one. */
+export function tighten(contract: ExecutionLimits, requested?: Partial<ExecutionLimits>): ExecutionLimits {
+  if (!requested) return { ...contract };
+  const lower = (base: number, asked: number | undefined) => (asked !== undefined && Number.isFinite(asked) && asked >= 0 && asked < base ? asked : base);
+  return {
+    maxTurns: lower(contract.maxTurns, requested.maxTurns),
+    maxToolCalls: lower(contract.maxToolCalls, requested.maxToolCalls),
+    maxElapsedMs: lower(contract.maxElapsedMs, requested.maxElapsedMs),
+    maxRetries: lower(contract.maxRetries, requested.maxRetries),
+    maxConcurrent: lower(contract.maxConcurrent, requested.maxConcurrent),
+    costCeilingUsd: contract.costCeilingUsd === undefined ? requested.costCeilingUsd : lower(contract.costCeilingUsd, requested.costCeilingUsd),
   };
 }

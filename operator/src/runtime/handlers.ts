@@ -3,9 +3,10 @@ import { resolve } from 'node:path';
 import type { AcceptanceCriterion, EvidenceItem, ExecutionRecord, Task, WorkerReport } from '../../types.ts';
 import { sha256 } from '../store/hash.ts';
 import type { OperatorStore } from '../store/store.ts';
+import type { RunLimiter } from '../control/limits.ts';
 import { ToolDenied, type Toolbox } from '../tools/adapters.ts';
+import { modelDriven } from './agentloop.ts';
 import type { ModelPort } from './model.ts';
-import { ModelUnavailable } from './model.ts';
 
 /**
  * Deterministic worker handlers. Each one executes a structured task spec
@@ -18,6 +19,8 @@ export interface HandlerContext {
   tools: Toolbox;
   store: OperatorStore;
   model: ModelPort;
+  /** The run's limiter: a handler may only spend. */
+  limiter: RunLimiter;
   workspaceRoot: string;
   repositoryRoot: string;
   /** The execution record so far, for verifiers that need prior records of other tasks. */
@@ -209,21 +212,6 @@ export const docsContinuation: Handler = async (context) => {
   return report(context, { outcome: 'completed', status: 'continuation record written', changes: [`wrote ${path}`], artifacts: [`${path} sha256=${item.kind === 'file' ? item.sha256 : ''}`], verification: [{ name: 'file written', passed: true, detail: `${item.kind === 'file' ? item.bytes : 0} bytes` }], nextStep: 'Commit the record with the evidence it describes.' });
 };
 
-/** Agents whose work needs judgement go to the model port; without one they are blocked, not faked. */
-export const modelRequired: Handler = async (context) => {
-  try {
-    const { systemPrompt } = await import('../agents/contract.ts');
-    const { agent } = await import('../agents/roster.ts');
-    const contract = agent(context.task.agentId);
-    if (!contract) throw new Error(`Unknown agent ${context.task.agentId}.`);
-    const response = await context.model.complete({ system: systemPrompt(contract), prompt: JSON.stringify(context.task.spec), maxTurns: context.task.limits.maxTurns, costCeilingUsd: context.task.limits.costCeilingUsd });
-    return report(context, { outcome: 'completed', status: `model ${context.model.name} responded`, artifacts: [`response sha256=${sha256(response.text)}`], nextStep: 'Independent verification of the model output.' });
-  } catch (error) {
-    if (error instanceof ModelUnavailable) return report(context, { outcome: 'blocked', status: 'model_unavailable', risks: [error.message], approvalsRequired: ['Model dependency and credential approval (docs/AGENT-TOOLING.md supply-chain workflow)'], nextStep: 'Supply a model port, or give this task a deterministic spec.' });
-    throw error;
-  }
-};
-
 /** A20 — release.prepare: no deployment adapter exists; the task records what it would need and stops. */
 export const releasePrepare: Handler = async (context) => {
   const target = context.task.spec.target;
@@ -248,4 +236,4 @@ export const HANDLERS: Record<string, Handler> = {
   'release.prepare': releasePrepare,
 };
 
-export function handlerFor(type: string): Handler { return HANDLERS[type] ?? modelRequired; }
+export function handlerFor(type: string): Handler { return HANDLERS[type] ?? modelDriven; }
