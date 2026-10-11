@@ -14,7 +14,7 @@ import { SourceStatusBadge } from "./source-status";
 import { StudyModePanel } from "./study-mode-panel";
 import { UploadPanel } from "./upload-panel";
 import { ErrorState, LoadingState } from "./workspace-states";
-import type { Asset, Course, Event, Progress, Review, SourceFile } from "./workspace-types";
+import type { Asset, BackgroundJob, Course, Event, Progress, Review, SourceFile } from "./workspace-types";
 
 function useOnlineStatus() {
   const [online, setOnline] = useState(true);
@@ -40,11 +40,17 @@ export function Workspace({ courseId, mode }: { courseId: string; mode: string }
   const events = useQuery({ queryKey: ["events", courseId], queryFn: () => api<Event[]>(`/courses/${courseId}/calendar-events`) });
   const reviews = useQuery({ queryKey: ["reviews", courseId], queryFn: () => api<Review[]>(`/courses/${courseId}/review-items`) });
   const files = useQuery({ queryKey: ["files", courseId], queryFn: () => api<SourceFile[]>(`/courses/${courseId}/files`), refetchInterval: mode === "uploads" ? 3000 : false });
+  const jobs = useQuery({
+    queryKey: ["jobs", courseId],
+    queryFn: () => api<BackgroundJob[]>(`/courses/${courseId}/jobs`),
+    enabled: mode === "uploads",
+    refetchInterval: (query) => query.state.data?.some((job) => job.status === "queued" || job.status === "running") ? 2000 : false,
+  });
   const progress = useQuery({ queryKey: ["progress", courseId], queryFn: () => api<Progress>(`/courses/${courseId}/progress`), enabled: mode === "progress" });
   const queries = [course, assets, events, reviews, files];
-  const loading = queries.some((query) => query.isLoading) || (mode === "progress" && progress.isLoading);
-  const error = queries.map((query) => query.error).find(Boolean) ?? progress.error;
-  const retry = () => { for (const query of queries) void query.refetch(); if (mode === "progress") void progress.refetch(); };
+  const loading = queries.some((query) => query.isLoading) || (mode === "progress" && progress.isLoading) || (mode === "uploads" && jobs.isLoading);
+  const error = queries.map((query) => query.error).find(Boolean) ?? (mode === "progress" ? progress.error : null) ?? (mode === "uploads" ? jobs.error : null);
+  const retry = () => { for (const query of queries) void query.refetch(); if (mode === "progress") void progress.refetch(); if (mode === "uploads") void jobs.refetch(); };
 
   function content() {
     if (loading) return <LoadingState />;
@@ -52,7 +58,7 @@ export function Workspace({ courseId, mode }: { courseId: string; mode: string }
     if (mode === "overview") return <OverviewPanel course={course.data} events={events.data ?? []} reviews={reviews.data ?? []} />;
     if (mode === "calendar") return <CalendarPanel courseId={courseId} events={events.data ?? []} />;
     if (mode === "review") return <ReviewPanel courseId={courseId} reviews={reviews.data ?? []} />;
-    if (mode === "uploads") return <UploadPanel courseId={courseId} files={files.data ?? []} offline={!online} />;
+    if (mode === "uploads") return <UploadPanel courseId={courseId} files={files.data ?? []} jobs={jobs.data ?? []} offline={!online} />;
     if (mode === "progress") return <ProgressPanel progress={progress.data} />;
     if (mode === "benchmarks") return <BenchmarkPanel />;
     return <StudyModePanel assets={assets.data ?? []} courseId={courseId} mode={mode} />;

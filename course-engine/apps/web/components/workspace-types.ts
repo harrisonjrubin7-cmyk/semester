@@ -46,6 +46,20 @@ export type SourceFile = {
   page_count?: number;
 };
 
+export type BackgroundJob = {
+  id: string;
+  course_id: string;
+  document_id?: string | null;
+  target_id?: string | null;
+  job_type: string;
+  status: "queued" | "running" | "completed" | "failed";
+  progress: number;
+  error?: string | null;
+  revoked_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type SourceChunk = {
   id: string;
   chunk_index: number;
