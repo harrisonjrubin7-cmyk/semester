@@ -102,6 +102,16 @@ test('one task end to end: request → persisted task → policy → implementat
   assert.equal(persisted.store.tasks().length, 4, 'state survives a new runtime over the same directory');
 });
 
+test('a replace edit writes its replacement literally, dollar sequences included', async () => {
+  const repo = tempRepository();
+  const { runtime } = runtimeFor(repo);
+  const goal = runtime.addGoal({ title: 'g', requestedBy: 'owner', source: 's' });
+  const [task] = runtime.plan(goal.id, [{ type: 'implement.patch', title: 'dollar', agentId: 'A10', acceptance: [{ id: 'x', statement: 'n/a', check: { kind: 'manual', note: 'n/a' } }], spec: { edits: [{ path: 'packages/fixture/index.ts', kind: 'replace', find: '41', replace: 'Number("$&$1$$42")' }] } }]);
+  const result = await runtime.run(task!.id);
+  assert.equal(result.task.status, 'awaiting_verification');
+  assert.equal(readFileSync(join(runtime.store.root, result.task.workspace!, 'packages/fixture/index.ts'), 'utf8'), 'export const answer = Number("$&$1$$42");\n');
+});
+
 test('the verifier rejects a changed artifact and a failed check', async () => {
   const repo = tempRepository();
   const { runtime } = runtimeFor(repo);

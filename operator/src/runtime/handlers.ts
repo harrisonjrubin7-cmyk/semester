@@ -76,7 +76,9 @@ export const implementPatch: Handler = async (context) => {
         if (typeof edit.find !== 'string' || typeof edit.replace !== 'string') throw new Error(`replace ${edit.path} needs find and replace.`);
         const current = context.tools.readFile(edit.path);
         if (!current.includes(edit.find)) throw new Error(`replace ${edit.path}: the text to find is not present.`);
-        context.tools.writeFile(edit.path, current.replace(edit.find, edit.replace));
+        // A function replacer: the replacement is literal text, so `$&`, `$1` or `$$` in it are written as they are.
+        const replacement = edit.replace;
+        context.tools.writeFile(edit.path, current.replace(edit.find, () => replacement));
         changes.push(`replace in ${edit.path}`);
       } else throw new Error(`Unknown edit kind ${String((edit as { kind: unknown }).kind)}.`);
     } catch (error) {
