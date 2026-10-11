@@ -75,6 +75,7 @@ begin
     when 'jsonb' then '''{}''::jsonb'
     when 'boolean' then 'false'
     when 'integer' then '1'
+    when 'bigint' then '1::bigint'
     when 'numeric' then '1::numeric'
     when 'timestamp with time zone' then 'now()'
     when 'date' then 'current_date'

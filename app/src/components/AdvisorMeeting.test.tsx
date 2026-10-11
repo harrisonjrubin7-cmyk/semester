@@ -226,6 +226,24 @@ describe('preparing and exporting', () => {
     expect(() => button(/^Preview and share…$/)).toThrow();
     expect(text()).toContain('Sign in to share with an advisor.');
   });
+
+  it('previews the exact local meeting deletion and its partial backup boundary', async () => {
+    await mount(null);
+    await prepare();
+    await act(async () => button(/^Remove this meeting…$/).click());
+
+    const preview = text(dialog());
+    expect(preview).toContain('What happens');
+    expect(preview).toContain('agenda, questions, follow-ups and private notes');
+    expect(preview).toContain('What stays the same');
+    expect(preview).toContain('Shares already made stay available until you revoke or delete them');
+    expect(preview).toContain('Taking it back');
+    expect(preview).toContain('This can’t be undone.');
+    expect(preview).toContain('A device workspace backup can restore the meeting without its private notes');
+
+    await act(async () => button(/^Cancel$/).click());
+    expect(JSON.parse(localStorage.getItem(meetingKey(null))!).meetings).toHaveLength(1);
+  });
 });
 
 describe('sharing with an advisor', () => {

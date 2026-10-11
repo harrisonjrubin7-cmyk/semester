@@ -62,16 +62,19 @@ export function InstitutionalPreviewBar() {
   const { fixtures, institution, person, selectInstitution, selectPerson } = useInstitutionalPreview();
   const [resetting, setResetting] = useState(false);
   const [asking, setAsking] = useState(false);
+  const [resetError, setResetError] = useState('');
 
   const reset = async () => {
     setResetting(true);
+    setResetError('');
     try {
       await eraseDevice();
+      location.reload();
     } catch {
-      // Part of the erase refused (a browser with storage off, say). What is left is what the
-      // browser would not let go, and the reload is still the honest way to start again.
+      setResetting(false);
+      setAsking(false);
+      setResetError('The browser did not erase everything. Close other Semester tabs, then try again. The sample has not been reset.');
     }
-    location.reload();
   };
 
   return (
@@ -128,10 +131,11 @@ export function InstitutionalPreviewBar() {
             </button>
           </div>
         ) : (
-          <button type="button" className="bare" onClick={() => setAsking(true)} style={{ marginBlockStart: '6px', textDecoration: 'underline', cursor: 'pointer' }}>
+          <button type="button" className="bare" onClick={() => { setResetError(''); setAsking(true); }} style={{ marginBlockStart: '6px', textDecoration: 'underline', cursor: 'pointer' }}>
             Reset the sample
           </button>
         )}
+        {resetError ? <p role="alert" style={{ marginBlockEnd: 0 }}>{resetError}</p> : null}
       </details>
       <p style={{ margin: 0, fontSize: '0.75rem', ...secondLine() }}>Nothing you do here is sent to Semester.</p>
     </aside>
