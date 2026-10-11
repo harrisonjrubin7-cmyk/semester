@@ -20,13 +20,14 @@
 
 import { dateToIso } from './date';
 import { appointmentsOn, byTime, feedEventsOn, tasksOn } from './select';
-import type { Appointment, DatedEvent, DatedItem, FeedEvent, PersonalTask } from './types';
+import type { Appointment, Block, DatedEvent, DatedItem, FeedEvent, PersonalTask } from './types';
 
 /** How far ahead the agenda looks: two weeks, today included. */
 export const AGENDA_DAYS = 14;
 
 /** One thing on one day, in whichever record it came from. */
 export type AgendaEntry =
+  | { kind: 'class'; at: number; block: Block }
   | { kind: 'appointment'; at: number | null; appointment: Appointment }
   | { kind: 'feed'; at: number | null; event: FeedEvent }
   | { kind: 'deadline'; at: null; item: DatedItem }
@@ -46,6 +47,15 @@ export interface AgendaInput {
   feed: FeedEvent[];
   tasks: PersonalTask[];
   appointments: Appointment[];
+  /**
+   * The day's class meetings and standing commitments, as the day view's
+   * rail has them (`railFor` with no appointments). A function rather than a
+   * list because a timetable is a weekly pattern, not a set of dated rows,
+   * and the caller already has the one place that expands it. Left out, the
+   * agenda had no classes in it at all — the Classes chip drew an empty list
+   * for a student who meets four times a week.
+   */
+  classes?: (date: Date) => Block[];
 }
 
 /**
@@ -69,6 +79,7 @@ export function agendaDays(input: AgendaInput, from: Date, days = AGENDA_DAYS): 
     const date = new Date(from.getFullYear(), from.getMonth(), from.getDate() + n);
     const iso = dateToIso(date);
     const timed: AgendaEntry[] = [
+      ...(input.classes?.(date) ?? []).map((b) => ({ kind: 'class' as const, at: b.at, block: b })),
       ...appointmentsOn(input.appointments, date).map((a) => ({
         kind: 'appointment' as const,
         at: a.at,

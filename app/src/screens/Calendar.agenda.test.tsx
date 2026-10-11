@@ -111,3 +111,10 @@ it('opens a day from its heading', () => {
   expect(host.textContent).not.toMatch(/in the next 14 days/);
   expect(host.textContent).toContain('Draft the lab memo');
 });
+
+it('lists class meetings under the Classes chip rather than an empty agenda', () => {
+  click('Classes');
+  click('Agenda');
+  expect(host.textContent).not.toMatch(/Nothing in the next two weeks/);
+  expect(host.textContent).not.toMatch(/^0 things/);
+});

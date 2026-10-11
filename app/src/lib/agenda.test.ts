@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { agendaCount, agendaDays, AGENDA_DAYS } from './agenda';
-import type { Appointment, DatedEvent, DatedItem, FeedEvent, PersonalTask } from './types';
+import type { Appointment, Block, DatedEvent, DatedItem, FeedEvent, PersonalTask } from './types';
 
 // A Wednesday. Local time throughout, as the app's own dates are.
 const FROM = new Date(2026, 9, 7, 15, 30);
@@ -61,6 +61,21 @@ describe('agendaDays', () => {
     const weekly = appt('seminar', '2026-10-07', 14 * 60, { every: 'weekly', until: '2026-12-31' });
     const days = agendaDays({ ...none, appointments: [weekly] }, FROM);
     expect(days.map((d) => d.iso)).toEqual(['2026-10-07', '2026-10-14']);
+  });
+
+  it('puts class meetings on their days, in hour order with everything else timed', () => {
+    const seminar: Block = { time: '10:00 AM', at: 10 * 60, title: 'Seminar', meta: 'HIST 101', c: null };
+    const days = agendaDays(
+      {
+        ...none,
+        appointments: [appt('advisor', '2026-10-08', 9 * 60), appt('coffee', '2026-10-08', 11 * 60)],
+        // Thursdays only.
+        classes: (d) => (d.getDay() === 4 ? [seminar] : []),
+      },
+      FROM,
+    );
+    expect(days.map((d) => d.iso)).toEqual(['2026-10-08', '2026-10-15']);
+    expect(days[0].entries.map((e) => e.kind)).toEqual(['appointment', 'class', 'appointment']);
   });
 
   it('drops finished and undated tasks', () => {

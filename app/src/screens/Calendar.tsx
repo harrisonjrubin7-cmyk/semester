@@ -2690,6 +2690,10 @@ function AgendaView() {
       tasks: on.deadlines ? state.tasks : [],
       // Gated on `on.classes`, as the month grid and the semester mark them.
       appointments: on.classes ? state.appointments : [],
+      // The timetable and the standing commitments, from the day rail's own
+      // selector with no appointments or deadlines handed in, so a class is on
+      // the agenda exactly when it is on that day's rail.
+      classes: on.classes ? (date) => railFor(catalog, date, [], state.commitments) : undefined,
     },
     now,
   );
@@ -2754,6 +2758,30 @@ function AgendaView() {
                       </span>
                     </span>
                   </button>
+                );
+              case 'class':
+                return (
+                  <div
+                    key={`class:${d.iso}:${e.block.at}:${e.block.title}`}
+                    style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'center', ...dayRow }}
+                  >
+                    <span style={timeCell}>{shownTime(e.block.time, e.block.at)}</span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span
+                        style={{
+                          display: 'block',
+                          fontSize: 'var(--type-md)',
+                          lineHeight: 'var(--leading-display-xs)',
+                          textDecoration: e.block.canceled ? 'line-through' : undefined,
+                        }}
+                      >
+                        {e.block.title}
+                      </span>
+                      <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
+                        {e.block.canceled ? `Canceled · ${e.block.meta}` : e.block.meta}
+                      </span>
+                    </span>
+                  </div>
                 );
               case 'appointment':
               case 'feed': {
