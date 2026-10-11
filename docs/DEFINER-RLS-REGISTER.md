@@ -38,7 +38,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 
 ### After the second reading
 
-The current register also includes 29 callable definers whose current definitions were added after that dated catalogue snapshot: `20261009230000_guardian_projection_foundation.sql` (`read_guardian_calendar_projection`, `read_guardian_projection_access_history`); `20261009001500_course_material_retention_policy.sql` (`publish_course_material_retention_policy`); `20261008233000_tenant_projection_read.sql` (`read_tenant_projection`); `20261008223000_privileged_role_mfa.sql` (`privileged_mfa_required`); `20261008190500_projection_outbox_operations.sql` (`replay_domain_event`); `20261008190000_console_postmerge_safety.sql` (`console_command_center`, `console_release_incidents`); `20261005125000_console_integration_health.sql` (`console_integration_health`); `20261005124000_privacy_case_actions.sql` (`claim_privacy_request`, `my_privacy_completion_certificates`, `read_privacy_request_detail`, `resolve_privacy_request`, `verify_privacy_request`); `20261005123000_privacy_case_workspace.sql` (`console_privacy_requests`); `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`); `20261005120000_console_scoped_tenant_access.sql` (`console_tenant_access`); `20261005121000_console_tenant_operations.sql` (`console_tenant_operations`); `20261005122000_support_case_access.sql` (`available_case_supporters`, `read_support_case_signals`, `support_case_access`); `20261003120000_support_notification_consent_boundary.sql` (`set_support_email_notice`); `20261006000000_onboarding_journeys_and_handoff.sql` (`complete_onboarding_step`, `consume_handoff`, `skip_onboarding_step`, `start_onboarding`); `20261006160000_my_sessions.sql` (`end_my_session`, `my_sessions`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
+The current register also includes 32 callable definers whose current definitions were added after that dated catalogue snapshot: `20261010150000_notification_inbox_foundation.sql` (`mark_notification_inbox`, `read_notification_inbox`, `set_notification_preference`); `20261009230000_guardian_projection_foundation.sql` (`read_guardian_calendar_projection`, `read_guardian_projection_access_history`); `20261009001500_course_material_retention_policy.sql` (`publish_course_material_retention_policy`); `20261008233000_tenant_projection_read.sql` (`read_tenant_projection`); `20261008223000_privileged_role_mfa.sql` (`privileged_mfa_required`); `20261008190500_projection_outbox_operations.sql` (`replay_domain_event`); `20261008190000_console_postmerge_safety.sql` (`console_command_center`, `console_release_incidents`); `20261005125000_console_integration_health.sql` (`console_integration_health`); `20261005124000_privacy_case_actions.sql` (`claim_privacy_request`, `my_privacy_completion_certificates`, `read_privacy_request_detail`, `resolve_privacy_request`, `verify_privacy_request`); `20261005123000_privacy_case_workspace.sql` (`console_privacy_requests`); `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`); `20261005120000_console_scoped_tenant_access.sql` (`console_tenant_access`); `20261005121000_console_tenant_operations.sql` (`console_tenant_operations`); `20261005122000_support_case_access.sql` (`available_case_supporters`, `read_support_case_signals`, `support_case_access`); `20261003120000_support_notification_consent_boundary.sql` (`set_support_email_notice`); `20261006000000_onboarding_journeys_and_handoff.sql` (`complete_onboarding_step`, `consume_handoff`, `skip_onboarding_step`, `start_onboarding`); `20261006160000_my_sessions.sql` (`end_my_session`, `my_sessions`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
 
 ## How this page is held
 
@@ -51,16 +51,16 @@ The current register also includes 29 callable definers whose current definition
 
 | Category | Functions | Controls the audit requires |
 | --- | --- | --- |
-| self-service | 65 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
+| self-service | 67 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
 | sharing | 23 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
 | admin | 88 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 3 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
-| read-helper | 32 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 232 | |
+| read-helper | 33 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
+| **total** | 235 | |
 
-### self-service (65)
+### self-service (67)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -105,6 +105,7 @@ The current register also includes 29 callable definers whose current definition
 | `leave_organization` | `auth.uid()` | `20260921230000_organizations.sql` |
 | `leave_school` | `auth.uid()` | `20260930185000_school_membership_enforcement.sql` |
 | `make_referral_code` | `auth.uid()` | `20260921002623_referrals.sql` |
+| `mark_notification_inbox` | `auth.uid()`, `recipient_id = auth.uid()` | `20261010150000_notification_inbox_foundation.sql` |
 | `note_activity` | `auth.uid()` | `20260921151000_activity.sql` |
 | `open_help_request` | `auth.uid()`, `private.answers_for` | `20260927234000_help_request_reply_on_open.sql` |
 | `open_support_ticket` | `auth.uid()` | `20261008195500_support_ticket_retention.sql` |
@@ -119,6 +120,7 @@ The current register also includes 29 callable definers whose current definition
 | `request_mentor` | `auth.uid()`, `private.school_of`, `private.in_cohort` | `20260928021700_mentor_rosters.sql` |
 | `request_school_membership` | `auth.uid()`, `private.verified_account` | `20260930185000_school_membership_enforcement.sql` |
 | `send_help_request` | `auth.uid()`, `private.school_of` | `20260927233000_help_request_review_fixes.sql` |
+| `set_notification_preference` | `auth.uid()`, `p.school_id = want_school` | `20261010150000_notification_inbox_foundation.sql` |
 | `set_support_email_notice` | `auth.uid()` | `20261003120000_support_notification_consent_boundary.sql` |
 | `skip_onboarding_step` | `auth.uid()` | `20261006000000_onboarding_journeys_and_handoff.sql` |
 | `start_onboarding` | `auth.uid()` | `20261006000000_onboarding_journeys_and_handoff.sql` |
@@ -290,7 +292,7 @@ The current register also includes 29 callable definers whose current definition
 | `volunteer_next_tasks` | `auth.uid()`, `private.volunteer_ready` | `20260928032000_community.sql` |
 | `volunteer_roster` | `private.has_capability` | `20260928032000_community.sql` |
 
-### read-helper (32)
+### read-helper (33)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -325,6 +327,7 @@ The current register also includes 29 callable definers whose current definition
 | `my_volunteer_standing` | `auth.uid()` | `20260928032000_community.sql` |
 | `office_action_programs` | `auth.uid()` | `20260928302000_office_action_feed.sql` |
 | `privileged_mfa_required` | `auth.uid()` | `20261008223000_privileged_role_mfa.sql` |
+| `read_notification_inbox` | `auth.uid()`, `i.recipient_id = auth.uid()` | `20261010150000_notification_inbox_foundation.sql` |
 | `referral_standing` | `auth.uid()` | `20260921002623_referrals.sql` |
 
 ## Policy-less tables
