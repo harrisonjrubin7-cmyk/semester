@@ -12,10 +12,10 @@ import { join, resolve } from 'node:path';
  */
 export interface Workspace { path: string; branch: string; baseCommit: string }
 
-function git(cwd: string, args: string[]): string {
-  const result = spawnSync('git', args, { cwd, encoding: 'utf8' });
+function git(cwd: string, args: string[], raw = false): string {
+  const result = spawnSync('git', args, { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   if (result.status !== 0) throw new Error(`git ${args.join(' ')} failed: ${(result.stderr || result.stdout).trim()}`);
-  return result.stdout.trim();
+  return raw ? result.stdout : result.stdout.trim();
 }
 
 export function createWorkspace(repositoryRoot: string, stateRoot: string, taskId: string, baseRef = 'HEAD'): Workspace {
@@ -40,7 +40,8 @@ export function removeWorkspace(repositoryRoot: string, path: string, branch?: s
 
 export function workspaceDiff(path: string): { text: string; files: string[] } {
   git(path, ['add', '-A', '--intent-to-add']);
-  const text = git(path, ['diff']);
+  // Raw, not trimmed: a patch without its final newline is corrupt to `git apply`.
+  const text = git(path, ['diff'], true);
   const files = git(path, ['diff', '--name-only']).split('\n').filter(Boolean);
   return { text, files };
 }

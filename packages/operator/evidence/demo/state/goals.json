@@ -1,0 +1,11 @@
+[
+  {
+    "id": "goal_001",
+    "title": "Register the Semester Operator policy controller as a platform-control control record",
+    "requestedBy": "owner",
+    "source": "packages/platform-control/README.md (controls registry) and the Semester agent-team request",
+    "status": "open",
+    "createdAt": "2026-10-11T17:37:09.928Z",
+    "updatedAt": "2026-10-11T17:37:09.928Z"
+  }
+]

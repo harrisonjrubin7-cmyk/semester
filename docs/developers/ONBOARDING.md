@@ -40,7 +40,7 @@ git clone https://github.com/harrisonjrubin7-cmyk/semester.git
 cd semester
 ```
 
-The repository's root `package.json` is the workspace root for `app` and `packages/*` and holds the one lockfile. Install at the root. Product commands still run from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says; the root exposes only the platform-control registry commands (`registry:validate`, `registry:build`, `release:check`, `release:report`, and `platform-control:test`). At the root, plain `npm test` still fails with "Missing script" instead of running the product suite.
+The repository's root `package.json` is the workspace root for `app` and `packages/*` and holds the one lockfile. Install at the root. Product commands still run from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says; the root exposes only the platform-control registry commands (`registry:validate`, `registry:build`, `release:check`, `release:report`, and `platform-control:test`) and the Semester Operator commands (`operator:typecheck`, `operator:test`, `operator:build`, `operator:demo`, and `operator -- <command>`; see [`packages/operator/README.md`](../../packages/operator/README.md)). At the root, plain `npm test` still fails with "Missing script" instead of running the product suite.
 
 When the browser app consumes a workspace package, register that package consistently in `app/tsconfig.app.json`, `app/vite.config.ts`, and `app/src/lib/importgraph.ts`. Package build scripts may use Node built-ins; code under a package's `src/` remains inside the browser-safe leaf boundary unless its architecture explicitly says otherwise.
 

@@ -45,13 +45,16 @@ export function createToolbox(policy: PolicyController, context: PolicyContext, 
     const spent = limiter.consume('tool');
     if (!spent.ok) throw new ToolDenied(action.tool, action.target, spent.code, spent.reason);
     const decision = policy.evaluate(action, context);
-    const item: EvidenceItem = { kind: 'decision', label: `${action.tool}:${action.target}`, tool: action.tool, target: action.target, allowed: decision.allowed, code: decision.code };
+    // Records name the target relative to the repository, so evidence reads the same on any machine.
+    const shown = recorded(action.target);
+    const item: EvidenceItem = { kind: 'decision', label: `${action.tool}:${shown}`, tool: action.tool, target: shown, allowed: decision.allowed, code: decision.code };
     evidence.push(item);
-    audit.record('policy.decision', context.agentId, { tool: action.tool, target: action.target, code: decision.code, allowed: decision.allowed, requiresApproval: decision.requiresApproval }, context.taskId);
+    audit.record('policy.decision', context.agentId, { tool: action.tool, target: shown, code: decision.code, allowed: decision.allowed, requiresApproval: decision.requiresApproval }, context.taskId);
     if (!decision.allowed) { onDenied?.(item); throw new ToolDenied(action.tool, action.target, decision.code, decision.reason); }
   }
 
   const absolute = (path: string) => resolve(base, path);
+  const recorded = (target: string) => { if (!target.startsWith('/')) return target; const rel = relative(context.repositoryRoot, target); if (rel === '') return '.'; return rel.startsWith('..') ? target : rel; };
   const risk: RiskLevel = 'low';
 
   return {

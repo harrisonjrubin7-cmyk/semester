@@ -1,0 +1,34 @@
+{
+  "head": "3a62239a33bd960210cf88fb6e164bf7193391d3",
+  "killSwitch": {
+    "engaged": false
+  },
+  "goals": 1,
+  "tasks": {
+    "awaiting_verification": 3,
+    "verified": 5,
+    "awaiting_approval": 1
+  },
+  "ready": [],
+  "running": [],
+  "awaitingApproval": [
+    "task_007"
+  ],
+  "blocked": [],
+  "executions": 9,
+  "approvals": {
+    "live": 0,
+    "consumed": 0,
+    "revoked": 0
+  },
+  "audit": {
+    "ok": true,
+    "events": 70
+  },
+  "usage": {
+    "turns": 9,
+    "toolCalls": 12,
+    "elapsedMs": 19748,
+    "retries": 0
+  }
+}
