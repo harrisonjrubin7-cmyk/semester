@@ -21,7 +21,13 @@ function guideSections(content: Record<string, unknown>): GuideSection[] {
   return content.sections.filter((section): section is GuideSection => Boolean(
     section && typeof section === "object" &&
     typeof section.heading === "string" && typeof section.explanation === "string" &&
-    Array.isArray(section.citation_ids),
+    Array.isArray(section.citation_ids) && section.citation_ids.every((id: unknown) => typeof id === "string") &&
+    (section.key_points === undefined || (
+      Array.isArray(section.key_points) && section.key_points.every((point: unknown) => typeof point === "string")
+    )) &&
+    (section.examples === undefined || (
+      Array.isArray(section.examples) && section.examples.every((example: unknown) => typeof example === "string")
+    )),
   ));
 }
 

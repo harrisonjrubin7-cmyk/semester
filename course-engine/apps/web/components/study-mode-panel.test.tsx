@@ -55,6 +55,21 @@ describe("stored study asset interactions", () => {
     expect(screen.queryByText(/citation_ids/)).not.toBeInTheDocument();
   });
 
+  it("rejects malformed optional guide lists instead of crashing the panel", () => {
+    renderPanel("read", { ...baseAsset, content: {
+      ...baseAsset.content,
+      sections: [{
+        heading: "Malformed",
+        explanation: "This should not render.",
+        key_points: { unexpected: true },
+        citation_ids: [citationId],
+      }],
+    } });
+
+    expect(screen.getByRole("status")).toHaveTextContent("no valid cited sections");
+    expect(screen.queryByRole("heading", { name: "Malformed" })).not.toBeInTheDocument();
+  });
+
   it("downloads a confirmed document through the authenticated export helper", async () => {
     mockedDownload.mockResolvedValue();
     renderPanel("doc", baseAsset);
