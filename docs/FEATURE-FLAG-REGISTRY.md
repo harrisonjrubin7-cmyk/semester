@@ -80,11 +80,11 @@ Rollout plans and success criteria for each are in `flags.ts` beside the key.
 
 ### Grade passback and this flag
 
-`writeback.lms_grade_passback` governs the existing Brightspace score passback (`functions/lti`, `/score`) for any
+`writeback.lms_grade_passback` governs the existing Brightspace score passback (`functions/lti`, `/score`) for an
 LTI registration **bound to a school**, through `public.lti_passback_decision`, which the SQL suite
-`lti-integration.check.sql` walks gate by gate. A registration not yet bound keeps the pre-existing behaviour
-(instructor-gated), stopped only by the global `kill.writeback` / `kill.integration_sync`. See the migration
-plan, D-1, for why and for the binding steps.
+`lti-integration.check.sql` walks gate by gate. A registration not yet bound is refused as
+`registration-unbound`; global kill switches still take precedence. See the migration plan, D-1, for the
+remaining binding and approval steps.
 
 ## Kill switches
 

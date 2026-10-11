@@ -141,19 +141,18 @@ matches exactly one line item, **and** `lti_passback_decision` allows it. That
 database gate applies kill switches to every registration, and for a bound one
 also the school's `integration.lms_lti` and `writeback.lms_grade_passback`
 flags, an approved write connection and an approved `scope.lms.score_publish`.
-An unbound registration is `allowed-unbound`, unchanged from before binding
-existed. Any refusal answers "not reported" with the reason.
+An unbound registration is `registration-unbound` and is not sent. Any
+refusal answers "not reported" with the reason.
 See [INTEGRATION-OPERATOR-RUNBOOK.md](INTEGRATION-OPERATOR-RUNBOOK.md).
 
 ## Gaps
 
-- **Unbound registrations are allowed, with a warning.** A registration
-  installed before `tenant_id` existed has none. Its launches go through, and
-  on every one the function logs `lti launch unbound: …` (`launchTenant` in
-  `_shared/lti.ts`), naming the issuer, client and deployment whose school needs
-  recording. Main's `lti context: unbound` line covers only launches that carry
-  a course context, and does not name the row. An unbound launch must never be
-  treated as belonging to a default school.
+- **Unbound registrations are refused.** A registration installed before
+  `tenant_id` existed has none. Grade passback fails closed as
+  `registration-unbound` until an operator binds it to the correct school and
+  approved connection. Launch diagnostics still identify the issuer, client
+  and deployment that need binding; an unbound launch is never treated as
+  belonging to a default school.
 - The membership join is logged but not yet acted on. See
   **Joining a membership** above.
 - Launch refusals are logged, not persisted to an audit table.
