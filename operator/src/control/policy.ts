@@ -17,6 +17,8 @@ import { matchesAny } from './glob.ts';
 export interface PolicyController {
   readonly policy: Readonly<PolicySet>;
   evaluate(action: ToolAction, context: PolicyContext): PolicyDecision;
+  /** Whether one path, inside the repository or the workspace, is a protected read. The walkers ask this per file so a directory grant never reaches a file `read_file` would deny. */
+  protectedRead(target: string, context: PolicyContext): boolean;
 }
 
 export interface PolicyDependencies {
@@ -68,6 +70,10 @@ export function createPolicyController(policyInput: PolicySet, deps: PolicyDepen
 
   return {
     policy,
+    protectedRead(target, context) {
+      const rel = (context.workspaceRoot ? repositoryPath(context.workspaceRoot, target) : undefined) ?? repositoryPath(context.repositoryRoot, target);
+      return rel === undefined || matchesAny(rel, policy.protectedReads);
+    },
     evaluate(action, context) {
       if (deps.killSwitchEngaged()) return deny('kill_switch', 'The kill switch is engaged; no new work runs.');
       if (!context.agentTools.includes(action.tool)) return deny('tool_not_granted', `${context.agentId} was not granted ${action.tool}.`);

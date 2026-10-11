@@ -41,6 +41,11 @@ test('workspace is an isolated worktree from an exact commit; writes stay inside
   assert.throws(() => tools.writeFile('docs/x.md', 'no'), (error: unknown) => error instanceof ToolDenied && error.code === 'write_not_allowed');
   assert.throws(() => tools.writeFile(join(repo, 'packages/fixture/index.ts'), 'no'), (error: unknown) => error instanceof ToolDenied && error.code === 'outside_workspace');
   assert.throws(() => tools.readFile('.env'), (error: unknown) => error instanceof ToolDenied && error.code === 'protected_read');
+  // A directory grant does not reach a protected file: the walkers skip what read_file would deny, and say so.
+  assert.ok(!tools.listFiles('.').includes('.env'), 'list_files does not list a protected file');
+  assert.equal(tools.search('.', /SECRET_TOKEN/).length, 0, 'search does not read a protected file');
+  assert.ok(tools.listFiles('.').includes('README.md'));
+  assert.ok(tools.evidence.some((item) => item.kind === 'note' && item.label === 'search:protected_reads_skipped' && item.detail.includes('.env')));
   assert.throws(() => tools.runCheck('rm'), (error: unknown) => error instanceof ToolDenied && error.code === 'command_not_allowed');
   const check = tools.runCheck('fixture:check');
   assert.equal(check.exitCode, 0);

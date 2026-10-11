@@ -54,8 +54,12 @@ export function createToolbox(policy: PolicyController, context: PolicyContext, 
   }
 
   const absolute = (path: string) => resolve(base, path);
+  // A directory grant is not a file grant: every file a walker reaches is checked against the protected reads, and a protected one is neither listed nor searched.
+  const skipped: string[] = [];
+  const protectedRead = (full: string) => { const hit = policy.protectedRead(full, context); if (hit) skipped.push(relative(base, full)); return hit; };
   const recorded = (target: string) => { if (!target.startsWith('/')) return target; const rel = relative(context.repositoryRoot, target); if (rel === '') return '.'; return rel.startsWith('..') ? target : rel; };
   const risk: RiskLevel = 'low';
+  const noteSkipped = (tool: ToolName) => { if (!skipped.length) return; evidence.push({ kind: 'note', label: `${tool}:protected_reads_skipped`, detail: `${skipped.length} protected file(s) were not ${tool === 'search' ? 'searched' : 'listed'}: ${skipped.slice(0, 5).join(', ')}${skipped.length > 5 ? ', …' : ''}` }); skipped.length = 0; };
 
   return {
     evidence,
@@ -74,10 +78,11 @@ export function createToolbox(policy: PolicyController, context: PolicyContext, 
         for (const entry of readdirSync(current, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
           if (entry.name === 'node_modules' || entry.name === '.git' || out.length >= maxEntries) continue;
           const full = join(current, entry.name);
-          if (entry.isDirectory()) walk(full); else out.push(relative(base, full));
+          if (entry.isDirectory()) walk(full); else if (!protectedRead(full)) out.push(relative(base, full));
         }
       };
       walk(absolute(dir));
+      noteSkipped('list_files');
       return out;
     },
     search(dir, pattern, maxMatches = 200) {
@@ -89,12 +94,14 @@ export function createToolbox(policy: PolicyController, context: PolicyContext, 
           if (entry.name === 'node_modules' || entry.name === '.git') continue;
           const full = join(current, entry.name);
           if (entry.isDirectory()) { walk(full); continue; }
+          if (protectedRead(full)) continue;
           const bytes = readFileSync(full);
           if (bytes.byteLength > MAX_READ_BYTES) continue;
           bytes.toString('utf8').split('\n').forEach((text, index) => { if (matches.length < maxMatches && pattern.test(text)) matches.push({ path: relative(base, full), line: index + 1, text: redactString(text.slice(0, 200)) }); });
         }
       };
       walk(absolute(dir));
+      noteSkipped('search');
       return matches;
     },
     writeFile(path, content) {
