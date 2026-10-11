@@ -3,18 +3,17 @@
     "id": "P0-001",
     "name": "Repository baseline and CI",
     "owner": "platform-engineering",
-    "state": "in_progress",
+    "state": "verified",
     "registry_keys": [
       "control.tenant-isolation"
     ],
     "depends_on": [],
     "evidence": [
       "package.json",
-      ".github/workflows/ci.yml"
+      ".github/workflows/ci.yml",
+      "docs/operating-model/evidence/P0-001-repository-ci.md"
     ],
-    "blockers": [
-      "Hosted completion and retained immutable artifacts are external run evidence, not established by the workflow definition alone."
-    ]
+    "blockers": []
   },
   {
     "id": "P0-002",
