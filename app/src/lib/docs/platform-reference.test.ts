@@ -401,6 +401,9 @@ const PLATFORM_NON_EVENT_IMPORTERS = [
   'app/server/institution/adapter.ts',
   'app/server/institution/context.ts',
   'app/server/institution/gateway.ts',
+  // Membership imports only the tenant ID validator before carrying the
+  // authoritative row ID into active-context selection.
+  'app/server/institution/membership.ts',
   'app/server/institution/registration-readiness-commands.ts',
   'app/server/institution/readiness-repository.ts',
   // Course sources reuse only the tenant context, error envelope and file
