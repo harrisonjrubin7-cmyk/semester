@@ -86,6 +86,20 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
             lease_generation=1,
             lease_expires_at=now + timedelta(minutes=1),
         )
+        stalled_queued = BackgroundJob(
+            course_id=course.id,
+            document_id=document.id,
+            job_type="extract",
+            status=JobStatus.queued,
+            created_at=now - timedelta(minutes=6),
+        )
+        recent_queued = BackgroundJob(
+            course_id=course.id,
+            document_id=document.id,
+            job_type="extract",
+            status=JobStatus.queued,
+            created_at=now - timedelta(minutes=1),
+        )
         revoked = BackgroundJob(
             course_id=course.id,
             job_type="generate:study_guide",
@@ -121,6 +135,8 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
                 expired_extract,
                 expired_generation,
                 active,
+                stalled_queued,
+                recent_queued,
                 revoked,
                 inactive,
                 inactive_queued,
@@ -130,7 +146,10 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
         expected = {
             ("extract_document", str(expired_extract.id)),
             ("generate_study_asset", str(expired_generation.id)),
+            ("extract_document", str(stalled_queued.id)),
         }
+        stalled_queued_id = stalled_queued.id
+        recent_queued_id = recent_queued.id
         inactive_id = inactive.id
         inactive_queued_id = inactive_queued.id
 
@@ -141,10 +160,10 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
     monkeypatch.setattr(
         worker.celery,
         "send_task",
-        lambda name, args: sent.append((name, args[0])),
+        lambda name, args, **_kwargs: sent.append((name, args[0])),
     )
 
-    assert worker.recover_expired_jobs.run() == {"redelivered": 2}
+    assert worker.recover_expired_jobs.run() == {"redelivered": 3}
     assert set(sent) == expected
     with testing_session() as session:
         terminal = session.get(BackgroundJob, inactive_id)
@@ -157,6 +176,8 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
         assert queued_terminal.status == JobStatus.failed
         assert queued_terminal.revoked_at is not None
         assert queued_terminal.error == "Job scope was deleted"
+        assert session.get(BackgroundJob, stalled_queued_id).heartbeat_at is not None
+        assert session.get(BackgroundJob, recent_queued_id).heartbeat_at is None
 
 
 def test_lease_heartbeat_runs_while_worker_operation_is_blocked(monkeypatch):
