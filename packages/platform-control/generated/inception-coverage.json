@@ -1,0 +1,1597 @@
+[
+  {
+    "identifier": "admissions",
+    "system": "Admissions OS",
+    "workspaces": [
+      "applicant-portal"
+    ],
+    "master_domains": [],
+    "routes": [
+      "/admissions/applicants",
+      "/portal/applicant"
+    ],
+    "roles": [],
+    "screens_in_repo": [
+      "app/src/screens/Applying.tsx"
+    ],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 0,
+      "proposed": 3
+    },
+    "journeys": [
+      {
+        "key": "journey.01",
+        "status": "designed"
+      },
+      {
+        "key": "journey.02",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_ROLE_CATALOG.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "No master-catalog domain (D01–D40) covers admissions; the role catalog has prospective_student and admitted_student only.",
+      "No admissions capability, workflow or event exists in the repository."
+    ]
+  },
+  {
+    "identifier": "advising",
+    "system": "Advising OS",
+    "workspaces": [
+      "advisor-os"
+    ],
+    "master_domains": [
+      "D09"
+    ],
+    "routes": [
+      "/advising",
+      "/advising/caseload",
+      "/advising/referrals"
+    ],
+    "roles": [
+      "advisor"
+    ],
+    "screens_in_repo": [],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [
+      "advisor.case.read.assigned_caseload"
+    ],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 1,
+      "proposed": 2
+    },
+    "journeys": [
+      {
+        "key": "journey.11",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.calendar",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md",
+      "docs/ADVISOR-MEETING-MODE.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "No advising screen exists in app/src/screens; referrals are SQL (supabase/referrals.check.sql) without a registered screen contract."
+    ]
+  },
+  {
+    "identifier": "ai_governance",
+    "system": "AI Governance OS",
+    "workspaces": [
+      "institution-console",
+      "operations-os",
+      "student-os"
+    ],
+    "master_domains": [
+      "D06"
+    ],
+    "routes": [
+      "/console/ai",
+      "/ops/ai",
+      "/app/privacy/ai"
+    ],
+    "roles": [],
+    "screens_in_repo": [],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 1,
+      "proposed": 2
+    },
+    "journeys": [
+      {
+        "key": "journey.04",
+        "status": "designed"
+      },
+      {
+        "key": "journey.06",
+        "status": "designed"
+      },
+      {
+        "key": "journey.24",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.ai_provider",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/architecture/0004-ai-through-a-metered-gateway.md",
+      "supabase/intelligence-policy.check.sql"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "ai.request_authorized and ai.response_validated have no catalog event; ai.requested and ai.response_completed are the nearest and do not assert validation."
+    ]
+  },
+  {
+    "identifier": "alumni",
+    "system": "Alumni OS",
+    "workspaces": [
+      "alumni-portal"
+    ],
+    "master_domains": [
+      "D23"
+    ],
+    "routes": [
+      "/portal/alumni",
+      "/alumni"
+    ],
+    "roles": [],
+    "screens_in_repo": [],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [],
+    "events": {
+      "required": 0,
+      "carried_by_catalog": 0,
+      "proposed": 0
+    },
+    "journeys": [],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_ROLE_CATALOG.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "No alumni portal or screen exists; the alumni role holds no capability (role catalog)."
+    ]
+  },
+  {
+    "identifier": "campus",
+    "system": "Campus OS",
+    "workspaces": [
+      "student-os",
+      "student-affairs-os"
+    ],
+    "master_domains": [
+      "D15",
+      "D18",
+      "D22"
+    ],
+    "routes": [
+      "/app/campus",
+      "/campus/services",
+      "/campus/events"
+    ],
+    "roles": [],
+    "screens_in_repo": [
+      "app/src/screens/Maps.tsx",
+      "app/src/screens/Activities.tsx"
+    ],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [],
+    "events": {
+      "required": 2,
+      "carried_by_catalog": 0,
+      "proposed": 2
+    },
+    "journeys": [],
+    "adapters": [
+      {
+        "key": "adapter.calendar",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "Neither minimum event has a catalog entry; no event backend exists (D18)."
+    ]
+  },
+  {
+    "identifier": "career",
+    "system": "Career OS",
+    "workspaces": [
+      "student-os",
+      "employer-portal"
+    ],
+    "master_domains": [
+      "D23"
+    ],
+    "routes": [
+      "/app/career",
+      "/career",
+      "/portal/employer"
+    ],
+    "roles": [],
+    "screens_in_repo": [
+      "app/src/screens/Career.tsx",
+      "app/src/screens/Opportunities.tsx"
+    ],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 0,
+      "proposed": 3
+    },
+    "journeys": [
+      {
+        "key": "journey.14",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "No employer portal exists; the employer role holds talent:search only (role catalog)."
+    ]
+  },
+  {
+    "identifier": "community",
+    "system": "Community OS",
+    "workspaces": [
+      "community-marketplace"
+    ],
+    "master_domains": [
+      "D19"
+    ],
+    "routes": [
+      "/app/community",
+      "/community/moderation"
+    ],
+    "roles": [
+      "community_moderator"
+    ],
+    "screens_in_repo": [
+      "app/src/screens/Community.tsx",
+      "app/src/screens/Moderation.tsx"
+    ],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [
+      "community.post.moderate.assigned_community"
+    ],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 0,
+      "proposed": 3
+    },
+    "journeys": [
+      {
+        "key": "journey.15",
+        "status": "designed"
+      },
+      {
+        "key": "journey.16",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md",
+      "supabase/moderation-audit.check.sql"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "None of the three minimum events has a catalog entry; moderation is audited in SQL without outbox events."
+    ]
+  },
+  {
+    "identifier": "company",
+    "system": "Company OS",
+    "workspaces": [
+      "company-os"
+    ],
+    "master_domains": [
+      "D32",
+      "D33",
+      "D38",
+      "D39"
+    ],
+    "routes": [
+      "/company",
+      "/company/sales",
+      "/company/success"
+    ],
+    "roles": [
+      "founder_executive",
+      "legal"
+    ],
+    "screens_in_repo": [],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [
+      "company.contract.approve.company"
+    ],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 0,
+      "proposed": 3
+    },
+    "journeys": [
+      {
+        "key": "journey.19",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.crm",
+        "health": "blocked"
+      },
+      {
+        "key": "adapter.analytics_warehouse",
+        "health": "blocked"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_COMPANY_OPERATING_SYSTEM.md",
+      "docs/COMMERCIAL-CORE.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "No company workspace screen exists in the app; commercial automation is SQL (supabase/commercial-automation.check.sql)."
+    ]
+  },
+  {
+    "identifier": "customer",
+    "system": "Customer OS",
+    "workspaces": [
+      "company-os"
+    ],
+    "master_domains": [
+      "D32"
+    ],
+    "routes": [
+      "/company/implementation",
+      "/company/renewals"
+    ],
+    "roles": [],
+    "screens_in_repo": [],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [],
+    "events": {
+      "required": 0,
+      "carried_by_catalog": 0,
+      "proposed": 0
+    },
+    "journeys": [
+      {
+        "key": "journey.19",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_COMPANY_OPERATING_SYSTEM.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "The specification lists no minimum events for this system.",
+      "Implementation checklist (journey 19) is a document, not a workflow record."
+    ]
+  },
+  {
+    "identifier": "developer",
+    "system": "Developer OS",
+    "workspaces": [
+      "developer-portal"
+    ],
+    "master_domains": [
+      "D34"
+    ],
+    "routes": [
+      "/developers",
+      "/developers/apps",
+      "/developers/webhooks"
+    ],
+    "roles": [
+      "developer",
+      "developer_organization_administrator"
+    ],
+    "screens_in_repo": [],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [
+      "developer.key.rotate.own_application"
+    ],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 0,
+      "proposed": 3
+    },
+    "journeys": [
+      {
+        "key": "journey.18",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/DEVELOPER-TOOLS.md",
+      "docs/API-PLATFORM.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "No developer role or app registration model is in the role table (role catalog)."
+    ]
+  },
+  {
+    "identifier": "faculty",
+    "system": "Faculty OS",
+    "workspaces": [
+      "faculty-os"
+    ],
+    "master_domains": [
+      "D04",
+      "D05",
+      "D08"
+    ],
+    "routes": [
+      "/teach",
+      "/teach/gradebook",
+      "/teach/assessments"
+    ],
+    "roles": [
+      "faculty_member",
+      "teaching_assistant"
+    ],
+    "screens_in_repo": [
+      "app/src/screens/Gradebook.tsx"
+    ],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [
+      "faculty.grade_draft.write.assigned_section",
+      "faculty.grade_release.submit.assigned_section"
+    ],
+    "events": {
+      "required": 2,
+      "carried_by_catalog": 1,
+      "proposed": 1
+    },
+    "journeys": [
+      {
+        "key": "journey.09",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.sis",
+        "health": "blocked"
+      },
+      {
+        "key": "adapter.lms",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "grade_draft.submitted has no catalog event; grade.posted is the release, and the draft-to-official boundary (journey 9) is not yet a tested workflow."
+    ]
+  },
+  {
+    "identifier": "family",
+    "system": "Family OS",
+    "workspaces": [
+      "guardian-portal",
+      "student-os"
+    ],
+    "master_domains": [
+      "D24"
+    ],
+    "routes": [
+      "/app/family",
+      "/portal/family"
+    ],
+    "roles": [
+      "guardian_family_delegate"
+    ],
+    "screens_in_repo": [
+      "app/src/screens/Family.tsx"
+    ],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [
+      "family.delegation.read.granted_scope"
+    ],
+    "events": {
+      "required": 2,
+      "carried_by_catalog": 1,
+      "proposed": 1
+    },
+    "journeys": [
+      {
+        "key": "journey.12",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md",
+      "docs/CONSENT-SHARING-DESIGN.md",
+      "supabase/guardian-projection.check.sql"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "Delegation events are not catalog types; family access is a grant with share.revoked as the nearest event."
+    ]
+  },
+  {
+    "identifier": "finance",
+    "system": "Finance OS",
+    "workspaces": [
+      "finance-os"
+    ],
+    "master_domains": [
+      "D13",
+      "D14"
+    ],
+    "routes": [
+      "/app/money",
+      "/finance",
+      "/finance/reconciliation"
+    ],
+    "roles": [
+      "finance_manager"
+    ],
+    "screens_in_repo": [
+      "app/src/screens/Bill.tsx",
+      "app/src/screens/Costs.tsx"
+    ],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [
+      "finance.payment_refund.approve.tenant"
+    ],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 0,
+      "proposed": 3
+    },
+    "journeys": [
+      {
+        "key": "journey.13",
+        "status": "designed"
+      },
+      {
+        "key": "journey.16",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.sis",
+        "health": "blocked"
+      },
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.payment_processor",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md",
+      "docs/COMMERCIAL-CORE.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "No student payment intent event exists; invoice.paid and payment.failed are company billing events.",
+      "Nothing connects a student ledger to a payment provider (D13)."
+    ]
+  },
+  {
+    "identifier": "housing_dining",
+    "system": "Housing and Dining OS",
+    "workspaces": [
+      "student-os",
+      "student-affairs-os"
+    ],
+    "master_domains": [
+      "D16",
+      "D17"
+    ],
+    "routes": [
+      "/app/housing",
+      "/app/dining",
+      "/campus/housing"
+    ],
+    "roles": [],
+    "screens_in_repo": [
+      "app/src/screens/Housing.tsx",
+      "app/src/screens/Dining.tsx",
+      "app/src/screens/Meals.tsx"
+    ],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [],
+    "events": {
+      "required": 0,
+      "carried_by_catalog": 0,
+      "proposed": 0
+    },
+    "journeys": [],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "The specification lists no minimum events for this system.",
+      "Dining ordering needs a live partner connection (D17)."
+    ]
+  },
+  {
+    "identifier": "identity",
+    "system": "Identity OS",
+    "workspaces": [
+      "student-os",
+      "institution-console"
+    ],
+    "master_domains": [
+      "D26"
+    ],
+    "routes": [
+      "/sign-in",
+      "/onboarding",
+      "/account-recovery"
+    ],
+    "roles": [],
+    "screens_in_repo": [
+      "app/src/screens/Onboarding.tsx",
+      "app/src/screens/Account.tsx",
+      "app/src/screens/Recovery.tsx"
+    ],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 2,
+      "proposed": 1
+    },
+    "journeys": [
+      {
+        "key": "journey.01",
+        "status": "designed"
+      },
+      {
+        "key": "journey.02",
+        "status": "designed"
+      },
+      {
+        "key": "journey.03",
+        "status": "designed"
+      },
+      {
+        "key": "journey.12",
+        "status": "designed"
+      },
+      {
+        "key": "journey.14",
+        "status": "designed"
+      },
+      {
+        "key": "journey.17",
+        "status": "designed"
+      },
+      {
+        "key": "journey.24",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.saml_oidc",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md",
+      "supabase/tenant-sso-policy.check.sql",
+      "supabase/scim-gateway.check.sql"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "No membership registry record type exists; memberships are role grants scoped by school today.",
+      "membership.activated has no catalog event."
+    ]
+  },
+  {
+    "identifier": "institution",
+    "system": "Institution OS",
+    "workspaces": [
+      "institution-console"
+    ],
+    "master_domains": [
+      "D25",
+      "D27"
+    ],
+    "routes": [
+      "/console",
+      "/console/integrations",
+      "/console/audit"
+    ],
+    "roles": [
+      "institution_admin",
+      "it_administrator"
+    ],
+    "screens_in_repo": [
+      "app/src/screens/Console.tsx"
+    ],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [
+      "institution.integration.configure.tenant"
+    ],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 0,
+      "proposed": 3
+    },
+    "journeys": [
+      {
+        "key": "journey.02",
+        "status": "designed"
+      },
+      {
+        "key": "journey.03",
+        "status": "designed"
+      },
+      {
+        "key": "journey.08",
+        "status": "designed"
+      },
+      {
+        "key": "journey.10",
+        "status": "designed"
+      },
+      {
+        "key": "journey.17",
+        "status": "designed"
+      },
+      {
+        "key": "journey.19",
+        "status": "designed"
+      },
+      {
+        "key": "journey.21",
+        "status": "designed"
+      },
+      {
+        "key": "journey.24",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.saml_oidc",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.scim",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.analytics_warehouse",
+        "health": "blocked"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md",
+      "app/src/screens/Console.tsx"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "None of the three minimum events has a catalog entry; tenant_rollout.changed and connector.sync_* are the nearest."
+    ]
+  },
+  {
+    "identifier": "investor",
+    "system": "Investor and Board OS",
+    "workspaces": [
+      "company-os"
+    ],
+    "master_domains": [
+      "D39"
+    ],
+    "routes": [
+      "/investor",
+      "/company/board"
+    ],
+    "roles": [],
+    "screens_in_repo": [],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [],
+    "events": {
+      "required": 0,
+      "carried_by_catalog": 0,
+      "proposed": 0
+    },
+    "journeys": [],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.analytics_warehouse",
+        "health": "blocked"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_COMPANY_OPERATING_SYSTEM.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "The specification lists no minimum events for this system.",
+      "Investor access is invitation-only, read-only, and has no screen."
+    ]
+  },
+  {
+    "identifier": "learning",
+    "system": "Learning OS",
+    "workspaces": [
+      "student-os"
+    ],
+    "master_domains": [
+      "D02",
+      "D06",
+      "D22"
+    ],
+    "routes": [
+      "/app/study",
+      "/app/write",
+      "/app/solve",
+      "/app/sources"
+    ],
+    "roles": [],
+    "screens_in_repo": [
+      "app/src/screens/Study.tsx",
+      "app/src/screens/Write.tsx",
+      "app/src/screens/Solve.tsx",
+      "app/src/screens/Sources.tsx"
+    ],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 0,
+      "proposed": 3
+    },
+    "journeys": [
+      {
+        "key": "journey.04",
+        "status": "designed"
+      },
+      {
+        "key": "journey.05",
+        "status": "designed"
+      },
+      {
+        "key": "journey.06",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.lms",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.object_storage",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.ai_provider",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md",
+      "docs/architecture/0004-ai-through-a-metered-gateway.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "None of the three minimum events has a catalog entry; course-source derivation receipts exist in SQL (20261009014500) without an outbox event type."
+    ]
+  },
+  {
+    "identifier": "marketplace",
+    "system": "Marketplace OS",
+    "workspaces": [
+      "community-marketplace"
+    ],
+    "master_domains": [
+      "D35"
+    ],
+    "routes": [
+      "/app/marketplace",
+      "/marketplace/operations"
+    ],
+    "roles": [
+      "trust_and_safety"
+    ],
+    "screens_in_repo": [],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [
+      "marketplace.dispute.resolve.assigned_queue"
+    ],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 0,
+      "proposed": 3
+    },
+    "journeys": [
+      {
+        "key": "journey.16",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.payment_processor",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md",
+      "supabase/listings.check.sql"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "D35 is not started beyond listings; offers, disputes and refunds (journey 16) have no code."
+    ]
+  },
+  {
+    "identifier": "operations",
+    "system": "Operations OS",
+    "workspaces": [
+      "operations-os"
+    ],
+    "master_domains": [
+      "D31",
+      "D37"
+    ],
+    "routes": [
+      "/ops",
+      "/ops/inbox",
+      "/ops/incidents",
+      "/ops/releases"
+    ],
+    "roles": [
+      "operations_commander",
+      "platform_engineering"
+    ],
+    "screens_in_repo": [],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [
+      "ops.release.promote.production"
+    ],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 1,
+      "proposed": 2
+    },
+    "journeys": [
+      {
+        "key": "journey.08",
+        "status": "designed"
+      },
+      {
+        "key": "journey.17",
+        "status": "designed"
+      },
+      {
+        "key": "journey.18",
+        "status": "designed"
+      },
+      {
+        "key": "journey.19",
+        "status": "designed"
+      },
+      {
+        "key": "journey.20",
+        "status": "designed"
+      },
+      {
+        "key": "journey.22",
+        "status": "designed"
+      },
+      {
+        "key": "journey.23",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.scim",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.sms_push",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.support_provider",
+        "health": "blocked"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md",
+      "docs/ops/OPERATIONS_CONSOLE_RUNBOOK.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "release.promoted and job.quarantined have no catalog event; the ops projector worker (20261008210000) quarantines without emitting one."
+    ]
+  },
+  {
+    "identifier": "partner",
+    "system": "Partner OS",
+    "workspaces": [
+      "partner-portal",
+      "company-os"
+    ],
+    "master_domains": [
+      "D35"
+    ],
+    "routes": [
+      "/portal/partner",
+      "/company/partners"
+    ],
+    "roles": [],
+    "screens_in_repo": [],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [],
+    "events": {
+      "required": 0,
+      "carried_by_catalog": 0,
+      "proposed": 0
+    },
+    "journeys": [],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "The specification lists no minimum events for this system.",
+      "No partner portal exists."
+    ]
+  },
+  {
+    "identifier": "public",
+    "system": "Public OS",
+    "workspaces": [
+      "public-web"
+    ],
+    "master_domains": [
+      "D33",
+      "D30"
+    ],
+    "routes": [
+      "/",
+      "/students",
+      "/institutions",
+      "/trust",
+      "/legal"
+    ],
+    "roles": [],
+    "screens_in_repo": [
+      "company-site/index.html"
+    ],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [],
+    "events": {
+      "required": 0,
+      "carried_by_catalog": 0,
+      "proposed": 0
+    },
+    "journeys": [
+      {
+        "key": "journey.01",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "company-site/index.html",
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "The specification lists no minimum events for this system.",
+      "Public-site journeys are not yet registered as capability records."
+    ]
+  },
+  {
+    "identifier": "registrar",
+    "system": "Registrar OS",
+    "workspaces": [
+      "registrar-os"
+    ],
+    "master_domains": [
+      "D10",
+      "D11",
+      "D12"
+    ],
+    "routes": [
+      "/registrar",
+      "/registrar/readiness",
+      "/registrar/overrides"
+    ],
+    "roles": [
+      "registrar",
+      "registrar_manager"
+    ],
+    "screens_in_repo": [
+      "app/src/screens/Registrar.tsx",
+      "app/src/screens/Registration.tsx"
+    ],
+    "screen_contracts": [
+      "registrar.readiness.case"
+    ],
+    "capabilities": [],
+    "permissions": [
+      "registrar.readiness.evaluate.tenant",
+      "registrar.override.approve.tenant"
+    ],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 3,
+      "proposed": 0
+    },
+    "journeys": [
+      {
+        "key": "journey.07",
+        "status": "designed"
+      },
+      {
+        "key": "journey.08",
+        "status": "designed"
+      },
+      {
+        "key": "journey.09",
+        "status": "designed"
+      },
+      {
+        "key": "journey.10",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.sis",
+        "health": "blocked"
+      },
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/reference/registration-readiness-workflow.md",
+      "packages/institution/src/readiness.ts"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "The readiness capability is at policies maturity; api and user_interface stages are unproven (capabilities/registration.readiness.json)."
+    ]
+  },
+  {
+    "identifier": "security",
+    "system": "Security and Trust OS",
+    "workspaces": [
+      "institution-console",
+      "public-web"
+    ],
+    "master_domains": [
+      "D28",
+      "D29",
+      "D30"
+    ],
+    "routes": [
+      "/trust",
+      "/security",
+      "/privacy"
+    ],
+    "roles": [],
+    "screens_in_repo": [
+      "app/src/screens/TrustRoom.tsx",
+      "app/src/screens/Privacy.tsx"
+    ],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 1,
+      "proposed": 2
+    },
+    "journeys": [
+      {
+        "key": "journey.15",
+        "status": "designed"
+      },
+      {
+        "key": "journey.16",
+        "status": "designed"
+      },
+      {
+        "key": "journey.17",
+        "status": "designed"
+      },
+      {
+        "key": "journey.18",
+        "status": "designed"
+      },
+      {
+        "key": "journey.21",
+        "status": "designed"
+      },
+      {
+        "key": "journey.23",
+        "status": "designed"
+      },
+      {
+        "key": "journey.24",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md",
+      "SECURITY.md",
+      "app/src/screens/TrustRoom.tsx"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "access.denied and key.rotated have no catalog event."
+    ]
+  },
+  {
+    "identifier": "student",
+    "system": "Student OS",
+    "workspaces": [
+      "student-os"
+    ],
+    "master_domains": [
+      "D01",
+      "D02"
+    ],
+    "routes": [
+      "/app/today",
+      "/app/courses",
+      "/app/calendar",
+      "/app/privacy"
+    ],
+    "roles": [
+      "student"
+    ],
+    "screens_in_repo": [
+      "app/src/screens/Today.tsx",
+      "app/src/screens/Courses.tsx",
+      "app/src/screens/Calendar.tsx",
+      "app/src/screens/Privacy.tsx"
+    ],
+    "screen_contracts": [],
+    "capabilities": [
+      "registration.readiness"
+    ],
+    "permissions": [
+      "student.course.read.own",
+      "student.course.write.own",
+      "student.calendar.export.own"
+    ],
+    "events": {
+      "required": 3,
+      "carried_by_catalog": 1,
+      "proposed": 2
+    },
+    "journeys": [
+      {
+        "key": "journey.02",
+        "status": "designed"
+      },
+      {
+        "key": "journey.03",
+        "status": "designed"
+      },
+      {
+        "key": "journey.04",
+        "status": "designed"
+      },
+      {
+        "key": "journey.05",
+        "status": "designed"
+      },
+      {
+        "key": "journey.07",
+        "status": "designed"
+      },
+      {
+        "key": "journey.10",
+        "status": "designed"
+      },
+      {
+        "key": "journey.11",
+        "status": "designed"
+      },
+      {
+        "key": "journey.12",
+        "status": "designed"
+      },
+      {
+        "key": "journey.13",
+        "status": "designed"
+      },
+      {
+        "key": "journey.14",
+        "status": "designed"
+      },
+      {
+        "key": "journey.21",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.lms",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.calendar",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.sms_push",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.object_storage",
+        "health": "configured"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "course.created and calendar.event.confirmed have no catalog event; the catalog carries course.published and calendar_event.created."
+    ]
+  },
+  {
+    "identifier": "support",
+    "system": "Student Affairs OS",
+    "workspaces": [
+      "student-affairs-os"
+    ],
+    "master_domains": [
+      "D20",
+      "D21"
+    ],
+    "routes": [
+      "/app/support",
+      "/support/cases",
+      "/support/referrals"
+    ],
+    "roles": [],
+    "screens_in_repo": [
+      "app/src/screens/Support.tsx",
+      "app/src/screens/Help.tsx"
+    ],
+    "screen_contracts": [],
+    "capabilities": [],
+    "permissions": [],
+    "events": {
+      "required": 0,
+      "carried_by_catalog": 0,
+      "proposed": 0
+    },
+    "journeys": [
+      {
+        "key": "journey.11",
+        "status": "designed"
+      }
+    ],
+    "adapters": [
+      {
+        "key": "adapter.email",
+        "health": "configured"
+      },
+      {
+        "key": "adapter.support_provider",
+        "health": "blocked"
+      }
+    ],
+    "status": "designed",
+    "evidence": [
+      "docs/master/SEMESTER_DOMAIN_CATALOG.md",
+      "supabase/support-case-access.check.sql"
+    ],
+    "deployment": "not deployed",
+    "blockers": [
+      "The specification lists no minimum events for this system; support.ticket_created exists in the catalog."
+    ]
+  }
+]

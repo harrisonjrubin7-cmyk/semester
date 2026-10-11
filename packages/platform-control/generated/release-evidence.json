@@ -5,10 +5,276 @@
       "code": "capability_not_production_ready",
       "path": "capabilities.registration.readiness.maturity.production_ready",
       "message": "registration.readiness lacks production-ready evidence."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.01.status",
+      "message": "journey.01 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.02.status",
+      "message": "journey.02 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.03.status",
+      "message": "journey.03 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.04.status",
+      "message": "journey.04 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.05.status",
+      "message": "journey.05 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.06.status",
+      "message": "journey.06 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.07.status",
+      "message": "journey.07 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.08.status",
+      "message": "journey.08 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.09.status",
+      "message": "journey.09 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.10.status",
+      "message": "journey.10 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.11.status",
+      "message": "journey.11 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.12.status",
+      "message": "journey.12 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.13.status",
+      "message": "journey.13 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.14.status",
+      "message": "journey.14 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.15.status",
+      "message": "journey.15 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.16.status",
+      "message": "journey.16 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.17.status",
+      "message": "journey.17 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.18.status",
+      "message": "journey.18 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.19.status",
+      "message": "journey.19 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.20.status",
+      "message": "journey.20 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.21.status",
+      "message": "journey.21 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.22.status",
+      "message": "journey.22 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.23.status",
+      "message": "journey.23 has not passed end to end."
+    },
+    {
+      "code": "journey_not_verified",
+      "path": "journeys.journey.24.status",
+      "message": "journey.24 has not passed end to end."
+    },
+    {
+      "code": "adapter_not_sandbox_verified",
+      "path": "adapters.adapter.ai_provider.sandbox_verified",
+      "message": "adapter.ai_provider has no sandbox verification."
+    },
+    {
+      "code": "adapter_not_sandbox_verified",
+      "path": "adapters.adapter.analytics_warehouse.sandbox_verified",
+      "message": "adapter.analytics_warehouse has no sandbox verification."
+    },
+    {
+      "code": "adapter_not_sandbox_verified",
+      "path": "adapters.adapter.calendar.sandbox_verified",
+      "message": "adapter.calendar has no sandbox verification."
+    },
+    {
+      "code": "adapter_not_sandbox_verified",
+      "path": "adapters.adapter.crm.sandbox_verified",
+      "message": "adapter.crm has no sandbox verification."
+    },
+    {
+      "code": "adapter_not_sandbox_verified",
+      "path": "adapters.adapter.email.sandbox_verified",
+      "message": "adapter.email has no sandbox verification."
+    },
+    {
+      "code": "adapter_not_sandbox_verified",
+      "path": "adapters.adapter.lms.sandbox_verified",
+      "message": "adapter.lms has no sandbox verification."
+    },
+    {
+      "code": "adapter_not_sandbox_verified",
+      "path": "adapters.adapter.object_storage.sandbox_verified",
+      "message": "adapter.object_storage has no sandbox verification."
+    },
+    {
+      "code": "adapter_not_sandbox_verified",
+      "path": "adapters.adapter.payment_processor.sandbox_verified",
+      "message": "adapter.payment_processor has no sandbox verification."
+    },
+    {
+      "code": "adapter_not_sandbox_verified",
+      "path": "adapters.adapter.saml_oidc.sandbox_verified",
+      "message": "adapter.saml_oidc has no sandbox verification."
+    },
+    {
+      "code": "adapter_not_sandbox_verified",
+      "path": "adapters.adapter.scim.sandbox_verified",
+      "message": "adapter.scim has no sandbox verification."
+    },
+    {
+      "code": "adapter_not_sandbox_verified",
+      "path": "adapters.adapter.sis.sandbox_verified",
+      "message": "adapter.sis has no sandbox verification."
+    },
+    {
+      "code": "adapter_not_sandbox_verified",
+      "path": "adapters.adapter.sms_push.sandbox_verified",
+      "message": "adapter.sms_push has no sandbox verification."
+    },
+    {
+      "code": "adapter_not_sandbox_verified",
+      "path": "adapters.adapter.support_provider.sandbox_verified",
+      "message": "adapter.support_provider has no sandbox verification."
+    },
+    {
+      "code": "artifact_without_producer",
+      "path": "evidence_pack.approvers.json",
+      "message": "Nothing in the repository produces approvers.json."
+    },
+    {
+      "code": "artifact_without_producer",
+      "path": "evidence_pack.container-scan.json",
+      "message": "Nothing in the repository produces container-scan.json."
+    },
+    {
+      "code": "artifact_without_producer",
+      "path": "evidence_pack.feature-config-snapshot.json",
+      "message": "Nothing in the repository produces feature-config-snapshot.json."
+    },
+    {
+      "code": "artifact_without_producer",
+      "path": "evidence_pack.integration-health-snapshot.json",
+      "message": "Nothing in the repository produces integration-health-snapshot.json."
+    },
+    {
+      "code": "artifact_without_producer",
+      "path": "evidence_pack.openapi-diff.md",
+      "message": "Nothing in the repository produces openapi-diff.md."
+    },
+    {
+      "code": "artifact_without_producer",
+      "path": "evidence_pack.rollback-drill.json",
+      "message": "Nothing in the repository produces rollback-drill.json."
     }
   ],
   "blockedCapabilities": [
     "registration.readiness"
   ],
+  "inception": {
+    "unverifiedJourneys": [
+      "journey.01",
+      "journey.02",
+      "journey.03",
+      "journey.04",
+      "journey.05",
+      "journey.06",
+      "journey.07",
+      "journey.08",
+      "journey.09",
+      "journey.10",
+      "journey.11",
+      "journey.12",
+      "journey.13",
+      "journey.14",
+      "journey.15",
+      "journey.16",
+      "journey.17",
+      "journey.18",
+      "journey.19",
+      "journey.20",
+      "journey.21",
+      "journey.22",
+      "journey.23",
+      "journey.24"
+    ],
+    "unverifiedAdapters": [
+      "adapter.ai_provider",
+      "adapter.analytics_warehouse",
+      "adapter.calendar",
+      "adapter.crm",
+      "adapter.email",
+      "adapter.lms",
+      "adapter.object_storage",
+      "adapter.payment_processor",
+      "adapter.saml_oidc",
+      "adapter.scim",
+      "adapter.sis",
+      "adapter.sms_push",
+      "adapter.support_provider"
+    ],
+    "artifactsWithoutProducer": [
+      "approvers.json",
+      "container-scan.json",
+      "feature-config-snapshot.json",
+      "integration-health-snapshot.json",
+      "openapi-diff.md",
+      "rollback-drill.json"
+    ]
+  },
   "registryIssues": []
 }
