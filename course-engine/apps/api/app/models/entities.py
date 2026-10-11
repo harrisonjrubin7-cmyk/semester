@@ -19,6 +19,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -312,3 +313,16 @@ class UploadCompletion(Base, TimestampMixin):
 
 Index("ix_calendar_course_date", CalendarEvent.course_id, CalendarEvent.event_date)
 Index("ix_asset_course_type", StudyAsset.course_id, StudyAsset.asset_type)
+Index(
+    "uq_background_jobs_active_extract_document",
+    BackgroundJob.document_id,
+    unique=True,
+    postgresql_where=text(
+        "document_id IS NOT NULL AND job_type = 'extract' "
+        "AND status IN ('queued', 'running') AND revoked_at IS NULL"
+    ),
+    sqlite_where=text(
+        "document_id IS NOT NULL AND job_type = 'extract' "
+        "AND status IN ('queued', 'running') AND revoked_at IS NULL"
+    ),
+)

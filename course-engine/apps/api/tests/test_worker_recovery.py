@@ -62,6 +62,16 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
         )
         session.add(document)
         session.flush()
+        queued_document = SourceDocument(
+            course_id=course.id,
+            filename="queued.txt",
+            storage_key="courses/recovery/originals/queued.txt",
+            mime_type="text/plain",
+            size_bytes=8,
+            sha256="b" * 64,
+        )
+        session.add(queued_document)
+        session.flush()
         expired_extract = BackgroundJob(
             course_id=course.id,
             document_id=document.id,
@@ -70,6 +80,19 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
             lease_owner="crashed-extract",
             lease_generation=1,
             lease_expires_at=now - timedelta(seconds=1),
+        )
+        stranded_queued = BackgroundJob(
+            course_id=course.id,
+            document_id=queued_document.id,
+            job_type="extract",
+            status=JobStatus.queued,
+            created_at=now - timedelta(minutes=6),
+        )
+        fresh_queued = BackgroundJob(
+            course_id=course.id,
+            job_type="generate:flashcards",
+            status=JobStatus.queued,
+            created_at=now - timedelta(minutes=4),
         )
         expired_generation = BackgroundJob(
             course_id=course.id,
@@ -86,20 +109,6 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
             lease_owner="active-worker",
             lease_generation=1,
             lease_expires_at=now + timedelta(minutes=1),
-        )
-        stalled_queued = BackgroundJob(
-            course_id=course.id,
-            document_id=document.id,
-            job_type="extract",
-            status=JobStatus.queued,
-            created_at=now - timedelta(minutes=6),
-        )
-        recent_queued = BackgroundJob(
-            course_id=course.id,
-            document_id=document.id,
-            job_type="extract",
-            status=JobStatus.queued,
-            created_at=now - timedelta(minutes=1),
         )
         revoked = BackgroundJob(
             course_id=course.id,
@@ -134,10 +143,10 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
         session.add_all(
             [
                 expired_extract,
+                stranded_queued,
+                fresh_queued,
                 expired_generation,
                 active,
-                stalled_queued,
-                recent_queued,
                 revoked,
                 inactive,
                 inactive_queued,
@@ -145,12 +154,12 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
         )
         session.commit()
         expected = {
-            ("extract_document", str(expired_extract.id)),
-            ("generate_study_asset", str(expired_generation.id)),
-            ("extract_document", str(stalled_queued.id)),
+            ("extract_document", str(expired_extract.id), str(expired_extract.id)),
+            ("extract_document", str(stranded_queued.id), str(stranded_queued.id)),
+            ("generate_study_asset", str(expired_generation.id), str(expired_generation.id)),
         }
-        stalled_queued_id = stalled_queued.id
-        recent_queued_id = recent_queued.id
+        stranded_queued_id = stranded_queued.id
+        fresh_queued_id = fresh_queued.id
         inactive_id = inactive.id
         inactive_queued_id = inactive_queued.id
 
@@ -161,7 +170,7 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
     monkeypatch.setattr(
         worker.celery,
         "send_task",
-        lambda name, args, **_kwargs: sent.append((name, args[0])),
+        lambda name, args, task_id: sent.append((name, args[0], task_id)),
     )
 
     assert worker.recover_expired_jobs.run() == {"redelivered": 3, "failed": 0}
@@ -177,8 +186,8 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
         assert queued_terminal.status == JobStatus.failed
         assert queued_terminal.revoked_at is not None
         assert queued_terminal.error == "Job scope was deleted"
-        assert session.get(BackgroundJob, stalled_queued_id).heartbeat_at is not None
-        assert session.get(BackgroundJob, recent_queued_id).heartbeat_at is None
+        assert session.get(BackgroundJob, stranded_queued_id).heartbeat_at is not None
+        assert session.get(BackgroundJob, fresh_queued_id).heartbeat_at is None
 
 
 def test_recovery_continues_after_one_publish_fails(monkeypatch):

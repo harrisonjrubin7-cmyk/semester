@@ -213,6 +213,7 @@ def _commit_extraction(
         ReviewItem.document_id == document.id,
         ReviewItem.item_type.in_((
             "extracted_evidence",
+            "extraction_failed",
             "low_confidence_extraction",
             "unsupported_file",
             "no_extractable_content",

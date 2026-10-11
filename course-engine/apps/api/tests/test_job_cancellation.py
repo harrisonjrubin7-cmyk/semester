@@ -115,7 +115,7 @@ def test_job_cancellation_is_owner_scoped_idempotent_and_terminal():
         ).status_code == 409
         with testing_session() as session:
             assert session.get(BackgroundJob, failed_id).error == "Original provider failure"
-            assert session.get(SourceDocument, document_id).status == "failed"
+            assert session.get(SourceDocument, document_id).status == "uploaded"
     finally:
         app.dependency_overrides.clear()
 
@@ -224,6 +224,104 @@ def test_retry_extraction_reuses_active_job_after_dispatch_failure(monkeypatch):
             ).all()
             assert len(jobs) == 1
             assert str(jobs[0].id) == retried.json()["id"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_course_job_feed_keeps_all_active_jobs_beyond_terminal_history_limit():
+    testing_session = _database()
+    now = datetime.now(UTC)
+    with testing_session() as session:
+        owner = User(email="active-jobs-owner@example.com", password_hash="unused")
+        session.add(owner)
+        session.flush()
+        course = Course(user_id=owner.id, title="Active job feed")
+        session.add(course)
+        session.flush()
+        active_jobs = [
+            BackgroundJob(
+                course_id=course.id,
+                job_type=f"generate:active-{index}",
+                status=JobStatus.running,
+                created_at=now - timedelta(hours=index + 1),
+            )
+            for index in range(3)
+        ]
+        terminal_jobs = [
+            BackgroundJob(
+                course_id=course.id,
+                job_type=f"generate:terminal-{index}",
+                status=JobStatus.completed,
+                created_at=now - timedelta(minutes=index),
+            )
+            for index in range(3)
+        ]
+        session.add_all([*active_jobs, *terminal_jobs])
+        session.commit()
+        owner_id, course_id = owner.id, course.id
+        active_ids = {str(job.id) for job in active_jobs}
+
+    def override_db():
+        with testing_session() as session:
+            yield session
+
+    app.dependency_overrides[get_db] = override_db
+    try:
+        response = TestClient(app).get(
+            f"/api/v1/courses/{course_id}/jobs?limit=1",
+            headers={"Authorization": f"Bearer {create_access_token(owner_id)}"},
+        )
+        assert response.status_code == 200
+        rows = response.json()
+        assert len(rows) == 4
+        assert active_ids <= {row["id"] for row in rows}
+        assert sum(row["status"] == JobStatus.completed.value for row in rows) == 1
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_cancelling_extraction_restores_document_to_uploaded_state():
+    testing_session = _database()
+    with testing_session() as session:
+        owner = User(email="cancel-extract@example.com", password_hash="unused")
+        session.add(owner)
+        session.flush()
+        course = Course(user_id=owner.id, title="Cancel extraction")
+        session.add(course)
+        session.flush()
+        document = SourceDocument(
+            course_id=course.id,
+            filename="source.txt",
+            storage_key="courses/cancel/originals/source.txt",
+            mime_type="text/plain",
+            size_bytes=4,
+            sha256="a" * 64,
+            status="extracting",
+        )
+        session.add(document)
+        session.flush()
+        job = BackgroundJob(
+            course_id=course.id,
+            document_id=document.id,
+            job_type="extract",
+            status=JobStatus.running,
+        )
+        session.add(job)
+        session.commit()
+        owner_id, document_id, job_id = owner.id, document.id, job.id
+
+    def override_db():
+        with testing_session() as session:
+            yield session
+
+    app.dependency_overrides[get_db] = override_db
+    try:
+        client = TestClient(app)
+        headers = {"Authorization": f"Bearer {create_access_token(owner_id)}"}
+        assert client.post(f"/api/v1/jobs/{job_id}/cancel", headers=headers).status_code == 200
+        assert client.post(f"/api/v1/jobs/{job_id}/cancel", headers=headers).status_code == 200
+        with testing_session() as session:
+            assert session.get(SourceDocument, document_id).status == "uploaded"
     finally:
         app.dependency_overrides.clear()
 
