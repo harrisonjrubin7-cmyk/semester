@@ -31,6 +31,12 @@ import { RHYTHM_KEY, readRhythm } from './daily-rhythm';
 import { CALM_KEY, keepMemory, readCalm, withoutMemory } from './calm-controls';
 import { readDataProjects } from './toolkit/data';
 import { readToolkit, TOOLKIT_DATA_PREFIX, TOOLKIT_PREFIX } from './toolkit/store';
+import {
+  keepReflections as keepLaunchpadReflections,
+  LAUNCHPAD_PREFIX,
+  readLaunchpad,
+  withoutReflections as withoutLaunchpadReflections,
+} from './launchpad';
 
 /**
  * A backup for the device workspaces the main one does not reach.
@@ -195,6 +201,15 @@ const DEFINITIONS: Record<string, Definition> = {
     scope: 'device',
     read: (v) => withoutMemory(readCalm(v)),
     restore: (incoming, existing) => keepMemory(readCalm(incoming), existing),
+  },
+  // Launchpad progress and student-chosen setup travel; private reflection
+  // answers do not. Restoring keeps the answers already on this device.
+  launchpad: {
+    label: 'Launchpad progress and choices',
+    prefix: LAUNCHPAD_PREFIX,
+    scope: 'account',
+    read: (v) => withoutLaunchpadReflections(readLaunchpad(v)),
+    restore: (incoming, existing) => keepLaunchpadReflections(readLaunchpad(incoming), existing),
   },
   toolkit: { label: 'Toolkit assignments, research and declarations', prefix: TOOLKIT_PREFIX, scope: 'account', read: readToolkit },
   toolkitData: { label: 'Toolkit data projects', prefix: TOOLKIT_DATA_PREFIX, scope: 'account', read: readDataProjects },

@@ -367,6 +367,57 @@ describe('the Toolkit stores', () => {
   });
 });
 
+describe('the Launchpad workspace', () => {
+  const launchpad = {
+    stage: 'first-term',
+    types: ['first-year'],
+    done: { deposit: '2026-08-01' },
+    reflection: { working: 'I found a study group.' },
+    mentorOptIn: true,
+    interests: ['Study habits'],
+  };
+
+  it('backs up one account without putting private reflections in the file', () => {
+    storage.setItem(`semester.launchpad.v1:${ACCOUNT}`, JSON.stringify(launchpad));
+    storage.setItem('semester.launchpad.v1:someone-else', JSON.stringify({ ...launchpad, stage: 'admitted' }));
+
+    const backup = workspaceBackup(ACCOUNT, storage);
+    expect(backup.records.map((record) => record.kind)).toEqual(['launchpad']);
+    const record = backup.records[0];
+    expect(record).toBeDefined();
+    expect(record!.value).toMatchObject({
+      stage: 'first-term',
+      done: { deposit: '2026-08-01' },
+      mentorOptIn: true,
+    });
+    expect((record!.value as typeof launchpad).reflection).toEqual({});
+    expect(JSON.stringify(backup)).not.toContain('I found a study group.');
+    expect(JSON.stringify(backup)).not.toContain('someone-else');
+  });
+
+  it('restores progress to the restoring account and keeps that device\'s reflections', () => {
+    storage.setItem(`semester.launchpad.v1:${ACCOUNT}`, JSON.stringify(launchpad));
+    const backup = workspaceBackup(ACCOUNT, storage);
+    const fresh = new FakeStorage();
+    fresh.setItem('semester.launchpad.v1:acct-2', JSON.stringify({
+      ...launchpad,
+      stage: 'admitted',
+      done: {},
+      reflection: { working: 'Keep this private answer.' },
+      mentorOptIn: false,
+    }));
+
+    restoreWorkspaces(backup, 'acct-2', fresh);
+    expect(JSON.parse(fresh.getItem('semester.launchpad.v1:acct-2')!)).toMatchObject({
+      stage: 'first-term',
+      done: { deposit: '2026-08-01' },
+      reflection: { working: 'Keep this private answer.' },
+      mentorOptIn: true,
+    });
+    expect(fresh.getItem(`semester.launchpad.v1:${ACCOUNT}`)).toBeNull();
+  });
+});
+
 /*
  * The study journal, with an entry in it.
  *

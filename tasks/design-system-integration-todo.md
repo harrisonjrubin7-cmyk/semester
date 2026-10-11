@@ -1904,3 +1904,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep broader Toolkit backup coverage, account/institution records, provider operations and whole-account deletion separate from this one device project.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 recoverable Launchpad progress — automation pass 1, integration slice 91
+
+- [x] Start from clean required-branch head `a4742f6b`; fetch `origin/main`, confirm the same exact head and inspect Launchpad/workspace-backup history and code for equivalent work.
+- [x] Re-rank the unresolved account-scoped Launchpad recovery gap ahead of later campus and career workspace stores; keep Hub display markers, Opportunities, housing, meals and provider/institution operations outside this slice.
+- [x] Add Launchpad progress and student-chosen setup to the validated account-scoped workspace backup, remapped only to the restoring account.
+- [x] Keep private reflection answers out of the portable file and preserve any reflections already on the restoring device.
+- [x] Use one exported `LAUNCHPAD_PREFIX` authority across Launchpad, Hub and workspace backup instead of duplicating the storage key.
+- [x] Prove the account-selection, reflection-redaction and restore-preservation assertions red against the former exclusion, then pass 74/74 focused workspace-backup, coverage and journey-reader tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the build chunk-size warning.
+- [x] Pass 9/9 token export, 138/138 combined design contracts and the exact 96/96 report contracts; keep the design audit at zero violations with 86 existing warnings and CSS within its ledger.
+- [ ] Aggregate design-system wrappers — `design-system:check` hardcodes unavailable `npm`; the report writes then exits after invoking unavailable `npx`. Exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-workspace recovery slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
+- [ ] Keep Hub display markers, Opportunities, housing, meals and other unresolved device stores separate until their portability and privacy semantics are explicit.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
