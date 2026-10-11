@@ -2,7 +2,7 @@
 
 ## Passed
 
-- `python -m pytest -q`: 75 passed with 41 subtests using the documented SQLite migration-test environment. Coverage includes authorization/ownership isolation, review resolution, bounded correction payloads, real migration round trips, concurrent upload completion, owner-scoped job feeds, worker fencing/recovery, stored card/quiz ownership and persistence, safe archives, citation rejection, dates, ICS, and exports.
+- `python -m pytest -q`: 76 passed with 41 subtests using the documented SQLite migration-test environment. Coverage includes authorization/ownership isolation, review resolution, bounded correction payloads, real migration round trips, concurrent upload completion, owner-scoped job feeds, idempotent retry dispatch and abandoned-queue redelivery, worker fencing/recovery, stored card/quiz ownership and persistence, safe archives, citation rejection, dates, ICS, and exports.
 - `python -m ruff check app tests ../worker/tasks.py`: passed.
 - `python -m compileall`: API, worker, scripts, and benchmark modules compile.
 - `pnpm run typecheck`: passed.

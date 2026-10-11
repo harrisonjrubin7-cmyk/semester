@@ -424,12 +424,29 @@ def list_jobs(
     db: Session = Depends(get_db),
 ):
     owned_course(db, user, course_id)
-    jobs = db.scalars(
+    recent_jobs = db.scalars(
         select(BackgroundJob)
         .where(BackgroundJob.course_id == course_id)
         .order_by(BackgroundJob.created_at.desc())
         .limit(limit)
     ).all()
+    active_extractions = db.scalars(
+        select(BackgroundJob)
+        .where(
+            BackgroundJob.course_id == course_id,
+            BackgroundJob.job_type == "extract",
+            BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
+            BackgroundJob.revoked_at.is_(None),
+        )
+        .order_by(BackgroundJob.created_at.desc())
+    ).all()
+    jobs_by_id = {job.id: job for job in recent_jobs}
+    jobs_by_id.update({job.id: job for job in active_extractions})
+    jobs = sorted(
+        jobs_by_id.values(),
+        key=lambda job: job.created_at,
+        reverse=True,
+    )
     return [serialize(job) for job in jobs]
 
 
@@ -503,12 +520,38 @@ def delete_file(file_id: UUID, user: User = Depends(get_current_user), db: Sessi
 
 @router.post("/files/{file_id}/retry-extraction")
 def retry_file(file_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    doc = db.get(SourceDocument, file_id)
+    doc = db.scalar(
+        select(SourceDocument)
+        .where(SourceDocument.id == file_id)
+        .with_for_update()
+    )
     if not doc: raise HTTPException(404)
     owned_course(db, user, doc.course_id)
+    active = db.scalar(
+        select(BackgroundJob)
+        .where(
+            BackgroundJob.document_id == doc.id,
+            BackgroundJob.job_type == "extract",
+            BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
+            BackgroundJob.revoked_at.is_(None),
+        )
+        .order_by(BackgroundJob.created_at.desc())
+    )
+    if active:
+        if active.status == JobStatus.queued:
+            celery_client.send_task(
+                "extract_document",
+                args=[str(active.id)],
+                task_id=str(active.id),
+            )
+        return serialize(active)
     job = BackgroundJob(course_id=doc.course_id, document_id=doc.id, job_type="extract")
     doc.status = "queued"; db.add(job); db.commit(); db.refresh(job)
-    celery_client.send_task("extract_document", args=[str(job.id)])
+    celery_client.send_task(
+        "extract_document",
+        args=[str(job.id)],
+        task_id=str(job.id),
+    )
     return serialize(job)
 
 
@@ -531,7 +574,19 @@ def cancel_job(job_id: UUID, user: User = Depends(get_current_user), db: Session
         return serialize(job)
     if job.status in (JobStatus.completed, JobStatus.failed):
         raise HTTPException(409, "Terminal jobs cannot be cancelled")
-    revoke_job(db, job.id, job.course_id, datetime.now(UTC), "Cancelled by user")
+    changed = revoke_job(
+        db,
+        job.id,
+        job.course_id,
+        datetime.now(UTC),
+        "Cancelled by user",
+        commit=False,
+    )
+    if changed and job.job_type == "extract" and job.document_id:
+        document = db.get(SourceDocument, job.document_id)
+        if document and not document.deleted_at:
+            document.status = "failed"
+    db.commit()
     db.refresh(job)
     return serialize(job)
 
