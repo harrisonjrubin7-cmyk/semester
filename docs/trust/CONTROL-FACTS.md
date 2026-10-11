@@ -15,11 +15,11 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | Migration files | 233 |
 | Tables created in `public` and not later dropped | 342 |
 | … of which enable row-level security in a migration | 342 |
-| Tables created in `private` and not later dropped | 50 |
-| … of which enable row-level security in a migration | 50 |
+| Tables created in `private` and not later dropped | 49 |
+| … of which enable row-level security in a migration | 49 |
 | Tables with no `enable row level security` statement found | 0 |
 | Tables named by at least one literal `create policy` statement | 276 |
-| Tables with RLS found and no literal policy statement | 116 |
+| Tables with RLS found and no literal policy statement | 115 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -120,7 +120,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/legal-holds.check.sql` | Legal holds (RM-02, RM-05): who may place one and over what, that it is released only by someone else with a reason, that it is never deleted or edited, that a held account cannot be deleted, and tha… |
 | `supabase/listings.check.sql` | Verified listings: who drafts, who publishes, who reads, and https only. |
 | `supabase/lti-capability.check.sql` | Whether an LTI launch's account holds lti:launch at the school, as the launch facts report it. |
-| `supabase/lti-integration.check.sql` | LTI bound to the integration control plane: the passback gate walks one gate at a time, unbound passback fails closed, and the launch's context is recorded only when every condition holds. |
+| `supabase/lti-integration.check.sql` | LTI bound to the integration control plane: the passback gate walked one gate at a time, the pre-binding behaviour kept, and the launch's context recorded only when every condition holds. |
 | `supabase/lti-membership.check.sql` | Joining an LTI launch to an institutional membership. |
 | `supabase/lti.check.sql` | The two tables an LTI launch runs on, and the four ways they are meant to refuse. |
 | `supabase/ltiags.check.sql` | The table a grade finds its way back through, and the ways it refuses. |
@@ -139,9 +139,9 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/organizations.check.sql` | Who may say what about whom, in an organization. |
 | `supabase/outbox.check.sql` | The transactional outbox and the consumer receipts: service-role only, and the constraints that make a mislabelled or a duplicated event fail in the transaction that tried to write it. |
 | `supabase/payment-inbox.check.sql` | The payment-rail registry and the verified-event inbox (20261006090000_payment_rails_and_event_inbox, D-1319). |
+| `supabase/platform-registry.check.sql` | The platform registry projection (20261011120000): a capability is live only when its full chain resolves, and the database refuses anything less. |
 | `supabase/privacy-case-actions.check.sql` | Privacy case lifecycle, holds, approvals and certificates. |
 | `supabase/privacy-case-workspace.check.sql` | Scoped, identity-minimized privacy queue. |
-| `supabase/privileged-access-review.check.sql` | Privileged role-grant review. |
 | `supabase/privileged-mfa.check.sql` | Platform administrators and support agents do not carry capabilities until the current JWT proves MFA. |
 | `supabase/productivity-commands.check.sql` | The storage half of the productivity command API: that the commit function is atomic, idempotent, gapless and refuses a stale writer; that row-level security lets a person read their own live rows in… |
 | `supabase/productivity.check.sql` | Include owner isolation, optimistic revisions, tenant membership, aggregate suppression, and account-link preservation in the standard policy harness. |
@@ -292,15 +292,15 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 240 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 240 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 235 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 235 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 65 |
 | Register rows in category `sharing` | 23 |
-| Register rows in category `admin` | 96 |
+| Register rows in category `admin` | 91 |
 | Register rows in category `integration` | 6 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |
