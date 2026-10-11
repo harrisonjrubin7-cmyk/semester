@@ -727,6 +727,7 @@ const MOCKS_MODULES = [
   'src/screens/onboardingcounts.test.tsx',
   'src/components/saysomething.test.tsx',
   'src/screens/mentionbadge.test.tsx',
+  'src/screens/mine/Drive.delete-file.test.tsx',
   'src/screens/mine/Drive.delete-folder.test.tsx',
   'src/screens/mine/Drive.delete-file.test.tsx',
   'src/components/syncstrip.test.tsx',
