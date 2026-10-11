@@ -69,7 +69,9 @@ describe('Roles & capabilities workspace', () => {
     expect(host.textContent).toContain('Exact identifier match · not activation evidence');
     expect(host.textContent).toContain('Table membership is vocabulary and policy, not a user’s active grants.');
     expect(host.textContent).toContain('Copy 7 proposals are non-authoritative');
-    expect(host.textContent).toContain('identical to the Copy 5 role dataset');
+    expect(host.textContent).toContain('role dataset is identical to Copy 5');
+    expect(host.textContent).toContain('annotations are carried forward from Copy 5');
+    expect(host.textContent).toContain('unapproved conflict');
     expect(host.querySelectorAll('button')).toHaveLength(0);
   });
 

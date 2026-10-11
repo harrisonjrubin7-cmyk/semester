@@ -10,6 +10,7 @@ import {
 } from '../../lib/console/role-policy';
 import {
   COPY5_ROLE_PROPOSALS,
+  COPY7_ROLE_CONFLICTS,
   ROLE_PROPOSAL_AUTHORITY,
   proposalMatchLabel,
   type Copy5RoleProposal,
@@ -79,6 +80,7 @@ export function RolePolicy({ filter, authorityKey, read = loadRolePolicy }: Role
     ...proposal.candidateRoles,
     proposalMatchLabel(proposal),
     proposal.requiredDecision,
+    COPY7_ROLE_CONFLICTS[proposal.id] ?? '',
   )), [filter]);
 
   if (current?.status === 'error') {
@@ -108,7 +110,7 @@ export function RolePolicy({ filter, authorityKey, read = loadRolePolicy }: Role
     { id: 'family', header: 'Family', cell: (proposal) => proposal.family },
     { id: 'candidate', header: 'Repository candidate', cell: (proposal) => proposal.candidateRoles.length ? proposal.candidateRoles.join(', ') : 'No canonical role proposed' },
     { id: 'status', header: 'Reconciliation status', cell: (proposal) => proposalMatchLabel(proposal) },
-    { id: 'decision', header: 'Required decision', cell: (proposal) => proposal.requiredDecision },
+    { id: 'decision', header: 'Required decision', cell: (proposal) => <>{proposal.requiredDecision}{COPY7_ROLE_CONFLICTS[proposal.id] ? <><br /><strong>{COPY7_ROLE_CONFLICTS[proposal.id]}</strong></> : null}</> },
   ];
 
   return (
@@ -152,7 +154,7 @@ export function RolePolicy({ filter, authorityKey, read = loadRolePolicy }: Role
       <section aria-label="Copy 7 role proposals" style={{ display: 'grid', gap: 'var(--sp-4)' }}>
         <SectionLabel aside={`${proposals.length} shown`}>Copy 7 role proposals</SectionLabel>
         <p style={{ marginBlock: 0 }}>
-          51 design and governance proposals. {ROLE_PROPOSAL_AUTHORITY.current} proposals are non-authoritative: candidates and exact identifier matches do not create roles, grants, permissions, or activation. The current source is identical to the Copy 5 role dataset.
+          51 design and governance proposals. {ROLE_PROPOSAL_AUTHORITY.current} proposals are non-authoritative: candidates and exact identifier matches do not create roles, grants, permissions, or activation. The current role dataset is identical to Copy 5; the reconciliation annotations are carried forward from Copy 5.
         </p>
         <Table
           caption="Copy 7 role proposals and reconciliation decisions"

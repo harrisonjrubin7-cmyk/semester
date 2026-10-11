@@ -22,10 +22,16 @@ export const ROLE_PROPOSAL_AUTHORITY = {
   current: 'Copy 7',
   inheritedFrom: 'Copy 5',
   relationship: 'byte-identical role dataset',
+  reconciliation: 'Copy 5 annotations carried forward',
 } as const;
 
+export const COPY7_ROLE_CONFLICTS: Readonly<Record<string, string>> = {
+  sem_security: 'Copy 7 unapproved conflict: launch role data proposes break-glass student-record access, while the stricter permissions/atlas policy forbids it. Preserve the server prohibition pending governance approval.',
+  inst_sec: 'Copy 7 unapproved conflict: launch role data proposes break-glass student-record access, while the stricter permissions/atlas policy forbids it. Preserve the server prohibition pending governance approval.',
+};
+
 const SOURCE = `sem_support\tSemester support operator\tPlatform operations\tsupport_agent\tcandidate_alias\tConfirm support session scope, expiry, audit and allowed capabilities; do not inherit student-record access
-sem_security\tSemester security operator\tPlatform operations\tincident_responder|platform_admin\tgovernance_decision\tSplit incident response from platform administration; map each Copy 7 capability explicitly
+sem_security\tSemester security operator\tPlatform operations\tincident_responder|platform_admin\tgovernance_decision\tSplit incident response from platform administration; map each Copy 5 capability explicitly
 sem_product\tSemester product operator\tPlatform operations\tcontent_owner|platform_admin\tgovernance_decision\tDefine a release/feature-flag operator role or prove existing roles are sufficient; no implicit data access
 sem_privacy\tSemester privacy/legal operator\tPlatform operations\ttrust_officer|compliance_owner\tgovernance_decision\tSeparate privacy-case handling, legal holds and compliance oversight
 sem_impl\tSemester implementation lead\tPlatform operations\timplementation_manager\tcandidate_alias\tConfirm tenant onboarding and cutover scope; preserve tenant isolation
