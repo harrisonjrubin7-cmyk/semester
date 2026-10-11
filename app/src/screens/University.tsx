@@ -700,7 +700,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <ActionButton
               onClick={() => {
                 if (drafts.length >= DRAFT_LIMITS.drafts) return;
-                setDrafts((ds) => [removed, ...ds]);
+                if (!setDrafts((ds) => [removed, ...ds])) return;
                 setRemoved(null);
                 setNotice('Draft restored.');
               }}
@@ -1140,8 +1140,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 </ActionButton>
                 <ActionButton
                   onClick={() => {
+                    if (!setDrafts((ds) => ds.filter((d) => d.id !== selected))) return;
                     setRemoved(draft);
-                    setDrafts((ds) => ds.filter((d) => d.id !== selected));
                     setSelected('');
                     setNotice('Draft removed. You can undo this.');
                   }}
