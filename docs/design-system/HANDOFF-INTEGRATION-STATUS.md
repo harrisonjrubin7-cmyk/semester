@@ -1,10 +1,19 @@
 # Handoff integration status
 
-**Automation pass** 12 of 120 · **Integration slice** 77 · **Date** 2026-10-10 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `b01e1d45` · **Latest observed `origin/main`** `a607200c`
+**Automation pass** 1 of 120 · **Integration slice** 79 · **Date** 2026-10-11 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `121eb809` · **Latest observed `origin/main`** `121eb809`
 
 ## State
 
-Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Current Phase 3 consequence work now also records separate governed removal of a device graduation scenario and its signed-in-account draft. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed in this documentation-only reconciliation.
+
+## Evidence locked in automation pass 1 / integration slice 79
+
+- Fresh fetch confirms clean branch head and `origin/main` are both `121eb809`. Exact-work inspection found the next account-draft deletion boundary already landed as `44950935`, so this pass reconciles it rather than duplicating production code.
+- The signed-in-account removal uses the shared preview to name the account-only deletion, unchanged device scenario, other account drafts, downloads and official degree audit, plus the no-restore boundary. Cancel writes nothing.
+- The server adapter now requires a returned deletion row before reporting success. A refusal or empty receipt keeps the dialog open, preserves the displayed device/account state and offers retry or cancel; success clears only that account's cloud-id mapping and leaves the device scenario available to save again.
+- The current focused and adjacent graduation, cloud, ActionPreview and root-unmount set passes 36/36.
+- This pass changes documentation only. The landed production slice recorded Hawk, Docker, API key and app host unavailable; no DAST result or security pass is claimed, and the documentation-only HawkScan exclusion applies now.
+- Ordered and shuffled full suites were not rerun. No route, dependency, schema, policy, provider configuration, deployment, production data or external system changed. Safe in-scope work remains and requires a fresh dependency/consequence ranking.
 
 ## Evidence locked in automation pass 10 / integration slice 75
 

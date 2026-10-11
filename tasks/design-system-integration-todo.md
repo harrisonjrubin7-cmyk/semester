@@ -1650,3 +1650,21 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep account-draft deletion, official degree-audit operations and account deletion separate from this device-only scenario mutation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed graduation account-draft removal — automation pass 1, integration slice 79
+
+- [x] Start from clean head `121eb809`; fetch `origin/main`, confirm it is identical, and inspect exact work rather than duplicating landed commit `44950935`.
+- [x] Reconcile the separately authorized signed-in-account draft removal while preserving the device scenario, other account drafts, downloads and registrar-owned degree audit.
+- [x] Confirm the shared `ConfirmDialog` and `ActionPreview` disclose the account-only effect, unchanged records and no-restore boundary before any server write.
+- [x] Confirm cancellation writes nothing; explicit confirmation waits for a returned deletion row before removing that account's cloud id from the device mapping.
+- [x] Confirm a refused or receipt-less deletion leaves the dialog open, preserves the device/account state shown by the client and offers retry or cancel.
+- [x] Pass 36/36 focused and adjacent graduation, cloud, ActionPreview and root-unmount tests on current head.
+- [x] Update the four persistent integration controls without changing production code.
+- [ ] Production-change HawkScan DAST — the landed slice recorded `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; this documentation-only reconciliation does not trigger another scan, and no DAST pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for documentation-only reconciliation; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official degree-audit operations, whole-account deletion and same-origin device erase separate from this one-draft account mutation.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

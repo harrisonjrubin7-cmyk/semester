@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-10 · **Latest observed `origin/main`** `9642e983` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `121eb809` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -447,3 +447,14 @@ The regression failed against the prior immediate deletion. The final focused/ad
 | Security verification after production UI behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST scan, finding result or security pass exists. |
 
 The regression failed against the prior first-press deletion. The focused/adjacent set passes 57/57; TypeScript, lint, university typecheck and production build pass; the combined token/design/report-contract set passes 147/147, and audit/CSS stay within their ledgers. Aggregate npm design wrappers and ordered/shuffled full suites were not run. Account-draft deletion and official degree operations remain separate authority-aware paths.
+
+## Pass 1 delta — governed graduation account-draft removal (slice 79)
+
+| Reference intent | Current repository authority | Disposition and evidence |
+| --- | --- | --- |
+| Consequence preview before deleting one account-saved planning draft | `app/src/components/GraduationSimulator.tsx`, `app/src/components/ConfirmDialog.tsx`, `app/src/components/unity/ActionPreview.tsx` | **Existing but incomplete → existing and verified for one signed-in-account draft removal.** The landed first press previews the account-only deletion, unchanged device scenario and records, and lack of automatic restore; cancellation performs no delete. |
+| Require trustworthy completion before changing the client receipt | `app/src/lib/graduation-cloud.ts`, `app/src/lib/graduation-cloud.test.ts`, `app/src/components/GraduationSimulator.phase-d.test.tsx` | **Existing and verified for this slice.** The delete requests the removed id and refuses to report success when no row returns. A failure keeps the confirmation open, preserves the displayed account/device mapping and permits retry; confirmed completion clears only the signed-in account's cloud id. |
+| Preserve student control and official academic authority | `app/src/components/GraduationSimulator.tsx`, `app/src/lib/graduation.ts` | **Existing and verified for this slice.** The device scenario remains available and can be saved again; other account drafts, downloads and the registrar-owned degree audit remain unchanged. Whole-account deletion and official degree operations are separate. |
+| Security verification after the landed production change | `stackhawk.yml` | **Blocked by environment.** The landed slice recorded Hawk and Docker unavailable with no API key or app host. This pass changes documentation only, so it does not trigger a new scan; no DAST result or security pass is inferred. |
+
+Exact-work inspection found commit `44950935` already present in clean current head `121eb809`; this pass records it instead of rebuilding it. The current focused/adjacent graduation, cloud, preview and root-unmount set passes 36/36. No route, dependency, schema, policy, provider configuration, deployment or external system changed in this reconciliation.

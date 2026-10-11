@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-10 · **Latest observed `origin/main`** `8c3acf89` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `121eb809` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -813,3 +813,11 @@ Scenario removal now opens the shared `ConfirmDialog` and `ActionPreview`. It na
 The regression failed against the prior first-press deletion. After implementation, 57/57 focused and adjacent graduation, cloud-draft, backup, preview/modal and root-unmount tests pass. TypeScript, lint, university typecheck and production build pass; the six existing lint warnings and build chunk-size warning remain. The combined token/design/report-contract set passes 147/147, design audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. The aggregate design wrappers remain unavailable because they hardcode missing `npm`/`npx`; ordered and shuffled full suites were not rerun for this bounded device-library slice.
 
 The required HawkScan loop stops at preflight: Hawk and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and no target can be started. `stackhawk.yml` exists, but no DAST result or security pass is claimed. No route, dependency, schema, server operation, provider configuration or external system changed. Safe in-scope work remains; the next slice requires another fresh dependency/consequence ranking, while authenticated Import stays externally gated.
+
+## Governed graduation account-draft removal — automation pass 1, integration slice 79
+
+Fresh `origin/main` `121eb809` is the clean branch head. Exact-work inspection found that commit `44950935` had already implemented the next separately held account-draft boundary after slice 78, so this pass reconciles that landed work instead of duplicating it. The account operation deletes only the signed-in student's estimated scenario draft; the same scenario on the device, other account drafts, downloaded summaries and the registrar-owned degree audit remain unchanged.
+
+The existing confirmation now uses the shared `ActionPreview`, gives Cancel initial focus and identifies the no-restore boundary before the server write. Explicit confirmation awaits the existing account-scoped delete, and `deleteDraft()` now requires a returned row before reporting success. A provider or RLS refusal leaves the dialog open, preserves both account and device representations in the UI, and offers retry or cancel. On a confirmed deletion, only that account's cloud id is removed from the device mapping and the device scenario remains available to save again later.
+
+The landed regression covers the preview, no-write first press, successful receipt and failed retry path. On current head, 36/36 focused and adjacent graduation, cloud, preview and root-unmount tests pass. This reconciliation changes documentation only, so no new HawkScan trigger applies; the production change's prior DAST gate remains open because the recorded environment had no Hawk runtime, Docker, API key or app host. No route, dependency, schema, policy, provider configuration, deployment or external system changed in this pass. The next slice requires a fresh dependency/consequence ranking; official degree operations, account deletion and scanner/extractor-backed Import remain separate.
