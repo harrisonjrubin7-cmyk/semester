@@ -156,7 +156,7 @@ The repository's canonical names win over the design project's proposed schemas;
 - **Database.** The production Supabase project `lzrqvlugnawcgywkhqlz` ("semester", us-west-2) lists the same 234 migration versions as `supabase/migrations/`; the comparison is a digest of the version list computed on both sides and recorded in `deployed.json`. Three other projects exist in the organisation (`Semester2`, `semester-restore-drill-2026-10-01`, and `Semester-Platform`, created this day); none is referenced by the repository.
 - **Edge Functions.** Deployed by workflow on merge; not re-verified from this session.
 - **App.** Vercel projects `semester`, `api`, `web`, `semester-company-site` exist in the team; the deployment listing was refused to this session's credentials (403), and the production URL is a repository variable not readable here. **Unverified.**
-- **Preview.** Pushing this branch opens a preview deployment through the Vercel Git integration if it is enabled for the repository; the pull request's check runs are where that shows.
+- **Preview.** The Vercel Git integration built preview deployments of this branch for `semester`, `api`, `web` and `semester-company-site` (commit statuses on #1475, "Deployment has completed"). They are protected by Vercel Authentication: a plain fetch answers 302 and the authorized Vercel fetch answered 403 for this session's connection (team `harrison22` not authorized). So a preview exists and was not seen; `deployed.json` says the same, and no row is `deployed`. The `api` and `web` projects build `course-engine/apps/api` and `course-engine/apps/web`, not the institution gateway.
 
 ## 11. Operational and administrative requirements
 

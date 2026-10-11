@@ -243,6 +243,6 @@
   },
   "app": {
     "verified": false,
-    "status": "unverified — the Vercel deployment listing refused this session's credentials (403) and the production URL is a repository variable (SEMESTER_PRODUCTION_APP_URL) not readable here; no production probe was made"
+    "status": "unverified — Vercel built preview deployments of this branch for the projects semester, api, web and semester-company-site (GitHub commit statuses \"Deployment has completed\", 2026-10-11) but they sit behind Vercel Authentication, and both the plain fetch (302) and the authorized Vercel fetch (403, team harrison22 not authorized for this session's connection) were refused; the production URL is the repository variable SEMESTER_PRODUCTION_APP_URL, not readable here. No deployment was seen running."
   }
 }

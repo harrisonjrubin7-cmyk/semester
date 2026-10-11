@@ -42,3 +42,21 @@ Commands run from `app/` unless noted. Discover the script in `app/package.json`
 A green typecheck is not production readiness. Deployment readiness for the device plan stays `not-deployed`. Record authority stays `device-local`.
 
 Do not weaken `keyless.test.tsx`. The syllabus door stays first. The by-hand door stays keyless-only.
+
+## Handoff intake and coverage matrix (11 October 2026, #1475)
+
+| Command | Working directory | Result |
+| --- | --- | --- |
+| `npx vitest run src/lib/path-readiness.test.ts` | `app/` | 5 new tests failed first (`unmatched` undefined); exit 0 after the change, 20 tests passed. |
+| `npx vitest run src/lib/docs/ecosystem.test.ts` | `app/` | Exit 0. 12 tests passed; `problems: []` over 281 routes and 122 capabilities. Controls prove a missing path, an over-claimed status and a ghost route are each reported. |
+| `npx tsc -b` | `app/` | Exit 0, before and after the rebase onto `ccf2d45f`. |
+| `npm run lint` | `app/` | Exit 0. Styles, labels and terms passed. |
+| `npm run check:university` | `app/` | Exit 0. |
+| `npm run design-system:check` | `app/` | Exit 0. 69 tests passed. |
+| `npm test` | `app/` | 1516 files passed, 4 failed, 1 skipped; 24192 tests passed, 4 failed, 69 skipped. One failure was plugin debris at the repository root (`.md-linker`, `.ruff_cache`; removed). Three reproduce on the untouched base `a4742f6b`: `src/isolation.test.ts`, `src/lib/docs/trust-docs.test.ts`, `src/components/unity/rollout-c.test.tsx`. |
+| `npm run test:shuffle` | `app/` | Seed `1791757697990`. 1517 files passed, 3 failed, 1 skipped; 24196 tests passed, 3 failed. The same three. No ordering failure. |
+| `npm run build` | `app/` | Exit 0 after the rebase. |
+| Read-only SQL on production `lzrqvlugnawcgywkhqlz` | Supabase MCP | 234 applied migrations, md5 of the ordered version list `b3f233cab6a321ee41bdc2d7716fb64f`, equal to the repository's. Nothing applied. |
+| `curl` and the authorized Vercel fetch on the branch preview | — | 302 (Vercel Authentication) and 403 (team not authorized for this connection). Preview built, not seen. |
+
+Not run: `verify.sh` (no Docker), HawkScan locally (no `HAWK_API_KEY`), a browser walk (one sentence changed in an existing list), any remote migration.
