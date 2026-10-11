@@ -12,7 +12,7 @@ function button(text:string){const b=[...host.querySelectorAll('button')].find(b
 async function press(text:string){await act(async()=>button(text).click());}
 function mount(){act(()=>root.render(<University/>));}
 beforeEach(()=>{localStorage.clear();Object.values(mock).forEach(value=>{if(typeof value==='function')value.mockReset();});mock.role='student';host=document.createElement('div');document.body.append(host);root=createRoot(host);});
-afterEach(()=>{act(()=>root.unmount());host.remove();});
+afterEach(()=>{vi.restoreAllMocks();act(()=>root.unmount());host.remove();});
 it('keeps official data separate from local preparation and requires preview plus confirmation',async()=>{
  mock.status.mockResolvedValue({version:1,institutionId:'school',institutionName:'Test school',roles:['student'],connections:[{area:'courses',state:'connected',provider:'Fixture LMS',canRead:true,canWrite:true,lastSyncAt:null,permissions:[],message:''}]});
  mock.records.mockResolvedValue({records:[{id:'course',area:'courses',title:'Test course',summary:'Official record fixture',status:'Ready',version:'1',updatedAt:'2026-09-13T12:00:00Z',details:[],actions:[{id:'acknowledge',label:'Acknowledge course policy',fields:[]}]}],nextCursor:null,fetchedAt:'2026-09-13T12:00:00Z'});
@@ -23,6 +23,33 @@ it('keeps official data separate from local preparation and requires preview plu
 });
 it('preserves malformed saved drafts instead of overwriting them with an empty file',()=>{
  const key='semester.university.drafts.v1:device:2026FA';localStorage.setItem(key,'broken but recoverable');mount();expect(localStorage.getItem(key)).toBe('broken but recoverable');expect(host.textContent).toContain('Download recovery copy');
+});
+it('reports draft removal and undo only after the device write succeeds',async()=>{
+ const key='semester.university.drafts.v1:device:2026FA';
+ localStorage.setItem(key,JSON.stringify([{
+  id:'appeal-draft',role:'student',area:'advising',title:'Academic appeal',body:'Points to raise',due:'',courseId:'',steps:[],updatedAt:'2026-10-11T12:00:00.000Z',
+ }]));
+ mount();
+ await act(async()=>[...host.querySelectorAll('button')].find(b=>b.textContent?.startsWith('Drafts ('))!.click());
+ await act(async()=>[...host.querySelectorAll('button')].find(b=>b.textContent?.startsWith('Academic appeal'))!.click());
+
+ const refuseRemoval=vi.spyOn(Storage.prototype,'setItem').mockImplementation(()=>{throw new Error('device full');});
+ await press('Remove draft');
+ expect(host.textContent).toContain('Academic appeal');
+ expect(host.textContent).toContain('Changes could not be saved: device full');
+ expect(host.textContent).not.toContain('Draft removed. You can undo this.');
+
+ refuseRemoval.mockRestore();
+ await press('Remove draft');
+ expect(host.textContent).not.toContain('Academic appeal');
+ expect(host.textContent).toContain('Draft removed. You can undo this.');
+
+ vi.spyOn(Storage.prototype,'setItem').mockImplementation(()=>{throw new Error('device full');});
+ await press('Undo removal');
+ expect(host.textContent).not.toContain('Academic appeal');
+ expect(host.textContent).toContain('Undo removal');
+ expect(host.textContent).toContain('Changes could not be saved: device full');
+ expect(host.textContent).not.toContain('Draft restored.');
 });
 it('seeds draft intent from the selected role and hides role-inapplicable local actions',async()=>{
  mock.role='staff';mount();

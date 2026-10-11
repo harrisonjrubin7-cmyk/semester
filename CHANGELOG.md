@@ -28,6 +28,30 @@ will happily serve you the copy you already had.
 
 Senior Trust & Safety reviewers now see a preview before revoking a student volunteer. It names the volunteer, says their moderation access ends immediately, identifies the unanswered review actions that will leave their queue, shows the reason that will be kept in programme history, and says the action cannot be undone by sending them back to calibration. Cancel changes nothing; the existing server operation runs only after **Revoke access** is confirmed. Other volunteers, moderation cases, completed reviews and school settings are unchanged.
 
+### Toolkit work can travel in a device workspace backup
+
+Device workspace backups now include the signed-in account's Toolkit work: assignment workspaces, Research Studio projects, AI-use declarations and the separate Data Studio projects with their original imported data. Restoring checks the entire backup before writing anything and restores those records into the account doing the restore, not the account name from the old device. Research Studio's source, claim and project removal previews now say to create a device workspace backup first if you may need to restore the removed work; without one, it must still be re-entered from the originals.
+
+### Research Studio now explains claim removal before changing a project
+
+In **Research Studio**, **Remove claim** now opens the standard consequence preview before changing the device workspace. It names the claim's current evidence status and linked-source count, says that the claim and its source links will be removed, and keeps the sources, research question, search plan and other claims unchanged. Cancel starts focused and changes nothing. The preview says a device workspace backup created before removal can restore it; without one, the claim and its source links must be re-entered.
+
+### Research Studio now explains source removal before changing a project
+
+In **Research Studio**, **Remove source** now opens the standard consequence preview before changing the device workspace. It says that the evidence row will be removed from the project and detached from every linked claim, while the claim text, research question, search plan, other sources and original files remain. Cancel starts focused and changes nothing. The preview says a device workspace backup created before removal can restore it; without one, the source must be re-entered from the original.
+
+### Stopping a claimed family share now shows the full consequence and waits for receipts
+
+On **Family**, **Stop sharing** now opens the standard consequence preview before changing the account. It says which person's selected family items lose access, that Semester's stored copies are removed, and that the family plan, other people's shares, unused codes and read history remain. It also says copies already saved outside Semester cannot be recalled and that sharing again requires a new confirmed share. Cancel starts focused and writes nothing. Semester reports success only after the account returns the exact revoked grants and removed copies; if access ends but copy cleanup fails, the dialog stays open and says that partial result instead of claiming sharing did not stop.
+
+### Calling off an unused family share code now asks first
+
+On **Family**, calling off an unused share code now shows what will happen before the account is changed. The preview says the code stops working immediately, claimed family access is unaffected, the family plan and other codes stay unchanged, and a new code can be made later. Cancel starts focused and changes nothing. If the account does not return the exact revoked code, Semester keeps the choice open for retry instead of claiming the code was called off.
+
+### Revoking an advisor share waits for the account to confirm it
+
+In **Advisor meeting** and **Your data**, revoking a live advisor share now keeps the confirmation open until the account returns the exact updated share. If the share is stale, unavailable or refused, Semester leaves the choice open and says to refresh and retry instead of claiming the advisor lost access. The preview also says that the share and access log stay in the account, meeting preparation and official advising records do not change, and revocation cannot be undone; you can make a new share later.
+
 ### Privileged platform accounts verify MFA before Semester opens staff tools
 
 An account with a live `platform_admin` or `support_agent` grant now verifies a second factor before Semester mounts any capability-backed tool, including tools outside **Semester Operations**. An enrolled authenticator-app or phone-code factor can be challenged; if neither exists, the step offers authenticator-app enrolment. A failed factor lookup has its own retry. The database also keeps those two grants dormant at `aal1` for capability checks and role-based approval requests. Accounts without either privileged role are unchanged. Production authentication configuration and recovery still require separate operational verification.

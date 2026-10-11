@@ -97,6 +97,10 @@ describe('which actions can be taken back', () => {
       fields: ['wanted'],
       onChange: true,
     });
+    expect(undoableFor('deleteMyRule')).toEqual({
+      label: 'Reminder rule deleted',
+      fields: ['myRules'],
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
