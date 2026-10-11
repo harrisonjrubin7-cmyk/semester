@@ -128,7 +128,7 @@ describe('Support', () => {
     expect(host.textContent).toContain('Aunt Maya');
     expect(host.textContent).toContain('615-555-0142');
     expect(host.textContent).toContain('Other emergency contacts, access planning notes, routines');
-    expect(host.textContent).toContain('This Support workspace is not included in a device workspace backup.');
+    expect(host.textContent).toContain('Emergency contacts are intentionally excluded from device workspace backups.');
     expect(JSON.parse(localStorage.getItem('semester.support.v1:device')!).contacts).toHaveLength(1);
 
     click(button('Cancel'));

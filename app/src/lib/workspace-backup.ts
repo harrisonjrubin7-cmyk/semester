@@ -49,6 +49,7 @@ import {
   readHubPrefs,
   withoutMessageMarkers,
 } from './comms';
+import { keepPrivateSupport, readSupport, SUPPORT_PREFIX, withoutPrivateSupport } from './support';
 
 /**
  * A backup for the device workspaces the main one does not reach.
@@ -241,6 +242,16 @@ const DEFINITIONS: Record<string, Definition> = {
     scope: 'account',
     read: (v) => withoutMessageMarkers(readHubPrefs(v)),
     restore: (incoming, existing) => keepMessageMarkers(incoming, existing),
+  },
+  // Routines, continuity choices and commute planning travel. Emergency
+  // contacts and access notes stay on the device where the student entered
+  // them and are preserved when portable planning is restored.
+  support: {
+    label: 'Support routines and continuity plan',
+    prefix: SUPPORT_PREFIX,
+    scope: 'account',
+    read: (v) => withoutPrivateSupport(readSupport(v)),
+    restore: (incoming, existing) => keepPrivateSupport(incoming, existing),
   },
   toolkit: { label: 'Toolkit assignments, research and declarations', prefix: TOOLKIT_PREFIX, scope: 'account', read: readToolkit },
   toolkitData: { label: 'Toolkit data projects', prefix: TOOLKIT_DATA_PREFIX, scope: 'account', read: readDataProjects },

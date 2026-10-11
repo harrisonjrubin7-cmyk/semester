@@ -137,7 +137,7 @@ const STORES: Record<string, 'backed up' | { exempt: string }> = {
   'semester.directory': { exempt: 'A campus directory imported from the school, which can be imported again. ' + OTHER_MODULE },
   'semester.housing-plan': { exempt: OTHER_MODULE },
   'semester.meal-plan': { exempt: OTHER_MODULE },
-  'semester.support.v1': { exempt: OTHER_MODULE },
+  'semester.support.v1': 'backed up',
   'semester.nil.v1': { exempt: OTHER_MODULE },
   'semester.toolkit.v1': 'backed up',
   'semester.toolkit-data.v1': 'backed up',

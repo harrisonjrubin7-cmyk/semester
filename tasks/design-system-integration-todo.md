@@ -1968,3 +1968,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
 - [ ] Keep housing, meals and other unresolved term/device stores separate until their portability, privacy and account/term semantics are explicit.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 recoverable Support planning — automation pass 4, integration slice 94
+
+- [x] Start from clean required-branch head `bd1f1493`; fetch current `origin/main` `ccf2d45ff`, confirm it is already included and inspect exact Support/workspace-backup history and code for overlap.
+- [x] Re-rank the existing account-scoped Support workspace ahead of housing and meals, whose term-only keys still need an account/migration decision before portable recovery is safe.
+- [x] Add routines, continuity choices and commute planning to the validated account-scoped workspace backup.
+- [x] Exclude emergency contacts and access-planning notes from the portable file and preserve those private fields already on the restoring device.
+- [x] Exclude other accounts, remap only to the restoring account and give a new device empty private fields.
+- [x] Export one `SUPPORT_PREFIX` authority and reuse it in Support and backup code.
+- [x] Update the contact-removal preview so it still states the exact no-backup boundary for contacts after the rest of the Support workspace becomes portable.
+- [x] Prove the two recovery guards red against the former exclusion, then pass 54/54 focused and adjacent workspace-backup, coverage, Support journey and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the build chunk-size warning.
+- [x] Pass 78/78 design-check constituents and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [ ] Aggregate design-system wrappers — `npm`/`npx` are unavailable in this shell; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-workspace recovery slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` and an unread local properties file exist, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
+- [ ] Keep housing and meals separate until their portability, privacy, legacy-key migration and account/term semantics are explicit.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

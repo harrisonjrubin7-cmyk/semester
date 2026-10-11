@@ -552,6 +552,69 @@ describe('the Hub preferences', () => {
   });
 });
 
+describe('the Support workspace', () => {
+  const support = {
+    contacts: [{ id: 'contact-1', name: 'Aunt Maya', phone: '615-555-0142' }],
+    accessNotes: 'Ask about a quiet testing room.',
+    routines: ['A regular bedtime on weeknights'],
+    continuity: { sources: true, backup: true },
+    commute: { travel: 25, buffer: 12 },
+  };
+
+  it('backs up one account without exporting emergency contacts or access notes', () => {
+    storage.setItem(`semester.support.v1:${ACCOUNT}`, JSON.stringify(support));
+    storage.setItem('semester.support.v1:someone-else', JSON.stringify({
+      ...support,
+      contacts: [{ id: 'other-contact', name: 'Other account contact', phone: '555-0100' }],
+    }));
+
+    const backup = workspaceBackup(ACCOUNT, storage);
+    expect(backup.records.map((record) => record.kind)).toEqual(['support']);
+    expect(backup.records[0]?.value).toEqual({
+      contacts: [],
+      accessNotes: '',
+      routines: ['A regular bedtime on weeknights'],
+      continuity: { sources: true, backup: true },
+      commute: { travel: 25, buffer: 12 },
+    });
+    expect(JSON.stringify(backup)).not.toContain('Aunt Maya');
+    expect(JSON.stringify(backup)).not.toContain('quiet testing room');
+    expect(JSON.stringify(backup)).not.toContain('Other account contact');
+  });
+
+  it('restores portable planning to the restoring account and keeps private device details', () => {
+    storage.setItem(`semester.support.v1:${ACCOUNT}`, JSON.stringify(support));
+    const backup = workspaceBackup(ACCOUNT, storage);
+    const fresh = new FakeStorage();
+    fresh.setItem('semester.support.v1:acct-2', JSON.stringify({
+      ...support,
+      contacts: [{ id: 'current-contact', name: 'Keep this contact', phone: '555-0199' }],
+      accessNotes: 'Keep this private note.',
+      routines: [],
+      continuity: {},
+      commute: { travel: 5, buffer: 5 },
+    }));
+
+    restoreWorkspaces(backup, 'acct-2', fresh);
+    expect(JSON.parse(fresh.getItem('semester.support.v1:acct-2')!)).toEqual({
+      contacts: [{ id: 'current-contact', name: 'Keep this contact', phone: '555-0199' }],
+      accessNotes: 'Keep this private note.',
+      routines: ['A regular bedtime on weeknights'],
+      continuity: { sources: true, backup: true },
+      commute: { travel: 25, buffer: 12 },
+    });
+    expect(fresh.getItem(`semester.support.v1:${ACCOUNT}`)).toBeNull();
+
+    const newDevice = new FakeStorage();
+    restoreWorkspaces(backup, 'acct-3', newDevice);
+    expect(JSON.parse(newDevice.getItem('semester.support.v1:acct-3')!)).toMatchObject({
+      contacts: [],
+      accessNotes: '',
+      routines: ['A regular bedtime on weeknights'],
+    });
+  });
+});
+
 /*
  * The study journal, with an entry in it.
  *
