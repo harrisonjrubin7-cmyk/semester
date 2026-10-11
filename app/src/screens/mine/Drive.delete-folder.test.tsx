@@ -19,7 +19,7 @@ const files = vi.hoisted(() => ({
 vi.mock('../../lib/files', () => ({
   TRASH_DAYS: 30,
   addFile: vi.fn(),
-  sweepTrash: vi.fn(async () => undefined),
+  sweepTrash: vi.fn(async () => 0),
   deleteFile: vi.fn(),
   emptyTrash: vi.fn(),
   formatBytes: (size: number) => `${size} bytes`,
