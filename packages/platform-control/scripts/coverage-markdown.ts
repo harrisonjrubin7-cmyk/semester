@@ -5,9 +5,9 @@ type CoverageRow = ReturnType<typeof inceptionCoverage>[number];
 interface EventRow { os: string; event: string; catalog_event: string | null; status: string }
 interface EvidencePack { required: number; present: number; artifacts: Array<{ artifact: string; producer: string | null; status: string; present: boolean }> }
 
-const cell = (value: string | readonly string[]): string => {
+export const cell = (value: string | readonly string[]): string => {
   const text = Array.isArray(value) ? (value.length ? value.join(', ') : '—') : String(value);
-  return text.replace(/\|/g, '\\|');
+  return text.replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
 };
 const yesNo = (ok: boolean, detail: string): string => `${ok ? 'yes' : 'no'} — ${detail}`;
 
