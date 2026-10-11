@@ -90,6 +90,21 @@ def serialize(row) -> dict:
     return {column.name: getattr(row, column.name) for column in row.__table__.columns}
 
 
+def serialize_completion_receipt(receipt: UploadCompletion) -> dict:
+    """Return the durable idempotency receipt without transient outbox state."""
+    transient_fields = {
+        "dispatch_status",
+        "dispatch_claimed_at",
+        "dispatched_at",
+        "updated_at",
+    }
+    return {
+        column.name: getattr(receipt, column.name)
+        for column in receipt.__table__.columns
+        if column.name not in transient_fields
+    }
+
+
 def _citation_label(document: SourceDocument, chunk: SourceChunk) -> str:
     archive_member = (chunk.metadata_json or {}).get("archive_member")
     source_name = (
@@ -323,7 +338,7 @@ def complete_upload(course_id: UUID, payload: UploadComplete, user: User = Depen
         db.refresh(existing)
         return {
             "document": serialize(document),
-            "receipt": serialize(existing),
+            "receipt": serialize_completion_receipt(existing),
             "job": serialize(job),
         }
     try:
@@ -396,7 +411,7 @@ def complete_upload(course_id: UUID, payload: UploadComplete, user: User = Depen
         db.refresh(existing)
         return {
             "document": serialize(document),
-            "receipt": serialize(existing),
+            "receipt": serialize_completion_receipt(existing),
             "job": serialize(job),
         }
     db.refresh(job)
@@ -405,7 +420,7 @@ def complete_upload(course_id: UUID, payload: UploadComplete, user: User = Depen
     db.refresh(receipt)
     return {
         "document": serialize(document),
-        "receipt": serialize(receipt),
+        "receipt": serialize_completion_receipt(receipt),
         "job": serialize(job),
     }
 

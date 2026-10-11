@@ -142,22 +142,26 @@ def recover_expired_jobs() -> dict:
         db.close()
 
     redelivered = 0
+    failed = 0
     for job_id, job_type in jobs:
-        if job_type == "extract":
-            celery.send_task(
-                "extract_document",
-                args=[str(job_id)],
-                task_id=str(job_id),
-            )
-            redelivered += 1
-        elif job_type.startswith(("generate:", "regenerate:")):
-            celery.send_task(
-                "generate_study_asset",
-                args=[str(job_id)],
-                task_id=str(job_id),
-            )
-            redelivered += 1
-    return {"redelivered": redelivered}
+        try:
+            if job_type == "extract":
+                celery.send_task(
+                    "extract_document",
+                    args=[str(job_id)],
+                    task_id=str(job_id),
+                )
+                redelivered += 1
+            elif job_type.startswith(("generate:", "regenerate:")):
+                celery.send_task(
+                    "generate_study_asset",
+                    args=[str(job_id)],
+                    task_id=str(job_id),
+                )
+                redelivered += 1
+        except Exception:
+            failed += 1
+    return {"redelivered": redelivered, "failed": failed}
 
 
 def invalidate_document_assets(db, document: SourceDocument) -> None:
