@@ -29,6 +29,8 @@ import { STUDY_JOURNAL_PREFIX, readJournal } from './studyjournal';
 import { RESET_KEY, keepReflections, readResets, withoutReflections } from './weekly-reset';
 import { RHYTHM_KEY, readRhythm } from './daily-rhythm';
 import { CALM_KEY, keepMemory, readCalm, withoutMemory } from './calm-controls';
+import { readDataProjects } from './toolkit/data';
+import { readToolkit, TOOLKIT_DATA_PREFIX, TOOLKIT_PREFIX } from './toolkit/store';
 
 /**
  * A backup for the device workspaces the main one does not reach.
@@ -194,6 +196,8 @@ const DEFINITIONS: Record<string, Definition> = {
     read: (v) => withoutMemory(readCalm(v)),
     restore: (incoming, existing) => keepMemory(readCalm(incoming), existing),
   },
+  toolkit: { label: 'Toolkit assignments, research and declarations', prefix: TOOLKIT_PREFIX, scope: 'account', read: readToolkit },
+  toolkitData: { label: 'Toolkit data projects', prefix: TOOLKIT_DATA_PREFIX, scope: 'account', read: readDataProjects },
 };
 
 /** Every prefix this backup covers, for the guard in `workspace-backup.coverage.test.ts`. */

@@ -12,7 +12,27 @@ export type Asset = {
   title: string;
   status: string;
   content: Record<string, unknown>;
+  generation_version: number;
   updated_at: string;
+};
+
+export type CitationDetail = { label: string; quote?: string };
+
+export type GuideSection = {
+  heading: string;
+  explanation: string;
+  key_points?: string[];
+  examples?: string[];
+  citation_ids: string[];
+};
+
+export type Flashcard = {
+  id: string;
+  front: string;
+  back: string;
+  difficulty: number;
+  unit?: string | null;
+  citation_ids: string[];
 };
 
 export type Event = {
