@@ -32,7 +32,6 @@ create table if not exists private.privileged_access_review_item (
   grant_id uuid not null,
   subject_sha256 text not null check (subject_sha256 ~ '^[0-9a-f]{64}$'),
   role text not null,
-  capabilities text[] not null check (cardinality(capabilities) > 0),
   scope_kind text not null,
   scope_id text not null,
   provenance text not null,
@@ -49,24 +48,13 @@ create table if not exists private.privileged_access_review_decision (
   id uuid primary key default gen_random_uuid(),
   item_id uuid not null unique references private.privileged_access_review_item(id) on delete restrict,
   decision text not null check (decision in ('retain', 'revoke', 'investigate')),
-  reason_code text not null,
+  reason_code text not null check (reason_code in (
+    'still-required', 'least-privilege-confirmed', 'access-ended', 'unauthorized',
+    'inactive', 'scope-changed', 'mfa-not-current', 'ownership-unknown',
+    'conflict-review', 'activity-review')),
   decided_by_sha256 text not null check (decided_by_sha256 ~ '^[0-9a-f]{64}$'),
   decided_at timestamptz not null default now(),
-  constraint privileged_access_review_decision_reason check (
-    (decision = 'retain' and reason_code in ('still-required', 'least-privilege-confirmed'))
-    or (decision = 'revoke' and reason_code in (
-      'access-ended', 'unauthorized', 'inactive', 'scope-changed', 'mfa-not-current'))
-    or (decision = 'investigate' and reason_code in (
-      'mfa-not-current', 'ownership-unknown', 'conflict-review', 'activity-review'))
-  )
-);
-
-create table if not exists private.privileged_access_review_remediation (
-  decision_id uuid primary key references private.privileged_access_review_decision(id) on delete restrict,
-  grant_id uuid not null,
-  outcome text not null check (outcome = 'revoked-by-review'),
-  applied_by_sha256 text not null check (applied_by_sha256 ~ '^[0-9a-f]{64}$'),
-  applied_at timestamptz not null default now()
+  remediation_applied boolean not null
 );
 
 create table if not exists private.privileged_access_review_investigation_resolution (
@@ -89,13 +77,11 @@ create table if not exists private.privileged_access_review_signoff (
 alter table private.privileged_access_review enable row level security;
 alter table private.privileged_access_review_item enable row level security;
 alter table private.privileged_access_review_decision enable row level security;
-alter table private.privileged_access_review_remediation enable row level security;
 alter table private.privileged_access_review_investigation_resolution enable row level security;
 alter table private.privileged_access_review_signoff enable row level security;
 revoke all on table private.privileged_access_review from public, anon, authenticated, service_role;
 revoke all on table private.privileged_access_review_item from public, anon, authenticated, service_role;
 revoke all on table private.privileged_access_review_decision from public, anon, authenticated, service_role;
-revoke all on table private.privileged_access_review_remediation from public, anon, authenticated, service_role;
 revoke all on table private.privileged_access_review_investigation_resolution from public, anon, authenticated, service_role;
 revoke all on table private.privileged_access_review_signoff from public, anon, authenticated, service_role;
 
@@ -114,9 +100,6 @@ create trigger keep_privileged_access_review_item_immutable before update or del
   for each row execute function private.refuse_privileged_access_review_change();
 drop trigger if exists keep_privileged_access_review_decision_immutable on private.privileged_access_review_decision;
 create trigger keep_privileged_access_review_decision_immutable before update or delete on private.privileged_access_review_decision
-  for each row execute function private.refuse_privileged_access_review_change();
-drop trigger if exists keep_privileged_access_review_remediation_immutable on private.privileged_access_review_remediation;
-create trigger keep_privileged_access_review_remediation_immutable before update or delete on private.privileged_access_review_remediation
   for each row execute function private.refuse_privileged_access_review_change();
 drop trigger if exists keep_privileged_access_review_resolution_immutable on private.privileged_access_review_investigation_resolution;
 create trigger keep_privileged_access_review_resolution_immutable before update or delete on private.privileged_access_review_investigation_resolution
@@ -149,39 +132,37 @@ begin
     where not exists (select 1 from private.privileged_access_review_signoff s where s.review_id = r.id)) then
     raise exception 'Finish the existing open access review before starting another.' using errcode = '55000';
   end if;
-  -- Keep the same lock order as console_act(): append the audit event before
-  -- taking a table lock that can wait on a grant writer.
-  perform private.console_audit_write(me, 'authenticated', null, 'access_review.started', ref,
-    jsonb_build_object('period_start', want_period_start, 'period_end', want_period_end,
-      'next_due', want_next_due), 'access-review:' || ref);
-  lock table public.role_grants in share mode;
-  lock table public.role_capabilities in share mode;
   if (select count(distinct g.subject) from public.role_grants g
       join public.role_capabilities rc on rc.role = g.role and rc.capability = 'access_review:manage'
       where g.scope_kind = 'platform' and g.scope_id = '' and g.revoked_at is null
         and (g.expires_at is null or g.expires_at > now())) < 3 then
     raise exception 'Three independently staffed access-review operators are required.' using errcode = '55000';
   end if;
+  lock table public.role_grants in share mode;
   snapshot_time := clock_timestamp();
   select count(*) into expected from public.role_grants g
-   where g.revoked_at is null and (g.expires_at is null or g.expires_at > snapshot_time)
-     and exists (select 1 from public.role_capabilities rc where rc.role = g.role);
+   where g.role in ('platform_admin', 'support_agent', 'incident_responder', 'moderator',
+     'trust_safety_reviewer', 'trust_safety_senior', 'community_manager',
+     'implementation_manager', 'integration_admin', 'university_admin', 'trust_officer')
+     and g.revoked_at is null and (g.expires_at is null or g.expires_at > snapshot_time);
+  perform private.console_audit_write(me, 'authenticated', null, 'access_review.started', ref,
+    jsonb_build_object('period_start', want_period_start, 'period_end', want_period_end,
+      'next_due', want_next_due, 'item_count', expected), 'access-review:' || ref);
   insert into private.privileged_access_review
     (id, public_id, request_key, period_start, period_end, next_due, snapshot_at, started_by_sha256, item_count)
   values (made, ref, want_request_key, want_period_start, want_period_end, want_next_due,
     snapshot_time, private.role_audit_sha256(me::text), expected);
   insert into private.privileged_access_review_item
-    (review_id, grant_id, subject_sha256, role, capabilities, scope_kind, scope_id,
-      provenance, granted_by_sha256, granted_at, expires_at)
-  select made, g.id, private.role_audit_sha256(g.subject::text), g.role,
-         array(select distinct rc.capability from public.role_capabilities rc
-           where rc.role = g.role order by rc.capability), g.scope_kind,
+    (review_id, grant_id, subject_sha256, role, scope_kind, scope_id, provenance, granted_by_sha256, granted_at, expires_at)
+  select made, g.id, private.role_audit_sha256(g.subject::text), g.role, g.scope_kind,
          g.scope_id, g.provenance,
          case when g.granted_by is null then null else private.role_audit_sha256(g.granted_by::text) end,
          g.granted_at, g.expires_at
     from public.role_grants g
-   where g.revoked_at is null and (g.expires_at is null or g.expires_at > snapshot_time)
-     and exists (select 1 from public.role_capabilities rc where rc.role = g.role);
+   where g.role in ('platform_admin', 'support_agent', 'incident_responder', 'moderator',
+     'trust_safety_reviewer', 'trust_safety_senior', 'community_manager',
+     'implementation_manager', 'integration_admin', 'university_admin', 'trust_officer')
+     and g.revoked_at is null and (g.expires_at is null or g.expires_at > snapshot_time);
   get diagnostics actual = row_count;
   if actual <> expected then
     raise exception 'Role grants changed during the snapshot; retry the review.' using errcode = '40001';
@@ -194,23 +175,13 @@ create or replace function public.decide_privileged_access_review_item(
 ) returns void language plpgsql volatile security definer set search_path = '' as $$
 declare
   me uuid := auth.uid(); actor_hash text; item private.privileged_access_review_item;
-  review private.privileged_access_review; grant_row public.role_grants;
-  grant_current boolean; decision_id uuid;
+  review private.privileged_access_review; applied boolean := false;
 begin
   if me is null or not private.has_capability('access_review:manage', 'platform', '') then
     raise exception 'access_review:manage at platform scope is required.' using errcode = '42501';
   end if;
   perform private.assert_fresh_mfa(); actor_hash := private.role_audit_sha256(me::text);
   if want_decision not in ('retain', 'revoke', 'investigate') then raise exception 'Invalid review decision.' using errcode = '22023'; end if;
-  if not (
-    (want_decision = 'retain' and want_reason_code in ('still-required', 'least-privilege-confirmed'))
-    or (want_decision = 'revoke' and want_reason_code in (
-      'access-ended', 'unauthorized', 'inactive', 'scope-changed', 'mfa-not-current'))
-    or (want_decision = 'investigate' and want_reason_code in (
-      'mfa-not-current', 'ownership-unknown', 'conflict-review', 'activity-review'))
-  ) then
-    raise exception 'The reason code is not valid for that decision.' using errcode = '22023';
-  end if;
   select i.* into item from private.privileged_access_review_item i where i.public_id = want_item;
   if not found then raise exception 'No such review item.' using errcode = '22023'; end if;
   select r.* into review from private.privileged_access_review r where r.id = item.review_id;
@@ -221,29 +192,20 @@ begin
      or exists (select 1 from private.privileged_access_review_decision d where d.item_id = item.id) then
     raise exception 'This review item is already closed.' using errcode = '23505';
   end if;
-  -- Match console_act(): audit before locking the grant row. The decision and
-  -- any revoke remediation then commit atomically with that row lock held.
+  if not exists (select 1 from public.role_grants g where g.id = item.grant_id
+      and g.role = item.role and g.scope_kind = item.scope_kind and g.scope_id = item.scope_id
+      and g.provenance = item.provenance and g.granted_at = item.granted_at
+      and g.expires_at is not distinct from item.expires_at and g.revoked_at is null) then
+    raise exception 'The grant changed after snapshot; investigate it in a new review.' using errcode = '40001';
+  end if;
   perform private.console_audit_write(me, 'authenticated', null, 'access_review.item_' || want_decision,
     item.public_id, jsonb_build_object('review', review.public_id, 'reason_code', want_reason_code),
     'access-review:' || review.public_id);
-  select g.* into grant_row from public.role_grants g where g.id = item.grant_id for update;
-  grant_current := found and grant_row.role = item.role
-    and grant_row.scope_kind = item.scope_kind and grant_row.scope_id = item.scope_id
-    and grant_row.provenance = item.provenance and grant_row.granted_at = item.granted_at
-    and grant_row.expires_at is not distinct from item.expires_at and grant_row.revoked_at is null;
-  if not grant_current and want_decision <> 'investigate' then
-    raise exception 'A changed grant can only be closed as investigate.' using errcode = '40001';
-  end if;
+  -- A revoke decision records required remediation. The sole role-grant writer
+  -- remains console_act(); signoff verifies that workflow closed the grant.
   insert into private.privileged_access_review_decision
-    (item_id, decision, reason_code, decided_by_sha256)
-  values (item.id, want_decision, want_reason_code, actor_hash)
-  returning id into decision_id;
-  if want_decision = 'revoke' then
-    update public.role_grants set revoked_at = clock_timestamp() where id = item.grant_id;
-    insert into private.privileged_access_review_remediation
-      (decision_id, grant_id, outcome, applied_by_sha256)
-    values (decision_id, item.grant_id, 'revoked-by-review', actor_hash);
-  end if;
+    (item_id, decision, reason_code, decided_by_sha256, remediation_applied)
+  values (item.id, want_decision, want_reason_code, actor_hash, applied);
 end $$;
 
 create or replace function public.resolve_privileged_access_review_investigation(
@@ -295,18 +257,9 @@ begin
      or exists (select 1 from private.privileged_access_review_investigation_resolution x
        join private.privileged_access_review_decision d on d.id = x.decision_id
        join private.privileged_access_review_item i on i.id = d.item_id
-       where i.review_id = review.id and x.resolved_by_sha256 = actor_hash)
-     or exists (select 1 from private.privileged_access_review_remediation x
-       join private.privileged_access_review_decision d on d.id = x.decision_id
-       join private.privileged_access_review_item i on i.id = d.item_id
-       where i.review_id = review.id and x.applied_by_sha256 = actor_hash) then
+       where i.review_id = review.id and x.resolved_by_sha256 = actor_hash) then
     raise exception 'An independent operator who neither started nor worked the review must sign it.' using errcode = '42501';
   end if;
-  -- Audit first, then prevent a console regrant from racing the validation and
-  -- signoff. A failed signoff rolls this audit insert back with the transaction.
-  perform private.console_audit_write(me, 'authenticated', null, 'access_review.signed', review.public_id,
-    jsonb_build_object('next_due', review.next_due), 'access-review:' || review.public_id);
-  lock table public.role_grants in share mode;
   select count(*), count(*) filter (where d.decision = 'retain'),
          count(*) filter (where d.decision = 'revoke'), count(*) filter (where d.decision = 'investigate')
     into decided_n, keep_n, revoke_n, investigate_n
@@ -322,15 +275,16 @@ begin
   end if;
   if exists (select 1 from private.privileged_access_review_decision d
       join private.privileged_access_review_item i on i.id = d.item_id
-      left join private.privileged_access_review_remediation x on x.decision_id = d.id
-      left join public.role_grants g on g.id = i.grant_id
+      join public.role_grants g on g.id = i.grant_id
       where i.review_id = review.id and d.decision = 'revoke'
-        and (x.decision_id is null or g.id is null or g.role <> i.role
-          or g.scope_kind <> i.scope_kind or g.scope_id <> i.scope_id
+        and (g.role <> i.role or g.scope_kind <> i.scope_kind or g.scope_id <> i.scope_id
           or g.provenance <> i.provenance or g.granted_at <> i.granted_at
           or g.expires_at is distinct from i.expires_at or g.revoked_at is null)) then
-    raise exception 'Every revoke decision must have an applied remediation and remain revoked at signoff.' using errcode = '23514';
+    raise exception 'Every revoke decision must be remediated through the approved grant workflow before signoff.' using errcode = '23514';
   end if;
+  perform private.console_audit_write(me, 'authenticated', null, 'access_review.signed', review.public_id,
+    jsonb_build_object('retained', keep_n, 'revoked', revoke_n, 'investigating', investigate_n,
+      'next_due', review.next_due), 'access-review:' || review.public_id);
   insert into private.privileged_access_review_signoff
     (review_id, signed_by_sha256, retained, revoked, investigating)
   values (review.id, actor_hash, keep_n, revoke_n, investigate_n);
@@ -338,11 +292,9 @@ end $$;
 
 create or replace function public.privileged_access_review(want_review text)
 returns table (review_ref text, period_start date, period_end date, next_due date,
-  snapshot_at timestamptz, started_by_sha256 text, item_ref text, subject_sha256 text, role text,
-  capabilities text[], scope_kind text,
+  snapshot_at timestamptz, started_by_sha256 text, item_ref text, subject_sha256 text, role text, scope_kind text,
   scope_id text, provenance text, granted_by_sha256 text, granted_at timestamptz, expires_at timestamptz,
   decision text, reason_code text, decided_by_sha256 text, remediation_applied boolean, decided_at timestamptz,
-  remediation_outcome text, remediated_by_sha256 text, remediated_at timestamptz,
   investigation_resolution text, resolved_by_sha256 text, resolved_at timestamptz,
   signed_by_sha256 text, signed_at timestamptz)
 language plpgsql volatile security definer set search_path = '' as $$
@@ -357,15 +309,12 @@ begin
   perform private.console_audit_write(me, 'authenticated', null, 'access_review.read', review.public_id,
     jsonb_build_object('item_count', review.item_count), 'access-review-read:' || review.public_id);
   return query select review.public_id, review.period_start, review.period_end, review.next_due,
-    review.snapshot_at, review.started_by_sha256, i.public_id, i.subject_sha256, i.role, i.capabilities,
-    i.scope_kind, i.scope_id,
+    review.snapshot_at, review.started_by_sha256, i.public_id, i.subject_sha256, i.role, i.scope_kind, i.scope_id,
     i.provenance, i.granted_by_sha256, i.granted_at, i.expires_at, d.decision, d.reason_code,
-    d.decided_by_sha256, (m.decision_id is not null), d.decided_at, m.outcome,
-    m.applied_by_sha256, m.applied_at, x.resolution_code,
+    d.decided_by_sha256, d.remediation_applied, d.decided_at, x.resolution_code,
     x.resolved_by_sha256, x.resolved_at, s.signed_by_sha256, s.signed_at
   from private.privileged_access_review_item i
   left join private.privileged_access_review_decision d on d.item_id = i.id
-  left join private.privileged_access_review_remediation m on m.decision_id = d.id
   left join private.privileged_access_review_investigation_resolution x on x.decision_id = d.id
   left join private.privileged_access_review_signoff s on s.review_id = i.review_id
   where i.review_id = review.id order by i.role, i.scope_kind, i.scope_id, i.public_id;

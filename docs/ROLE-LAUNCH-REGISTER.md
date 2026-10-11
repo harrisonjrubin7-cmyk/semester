@@ -301,7 +301,7 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `data_steward` | `data_request:handle` | — | `privileged-access-review.check.sql` |
 | `data_steward` | `console:operate` | — | `capabilities.check.sql`<br>`console-control-plane.check.sql`<br>`projection-foundation.check.sql` |
 | `portfolio_council` | `governance:decide` | — | — |
-| `platform_admin` | `report:read` | `app/src/screens/Moderation.tsx` | `capabilities.check.sql`<br>`my-capabilities.check.sql`<br>`privileged-mfa.check.sql`<br>`reports.check.sql` |
+| `platform_admin` | `report:read` | `app/src/screens/Moderation.tsx` | `capabilities.check.sql`<br>`my-capabilities.check.sql`<br>`privileged-access-review.check.sql`<br>`privileged-mfa.check.sql`<br>`reports.check.sql` |
 | `platform_admin` | `moderation:action` | `app/src/screens/Moderation.tsx` | `capabilities.check.sql`<br>`reports.check.sql` |
 | `platform_admin` | `platform:configure` | — | `capabilities.check.sql`<br>`institutional-foundation.check.sql`<br>`my-capabilities.check.sql`<br>`privileged-mfa.check.sql` |
 | `platform_admin` | `beta:manage` | — | `capabilities.check.sql` |
@@ -317,7 +317,7 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `incident_responder` | `incident:communicate` | — | — |
 | `incident_responder` | `console:operate` | — | `capabilities.check.sql`<br>`console-control-plane.check.sql`<br>`projection-foundation.check.sql` |
 | `incident_responder` | `breakglass:request` | — | `capabilities.check.sql`<br>`console-control-plane.check.sql` |
-| `moderator` | `report:read` | `app/src/screens/Moderation.tsx` | `capabilities.check.sql`<br>`my-capabilities.check.sql`<br>`privileged-mfa.check.sql`<br>`reports.check.sql` |
+| `moderator` | `report:read` | `app/src/screens/Moderation.tsx` | `capabilities.check.sql`<br>`my-capabilities.check.sql`<br>`privileged-access-review.check.sql`<br>`privileged-mfa.check.sql`<br>`reports.check.sql` |
 | `moderator` | `moderation:action` | `app/src/screens/Moderation.tsx` | `capabilities.check.sql`<br>`reports.check.sql` |
 | `moderator` | `review:moderate` | — | — |
 | `moderator` | `opportunity:moderate` | `app/src/components/ListingDesk.tsx` | — |

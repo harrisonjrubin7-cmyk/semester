@@ -96,8 +96,9 @@ begin
   perform pg_temp.must('a reissued grant cannot be decided from a stale snapshot', pg_temp.refused(starter, format(
     'select public.decide_privileged_access_review_item(%L,%L,%L)', signer_item, 'retain', 'still-required')));
   update public.role_grants set granted_at = signer_granted_at where subject = signer and role = 'trust_officer';
-  update public.role_grants set granted_at = clock_timestamp()
-   where subject = steward and role = 'data_steward';
+  insert into public.role_capabilities (role, capability) values ('data_steward', 'report:read');
+  perform pg_temp.must('a capability change makes the snapshot stale for retain', pg_temp.refused(starter, format(
+    'select public.decide_privileged_access_review_item(%L,%L,%L)', steward_item, 'retain', 'still-required')));
 
   perform pg_temp.become(starter);
   perform public.decide_privileged_access_review_item(reviewer_item, 'retain', 'still-required');
@@ -114,6 +115,9 @@ begin
 
   perform pg_temp.must('the reviewed revoke atomically closed the live role grant',
     (select revoked_at is not null from public.role_grants where subject = target and role = 'university_admin'));
+  delete from auth.users where id = target;
+  perform pg_temp.must('account deletion may remove an already-remediated grant',
+    not exists (select 1 from public.role_grants where subject = target and role = 'university_admin'));
   perform pg_temp.become(starter);
   perform public.resolve_privileged_access_review_investigation(investigate_item, 'remediated');
   perform public.resolve_privileged_access_review_investigation(steward_item, 'remediated');
@@ -122,6 +126,15 @@ begin
     'select public.complete_privileged_access_review(%L)', review_ref)));
   perform pg_temp.must('an item reviewer cannot sign the review', pg_temp.refused(reviewer, format(
     'select public.complete_privileged_access_review(%L)', review_ref)));
+  update public.role_grants set granted_at = clock_timestamp()
+   where subject = signer and role = 'trust_officer';
+  perform pg_temp.must('signoff detects a retained grant changed after its decision', pg_temp.refused(signer,
+    format('select public.complete_privileged_access_review(%L)', review_ref)));
+  perform pg_temp.must('the retain decision maker cannot resolve its later change', pg_temp.refused(reviewer,
+    format('select public.resolve_privileged_access_review_post_decision_change(%L)', signer_item)));
+  perform pg_temp.become(starter);
+  perform public.resolve_privileged_access_review_post_decision_change(signer_item);
+  reset role;
   perform pg_temp.become(signer);
   perform public.complete_privileged_access_review(review_ref);
   select count(*), count(*) filter (where decision = 'retain'),
