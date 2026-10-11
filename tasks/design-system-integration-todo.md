@@ -1936,6 +1936,8 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove account selection, private-field redaction and restore preservation red against the former exclusion, then pass 89/89 focused and adjacent backup/privacy/journey tests.
 - [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the build chunk-size warning.
 - [x] Pass 147/147 exact combined design contracts and 96/96 exact report contracts; retain zero audit violations, 86 existing audit warnings and the existing CSS ledger.
+- [x] Commit the coherent slice as `19a7374c8`, merge final upstream `ccf2d45ff` cleanly as `d9dd47eb6`, then pass TypeScript and university gateway typecheck on the combined head.
+- [ ] Post-merge focused rerun — interrupted because a concurrent full-suite process held the shared Vitest worker pool; the pre-merge 89/89 focused result remains the claimed evidence.
 - [ ] Aggregate design-system wrappers — `design-system:check` hardcodes unavailable `npm`; the report writes then exits after invoking unavailable `npx`. Exact constituents pass, but no aggregate-wrapper pass is claimed.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded account-workspace recovery slice; no full-suite result is claimed.
 - [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file present but unread; no target, scan, finding result or security pass exists.
