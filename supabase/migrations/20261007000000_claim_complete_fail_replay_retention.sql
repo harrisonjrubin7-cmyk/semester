@@ -22,6 +22,10 @@ check (outcome in ('processing', 'processed', 'skipped', 'failed'));
 -- Claim an event and register the consumer. Returns the receipt row. If already
 -- claimed by this consumer, returns the existing receipt (idempotent via
 -- primary key). If the event is not pending, returns null.
+--
+-- Uses FOR UPDATE SKIP LOCKED to prevent race conditions: if another consumer
+-- is simultaneously claiming the same event, this acquires a lease on the event
+-- row and blocks competing claims. SKIP LOCKED avoids deadlock on high contention.
 create or replace function private.claim_event(
   want_consumer text,
   want_event_id uuid,
@@ -41,14 +45,16 @@ as $$
 declare
   event_pending boolean;
 begin
-  -- Validate event is pending and exists.
+  -- Validate event is pending and exists, acquiring a lease (FOR UPDATE SKIP LOCKED)
+  -- to prevent concurrent claims of the same event.
   select (published_at is null and dead_lettered_at is null)
     into event_pending
     from private.domain_outbox_events
-   where id = want_event_id;
+   where id = want_event_id
+   for update skip locked;
 
   if event_pending is null then
-    -- Event does not exist.
+    -- Event does not exist or is locked by another claim.
     return;
   elsif event_pending is false then
     -- Event is already published or dead-lettered.
@@ -93,7 +99,7 @@ begin
      and event_id = want_event_id
      and outcome = 'processing';
 
-  rows_affected := found::integer;
+  get diagnostics rows_affected = row_count;
 
   if rows_affected = 0 then
     -- Receipt not found or not in 'processing' state.
@@ -130,7 +136,7 @@ begin
      and event_id = want_event_id
      and outcome = 'processing';
 
-  rows_affected := found::integer;
+  get diagnostics rows_affected = row_count;
 
   if rows_affected = 0 then
     -- Receipt not found or not in 'processing' state.
@@ -212,12 +218,17 @@ set search_path = ''
 as $$
 declare
   cutoff_time timestamptz;
-  deleted_count integer;
+  deleted_count integer := 0;
   age_days_to_use integer;
 begin
   -- Validate retention class.
   if want_retention_class not in ('operational', 'student_record', 'audit', 'commercial') then
     raise exception 'Invalid retention_class: %', want_retention_class using errcode = '22023';
+  end if;
+
+  -- Validate age_days if provided.
+  if want_age_days is not null and want_age_days < 0 then
+    raise exception 'Invalid age_days: must be non-negative, got %', want_age_days using errcode = '22023';
   end if;
 
   -- Determine cutoff age if not specified.
@@ -240,22 +251,24 @@ begin
   -- Calculate cutoff time.
   cutoff_time := now() - (age_days_to_use || ' days')::interval;
 
-  -- Delete receipts for events to be deleted.
+  -- Delete receipts for events to be deleted (only for successfully processed/skipped, not failed).
   delete from private.domain_event_receipts
    where event_id in (
      select id from private.domain_outbox_events
       where retention_class = want_retention_class
         and occurred_at < cutoff_time
-        and (published_at is not null or dead_lettered_at is not null)
-   );
+        and published_at is not null
+   )
+   and outcome in ('processed', 'skipped');
 
-  -- Delete the events themselves.
+  -- Delete the events themselves (only published ones without dead-letter).
   delete from private.domain_outbox_events
    where retention_class = want_retention_class
      and occurred_at < cutoff_time
-     and (published_at is not null or dead_lettered_at is not null);
+     and published_at is not null
+     and dead_lettered_at is null;
 
-  deleted_count := found::integer;
+  deleted_count := ROW_COUNT;
 
   return deleted_count;
 end $$;
