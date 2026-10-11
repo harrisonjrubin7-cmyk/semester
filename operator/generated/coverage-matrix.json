@@ -980,15 +980,14 @@
       "permissions": "owner=platform-engineering",
       "integrationDependencies": [],
       "acceptanceCriteria": "control.tenant-isolation",
-      "implementationStatus": "in_progress",
+      "implementationStatus": "verified",
       "verificationEvidence": [
         "package.json",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "docs/operating-model/evidence/P0-001-repository-ci.md"
       ],
       "deploymentStatus": "not_deployed",
-      "blockers": [
-        "Hosted completion and retained immutable artifacts are external run evidence, not established by the workflow definition alone."
-      ],
+      "blockers": [],
       "tasks": []
     },
     {
@@ -1485,10 +1484,10 @@
   "summary": {
     "proposed": 0,
     "specified": 15,
-    "in_progress": 12,
+    "in_progress": 11,
     "blocked": 23,
     "implemented": 9,
-    "verified": 1,
+    "verified": 2,
     "deployed": 0
   }
 }

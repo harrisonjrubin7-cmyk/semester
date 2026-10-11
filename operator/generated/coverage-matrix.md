@@ -8,10 +8,10 @@ Every record in the platform-control registry, once, with its status derived fro
 | --- | ---: |
 | proposed | 0 |
 | specified | 15 |
-| in_progress | 12 |
+| in_progress | 11 |
 | blocked | 23 |
 | implemented | 9 |
-| verified | 1 |
+| verified | 2 |
 | deployed | 0 |
 
 | Identifier | Kind | System | Workspace | Module | User role | Screen or workflow | Required behavior | Data dependencies | Permissions | Integration dependencies | Acceptance criteria | Implementation status | Verification evidence | Deployment status | Blockers | Operator tasks |
@@ -56,7 +56,7 @@ Every record in the platform-control registry, once, with its status derived fro
 | document.document.registration-readiness-workflow | document | semester |  |  |  |  | Registration readiness workflow reference |  |  |  |  | verified | docs/reference/registration-readiness-workflow.md | not_deployed |  |  |
 | tenant.tenant.synthetic | tenant | semester |  |  |  |  | Synthetic validation tenant |  |  |  |  | specified | packages/platform/src/testing/memory.ts | not_deployed |  |  |
 | workflow.registration.readiness.evaluation | workflow | semester |  |  |  | registration.readiness.evaluation | Registration readiness evaluation: requested → continuous |  | escalation=operations |  | idempotency=Every command requires an idempotency key and replays the recorded receipt.; retry=Ambiguous results enter reconciliation before a new evaluation generation. Expired evaluator claims first record unknown, then enter reconciliation. | implemented | packages/institution/src/readiness-workflow.ts<br>packages/institution/src/readiness-workflow.test.ts | not_deployed |  |  |
-| P0-001 | backlog | semester |  |  |  |  | Repository baseline and CI |  | owner=platform-engineering |  | control.tenant-isolation | in_progress | package.json<br>.github/workflows/ci.yml | not_deployed | Hosted completion and retained immutable artifacts are external run evidence, not established by the workflow definition alone. |  |
+| P0-001 | backlog | semester |  |  |  |  | Repository baseline and CI |  | owner=platform-engineering |  | control.tenant-isolation | verified | package.json<br>.github/workflows/ci.yml<br>docs/operating-model/evidence/P0-001-repository-ci.md | not_deployed |  |  |
 | P0-002 | backlog | semester |  |  |  |  | Shared tokens and component package | P0-001 | owner=design-systems |  |  | in_progress | app/src/styles/tokens.css<br>app/src/components | not_deployed | The complete catalog has not been registered in platform control. |  |
 | P0-003 | backlog | semester |  |  |  |  | Tenants, memberships, role grants, and workspace context | P0-001 | owner=platform-security |  | identity, authorization | in_progress | packages/platform/src/tenancy/context.ts<br>packages/platform/src/tenancy/tenancy.test.ts | not_deployed | Target-environment and named-tenant verification remain open. |  |
 | P0-004 | backlog | semester |  |  |  |  | RLS test harness and tenant-isolation gate | P0-003 | owner=platform-security |  | control.tenant-isolation | in_progress | packages/platform/src/isolation/isolation.test.ts<br>supabase | not_deployed | Hosted database isolation evidence remains open. |  |
