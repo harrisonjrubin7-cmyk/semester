@@ -11,14 +11,14 @@
 | Transactional outbox table | `private.domain_outbox_events` (`20260928320000_audit_correlation_and_outbox.sql`): event type and version, tenant, correlation and causation ids, idempotency key (unique per aggregate), data classification, retention class, `published_at`, `publish_attempts`, `dead_lettered_at`, a partial index on pending rows | Built; service-role only |
 | Consumer receipts | `private.domain_event_receipts`, primary key (consumer, event id), outcomes processed / skipped / failed | Built; service-role only |
 | Event contract in code | `packages/institution/src/events.ts` (envelope, catalog, `drainOutbox`, `processOnce`, `MemoryOutbox`); `docs/architecture/0008-event-envelope-and-outbox.md` | Built; the publisher loop runs against an in-memory store in tests |
-| Producers | Three migrations write events: `20261004123000_productivity_commands.sql`, `20261004180000_productivity_reads.sql`, `20261004191000_productivity_task_carries_the_apps_task.sql` (productivity commands only) | Built |
-| Integration dead-letter and replay | `integration_dead_letter_events`, `integration_request_replay` (`20260927200000_integration_hardening.sql`) | Built, for integrations only |
-| Live contents (read-only query, 6 Oct) | `domain_outbox_events` 0 rows, 0 pending, 0 parked; `domain_event_receipts` 0 rows | **The outbox has never carried an event in production** |
+| Producers | One producer, `private.productivity_commit(...)`, writes events; it is redefined with `create or replace` by three migrations (`20261004123000_productivity_commands.sql`, `20261004180000_productivity_reads.sql`, `20261004191000_productivity_task_carries_the_apps_task.sql` ), so only the last definition is live (productivity commands only) | Built |
+| Integration dead-letter and replay | `integration_dead_letter_events`, `integration_request_replay` (`20260927170000_integration_control_plane.sql`; `20260927200000_integration_hardening.sql` adds retention and health over the dead-letter table but does not define the replay RPC) | Built, for integrations only |
+| Live contents (read-only query, 6 Oct) | `domain_outbox_events` 0 rows, 0 pending, 0 parked; `domain_event_receipts` 0 rows | **The outbox was empty in production on 6 Oct** (a zero-row count shows current contents only; rows could have been removed earlier, since `service_role` can delete and rows cascade with a school, so "never carried an event" is not established) |
 | Live console reads | `console_command_center`, `console_figures`, `console_customers`, `console_audit_read`, … compute from tables when called | Built; no freshness or lag figure beyond what each returns |
 
 ## 2. What is not there (searched; "not found" is a grep, not a proof)
 
-- A projection worker or any consumer of the outbox in SQL, the gateway or an Edge Function. `ADR 0008` says as much: "no producer writes to the outbox yet" (three now do).
+- A projection worker or any consumer of the outbox in SQL, the gateway or an Edge Function. `ADR 0008` says as much: "no producer writes to the outbox yet" (one productivity producer does, revised by three migrations).
 - A Postgres-backed `OutboxStore` for `drainOutbox`; the loop is exercised only against `MemoryOutbox` and the productivity repository in tests.
 - Projection watermarks, a read-model registry or versioning, a rebuild path, a replay path for the domain outbox (the column exists; nothing offers a parked row again).
 - Any of the 17 `ops_*` read contracts by name. Equivalents are partial (see `SEMESTER_GAP_AND_STATUS_REGISTER.md`).
@@ -54,20 +54,20 @@ Tested the way the last slice was: a migration written and run on a throwaway Po
 
 ## 6. Not done by this page
 
-This page wrote no migration, function or test; §7 records the slice that followed. The ADR's "no producer writes yet" sentence is stale (three producers do); it is left for whoever owns that ADR. The 17 contracts, a worker, and any producer are untouched.
+This page wrote no migration, function or test; §7 records the slice that followed. The ADR's "no producer writes yet" sentence is stale (one productivity producer does); it is left for whoever owns that ADR. The 17 contracts, a worker, and any producer are untouched.
 
 ## 7. Outcome: the registry slice was built, then withdrawn
 
-The owner chose option C and a first slice was built and tested on a throwaway PostgreSQL 17: a service-only registry of the operations read contracts and a `console:operate`-gated `ops_projection_dashboard()` over it. **It was never merged and nothing was applied to any database.** This pull request is documentation only.
+The owner chose option C and a first slice was built and tested on a throwaway PostgreSQL 17: a service-only registry of the operations read contracts and a `console:operate`-gated `ops_projection_dashboard()` over it. **It was never merged, and it was never applied to any connected, persistent or production database;** the only database it ran against was a throwaway PostgreSQL 17 instance used for testing. This pull request is documentation only.
 
 Why it was withdrawn:
 
-- **The projection side landed first.** While the slice was open, main gained `20261006130000_projection_foundation.sql` (a different `private.read_model_registry`, keyed by name and version with a required freshness SLO, plus watermark, invalidation and rebuild tables), then a projector worker, outbox operations and a scoped freshness read (`20261008210000`, `20261008190500`, `20261008233000`). Main's design (`docs/ops/CQRS_READ_MODEL_ARCHITECTURE.md`, `PROJECTION_AND_CACHE_POLICY.md`) defines `ops_projection_dashboard` as a per-projection view of status, version, lag and watermarks. The withdrawn slice used the same name for a different contract.
+- **The projection side landed first.** While the slice was open, main gained `20261006130000_projection_foundation.sql` (a different `private.read_model_registry`, keyed by name and version with a required freshness SLO, plus watermark, invalidation and rebuild tables), then a projector worker, outbox operations and a scoped freshness read (`20261008210000`, `20261008190500`, `20261008233000`). Main's design (`docs/ops/CQRS_READ_MODEL_ARCHITECTURE.md`, `PROJECTION_AND_CACHE_POLICY.md`) defines `ops_projection_dashboard` as a per-projection operability view: status, version, lag and watermark, plus outbox counts and dead letters (`CQRS_READ_MODEL_ARCHITECTURE.md`) and the last error, events behind, last rebuild and parity (`PROJECTION_AND_CACHE_POLICY.md`). The withdrawn slice used the same name for a different contract.
 - **Three review findings were correct** (Codex, on the pull request): the migration version sorted before versions already applied in production, so a production push would have been refused; the registry row for `console_integration_health` omitted `integration:view`, which the function requires, and the completeness check was one-way so it could not notice; and returning `now()` as `as_of` for every live read claimed a freshness nothing measured.
 
 What a later attempt should keep from it: a live read is not a projection and should not be forced into the projection registry; a null staleness budget must read as "no budget set", never as fresh; a registry that restates a function's gate needs a check in both directions (nothing extra, nothing missing); and a new migration must sort after the newest one on main.
 
-The real `ops_projection_dashboard` belongs on main's watermark tables. It needs its own migration and the owner's explicit confirmation before it is merged, since merging applies it to the connected production project (see `D-1324`).
+The real `ops_projection_dashboard` belongs on main's watermark tables and must carry that full operability contract (watermark and lag, outbox counts, dead letters, last error, events behind, last rebuild, parity), not a subset. It needs its own migration and the owner's explicit confirmation before it is merged, since merging applies it to the connected production project (see `D-1324`).
 
 ## 8. Not done by this page
 
