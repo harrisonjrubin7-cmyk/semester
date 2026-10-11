@@ -2046,6 +2046,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove both regression assertions red against the former first-press removal, then pass 100/100 focused and adjacent graduation, cost, device-library, backup, preview/modal and root-lifecycle tests.
 - [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the existing build chunk-size warning.
 - [x] Pass 9/9 token export, 69/69 design contracts and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [x] Commit the coherent production/test/control slice locally as `633bfbfcb`; repeat mandatory post-commit HawkScan preflight for the exact SHA and retain the DAST gate as blocked.
 - [ ] Aggregate design-system check — its hardcoded `npm` launcher is unavailable; exact constituents pass, but no aggregate-wrapper pass is claimed.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace consequence slice; no full-suite result is claimed.
 - [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
