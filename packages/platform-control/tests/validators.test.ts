@@ -46,6 +46,8 @@ test('the P0 board is complete, ordered, and remains fail-closed at launch', asy
   const snapshot = await loadRegistry();
   assert.equal(snapshot.backlog.length, 20);
   assert.deepEqual(snapshot.backlog.map(({ id }) => id), Array.from({ length: 20 }, (_, index) => `P0-${String(index + 1).padStart(3, '0')}`));
+  assert.equal(snapshot.backlog[0]?.state, 'verified');
+  assert.equal(snapshot.backlog[0]?.blockers.length, 0);
   assert.equal(snapshot.backlog.at(-1)?.state, 'blocked');
   assert.ok(snapshot.backlog.at(-1)?.blockers.some((blocker) => blocker.includes('Named-institution')));
 });
@@ -53,8 +55,8 @@ test('the P0 board is complete, ordered, and remains fail-closed at launch', asy
 test('the execution plan distinguishes executable work from sequencing debt and dependency waits', async () => {
   const snapshot = await loadRegistry();
   const plan = buildExecutionPlan(snapshot.backlog);
-  assert.equal(plan.find(({ id }) => id === 'P0-001')?.execution_status, 'active');
-  assert.equal(plan.find(({ id }) => id === 'P0-002')?.execution_status, 'sequencing_debt');
+  assert.equal(plan.find(({ id }) => id === 'P0-001')?.execution_status, 'verified');
+  assert.equal(plan.find(({ id }) => id === 'P0-002')?.execution_status, 'active');
   assert.deepEqual(plan.find(({ id }) => id === 'P0-012')?.open_dependencies, ['P0-010', 'P0-011']);
   assert.equal(plan.find(({ id }) => id === 'P0-012')?.execution_status, 'waiting');
   assert.equal(plan.find(({ id }) => id === 'P0-020')?.execution_status, 'blocked');
@@ -62,8 +64,16 @@ test('the execution plan distinguishes executable work from sequencing debt and 
 
 test('a verified backlog item cannot depend on unfinished work', async () => {
   const snapshot = await loadRegistry();
+  snapshot.backlog[0]!.state = 'in_progress';
   snapshot.backlog[1]!.state = 'verified';
   snapshot.backlog[1]!.evidence = ['package.json'];
   const issues = validateBacklog(snapshot);
   assert.ok(issues.some(({ code, path }) => code === 'verified_with_open_dependency' && path === 'backlog.P0-002.depends_on'));
+});
+
+test('verified backlog work cannot retain an open blocker', async () => {
+  const snapshot = await loadRegistry();
+  snapshot.backlog[0]!.blockers = ['This work is not actually complete.'];
+  const issues = validateBacklog(snapshot);
+  assert.ok(issues.some(({ code, path }) => code === 'verified_with_blockers' && path === 'backlog.P0-001'));
 });

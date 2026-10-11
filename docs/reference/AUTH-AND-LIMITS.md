@@ -328,7 +328,7 @@ Read-only mode lets an operator freeze writes for maintenance while reads go on.
 
 Reconcile stays open on purpose. It does not act at the institution; it asks what already happened to an action whose outcome is unknown. Refusing it would leave that person's action stuck at `uncertain` for the whole window.
 
-Read-only mode is wired only into `start.ts`. It reads `SEMESTER_READ_ONLY` on every request, accepts `on` in any letter case with surrounding spaces removed, and needs no restart to end. The Vercel runtime does not read `SEMESTER_READ_ONLY`, so on that entry point the variable has no effect. The test holds this; if the runtime is wired later, update this page and [`FEATURE-FLAG-REGISTRY.md`](../FEATURE-FLAG-REGISTRY.md), which currently names only `start.ts`.
+Both `start.ts` and the Vercel runtime read `SEMESTER_READ_ONLY` through a callback on every request. They accept `on` in any letter case with surrounding spaces removed; any other value turns the gateway control off. The callback does not cache the value. Changing a hosted Vercel environment variable can still require a redeploy or process restart before that runtime's environment object receives the new value.
 
 <!-- example:read-only-prepare -->
 **Request**
@@ -444,6 +444,6 @@ Names only. Values are secrets or deployment choices and never belong in the rep
 | `SEMESTER_JOURNAL_PATH` | `start.ts` | SQLite journal file, default `work/university/private/actions.sqlite`. |
 | `SEMESTER_SANDBOX_INSTITUTION` | `start.ts` | `1` installs the sandbox adapters. |
 | `SEMESTER_SANDBOX_PATH` | `start.ts` | Sandbox SQLite file, default `work/university/private/sandbox.sqlite`. |
-| `SEMESTER_READ_ONLY` | `start.ts` | `on` turns read-only mode on ([above](#read-only-mode)). |
+| `SEMESTER_READ_ONLY` | Both | `on` turns read-only mode on ([above](#read-only-mode)); each request re-reads the runtime environment object. |
 
 The app's own browser setting for the gateway address, `VITE_UNIVERSITY_GATEWAY_URL`, is in `app/.env.example`; the gateway does not read it.

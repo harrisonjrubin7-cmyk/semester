@@ -12,7 +12,27 @@ export type Asset = {
   title: string;
   status: string;
   content: Record<string, unknown>;
+  generation_version: number;
   updated_at: string;
+};
+
+export type CitationDetail = { label: string; quote?: string };
+
+export type GuideSection = {
+  heading: string;
+  explanation: string;
+  key_points?: string[];
+  examples?: string[];
+  citation_ids: string[];
+};
+
+export type Flashcard = {
+  id: string;
+  front: string;
+  back: string;
+  difficulty: number;
+  unit?: string | null;
+  citation_ids: string[];
 };
 
 export type Event = {
@@ -44,6 +64,20 @@ export type SourceFile = {
   size_bytes: number;
   mime_type?: string;
   page_count?: number;
+};
+
+export type BackgroundJob = {
+  id: string;
+  course_id: string;
+  document_id?: string | null;
+  target_id?: string | null;
+  job_type: string;
+  status: "queued" | "running" | "completed" | "failed";
+  progress: number;
+  error?: string | null;
+  revoked_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type SourceChunk = {

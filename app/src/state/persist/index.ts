@@ -36,6 +36,19 @@ import {
 /** Where the migration records that it happened, so it happens once. */
 export const MIGRATED = 'migratedFrom';
 export const MIGRATED_VALUE = 'localStorage.v1';
+/**
+ * Inverse writes for an account snapshot that is not owned until its exact
+ * write and the auth boundary both settle. Kept in the same transaction as
+ * the snapshot, so startup can restore authored device state after a crash.
+ */
+export const REMOTE_ROLLBACK = 'remoteWriteRollback';
+
+export class OfflineRecoveryRequired extends Error {
+  constructor() {
+    super('Semester could not safely restore the device copy.');
+    this.name = 'OfflineRecoveryRequired';
+  }
+}
 
 /**
  * The version a database account is assumed to be at when it does not say.
@@ -101,6 +114,32 @@ async function readEverything(): Promise<Partial<Persisted> | null> {
   }
 
   return out as Partial<Persisted>;
+}
+
+/**
+ * Restore a remote snapshot whose owner changed (or whose final acknowledgement
+ * was interrupted). Unknown journal shapes fail closed into the localStorage
+ * fallback rather than exposing a possibly cross-account snapshot.
+ */
+async function recoverRemoteWrite(): Promise<boolean> {
+  const rows = await readAll(SETTINGS_STORE);
+  if (rows === null) return false;
+  const value = rows.find(([key]) => key === REMOTE_ROLLBACK)?.[1];
+  if (value === undefined) return true;
+  const stores = new Set<string>([...COLLECTIONS, MAPS_STORE, SETTINGS_STORE]);
+  if (!Array.isArray(value)) return false;
+  const inverse: Write[] = [];
+  for (const entry of value) {
+    if (!entry || typeof entry !== 'object') return false;
+    const candidate = entry as Partial<Write>;
+    if (typeof candidate.store !== 'string' || !stores.has(candidate.store) ||
+      typeof candidate.key !== 'string' || !('value' in candidate)) return false;
+    inverse.push(candidate as Write);
+  }
+  return write([
+    ...inverse,
+    { store: SETTINGS_STORE, key: REMOTE_ROLLBACK, value: null },
+  ]);
 }
 
 /**
@@ -198,6 +237,11 @@ export async function load(): Promise<Persisted | null> {
     ready = false;
     return null;
   };
+
+  if (!(await recoverRemoteWrite())) {
+    ready = false;
+    throw new OfflineRecoveryRequired();
+  }
 
   const empty = await isEmpty();
   if (empty === null) return lost();
@@ -407,6 +451,8 @@ async function flushValue(
   nextSeq: number,
   tell: (() => void) | null,
   exact = false,
+  signal?: AbortSignal,
+  rollbackTo?: Partial<Persisted>,
 ): Promise<boolean> {
   if (!next || !last) return true;
   const before = last;
@@ -448,8 +494,16 @@ async function flushValue(
    * none afterwards, and nothing in the console.
    */
   let ok = false;
+  const inverse = exact && signal && rollbackTo ? writesFor(next, rollbackTo) : [];
+  const journal = { store: SETTINGS_STORE, key: REMOTE_ROLLBACK, value: inverse };
   try {
-    ok = await write(writes);
+    /*
+     * The journal deliberately survives each successful iteration. A remote
+     * merge may be rewritten when an authored edit arrives during its first
+     * transaction; acknowledging either iteration separately would strand
+     * the earlier account rows if identity changed during the next one.
+     */
+    ok = await write(exact && signal && rollbackTo ? [...writes, journal] : writes, signal);
   } catch {
     ok = false;
   }
@@ -571,7 +625,10 @@ export function stopWriting(): void {
  * Write whatever is owing right now against what is confirmed on disk.
  * False means the transaction did not land.
  */
-export async function flushNow(): Promise<boolean> {
+export async function flushNow(
+  signal?: AbortSignal,
+  rollbackTo?: Partial<Persisted>,
+): Promise<boolean> {
   if (timer) {
     clearTimeout(timer);
     timer = null;
@@ -597,10 +654,36 @@ export async function flushNow(): Promise<boolean> {
   told = null;
   let landed = false;
   inFlight = inFlight.then(async () => {
-    landed = await flushValue(next, nextSeq, tell, true);
+    landed = await flushValue(next, nextSeq, tell, true, signal, rollbackTo);
   });
   await inFlight;
   return landed;
+}
+
+/**
+ * Acknowledge the complete, quiescent remote operation. Auth delivery remains
+ * fenced until this durable marker removal lands.
+ */
+export async function acknowledgeRemoteWrite(): Promise<boolean> {
+  return write([{ store: SETTINGS_STORE, key: REMOTE_ROLLBACK, value: null }]);
+}
+
+/**
+ * Restore the current device-authored snapshot before releasing a queued
+ * identity. The restore and journal acknowledgement are one transaction.
+ */
+export async function rollbackRemoteWrite(target: Partial<Persisted>): Promise<boolean> {
+  const base = confirmed ?? last;
+  if (!base) return false;
+  const ok = await write([
+    ...writesFor(base, target),
+    { store: SETTINGS_STORE, key: REMOTE_ROLLBACK, value: null },
+  ]);
+  if (ok) {
+    last = target;
+    confirmed = target;
+  }
+  return ok;
 }
 
 /**

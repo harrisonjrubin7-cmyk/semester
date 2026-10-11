@@ -6,6 +6,8 @@ The root manifest also fixes the canonical product domain at `semesterintel.tech
 
 The generated `execution-board.json` is the dependency-ordered P0 delivery board. Every item links to registry keys, names an owner, and keeps missing external or operational proof in explicit blockers. The derived `execution-plan.json` identifies ready work, active work, sequencing debt, dependency waits, and explicit blocks without treating partial implementation as verified.
 
+Verified work must link retained evidence, have only verified dependencies, and carry no open blockers. P0-001's bounded repository/CI evidence is recorded in `docs/operating-model/evidence/P0-001-repository-ci.md`; it does not promote any deployment or institutional gate.
+
 It deliberately separates repository implementation evidence from deployment, activation, and observed operation. A stage may be `true` only when that exact stage has evidence, and stages cannot skip an earlier false gate.
 
 Run from the repository root:

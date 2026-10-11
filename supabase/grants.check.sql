@@ -643,6 +643,15 @@ declare
     'record_incident_evidence(want_incident text, want_kind text, want_source_system text, want_evidence_locator text, want_sha256 text, want_byte_size bigint, want_captured_at timestamp with time zone, want_retention_until timestamp with time zone, want_classification text)',
     'record_incident_evidence_custody(want_evidence text, want_action text, want_custodian text, want_reason_code text, want_observed_sha256 text)',
 
+    -- Identity-minimized, three-operator privileged role-grant review. These paths require
+    -- access_review:manage at platform scope and fresh MFA; the private
+    -- snapshot, decisions and signoff have no client or service-role grants.
+    'begin_privileged_access_review(want_request_key text, want_period_start date, want_period_end date, want_next_due date)',
+    'complete_privileged_access_review(want_review text)',
+    'decide_privileged_access_review_item(want_item text, want_decision text, want_reason_code text)',
+    'privileged_access_review(want_review text)',
+    'resolve_privileged_access_review_investigation(want_item text, want_resolution_code text)',
+
     -- Identity-minimized privacy queue. It requires the platform console
     -- shell, derives tenants from exact-school data_request:handle grants and
     -- keeps subject ids and request content out of its result.

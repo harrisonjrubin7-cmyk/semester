@@ -123,4 +123,19 @@ describe('the integrated Semester design archive', () => {
     expect(html).toContain('someone else must approve');
     expect(html).not.toContain('>Approve<');
   });
+
+  it('does not open another delegation revocation while one is in flight', () => {
+    const html = renderToStaticMarkup(
+      <Design.DelegationRow
+        who="Advisor Rivera"
+        scope={['Learning progress']}
+        revoking
+        onRevoke={() => undefined}
+      />,
+    );
+
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain('disabled=""');
+    expect(html).toContain('Revoke');
+  });
 });
