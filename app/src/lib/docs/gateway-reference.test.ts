@@ -1401,7 +1401,7 @@ describe('the constants a reader would copy', () => {
     expect(src(SRC.runtime)).toMatch(/refreshIdentity:/);
     expect(src(SRC.start)).toMatch(/refreshIdentity:/);
     const auth = read(PAGES.auth);
-    expect(auth).toMatch(/Read-only mode is wired only into `start\.ts`/);
+    expect(auth).toContain('Both `start.ts` and the Vercel runtime read `SEMESTER_READ_ONLY` through a callback on every request.');
     expect(read(PAGES.scim)).toMatch(/`start\.ts` does not mount SCIM/);
   });
 
