@@ -15,11 +15,11 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | Migration files | 232 |
 | Tables created in `public` and not later dropped | 342 |
 | … of which enable row-level security in a migration | 342 |
-| Tables created in `private` and not later dropped | 47 |
-| … of which enable row-level security in a migration | 47 |
+| Tables created in `private` and not later dropped | 48 |
+| … of which enable row-level security in a migration | 48 |
 | Tables with no `enable row level security` statement found | 0 |
 | Tables named by at least one literal `create policy` statement | 276 |
-| Tables with RLS found and no literal policy statement | 113 |
+| Tables with RLS found and no literal policy statement | 114 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -291,15 +291,15 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 236 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 236 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 237 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 237 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 65 |
 | Register rows in category `sharing` | 23 |
-| Register rows in category `admin` | 92 |
+| Register rows in category `admin` | 93 |
 | Register rows in category `integration` | 6 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |
