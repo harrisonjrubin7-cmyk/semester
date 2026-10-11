@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, TabList } from '../components/ui';
@@ -121,6 +121,7 @@ export function Console() {
 }
 
 function Operations({ operator, authorityKey, grants }: { operator: string; authorityKey: string; grants: Grant[] }) {
+  const live = useRef(true);
   const env = environment();
   const workspaces = useMemo(() => visibleConsoleWorkspaces(grants), [grants]);
   const [tab, setTab] = useState<ConsoleWorkspaceId>('command');
@@ -136,6 +137,11 @@ function Operations({ operator, authorityKey, grants }: { operator: string; auth
   const [now, setNow] = useState(() => new Date());
 
   const onStatus = useCallback((s: string) => setStatus(s), []);
+
+  useEffect(() => {
+    live.current = true;
+    return () => { live.current = false; };
+  }, []);
 
   const readMfa = useCallback(async () => {
     try {
@@ -221,13 +227,15 @@ function Operations({ operator, authorityKey, grants }: { operator: string; auth
   );
 
   const verified = () => {
+    if (!live.current) return;
     const pending = gate;
     if (!pending) return;
     setGateRunning(true);
     void readMfa()
-      .then(() => pending.run())
-      .catch((e: unknown) => setStatus(said(e, 'The change was not recorded.')))
+      .then(() => live.current ? pending.run() : undefined)
+      .catch((e: unknown) => { if (live.current) setStatus(said(e, 'The change was not recorded.')); })
       .finally(() => {
+        if (!live.current) return;
         setGate(null);
         setGateRunning(false);
       });
