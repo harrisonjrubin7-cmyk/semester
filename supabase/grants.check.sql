@@ -635,6 +635,14 @@ declare
     -- tenants without exact implementation scope, and performs no mutation.
     'console_release_incidents(include_demo boolean)',
 
+    -- Protected incident-evidence metadata and hash-linked custody. Every
+    -- callable path requires platform console plus incident-response
+    -- authority and fresh MFA; the backing private tables have no client or
+    -- service-role grants.
+    'incident_evidence_custody(want_incident text)',
+    'record_incident_evidence(want_incident text, want_kind text, want_source_system text, want_evidence_locator text, want_sha256 text, want_byte_size bigint, want_captured_at timestamp with time zone, want_retention_until timestamp with time zone, want_classification text)',
+    'record_incident_evidence_custody(want_evidence text, want_action text, want_custodian text, want_reason_code text, want_observed_sha256 text)',
+
     -- Identity-minimized privacy queue. It requires the platform console
     -- shell, derives tenants from exact-school data_request:handle grants and
     -- keeps subject ids and request content out of its result.

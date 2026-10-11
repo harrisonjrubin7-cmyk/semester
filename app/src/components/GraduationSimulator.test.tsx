@@ -71,6 +71,41 @@ it('adds a what-if scenario and compares it with the current plan', () => {
   expect(host.textContent).not.toMatch(/\bbehind\b|at risk|failing/i);
 });
 
+it('previews device-only scenario removal and preserves it when cancelled', () => {
+  localStorage.setItem(
+    GRADUATION_KEY,
+    JSON.stringify({
+      plan: { needed: 120, perTerm: 15, summer: 0, costPerTerm: 20000, summerCost: 0, next: { season: 'Spring', year: 2027 } },
+      scenarios: [{
+        id: 'minor-1',
+        name: 'Add a minor',
+        extra: 18,
+        perTerm: 12,
+        summer: 3,
+        cloudIds: { u1: '11111111-1111-4111-8111-111111111111' },
+      }],
+    }),
+  );
+  act(() => root.render(<GraduationSimulator done={60} accountId="u1" simulator />));
+
+  act(() => host.querySelector<HTMLButtonElement>('button[aria-label="Remove scenario Add a minor"]')!.click());
+
+  expect(host.textContent).toContain('Remove this scenario from this device?');
+  expect(host.textContent).toContain('18 additional credits, 12 credits per fall or spring, and 3 credits each summer');
+  expect(host.textContent).toContain('The draft saved to your account stays there');
+  expect(JSON.parse(localStorage.getItem(GRADUATION_KEY)!).scenarios).toHaveLength(1);
+
+  const cancel = [...host.querySelectorAll('button')].find((button) => button.textContent === 'Cancel')!;
+  act(() => cancel.click());
+  expect(JSON.parse(localStorage.getItem(GRADUATION_KEY)!).scenarios).toHaveLength(1);
+
+  act(() => host.querySelector<HTMLButtonElement>('button[aria-label="Remove scenario Add a minor"]')!.click());
+  const confirm = [...host.querySelectorAll('button')].find((button) => button.textContent === 'Remove scenario')!;
+  act(() => confirm.click());
+  expect(JSON.parse(localStorage.getItem(GRADUATION_KEY)!).scenarios).toHaveLength(0);
+  expect(host.textContent).toContain('removed from this device');
+});
+
 it('shows the editable assumptions behind the plan estimate', () => {
   act(() => root.render(<GraduationSimulator done={60} />));
   expect(host.textContent).toContain('This plan assumes');
