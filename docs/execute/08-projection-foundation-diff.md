@@ -34,7 +34,7 @@ The PDFs ask for projected read models. The repository's console already answers
 | B. Live reads with freshness | Keep definer functions; add a registry row per contract with its source tables and an `as_of` / staleness figure returned by each | One registry table, a column on each return | Does not deliver CQRS; read cost stays on the primary |
 | C. Both, in order | B first (cheap, honest), A only for a contract that measurably needs it | B's cost, then A per contract | Slower to the PDFs' picture |
 
-**Recommendation:** C, with the first slice below. It is a recommendation, not a decision; the founder can overrule it, and `D-1287`'s rule that doing less is the reversible answer applies.
+**Recommendation:** C, with the first slice below. It is a recommendation, not a decision; the founder can overrule it. (`D-1287` decides four scoped product questions and no migration, so it does not govern this choice; the preference for the reversible answer here is this page's own.)
 
 ## 4. Proposed first slice (if C is chosen)
 
@@ -45,12 +45,12 @@ The PDFs ask for projected read models. The repository's console already answers
 
 Tested the way the last slice was: a migration written and run on a throwaway PostgreSQL 17 through `supabase/check.sh`, shown red against a deliberate break, then opened as a draft pull request. **Production is not touched by any step**; applying a migration to the project is a separate, explicit confirmation.
 
-## 5. Decisions needed from the owner
+## 5. Decisions needed from the owner (as presented before §7; question 1 was answered: option C)
 
 1. A, B or C (§3).
 2. Whether the registry may be written only by migration (proposed) or by an approved console action.
 3. The staleness budget per contract; the PDFs do not state one and none is invented here.
-4. Whether `docs/handoff/execute/08` task 3 (error tracking, uptime, SSO failures, SIS lag, alert routes) is in this slice. It needs vendors and on-call people the repository cannot supply.
+4. Whether `docs/handoff/execute/08` task 3 (error tracking, uptime, SSO failures, SIS lag, gateway blocks, alert routes) is in this slice. It needs vendors and on-call people the repository cannot supply.
 
 ## 6. Not done by this page
 
