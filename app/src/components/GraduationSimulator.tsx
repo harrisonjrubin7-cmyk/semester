@@ -109,17 +109,19 @@ export function GraduationSimulator({
       }
       return;
     }
-    setConfirm(null);
     try {
       if (c.kind === 'save' && accountId) {
+        setConfirm(null);
         const id = await saveDraft(accountId, draftRow(plan, done, c.scenario), inAccount(c.scenario));
         setCloudId(c.scenario.id, id, accountId);
         setStatus(`“${c.scenario.name}” saved to your account as an estimate.`);
       } else if (c.kind === 'unsave' && inAccount(c.scenario)) {
         await deleteDraft(inAccount(c.scenario)!);
         setCloudId(c.scenario.id, undefined, accountId!);
+        setConfirm(null);
         setStatus(`“${c.scenario.name}” removed from your account. It is still on this device.`);
       } else if (c.kind === 'share') {
+        setConfirm(null);
         try {
           await navigator.clipboard.writeText(c.text);
           setStatus('Copied. Paste it into an email or your advising notes — Semester did not send it anywhere.');
@@ -129,7 +131,12 @@ export function GraduationSimulator({
         }
       }
     } catch (e) {
-      setStatus(`That did not save: ${e instanceof Error ? e.message : String(e)}. Your scenarios are still on this device.`);
+      const reason = e instanceof Error ? e.message : String(e);
+      setStatus(
+        c.kind === 'unsave'
+          ? `“${c.scenario.name}” could not be removed from your account: ${reason}. The account draft and device scenario are unchanged; retry or cancel.`
+          : `That did not save: ${reason}. Your scenarios are still on this device.`,
+      );
     }
   };
 
@@ -504,7 +511,15 @@ export function GraduationSimulator({
                 <p>It stays on this device too. Deleting your account deletes it.</p>
               </>
             ) : (
-              <p>“{confirm.scenario.name}” will be deleted from your account. It stays on this device.</p>
+              <ActionPreview
+                subject={confirm.scenario.name}
+                says="Deletes this estimated scenario draft from your signed-in account."
+                doesNotChange="The scenario on this device, other account drafts, downloaded summaries and the registrar’s official degree audit stay unchanged."
+                recovery={{
+                  kind: 'none',
+                  how: 'This account copy cannot be restored after deletion. The device scenario stays available and can be saved to the account again later.',
+                }}
+              />
             )
           }
         />
