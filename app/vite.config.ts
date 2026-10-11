@@ -707,6 +707,8 @@ const MOCKS_MODULES = [
   'src/components/TodayActionCenter.shadow.sources.test.tsx',
   'src/composition/react.mount.test.tsx',
   'src/components/ProductivityPreparation.test.tsx',
+  'src/components/ProductivityCloud.test.tsx',
+  'src/components/MyRules.test.tsx',
   'src/lib/productivity-cloud.test.ts',
   'src/components/ProductivityWorkspace.test.tsx',
   'src/components/GetHelp.feedback.test.tsx',

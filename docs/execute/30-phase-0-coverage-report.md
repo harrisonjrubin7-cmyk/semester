@@ -60,11 +60,11 @@ $ npm run build                    → exit 0 (after the rebase; chunk-size warn
 $ npm run test:shuffle             → seed 1791757697990; Test Files 1517 passed | 3 failed | 1 skipped; Tests 24196 passed | 3 failed | 69 skipped
 ```
 
-**The four `npm test` failures.** One was this container: plugin tooling created `.md-linker/` and `.ruff_cache/` at the repository root, which `developers.test.ts` rightly refuses; removed, not committed. The other three reproduce on the untouched base `a4742f6b` with this branch's changes stashed, in the ordered run and the shuffled run alike, so they are main's and are not fixed here:
+**The four `npm test` failures.** One was this container: plugin tooling created `.md-linker/` and `.ruff_cache/` at the repository root, which `developers.test.ts` rightly refuses; removed, not committed. The other three reproduce on the untouched base `a4742f6b` with this branch's changes stashed, in the ordered run and the shuffled run alike, and main's own CI had been red on them for its last five runs (`a4742f6b`, `ccf2d45f` and three before). No fix existed elsewhere, so the third commit makes them green, each by the smallest change that matches what the tree already does:
 
-- `src/isolation.test.ts` — `MyRules.test.tsx` and `ProductivityCloud.test.tsx` call `vi.mock` and are not in the `mocked` project (130 expected, 128 listed).
-- `src/lib/docs/trust-docs.test.ts` — `docs/trust/CONTROL-FACTS.md` says 234 migration files; the renderer counts 233.
-- `src/components/unity/rollout-c.test.tsx` — the "Revoke now" control is not rendered in the fixture.
+- `src/isolation.test.ts` — `MyRules.test.tsx` and `ProductivityCloud.test.tsx` call `vi.mock` and were not in the `mocked` project (130 expected, 128 listed). Both are now listed in `MOCKS_MODULES`.
+- `src/lib/docs/trust-docs.test.ts` — `docs/trust/CONTROL-FACTS.md` said 233 migration files after the 234th landed (#1419) without a regeneration. Regenerated with `REGISTERS=write`; the diff is that one line.
+- `src/components/unity/rollout-c.test.tsx` — the shared `DelegationRow` confirms a revoke inline (Revoke, then Revoke now) since #1360 unified the controls; the test still pressed "Revoke now" first. It now presses both, which is the behaviour the control's own comment describes.
 
 **CI on the first push** failed `secrets` (one gitleaks `generic-api-key` hit on a prose field in the intake, pinned in `.gitleaksignore`) and `impact` (`app/package.json` changed with no developer doc; `ONBOARDING.md` now names the scripts). Both fixes are in the second commit; the result is on the pull request.
 

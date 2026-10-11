@@ -13,7 +13,7 @@
 1. This file, then [`D-1475`](../decisions/D-1475.md).
 2. `docs/ecosystem/INVENTORY.md` §10 and `docs/ecosystem/deployed.json`: the schema is verified against production by digest; the app is not. Establishing the production app URL (repository variable `SEMESTER_PRODUCTION_APP_URL`) and probing it is what moves rows to `deployed`.
 3. `EXECUTION_BACKLOG.md` next items: the second half of cart freshness, then matrix rows chosen by the phased plan's Phase 1 and 2 exit gates.
-4. The pull request's CI. Three tests fail on main itself at `a4742f6b` and are not this branch's (`src/isolation.test.ts`, `src/lib/docs/trust-docs.test.ts`, `src/components/unity/rollout-c.test.tsx`); if CI is red on them, that is the base, and the fix belongs in its own pull request.
+4. The pull request's CI. Three tests were red on main itself at `a4742f6b` (`src/isolation.test.ts`, `src/lib/docs/trust-docs.test.ts`, `src/components/unity/rollout-c.test.tsx`) and main's CI had failed on them for five runs; this branch's third commit fixes them (isolation list, regenerated `CONTROL-FACTS.md`, two-step revoke in the test). After it merges, main's `build` job should be green again; if it is not, the failure is new.
 
 ## How to change the matrix
 
