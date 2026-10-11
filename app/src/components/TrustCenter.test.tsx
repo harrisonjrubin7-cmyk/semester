@@ -24,12 +24,14 @@ import { StoreProvider, useStore } from '../state/store';
 const future = new Date(Date.now() + 20 * 86_400_000).toISOString();
 let shares: ShareRow[] = [];
 const revoked: string[] = [];
+let revokeFailure: Error | null = null;
 vi.mock('../lib/advisor-shares', async (importOriginal) => {
   const real = await importOriginal<typeof import('../lib/advisor-shares')>();
   return {
     ...real,
     myShares: vi.fn(async () => ({ shares, events: [] })),
     revokeShare: vi.fn(async (id: string) => {
+      if (revokeFailure) throw revokeFailure;
       revoked.push(id);
       shares = shares.map((s) => (s.id === id ? { ...s, revoked_at: new Date().toISOString() } : s));
     }),
@@ -81,6 +83,7 @@ beforeEach(() => {
     { id: 's2', title: 'Old agenda', created_at: '2026-01-01T00:00:00Z', expires_at: '2026-02-01T00:00:00Z', revoked_at: null },
   ];
   revoked.length = 0;
+  revokeFailure = null;
   seen = null;
   host = document.createElement('div');
   host.className = 'device';
@@ -179,7 +182,7 @@ describe('with trust_center on', () => {
     expect(text(section('Shares and access'))).toContain('Nothing is shared: this device is not signed in.');
   });
 
-  it('revokes a live share only after saying what happens, and shows it gone', async () => {
+  it('keeps a refused live-share revocation open, then shows a confirmed retry', async () => {
     await render(<TrustCenter accountId="u1" />);
     await settle(() => text().includes('Spring planning'));
     const shares = section('Shares and access');
@@ -187,8 +190,16 @@ describe('with trust_center on', () => {
     expect(text(shares)).toContain('1 earlier share has expired or been revoked.');
     await act(async () => button(/^Revoke…$/, shares).click());
     expect(revoked).toEqual([]);
-    expect(text(dialog()!)).toContain('Your advisor will no longer be able to open it.');
+    expect(text(dialog()!)).toContain('Your advisor loses access to this shared meeting immediately.');
+    expect(text(dialog()!)).toContain('The share and its access log stay in your account');
+    expect(text(dialog()!)).toContain('This can’t be undone. You can make a new share later.');
     expect(document.activeElement?.textContent).toBe('Cancel');
+    revokeFailure = new Error('The share was not revoked. Refresh your shares, then try again.');
+    await act(async () => button(/^Revoke$/, dialog()!).click());
+    expect(revoked).toEqual([]);
+    expect(text(dialog()!)).toContain('The share was not revoked. Refresh your shares, then try again.');
+
+    revokeFailure = null;
     await act(async () => button(/^Revoke$/, dialog()!).click());
     await settle(() => text().includes('No advisor can open'));
     expect(revoked).toEqual(['s1']);

@@ -1,13 +1,13 @@
-# Verification report — 2026-10-10
+# Verification report — 2026-10-11
 
 ## Passed
 
-- `python -m pytest -q`: 74 passed with 41 subtests using the documented SQLite migration-test environment. Coverage includes authorization/ownership isolation, review resolution, bounded correction payloads, real migration round trips, concurrent upload completion, owner-scoped job feeds, worker fencing/recovery, safe archives, citation rejection, dates, ICS, and exports.
+- `python -m pytest -q`: 76 passed with 41 subtests using the documented SQLite migration-test environment. Coverage includes authorization/ownership isolation, review resolution, bounded correction payloads, real migration round trips, concurrent upload completion, owner-scoped job feeds, idempotent retry dispatch and abandoned-queue redelivery, worker fencing/recovery, stored card/quiz ownership and persistence, safe archives, citation rejection, dates, ICS, and exports.
 - `python -m ruff check app tests ../worker/tasks.py`: passed.
 - `python -m compileall`: API, worker, scripts, and benchmark modules compile.
 - `pnpm run typecheck`: passed.
 - `pnpm run build`: passed; all 15 course workspace routes compiled.
-- `pnpm test`: 21 frontend tests passed across nine files, including the shell, command-palette focus, source/status vocabulary and locations, review correction validation, calendar consequence preview/exact undo, upload job progress/cancellation/retry, operational states, semantic token contracts, and an axe ready-state scan.
+- `pnpm test`: 25 frontend tests passed across ten files, including the shell, command-palette focus, source/status vocabulary and locations, review correction validation, calendar consequence preview/exact undo, upload job progress/cancellation/retry, card recall, cited guide rendering, authenticated document export, quiz completion, operational states, semantic token contracts, and an axe ready-state scan.
 - Rendered smoke check: the built landing route rendered at the default desktop viewport and at 320 px without visible horizontal overflow.
 - `alembic upgrade head`: passed against a clean SQLite verification database.
 - `scripts/seed_demo_course.py`: passed and produced an authenticated demo course.
@@ -36,3 +36,5 @@ The responsive shell uses the Semester Ink/Parchment/blue system without gradien
 The upload workspace now opens an owner-scoped, focus-managed source sheet and recovers current extraction state after reload. It polls only while queued or running work exists, displays progress, and gives the student explicit cancellation and failure-retry controls. Extracted chunks retain page, slide, sheet/cell, or media timestamp labels and confidence; exact PDF bounding-box overlays and correction actions remain open.
 
 The Review workspace can confirm, reject, or correct extracted payloads, records an optional decision note, refreshes course counts, and blocks malformed correction JSON before sending it. The Calendar workspace now previews changed fields and ICS consequences before saving, preserves unspecified times, and offers one-step session undo.
+
+Cards now reveal stored answers and citations before a student records recall confidence; first-review counters are initialized explicitly and progress refreshes after each response. Read and Doc render stored guide sections as accessible prose with canonical source labels rather than raw JSON, while confirmed Doc versions can be downloaded as DOCX or PDF through authenticated requests. Quiz presents each stored cited section as a retrieval prompt, requires an explicit self-rating for every prompt, verifies ownership and exact prompt coverage server-side, and persists the completed study session.
