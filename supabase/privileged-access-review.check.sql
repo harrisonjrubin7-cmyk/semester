@@ -99,6 +99,11 @@ begin
   insert into public.role_capabilities (role, capability) values ('data_steward', 'report:read');
   perform pg_temp.must('a capability change makes the snapshot stale for retain', pg_temp.refused(starter, format(
     'select public.decide_privileged_access_review_item(%L,%L,%L)', steward_item, 'retain', 'still-required')));
+  update public.role_grants set subject = outsider
+   where subject = investigate_subject and role = 'integration_admin';
+  perform pg_temp.must('a changed grant subject cannot be retained under the old subject evidence',
+    pg_temp.refused(starter, format(
+      'select public.decide_privileged_access_review_item(%L,%L,%L)', investigate_item, 'retain', 'still-required')));
 
   perform pg_temp.become(starter);
   perform public.decide_privileged_access_review_item(reviewer_item, 'retain', 'still-required');
@@ -132,6 +137,13 @@ begin
     format('select public.complete_privileged_access_review(%L)', review_ref)));
   perform pg_temp.must('the retain decision maker cannot resolve its later change', pg_temp.refused(reviewer,
     format('select public.resolve_privileged_access_review_post_decision_change(%L)', signer_item)));
+  perform pg_temp.become(starter);
+  perform public.resolve_privileged_access_review_post_decision_change(signer_item);
+  reset role;
+  update public.role_grants set granted_at = granted_at + interval '1 second'
+   where subject = signer and role = 'trust_officer';
+  perform pg_temp.must('a second grant change invalidates the first resolution fingerprint', pg_temp.refused(signer,
+    format('select public.complete_privileged_access_review(%L)', review_ref)));
   perform pg_temp.become(starter);
   perform public.resolve_privileged_access_review_post_decision_change(signer_item);
   reset role;
