@@ -23,7 +23,7 @@ docs for a written refusal.
 1. **LTI grade passback fails closed until a registration is bound to a
    school.** #779 added `public.lti_passback_decision`
    (`20260927180000_lti_integration_binding.sql`); the additive
-   `20261010174500_lti_passback_requires_binding.sql` closes its legacy
+   `20261011183000_lti_passback_requires_binding.sql` closes its legacy
    unbound bypass. Global kill switches still take precedence. A bound
    registration also needs both LTI and grade-passback flags at `production`,
    an approved write-capable connection, an unexpired score-publish scope, and
