@@ -733,7 +733,7 @@ The same `createGateway` is composed two ways. What each composition wires diffe
 | Journal | SQLite file, or Postgres if `SEMESTER_GATEWAY_STORE=postgres` | Postgres |
 | Rate limiter | In memory, or Postgres with the store switch | Postgres |
 | Sandbox adapters | If `SEMESTER_SANDBOX_INSTITUTION=1` | Never |
-| Read-only mode | `SEMESTER_READ_ONLY=on` | Not wired |
+| Read-only mode | `SEMESTER_READ_ONLY=on` | `SEMESTER_READ_ONLY=on` |
 | Telemetry line per request | None | JSON line to the process log |
 | SCIM | Not mounted | Mounted when `SEMESTER_SCIM=on` |
 | Readiness | Journal healthy | The stricter rule [above](#health-and-sign-in-configuration) |

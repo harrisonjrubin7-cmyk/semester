@@ -28,12 +28,13 @@ the directory on exit.
 
 The public [developer-tools topic](https://github.com/topics/developer-tools)
 is volatile, so coverage is recorded against a dated snapshot rather than
-implied to be permanent. On 2026-10-10, a refreshed review of the first seven
-topic pages displayed 140 repository cards covering 140 unique repositories.
+implied to be permanent. On 2026-10-11, a refreshed review of the first eight
+topic pages displayed 160 repository cards covering 160 unique repositories.
 The ranking changed during the review: 21 repositories not present in the
 earlier three-page snapshot were reviewed in the page-four increment, followed
-by 20 repositories on page five, 20 on page six and 20 on page seven. Every
-repository in the refreshed seven-page snapshot is accounted for. ShellCheck closed the
+by 20 repositories on page five, 20 on page six, 20 on page seven and 20 on
+page eight. Every repository in the refreshed eight-page snapshot is accounted
+for. ShellCheck closed the
 standalone-script lint gap; the other repositories did not supply a new
 Semester product or CI requirement.
 
@@ -125,6 +126,17 @@ Semester product or CI requirement.
 | [SAWS](https://github.com/donnemartin/saws) | Semester does not deploy an AWS application stack, so another AWS command-line client has no build or release role. No licence was detected when evaluated. |
 | [TUIOS](https://github.com/Gaurav-Gosain/tuios), [Gitlogue](https://github.com/unhappychoice/gitlogue) and [Port Killer](https://github.com/productdevbook/port-killer) | Terminal session management, animated Git history and interactive process termination are personal workstation utilities. They do not provide reproducible product or CI evidence, and process-killing must remain explicitly scoped. |
 | [Fallow](https://github.com/fallow-rs/fallow) | Code-health analysis could become a gate only with approved complexity, duplication, boundary and drift baselines. No measured threshold currently exists, so installing it now would create an unowned policy rather than close a demonstrated gap. |
+| [Chronos](https://github.com/Kodezi/Chronos), [ByteRover CLI](https://github.com/campfirein/byterover-cli), [ACI](https://github.com/aipotheosis-labs/aci), [OpenAgentsControl](https://github.com/darrenhinde/OpenAgentsControl), [Codex Keysmith](https://github.com/Jia-Ethan/codex-keysmith) and [Claude Octopus](https://github.com/nyldn/claude-octopus) | Debugging models, agent memory, tool-calling, workflow orchestration, instruction deployment and multi-model runners overlap Semester's reviewed development environment. They would expand model, credential, execution or repository-data boundaries without a measured product or CI gap. ByteRover was archived, and neither it nor Chronos had a detected licence when evaluated. |
+| [ReactiveSearch](https://github.com/appbaseio/reactivesearch) | Another search component and Elasticsearch-oriented UI stack would be a product architecture choice, not a repository tool. Semester's existing search surfaces have no measured requirement for this parallel dependency. |
+| [Quotio](https://github.com/nguyenphutrong/quotio), [DeepSeek Balance Whale Widget](https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget) and [Petdex](https://github.com/crafter-station/petdex) | Model-account quota menus, decorative balance widgets and agent mascots are personal interface enhancements, not application, build or release dependencies. |
+| [xplr](https://github.com/sayanarijit/xplr) and [Boop](https://github.com/IvanMathy/Boop) | A terminal file explorer and scriptable scratchpad are workstation preferences, not reproducible Semester product or CI capabilities. |
+| [CLI Printing Press](https://github.com/mvanhorn/cli-printing-press) | Generating an agent-oriented CLI from API descriptions should follow a stable, owned, published contract and freshness gate. Adding another generator before that contract exists would not make Semester's API production-ready. |
+| [Go Recipes](https://github.com/nikolaydubina/go-recipes) | A catalogue of Go-project techniques does not apply to Semester's current TypeScript and Python application stacks and is reference material rather than a dependency. |
+| [Git-Sim](https://github.com/initialcommit-com/git-sim) | Git workflow simulation and visualization may help personal learning, but it does not replace the repository's real Git history, protected-branch controls or CI evidence. |
+| [Wakapi](https://github.com/muety/wakapi) | Self-hosted coding-activity collection has no product or CI requirement and would introduce developer telemetry, identity, access and retention obligations. |
+| [Kubero](https://github.com/kubero-dev/kubero) and [kubefwd](https://github.com/txn2/kubefwd) | A Kubernetes PaaS and Kubernetes port-forwarding layer do not serve Semester's Vercel and Supabase deployment architecture. |
+| [CML](https://github.com/iterative/cml) | Continuous machine-learning pipelines do not match Semester's current build inputs or release gates; adopting ML CI without a model-training workflow would add unused infrastructure. |
+| [Flox](https://github.com/flox/flox) | A Nix-based deterministic environment could be reconsidered for a demonstrated reproducibility failure, but adding it now would create another environment and package-management definition beside the validated repository and CI setup. |
 
 Revisit a deferred tool only when a concrete product or engineering requirement
 exists, and repeat the ownership, licence, provenance, permissions, maintenance,
