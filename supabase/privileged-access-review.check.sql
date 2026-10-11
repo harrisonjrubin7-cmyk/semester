@@ -48,7 +48,7 @@ begin
 
   perform pg_temp.become(starter);
   review_ref := public.begin_privileged_access_review(current_date - 90, current_date, current_date + 90);
-  reset role;
+  set local role postgres;
   select i.public_id into starter_item from private.privileged_access_review_item i
     where i.review_id = (select id from private.privileged_access_review where public_id = review_ref)
       and i.grant_id = (select id from public.role_grants where subject = starter and role = 'trust_officer');
@@ -71,7 +71,7 @@ begin
   perform public.decide_privileged_access_review_item(starter_item, 'retain', 'still-required');
   perform public.decide_privileged_access_review_item(signer_item, 'retain', 'still-required');
   perform public.decide_privileged_access_review_item(target_item, 'revoke', 'access-ended');
-  reset role;
+  set local role postgres;
   perform pg_temp.become(signer);
   perform public.decide_privileged_access_review_item(reviewer_item, 'retain', 'still-required');
   perform public.decide_privileged_access_review_item(
@@ -79,7 +79,7 @@ begin
       where i.review_id = (select id from private.privileged_access_review where public_id = review_ref)
         and i.grant_id = (select id from public.role_grants where subject = no_mfa and role = 'trust_officer')),
     'investigate', 'mfa-not-current');
-  reset role;
+  set local role postgres;
   perform pg_temp.must('revoke decisions close the live role grant',
     (select revoked_at is not null from public.role_grants where subject = target and role = 'platform_admin'));
   perform pg_temp.must('a review cannot be signed by its starter', pg_temp.refused(starter, format(
@@ -87,7 +87,7 @@ begin
   perform pg_temp.become(reviewer);
   perform public.complete_privileged_access_review(review_ref);
   select count(*) into n from public.privileged_access_review(review_ref);
-  reset role;
+  set local role postgres;
   perform pg_temp.must('the signed ledger returns every snapshot item', n = 5);
   perform pg_temp.must('the immutable signoff preserves counts including open investigation',
     (select retained = 3 and revoked = 1 and investigating = 1
