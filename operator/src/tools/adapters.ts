@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import type { EvidenceItem, PolicyContext, RiskLevel, ToolAction, ToolName } from '../../types.ts';
 import type { AuditLog } from '../control/audit.ts';
@@ -61,9 +61,10 @@ export function createToolbox(policy: PolicyController, context: PolicyContext, 
     evidence,
     readFile(path) {
       gate({ tool: 'read_file', target: absolute(path), risk });
-      const stats = statSync(absolute(path));
-      if (stats.size > MAX_READ_BYTES) throw new ToolDenied('read_file', path, 'file_too_large', `${stats.size} bytes exceeds ${MAX_READ_BYTES}.`);
-      return readFileSync(absolute(path), 'utf8');
+      // Read first, then measure what was read: a size check before the read would be a check on a file that can change in between.
+      const bytes = readFileSync(absolute(path));
+      if (bytes.byteLength > MAX_READ_BYTES) throw new ToolDenied('read_file', path, 'file_too_large', `${bytes.byteLength} bytes exceeds ${MAX_READ_BYTES}.`);
+      return bytes.toString('utf8');
     },
     listFiles(dir, maxEntries = 500) {
       gate({ tool: 'list_files', target: absolute(dir), risk });
@@ -88,8 +89,9 @@ export function createToolbox(policy: PolicyController, context: PolicyContext, 
           if (entry.name === 'node_modules' || entry.name === '.git') continue;
           const full = join(current, entry.name);
           if (entry.isDirectory()) { walk(full); continue; }
-          if (statSync(full).size > MAX_READ_BYTES) continue;
-          readFileSync(full, 'utf8').split('\n').forEach((text, index) => { if (matches.length < maxMatches && pattern.test(text)) matches.push({ path: relative(base, full), line: index + 1, text: redactString(text.slice(0, 200)) }); });
+          const bytes = readFileSync(full);
+          if (bytes.byteLength > MAX_READ_BYTES) continue;
+          bytes.toString('utf8').split('\n').forEach((text, index) => { if (matches.length < maxMatches && pattern.test(text)) matches.push({ path: relative(base, full), line: index + 1, text: redactString(text.slice(0, 200)) }); });
         }
       };
       walk(absolute(dir));
