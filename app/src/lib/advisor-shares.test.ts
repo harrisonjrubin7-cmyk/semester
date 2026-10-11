@@ -98,12 +98,17 @@ describe('managing and reading', () => {
     expect(got.events).toEqual([{ share_id: 's1', read_at: '2026-09-25' }, { share_id: 's1', read_at: '2026-09-20' }]);
   });
 
-  it('revokes by setting revoked_at on that share only', async () => {
+  it('revokes only when the account-scoped row is returned', async () => {
+    reply = { data: [{ id: 's1', revoked_at: '2026-09-27T12:00:00.000Z' }], error: null };
     await shares.revokeShare('s1', NOW);
     expect(calls).toEqual([
       { what: 'update advisor_shares', args: { revoked_at: '2026-09-27T12:00:00.000Z' } },
+      { what: 'select advisor_shares', args: 'id, revoked_at' },
       { what: 'eq id', args: 's1' },
     ]);
+
+    reply = { data: [], error: null };
+    await expect(shares.revokeShare('s1', NOW)).rejects.toThrow('not revoked');
   });
 
   it('deletes only when the account-scoped row is returned', async () => {

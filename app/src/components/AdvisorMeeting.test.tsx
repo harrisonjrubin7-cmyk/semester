@@ -12,6 +12,7 @@ const sent: { email: string; title: string; payload: SharePayload; days: number 
 const revoked: string[] = [];
 const deleted: string[] = [];
 let deleteFailure: Error | null = null;
+let revokeFailure: Error | null = null;
 let listed: { shares: unknown[]; events: unknown[] } = { shares: [], events: [] };
 vi.mock('../lib/advisor-shares', async (importOriginal) => {
   const real = await importOriginal<typeof import('../lib/advisor-shares')>();
@@ -23,6 +24,7 @@ vi.mock('../lib/advisor-shares', async (importOriginal) => {
     }),
     myShares: vi.fn(async () => listed),
     revokeShare: vi.fn(async (id: string) => {
+      if (revokeFailure) throw revokeFailure;
       revoked.push(id);
     }),
     deleteShare: vi.fn(async (id: string) => {
@@ -65,6 +67,7 @@ beforeEach(() => {
   localStorage.clear();
   deleted.length = 0;
   deleteFailure = null;
+  revokeFailure = null;
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 6, seenOnboarding: true, sample: false, courses: [] }));
   localStorage.setItem(
     'semester.registration.v1',
@@ -289,7 +292,7 @@ describe('sharing with an advisor', () => {
     expect(sent[0].payload.followUps).toEqual(['Email the department']);
   });
 
-  it('lists shares by state and reads, and revokes only after confirming', async () => {
+  it('lists shares by state and reads, and keeps a refused revocation available to retry', async () => {
     listed = {
       shares: [
       // 07:00 UTC is the same calendar day from UTC-5 to UTC+14, the range
@@ -311,10 +314,20 @@ describe('sharing with an advisor', () => {
     expect(text(rows[1])).toContain('Expired Aug 8, 2026.');
     expect(rows[1].textContent).not.toContain('Revoke');
     await act(async () => button(/^Revoke…$/, rows[0]).click());
-    expect(text(dialog())).toContain('stops opening for your advisor now');
+    expect(text(dialog())).toContain('Your advisor loses access to this shared meeting immediately.');
+    expect(text(dialog())).toContain('The share and its access log stay in your account');
+    expect(text(dialog())).toContain('This can’t be undone. You can make a new share later.');
+    expect(document.activeElement?.textContent).toBe('Cancel');
     expect(revoked).toEqual([]);
+    revokeFailure = new Error('The share was not revoked. Refresh your shares, then try again.');
+    await act(async () => button(/^Revoke$/).click());
+    expect(revoked).toEqual([]);
+    expect(text(dialog())).toContain('The share was not revoked. Refresh your shares, then try again.');
+
+    revokeFailure = null;
     await act(async () => button(/^Revoke$/).click());
     expect(revoked).toEqual(['s-live']);
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
   });
 
   it('previews account-share deletion and keeps the choice open when the server refuses it', async () => {

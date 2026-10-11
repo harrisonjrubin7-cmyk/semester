@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `121eb809` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `bb91c689` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -480,3 +480,14 @@ The four regression assertions failed against the prior immediate/receipt-less b
 | Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST scan, finding result or security pass exists. |
 
 The regression paths failed against the prior prose-only preview and receipt-less success behavior. The final focused/adjacent set passes 41/41; TypeScript, lint, university typecheck and production build pass; 147/147 exact token/design/report-contract tests pass, and audit/CSS stay within their ledgers. Current `origin/main` `d44f10f6` is already included and has no equivalent change. No route, dependency, schema, policy, provider configuration, deployment or external system changed.
+
+## Pass 4 delta — governed advisor-share revocation (slice 82)
+
+| Reference intent | Current repository authority | Disposition and evidence |
+| --- | --- | --- |
+| Consequence preview before ending one advisor's access | `app/src/components/AdvisorMeeting.tsx`, `app/src/components/TrustCenter.tsx`, `app/src/components/unity/ActionPreview.tsx` | **Existing but incomplete → existing and verified for one signed-in-account share revocation.** Both reachable callers disclose immediate advisor access loss, the retained share/access log, unchanged meeting preparation/other shares/official records and the no-undo/new-share boundary. Cancel is initially focused and writes nothing. |
+| Require trustworthy server completion and retry on refusal | `app/src/lib/advisor-shares.ts`, `app/src/lib/advisor-shares.test.ts`, `app/src/components/AdvisorMeeting.test.tsx`, `app/src/components/TrustCenter.test.tsx` | **Existing and verified for this slice.** The update selects the exact id and requested timestamp and refuses success on a zero-row or mismatched receipt. Either caller retains the dialog and represented active share for retry or cancel; repeat confirmation is guarded while in flight. |
+| Preserve advising authority, audit history and tenant boundary | `supabase/migrations/20260928301000_advisor_shares.sql`, `app/src/lib/advisor-shares.ts` | **Existing and unchanged.** Current account-scoped RLS, tenant-bound share row and one-way `revoked_at` update remain authoritative. The share and read log remain in the account; no schema, policy, role or capability changes. |
+| Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. A local properties file exists but was not read; no runnable target, DAST scan, finding result or security pass exists. |
+
+The three regression paths failed against the prior early-close and receipt-less behavior. The final focused/adjacent set passes 59/59; TypeScript, lint, university typecheck and production build pass; aggregate design check and report complete with 9 token tests, 69 design contracts, zero audit violations and no CSS-ledger increase. The locked install audit reports zero dependency vulnerabilities. Selection-time `origin/main` `d44f10f6` is already included and has no equivalent change; final observed `bb91c689` changes only platform-control execution-plan files and does not overlap this slice. No route, dependency, schema, policy, provider configuration, deployment or external system changed.

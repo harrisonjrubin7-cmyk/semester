@@ -1711,3 +1711,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep advisor-share revocation, whole-account deletion, official advising operations and aggregate-consent changes separate from this one account-share deletion.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed advisor-share revocation — automation pass 4, integration slice 82
+
+- [x] Start from clean current head `9afd7b4a`; fetch `origin/main` `d44f10f6`, confirm it is already included and inspect exact advisor-share history and both revocation callers for overlap. Inspect final fetched `bb91c689`; its platform-control execution-plan files do not overlap this slice.
+- [x] Re-rank one signed-in student's advisor-share revocation as the earliest bounded account consequence gap; keep deletion, meeting preparation, other shares and official advising operations outside the mutation.
+- [x] Use the shared `ActionPreview` in Advisor Meeting and Your data to name immediate advisor access loss, retained account share/access log, unchanged device and official records, and the no-undo/new-share boundary.
+- [x] Give Cancel initial focus, prove first press/cancellation perform no update, and guard repeat confirmation while a request is in flight.
+- [x] Require the account-scoped update to return the exact id and requested `revoked_at`; treat an error-free zero-row result as refusal or staleness.
+- [x] Keep both caller dialogs open with an assertive retry-or-cancel path after a server error or missing receipt; close and refresh only after confirmed success.
+- [x] Prove the three intended guards red against prior behavior, then pass 59/59 focused and adjacent advisor-share, Advisor Meeting, Trust Center, ActionPreview, modal, backup-coverage and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass aggregate `design-system:check` (9 token tests and 69 contracts, zero audit violations, CSS within its ledger) and the test-backed design report.
+- [x] Run the locked root install; audit reports zero dependency vulnerabilities.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-share slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists and a local properties file was detected without reading it, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep whole-account deletion, official advising operations and aggregate-consent changes separate from this one account-share revocation.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

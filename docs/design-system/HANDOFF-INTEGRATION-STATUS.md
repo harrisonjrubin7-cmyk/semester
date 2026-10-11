@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 2 of 120 · **Integration slice** 80 · **Date** 2026-10-11 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `4f45a3c0` · **Latest observed `origin/main`** `d44f10f6`
+**Automation pass** 4 of 120 · **Integration slice** 82 · **Date** 2026-10-11 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `9afd7b4a` · **Latest observed `origin/main`** `bb91c689`
 
 ## State
 
@@ -894,3 +894,13 @@ The sharing panel now uses the shared `ActionPreview` to name the account share 
 The two regression paths failed against the prior prose-only and receipt-less behavior. After implementation, 41/41 focused and adjacent tests pass across Advisor Meeting, advisor shares, `ActionPreview`, workspace-backup coverage and root cleanup. TypeScript, lint, university typecheck and production build pass; the six existing lint warnings and build chunk-size warning remain. The exact token/design/report-contract set passes 147/147, design audit stays at zero violations with 86 existing warnings and CSS stays within its ledger. Aggregate npm wrappers and ordered/shuffled full suites were not run.
 
 HawkScan remains an open release gate. Mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan, finding result or security pass exists. This local implementation does not prove deployment, production execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains, so the program continues.
+
+## Automation pass 4 update — governed advisor-share revocation (slice 82)
+
+Selection-time `origin/main` `d44f10f6` is already included in clean branch head `9afd7b4a`; exact history and code inspection found no equivalent returned-row revocation receipt or retry-preserving behavior in either caller. Final observed `bb91c689` changes only platform-control execution-plan files and does not overlap this slice. The earliest bounded account consequence gap was **Revoke…** for one live advisor share. Both Advisor Meeting and Your data previously closed before the server answered, while an error-free zero-row update was treated as completed access loss.
+
+Both surfaces now use the shared `ActionPreview` to identify the immediate advisor access loss, retained account share/access log, unchanged meeting preparation/other shares/official records and the no-undo/new-share boundary. Cancel receives initial focus and writes nothing. Confirmation is guarded while in flight. A server error or receipt-less update leaves the dialog open, announces a retry-or-cancel path and preserves the represented active share; success closes only after the database returns the exact id and requested revocation timestamp. Existing account RLS, tenant scope and one-way `revoked_at` policy remain authoritative.
+
+The three regression paths failed against the prior early-close and receipt-less behavior. After implementation, 59/59 focused and adjacent tests pass across Advisor Meeting, Trust Center, advisor shares, `ActionPreview`, modal accessibility, workspace-backup coverage and root cleanup. TypeScript, lint, university typecheck and production build pass; the six existing lint warnings and build chunk-size warning remain. Aggregate `design-system:check` passes 9 token tests and 69 contracts, design audit stays at zero violations, CSS stays within its ledger, and the test-backed report completes. The locked install audit reports zero dependency vulnerabilities. Ordered and shuffled full suites were not rerun.
+
+HawkScan remains an open release gate. Mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists and a local properties file was detected without reading it, but no runnable target, scan, finding result or security pass exists. This local implementation does not prove deployment, production execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains, so the program continues.

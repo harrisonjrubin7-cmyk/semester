@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Revoking an advisor share waits for the account to confirm it
+
+In **Advisor meeting** and **Your data**, revoking a live advisor share now keeps the confirmation open until the account returns the exact updated share. If the share is stale, unavailable or refused, Semester leaves the choice open and says to refresh and retry instead of claiming the advisor lost access. The preview also says that the share and access log stay in the account, meeting preparation and official advising records do not change, and revocation cannot be undone; you can make a new share later.
+
 ### Privileged platform accounts verify MFA before Semester opens staff tools
 
 An account with a live `platform_admin` or `support_agent` grant now verifies a second factor before Semester mounts any capability-backed tool, including tools outside **Semester Operations**. An enrolled authenticator-app or phone-code factor can be challenged; if neither exists, the step offers authenticator-app enrolment. A failed factor lookup has its own retry. The database also keeps those two grants dormant at `aal1` for capability checks and role-based approval requests. Accounts without either privileged role are unchanged. Production authentication configuration and recovery still require separate operational verification.
