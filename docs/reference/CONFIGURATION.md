@@ -78,7 +78,7 @@ Every one of these is server-only. None may carry a `VITE_` prefix, because that
 | `SEMESTER_JOURNAL_PATH` | The SQLite journal file for `start.ts`. | optional | `work/university/private/actions.sqlite` | `start.ts` | yes |
 | `SEMESTER_MINIMUM_ADAPTERS` | The least number of installed institution adapters for readiness. A negative or non-integer value stops the runtime. | optional | `1` | `runtime.ts` | yes |
 | `SEMESTER_MONITORING_READY` | A readiness input: exactly `1` says logs, alerts and an owner have been verified. | optional | not ready | `runtime.ts` | yes |
-| `SEMESTER_READ_ONLY` | Read-only mode: the value `on` (trimmed, any case) refuses every `POST` except `/actions/reconcile` after authentication, with 503 `read_only`. Read per request, so no restart is needed. Registered in the flag registry. | optional | off | `start.ts` | no |
+| `SEMESTER_READ_ONLY` | Read-only mode: the value `on` (trimmed, any case) refuses every `POST` except `/actions/reconcile` after authentication, with 503 `read_only`. Both entry points re-read their runtime environment object per request; a hosted environment change can still require redeploy or restart before it reaches that object. Registered in the flag registry. | optional | off | `start.ts`, `runtime.ts` | no |
 | `SEMESTER_REQUIRE_AI` | A readiness input: exactly `1` requires production-status AI for the gateway to report ready. | optional | not required | `runtime.ts` | yes |
 | `SEMESTER_SANDBOX_INSTITUTION` | Exactly `1` installs demonstration adapters whose output is not real. | optional | off | `start.ts` | no |
 | `SEMESTER_SANDBOX_PATH` | The SQLite file for the sandbox's coursework. | optional | `work/university/private/sandbox.sqlite` | `start.ts` | no |
@@ -99,7 +99,7 @@ These are the controls that sit beside the variables above. The registry is [`do
 
 | Control | Kind | Read by | Effect |
 | --- | --- | --- | --- |
-| `SEMESTER_READ_ONLY` | environment variable | the gateway, `start.ts` only | Every `POST` except `/actions/reconcile` is refused with 503 `read_only` after authentication. Not read by the production runtime, so the Vercel runtime has no read-only switch in code. |
+| `SEMESTER_READ_ONLY` | environment variable | the gateway, `start.ts` and `runtime.ts` | Every `POST` except `/actions/reconcile` is refused with 503 `read_only` after authentication. Both entry points re-read their runtime environment object per request; hosted environment propagation may still require redeploy or restart. |
 | `SHARED_AI_PROVIDER` | environment variable | `claude` | Half of the shared-key gate. The other half is the activation record in [`provideractivation.ts`](../../supabase/functions/_shared/provideractivation.ts); checklist in [`SHARED-PROVIDER-ACTIVATION.md`](../trust/SHARED-PROVIDER-ACTIVATION.md). |
 | `BILLING_LIVE_ENABLED` | environment variable | `billing-checkout` | Requested-operations half of the checkout gate; a constant in the function holds new checkout off regardless. Context: [`COMMERCIAL-CORE.md`](../COMMERCIAL-CORE.md). |
 | `kill.ai_generation` | kill switch (`feature_kill_switch` row) | `claude` | An engaged global row answers 503 before the call is counted. A row that cannot be read counts as engaged. |
