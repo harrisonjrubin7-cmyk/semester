@@ -927,6 +927,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const pulledAt = useRef(0);
   /** One pull at a time; auth, focus and reconnect can otherwise overlap. */
   const refreshing = useRef(false);
+  /**
+   * The account whose copy this device has successfully read.
+   *
+   * A first upload must not race the first pull. On a slower device the push
+   * timer could otherwise send the pre-sign-in (often empty) copy while the
+   * account read was still in flight, replacing the rows the pull was about
+   * to adopt. A later focus or reconnect pull closes the same gate until its
+   * read has finished.
+   */
+  const [pulledFor, setPulledFor] = useState<string | null>(null);
   const refresh = useCallback(async (): Promise<string> => {
     const base = { cloud: cloudConfigured, signedIn: Boolean(account), took: false, courses: 0, error: '', at: 0 };
     if (!account) {
@@ -950,6 +960,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
      */
     if (refreshing.current) return 'Semester is already syncing.';
     refreshing.current = true;
+    setPulledFor(null);
     setSync((s) => ({ ...s, status: 'syncing', error: '' }));
     pulledAt.current = Date.now();
     try {
@@ -980,6 +991,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (decide(both).do === 'ask') {
           setAsking({ sides: both, say: decide(both).say, remote });
           setSync({ status: 'synced', at: Date.now(), error: '' });
+          setPulledFor(account.id);
           return refreshSaid({ ...base, took: false }, Date.now());
         }
       }
@@ -1117,6 +1129,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         writeBase(baseOf(forLegacy(theirsAll as Record<string, unknown>)));
       }
       setSync({ status: 'synced', at: Date.now(), error: '' });
+      setPulledFor(account.id);
       return refreshSaid(
         { ...base, took: take, courses: take ? remote.courses.length : 0, at: take ? remote.updated : 0 },
         Date.now(),
@@ -1273,7 +1286,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * go back up is the second half of not losing a note.
    */
   useEffect(() => {
-    if (!account) return;
+    if (!account || pulledFor !== account.id) return;
     // Not while the first-sign-in question is open. Before it is answered
     // this device has no business writing either copy — and it used to: an
     // edit made with the dialogue on screen was pushed over the account the
@@ -1370,7 +1383,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // inside the timer and is deliberately not a dependency — it changes on
     // every navigation, and none of those are worth a write.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, edit, asking, lost, failed, online, landed]);
+  }, [account, pulledFor, edit, asking, lost, failed, online, landed]);
 
   /*
    * Push without waiting for the next edit: the offline banner asks for this

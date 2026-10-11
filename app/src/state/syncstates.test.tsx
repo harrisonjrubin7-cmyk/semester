@@ -155,6 +155,10 @@ describe('an edit goes up on the database path', () => {
     await wait(500);
     expect(pull).toHaveBeenCalledOnce();
 
+    await addTask('Made while the first pull is waiting');
+    await wait(3_000);
+    expect(push, 'the pre-pull device copy must not replace the account').not.toHaveBeenCalled();
+
     await expect(store.refresh()).resolves.toBe('Semester is already syncing.');
     expect(pull).toHaveBeenCalledOnce();
 
