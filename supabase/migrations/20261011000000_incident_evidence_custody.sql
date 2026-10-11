@@ -35,6 +35,8 @@ create table if not exists private.incident_evidence_artifact (
 
 create index if not exists incident_evidence_artifact_by_incident_time
   on private.incident_evidence_artifact (incident_id, captured_at desc, id);
+create index if not exists incident_evidence_artifact_by_tenant
+  on private.incident_evidence_artifact (tenant_id, id);
 create index if not exists incident_evidence_artifact_by_retention
   on private.incident_evidence_artifact (retention_until, id);
 
