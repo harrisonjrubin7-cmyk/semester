@@ -9,6 +9,7 @@ import {
   options,
   type Sides,
 } from './adopt';
+import { DEFAULT_PERSISTED } from '../state/shape';
 
 const sides = (over: Partial<Sides> = {}): Sides => ({
   cloud: 0,
@@ -128,14 +129,15 @@ describe('counting what is on a side', () => {
     expect(rows).toBe(5);
   });
 
-  it('does not mistake untouched defaults for authored rows', () => {
-    const defaults = {
-      saved: { e1: true, e16: true },
-      notifs: { due: true, changes: true },
-      tasks: [] as unknown[],
-    };
-    expect(countRows(structuredClone(defaults), defaults).rows).toBe(0);
-    expect(countRows({ ...defaults, tasks: [{ id: 'mine' }] }, defaults).rows).toBe(1);
+  it('does not mistake the full shipped state for authored rows', () => {
+    const defaults = structuredClone(DEFAULT_PERSISTED);
+    expect(countRows(defaults, DEFAULT_PERSISTED).rows).toBe(0);
+    expect(
+      countRows(
+        { ...defaults, tasks: [{ id: 'mine' }] },
+        DEFAULT_PERSISTED,
+      ).rows,
+    ).toBe(1);
   });
 
   it('counts courses separately, because that is the unit people think in', () => {
