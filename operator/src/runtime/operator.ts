@@ -71,7 +71,7 @@ export interface RuntimeStatus {
 }
 
 export function loadPolicy(repositoryRoot: string): PolicySet {
-  return JSON.parse(readFileSync(resolve(repositoryRoot, 'packages/operator/policy/policy.json'), 'utf8')) as PolicySet;
+  return JSON.parse(readFileSync(resolve(repositoryRoot, 'operator/policy/policy.json'), 'utf8')) as PolicySet;
 }
 
 function workerStatus(outcome: WorkerReport['outcome']): Task['status'] {

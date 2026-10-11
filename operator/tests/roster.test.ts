@@ -9,7 +9,7 @@ import { HANDLERS } from '../src/runtime/handlers.ts';
 import { READ_ONLY_TOOLS } from '../types.ts';
 import { resolve } from 'node:path';
 
-const repositoryRoot = resolve(import.meta.dirname, '../../..');
+const repositoryRoot = resolve(import.meta.dirname, '../..');
 
 test('thirty-three agents, unique ids and keys, A01..A33 in order', () => {
   assert.equal(ROSTER.length, 33);

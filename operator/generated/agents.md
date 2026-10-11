@@ -62,7 +62,7 @@ Thirty-three agents, each a bounded responsibility sharing one runtime (`src/run
 | A30 | business-operations | company | company | Internal planning, ownership tracking and decision preparation. | ops.brief (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
 | A31 | vendor-review | company | company | Service evaluation and procurement preparation. | vendor.evaluate (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
 | A32 | compliance-coordination | company | company | Requirement tracking and professional-review preparation. | compliance.prepare (model port) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A33 | knowledge-maintainer | company | company | Canonical documents and durable execution context. | docs.continuation (deterministic)<br>docs.update (model port) | read_file, list_files, search, registry_read, store_read, write_file | packages/operator/evidence/**, docs/operator/** | 15 | 60 | 10 min | 1 | $1 |
+| A33 | knowledge-maintainer | company | company | Canonical documents and durable execution context. | docs.continuation (deterministic)<br>docs.update (model port) | read_file, list_files, search, registry_read, store_read, write_file | operator/evidence/**, docs/operator/** | 15 | 60 | 10 min | 1 | $1 |
 
 ## Contracts
 
@@ -2603,7 +2603,7 @@ Never claim a file was updated unless the change actually occurred.
 
 **Available tools.** read_file, list_files, search, registry_read, store_read, write_file
 
-**Allowed writes.** packages/operator/evidence/**, docs/operator/**
+**Allowed writes.** operator/evidence/**, docs/operator/**
 
 **Prohibited actions.** Repository edits; Shell commands; External writes; Policy or approval changes; Secret disclosure
 

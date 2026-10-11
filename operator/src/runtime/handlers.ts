@@ -175,13 +175,13 @@ export const coverageRefresh: Handler = async (context) => {
   const registry = loadEcosystemRegistry(context.repositoryRoot);
   const rows = buildCoverageMatrix(registry, context.store.tasks());
   const summary = coverageSummary(rows);
-  const committed = resolve(context.repositoryRoot, 'packages/operator/generated/coverage-matrix.json');
+  const committed = resolve(context.repositoryRoot, 'operator/generated/coverage-matrix.json');
   const inStep = existsSync(committed) && JSON.parse(readFileSync(committed, 'utf8')).rows?.length === rows.length;
   return report(context, {
     outcome: 'completed', status: `${rows.length} rows; ${Object.entries(summary).map(([k, v]) => `${k}=${v}`).join(' ')}`,
     evidenceInspected: ['packages/platform-control/registry/**', 'operator task store'],
     verification: [{ name: 'generated matrix in step', passed: inStep, detail: inStep ? 'row count matches the committed matrix' : 'run `npm run operator:build` from the repository root and commit generated/' }],
-    artifacts: ['packages/operator/generated/coverage-matrix.json'], nextStep: inStep ? 'None.' : 'Regenerate and commit the matrix.',
+    artifacts: ['operator/generated/coverage-matrix.json'], nextStep: inStep ? 'None.' : 'Regenerate and commit the matrix.',
   });
 };
 

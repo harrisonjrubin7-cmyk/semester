@@ -48,7 +48,7 @@ const commands: Record<string, () => Promise<void> | void> = {
   tick                                create this period's scheduled tasks
   kill --reason r [--by who]          engage the kill switch; release-kill lifts it
   release-kill [--by who]
-Options: --state <dir> (default packages/operator/.state or $SEMESTER_OPERATOR_STATE), --environment development|staging|production, --allow-handoffs`);
+Options: --state <dir> (default operator/.state or $SEMESTER_OPERATOR_STATE), --environment development|staging|production, --allow-handoffs`);
   },
   status: () => print(runtime.status()),
   agents: () => { for (const agent of runtime.agents) console.log(`${agent.id}  ${agent.key.padEnd(26)} ${agent.suite.padEnd(13)} ${agent.implementation.padEnd(13)} ${agent.taskTypes.join(',')}`); },

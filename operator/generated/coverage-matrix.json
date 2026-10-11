@@ -829,53 +829,6 @@
       "tasks": []
     },
     {
-      "identifier": "control.operator-policy",
-      "kind": "control",
-      "system": "semester",
-      "workspace": "",
-      "module": "",
-      "userRole": "",
-      "screenOrWorkflow": "",
-      "requiredBehavior": "Semester Operator policy, approval and kill-switch enforcement",
-      "dataDependencies": [],
-      "permissions": "",
-      "integrationDependencies": [],
-      "acceptanceCriteria": "",
-      "implementationStatus": "implemented",
-      "verificationEvidence": [
-        "packages/operator/src/control/policy.ts",
-        "packages/operator/src/control/approvals.ts",
-        "packages/operator/src/control/audit.ts",
-        "packages/operator/policy/policy.json",
-        "packages/operator/tests/controls.test.ts",
-        "packages/operator/tests/runtime.test.ts"
-      ],
-      "deploymentStatus": "not_deployed",
-      "blockers": [],
-      "tasks": [
-        {
-          "id": "task_002",
-          "status": "verified"
-        },
-        {
-          "id": "task_003",
-          "status": "verified"
-        },
-        {
-          "id": "task_004",
-          "status": "verified"
-        },
-        {
-          "id": "task_005",
-          "status": "verified"
-        },
-        {
-          "id": "task_006",
-          "status": "verified"
-        }
-      ]
-    },
-    {
       "identifier": "control.tenant-isolation",
       "kind": "control",
       "system": "semester",
@@ -896,12 +849,7 @@
       ],
       "deploymentStatus": "not_deployed",
       "blockers": [],
-      "tasks": [
-        {
-          "id": "task_001",
-          "status": "awaiting_verification"
-        }
-      ]
+      "tasks": []
     },
     {
       "identifier": "document.document.registration-readiness-workflow",
@@ -1487,7 +1435,7 @@
     "specified": 15,
     "in_progress": 12,
     "blocked": 23,
-    "implemented": 9,
+    "implemented": 8,
     "verified": 1,
     "deployed": 0
   }

@@ -108,7 +108,7 @@ jobs:
           npm run operator:typecheck
           npm run operator:test
           npm run operator:build
-          git diff --exit-code -- packages/operator/generated
+          git diff --exit-code -- operator/generated
 
       - name: Keep platform-control reports
         if: always()

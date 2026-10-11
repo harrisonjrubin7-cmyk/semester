@@ -1,9 +1,9 @@
 {
   "version": 1,
   "protectedPaths": [
-    "packages/operator/policy/**",
-    "packages/operator/src/control/**",
-    "packages/operator/evidence/**/approvals.json",
+    "operator/policy/**",
+    "operator/src/control/**",
+    "operator/evidence/**/approvals.json",
     ".github/**",
     ".env",
     ".env.*",
@@ -70,7 +70,7 @@
         "npx",
         "tsc",
         "-p",
-        "packages/operator/tsconfig.json"
+        "operator/tsconfig.json"
       ],
       "cwd": ".",
       "timeoutMs": 300000

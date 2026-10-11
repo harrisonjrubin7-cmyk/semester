@@ -1819,7 +1819,7 @@
         "write_file"
       ],
       "allowedWrites": [
-        "packages/operator/evidence/**",
+        "operator/evidence/**",
         "docs/operator/**"
       ],
       "prohibited": [

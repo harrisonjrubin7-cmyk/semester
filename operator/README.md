@@ -18,7 +18,7 @@ npm run operator -- status
 npm run operator:demo             # the end-to-end demonstration (needs the package committed at HEAD)
 ```
 
-Live state defaults to `packages/operator/.state/` (gitignored) or `$SEMESTER_OPERATOR_STATE`. The demonstration writes to `evidence/demo/state/`, which is committed as the record of that run.
+Live state defaults to `operator/.state/` (gitignored) or `$SEMESTER_OPERATOR_STATE`. The demonstration writes to `evidence/demo/state/`, which is committed as the record of that run.
 
 ## What is implemented and tested
 
@@ -55,7 +55,7 @@ A model-backed agent, once a port exists, gets no wider access than its contract
 2. A10 writes `packages/platform-control/registry/controls/operator.json` in an isolated worktree.
 3. A15 runs `registry:validate` and `platform-control:test` there, recording argv, cwd, exit code and output hashes.
 4. A16 recomputes the diff hash, evaluates every acceptance criterion, and returns a verdict; the reviewed tasks move to `verified` only on acceptance.
-5. A negative control: A10 tries to write `packages/operator/policy/policy.json`; the policy denies it (`protected_path`), the task is blocked, and A16 accepts the denial as the criterion.
+5. A negative control: A10 tries to write `operator/policy/policy.json`; the policy denies it (`protected_path`), the task is blocked, and A16 accepts the denial as the criterion.
 6. A20 prepares a staging release and stops at `awaiting_approval`; nobody granted one, and no adapter exists.
 7. A02 confirms the coverage matrix is in step; A33 writes the continuation record.
 

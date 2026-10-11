@@ -24,7 +24,7 @@ const rows = buildCoverageMatrix(registry, tasks);
 const summary = coverageSummary(rows);
 const modules = moduleAgents(registry);
 
-const cell = (value: string | string[] | number | boolean) => String(Array.isArray(value) ? value.join('<br>') : value).replace(/\|/g, '\\|').replace(/\n/g, ' ');
+const cell = (value: string | string[] | number | boolean) => String(Array.isArray(value) ? value.join('<br>') : value).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ');
 const table = (header: string[], body: Array<Array<string | string[] | number | boolean>>) => [`| ${header.join(' | ')} |`, `| ${header.map(() => '---').join(' | ')} |`, ...body.map((row) => `| ${row.map(cell).join(' | ')} |`)].join('\n');
 
 const implementationOf = (taskTypes: string[], implementation: string) => taskTypes.map((type) => `${type}${type in HANDLERS ? ' (deterministic)' : implementation === 'model' ? ' (model port)' : ' (model port)'}`);

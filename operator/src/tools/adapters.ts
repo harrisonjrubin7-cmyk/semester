@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import type { EvidenceItem, PolicyContext, RiskLevel, ToolAction, ToolName } from '../../types.ts';
 import type { AuditLog } from '../control/audit.ts';
@@ -108,8 +108,9 @@ export function createToolbox(policy: PolicyController, context: PolicyContext, 
       gate({ tool: 'run_check', target: key, risk: 'low' });
       const command = policy.policy.commands[key]!;
       const runIn = resolve(cwd ?? base, command.cwd);
-      if (!existsSync(runIn)) throw new ToolDenied('run_check', key, 'cwd_missing', `${runIn} does not exist.`);
       const result = spawnSync(command.argv[0]!, command.argv.slice(1), { cwd: runIn, encoding: 'utf8', timeout: command.timeoutMs, env: minimalEnv(), shell: false, maxBuffer: 16 * 1024 * 1024 });
+      // A missing working directory or executable surfaces as ENOENT from spawn itself; no separate existence check, so nothing can change between check and use.
+      if (result.error && (result.error as NodeJS.ErrnoException).code === 'ENOENT') throw new ToolDenied('run_check', key, 'cwd_or_executable_missing', `${command.argv[0]} in ${runIn}: ${result.error.message}`);
       const stdout = result.stdout ?? '';
       const stderr = result.stderr ?? '';
       const exitCode = result.status ?? (result.error ? 124 : 1);

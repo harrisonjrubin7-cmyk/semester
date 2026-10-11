@@ -537,7 +537,7 @@ Never claim a file was updated unless the change actually occurred.`,
     acceptance: ['The written file exists with the recorded hash', 'Unresolved decisions listed', 'Next executable task named'],
     verification: ['File evidence hash recomputed'],
     escalation: ['A document whose authoritative version is disputed'],
-    tools: ['read_file', 'list_files', 'search', 'registry_read', 'store_read', 'write_file'], allowedWrites: ['packages/operator/evidence/**', 'docs/operator/**'],
+    tools: ['read_file', 'list_files', 'search', 'registry_read', 'store_read', 'write_file'], allowedWrites: ['operator/evidence/**', 'docs/operator/**'],
   }),
 ];
 

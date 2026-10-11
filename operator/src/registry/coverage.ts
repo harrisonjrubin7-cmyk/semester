@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
-import type { BacklogItem, CapabilityRecord, PlatformManifest, RegistryRecord, WorkflowRecord, WorkspaceRecord } from '../../../platform-control/types.ts';
+import type { BacklogItem, CapabilityRecord, PlatformManifest, RegistryRecord, WorkflowRecord, WorkspaceRecord } from '../../../packages/platform-control/types.ts';
 import type { Task } from '../../types.ts';
 
 /**
