@@ -1668,3 +1668,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep official degree-audit operations, whole-account deletion and same-origin device erase separate from this one-draft account mutation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed Productivity cloud-workspace deletion — automation pass 2, integration slice 80
+
+- [x] Start from clean current base `121eb809`; fetch `origin/main` and confirm no equivalent Productivity cloud deletion preview, retry path or returned-row receipt has landed. Final observed upstream `d44f10f6` changes only incident-evidence custody files and does not overlap this slice.
+- [x] Re-rank the private account workspace deletion as the earliest bounded consequence gap; keep the current device workspace, other account data, institution records and downloaded exports outside the mutation.
+- [x] Open the shared `ConfirmDialog` and `ActionPreview` before any delete, naming the reviewed revision and its decision, capture and draft counts.
+- [x] Give Cancel initial focus and prove cancellation performs no cloud write.
+- [x] Explain that the reviewed cloud copy must be exported before deletion to preserve its exact contents and that the current device workspace can be saved again later.
+- [x] Require the database delete to return the account row before reporting success; treat an error-free zero-row result as refusal/staleness rather than completion.
+- [x] Keep a failed deletion dialog open with unchanged cloud/device state shown and offer retry or cancel.
+- [x] Prove the four intended guards red against the prior behavior, then pass 20/20 focused and adjacent Productivity, ActionPreview/modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass 147/147 exact token, design-check and report-contract tests; retain zero audit violations, 86 existing warnings and the CSS ledger.
+- [ ] Aggregate design-system wrappers — cannot complete because they hardcode unavailable `npm`/`npx`; their exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-workspace slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports Hawk and Docker absent and no app host configured. A local credential properties file exists but was not read; no target, scan, finding result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep whole-account deletion, same-origin device erase, aggregate-consent changes and institution operations separate from this one private cloud copy.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
