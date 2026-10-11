@@ -2,7 +2,7 @@ import { obj, textValue } from '../device-library';
 import { blankDeclaration, type Declaration } from './disclosure';
 import { USES, type Use } from './policy';
 import { readProjects, type Project } from './research';
-import { readWorkspaces, type Workspace } from './templates';
+import { readWorkspaces, type Workspace } from './workspace-storage';
 
 /*
  * The Toolkit schema and account-scoped keys live below components so backup
