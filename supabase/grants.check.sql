@@ -635,6 +635,14 @@ declare
     -- tenants without exact implementation scope, and performs no mutation.
     'console_release_incidents(include_demo boolean)',
 
+    -- Identity-minimized, two-person role-grant review. These paths require
+    -- access_review:manage at platform scope and fresh MFA; the private
+    -- snapshot, decisions and signoff have no client or service-role grants.
+    'begin_privileged_access_review(want_period_start date, want_period_end date, want_next_due date)',
+    'complete_privileged_access_review(want_review text)',
+    'decide_privileged_access_review_item(want_item text, want_decision text, want_reason_code text)',
+    'privileged_access_review(want_review text)',
+
     -- Identity-minimized privacy queue. It requires the platform console
     -- shell, derives tenants from exact-school data_request:handle grants and
     -- keeps subject ids and request content out of its result.

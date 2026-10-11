@@ -131,6 +131,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['available_case_supporters', 'read-helper', ['auth.uid()', 'private.subject_has_capability']],
   ['available_supporters', 'read-helper', ['auth.uid()']],
   ['begin_community_image', 'self-service', ['auth.uid()', 'private.community_role']],
+  ['begin_privileged_access_review', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['beta_add_cohort', 'admin', ['private.beta_manager']],
   ['beta_create_program', 'admin', ['auth.uid()', 'private.beta_manager']],
   ['beta_declare_flag', 'admin', ['private.beta_manager']],
@@ -158,6 +159,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['community_reviewer_standing', 'moderation', ['private.has_capability']],
   ['community_session_counts', 'read-helper', ['private.community_role']],
   ['complete_onboarding_step', 'self-service', ['auth.uid()']],
+  ['complete_privileged_access_review', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['connected_with', 'read-helper', ['auth.uid()']],
   ['console_act', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['console_audit_read', 'admin', ['auth.uid()', 'private.has_capability']],
@@ -180,6 +182,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['decide_community_appeal', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['decide_community_case', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['decide_community_escalation', 'moderation', ['auth.uid()', 'private.has_capability']],
+  ['decide_privileged_access_review_item', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['decide_school_request', 'admin', ['private.has_capability']],
   ['delete_community_post', 'self-service', ['auth.uid()']],
   ['dining_advance_order', 'admin', ['auth.uid()', 'private.dining_caller_school', 'private.has_capability']],
@@ -267,6 +270,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['office_desk_actions', 'admin', ['auth.uid()', 'private.may_publish']],
   ['open_help_request', 'self-service', ['auth.uid()', 'private.answers_for']],
   ['open_support_ticket', 'self-service', ['auth.uid()']],
+  ['privileged_access_review', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['privileged_mfa_required', 'read-helper', ['auth.uid()']],
   ['productivity_readiness_aggregate', 'admin', ['auth.uid()', "'admin'=any(m.roles)", 'if owners<10']],
   ['propose_offboarding', 'admin', ['auth.uid()', 'private.is_app_admin', 'private.has_capability']],
@@ -462,6 +466,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * historical snapshot.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261011160000_privileged_access_review.sql',
+    functions: ['begin_privileged_access_review', 'complete_privileged_access_review', 'decide_privileged_access_review_item', 'privileged_access_review'],
+  },
   {
     file: '20261009230000_guardian_projection_foundation.sql',
     functions: ['read_guardian_calendar_projection', 'read_guardian_projection_access_history'],

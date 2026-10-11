@@ -41,9 +41,9 @@ Include human, service, provider and integration identities; SSO/SCIM membership
 
 ## Evidence state
 
-**Repository evidence.** Scoped roles/capabilities, selected lifecycle/audit/expiry/approval controls and access-policy guidance support a review process.
+**Repository evidence.** Scoped roles/capabilities, selected lifecycle/audit/expiry/approval controls and access-policy guidance support a review process. The repository also contains a fresh-MFA, two-person `role_grants` snapshot, decision, revocation and immutable signoff path in `20261011160000_privileged_access_review.sql`, exercised synthetically by `supabase/privileged-access-review.check.sql`.
 
-**Operational evidence.** No complete target identity/access inventory, customer-approved matrix, recurring review, remediation record, privileged/service-account reconciliation, staffed backups or customer sign-off is evidenced.
+**Operational evidence.** No human has run that path against production, and it covers Semester's role-grant table only. No complete provider-console identity/access inventory, customer-approved matrix, recurring review, real remediation record, privileged/service-account reconciliation, staffed backups or customer sign-off is evidenced.
 
 **Missing test/proof.** Run this procedure against the exact target with authoritative inventories; resolve discrepancies; sample effective access and joiner/mover/leaver cases; exercise privileged/emergency access; obtain owner/customer sign-off and repeat on cadence.
 
