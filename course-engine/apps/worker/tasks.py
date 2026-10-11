@@ -213,6 +213,7 @@ def _commit_extraction(
             "low_confidence_extraction",
             "unsupported_file",
             "no_extractable_content",
+            "extraction_failed",
         )),
     ))
     for unsupported_path in unsupported:

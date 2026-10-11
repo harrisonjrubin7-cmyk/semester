@@ -157,6 +157,8 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
             ("extract_document", str(stranded_queued.id), str(stranded_queued.id)),
             ("generate_study_asset", str(expired_generation.id), str(expired_generation.id)),
         }
+        stranded_queued_id = stranded_queued.id
+        fresh_queued_id = fresh_queued.id
         inactive_id = inactive.id
         inactive_queued_id = inactive_queued.id
 
@@ -183,6 +185,8 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
         assert queued_terminal.status == JobStatus.failed
         assert queued_terminal.revoked_at is not None
         assert queued_terminal.error == "Job scope was deleted"
+        assert session.get(BackgroundJob, stranded_queued_id).heartbeat_at is not None
+        assert session.get(BackgroundJob, fresh_queued_id).heartbeat_at is None
 
 
 def test_lease_heartbeat_runs_while_worker_operation_is_blocked(monkeypatch):

@@ -252,6 +252,7 @@ def test_extraction_routes_even_high_confidence_evidence_through_review(tmp_path
         def fail_after_review_cleanup(_db, _document):
             raise ValueError("replacement failed")
 
+        original_invalidator = worker.invalidate_document_assets
         worker.invalidate_document_assets = fail_after_review_cleanup
         with pytest.raises(ValueError, match="replacement failed"):
             worker.extract_document.run(str(replacement_id))
@@ -259,6 +260,28 @@ def test_extraction_routes_even_high_confidence_evidence_through_review(tmp_path
             assert session.get(ReviewItem, review_id) is not None
             assert session.get(SourceChunk, chunk.id) is not None
             assert session.get(Citation, citation_id) is not None
+            failed_review = session.scalar(select(ReviewItem).where(
+                ReviewItem.document_id == document_id,
+                ReviewItem.item_type == "extraction_failed",
+            ))
+            assert failed_review is not None
+
+        with testing_session() as session:
+            successful_retry = BackgroundJob(
+                course_id=course_id,
+                document_id=document_id,
+                job_type="extract",
+            )
+            session.add(successful_retry)
+            session.commit()
+            successful_retry_id = successful_retry.id
+        worker.invalidate_document_assets = original_invalidator
+        worker.extract_document.run(str(successful_retry_id))
+        with testing_session() as session:
+            assert session.scalar(select(ReviewItem).where(
+                ReviewItem.document_id == document_id,
+                ReviewItem.item_type == "extraction_failed",
+            )) is None
     finally:
         app.dependency_overrides.clear()
 
