@@ -1382,9 +1382,9 @@ describe('the constants a reader would copy', () => {
   });
 
   it('records which entry point honours which switch, so the page cannot say otherwise', () => {
-    // Read-only mode, SCIM and telemetry are wired in exactly one entry point each.
+    // Read-only mode is wired in both entry points; SCIM and telemetry are production-runtime only.
     expect(src(SRC.start)).toMatch(/readOnly:/);
-    expect(src(SRC.runtime)).not.toMatch(/readOnly/);
+    expect(src(SRC.runtime)).toMatch(/readOnly:/);
     expect(src(SRC.runtime)).toMatch(/withScim\(/);
     expect(src(SRC.start)).not.toMatch(/scim/i);
     expect(src(SRC.runtime)).toMatch(/telemetry:/);
@@ -1393,10 +1393,15 @@ describe('the constants a reader would copy', () => {
     expect(src(SRC.runtime)).not.toMatch(/sandbox\.ts|sandboxAdapters|SEMESTER_SANDBOX/);
     expect(src(SRC.start)).toMatch(/sandboxAdapters\(/);
     expect(src(SRC.start)).toMatch(/\(process\.env\.SEMESTER_READ_ONLY \|\| ''\)\.trim\(\)\.toLowerCase\(\) === 'on'/);
+    expect(src(SRC.runtime)).toMatch(/\(env\.SEMESTER_READ_ONLY \|\| ''\)\.trim\(\)\.toLowerCase\(\) === 'on'/);
+    const configuration = read('docs/reference/CONFIGURATION.md');
+    expect(configuration).not.toContain('start.ts only');
+    expect(configuration).not.toContain('production runtime has no read-only switch');
+    expect(configuration).toContain('the gateway, `start.ts` and `runtime.ts`');
     expect(src(SRC.runtime)).toMatch(/refreshIdentity:/);
     expect(src(SRC.start)).toMatch(/refreshIdentity:/);
     const auth = read(PAGES.auth);
-    expect(auth).toMatch(/Read-only mode is wired only into `start\.ts`/);
+    expect(auth).toContain('Both `start.ts` and the Vercel runtime read `SEMESTER_READ_ONLY` through a callback on every request.');
     expect(read(PAGES.scim)).toMatch(/`start\.ts` does not mount SCIM/);
   });
 
