@@ -1387,3 +1387,520 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 recoverable opportunity-suggestion dismissal — automation pass 15, integration slice 66
+
+- [x] Fast-forward the clean branch to current `origin/main` `071e679d`; confirm its typed capability-maturity evidence has no `dismissProgramme`, suggestion-preference or shared-Undo equivalent.
+- [x] Re-rank remaining consequence paths and select only **Not for me** on a shipped opportunity suggestion; keep permanent file purge, broad demo reset and scanner-backed Import outside the mutation.
+- [x] Add `dismissProgramme` to the shared eight-second Undo contract with exactly `wanted` and change detection for the nested preference update.
+- [x] Restore the exact dismissed list plus year and field filters without reverting unrelated work; keep the catalog, provenance caveats, official link, route, visible control and persistence unchanged.
+- [x] Prove registry, snapshot and reducer assertions red before implementation, then pass 190/190 focused Undo, reducer, suggestion, Applying and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and build chunk-size warning.
+- [x] Pass 9/9 token-export tests, 69/69 design-check contracts, 96/96 report contracts, design audit with no violations and CSS ledger checks.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed Advisor Meeting preparation deletion — automation pass 16, integration slice 67
+
+- [x] Fetch current `origin/main` `071e679d`; confirm it has no equivalent Advisor Meeting consequence-preview change and remains the branch base.
+- [x] Re-rank remaining consequence paths and select only device-owned meeting-preparation deletion; keep permanent file purge, broad demo reset and scanner-backed Import outside the mutation.
+- [x] Replace the ad hoc deletion sentence with the shared `ActionPreview`, naming the selected meeting, exact local payload removed, already-created shares and official records that remain unchanged.
+- [x] State the truthful recovery boundary: a prior device workspace backup can restore meeting structure but never the intentionally device-private notes.
+- [x] Preserve initial Cancel focus, no-write cancellation, account-keyed storage, share authority and the existing deletion behavior.
+- [x] Prove the rendered consequence assertion red before implementation, then pass 30/30 focused Advisor Meeting, preview, backup and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and build chunk-size warning.
+- [x] Pass 78/78 design-system constituent tests, 96/96 report contracts, design audit with no violations and the CSS ledger check.
+- [ ] Aggregate design-system report launcher and ordered/shuffled full suites — not run for this bounded content/state-contract slice; shell `npm`/`npx` are unavailable and the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed remembered-line deletion — automation pass 17, integration slice 68
+
+- [x] Begin from `origin/main` `071e679d`; inspect final fetched `9642e983`, confirm its separate Course Engine upload/calendar work contains no equivalent Profile remembered-line preview, test or integration-control change, then merge it cleanly as `d7d63db6` after slice commit `f3993a30`.
+- [x] Re-rank remaining consequence paths and select only one student-authored assistant-context line; keep conversation deletion, permanent file purge, broad demo reset and scanner-backed Import outside the mutation.
+- [x] Replace Profile's immediate × deletion with the shared `ConfirmDialog` and `ActionPreview`; bring the existing Trust & Data confirmation onto the same structured contract.
+- [x] Name the exact line, immediate device effect, account effect after sync, unchanged remembered lines/conversations/notes/plans and lack of automatic Undo.
+- [x] State the truthful recovery boundary: the student may re-add text they still know, and a data export downloaded before deletion retains the earlier copy without becoming an automatic restore claim.
+- [x] Preserve initial Cancel focus and no-write cancellation; confirmation dispatches the unchanged `setAboutMe` update containing every other fact.
+- [x] Prove the new Profile guard red against immediate deletion, then pass 146/146 About Me, Trust Center, ActionPreview, modal, root-unmount, fact, export and private-backup tests.
+- [x] Pass 146/146 focused tests plus TypeScript, lint, university typecheck and production build again on the reconciled head; retain the existing four lint warnings and build chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design-check contracts, 96/96 report contracts, aggregate report generation, design audit with no violations and the CSS ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded content/state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed Student Operating item deletion — automation pass 18, integration slice 69
+
+- [x] Start from clean head `a6cd4b5e`; fetch `origin/main` `9642e983` and confirm it is already merged and contains no equivalent Student Operating item consequence preview.
+- [x] Re-rank remaining consequence paths and select only one saved private Student Operating item; keep whole-workspace deletion, preference deletion, permanent file purge, broad demo reset and scanner-backed Import separate.
+- [x] Replace first-press item deletion with the shared `ConfirmDialog` and `ActionPreview`, naming the item, workflow kind, device/account-sync effect, unaffected data and already-open editor/review boundary.
+- [x] Preserve the current `operatingWorkspace` JSON authority and exact selected-entry filter; add no route, dependency, schema, policy, provider operation or external-system effect.
+- [x] State the truthful recovery boundary: a core Semester data backup made before deletion can restore the earlier workspace.
+- [x] Prove the focused guard red against immediate deletion, then pass 122/122 Student Operating, domain, ActionPreview, modal, core export/backup and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and build chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design-check contracts, 96/96 report contracts, design audit with zero violations and the CSS ledger.
+- [ ] Aggregate design-system report wrapper — writes the report, then cannot launch its `npx` contract subprocesses in this shell; exact constituents pass, but no aggregate wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded content/state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target or scan can start and no security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep preference deletion, permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed Student Operating preference deletion — automation pass 19, integration slice 70
+
+- [x] Start from clean head `b7c61944` with `origin/main` `9642e983` already merged; inspect final fetched `8c3acf89`, confirm its developer-tools-only change has no overlap, then merge it cleanly after slice commit `c8a0cf15` as `2dec7e1a`.
+- [x] Re-rank remaining consequence paths and select only saved Student Operating preferences; keep whole-workspace deletion, permanent file purge, broad demo reset and scanner-backed Import separate.
+- [x] Replace first-press preference deletion with the shared `ConfirmDialog` and `ActionPreview`, naming the saved term, preference families removed, editor reset, device/account-sync effect, unaffected workflow items/exports/official records and recovery boundary.
+- [x] Preserve the current `operatingWorkspace` JSON authority; confirmation clears only `manual`, resets transient preference state and leaves every saved workflow entry intact.
+- [x] State the truthful recovery boundary: a core Semester data backup made before deletion can restore the earlier workspace, and the student can enter new preferences later.
+- [x] Prove the focused guard red against immediate deletion, then pass 161/161 Student Operating, domain, ActionPreview, modal, core export/backup and root-unmount tests.
+- [x] After upstream reconciliation, pass the combined focused set 183/183 and rerun TypeScript successfully.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and build chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design-check contracts, 96/96 report contracts, design audit with zero violations and the CSS ledger.
+- [ ] Aggregate design-system report wrapper — writes the report, then cannot launch its `npx` contract subprocesses in this shell; exact constituents pass, but no aggregate wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded content/state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight finds no Hawk CLI or Docker, `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, and the local properties file was not read. `stackhawk.yml` exists, but no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed one-file permanent deletion — automation pass 6, integration slice 71
+
+- [x] Begin with `origin/main` `8c3acf89` already merged; inspect final fetched `d20a4d18`, confirm its registration-readiness boundary has no overlap, then merge it cleanly after slice commit `cb147e44` as `9a5c17bd`.
+- [x] Re-rank remaining consequence paths and select only one file already in the device-local bin; keep bulk bin emptying, automatic retention cleanup, same-origin device erase and scanner-backed Import separate.
+- [x] Replace first-press `deleteFile` with the existing irreversible `TypeToConfirm` flow and require the exact file name.
+- [x] Name the exact file, stored-byte count, links that remain but can no longer open it, external copies that remain and the no-Undo/no-backup recovery boundary.
+- [x] Preserve cancellation without writes and the existing single-record IndexedDB deletion, shared Drive failure message and refresh behavior; add no route, dependency, schema, policy, server operation or provider effect.
+- [x] Prove both focused tests red against the prior first-press behavior, then pass 53/53 Drive, files, typed-confirm, modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and chunk-size warning.
+- [x] After final upstream reconciliation, pass the same 53 focused tests, TypeScript, lint, university typecheck and production build again.
+- [x] Pass 9/9 token-export tests, 69/69 design-check contracts and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the CSS ledger.
+- [ ] Aggregate `design-system:check` launcher — cannot start because it hardcodes unavailable `npm`; its exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep bulk empty-bin deletion, automatic retention cleanup and same-origin device erase separate until their broader concurrency, retention and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed bulk bin emptying — automation pass 7, integration slice 72
+
+- [x] Start from current `origin/main` `d20a4d18` already merged; confirm it contains no equivalent bulk-bin consequence preview or exact-snapshot purge operation.
+- [x] Re-rank remaining consequence paths and select only manual bulk emptying of the device-local bin; keep automatic retention cleanup, same-origin device erase and scanner-backed Import separate.
+- [x] Replace first-press `emptyTrash()` with the existing irreversible `TypeToConfirm` flow and require **EMPTY BIN**.
+- [x] Name the exact previewed count and byte total, surviving but unusable course/deadline/note links, unaffected external copies and the no-Undo/no-backup recovery boundary.
+- [x] Capture the previewed ids and add `purgeTrash`, which deduplicates them and deletes only records that are still binned; preserve files restored before confirmation and files binned after the preview opened.
+- [x] Preserve cancellation without writes and the shared Drive failure/refresh boundary; add no route, dependency, schema, policy, server operation or provider effect.
+- [x] Prove three focused assertions red against the prior behavior, then pass 23/23 directly changed and 43/43 adjacent Drive, file, modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and chunk-size warning.
+- [x] Pass 147/147 token/design contracts, design audit with no violations and the CSS ledger check.
+- [ ] Aggregate npm design launchers — unavailable because the shell has no `npm`/`npx`; exact constituents pass, but no aggregate launcher pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep automatic retention cleanup and same-origin device erase separate until their broader retention, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed automatic bin retention — automation pass 8, integration slice 73
+
+- [x] Start from current `origin/main` `d20a4d18` already merged; confirm it contains no equivalent strict Drive retention read, cleanup receipt or cleanup-failure recovery state.
+- [x] Re-rank the remaining consequence paths and select only automatic 30-day deletion of device-local binned files; keep same-origin device erase and scanner-backed Import separate.
+- [x] Preserve the resilient empty-list contract for ordinary file browsing while making the retention write boundary propagate a refused IndexedDB read instead of reporting zero due.
+- [x] Keep the full 30-day cutoff and transactional still-binned recheck; preserve restored files and files newer than the cutoff.
+- [x] Announce the actual permanently removed count, no-Undo/no-backup recovery boundary and unaffected external copies through the shared polite notice; announce a failed sweep assertively with inspect-and-retry guidance.
+- [x] Prove the two new retention/recovery assertions red against the prior behavior, then pass 39/39 focused and adjacent file, Drive, modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and chunk-size warning.
+- [x] Pass the aggregate design-system check (9 token-export tests and 69 contracts, no new audit/CSS-ledger violation) and the test-backed design report.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only retention slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep same-origin device erase separate until its origin-sharing, provider-revocation, partial-failure and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 device-erase caller recovery — automation pass 9, integration slice 74
+
+- [x] Start with `origin/main` `d20a4d18` already merged; after slice commit `70883874`, inspect and merge final `f7dba6e6`, whose institution-idempotency and classified-offline-storage work adds erase-core attachment coverage but no equivalent caller recovery path.
+- [x] Reconcile existing device-erase boundaries: Semester-only same-origin keys, provider withdrawal before token removal, typed confirmation and explicit account non-effect remain current authority.
+- [x] Make Privacy reload only after a resolved erase; on rejection, remain open, announce the incomplete wipe assertively, re-enable retry and preserve the account boundary.
+- [x] Make institutional sample reset reload only after a resolved erase; on rejection, retain the current sample and stop claiming a reset.
+- [x] Prove both caller guards red against the prior unconditional reload, pass 40/40 focused Privacy, sample-reset, erase, revocation and root-unmount tests, then pass 45/45 on the merged head including classified-attachment erase coverage.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the existing four lint warnings and chunk-size warning.
+- [x] Pass 9/9 token-export tests, 69/69 design-check contracts, 96/96 report contracts, design audit with zero violations and the CSS ledger check.
+- [ ] Aggregate npm design-system launchers — unavailable because this shell has no `npm`/`npx`; exact constituents pass and no aggregate launcher result is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded caller-state slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — the active skill stops at preflight because Hawk v6 and Docker are absent, `HAWK_API_KEY` / `HAWK_APP_HOST` are unset and no target is running. `stackhawk.yml` exists, but no scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Add truthful per-store completion evidence before classifying a swallowed unavailable-store clear as success; keep post-reload provider-revocation results separate from device storage.
+- [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 recoverable Toolkit workspaces — automation pass 12, integration slice 90
+
+- [x] Start from clean required-branch head `bb70b1c7`; confirm selection-time `origin/main` `ec618dea` is already included, then inspect final `bbf94ea2` and confirm its production read-only wiring/reference files do not overlap the Toolkit, backup or integration-control slice.
+- [x] Re-rank broader Toolkit backup coverage as the earliest adjacent recovery gap after governing research source, claim and project deletion; keep server ingestion and official academic records outside the slice.
+- [x] Extract Toolkit keys, schema and reader below React so UI persistence and backup validation share one production authority without duplicating the model.
+- [x] Add both account-scoped Toolkit records to the existing device-workspace backup: assignments/research/declarations and the separate raw Data Studio project store.
+- [x] Preserve exact-account export isolation and restore into the restoring account rather than the account named by the source device.
+- [x] Validate both records before any restore write and refuse a malformed data project without partially restoring the valid Toolkit record.
+- [x] Update research source, claim and whole-project consequence previews to name the pre-removal device-workspace backup and the manual re-entry fallback truthfully.
+- [x] Prove coverage, round-trip and preview guards red before implementation, then pass 68/68 focused backup, Toolkit, ActionPreview and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the existing chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design-check contracts and 96/96 report contracts with zero audit violations, 86 existing warnings and no CSS-ledger increase; regenerate the test-backed report through a temporary local shim that is not retained.
+- [x] Commit the coherent slice as `178da384`, merge final upstream `bbf94ea2` cleanly as `0226ed29`, then pass the same 68/68 focused tests, TypeScript and university gateway typecheck on the combined head.
+- [ ] Aggregate `design-system:check` wrapper — cannot start its hardcoded `npm` subprocess because this shell exposes only `pnpm`; its exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace recovery slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists and a local properties file was not read, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep whole-account deletion, provider state, official records and external operations separate from this account-scoped device backup.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 truthful device-erase completion — automation pass 10, integration slice 75
+
+- [x] Merge current `origin/main` `0b1522dc` into the clean branch as slice base `481f6d7d`; confirm its guardian calendar reader/history contains no equivalent device-erase completion contract. Inspect final `b8d685e1`; its sole net institution-gateway test does not overlap.
+- [x] Preserve Semester-prefix scoping, stop-writing order, provider-withdrawal-before-token-removal, typed confirmation and explicit account non-effect.
+- [x] Verify each prefixed Web Storage removal and return the exact confirmed store list on a complete erase.
+- [x] Attempt every device storage area after either a thrown failure or false completion result, then throw one bounded partial receipt instead of reloading or claiming success.
+- [x] Make the repository database wipe report unavailable-handle and transaction failures; make snapshot, outbox, vault, engine and shared-cache clears return truthful completion.
+- [x] Prove the core regression red against prior swallowed failure; cover thrown and boolean refusals, a silent Web Storage no-op and continued attempts through the final cache.
+- [x] Pass 104/104 focused and adjacent erase, outbox, engine, history, classified-attachment, Privacy, institutional-sample and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the six existing post-merge lint warnings and build chunk-size warning.
+- [x] Pass 9/9 token-export tests, 69/69 direct design contracts, design audit with no new violation and the CSS ledger check.
+- [ ] Aggregate design report wrapper — writes the unchanged report, then exits because this shell has no `npm`; no aggregate wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-storage slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — the active skill stops at mandatory preflight because `hawk` is not installed; no target, scan, finding result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep post-reload provider-withdrawal results separate from confirmed local storage removal; do not widen this slice into provider activation or account deletion.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed study-abroad program removal — automation pass 11, integration slice 76
+
+- [x] Start from clean head `a96a5883`; fetch current `origin/main` `b8d685e1`, confirm it is already merged and contains no equivalent Study Abroad program-removal preview or regression guard.
+- [x] Re-rank remaining Phase 3 consequence paths and select only one account-keyed, student-authored study-abroad program; keep course-row removal, official workflows and scanner-backed Import separate.
+- [x] Replace first-press removal with the shared `ConfirmDialog` and `ActionPreview`, naming the program, course matches, recorded approval states and stage progress removed from this device.
+- [x] State that other plans, official applications, written approval decisions and school-held records remain unchanged and that Semester sends no removal request.
+- [x] Preserve initial Cancel focus and no-write cancellation; explicit confirmation uses the unchanged exact-id device-library mutation and adds a truthful completion receipt.
+- [x] State the bounded recovery path: only a device workspace backup made before removal can restore the earlier plan.
+- [x] Prove the focused guard red against the prior immediate deletion, then pass 59/59 focused and adjacent Study Abroad, domain, device-library, backup, preview, modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the six existing lint warnings and build chunk-size warning.
+- [x] Pass 78/78 design-check constituents, 96/96 report contracts, design audit with no new violation and the CSS ledger check.
+- [ ] Aggregate npm design-system launchers — unavailable because this shell has no `npm`/`npx`; exact constituents pass, but no aggregate launcher or regenerated report pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-library slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no target, scan, finding result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep study-abroad course-row removal, official/provider operations and account deletion separate from this device-plan mutation.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed study-abroad course-match removal — automation pass 12, integration slice 77
+
+- [x] Start from clean head `b01e1d45`; fetch selection-time `origin/main` `b8d685e1` and confirm it is already merged with no equivalent course-match removal preview or guard. Inspect final `a607200c`; its privileged-MFA/account-pull work changes none of the six slice files and adds no equivalent flow.
+- [x] Re-rank remaining Phase 3 consequence paths and select only one student-entered study-abroad course match; keep official/provider operations and scanner-backed Import separate.
+- [x] Replace first-press removal with the shared `ConfirmDialog` and `ActionPreview`, naming the host/home match, credits, recorded approval status and source note removed from this device.
+- [x] State that the program, its stage progress, other course matches and school-held records remain unchanged and that Semester sends no removal request.
+- [x] Preserve initial Cancel focus and no-write cancellation; explicit confirmation uses the unchanged exact-id account-keyed device-library mutation and adds a truthful completion receipt.
+- [x] State the bounded recovery path: only a device workspace backup made before removal can restore the earlier match.
+- [x] Prove the focused guard red against the prior immediate deletion, then pass 76/76 focused and adjacent Study Abroad, domain, device-library, backup, preview, modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the six existing lint warnings and build chunk-size warning.
+- [x] Pass 78/78 token/design-check constituents, 96/96 report contracts, design audit with no new violation and the CSS ledger check; the report artifact remains unchanged.
+- [x] Commit the coherent slice as `dc4ab398`, merge current `origin/main` `a607200c` cleanly as `b7547bd2`, then pass the same 76/76 focused tests and TypeScript on the merged head.
+- [ ] Aggregate `design-system:check` launcher — cannot start because it hardcodes unavailable `npm`; its exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-library slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no target, scan, finding result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official study-abroad operations, provider changes and account deletion separate from this device-plan mutation.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-10 governed graduation-scenario removal — automation pass 13, integration slice 78
+
+- [x] Start from clean head `0f3cc514`; fetch current `origin/main` `a607200c`, confirm it is already included and contains no equivalent graduation-scenario preview or regression guard.
+- [x] Re-rank remaining Phase 3 consequence paths and select only removal of one student-authored graduation what-if scenario from device storage; keep account-draft deletion and official degree records separate.
+- [x] Replace first-press removal with the shared `ConfirmDialog` and `ActionPreview`, naming the scenario and its exact credit-load assumptions, including study-abroad assumptions when present.
+- [x] State that the current plan, other scenarios, downloaded summaries and official degree audit remain unchanged, and that a separately saved account draft remains in the account.
+- [x] Preserve initial Cancel focus and no-write cancellation; explicit confirmation uses the unchanged exact-id device-library mutation, closes only on a successful write and announces a device-only receipt.
+- [x] State the bounded recovery path: only a device workspace backup made before removal can restore the earlier scenario.
+- [x] Prove the focused guard red against prior immediate deletion, then pass 57/57 focused and adjacent graduation, cloud-draft, backup, preview/modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain the six existing lint warnings and build chunk-size warning.
+- [x] Pass 147/147 combined token, design-check and report contracts; retain zero audit violations, 86 existing warnings and the CSS ledger.
+- [ ] Aggregate design-system wrappers — cannot complete because they hardcode unavailable `npm`/`npx`; their exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-library slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan, finding result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep account-draft deletion, official degree-audit operations and account deletion separate from this device-only scenario mutation.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed graduation account-draft removal — automation pass 1, integration slice 79
+
+- [x] Start from clean head `121eb809`; fetch `origin/main`, confirm it is identical, and inspect exact work rather than duplicating landed commit `44950935`.
+- [x] Reconcile the separately authorized signed-in-account draft removal while preserving the device scenario, other account drafts, downloads and registrar-owned degree audit.
+- [x] Confirm the shared `ConfirmDialog` and `ActionPreview` disclose the account-only effect, unchanged records and no-restore boundary before any server write.
+- [x] Confirm cancellation writes nothing; explicit confirmation waits for a returned deletion row before removing that account's cloud id from the device mapping.
+- [x] Confirm a refused or receipt-less deletion leaves the dialog open, preserves the device/account state shown by the client and offers retry or cancel.
+- [x] Pass 36/36 focused and adjacent graduation, cloud, ActionPreview and root-unmount tests on current head.
+- [x] Update the four persistent integration controls without changing production code.
+- [ ] Production-change HawkScan DAST — the landed slice recorded `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; this documentation-only reconciliation does not trigger another scan, and no DAST pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for documentation-only reconciliation; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official degree-audit operations, whole-account deletion and same-origin device erase separate from this one-draft account mutation.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed Productivity cloud-workspace deletion — automation pass 2, integration slice 80
+
+- [x] Start from clean current base `121eb809`; fetch `origin/main` and confirm no equivalent Productivity cloud deletion preview, retry path or returned-row receipt has landed. Final observed upstream `d44f10f6` changes only incident-evidence custody files and does not overlap this slice.
+- [x] Re-rank the private account workspace deletion as the earliest bounded consequence gap; keep the current device workspace, other account data, institution records and downloaded exports outside the mutation.
+- [x] Open the shared `ConfirmDialog` and `ActionPreview` before any delete, naming the reviewed revision and its decision, capture and draft counts.
+- [x] Give Cancel initial focus and prove cancellation performs no cloud write.
+- [x] Explain that the reviewed cloud copy must be exported before deletion to preserve its exact contents and that the current device workspace can be saved again later.
+- [x] Require the database delete to return the account row before reporting success; treat an error-free zero-row result as refusal/staleness rather than completion.
+- [x] Keep a failed deletion dialog open with unchanged cloud/device state shown and offer retry or cancel.
+- [x] Prove the four intended guards red against the prior behavior, then pass 20/20 focused and adjacent Productivity, ActionPreview/modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass 147/147 exact token, design-check and report-contract tests; retain zero audit violations, 86 existing warnings and the CSS ledger.
+- [ ] Aggregate design-system wrappers — cannot complete because they hardcode unavailable `npm`/`npx`; their exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-workspace slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports Hawk and Docker absent and no app host configured. A local credential properties file exists but was not read; no target, scan, finding result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep whole-account deletion, same-origin device erase, aggregate-consent changes and institution operations separate from this one private cloud copy.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed advisor-share deletion — automation pass 3, integration slice 81
+
+- [x] Start from clean current head `3e7448e1`; fetch `origin/main` `d44f10f6`, confirm it is already included and inspect exact Advisor Meeting/share history for overlap.
+- [x] Re-rank one signed-in student's advisor-share deletion as the earliest bounded account consequence gap; keep meeting preparation, other shares and official advising records outside the mutation.
+- [x] Replace the prose-only delete body with the shared `ActionPreview`, naming the removed share/access log, advisor access loss, unchanged records and no-restore boundary.
+- [x] Give Cancel initial focus and prove the first press and cancellation perform no server delete.
+- [x] Guard repeat confirmation while the request is in flight; keep a refused deletion dialog open with an assertive retry-or-cancel path.
+- [x] Require the database delete to return the exact account-scoped row before reporting success; treat a zero-row response as refusal or staleness.
+- [x] Prove both intended regression paths red against the prior behavior, then pass 41/41 focused and adjacent Advisor Meeting, advisor-share, ActionPreview, workspace-backup and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass 147/147 exact token, design-check and report-contract tests; retain zero audit violations, 86 existing warnings and the CSS ledger.
+- [ ] Aggregate npm design-system wrappers — unavailable because this shell has no `npm`/`npx`; their exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-share slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep advisor-share revocation, whole-account deletion, official advising operations and aggregate-consent changes separate from this one account-share deletion.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed advisor-share revocation — automation pass 4, integration slice 82
+
+- [x] Start from clean current head `9afd7b4a`; fetch `origin/main` `d44f10f6`, confirm it is already included and inspect exact advisor-share history and both revocation callers for overlap. Inspect final fetched `bb91c689`; its platform-control execution-plan files do not overlap this slice.
+- [x] Re-rank one signed-in student's advisor-share revocation as the earliest bounded account consequence gap; keep deletion, meeting preparation, other shares and official advising operations outside the mutation.
+- [x] Use the shared `ActionPreview` in Advisor Meeting and Your data to name immediate advisor access loss, retained account share/access log, unchanged device and official records, and the no-undo/new-share boundary.
+- [x] Give Cancel initial focus, prove first press/cancellation perform no update, and guard repeat confirmation while a request is in flight.
+- [x] Require the account-scoped update to return the exact id and requested `revoked_at`; treat an error-free zero-row result as refusal or staleness.
+- [x] Keep both caller dialogs open with an assertive retry-or-cancel path after a server error or missing receipt; close and refresh only after confirmed success.
+- [x] Prove the three intended guards red against prior behavior, then pass 59/59 focused and adjacent advisor-share, Advisor Meeting, Trust Center, ActionPreview, modal, backup-coverage and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass aggregate `design-system:check` (9 token tests and 69 contracts, zero audit violations, CSS within its ledger) and the test-backed design report.
+- [x] Run the locked root install; audit reports zero dependency vulnerabilities.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-share slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists and a local properties file was detected without reading it, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep whole-account deletion, official advising operations and aggregate-consent changes separate from this one account-share revocation.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 reversible custom-reminder deletion — automation pass 5, integration slice 83
+
+- [x] Start from clean required-branch head `63c0319d`; confirm selection-time `origin/main` `bb91c689` is already included, inspect exact reminder-rule and Undo history for overlap, then inspect final `51dd47b8` and confirm its signed-in-device-session files do not overlap.
+- [x] Re-rank the one-row student-authored reminder deletion as the earliest bounded device-state consequence gap; keep provider notification state, course data and broader account actions outside the mutation.
+- [x] Add a dedicated `deleteMyRule` action and register only that action with the existing eight-second Undo path, snapshotting only `myRules`.
+- [x] Preserve ordinary rule edits and enable/disable changes on `setMyRules`, the exact accessible delete name, shipped defaults and every unrelated reminder/course/deadline record.
+- [x] Prove the UI guard red against the prior immediate list replacement, then pass 169/169 focused MyRules, reminder, Undo, reducer and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass aggregate design-system check and the test-backed report through local command compatibility shims; retain zero audit violations, 86 existing warnings and the CSS ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-state slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk=false`, `docker=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge, whole-account deletion, provider state and scanner-backed Import separate from this device-only reminder rule.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed athletic-support share revocation — automation pass 6, integration slice 84
+
+- [x] Start from clean required-branch head `49a93810`; confirm selection-time `origin/main` `51dd47b8` is already included, inspect exact athletic-support share history/code for overlap, then inspect final `573af52b` and confirm its Course Engine MVP/upload-job and developer-tools files do not overlap.
+- [x] After slice commit `8edcba21`, merge final upstream cleanly as `40eee878`; pass the same 30/30 focused tests and TypeScript on the combined head.
+- [x] Re-rank one student-owned athletic-support share revocation as the earliest bounded account consequence gap; keep other shares, local athletics planning and official school records outside the mutation.
+- [x] Put the server write behind the shared `ConfirmDialog` and `ActionPreview`, with Cancel initially focused and no write on the first press or cancellation.
+- [x] Name immediate staff access loss, retained share/read history, unchanged records and the no-undo/new-share recovery boundary.
+- [x] Guard repeat confirmation while the request is in flight; preserve the dialog and represented share with an assertive retry-or-cancel path after provider or receipt failure.
+- [x] Require the existing account-scoped update to return the exact share id and requested revocation timestamp before reporting success; treat zero returned rows as refusal or staleness.
+- [x] Preserve the migration's student-owner RLS, tenant-bound row, `revoked_at`-only column grant and one-way revocation policy without schema, grant, role or capability change.
+- [x] Prove the regression red against first-press behavior, then pass 30/30 focused and adjacent Athlete Share, domain, ActionPreview/modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass aggregate design check (9 token tests and 69 contracts) and 96 report contracts with zero audit violations, 86 existing warnings and no CSS-ledger increase; report artifact unchanged.
+- [ ] Aggregate design-system report launcher — no real `npx` executable is available in this shell; exact 96 report contracts pass, but no aggregate launcher pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-share slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists and a local properties file was not read, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep family-invite revocation, whole-account deletion, official athletics operations and aggregate-consent changes separate from this athletic-support share.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed family share-code revocation — automation pass 7, integration slice 85
+
+- [x] Start from clean required-branch head `8e71b978`; fetch current `origin/main` `573af52b`, confirm it is already included and inspect exact family-invite history/code for overlap.
+- [x] Re-rank one signed-in student's unused family share-code revocation as the earliest bounded account consequence gap; keep claimed family grants, whole-account deletion and institution/provider operations outside the mutation.
+- [x] Put the account write behind the shared `ConfirmDialog` and `ActionPreview`, with Cancel initially focused and no write on the first press or cancellation.
+- [x] Name the exact code, immediate inability to accept it, unchanged claimed access/family plan/share record/read history/other codes and the no-undo/new-code recovery boundary.
+- [x] Guard repeat confirmation while the request is in flight; preserve the dialog and represented code with an assertive retry-or-cancel path after provider or receipt failure.
+- [x] Require the existing account-scoped update to return the exact code and requested revocation timestamp before reporting success; treat empty or mismatched rows as refusal or staleness.
+- [x] Preserve the migration's student-owner RLS, `revoked_at`-only column grant and one-way revocation policy without schema, grant, role or capability change.
+- [x] Prove the two regressions red against prior behavior, then pass 55/55 focused and adjacent Family Invite, family sharing, ActionPreview/modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass 147/147 exact token/design/report-contract constituents with zero audit violations, 86 existing warnings and no CSS-ledger increase; report artifacts remain unchanged.
+- [ ] Aggregate design-system wrappers — no real `npm`/`npx` executable is available in this shell; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-code slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists and a local properties file was not read, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep claimed family-grant revocation, whole-account deletion, official family/guardian operations and aggregate-consent changes separate from this unused code.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed claimed-family-access revocation — automation pass 8, integration slice 86
+
+- [x] Start from clean required-branch head `35a00c70`; confirm selection-time `origin/main` `573af52b` is already included, inspect exact family-share history/code for overlap, then inspect final `ec618dea` and confirm its test-runner mock isolation does not overlap.
+- [x] Re-rank claimed family access as the earliest bounded consequence gap; keep unused-code revocation, official guardian links, whole-account deletion and provider/institution operations outside the mutation.
+- [x] Replace the bespoke inline confirmation with the shared `ConfirmDialog` and `ActionPreview`, with Cancel initially focused and no write on the first press or cancellation.
+- [x] Name the person and selected item count, immediate access loss and stored-copy removal, retained family plan/other shares/unused codes/read history, unrecoverable external copies and the no-undo/new-share boundary.
+- [x] Guard repeat confirmation while the request is in flight and preserve the dialog after any provider, receipt or cleanup failure.
+- [x] Require exact returned grant ids and requested revocation timestamps before copy cleanup; require structurally valid returned copy rows before reporting success.
+- [x] Distinguish a refused revocation from a partial result where access ended but stored-copy cleanup remains incomplete and retryable.
+- [x] Preserve existing student-owner RLS, live-grant denial, access history and schema without adding an untested PostgreSQL migration; keep atomic server settlement as a separate hardening dependency.
+- [x] Pass 61/61 focused and adjacent Family, invite, access-overview, ActionPreview/modal and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass 78/78 design-check constituents and 96/96 report contracts with zero audit violations, 86 existing warnings and no CSS-ledger increase.
+- [ ] Aggregate design-system wrappers — no real `npm`/`npx` executable is available in this shell; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-share slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent and `HAWK_API_KEY` / `HAWK_APP_HOST` unset; a local properties file was detected without reading it, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep atomic family-share settlement, whole-account deletion, official family/guardian operations and aggregate-consent changes separate from this client-boundary hardening.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed Research Studio source removal — automation pass 9, integration slice 87
+
+- [x] Start from clean required-branch head `a4f1a97c`; fetch current `origin/main` `ec618dea`, confirm it is already included and inspect exact Research Studio history/code for overlap.
+- [x] Re-rank one student-entered research source as the earliest bounded consequence gap; keep whole-project deletion, original files, account/institution records and provider operations outside the mutation.
+- [x] Put the device-library mutation behind the shared `ConfirmDialog` and `ActionPreview`, with Cancel initially focused and no write on the first press or cancellation.
+- [x] Name the source, verification state and linked-claim count; state that claim links are detached while claim text, research plan, other sources and original files stay unchanged.
+- [x] State the exact recovery boundary: Toolkit keys are outside the device-workspace backup contract, so the student must re-enter a removed source from the original.
+- [x] Keep a refused device-library update represented as failure; close the dialog and announce completion only after the existing bounded write succeeds.
+- [x] Prove the regression red against prior immediate removal, then pass 34/34 focused Toolkit, ActionPreview/modal and root-lifecycle tests, including cancellation and refused storage.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design-check contracts and 96/96 report contracts with no new audit violation or CSS-ledger increase.
+- [ ] Aggregate design report wrapper — no real `npx` executable is available in this shell; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists and a local properties file was not read, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep whole-project deletion, broader Toolkit backup coverage, account/institution records and provider operations separate from this one evidence-row mutation.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed Research Studio claim removal — automation pass 10, integration slice 88
+
+- [x] Start from clean required-branch head `d3efb16b`; fetch current `origin/main` `ec618dea`, confirm it is already included and inspect exact Research Studio history/code for overlap.
+- [x] Re-rank one student-authored research claim as the earliest bounded consequence gap; keep source rows, whole-project deletion, original files, account/institution records and provider operations outside the mutation.
+- [x] Put the device-library mutation behind the shared `ConfirmDialog` and `ActionPreview`, with Cancel initially focused and no write on the first press or cancellation.
+- [x] Name the exact claim, current citation-audit status and linked-source count; state that the claim and its source links are removed while sources, question, search plan and other claims remain.
+- [x] State the exact recovery boundary: Toolkit keys are outside the device-workspace backup contract, so the student must re-enter the claim and reconnect its sources.
+- [x] Keep a refused device-library update represented as failure; retain the dialog and claim for retry, and announce completion only after the bounded write succeeds.
+- [x] Prove the regression red against prior immediate removal, then pass 36/36 focused Toolkit, ActionPreview/modal and root-lifecycle tests, including cancellation, refusal, retry and source preservation.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass 78/78 design-check constituents and 96/96 report contracts with zero new audit violation or CSS-ledger increase.
+- [ ] Aggregate design-system wrappers — no real `npm`/`npx` executable is available in this shell; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory skill preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep whole-project deletion, broader Toolkit backup coverage, account/institution records and provider operations separate from this one claim mutation.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed Research Studio project deletion — automation pass 11, integration slice 89
+
+- [x] Re-rank whole-project deletion as the earliest adjacent bounded consequence gap; keep row removals, original files, account/institution records and provider operations outside the mutation.
+- [x] Reuse `ConfirmDialog` and `ActionPreview` to name the exact source/claim payload, unchanged original files and other projects, and the Toolkit no-backup recovery boundary before any write.
+- [x] Keep Cancel side-effect free and initially focused through the shared modal contract.
+- [x] Require the existing account-keyed device-library write to succeed before closing or reporting completion; preserve the project and dialog for retry after storage refusal.
+- [x] Select the next remaining project after success instead of stranding unchanged work behind a null active id.
+- [x] Show a device-only completion receipt both beside a remaining project and on the empty Research Studio start state.
+- [x] Prove the guard red against the prior incomplete preview, then pass 51/51 focused Toolkit, device-library, backup-coverage, preview and root-lifecycle tests.
+- [x] TypeScript, lint, university typecheck and production build pass; lint retains six existing warnings and build retains the existing chunk-size warning.
+- [x] Design-check constituents pass 78/78; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- [ ] Aggregate design report/check wrappers — the report regenerates, then exits because this shell has no real `npx`; exact contract files are run directly, so no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep broader Toolkit backup coverage, account/institution records, provider operations and whole-account deletion separate from this one device project.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

@@ -4,7 +4,9 @@ This package is the repository-owned implementation control plane. It turns a bo
 
 The root manifest also fixes the canonical product domain at `semesterintel.tech` and maps the 13 grouped workspace families to 17 independently governed pilot release scopes. Every scope declares its required operational loop, but remains blocked and activation-disabled until route, capability, workflow, code, test, deployment, and approval evidence is present. A reachable shell is never operational-readiness evidence.
 
-The generated `execution-board.json` is the dependency-ordered P0 delivery board. Every item links to registry keys, names an owner, and keeps missing external or operational proof in explicit blockers.
+The generated `execution-board.json` is the dependency-ordered P0 delivery board. Every item links to registry keys, names an owner, and keeps missing external or operational proof in explicit blockers. The derived `execution-plan.json` identifies ready work, active work, sequencing debt, dependency waits, and explicit blocks without treating partial implementation as verified.
+
+Verified work must link retained evidence, have only verified dependencies, and carry no open blockers. P0-001's bounded repository/CI evidence is recorded in `docs/operating-model/evidence/P0-001-repository-ci.md`; it does not promote any deployment or institutional gate.
 
 It deliberately separates repository implementation evidence from deployment, activation, and observed operation. A stage may be `true` only when that exact stage has evidence, and stages cannot skip an earlier false gate.
 

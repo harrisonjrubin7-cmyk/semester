@@ -23,6 +23,7 @@ from app.models.entities import (
     BackgroundJob,
     CalendarEvent,
     Citation,
+    Concept,
     Conflict,
     Course,
     JobStatus,
@@ -34,6 +35,7 @@ from app.models.entities import (
     StudyAsset,
     StudyAssetCitation,
     StudyExport,
+    StudySession,
     UploadCompletion,
     User,
 )
@@ -47,6 +49,7 @@ from app.schemas import (
     CoursePatch,
     GenerateAssetRequest,
     LoginRequest,
+    QuizAttempt,
     RegisterRequest,
     ReviewPatch,
     TokenResponse,
@@ -413,6 +416,40 @@ def list_files(course_id: UUID, user: User = Depends(get_current_user), db: Sess
     return [serialize(x) for x in db.scalars(select(SourceDocument).where(SourceDocument.course_id == course_id, SourceDocument.deleted_at.is_(None)).order_by(SourceDocument.created_at.desc())).all()]
 
 
+@router.get("/courses/{course_id}/jobs")
+def list_jobs(
+    course_id: UUID,
+    limit: int = Query(default=100, ge=1, le=200),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    owned_course(db, user, course_id)
+    recent_jobs = db.scalars(
+        select(BackgroundJob)
+        .where(BackgroundJob.course_id == course_id)
+        .order_by(BackgroundJob.created_at.desc())
+        .limit(limit)
+    ).all()
+    active_extractions = db.scalars(
+        select(BackgroundJob)
+        .where(
+            BackgroundJob.course_id == course_id,
+            BackgroundJob.job_type == "extract",
+            BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
+            BackgroundJob.revoked_at.is_(None),
+        )
+        .order_by(BackgroundJob.created_at.desc())
+    ).all()
+    jobs_by_id = {job.id: job for job in recent_jobs}
+    jobs_by_id.update({job.id: job for job in active_extractions})
+    jobs = sorted(
+        jobs_by_id.values(),
+        key=lambda job: job.created_at,
+        reverse=True,
+    )
+    return [serialize(job) for job in jobs]
+
+
 @router.get("/files/{file_id}")
 def get_file(file_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     doc = db.get(SourceDocument, file_id)
@@ -483,12 +520,38 @@ def delete_file(file_id: UUID, user: User = Depends(get_current_user), db: Sessi
 
 @router.post("/files/{file_id}/retry-extraction")
 def retry_file(file_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    doc = db.get(SourceDocument, file_id)
+    doc = db.scalar(
+        select(SourceDocument)
+        .where(SourceDocument.id == file_id)
+        .with_for_update()
+    )
     if not doc: raise HTTPException(404)
     owned_course(db, user, doc.course_id)
+    active = db.scalar(
+        select(BackgroundJob)
+        .where(
+            BackgroundJob.document_id == doc.id,
+            BackgroundJob.job_type == "extract",
+            BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
+            BackgroundJob.revoked_at.is_(None),
+        )
+        .order_by(BackgroundJob.created_at.desc())
+    )
+    if active:
+        if active.status == JobStatus.queued:
+            celery_client.send_task(
+                "extract_document",
+                args=[str(active.id)],
+                task_id=str(active.id),
+            )
+        return serialize(active)
     job = BackgroundJob(course_id=doc.course_id, document_id=doc.id, job_type="extract")
     doc.status = "queued"; db.add(job); db.commit(); db.refresh(job)
-    celery_client.send_task("extract_document", args=[str(job.id)])
+    celery_client.send_task(
+        "extract_document",
+        args=[str(job.id)],
+        task_id=str(job.id),
+    )
     return serialize(job)
 
 
@@ -511,7 +574,19 @@ def cancel_job(job_id: UUID, user: User = Depends(get_current_user), db: Session
         return serialize(job)
     if job.status in (JobStatus.completed, JobStatus.failed):
         raise HTTPException(409, "Terminal jobs cannot be cancelled")
-    revoke_job(db, job.id, job.course_id, datetime.now(UTC), "Cancelled by user")
+    changed = revoke_job(
+        db,
+        job.id,
+        job.course_id,
+        datetime.now(UTC),
+        "Cancelled by user",
+        commit=False,
+    )
+    if changed and job.job_type == "extract" and job.document_id:
+        document = db.get(SourceDocument, job.document_id)
+        if document and not document.deleted_at:
+            document.status = "failed"
+    db.commit()
     db.refresh(job)
     return serialize(job)
 
@@ -782,9 +857,34 @@ def export_cards(asset_id: UUID, user: User = Depends(get_current_user), db: Ses
 @router.post("/flashcards/{card_id}/review")
 def review_card(card_id: UUID, payload: CardReview, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     owned_course(db, user, payload.course_id)
+    if payload.concept_id is not None and not db.scalar(select(Concept.id).where(
+        Concept.id == payload.concept_id,
+        Concept.course_id == payload.course_id,
+    )):
+        raise HTTPException(404, "Concept not found")
+    card_exists = any(
+        str(card.get("id")) == str(card_id)
+        for asset in db.scalars(select(StudyAsset).where(
+            StudyAsset.course_id == payload.course_id,
+            StudyAsset.asset_type == "flashcards",
+            StudyAsset.deleted_at.is_(None),
+        )).all()
+        for card in asset.content.get("cards", [])
+        if isinstance(card, dict)
+    )
+    if not card_exists:
+        raise HTTPException(404, "Flashcard not found")
     progress = db.scalar(select(LearnerProgress).where(LearnerProgress.user_id == user.id, LearnerProgress.course_id == payload.course_id, LearnerProgress.concept_id == payload.concept_id))
     if not progress:
-        progress = LearnerProgress(user_id=user.id, course_id=payload.course_id, concept_id=payload.concept_id); db.add(progress)
+        progress = LearnerProgress(
+            user_id=user.id,
+            course_id=payload.course_id,
+            concept_id=payload.concept_id,
+            attempts=0,
+            correct_attempts=0,
+            mastery_score=0,
+        )
+        db.add(progress)
     progress.attempts += 1; progress.correct_attempts += int(payload.correct)
     progress.mastery_score = progress.correct_attempts / progress.attempts
     progress.last_reviewed_at = datetime.now(UTC)
@@ -793,8 +893,35 @@ def review_card(card_id: UUID, payload: CardReview, user: User = Depends(get_cur
 
 
 @router.post("/quizzes/{quiz_id}/attempts")
-def quiz_attempt(quiz_id: UUID, payload: dict, user: User = Depends(get_current_user)):
-    return {"quiz_id": quiz_id, "recorded": True, "answer_count": len(payload.get("answers", []))}
+def quiz_attempt(quiz_id: UUID, payload: QuizAttempt, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    owned_course(db, user, payload.course_id)
+    quiz = db.scalar(select(StudyAsset).where(
+        StudyAsset.id == quiz_id,
+        StudyAsset.course_id == payload.course_id,
+        StudyAsset.asset_type.in_(("practice_quiz", "practice_exam")),
+        StudyAsset.deleted_at.is_(None),
+    ))
+    if not quiz:
+        raise HTTPException(404, "Quiz not found")
+    questions = quiz.content.get("sections", [])
+    expected_indexes = set(range(len(questions))) if isinstance(questions, list) else set()
+    rated_indexes = {
+        answer.get("question_index")
+        for answer in payload.answers
+        if isinstance(answer.get("question_index"), int)
+        and isinstance(answer.get("correct"), bool)
+    }
+    if (
+        not expected_indexes
+        or len(payload.answers) != len(expected_indexes)
+        or rated_indexes != expected_indexes
+    ):
+        raise HTTPException(400, "Rate every stored quiz prompt exactly once")
+    session = StudySession(user_id=user.id, course_id=payload.course_id, study_asset_id=quiz.id, mode="quiz", ended_at=datetime.now(UTC))
+    db.add(session)
+    db.commit()
+    db.refresh(session)
+    return {"id": session.id, "quiz_id": quiz_id, "recorded": True, "answer_count": len(payload.answers)}
 
 
 @router.get("/courses/{course_id}/progress")
