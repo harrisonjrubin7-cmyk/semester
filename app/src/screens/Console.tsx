@@ -32,6 +32,7 @@ import { TenantOperations } from '../components/console/TenantOperations';
 import { PrivacyRequests } from '../components/console/PrivacyRequests';
 import { IntegrationHealth } from '../components/console/IntegrationHealth';
 import { ReleaseIncidents } from '../components/console/ReleaseIncidents';
+import { RolePolicy } from '../components/console/RolePolicy';
 import { said, when } from '../components/console/Fields';
 import {
   isConsoleWorkspaceId,
@@ -115,10 +116,10 @@ export function Console() {
       </Page>
     );
   }
-  return <Operations operator={account.email} grants={grants} />;
+  return <Operations operator={account.email} authorityKey={account.id} grants={grants} />;
 }
 
-function Operations({ operator, grants }: { operator: string; grants: Grant[] }) {
+function Operations({ operator, authorityKey, grants }: { operator: string; authorityKey: string; grants: Grant[] }) {
   const env = environment();
   const workspaces = useMemo(() => visibleConsoleWorkspaces(grants), [grants]);
   const [tab, setTab] = useState<ConsoleWorkspaceId>('command');
@@ -281,6 +282,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
         {tab === 'approvals' && <Approvals {...viewProps} />}
         {tab === 'breakglass' && <BreakGlass {...viewProps} />}
         {tab === 'audit' && <Audit {...viewProps} />}
+        {tab === 'role-policy' && <RolePolicy filter={filter} authorityKey={authorityKey} />}
         {tab === 'tenant-operations' && <TenantOperations {...viewProps} now={now} />}
         {tab === 'privacy' && <PrivacyRequests {...viewProps} />}
         {tab === 'integration-health' && <IntegrationHealth {...viewProps} />}

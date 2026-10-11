@@ -45,6 +45,7 @@ const mock = vi.hoisted(() => ({
   privacyDetail: vi.fn(),
   verifyPrivacy: vi.fn(),
   resolvePrivacy: vi.fn(),
+  rolePolicy: vi.fn(),
   prefs: vi.fn(),
   savePref: vi.fn(),
   mfa: vi.fn(),
@@ -68,6 +69,10 @@ vi.mock('../lib/cloud', () => ({
   cloud: vi.fn(),
 }));
 vi.mock('../lib/capabilities', () => ({ loadMyCapabilities: mock.caps }));
+vi.mock('../lib/console/role-policy', async (orig) => ({
+  ...(await orig<object>()),
+  loadRolePolicy: mock.rolePolicy,
+}));
 vi.mock('../lib/environment', async (orig) => ({ ...(await orig<object>()), environment: () => mock.env }));
 vi.mock('../lib/experience-flags', () => ({ EXPERIENCE_FLAGS: { supportTickets: 'production' } }));
 vi.mock('../lib/console/client', async (orig) => ({
@@ -238,6 +243,20 @@ beforeEach(() => {
   });
   mock.verifyPrivacy.mockResolvedValue('in_progress');
   mock.resolvePrivacy.mockResolvedValue({ status: 'completed', certificateId: 'certificate-1' });
+  mock.rolePolicy.mockResolvedValue({
+    roles: [
+      { role: 'platform_admin', global: true },
+      { role: 'student', global: false },
+    ],
+    capabilities: [
+      { capability: 'console:operate', about: 'Open the operations console.' },
+      { capability: 'student:self', about: 'Read the signed-in student record.' },
+    ],
+    assignments: [
+      { role: 'platform_admin', capability: 'console:operate' },
+      { role: 'student', capability: 'student:self' },
+    ],
+  });
   // Existing view tests exercise Approvals first; production defaults to the
   // Command center when no server-side preference exists.
   mock.prefs.mockResolvedValue({ 'console.tab': 'approvals' });
@@ -280,6 +299,20 @@ describe('support tab capability gate', () => {
     mock.caps.mockResolvedValue(SUPPORT_PLATFORM);
     await render();
     expect(button('Support')).toBeDefined();
+  });
+});
+
+describe('roles and capabilities workspace', () => {
+  it('routes a platform console operator to the read-only policy view and reuses the Console filter', async () => {
+    await render();
+    await press('Roles & capabilities');
+    expect(mock.rolePolicy).toHaveBeenCalledTimes(1);
+    expect(host.textContent).toContain('platform_admin');
+    expect(host.textContent).toContain('51 design and governance proposals');
+    type(field('Filter this view'), 'platform_admin');
+    expect(host.textContent).toContain('Semester security operator');
+    expect(host.textContent).not.toContain('student:self');
+    expect(Object.keys(localStorage).filter((key) => /console/i.test(key))).toEqual([]);
   });
 });
 
