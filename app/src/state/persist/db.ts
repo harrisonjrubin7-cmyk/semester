@@ -376,22 +376,29 @@ export async function isEmpty(): Promise<boolean | null> {
 }
 
 /** For tests and for "delete everything on this device". */
-export async function wipe(collections: string[]): Promise<void> {
+export async function wipe(collections: string[]): Promise<boolean> {
+  let complete = true;
   for (const store of [MAPS_STORE, SETTINGS_STORE, ...collections]) {
-    await write([]).catch(() => false);
-    await new Promise<void>((resolve) => {
-      if (!db || !db.objectStoreNames.contains(store)) {
-        resolve();
+    const cleared = await new Promise<boolean>((resolve) => {
+      if (!db) {
+        resolve(false);
+        return;
+      }
+      if (!db.objectStoreNames.contains(store)) {
+        resolve(true);
         return;
       }
       try {
         const t = db.transaction(store, 'readwrite');
         t.objectStore(store).clear();
-        t.oncomplete = () => resolve();
-        t.onerror = () => resolve();
+        t.oncomplete = () => resolve(true);
+        t.onerror = () => resolve(false);
+        t.onabort = () => resolve(false);
       } catch {
-        resolve();
+        resolve(false);
       }
     });
+    complete &&= cleared;
   }
+  return complete;
 }

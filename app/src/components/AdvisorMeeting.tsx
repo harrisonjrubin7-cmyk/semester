@@ -40,6 +40,7 @@ import { comparisonText } from '../lib/scenario-compare';
 import { useNow, useStore } from '../state/store';
 import { AdvisorSharedView } from './AdvisorSharedView';
 import { ConfirmDialog } from './ConfirmDialog';
+import { ActionPreview } from './unity/ActionPreview';
 
 const day = (iso: string) => formatDate(new Date(iso), { month: 'short', day: 'numeric', year: 'numeric' });
 
@@ -380,7 +381,14 @@ export function AdvisorMeeting({ accountId }: { accountId: string | null }) {
       {confirm === 'remove' ? (
         <ConfirmDialog
           title="Remove this meeting from this device?"
-          preview={<p>“{meeting.title}” — its agenda, questions, follow-ups and private notes. Shares you already made stay until you revoke them.</p>}
+          preview={(
+            <ActionPreview
+              subject={meeting.title || 'Advisor meeting'}
+              says="Removes this meeting’s agenda, questions, follow-ups and private notes from this device."
+              doesNotChange="Shares already made stay available until you revoke or delete them. Other meeting preparations and official advising records stay unchanged."
+              recovery={{ kind: 'none', how: 'A device workspace backup can restore the meeting without its private notes; private notes never leave this device.' }}
+            />
+          )}
           confirmLabel="Remove"
           onConfirm={done}
           onCancel={() => setConfirm(null)}
@@ -553,4 +561,3 @@ function SharingPanel({ refresh, onSaid }: { refresh: number; onSaid: (s: string
     </section>
   );
 }
-
