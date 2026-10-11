@@ -20,12 +20,14 @@ const replies = new Map<string, Reply>();
 const auth = {
   getUser: vi.fn(async () => ({ data: { user: { id: 'op-1' } } })),
   getSession: vi.fn(async () => ({ data: { session: { expires_at: 1_800_000_000 } } })),
+  onAuthStateChange: vi.fn(),
   mfa: {
     getAuthenticatorAssuranceLevel: vi.fn(),
     listFactors: vi.fn(),
     enroll: vi.fn(),
     challenge: vi.fn(),
     verify: vi.fn(),
+    unenroll: vi.fn(),
   },
 };
 
@@ -86,9 +88,13 @@ import {
   loadBreakGlass,
   reviewBreakGlass,
   enrollTotp,
-  challengeTotp,
-  verifyTotp,
-  totpFactors,
+  challengeMfa,
+  verifyMfa,
+  mfaFactors,
+  clearUnverifiedMfaFactors,
+  unverifiedMfaFactorIds,
+  privilegedMfaRequired,
+  watchMfaSession,
 } from './client';
 
 const HEALTH_ROW = {
@@ -587,19 +593,81 @@ describe('identity', () => {
     expect(mfaFresh(level, new Date(1_700_000_000 * 1000))).toBe(false);
   });
 
+  it('accepts the auth client WebAuthn spelling as fresh for privileged actions', async () => {
+    auth.mfa.getAuthenticatorAssuranceLevel.mockResolvedValue({
+      data: { currentLevel: 'aal2', nextLevel: 'aal2', currentAuthenticationMethods: [{ method: 'mfa/webauthn', timestamp: 1_700_000_000 }] },
+      error: null,
+    });
+    const level = await mfaLevel();
+    expect(level.verifiedAt?.toISOString()).toBe(new Date(1_700_000_000 * 1000).toISOString());
+    expect(mfaFresh(level, new Date(1_700_000_000 * 1000))).toBe(true);
+  });
+
+  it('reports unfinished factors without removing them', async () => {
+    auth.mfa.listFactors.mockResolvedValue({ data: { all: [{ id: 'pending', status: 'unverified' }, { id: 'live', status: 'verified' }] }, error: null });
+    await expect(unverifiedMfaFactorIds()).resolves.toEqual(['pending']);
+    expect(auth.mfa.unenroll).not.toHaveBeenCalled();
+  });
+
+  it('removes only unverified factors after an explicit restart', async () => {
+    auth.mfa.listFactors.mockResolvedValue({ data: { all: [{ id: 'pending', status: 'unverified' }, { id: 'live', status: 'verified' }] }, error: null });
+    auth.mfa.unenroll.mockResolvedValue({ data: {}, error: null });
+    await clearUnverifiedMfaFactors(['pending']);
+    expect(auth.mfa.unenroll).toHaveBeenCalledTimes(1);
+    expect(auth.mfa.unenroll).toHaveBeenCalledWith({ factorId: 'pending' });
+  });
+
+  it('does not remove an unverified factor created after the restart choice was shown', async () => {
+    auth.mfa.listFactors.mockResolvedValue({ data: { all: [{ id: 'observed', status: 'unverified' }, { id: 'new-tab', status: 'unverified' }] }, error: null });
+    auth.mfa.unenroll.mockResolvedValue({ data: {}, error: null });
+    await clearUnverifiedMfaFactors(['observed']);
+    expect(auth.mfa.unenroll).toHaveBeenCalledTimes(1);
+    expect(auth.mfa.unenroll).toHaveBeenCalledWith({ factorId: 'observed' });
+  });
+
   it('enrols, challenges and verifies TOTP through the auth client', async () => {
-    auth.mfa.listFactors.mockResolvedValue({ data: { all: [], totp: [{ id: 'f-1', friendly_name: 'Phone' }] }, error: null });
-    expect(await totpFactors()).toEqual([{ id: 'f-1', name: 'Phone' }]);
+    auth.mfa.listFactors.mockResolvedValue({ data: { all: [], totp: [{ id: 'f-1', friendly_name: 'Authenticator', status: 'verified' }], phone: [{ id: 'p-1', friendly_name: 'Mobile', status: 'verified' }] }, error: null });
+    expect(await mfaFactors()).toEqual([
+      { id: 'f-1', name: 'Authenticator', type: 'totp' },
+      { id: 'p-1', name: 'Mobile', type: 'phone' },
+    ]);
     auth.mfa.enroll.mockResolvedValue({ data: { id: 'f-2', type: 'totp', totp: { qr_code: 'data:image/svg+xml;utf-8,<svg/>', secret: 'ABCD', uri: 'otpauth://x' } }, error: null });
     expect(await enrollTotp()).toEqual({ factorId: 'f-2', qrCode: 'data:image/svg+xml;utf-8,<svg/>', secret: 'ABCD', uri: 'otpauth://x' });
     expect(auth.mfa.enroll).toHaveBeenCalledWith({ factorType: 'totp', friendlyName: 'Operations console' });
     auth.mfa.challenge.mockResolvedValue({ data: { id: 'ch-1' }, error: null });
-    expect(await challengeTotp('f-2')).toBe('ch-1');
+    expect(await challengeMfa('f-2')).toBe('ch-1');
+    expect(auth.mfa.challenge).toHaveBeenLastCalledWith({ factorId: 'f-2' });
+    expect(await challengeMfa('p-1', 'phone')).toBe('ch-1');
+    expect(auth.mfa.challenge).toHaveBeenLastCalledWith({ factorId: 'p-1', channel: 'sms' });
     auth.mfa.verify.mockResolvedValue({ data: {}, error: null });
-    await verifyTotp('f-2', 'ch-1', '123 456');
+    await verifyMfa('f-2', 'ch-1', '123 456');
     expect(auth.mfa.verify).toHaveBeenCalledWith({ factorId: 'f-2', challengeId: 'ch-1', code: '123456' });
     auth.mfa.verify.mockResolvedValue({ data: null, error: { message: 'Invalid TOTP code' } });
-    await expect(verifyTotp('f-2', 'ch-1', '000000')).rejects.toThrow('Invalid TOTP code');
+    await expect(verifyMfa('f-2', 'ch-1', '000000')).rejects.toThrow('Invalid TOTP code');
+  });
+
+  it('asks the database whether a privileged grant needs elevation', async () => {
+    replies.set('rpc:privileged_mfa_required', { data: true });
+    await expect(privilegedMfaRequired()).resolves.toBe(true);
+    expect(last()).toMatchObject({ kind: 'rpc', name: 'privileged_mfa_required' });
+  });
+
+  it('rechecks on Auth session changes and unsubscribes cleanly', async () => {
+    const unsubscribe = vi.fn();
+    let changed: ((event: string) => void) | undefined;
+    auth.onAuthStateChange.mockImplementation((callback: (event: string) => void) => {
+      changed = callback;
+      return { data: { subscription: { unsubscribe } } };
+    });
+    const onChange = vi.fn();
+    const stop = await watchMfaSession(onChange);
+    changed?.('INITIAL_SESSION');
+    expect(onChange).not.toHaveBeenCalled();
+    changed?.('TOKEN_REFRESHED');
+    changed?.('MFA_CHALLENGE_VERIFIED');
+    expect(onChange).toHaveBeenCalledTimes(2);
+    stop();
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
   });
 
   it('turns the session’s epoch expiry into a date, and none into null', async () => {

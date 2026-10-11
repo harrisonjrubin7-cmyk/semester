@@ -175,11 +175,11 @@ export const ITEMS: readonly Item[] = [
   {
     id: 'TR-13', before: 'pilot', owner: 'security', effort: 'L', needs: ['TR-12'],
     title: 'Multi-factor and passkeys for students and platform staff',
-    finding: 'Only the console requires fresh aal2; has_capability checks no assurance level; students cannot enrol a factor.',
-    sources: ['app/src/components/MfaStep.tsx', 'app/src/lib/console/client.ts', 'docs/trust/PASSWORD-SESSION-AND-MFA-STANDARD.md'],
-    fix: 'Require aal2 on platform_admin and support_agent in has_capability; add enrolment and passkeys; record Supabase Auth settings in config.toml.',
+    finding: 'platform_admin and support_agent grants now require aal2 in has_capability and the console can enrol/challenge TOTP. Student-facing enrolment, passkeys, production Auth configuration evidence and recovery testing remain open.',
+    sources: ['supabase/migrations/20261008223000_privileged_role_mfa.sql', 'supabase/privileged-mfa.check.sql', 'app/src/components/MfaStep.tsx', 'app/src/lib/console/client.ts', 'docs/trust/PASSWORD-SESSION-AND-MFA-STANDARD.md'],
+    fix: 'Add student-facing enrolment and passkeys; record Supabase Auth settings; test recovery and every production provider console.',
     moves: ['TC-SEC-10', 'TC-SEC-11'],
-    files: 'The new database check and a recorded configuration.',
+    files: 'The database boundary is checked; the remaining work is student/passkey flows and recorded production configuration.',
   },
   {
     id: 'TR-14', before: 'pilot', owner: 'security', effort: 'M', needs: ['TR-12'],
