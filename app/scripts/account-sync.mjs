@@ -360,9 +360,10 @@ async function deviceTask(page, title) {
 
     if (Array.isArray(records)) {
       const task = records.find((candidate) => candidate?.title === title);
+      const local = fromLocalStorage();
       return task
-        ? { source: 'indexedDB', present: true, done: task.done === true }
-        : { source: 'indexedDB', present: false, done: false };
+        ? { source: 'indexedDB', present: true, done: task.done === true, local }
+        : { source: 'indexedDB', present: false, done: false, local };
     }
     return fromLocalStorage() ?? { source: 'unavailable', present: false, done: false };
   }, { title });
