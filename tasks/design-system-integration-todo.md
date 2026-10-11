@@ -1578,6 +1578,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove coverage, round-trip and preview guards red before implementation, then pass 68/68 focused backup, Toolkit, ActionPreview and root-lifecycle tests.
 - [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the existing chunk-size warning.
 - [x] Pass 9/9 token export, 69/69 design-check contracts and 96/96 report contracts with zero audit violations, 86 existing warnings and no CSS-ledger increase; regenerate the test-backed report through a temporary local shim that is not retained.
+- [x] Commit the coherent slice as `178da384`, merge final upstream `bbf94ea2` cleanly as `0226ed29`, then pass the same 68/68 focused tests, TypeScript and university gateway typecheck on the combined head.
 - [ ] Aggregate `design-system:check` wrapper — cannot start its hardcoded `npm` subprocess because this shell exposes only `pnpm`; its exact constituents pass.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace recovery slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
 - [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists and a local properties file was not read, but no target, scan, finding result or security pass exists.
