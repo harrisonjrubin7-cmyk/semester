@@ -106,6 +106,19 @@ describe('managing and reading', () => {
     ]);
   });
 
+  it('deletes only when the account-scoped row is returned', async () => {
+    reply = { data: [{ id: 's1' }], error: null };
+    await expect(shares.deleteShare('s1')).resolves.toBeUndefined();
+    expect(calls).toEqual([
+      { what: 'delete advisor_shares', args: null },
+      { what: 'select advisor_shares', args: 'id' },
+      { what: 'eq id', args: 's1' },
+    ]);
+
+    reply = { data: [], error: null };
+    await expect(shares.deleteShare('s1')).rejects.toThrow('not deleted');
+  });
+
   it('tells an advisor plainly when a share is gone', async () => {
     reply = { data: null, error: { message: 'not shared with you' } };
     await expect(shares.openShare('s1')).rejects.toThrow('expired or was revoked');

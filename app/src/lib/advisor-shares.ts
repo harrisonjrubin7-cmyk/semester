@@ -108,8 +108,11 @@ export async function revokeShare(id: string, now = Date.now()): Promise<void> {
 }
 
 export async function deleteShare(id: string): Promise<void> {
-  const { error } = await (await cloud()).from('advisor_shares').delete().eq('id', id);
+  const { data, error } = await (await cloud()).from('advisor_shares').delete().select('id').eq('id', id);
   if (error) throw new Error(error.message);
+  if (!(data ?? []).some((row) => row.id === id)) {
+    throw new Error('The share was not deleted. It may already be gone or you may no longer have access. Refresh your shares, then try again.');
+  }
 }
 
 export interface SharedWithMe {

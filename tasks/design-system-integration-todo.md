@@ -1690,3 +1690,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep whole-account deletion, same-origin device erase, aggregate-consent changes and institution operations separate from this one private cloud copy.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed advisor-share deletion — automation pass 3, integration slice 81
+
+- [x] Start from clean current head `3e7448e1`; fetch `origin/main` `d44f10f6`, confirm it is already included and inspect exact Advisor Meeting/share history for overlap.
+- [x] Re-rank one signed-in student's advisor-share deletion as the earliest bounded account consequence gap; keep meeting preparation, other shares and official advising records outside the mutation.
+- [x] Replace the prose-only delete body with the shared `ActionPreview`, naming the removed share/access log, advisor access loss, unchanged records and no-restore boundary.
+- [x] Give Cancel initial focus and prove the first press and cancellation perform no server delete.
+- [x] Guard repeat confirmation while the request is in flight; keep a refused deletion dialog open with an assertive retry-or-cancel path.
+- [x] Require the database delete to return the exact account-scoped row before reporting success; treat a zero-row response as refusal or staleness.
+- [x] Prove both intended regression paths red against the prior behavior, then pass 41/41 focused and adjacent Advisor Meeting, advisor-share, ActionPreview, workspace-backup and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass 147/147 exact token, design-check and report-contract tests; retain zero audit violations, 86 existing warnings and the CSS ledger.
+- [ ] Aggregate npm design-system wrappers — unavailable because this shell has no `npm`/`npx`; their exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-share slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep advisor-share revocation, whole-account deletion, official advising operations and aggregate-consent changes separate from this one account-share deletion.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
