@@ -1754,6 +1754,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 ## 2026-10-11 governed athletic-support share revocation — automation pass 6, integration slice 84
 
 - [x] Start from clean required-branch head `49a93810`; confirm selection-time `origin/main` `51dd47b8` is already included, inspect exact athletic-support share history/code for overlap, then inspect final `573af52b` and confirm its Course Engine MVP/upload-job and developer-tools files do not overlap.
+- [x] After slice commit `8edcba21`, merge final upstream cleanly as `40eee878`; pass the same 30/30 focused tests and TypeScript on the combined head.
 - [x] Re-rank one student-owned athletic-support share revocation as the earliest bounded account consequence gap; keep other shares, local athletics planning and official school records outside the mutation.
 - [x] Put the server write behind the shared `ConfirmDialog` and `ActionPreview`, with Cancel initially focused and no write on the first press or cancellation.
 - [x] Name immediate staff access loss, retained share/read history, unchanged records and the no-undo/new-share recovery boundary.
