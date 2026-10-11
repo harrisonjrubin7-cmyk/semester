@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
@@ -209,10 +210,8 @@ def test_retry_extraction_reuses_active_job_after_dispatch_failure(monkeypatch):
     try:
         client = TestClient(app)
         headers = {"Authorization": f"Bearer {create_access_token(owner_id)}"}
-        try:
+        with pytest.raises(RuntimeError, match="broker unavailable"):
             client.post(f"/api/v1/files/{document_id}/retry-extraction", headers=headers)
-        except RuntimeError as exc:
-            assert str(exc) == "broker unavailable"
         retried = client.post(
             f"/api/v1/files/{document_id}/retry-extraction",
             headers=headers,
