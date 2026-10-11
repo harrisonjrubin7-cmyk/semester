@@ -13,7 +13,7 @@ create table if not exists private.gateway_idempotency (
   lease_until timestamptz not null,
   expires_at timestamptz not null,
   response_status integer check (response_status between 100 and 599),
-  sealed_response text check (length(sealed_response) between 40 and 1000000),
+  sealed_response text check (sealed_response is null or length(sealed_response) >= 40),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   primary key (tenant_id, actor_id, command, idempotency_key),
@@ -41,6 +41,9 @@ as $$
 declare
   current_row private.gateway_idempotency%rowtype;
   made_lease uuid;
+  -- Caller time is accepted for API compatibility, but shared lease authority
+  -- must come from the database transaction clock so hosts cannot race on skew.
+  at_time timestamptz := statement_timestamp();
 begin
   if want_now is null
      or want_request_hash !~ '^[0-9a-f]{64}$'
@@ -66,7 +69,7 @@ begin
      and i.idempotency_key = want_key
    for update;
 
-  if found and current_row.expires_at > want_now then
+  if found and current_row.expires_at > at_time then
     if current_row.request_sha256 <> want_request_hash then
       return query select 'conflict'::text, null::uuid, null::integer, null::text, null::integer;
       return;
@@ -76,9 +79,9 @@ begin
         current_row.sealed_response, null::integer;
       return;
     end if;
-    if current_row.lease_until > want_now then
+    if current_row.lease_until > at_time then
       return query select 'in_progress'::text, null::uuid, null::integer, null::text,
-        greatest(1, ceil(extract(epoch from (current_row.lease_until - want_now)))::integer);
+        greatest(1, ceil(extract(epoch from (current_row.lease_until - at_time)))::integer);
       return;
     end if;
   end if;
@@ -89,8 +92,8 @@ begin
      lease_id, lease_until, expires_at, response_status, sealed_response, updated_at)
   values
     (want_tenant, want_actor, want_command, want_key, want_request_hash, 'in_progress',
-     made_lease, want_now + want_lease_ms * interval '1 millisecond',
-     want_now + want_ttl_ms * interval '1 millisecond', null, null, now())
+     made_lease, at_time + want_lease_ms * interval '1 millisecond',
+     at_time + want_ttl_ms * interval '1 millisecond', null, null, now())
   on conflict (tenant_id, actor_id, command, idempotency_key) do update
     set request_sha256 = excluded.request_sha256,
         state = excluded.state,
@@ -111,13 +114,13 @@ returns boolean language plpgsql volatile security definer set search_path = ''
 as $$
 begin
   if want_status not between 100 and 599
-     or length(want_body) not between 40 and 1000000
+     or length(want_body) < 40
      or want_now is null then
     return false;
   end if;
   update private.gateway_idempotency i
      set state = 'completed', response_status = want_status,
-         sealed_response = want_body, lease_until = want_now, updated_at = now()
+         sealed_response = want_body, lease_until = statement_timestamp(), updated_at = now()
    where i.tenant_id = want_tenant
      and i.actor_id = want_actor
      and i.command = want_command

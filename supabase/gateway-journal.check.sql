@@ -167,6 +167,19 @@ begin
 
   select * into takeover from public.gateway_begin_idempotency(
     'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
+    repeat('a', 64), at_time + interval '1 day', 60000, 86400000
+  );
+  if takeover.kind <> 'in_progress' then
+    raise exception 'FAILED: a caller clock could replace a database-clock lease';
+  end if;
+  update private.gateway_idempotency
+     set lease_until = statement_timestamp() - interval '1 second'
+   where tenant_id = 'gateway-a'
+     and actor_id = 'student-a'
+     and command = 'institution.action.commit'
+     and idempotency_key = 'commit-key-00000001';
+  select * into takeover from public.gateway_begin_idempotency(
+    'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
     repeat('a', 64), at_time + interval '61 seconds', 60000, 86400000
   );
   if takeover.kind <> 'started' or takeover.lease_id = begun.lease_id then
@@ -181,14 +194,14 @@ begin
   ) then raise exception 'FAILED: a stale worker released its successor lease'; end if;
   if not public.gateway_complete_idempotency(
     'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
-    takeover.lease_id, 201, repeat('r', 40), at_time + interval '61 seconds'
+    takeover.lease_id, 201, repeat('r', 1000001), at_time + interval '61 seconds'
   ) then raise exception 'FAILED: the current lease could not complete'; end if;
 
   select * into repeated from public.gateway_begin_idempotency(
     'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
     repeat('a', 64), at_time + interval '61 seconds', 60000, 86400000
   );
-  if repeated.kind <> 'replay' or repeated.response_status <> 201 or repeated.response_body <> repeat('r', 40) then
+  if repeated.kind <> 'replay' or repeated.response_status <> 201 or length(repeated.response_body) <> 1000001 then
     raise exception 'FAILED: the completed response was not replayed';
   end if;
   if not public.gateway_release_idempotency(
@@ -197,8 +210,11 @@ begin
 
   select * into other_scope from public.gateway_begin_idempotency(
     'gateway-a', 'student-c', 'institution.action.commit', 'commit-key-expired-01',
-    repeat('c', 64), now() - interval '2 seconds', 1000, 1000
+    repeat('c', 64), now(), 1000, 1000
   );
+  update private.gateway_idempotency
+     set expires_at = statement_timestamp() - interval '1 second'
+   where tenant_id = 'gateway-a' and actor_id = 'student-c';
   perform public.gateway_purge_journal();
   if exists (
     select 1 from private.gateway_idempotency
