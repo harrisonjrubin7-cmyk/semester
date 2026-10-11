@@ -31,6 +31,7 @@ export function validateBacklog(snapshot: RegistrySnapshot): ValidationIssue[] {
     if (seen.has(item.id)) issues.push({ code: 'duplicate_backlog_id', path, message: 'Backlog id is duplicated.' });
     if (!item.owner.trim()) issues.push({ code: 'missing_owner', path, message: 'Backlog item requires an owner.' });
     if (item.state === 'verified' && item.evidence.length === 0) issues.push({ code: 'missing_verification_evidence', path, message: 'Verified backlog items require evidence.' });
+    if (item.state === 'verified' && item.blockers.length > 0) issues.push({ code: 'verified_with_blockers', path, message: 'Verified backlog items cannot retain open blockers.' });
     if ((item.state === 'blocked' || item.state === 'planned') && item.blockers.length === 0) issues.push({ code: 'missing_blocker', path, message: 'Non-executable backlog items require an explicit blocker.' });
     for (const key of item.registry_keys) if (!knownRegistryKeys.has(key)) issues.push({ code: 'unknown_registry_key', path: `${path}.registry_keys`, message: `Unknown registry key ${key}.` });
     for (const dependency of item.depends_on) {
