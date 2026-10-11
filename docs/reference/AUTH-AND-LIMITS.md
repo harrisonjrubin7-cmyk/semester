@@ -75,11 +75,11 @@ curl -s 'http://127.0.0.1:8787/status' \
 
 The gateway never trusts anything the client says about who it is. Three facts are used, and none comes from the request body, a header other than `Authorization`, or the browser:
 
-- **The token.** A Supabase Auth access token, sent as `Authorization: Bearer <token>`. The gateway does not decode it. It asks the auth service about it (`auth.getUser`) on every request, so a revoked token or a deleted account stops working at once. The client used for this keeps no session and refreshes nothing.
+- **The token.** A Supabase Auth access token, sent as `Authorization: Bearer <token>`. The gateway asks the auth service about the exact token (`auth.getUser`) on every request, so a revoked token or a deleted account stops working at once. Only after that validation succeeds does it decode the signed `exp` claim, solely to carry the session expiry forward; identity, tenant and roles are never decoded from claims. A missing, malformed or expired `exp` fails closed before membership resolution. The client used for this keeps no session and refreshes nothing.
 - **The sign-in route.** The validated user must have signed in through a single sign-on provider: `app_metadata.provider` must start with `sso:` and the user must have an email address. A user who signed in another way has no identity here.
 - **A current membership.** `membership.ts` looks up the provider by its identifier and requires exactly one, with status `authorized`. It then requires exactly one membership for that user, tenant and provider, with status `active`, and roles that are all in the [role list](API-GATEWAY.md#roles). If the user has no membership yet, the lookup tries to bind one by user name through the database function `bind_institution_sso_membership`. Every outcome, accepted or denied, is written to the process log as an `institution.authorization` JSON line with a reason such as `missing-provider`, `ambiguous-membership` or `membership-not-active`. The reason is not returned to the caller.
 
-The result is an identity of three fields: `userId`, `institutionId` and `roles`. The institution id picks the adapter, so there is no request input that selects an adapter. `user_metadata` and a stale `app_metadata.semester` role claim play no part. `trustedIdentity` in `auth.ts`, which reads `app_metadata.semester`, is a fixture helper for tests; neither entry point calls it.
+The result carries `userId`, `institutionId` and `roles`, plus the authoritative membership row id and the validated session expiry. The institution id picks the adapter, so there is no request input that selects an adapter. `user_metadata` and a stale `app_metadata.semester` role claim play no part. `trustedIdentity` in `auth.ts`, which reads `app_metadata.semester`, is a fixture helper for tests; neither entry point calls it.
 
 The gateway also has an additive `contextForSelection` adapter for a future
 multi-membership flow. It accepts a requested membership and workspace, but derives the
@@ -87,9 +87,10 @@ tenant, person, institution, role-grant identifiers and expiry only from a direc
 server has already verified. It refuses a directory whose person or institution differs
 from the authenticated identity, and a conflicting `X-Tenant-Id` remains a
 `tenant_mismatch`. The selected membership becomes the request context's membership and
-its expiry caps the request's role grants. No current authentication result supplies the
-directory and session-expiry input, and no route calls this adapter; it is not a live
-workspace-switching API or a client contract.
+its expiry caps the request's role grants. Authentication now supplies the verified
+membership id and session expiry, but it does not yet assemble the complete directory or
+authorize a workspace selection. No route calls this adapter; it is not a live workspace-
+switching API or a client contract.
 
 Both entry points re-run the token check at the moment of a commit (and of an intelligence confirm) and require the same user and institution as before. If the answer changed, the commit is `403 forbidden` ("Your current university access does not permit this action.").
 

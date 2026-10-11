@@ -28,12 +28,12 @@ the directory on exit.
 
 The public [developer-tools topic](https://github.com/topics/developer-tools)
 is volatile, so coverage is recorded against a dated snapshot rather than
-implied to be permanent. On 2026-10-10, a refreshed review of the first six
-topic pages displayed 120 repository cards covering 120 unique repositories.
+implied to be permanent. On 2026-10-10, a refreshed review of the first seven
+topic pages displayed 140 repository cards covering 140 unique repositories.
 The ranking changed during the review: 21 repositories not present in the
 earlier three-page snapshot were reviewed in the page-four increment, followed
-by 20 repositories on page five and 20 more on page six. Every repository in
-the refreshed six-page snapshot is accounted for. ShellCheck closed the
+by 20 repositories on page five, 20 on page six and 20 on page seven. Every
+repository in the refreshed seven-page snapshot is accounted for. ShellCheck closed the
 standalone-script lint gap; the other repositories did not supply a new
 Semester product or CI requirement.
 
@@ -114,6 +114,17 @@ Semester product or CI requirement.
 | [jscpd](https://github.com/kucherenko/jscpd) | Copy/paste detection could become a CI quality gate only with an approved baseline, exclusions and failure threshold. Semester has no measured duplication criterion today, so installing it would create noisy policy rather than close a demonstrated gap. |
 | [Claude Code Ultimate Guide](https://github.com/FlorianBruniaux/claude-code-ultimate-guide) | A third-party tutorial and template collection is reference material, not an auditable dependency. Any workflow or template must be reviewed individually against repository instructions. |
 | [MailDev](https://github.com/maildev/maildev) | A local SMTP server is appropriate only when a defined email integration test requires it. Semester has no uncovered local-SMTP test requirement, so adding another service would not improve current release evidence. |
+| [Destructive Command Guard](https://github.com/Dicklesworthstone/destructive_command_guard) | Semester already constrains destructive operations through reviewed repository and agent instructions. An optional workstation interceptor would alter shell behavior and needs a defined policy, bypass and recovery model before adoption; no licence was detected when evaluated. |
+| [Shimmy](https://github.com/Michael-A-Kuykendall/shimmy) | A local GPU inference server would add model acquisition, hardware, serving, security and lifecycle boundaries without a Semester product or CI requirement for local inference. |
+| [Klavis](https://github.com/Klavis-AI/klavis), [Potpie](https://github.com/potpie-ai/potpie), [Wigolo](https://github.com/KnockOutEZ/wigolo), [codeflow](https://github.com/braedonsaunders/codeflow), [code-graph-rag](https://github.com/vitali87/code-graph-rag) and [treg](https://github.com/superdesigndev/treg) | MCP integration, agent search, code-graph and tool-routing platforms would add repository indexing, credentials, model execution or external-processing boundaries without a measured product or CI gap. Wigolo and treg also had no detected licence when evaluated. |
+| [Claude Scholar](https://github.com/Galaxy-Dawn/claude-scholar) | A semi-automated academic research workflow is a developer-level methodology, not a deterministic Semester dependency. Source authority, data handling and generated research still require task-specific review. |
+| [Hey API](https://github.com/hey-api/hey-api) | Generated SDKs are useful after Semester owns a stable published OpenAPI contract, generator configuration and freshness gate. The repository standards still describe that contract/client gate as proposed, so adding a generator now would not make the contract production-ready. |
+| [Heynote](https://github.com/heyman/heynote) | A developer scratchpad is a personal workstation tool, not a repository or student-facing dependency. No licence was detected when evaluated. |
+| [mirrord](https://github.com/metalbear-co/mirrord) and [DevSpace](https://github.com/devspace-sh/devspace) | Both depend on a Kubernetes development or deployment path. Semester intentionally uses Vercel and Supabase and does not operate a Kubernetes application stack. |
+| [nbdev](https://github.com/AnswerDotAI/nbdev) and [Argilla](https://github.com/argilla-io/argilla) | Notebook-driven software and AI dataset-labelling workflows do not match Semester's current React/Vite, FastAPI, Supabase and Vercel engineering inputs. |
+| [SAWS](https://github.com/donnemartin/saws) | Semester does not deploy an AWS application stack, so another AWS command-line client has no build or release role. No licence was detected when evaluated. |
+| [TUIOS](https://github.com/Gaurav-Gosain/tuios), [Gitlogue](https://github.com/unhappychoice/gitlogue) and [Port Killer](https://github.com/productdevbook/port-killer) | Terminal session management, animated Git history and interactive process termination are personal workstation utilities. They do not provide reproducible product or CI evidence, and process-killing must remain explicitly scoped. |
+| [Fallow](https://github.com/fallow-rs/fallow) | Code-health analysis could become a gate only with approved complexity, duplication, boundary and drift baselines. No measured threshold currently exists, so installing it now would create an unowned policy rather than close a demonstrated gap. |
 
 Revisit a deferred tool only when a concrete product or engineering requirement
 exists, and repeat the ownership, licence, provenance, permissions, maintenance,
