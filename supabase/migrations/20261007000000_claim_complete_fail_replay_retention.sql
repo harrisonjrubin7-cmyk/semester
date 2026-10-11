@@ -6,6 +6,17 @@
 -- Pattern: all RPCs are idempotent via idempotency keys or natural key
 -- uniqueness. Service-role-only RLS. Payload validation inherited from P1-02.
 
+-- ── Extend outcome constraint to include transient 'processing' state ────────
+--
+-- The earlier migration created outcome constraint with ('processed', 'skipped', 'failed').
+-- Claiming events requires a transient state; we extend it here to include 'processing'.
+alter table private.domain_event_receipts
+drop constraint if exists domain_event_receipts_outcome_check;
+
+alter table private.domain_event_receipts
+add constraint domain_event_receipts_outcome_check
+check (outcome in ('processing', 'processed', 'skipped', 'failed'));
+
 -- ── claim: Atomically claim an event for processing ──────────────────────────
 --
 -- Claim an event and register the consumer. Returns the receipt row. If already
