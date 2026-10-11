@@ -991,7 +991,7 @@ describe('a second tenant on every authenticated route', () => {
     // Registration readiness is not configured in this fixture, so the gateway
     // refuses before any command runs; the tenant check inside the command
     // path is readiness-repository.test.ts's.
-    const idem = { 'idempotency-key': '0f6f2a7e-2b3c-4d5e-8f90-1234567890ab' };
+    const idem = { 'idempotency-key': 'second-tenant-key-0001' };
     expect((await f.request('/v1/registration-readiness/evaluations', {}, idem)).status).toBe(503);
     expect((await f.request(`/v1/registration-readiness/evaluations/${r.id}/evaluate`, {}, idem)).status).toBe(503);
 

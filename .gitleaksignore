@@ -19,3 +19,7 @@
 863634d5c7c037cd2eae7afe2eec63ce998db991:docs/handoff/reference-slice/live/module_registry.json:generic-api-key:36
 # The same line, as the working-tree scan (`gitleaks dir .`) fingerprints it.
 docs/handoff/reference-slice/live/module_registry.json:generic-api-key:36
+# A test's fixed Idempotency-Key header in the second-tenant gateway sweep,
+# written as a random-looking UUID in c150fb62 and replaced by a plain word
+# in the next commit; the historical line is what the commit-range scan sees.
+c150fb620df78ae82929174502d3c1e0a886cd02:app/server/institution/gateway.test.ts:generic-api-key:994
