@@ -85,3 +85,48 @@ describe('courses named before a catalog', () => {
     expect(host.textContent).not.toMatch(/enrollment succeeded|you are enrolled|seat reserved/i);
   });
 });
+
+describe('courses named, once a catalog is imported', () => {
+  const catalog = {
+    institution: 'Test University',
+    courses: [
+      { id: 'econ-01', code: 'ECON 1020', section: '01', title: 'Principles', term: 'Fall 2026', department: 'ECON', credits: 3, instructor: '', location: '', description: '', prerequisites: '', seats: null, meetings: [{ days: [1, 3], start: '09:00', end: '09:50' }] },
+      { id: 'math-01', code: 'MATH 1100', section: '01', title: 'Calculus', term: 'Fall 2026', department: 'MATH', credits: 4, instructor: '', location: '', description: '', prerequisites: '', seats: 5, meetings: [{ days: [2, 4], start: '10:00', end: '10:50' }] },
+    ],
+  };
+
+  async function seedAndImport() {
+    show(
+      <>
+        <Seed />
+        <RegistrationPortal demandForecasting={false} courseDetail={false} />
+      </>,
+    );
+    const seed = [...host.querySelectorAll('button')].find((el) => el.textContent === 'seed plan');
+    act(() => (seed as HTMLButtonElement).click());
+    const input = host.querySelector('input[type="file"]') as HTMLInputElement;
+    const list = [new File([JSON.stringify(catalog)], 'catalog.json', { type: 'application/json' })] as unknown as FileList;
+    Object.defineProperty(input, 'files', { value: list, configurable: true, writable: true });
+    await act(async () => {
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+  }
+
+  it('keeps an unmatched code on the list instead of dropping it with the empty state', async () => {
+    await seedAndImport();
+    expect(host.textContent).toMatch(/Imported 2 sections from Test University/);
+    const list = host.querySelector('[aria-label="Courses you are considering"]');
+    expect(list?.textContent).toMatch(/ECON 1020 · Fall 2026 · 1 section in this file/);
+    expect(list?.textContent).toMatch(/PSCI 1104 · Fall 2026 · Unmatched: no section with this code in this file/);
+    expect(host.textContent).toMatch(/1 course you named has no section in this file/);
+  });
+
+  it('shows a matched code’s sections without putting anything in the cart', async () => {
+    await seedAndImport();
+    const reveal = host.querySelector('[aria-label="Show sections of ECON 1020"]') as HTMLButtonElement;
+    act(() => reveal.click());
+    expect(host.textContent).toMatch(/1 sections found/);
+    expect(host.textContent).toMatch(/Cart \(0\)/);
+  });
+});

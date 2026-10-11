@@ -46,7 +46,7 @@ Every slice ships together:
 **Phase A: the Registration Readiness pilot cut** (layers 3, 5, 8, 9; the mainframe backlog decides the order within it):
 
 1. **Agenda view (§94).** Done in #1448. Class meetings were added after review.
-2. **Unmatched named courses.** When a catalog is imported, the codes a student named stay visible as unmatched until the file holds a section with that code (mainframe backlog, item 1). Seats are never invented.
+2. **Unmatched named courses.** Done 11 October 2026: after a catalog import, the codes a student named stay listed, matched or unmatched (`matchNamed`, `RegistrationPortal.namedplan.test.tsx`). Seats are never invented.
 3. **Advising, the student-consented part** (Advising #5, #6, #8; P0). Check-ins and a success plan the student can see and revoke. This is built on the existing advisor-share grant, not on a new caseload store. It needs decision Q1 before any staff caseload screen is built.
 4. **Hold-release notice** (Student finance #12; P0). Through `push` and `support-reply-notify`.
 5. **Faculty P0 steps** (Faculty course lifecycle #1, #9, #10, #13, #19): rubric, assessment builder (wiring `lib/itembank.ts`), review of student work, and office hours. Each is gated on `course_studio`.
@@ -100,4 +100,5 @@ Update this section at the end of every session.
   - Built the inventory, the matrix, its renderer, and a CI test that fails when the matrix is stale or a cited file is gone (proved by moving `screens/Mine.tsx` away: the test went red, then green again when the file was restored).
   - Added the agenda view, with class meetings.
   - Gates for these changes: listed in the pull request.
-  - **Next executable task:** Phase A item 2, unmatched named courses.
+  - Named courses stay visible after a catalog import (Phase A item 2).
+  - **Next executable task:** Phase A item 3, the student-consented advising check-ins and success plan.

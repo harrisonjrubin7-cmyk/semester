@@ -24,9 +24,13 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Courses you named stay on the term plan after you import a catalog
+
+On **Term plan**, the courses you typed used to disappear as soon as you imported a course catalog. They now stay listed under **Courses you named**. A course with sections in the file shows how many there are and a **Show sections** button that finds them; one the file does not list says **Unmatched: no section with this code in this file**. The import message also says how many of your courses the file does not list. Nothing is added to your cart, and an unmatched course is not given a section or a seat. Nothing to do: your data is unchanged.
+
 ### The calendar has an Agenda view
 
-**Calendar** now has a fifth segment, **Agenda**, beside Day, Week, Month and Semester. It lists the next 14 days in order, one day under the next, and leaves out days with nothing on them. Deadlines, your own actions, campus events, appointments and entries from connected calendars appear exactly as they do on the day view, under the same source chips. Tap a day's heading to open that day. Nothing to do: your data is unchanged.
+**Calendar** now has a fifth segment, **Agenda**, beside Day, Week, Month and Semester. It lists the next 14 days in order, one day under the next, and leaves out days with nothing on them. Class meetings, standing commitments, deadlines, your own actions, campus events, appointments and entries from connected calendars appear exactly as they do on the day view, under the same source chips. Tap a day's heading to open that day. Nothing to do: your data is unchanged.
 
 ### Privileged platform accounts verify MFA before Semester opens staff tools
 

@@ -139,6 +139,36 @@ export function namedCoursesFrom(
     .map((module) => ({ code: module.course.code, term: module.course.term ?? null }));
 }
 
+/** One named code held against an imported catalog. */
+export interface NamedMatch extends NamedCourse {
+  /** Sections in the imported file with this code. Zero is "unmatched". */
+  sections: number;
+}
+
+/** "econ 1020", "ECON1020" and "ECON  1020" are the same code; anything else is not. */
+export const sameCode = (code: string): string => code.toUpperCase().replace(/\s+/g, '');
+
+/**
+ * Each code the student named, with how many sections of it the imported
+ * catalog holds.
+ *
+ * A named code with no section in the file stays on the list as unmatched
+ * rather than vanishing when a catalog arrives. It was typed for a reason,
+ * and a file that does not list it is a fact about the file, not a sign the
+ * student changed their mind. Nothing is invented for it: no section, no seat.
+ * Matching is by code alone. The term a student typed is shown, not enforced,
+ * because a catalog file is often for one term and the student may be
+ * planning another.
+ */
+export function matchNamed(named: readonly NamedCourse[], catalog: readonly CatalogCourse[]): NamedMatch[] {
+  const counts = new Map<string, number>();
+  for (const section of catalog) counts.set(sameCode(section.code), (counts.get(sameCode(section.code)) ?? 0) + 1);
+  const seen = new Set<string>();
+  return named
+    .filter((course) => course.code.trim() && !seen.has(sameCode(course.code)) && seen.add(sameCode(course.code)))
+    .map((course) => ({ code: course.code.trim(), term: course.term, sections: counts.get(sameCode(course.code)) ?? 0 }));
+}
+
 export function readinessCount(items: readonly PathReadinessItem[]): { ready: number; total: number } {
   return { ready: items.filter((item) => item.state === 'ready').length, total: items.length };
 }
