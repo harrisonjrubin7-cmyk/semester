@@ -460,6 +460,18 @@ async function journey(label, viewport) {
       (await other.getByText(title, { exact: true }).count()) === 0,
       'a fresh second context already had the action before signing in — the contexts are not separate',
     );
+    // Keep one viewport on the explicit first-sign-in adoption path and make
+    // the other deterministic for the ordinary automatic pull. A previously
+    // synced device legitimately carries an empty row-stamp set after signing
+    // out; the remote state stamp must still make the account copy unseen.
+    // This is the path that intermittently reached “Synced” with no durable
+    // task when the authenticated PostgREST identity lagged the auth event.
+    if (label === 'phone') {
+      await other.evaluate(() => {
+        localStorage.setItem('semester.seen', JSON.stringify({ courses: {} }));
+      });
+      notes.push(`${label}: exercised automatic pull with a prior empty seen-marker`);
+    }
 
     // ── 5 · Sign in there, and the action arrives, still done ──────────────
     at(STEPS[4]);
