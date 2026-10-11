@@ -23,6 +23,7 @@ from app.models.entities import (
     BackgroundJob,
     CalendarEvent,
     Citation,
+    Concept,
     Conflict,
     Course,
     JobStatus,
@@ -34,6 +35,7 @@ from app.models.entities import (
     StudyAsset,
     StudyAssetCitation,
     StudyExport,
+    StudySession,
     UploadCompletion,
     User,
 )
@@ -47,6 +49,7 @@ from app.schemas import (
     CoursePatch,
     GenerateAssetRequest,
     LoginRequest,
+    QuizAttempt,
     RegisterRequest,
     ReviewPatch,
     TokenResponse,
@@ -799,9 +802,34 @@ def export_cards(asset_id: UUID, user: User = Depends(get_current_user), db: Ses
 @router.post("/flashcards/{card_id}/review")
 def review_card(card_id: UUID, payload: CardReview, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     owned_course(db, user, payload.course_id)
+    if payload.concept_id is not None and not db.scalar(select(Concept.id).where(
+        Concept.id == payload.concept_id,
+        Concept.course_id == payload.course_id,
+    )):
+        raise HTTPException(404, "Concept not found")
+    card_exists = any(
+        str(card.get("id")) == str(card_id)
+        for asset in db.scalars(select(StudyAsset).where(
+            StudyAsset.course_id == payload.course_id,
+            StudyAsset.asset_type == "flashcards",
+            StudyAsset.deleted_at.is_(None),
+        )).all()
+        for card in asset.content.get("cards", [])
+        if isinstance(card, dict)
+    )
+    if not card_exists:
+        raise HTTPException(404, "Flashcard not found")
     progress = db.scalar(select(LearnerProgress).where(LearnerProgress.user_id == user.id, LearnerProgress.course_id == payload.course_id, LearnerProgress.concept_id == payload.concept_id))
     if not progress:
-        progress = LearnerProgress(user_id=user.id, course_id=payload.course_id, concept_id=payload.concept_id); db.add(progress)
+        progress = LearnerProgress(
+            user_id=user.id,
+            course_id=payload.course_id,
+            concept_id=payload.concept_id,
+            attempts=0,
+            correct_attempts=0,
+            mastery_score=0,
+        )
+        db.add(progress)
     progress.attempts += 1; progress.correct_attempts += int(payload.correct)
     progress.mastery_score = progress.correct_attempts / progress.attempts
     progress.last_reviewed_at = datetime.now(UTC)
@@ -810,8 +838,35 @@ def review_card(card_id: UUID, payload: CardReview, user: User = Depends(get_cur
 
 
 @router.post("/quizzes/{quiz_id}/attempts")
-def quiz_attempt(quiz_id: UUID, payload: dict, user: User = Depends(get_current_user)):
-    return {"quiz_id": quiz_id, "recorded": True, "answer_count": len(payload.get("answers", []))}
+def quiz_attempt(quiz_id: UUID, payload: QuizAttempt, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    owned_course(db, user, payload.course_id)
+    quiz = db.scalar(select(StudyAsset).where(
+        StudyAsset.id == quiz_id,
+        StudyAsset.course_id == payload.course_id,
+        StudyAsset.asset_type.in_(("practice_quiz", "practice_exam")),
+        StudyAsset.deleted_at.is_(None),
+    ))
+    if not quiz:
+        raise HTTPException(404, "Quiz not found")
+    questions = quiz.content.get("sections", [])
+    expected_indexes = set(range(len(questions))) if isinstance(questions, list) else set()
+    rated_indexes = {
+        answer.get("question_index")
+        for answer in payload.answers
+        if isinstance(answer.get("question_index"), int)
+        and isinstance(answer.get("correct"), bool)
+    }
+    if (
+        not expected_indexes
+        or len(payload.answers) != len(expected_indexes)
+        or rated_indexes != expected_indexes
+    ):
+        raise HTTPException(400, "Rate every stored quiz prompt exactly once")
+    session = StudySession(user_id=user.id, course_id=payload.course_id, study_asset_id=quiz.id, mode="quiz", ended_at=datetime.now(UTC))
+    db.add(session)
+    db.commit()
+    db.refresh(session)
+    return {"id": session.id, "quiz_id": quiz_id, "recorded": True, "answer_count": len(payload.answers)}
 
 
 @router.get("/courses/{course_id}/progress")
