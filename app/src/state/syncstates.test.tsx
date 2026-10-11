@@ -308,6 +308,15 @@ describe('an edit goes up on the database path', () => {
   });
 
   it('does not mark an accepted account copy as seen when its durable write fails', async () => {
+    localStorage.setItem(
+      'semester.v1',
+      JSON.stringify({
+        schemaVersion: 6,
+        seenOnboarding: true,
+        registered: true,
+        tasks: [{ id: 'local', title: 'Already here', done: false, created: 1 }],
+      }),
+    );
     localStorage.removeItem(SEEN_KEY);
     pull.mockResolvedValue({
       state: { tasks: [{ id: 'remote', title: 'From the account', done: true, created: 2 }] },
@@ -583,6 +592,44 @@ describe('what the review found', () => {
     expect(localStorage.getItem(UNPUSHED_KEY)).toBe('1');
   });
 
+  it('does not send a previous account’s semester to an empty new account without consent', async () => {
+    const previous = {
+      id: 'previous-account-task',
+      title: 'Private to the previous account',
+      date: null,
+      time: '',
+      note: '',
+      courseId: null,
+      done: false,
+      created: 1,
+    };
+    localStorage.setItem(
+      'semester.v1',
+      JSON.stringify({
+        schemaVersion: 6,
+        seenOnboarding: true,
+        registered: true,
+        tasks: [previous],
+      }),
+    );
+    localStorage.setItem('semester.syncedAs', 'u0');
+    pull.mockResolvedValue({ state: null, courses: [], updated: 0, seen: { courses: {} } });
+
+    await mount();
+    await wait(3_000);
+
+    expect(store.asking?.sides).toMatchObject({ cloud: 0, local: 1 });
+    expect(push, 'the previous account’s task must wait for an explicit ownership choice').not.toHaveBeenCalled();
+    expect(localStorage.getItem('semester.syncedAs')).toBe('u0');
+
+    await act(async () => store.settle('merge', null));
+    await wait(3_000);
+
+    expect(localStorage.getItem('semester.syncedAs')).toBe('u1');
+    expect(push).toHaveBeenCalled();
+    expect((push.mock.calls[0]![1] as { tasks?: { id: string }[] }).tasks?.map((task) => task.id)).toContain(previous.id);
+  });
+
   it('does not carry one account’s sync memory into another', async () => {
     // Another account was signed in on this device before: its stamps, its
     // agreed versions and a choice waiting on its review list.
@@ -598,6 +645,15 @@ describe('what the review found', () => {
     await wait(3_000); // the session arrives after first paint
     expect(store.review).toEqual([]);
     expect(localStorage.getItem('semester.review')).toBeNull();
+    // An account switch waits for an explicit ownership choice before any
+    // push, even when this account's remote copy has no authored rows.
+    expect(store.asking).not.toBeNull();
+    expect(push).not.toHaveBeenCalled();
+    expect(localStorage.getItem('semester.syncedAs')).toBe('u0');
+
+    await act(async () => store.settle('merge', null));
+    await wait(3_000);
+
     // The first push for this account names its own pulled stamp, never the
     // previous account's sync memory.
     expect((push.mock.calls[0]![4] as { state?: string } | null)?.state).toBe('t1');
