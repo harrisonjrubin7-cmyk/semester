@@ -1,5 +1,5 @@
 import { formatDate, formatDateTime } from '../lib/locale';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { shareState, type ShareRow } from '../lib/advisor-shares';
 import { myShares, revokeShare } from '../lib/advisor-shares';
 import { record, yours } from '../lib/journal';
@@ -63,6 +63,8 @@ export function TrustCenter({ accountId }: { accountId?: string | null } = {}) {
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [said, setSaid] = useState('');
   const [failed, setFailed] = useState('');
+  const [busy, setBusy] = useState(false);
+  const acting = useRef(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -82,13 +84,16 @@ export function TrustCenter({ accountId }: { accountId?: string | null } = {}) {
 
   const confirmed = async () => {
     const c = confirm;
-    setConfirm(null);
+    if (!c || acting.current) return;
+    acting.current = true;
+    setBusy(true);
     setFailed('');
-    if (!c) return;
+    if (c.kind !== 'revoke') setConfirm(null);
     try {
       if (c.kind === 'revoke') {
         await revokeShare(c.share.id);
         record(userId, { kind: 'share-revoked', detail: c.share.title, about: { type: 'share', id: c.share.id, label: c.share.title }, provenance: yours('Nobody', 'Revoked') });
+        setConfirm(null);
         setSaid(`“${c.share.title}” is revoked. Your advisor can no longer open it.`);
         setRound((r) => r + 1);
       } else if (c.kind === 'forget') {
@@ -102,6 +107,9 @@ export function TrustCenter({ accountId }: { accountId?: string | null } = {}) {
       }
     } catch (e) {
       setFailed(e instanceof Error ? e.message : String(e));
+    } finally {
+      acting.current = false;
+      setBusy(false);
     }
   };
 
@@ -110,7 +118,7 @@ export function TrustCenter({ accountId }: { accountId?: string | null } = {}) {
       <p className="portal-eyebrow">Trust &amp; data</p>
       <h2 className="trust-title">What Semester holds, and who can see it</h2>
       {said ? <p role="status" className="balance-said">{said}</p> : null}
-      {failed ? <p role="alert">{failed}</p> : null}
+      {failed && confirm?.kind !== 'revoke' ? <p role="alert">{failed}</p> : null}
 
       <section className="trust-section" aria-label="Connected sources">
         <h3>Connected sources</h3>
@@ -181,7 +189,7 @@ export function TrustCenter({ accountId }: { accountId?: string | null } = {}) {
                 {activeShares.map((s) => (
                   <li key={s.id}>
                     <strong>{s.title}</strong> — shared with your advisor, until {day(s.expires_at)}.{' '}
-                    <button type="button" className="balance-button" onClick={() => setConfirm({ kind: 'revoke', share: s })}>
+                    <button type="button" className="balance-button" onClick={() => { setFailed(''); setConfirm({ kind: 'revoke', share: s }); }}>
                       Revoke…
                     </button>
                   </li>
@@ -262,15 +270,23 @@ export function TrustCenter({ accountId }: { accountId?: string | null } = {}) {
           title="Revoke this share?"
           preview={
             <>
-              <p>
-                <strong>{confirm.share.title}</strong>
-              </p>
-              <p>Your advisor will no longer be able to open it. The record that they did stays in your list.</p>
+              <ActionPreview
+                subject={confirm.share.title}
+                says="Your advisor loses access to this shared meeting immediately."
+                doesNotChange="The share and its access log stay in your account. Your meeting preparation, other shares and official advising records stay unchanged."
+                recovery={{ kind: 'none', how: 'You can make a new share later.' }}
+              />
+              {failed ? <p role="alert">{failed} You can try again or cancel.</p> : null}
             </>
           }
-          confirmLabel="Revoke"
+          confirmLabel={busy ? 'Revoking…' : 'Revoke'}
           onConfirm={() => void confirmed()}
-          onCancel={() => setConfirm(null)}
+          onCancel={() => {
+            if (!acting.current) {
+              setFailed('');
+              setConfirm(null);
+            }
+          }}
         />
       ) : null}
       {confirm?.kind === 'forget' ? (

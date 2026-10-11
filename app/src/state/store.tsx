@@ -100,6 +100,7 @@ import { baseForLegacy, forLegacy } from '../lib/sync/engine/ownership';
 import { withEngine } from '../lib/sync/engine/tasks';
 import { useTaskEngine } from './useTaskEngine';
 import {
+  DEFAULT_PERSISTED,
   STORAGE_KEY,
   initialEphemeral,
   loadPersisted,
@@ -806,8 +807,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (was && was !== s.user.id) {
           forgetSyncMemory();
           setReview([]);
+          // Keep the previous owner written down until the student explicitly
+          // decides what the new account may do with this device's semester.
+          // Replacing it here let an empty new account silently receive the
+          // previous account's retained work.
+        } else {
+          rememberSyncedAs(s.user.id);
         }
-        rememberSyncedAs(s.user.id);
       }
       const next = accountOf(s);
       const nextId = next?.id ?? null;
@@ -1007,31 +1013,42 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (!stillCurrent()) return ignored();
       const seen = seenRows();
       const hasRemote = remote.state !== null || remote.courses.length > 0;
+      const previousAccount = syncedAs();
+      const switchedAccount = previousAccount !== null && previousAccount !== accountId;
 
       /*
        * A first sign-in with a semester on both sides is the one moment this
-       * feature can ruin a term, so it asks instead of deciding.
+       * feature can ruin a term, so it asks instead of deciding. An account
+       * switch is also always a question: even an empty new account must not
+       * silently receive the previous account's semester retained on this
+       * device.
        *
        * Only on a *first* one — `seenRows()` is null until this device has
        * taken something, and after that the ordinary newest-wins path is right
        * and a dialogue every time would be intolerable. See `lib/adopt.ts`.
        */
-      if (hasRemote && seen === null) {
-        const here = countRows(pickPersisted(latest.current));
-        const there = countRows({
-          ...(remote.state as Record<string, unknown>),
-          courses: remote.courses,
-        });
+      if ((hasRemote || switchedAccount) && seen === null) {
+        const here = countRows(pickPersisted(latest.current), DEFAULT_PERSISTED);
+        const there = countRows(
+          {
+            ...(remote.state as Record<string, unknown>),
+            courses: remote.courses,
+          },
+          DEFAULT_PERSISTED,
+        );
         const both: Sides = {
           cloud: there.rows,
           local: here.rows,
           cloudCourses: there.courses,
           localCourses: here.courses,
         };
-        if (decide(both).do === 'ask') {
+        const move = decide(both);
+        if (move.do === 'ask' || switchedAccount) {
           setAsking({
             sides: both,
-            say: decide(both).say,
+            say: switchedAccount
+              ? 'This device was last synced with a different account. Choose what this account may use before anything is uploaded.'
+              : move.say,
             remote,
             accountId,
             generation,
@@ -1222,6 +1239,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           }
         }
       }
+      rememberSyncedAs(accountId);
       pushReady.current = flight;
       setSync({ status: 'synced', at: Date.now(), error: '' });
       return refreshSaid(
@@ -2038,6 +2056,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           }
         }
       }
+      // The old owner remains durable until this point, so a reload cannot
+      // turn an unanswered account-switch question into an automatic upload.
+      rememberSyncedAs(accountId);
       pushReady.current = { accountId, generation };
       setAsking(null);
     },
