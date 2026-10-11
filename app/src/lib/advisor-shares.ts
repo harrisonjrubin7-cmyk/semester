@@ -103,13 +103,20 @@ export async function myShares(): Promise<{ shares: ShareRow[]; events: ShareEve
 }
 
 export async function revokeShare(id: string, now = Date.now()): Promise<void> {
-  const { error } = await (await cloud()).from('advisor_shares').update({ revoked_at: new Date(now).toISOString() }).eq('id', id);
+  const revokedAt = new Date(now).toISOString();
+  const { data, error } = await (await cloud()).from('advisor_shares').update({ revoked_at: revokedAt }).select('id, revoked_at').eq('id', id);
   if (error) throw new Error(error.message);
+  if (!(data ?? []).some((row) => row.id === id && typeof row.revoked_at === 'string' && Date.parse(row.revoked_at) === Date.parse(revokedAt))) {
+    throw new Error('The share was not revoked. It may already be unavailable or you may no longer have access. Refresh your shares, then try again.');
+  }
 }
 
 export async function deleteShare(id: string): Promise<void> {
-  const { error } = await (await cloud()).from('advisor_shares').delete().eq('id', id);
+  const { data, error } = await (await cloud()).from('advisor_shares').delete().select('id').eq('id', id);
   if (error) throw new Error(error.message);
+  if (!(data ?? []).some((row) => row.id === id)) {
+    throw new Error('The share was not deleted. It may already be gone or you may no longer have access. Refresh your shares, then try again.');
+  }
 }
 
 export interface SharedWithMe {

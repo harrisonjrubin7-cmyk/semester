@@ -18,7 +18,6 @@ import {
   MOST_DAYS,
   MOST_RULES,
   addRule,
-  dropRule,
   editRule,
   ruleLine,
 } from '../lib/myrules';
@@ -78,7 +77,7 @@ export function MyRules() {
             <button
               type="button"
               className="bare"
-              onClick={() => set(dropRule(rules, r.id))}
+              onClick={() => dispatch({ type: 'deleteMyRule', id: r.id })}
               aria-label={`Delete: ${ruleLine(r, courseCode)}`}
               style={{ flex: 'none', width: 28, color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
             >

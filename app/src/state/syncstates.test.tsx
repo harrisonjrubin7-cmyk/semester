@@ -32,7 +32,9 @@ class Stale extends Error {
 const pull = vi.fn();
 const push = vi.fn();
 const persist = vi.fn();
-const flushNow = vi.fn(async () => true);
+const flushNow = vi.fn(async (..._args: unknown[]) => true);
+const acknowledgeRemoteWrite = vi.fn(async () => true);
+const rollbackRemoteWrite = vi.fn(async (..._args: unknown[]) => true);
 let db = true;
 
 vi.mock('../lib/cloud', () => ({
@@ -54,7 +56,9 @@ vi.mock('../lib/cloud', () => ({
 vi.mock('./persist', () => ({
   available: () => db,
   persist: (...args: unknown[]) => persist(...args),
-  flushNow: () => flushNow(),
+  flushNow: (...args: unknown[]) => flushNow(...args),
+  acknowledgeRemoteWrite: () => acknowledgeRemoteWrite(),
+  rollbackRemoteWrite: (...args: unknown[]) => rollbackRemoteWrite(...args),
   flushOnLeave: () => {},
   whileWriting: () => {},
   load: async () => null,
@@ -128,6 +132,10 @@ beforeEach(async () => {
   persist.mockReset();
   flushNow.mockReset();
   flushNow.mockResolvedValue(true);
+  acknowledgeRemoteWrite.mockReset();
+  acknowledgeRemoteWrite.mockResolvedValue(true);
+  rollbackRemoteWrite.mockReset();
+  rollbackRemoteWrite.mockResolvedValue(true);
   localStorage.clear();
   localStorage.setItem('semester.v1', JSON.stringify({ schemaVersion: 6, seenOnboarding: true, registered: true }));
   localStorage.setItem(SEEN_KEY, JSON.stringify({ state: 's1', courses: {} }));
@@ -147,6 +155,24 @@ afterEach(async () => {
 });
 
 describe('an edit goes up on the database path', () => {
+  it('does not push a new device before its first account pull finishes', async () => {
+    let release: (value: ReturnType<typeof snapshot>) => void = () => {};
+    pull.mockImplementationOnce(() => new Promise<ReturnType<typeof snapshot>>((resolve) => {
+      release = resolve;
+    }));
+
+    await mount();
+    await wait(3_000);
+
+    expect(pull).toHaveBeenCalledOnce();
+    expect(push, 'the local copy must not overwrite an account it has not read').not.toHaveBeenCalled();
+
+    await act(async () => release(snapshot('s1')));
+    await wait(3_000);
+
+    expect(push).toHaveBeenCalledOnce();
+  });
+
   it('keeps auth and focus refreshes in one pull at a time', async () => {
     let release: (value: ReturnType<typeof snapshot>) => void = () => {};
     pull.mockImplementationOnce(() => new Promise<ReturnType<typeof snapshot>>((resolve) => { release = resolve; }));
@@ -572,7 +598,8 @@ describe('what the review found', () => {
     await wait(3_000); // the session arrives after first paint
     expect(store.review).toEqual([]);
     expect(localStorage.getItem('semester.review')).toBeNull();
-    // The first push for this account names no stamp from the other one.
+    // The first push for this account names its own pulled stamp, never the
+    // previous account's sync memory.
     expect((push.mock.calls[0]![4] as { state?: string } | null)?.state).toBe('t1');
     expect(localStorage.getItem('semester.syncedAs')).toBe('u1');
   });
