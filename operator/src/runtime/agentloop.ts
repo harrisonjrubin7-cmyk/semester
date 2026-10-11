@@ -3,7 +3,7 @@ import { systemPrompt } from '../agents/contract.ts';
 import { agent as findAgent } from '../agents/roster.ts';
 import { sha256 } from '../store/hash.ts';
 import { redactString } from '../store/redact.ts';
-import { ToolDenied } from '../tools/adapters.ts';
+import { ToolDenied, literalPattern } from '../tools/adapters.ts';
 import type { Handler, HandlerContext } from './handlers.ts';
 import type { ModelMessage } from './model.ts';
 import { ModelUnavailable } from './model.ts';
@@ -38,7 +38,7 @@ Reply with exactly one JSON object and nothing else: no prose, no code fence.
 To use a tool:
   {"action":"tool","tool":"read_file","args":{"path":"relative/path"}}
   {"action":"tool","tool":"list_files","args":{"dir":"relative/dir"}}
-  {"action":"tool","tool":"search","args":{"dir":"relative/dir","pattern":"regular expression"}}
+  {"action":"tool","tool":"search","args":{"dir":"relative/dir","pattern":"literal text to find (not a regular expression)"}}
   {"action":"tool","tool":"write_file","args":{"path":"relative/path","content":"whole file content"}}
   {"action":"tool","tool":"run_check","args":{"key":"allowlisted command key"}}
   {"action":"tool","tool":"git_diff","args":{}}
@@ -70,7 +70,7 @@ function runTool(context: HandlerContext, action: Extract<ModelAction, { action:
   switch (action.tool) {
     case 'read_file': return tools.readFile(str(action.args.path, 'path'));
     case 'list_files': return tools.listFiles(str(action.args.dir, 'dir'));
-    case 'search': return tools.search(str(action.args.dir, 'dir'), new RegExp(str(action.args.pattern, 'pattern')), 100);
+    case 'search': return tools.search(str(action.args.dir, 'dir'), literalPattern(str(action.args.pattern, 'pattern')), 100);
     case 'write_file': { if (typeof action.args.content !== 'string') throw new Error('args.content must be a string (it may be empty).'); const item = tools.writeFile(str(action.args.path, 'path'), action.args.content); return item.kind === 'file' ? { path: item.path, sha256: item.sha256, bytes: item.bytes } : item; }
     case 'run_check': { const item = tools.runCheck(str(action.args.key, 'key')); return { command: item.command, cwd: item.cwd, exitCode: item.exitCode, tail: item.tail }; }
     case 'git_diff': { const item = tools.gitDiff(); return { sha256: item.sha256, files: item.files, bytes: item.bytes, text: item.text }; }

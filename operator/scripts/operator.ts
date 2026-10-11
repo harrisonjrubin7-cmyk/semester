@@ -74,6 +74,6 @@ Model: off unless SEMESTER_OPERATOR_MODEL_KEY is set; SEMESTER_OPERATOR_MODEL (d
   'release-kill': () => { runtime.killSwitch.release(by()); print(runtime.killSwitch.state()); },
 };
 
-const handler = commands[command];
+const handler = Object.hasOwn(commands, command) ? commands[command] : undefined;
 if (!handler) { console.error(`Unknown command ${command}`); commands.help!(); process.exit(2); }
 await handler();

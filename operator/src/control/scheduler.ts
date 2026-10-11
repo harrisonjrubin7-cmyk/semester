@@ -19,6 +19,9 @@ import type { AuditLog } from './audit.ts';
  * never re-queues it: an interrupted task is inspected, then deliberately
  * re-queued or cancelled by a person.
  */
+/** Task types that may consume work before it is verified, because verifying it is their job. */
+export const CHECKING_TYPES: readonly string[] = ['run.checks', 'verify'];
+
 export const MAX_HANDOFF_DEPTH = 3;
 export const MAX_HANDOFFS_PER_RESULT = 3;
 
@@ -86,7 +89,11 @@ export function createScheduler(store: OperatorStore, clock: Clock, ids: IdFacto
 
   function dependencySatisfied(task: Task, dependency: Task | undefined): boolean {
     if (!dependency) return false;
-    if (dependency.status === 'verified' || dependency.status === 'awaiting_verification') return true;
+    if (dependency.status === 'verified') return true;
+    // Finished-but-unverified work is complete for the tasks whose job is to check or verify it, and an observe-mode
+    // dependency (an inspection, a review: no artifact to verify) is complete when its report is in. Unverified
+    // writes do not flow into further writes.
+    if (dependency.status === 'awaiting_verification') return CHECKING_TYPES.includes(task.type) || dependency.mode === 'observe';
     const reviews = Array.isArray(task.spec.reviews) ? (task.spec.reviews as unknown[]) : [];
     return reviews.includes(dependency.id) && ['failed', 'blocked', 'rejected'].includes(dependency.status);
   }

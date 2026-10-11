@@ -130,8 +130,6 @@ export function createRuntime(options: RuntimeOptions): Runtime {
         task = scheduler.transition(task.id, 'running', { workspace: relative(stateRoot, workspaceRoot) });
       }
       const tools = createToolbox(policy, contextFor(task, contract, workspaceRoot), limiter, audit);
-      const turn = limiter.consume('turn');
-      if (!turn.ok) throw new Error(turn.reason);
       const handler = handlerFor(task.type);
       if (!contract.taskTypes.includes(task.type)) throw new Error(`${contract.id} does not accept task type ${task.type}.`);
       const report = redact(await handler({ task, tools, store, model, limiter, workspaceRoot, repositoryRoot, execution }));

@@ -188,6 +188,8 @@ export interface ToolAction {
   /** A path for file tools, a command key for run_check, a target name for adapters. */
   target: string;
   payloadHash?: string;
+  /** Hash of the exact reviewed artifact an action releases; an approval bound to one is consumed only by the same hash. */
+  artifactHash?: string;
   risk: RiskLevel;
   /** Leaves the repository: deploys, sends, purchases, publishes. */
   external?: boolean;

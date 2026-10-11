@@ -113,7 +113,7 @@ export function createPolicyController(policyInput: PolicySet, deps: PolicyDepen
       );
       if (consequential) {
         if (!action.payloadHash) return deny('payload_hash_required', 'A consequential action must carry the hash of its exact payload.', true);
-        const result = deps.approvals.consume({ tool: action.tool, target: action.target, payloadHash: action.payloadHash, taskId: context.taskId, actor: context.agentId });
+        const result = deps.approvals.consume({ tool: action.tool, target: action.target, payloadHash: action.payloadHash, artifactHash: action.artifactHash, taskId: context.taskId, actor: context.agentId });
         if (!result.ok) return deny(result.code, result.reason, true);
         return { allowed: true, code: 'approved', reason: `Approval ${result.approval.id} consumed.`, requiresApproval: true };
       }

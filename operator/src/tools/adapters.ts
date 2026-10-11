@@ -25,6 +25,11 @@ export class ToolDenied extends Error {
   }
 }
 
+/** A search pattern as literal text: nothing a model or a task spec supplies is compiled as a regular expression. */
+export function literalPattern(text: string): RegExp {
+  return new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+}
+
 export interface Toolbox {
   readFile(path: string): string;
   listFiles(dir: string, maxEntries?: number): string[];

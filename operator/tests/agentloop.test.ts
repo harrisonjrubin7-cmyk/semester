@@ -87,6 +87,19 @@ test('a policy denial is fed back to the model as a result; three denials block 
   assert.ok(!existsSync(join(runtime.store.root, result.task.workspace!, 'policy/policy.json')));
 });
 
+test('a search pattern from the model is literal text, never a compiled regular expression', async () => {
+  const model = scriptedModel([toolCall('search', { dir: '.', pattern: '(a+)+$' }), toolCall('search', { dir: '.', pattern: 'answer.*41' }), toolCall('search', { dir: '.', pattern: 'answer = 41' }), finish({})]);
+  const { runtime, goal } = runtimeWith(model);
+  const [task] = runtime.plan(goal.id, [{ type: 'security.review', title: 'search', agentId: 'A17', acceptance: [manual('x')], spec: {} }]);
+  const started = Date.now();
+  const result = await runtime.run(task!.id);
+  assert.ok(Date.now() - started < 5000);
+  assert.equal(result.task.status, 'awaiting_verification');
+  assert.match(lastMessage(model, 2), /"ok":true,"result":\[\]/, 'the pathological pattern matched nothing, as literal text');
+  assert.match(lastMessage(model, 3), /"ok":true,"result":\[\]/, 'a metacharacter is literal: answer.*41 is not in the tree');
+  assert.match(lastMessage(model, 4), /packages\/fixture\/index.ts/, 'literal text still finds its line');
+});
+
 test('a tool the contract does not grant is denied as tool_not_granted, and the model may stop as blocked', async () => {
   const model = scriptedModel([toolCall('write_file', { path: 'README.md', content: 'x' }), finish({ outcome: 'blocked', status: 'no write tool' })]);
   const { runtime, goal } = runtimeWith(model);
@@ -106,7 +119,7 @@ test('the turn limit stops a model that never finishes; the planner may tighten 
   const result = await runtime.run(task!.id);
   assert.equal(result.task.status, 'blocked');
   assert.equal(result.execution.report?.status, 'turn_limit');
-  assert.ok(model.requests.length <= 3, `the model was called ${model.requests.length} times`);
+  assert.equal(model.requests.length, 3, 'maxTurns is the number of model calls, exactly');
   assert.deepEqual(tighten({ maxTurns: 10, maxToolCalls: 10, maxElapsedMs: 10, maxRetries: 1, maxConcurrent: 1 }, { maxTurns: 20, maxRetries: 0, costCeilingUsd: 2 }), { maxTurns: 10, maxToolCalls: 10, maxElapsedMs: 10, maxRetries: 0, maxConcurrent: 1, costCeilingUsd: 2 });
 });
 

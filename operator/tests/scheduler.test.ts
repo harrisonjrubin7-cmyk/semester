@@ -50,7 +50,8 @@ test('ready joins on every dependency being complete; claim refuses otherwise', 
   const { scheduler } = harness();
   const frontend = scheduler.enqueue({ goalId: 'goal_1', type: 'x', title: 'frontend', agentId: 'A07', acceptance: accept });
   const backend = scheduler.enqueue({ goalId: 'goal_1', type: 'x', title: 'backend', agentId: 'A10', acceptance: accept });
-  const qa = scheduler.enqueue({ goalId: 'goal_1', type: 'x', title: 'qa', agentId: 'A15', acceptance: accept, dependsOn: [frontend.id, backend.id] });
+  const qa = scheduler.enqueue({ goalId: 'goal_1', type: 'run.checks', title: 'qa', agentId: 'A15', acceptance: accept, dependsOn: [frontend.id, backend.id] });
+  const downstream = scheduler.enqueue({ goalId: 'goal_1', type: 'x', title: 'downstream', agentId: 'A10', acceptance: accept, dependsOn: [backend.id] });
   assert.deepEqual(scheduler.ready().map((task) => task.id), [frontend.id, backend.id]);
   assert.match((scheduler.claim(qa.id) as { error: string }).error, /waits on/);
   scheduler.transition(frontend.id, 'verified');
@@ -59,6 +60,10 @@ test('ready joins on every dependency being complete; claim refuses otherwise', 
   assert.ok(!scheduler.ready().some((task) => task.id === qa.id), 'a failed dependency the task does not review is not complete');
   scheduler.transition(backend.id, 'awaiting_verification');
   assert.ok(scheduler.ready().some((task) => task.id === qa.id), 'finished work may be checked before it is verified');
+  assert.ok(!scheduler.ready().some((task) => task.id === downstream.id), 'work that is not a check waits for the verdict');
+  scheduler.transition(backend.id, 'verified');
+  assert.ok(scheduler.ready().some((task) => task.id === downstream.id), 'and proceeds once the dependency is verified');
+  scheduler.transition(backend.id, 'awaiting_verification');
   const claimed = scheduler.claim(qa.id);
   assert.ok('task' in claimed && claimed.task.status === 'running' && claimed.execution.status === 'running');
   assert.match((scheduler.claim(qa.id) as { error: string }).error, /not ready/);

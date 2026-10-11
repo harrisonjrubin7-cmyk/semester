@@ -14,17 +14,17 @@ Thirty-three agents, each a bounded responsibility sharing one runtime (`src/run
 | Suite | Name | Responsibility | Hands off to | Main failure mode | Agents |
 | --- | --- | --- | --- | --- | --- |
 | coordinator | Coordinator | Priorities, dependencies, and delegation | product, architecture, company | Unbounded or duplicate delegation | A01 |
-| product | Product & Ecosystem | Requirements and ecosystem coverage | architecture, frontend, backend | Invented scope or vague acceptance criteria | A02, A03 |
-| architecture | Architecture & Data | Architecture, contracts, and data design | frontend, backend, integrations | Incompatible contracts or unsafe migrations | A04, A11 |
-| frontend | UX & Frontend | UX, screens, components, accessibility | backend, qa | Static UI mistaken for working functionality | A05, A06, A07, A08, A09 |
-| backend | Backend & Identity | APIs, domain rules, identity, authorization | integrations, qa, repair | Tenant leakage or incomplete authorization | A10, A12 |
-| integrations | Integrations & Automation | Provider contracts and background automation | backend, qa | Incorrect contracts or repeated side effects | A13, A14 |
-| qa | QA & Verification | Acceptance criteria and independent evidence | repair, release | Unsupported passing claims | A15, A16 |
-| repair | Repair & Security | Defect investigation and security review | qa, release | Speculative or repeated unsuccessful repair | A17, A18, A19 |
-| release | Release & Reliability | Release readiness, incidents, recovery | qa, capacity, company | Wrong artifact or premature readiness claims | A20, A22 |
-| capacity | Capacity & Analytics | Performance, analytics, and cost | architecture, backend | Scaling without evidence | A21, A25 |
-| growth | Customer & Growth | Customer experience and growth experiments | product, company | Unsupported claims or unauthorized outreach | A23, A24, A26, A27, A28 |
-| company | Company & Knowledge | Documentation and business coordination | coordinator, growth | Estimates presented as facts | A29, A30, A31, A32, A33 |
+| product | Product &amp; Ecosystem | Requirements and ecosystem coverage | architecture, frontend, backend | Invented scope or vague acceptance criteria | A02, A03 |
+| architecture | Architecture &amp; Data | Architecture, contracts, and data design | frontend, backend, integrations | Incompatible contracts or unsafe migrations | A04, A11 |
+| frontend | UX &amp; Frontend | UX, screens, components, accessibility | backend, qa | Static UI mistaken for working functionality | A05, A06, A07, A08, A09 |
+| backend | Backend &amp; Identity | APIs, domain rules, identity, authorization | integrations, qa, repair | Tenant leakage or incomplete authorization | A10, A12 |
+| integrations | Integrations &amp; Automation | Provider contracts and background automation | backend, qa | Incorrect contracts or repeated side effects | A13, A14 |
+| qa | QA &amp; Verification | Acceptance criteria and independent evidence | repair, release | Unsupported passing claims | A15, A16 |
+| repair | Repair &amp; Security | Defect investigation and security review | qa, release | Speculative or repeated unsuccessful repair | A17, A18, A19 |
+| release | Release &amp; Reliability | Release readiness, incidents, recovery | qa, capacity, company | Wrong artifact or premature readiness claims | A20, A22 |
+| capacity | Capacity &amp; Analytics | Performance, analytics, and cost | architecture, backend | Scaling without evidence | A21, A25 |
+| growth | Customer &amp; Growth | Customer experience and growth experiments | product, company | Unsupported claims or unauthorized outreach | A23, A24, A26, A27, A28 |
+| company | Company &amp; Knowledge | Documentation and business coordination | coordinator, growth | Estimates presented as facts | A29, A30, A31, A32, A33 |
 
 ## Roster
 

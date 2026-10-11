@@ -24,7 +24,9 @@ const rows = buildCoverageMatrix(registry, tasks);
 const summary = coverageSummary(rows);
 const modules = moduleAgents(registry);
 
-const cell = (value: string | string[] | number | boolean) => String(Array.isArray(value) ? value.join('<br>') : value).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+// Registry text is data, not markup: escape what Markdown would hand to HTML, then the table syntax, then join with the one intentional <br>.
+const text = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+const cell = (value: string | string[] | number | boolean) => (Array.isArray(value) ? value.map(text).join('<br>') : text(String(value)));
 const table = (header: string[], body: Array<Array<string | string[] | number | boolean>>) => [`| ${header.join(' | ')} |`, `| ${header.map(() => '---').join(' | ')} |`, ...body.map((row) => `| ${row.map(cell).join(' | ')} |`)].join('\n');
 
 const implementationOf = (taskTypes: string[], _implementation: string) => taskTypes.map((type) => `${type}${type in HANDLERS ? ' (deterministic)' : ' (model loop)'}`);

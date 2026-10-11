@@ -95,6 +95,13 @@ test('consequential actions need an exact, live, unconsumed approval from someon
   assert.equal(policy.evaluate({ ...action, payloadHash: payloadHash({ target: 'staging', artifact: 'changed' }) }, ctx).code, 'approval_required', 'a changed payload finds no approval');
   assert.equal(policy.evaluate({ ...action, target: 'production' }, ctx).code, 'approval_required', 'a different target finds no approval');
   assert.equal(policy.evaluate(action, { ...ctx, agentId: 'owner' }).code, 'approval_required', 'the approver cannot act on their own approval');
+  // An approval bound to an artifact is consumed through the gate only by an action carrying that exact artifact hash.
+  const bound = approvals.grant({ tool: 'release_adapter', target: 'preview', payloadHash: hash, artifactHash: 'sha256:artifact-1', approver: 'owner', ttlMs: 60_000, usesAllowed: 1 });
+  const release = { ...action, target: 'preview' };
+  assert.equal(policy.evaluate(release, ctx).code, 'approval_required', 'an action without an artifact hash cannot consume an artifact-bound approval');
+  assert.equal(policy.evaluate({ ...release, artifactHash: 'sha256:artifact-2' }, ctx).code, 'approval_required', 'a different artifact finds no approval');
+  assert.equal(policy.evaluate({ ...release, artifactHash: 'sha256:artifact-1' }, ctx).code, 'approved', 'the exact artifact consumes it');
+  assert.equal(approvals.find({ tool: 'release_adapter', target: 'preview', payloadHash: hash, artifactHash: 'sha256:artifact-1', taskId: ctx.taskId, actor: ctx.agentId })?.id, undefined, `${bound.id} is spent`);
   assert.equal(policy.evaluate(action, ctx).code, 'approved');
   assert.equal(policy.evaluate(action, ctx).code, 'approval_required', 'a consumed approval is spent');
   assert.equal(approvals.list()[0]!.usesConsumed, 1);
@@ -195,4 +202,15 @@ test('file store writes atomically and refuses a malformed collection', () => {
   assert.deepEqual(readdirSync(store.root).filter((name) => name.endsWith('.tmp')), []);
   writeFileSync(`${store.root}/tasks.json`, '{"not":"an array"}');
   assert.throws(() => store.tasks(), /not a JSON array/);
+});
+
+test('glob patterns are bounded: metacharacters are literal, and traversal never reaches the matcher', () => {
+  const started = Date.now();
+  assert.equal(matchesAny('(a+)+$', ['(a+)+$']), true, 'a pathological regular expression is only a literal path here');
+  assert.equal(matchesAny('a'.repeat(40) + '!', ['(a+)+$']), false);
+  assert.equal(matchesAny('a'.repeat(40) + '!', ['**/**/**/**/**/*.ts']), false);
+  assert.ok(Date.now() - started < 1000, 'matching is quick on inputs built to be slow');
+  assert.equal(globToRegExp('.env').source, '^\\.env$');
+  assert.equal(repositoryPath('/repo', '/repo/../other/.env'), undefined, 'a path that escapes the root is rejected before any glob is consulted');
+  assert.equal(repositoryPath('/repo', '../.env'), undefined);
 });

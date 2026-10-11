@@ -4,7 +4,7 @@ import type { AcceptanceCriterion, EvidenceItem, ExecutionRecord, Task, WorkerRe
 import { sha256 } from '../store/hash.ts';
 import type { OperatorStore } from '../store/store.ts';
 import type { RunLimiter } from '../control/limits.ts';
-import { ToolDenied, type Toolbox } from '../tools/adapters.ts';
+import { ToolDenied, literalPattern, type Toolbox } from '../tools/adapters.ts';
 import { modelDriven } from './agentloop.ts';
 import type { ModelPort } from './model.ts';
 
@@ -52,7 +52,7 @@ export const inspectRepository: Handler = async (context) => {
     verification.push({ name: path, passed: true, detail: `present, ${text.split('\n').length} lines` });
   }
   for (const pattern of patterns) {
-    const matches = context.tools.search('.', new RegExp(pattern), 50);
+    const matches = context.tools.search('.', literalPattern(pattern), 50);
     verification.push({ name: `pattern ${pattern}`, passed: matches.length > 0, detail: `${matches.length} matches${matches.length ? `, first ${matches[0]!.path}:${matches[0]!.line}` : ''}` });
   }
   return report(context, { outcome: 'completed', status: 'inspection complete', evidenceInspected: inspected, verification, nextStep: 'Hand the findings to the implementing agent.' });
