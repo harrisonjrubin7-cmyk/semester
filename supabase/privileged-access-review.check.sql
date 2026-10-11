@@ -51,16 +51,16 @@ begin
   reset role;
   select i.public_id into starter_item from private.privileged_access_review_item i
     where i.review_id = (select id from private.privileged_access_review where public_id = review_ref)
-      and i.subject_sha256 = private.role_audit_sha256(starter::text);
+      and i.grant_id = (select id from public.role_grants where subject = starter and role = 'trust_officer');
   select i.public_id into reviewer_item from private.privileged_access_review_item i
     where i.review_id = (select id from private.privileged_access_review where public_id = review_ref)
-      and i.subject_sha256 = private.role_audit_sha256(reviewer::text);
+      and i.grant_id = (select id from public.role_grants where subject = reviewer and role = 'trust_officer');
   select i.public_id into signer_item from private.privileged_access_review_item i
     where i.review_id = (select id from private.privileged_access_review where public_id = review_ref)
-      and i.subject_sha256 = private.role_audit_sha256(signer::text);
+      and i.grant_id = (select id from public.role_grants where subject = signer and role = 'platform_admin');
   select i.public_id into target_item from private.privileged_access_review_item i
     where i.review_id = (select id from private.privileged_access_review where public_id = review_ref)
-      and i.subject_sha256 = private.role_audit_sha256(target::text);
+      and i.grant_id = (select id from public.role_grants where subject = target and role = 'platform_admin');
 
   perform pg_temp.must('the starter cannot decide snapshot items', pg_temp.refused(starter, format(
     'select public.decide_privileged_access_review_item(%L,%L,%L)', target_item, 'retain', 'still-required')));
@@ -77,7 +77,8 @@ begin
   perform public.decide_privileged_access_review_item(
     (select i.public_id from private.privileged_access_review_item i
       where i.review_id = (select id from private.privileged_access_review where public_id = review_ref)
-        and i.subject_sha256 = private.role_audit_sha256(no_mfa::text)), 'investigate', 'mfa-not-current');
+        and i.grant_id = (select id from public.role_grants where subject = no_mfa and role = 'trust_officer')),
+    'investigate', 'mfa-not-current');
   reset role;
   perform pg_temp.must('revoke decisions close the live role grant',
     (select revoked_at is not null from public.role_grants where subject = target and role = 'platform_admin'));

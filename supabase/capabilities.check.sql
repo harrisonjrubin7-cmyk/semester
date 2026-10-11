@@ -170,21 +170,21 @@ begin
   select private.has_capability('platform:configure') into a;
   perform pg_temp.answered('and may not configure the platform', a, false);
 
-  -- `platform_admin` carries eight capabilities and not this one: the three it
+  -- `platform_admin` carries nine capabilities and not this one: the three it
   -- was created with, running the private beta
   -- (20260928220000_private_beta.sql), and the three the operations console
   -- added (20260929100000_console_control_plane.sql: console:operate,
   -- approval:decide, breakglass:request — each judged operations-only in
   -- app/src/lib/rolelaunch.ts before it was granted). Asserted out of the
   -- matrix rather than by granting it, because the claim is about what the
-  -- seeded rows say — and asserted as the exact set, so a ninth cannot arrive
+  -- seeded rows say — and asserted as the exact set, so a tenth cannot arrive
   -- in passing.
   set local role postgres;
   select count(*) into n from public.role_capabilities
    where role = 'platform_admin' and capability = 'member:manage';
   perform pg_temp.counted('platform_admin does not implicitly hold member:manage', n, 0);
   select count(*) into n from public.role_capabilities where role = 'platform_admin';
-  perform pg_temp.counted('it holds exactly the eight it was given', n, 8);
+  perform pg_temp.counted('it holds exactly the nine it was given', n, 9);
   select count(*) into n from public.role_capabilities
    where role = 'platform_admin'
      and capability in ('console:operate', 'approval:decide', 'breakglass:request');
@@ -192,8 +192,9 @@ begin
   select count(*) into n from public.role_capabilities where role = 'platform_admin'
      and capability not in ('report:read', 'moderation:action', 'platform:configure',
                             'beta:manage', 'beta:triage',
-                            'console:operate', 'approval:decide', 'breakglass:request');
-  perform pg_temp.counted('and they are those eight', n, 0);
+                            'console:operate', 'approval:decide', 'breakglass:request',
+                            'access_review:manage');
+  perform pg_temp.counted('and they are those nine', n, 0);
 
   -- ── The split, as a measurement ────────────────────────────────────────
   --
