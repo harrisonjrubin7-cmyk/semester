@@ -226,6 +226,7 @@
    "private.privileged_access_review_decision",
    "private.privileged_access_review_investigation_resolution",
    "private.privileged_access_review_item",
+   "private.privileged_access_review_remediation",
    "private.privileged_access_review_signoff",
    "private.ledger_chain",
    "private.ledger_chain_key",

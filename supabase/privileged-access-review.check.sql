@@ -22,11 +22,14 @@ returns void language plpgsql as $$ begin if ok is not true then raise exception
 do $$
 declare
   starter uuid := gen_random_uuid(); reviewer uuid := gen_random_uuid(); signer uuid := gen_random_uuid();
-  target uuid := gen_random_uuid(); investigate_subject uuid := gen_random_uuid(); outsider uuid := gen_random_uuid();
+  target uuid := gen_random_uuid(); investigate_subject uuid := gen_random_uuid(); steward uuid := gen_random_uuid();
+  outsider uuid := gen_random_uuid();
   review_ref text; retry_ref text; started_hash text; trust_items text[]; starter_item text; signer_item text;
-  reviewer_item text; target_item text; investigate_item text; signer_granted_at timestamptz;
+  reviewer_item text; target_item text; investigate_item text; steward_item text; signer_granted_at timestamptz;
+  steward_capabilities text[];
   table_owner text; mutation_error text;
-  n bigint; retained_n bigint; revoked_n bigint; investigating_n bigint; unsigned_n bigint; bad_hash_n bigint;
+  n bigint; retained_n bigint; revoked_n bigint; investigating_n bigint; remediated_n bigint;
+  unsigned_n bigint; bad_hash_n bigint;
 begin
   insert into auth.users (id, instance_id, aud, role, email, email_confirmed_at, created_at, updated_at) values
     (starter, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'starter@review.example', now(), now(), now()),
@@ -34,13 +37,15 @@ begin
     (signer, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'signer@review.example', now(), now(), now()),
     (target, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'target@review.example', now(), now(), now()),
     (investigate_subject, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'investigate@review.example', now(), now(), now()),
+    (steward, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'steward@review.example', now(), now(), now()),
     (outsider, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'outside@review.example', now(), now(), now());
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
     (starter, 'trust_officer', 'platform', '', 'platform'),
     (reviewer, 'platform_admin', 'platform', '', 'platform'),
     (signer, 'trust_officer', 'platform', '', 'platform'),
     (target, 'university_admin', 'platform', '', 'platform'),
-    (investigate_subject, 'integration_admin', 'platform', '', 'platform');
+    (investigate_subject, 'integration_admin', 'platform', '', 'platform'),
+    (steward, 'data_steward', 'platform', '', 'platform');
 
   perform pg_temp.must('an unprivileged account cannot start a review', pg_temp.refused(outsider,
     $q$select public.begin_privileged_access_review('access-review-outsider',current_date-90,current_date,current_date+90)$q$));
@@ -61,6 +66,8 @@ begin
          count(*) filter (where subject_sha256 !~ '^[0-9a-f]{64}$')
     into started_hash, trust_items, reviewer_item, target_item, investigate_item, bad_hash_n
     from public.privileged_access_review(review_ref);
+  select item_ref, capabilities into steward_item, steward_capabilities
+    from public.privileged_access_review(review_ref) where role = 'data_steward';
   select item_ref into starter_item from public.privileged_access_review(review_ref)
    where role = 'trust_officer' and subject_sha256 = started_hash;
   select item_ref, granted_at into signer_item, signer_granted_at from public.privileged_access_review(review_ref)
@@ -71,7 +78,10 @@ begin
     $q$select public.begin_privileged_access_review('access-review-another',current_date-90,current_date,current_date+90)$q$));
   perform pg_temp.must('the public ledger exposes all pseudonymous snapshot items',
     cardinality(trust_items) = 2 and starter_item is not null and signer_item is not null
-      and reviewer_item is not null and target_item is not null and investigate_item is not null and bad_hash_n = 0);
+      and reviewer_item is not null and target_item is not null and investigate_item is not null
+      and steward_item is not null and bad_hash_n = 0);
+  perform pg_temp.must('capability-bearing roles are discovered and their exact authority is preserved',
+    'data_request:handle' = any(steward_capabilities));
 
   perform pg_temp.must('a starter still cannot decide their own grant', pg_temp.refused(starter, format(
     'select public.decide_privileged_access_review_item(%L,%L,%L)', starter_item, 'retain', 'still-required')));
@@ -79,34 +89,34 @@ begin
     'select public.decide_privileged_access_review_item(%L,%L,%L)', reviewer_item, 'retain', 'still-required')));
   perform pg_temp.must('reason codes come from the controlled vocabulary', pg_temp.refused(starter, format(
     'select public.decide_privileged_access_review_item(%L,%L,%L)', target_item, 'retain', 'person-name')));
+  perform pg_temp.must('a controlled reason still has to match its decision', pg_temp.refused(starter, format(
+    'select public.decide_privileged_access_review_item(%L,%L,%L)', target_item, 'retain', 'unauthorized')));
 
   update public.role_grants set granted_at = clock_timestamp() where subject = signer and role = 'trust_officer';
   perform pg_temp.must('a reissued grant cannot be decided from a stale snapshot', pg_temp.refused(starter, format(
     'select public.decide_privileged_access_review_item(%L,%L,%L)', signer_item, 'retain', 'still-required')));
   update public.role_grants set granted_at = signer_granted_at where subject = signer and role = 'trust_officer';
+  update public.role_grants set granted_at = clock_timestamp()
+   where subject = steward and role = 'data_steward';
 
   perform pg_temp.become(starter);
-  perform public.decide_privileged_access_review_item(signer_item, 'retain', 'still-required');
   perform public.decide_privileged_access_review_item(reviewer_item, 'retain', 'still-required');
-  perform public.decide_privileged_access_review_item(target_item, 'revoke', 'access-ended');
-  perform public.decide_privileged_access_review_item(investigate_item, 'investigate', 'mfa-not-current');
   reset role;
   perform pg_temp.become(reviewer);
   perform public.decide_privileged_access_review_item(starter_item, 'retain', 'still-required');
+  perform public.decide_privileged_access_review_item(signer_item, 'retain', 'still-required');
+  perform public.decide_privileged_access_review_item(target_item, 'revoke', 'access-ended');
+  perform public.decide_privileged_access_review_item(investigate_item, 'investigate', 'mfa-not-current');
+  perform public.decide_privileged_access_review_item(steward_item, 'investigate', 'activity-review');
   reset role;
-  perform pg_temp.must('signoff waits for revoke remediation and investigation closure', pg_temp.refused(signer,
+  perform pg_temp.must('signoff waits for investigation closure', pg_temp.refused(signer,
     format('select public.complete_privileged_access_review(%L)', review_ref)));
 
-  -- Simulate the separately approved console_act lifecycle write. The review
-  -- function itself remains read/decision-only and is not a second grant writer.
-  update public.role_grants set revoked_at = clock_timestamp()
-   where subject = target and role = 'university_admin';
-  perform pg_temp.become(target);
-  perform pg_temp.must('the approved lifecycle write closed the live role grant',
+  perform pg_temp.must('the reviewed revoke atomically closed the live role grant',
     (select revoked_at is not null from public.role_grants where subject = target and role = 'university_admin'));
-  reset role;
-  perform pg_temp.become(reviewer);
+  perform pg_temp.become(starter);
   perform public.resolve_privileged_access_review_investigation(investigate_item, 'remediated');
+  perform public.resolve_privileged_access_review_investigation(steward_item, 'remediated');
   reset role;
   perform pg_temp.must('a starter cannot sign the review', pg_temp.refused(starter, format(
     'select public.complete_privileged_access_review(%L)', review_ref)));
@@ -116,13 +126,15 @@ begin
   perform public.complete_privileged_access_review(review_ref);
   select count(*), count(*) filter (where decision = 'retain'),
          count(*) filter (where decision = 'revoke'), count(*) filter (where decision = 'investigate'),
+         count(*) filter (where remediation_applied),
          count(*) filter (where signed_at is null)
-    into n, retained_n, revoked_n, investigating_n, unsigned_n
+    into n, retained_n, revoked_n, investigating_n, remediated_n, unsigned_n
     from public.privileged_access_review(review_ref);
   reset role;
-  perform pg_temp.must('the signed ledger returns every snapshot item', n = 5);
+  perform pg_temp.must('the signed ledger returns every snapshot item', n = 6);
   perform pg_temp.must('the signed ledger preserves every decision and the signoff timestamp',
-    retained_n = 3 and revoked_n = 1 and investigating_n = 1 and unsigned_n = 0);
+    retained_n = 3 and revoked_n = 1 and investigating_n = 2
+      and remediated_n = 1 and unsigned_n = 0);
   select pg_get_userbyid(c.relowner) into table_owner from pg_class c
    where c.oid = 'private.privileged_access_review_decision'::regclass;
   begin
