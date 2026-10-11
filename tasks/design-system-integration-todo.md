@@ -1750,3 +1750,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep permanent file purge, whole-account deletion, provider state and scanner-backed Import separate from this device-only reminder rule.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed athletic-support share revocation — automation pass 6, integration slice 84
+
+- [x] Start from clean required-branch head `49a93810`; confirm selection-time `origin/main` `51dd47b8` is already included, inspect exact athletic-support share history/code for overlap, then inspect final `573af52b` and confirm its Course Engine MVP/upload-job and developer-tools files do not overlap.
+- [x] Re-rank one student-owned athletic-support share revocation as the earliest bounded account consequence gap; keep other shares, local athletics planning and official school records outside the mutation.
+- [x] Put the server write behind the shared `ConfirmDialog` and `ActionPreview`, with Cancel initially focused and no write on the first press or cancellation.
+- [x] Name immediate staff access loss, retained share/read history, unchanged records and the no-undo/new-share recovery boundary.
+- [x] Guard repeat confirmation while the request is in flight; preserve the dialog and represented share with an assertive retry-or-cancel path after provider or receipt failure.
+- [x] Require the existing account-scoped update to return the exact share id and requested revocation timestamp before reporting success; treat zero returned rows as refusal or staleness.
+- [x] Preserve the migration's student-owner RLS, tenant-bound row, `revoked_at`-only column grant and one-way revocation policy without schema, grant, role or capability change.
+- [x] Prove the regression red against first-press behavior, then pass 30/30 focused and adjacent Athlete Share, domain, ActionPreview/modal and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass aggregate design check (9 token tests and 69 contracts) and 96 report contracts with zero audit violations, 86 existing warnings and no CSS-ledger increase; report artifact unchanged.
+- [ ] Aggregate design-system report launcher — no real `npx` executable is available in this shell; exact 96 report contracts pass, but no aggregate launcher pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-share slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists and a local properties file was not read, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep family-invite revocation, whole-account deletion, official athletics operations and aggregate-consent changes separate from this athletic-support share.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
