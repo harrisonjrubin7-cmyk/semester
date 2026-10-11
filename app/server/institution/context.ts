@@ -65,6 +65,20 @@ export interface ActiveInstitutionRequestContext extends RequestContext {
   readonly activeContext: ActiveContext;
 }
 
+/** Only the request headers that the shared platform context is allowed to trust. */
+function platformHeaders(
+  request: Request,
+  correlationId: string,
+): Record<string, string> {
+  const tenantHint = request.headers.get('x-tenant-id');
+  const idempotencyKey = request.headers.get('idempotency-key');
+  return {
+    'x-correlation-id': correlationId,
+    ...(tenantHint !== null ? { 'x-tenant-id': tenantHint } : {}),
+    ...(idempotencyKey !== null ? { 'idempotency-key': idempotencyKey } : {}),
+  };
+}
+
 /**
  * Build the request context for one gateway request.
  *
@@ -86,13 +100,9 @@ export function contextFor(
   purpose?: string,
 ): RequestContext {
   const now = systemClock.now();
-  const tenantHint = request.headers.get('x-tenant-id');
   return buildRequestContext(
     {
-      headers: {
-        'x-correlation-id': ids.correlationId,
-        ...(tenantHint !== null ? { 'x-tenant-id': tenantHint } : {}),
-      },
+      headers: platformHeaders(request, ids.correlationId),
       purpose,
     },
     trustedIdentityFor(identity, { environment, authenticatedAt: now.toISOString() }),
@@ -131,13 +141,9 @@ export function contextForSelection(
     throw new PlatformError('tenant_mismatch', 'The selected workspace belongs to a different school than your session.');
   }
 
-  const tenantHint = request.headers.get('x-tenant-id');
   const base = buildRequestContext(
     {
-      headers: {
-        'x-correlation-id': ids.correlationId,
-        ...(tenantHint !== null ? { 'x-tenant-id': tenantHint } : {}),
-      },
+      headers: platformHeaders(request, ids.correlationId),
       purpose,
     },
     trustedIdentityFor(identity, {

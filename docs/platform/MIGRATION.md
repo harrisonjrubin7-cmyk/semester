@@ -104,14 +104,19 @@ client supplied, its expiry is capped by both membership and session, and changi
 membership or workspace requires explicit confirmation. The gateway now has an additive
 `contextForSelection` adapter that rechecks the activated person and institution against
 the authenticated identity, carries the selected membership into `RequestContext`, and
-caps its role grants at the active-context expiry. No production authentication result
-provides the verified directory/session-expiry input yet, and no route or UI calls the
-adapter, so this remains an integration seam—not evidence of live context switching.
+caps its role grants at the active-context expiry. Production authentication now carries
+the authoritative membership row id and the signed session expiry after remote token
+validation; it still does not assemble the complete context directory or authorize a
+workspace selection. No route or UI calls the adapter, so this remains an integration
+seam—not evidence of live context switching.
 The browser's `lib/university.ts` now uses the shared SDK. Its transport
 preserves the existing secure-origin, no-redirect, no-cookie and timeout rules;
 mutating calls receive one idempotency key per logical call; only safe reads or
-keyed writes retry. The legacy institution commit route opts out of network
-retry until it adopts the shared idempotency store, preserving its
+keyed writes retry. The gateway context now validates and carries that key to
+adapters. The local SQLite action journal implements the shared persistent
+idempotency-store contract, but the production PostgreSQL journal does not and
+the legacy institution commit route is not wrapped with the store. That route
+therefore still opts out of network retry, preserving its
 unknown-outcome-to-reconciliation rule. The two older refusal shapes are translated at this
 migration boundary with a focused equivalence test. **Not done:** the edge
 functions have not adopted the envelope, and `environment`,

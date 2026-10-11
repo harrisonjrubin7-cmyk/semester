@@ -448,7 +448,8 @@ export async function sendReset(email: string): Promise<string> {
 }
 
 export async function signOut(): Promise<void> {
-  await (await cloud()).auth.signOut();
+  const { error } = await (await cloud()).auth.signOut();
+  if (error) throw new Error(error.message);
 }
 
 /**

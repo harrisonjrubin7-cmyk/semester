@@ -28,6 +28,10 @@ will happily serve you the copy you already had.
 
 Senior Trust & Safety reviewers now see a preview before revoking a student volunteer. It names the volunteer, says their moderation access ends immediately, identifies the unanswered assigned tasks that will leave their queue, shows the reason that will be kept in programme history, and says the action cannot be undone by sending them back to calibration. Cancel changes nothing; the existing server operation runs only after **Revoke access** is confirmed. Other volunteers, moderation cases, completed reviews and school settings are unchanged.
 
+### Privileged platform accounts verify MFA before Semester opens staff tools
+
+An account with a live `platform_admin` or `support_agent` grant now verifies a second factor before Semester mounts any capability-backed tool, including tools outside **Semester Operations**. An enrolled authenticator-app or phone-code factor can be challenged; if neither exists, the step offers authenticator-app enrolment. A failed factor lookup has its own retry. The database also keeps those two grants dormant at `aal1` for capability checks and role-based approval requests. Accounts without either privileged role are unchanged. Production authentication configuration and recovery still require separate operational verification.
+
 ### Courses you type stay on this device, and you can put them on a meeting agenda
 
 On first run, **Build your registration plan** takes a term and course codes. They stay on this device. While no catalog is imported, the Term plan lists them and says each one is not a section, a seat, or an enrollment. On My Path, registration readiness has a **Courses you named** row. **Add to my meeting** puts each code and term on your own advisor-meeting agenda. Nothing else from your record is copied, and nothing is sent to an advisor. If this build has advisor meetings turned on, that opens the Advisor meeting tab; otherwise the row says the codes are on your agenda. Naming a course does not register you, and you do not have to do anything if you have not named one.

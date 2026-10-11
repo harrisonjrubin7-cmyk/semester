@@ -2613,6 +2613,7 @@ export type Action =
   | { type: 'addPlot'; text?: string }
   | { type: 'writePlot'; id: string; patch: Partial<Omit<PlotLine, 'id'>> }
   | { type: 'dropPlot'; id: string }
+  | { type: 'clearPlots' }
   | { type: 'setPlot'; lines: string[] }
   | { type: 'writeMaths'; text?: string; given?: Record<string, string> }
   | { type: 'sitPaper'; minutes: number; formatId: string; code?: string }
@@ -2736,6 +2737,7 @@ export type Action =
   | { type: 'openDeck'; unit: number }
   | { type: 'openUpdate'; courseId: CourseId; unit?: number | null }
   | { type: 'addUpdate'; update: Omit<CourseUpdate, 'id' | 'created'> }
+  | { type: 'removeUpdate'; id: string }
   | { type: 'deleteUpdate'; id: string }
   | { type: 'addFeed'; feed: Omit<FeedSource, 'id' | 'added'>; events: FeedEvent[] }
   | { type: 'syncFeed'; id: string; events: FeedEvent[]; status: string }

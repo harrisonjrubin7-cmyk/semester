@@ -56,6 +56,8 @@ export interface EntityRow {
 export interface LocalStore {
   /** Writes inside commit together or not at all. */
   transaction<T>(fn: () => Promise<T>): Promise<T>
+  /** Wait until committed in-memory changes have reached durable storage. */
+  flush?(): Promise<void>
   outbox: {
     put(row: OutboxRow): Promise<void>
     get(id: string): Promise<OutboxRow | undefined>
@@ -71,6 +73,7 @@ export interface LocalStore {
   cursors: {
     get(scope: string): Promise<string | undefined>
     set(scope: string, value: string): Promise<void>
+    remove(scope: string): Promise<void>
   }
 }
 

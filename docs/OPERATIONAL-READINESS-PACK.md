@@ -63,7 +63,7 @@ Ordinary ownership apart from high-risk decision rights. A reviewer is never the
 
 ## The seven pillars of production safety
 
-68 checklist items: 7 at 0, 47 at 1, 14 at 2, none above the ceiling. An item’s level is the
+68 checklist items: 7 at 0, 46 at 1, 15 at 2, none above the ceiling. An item’s level is the
 lower median of the rows it rests on; `gate:` rows are launch gates (unmet 0,
 partial 1, met 2).
 
@@ -118,13 +118,13 @@ partial 1, met 2).
 
 ### Security, privacy and access control
 
-*Are users, tenants, data, keys, staff access and production systems protected by enforceable controls?* Required evidence: Access review, IAM settings, authorization test suite, secrets scan, data map, vendor review, scan and remediation log. — 0 at 0, 6 at 1, 5 at 2.
+*Are users, tenants, data, keys, staff access and production systems protected by enforceable controls?* Required evidence: Access review, IAM settings, authorization test suite, secrets scan, data map, vendor review, scan and remediation log. — 0 at 0, 5 at 1, 6 at 2.
 
 | Item | Rests on (level) | Level |
 | --- | --- | ---: |
 | Production and non-production environments are separate. | PRG-006 (1), gate:staging-parity (1) | 1 |
 | Secrets are in managed storage and never bundled to clients or source. | SDLC-2 (2), PRG-008 (2) | 2 |
-| MFA protects privileged accounts. | IAM-005 (1), IAM-1 (2) | 1 |
+| MFA protects privileged accounts. | IAM-005 (2), IAM-1 (2) | 2 |
 | SSO, session controls, account recovery, access review and offboarding are operational. | IAM-003 (1), IAM-011 (1), IAM-3 (0) | 1 |
 | Tenant isolation and role authorization have automated positive and negative tests. | IAM-007 (2), IAM-008 (2), TEN-1 (1) | 2 |
 | Private storage, signed URLs, upload validation and content access rules are enforced. | IAM-009 (2) | 2 |

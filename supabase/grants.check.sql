@@ -390,6 +390,10 @@ declare
     -- 20260928010000: the caller's own live capabilities, same predicate as
     -- private.has_capability, so staff screens can open for staff.
     'my_capabilities()',
+    -- 20261008223000: the caller's own yes/no signal for whether a live
+    -- platform_admin or support_agent grant still needs aal2. It exposes no
+    -- role roster or capability and is used only to show the elevation gate.
+    'privileged_mfa_required()',
     -- 20260929070000: click-to-cancel. The owner of an individual
     -- subscription ends it at the period end in one call, reason optional;
     -- cancelling must be as easy as signing up. Refuses anyone else's.
@@ -630,6 +634,14 @@ declare
     -- platform console shell and platform incident:communicate, excludes demo
     -- tenants without exact implementation scope, and performs no mutation.
     'console_release_incidents(include_demo boolean)',
+
+    -- Protected incident-evidence metadata and hash-linked custody. Every
+    -- callable path requires platform console plus incident-response
+    -- authority and fresh MFA; the backing private tables have no client or
+    -- service-role grants.
+    'incident_evidence_custody(want_incident text)',
+    'record_incident_evidence(want_incident text, want_kind text, want_source_system text, want_evidence_locator text, want_sha256 text, want_byte_size bigint, want_captured_at timestamp with time zone, want_retention_until timestamp with time zone, want_classification text)',
+    'record_incident_evidence_custody(want_evidence text, want_action text, want_custodian text, want_reason_code text, want_observed_sha256 text)',
 
     -- Identity-minimized privacy queue. It requires the platform console
     -- shell, derives tenants from exact-school data_request:handle grants and

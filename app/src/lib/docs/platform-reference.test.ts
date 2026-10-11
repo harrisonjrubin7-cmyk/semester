@@ -401,6 +401,11 @@ const PLATFORM_NON_EVENT_IMPORTERS = [
   'app/server/institution/adapter.ts',
   'app/server/institution/context.ts',
   'app/server/institution/gateway.ts',
+  // Membership imports only the tenant ID validator before carrying the
+  // authoritative row ID into active-context selection.
+  'app/server/institution/membership.ts',
+  'app/server/institution/registration-readiness-commands.ts',
+  'app/server/institution/readiness-repository.ts',
   // Course sources reuse only the tenant context, error envelope and file
   // engine through the public package. The intelligence path imports only the
   // platform retrieval/context contract. None calls event primitives or mounts
@@ -1401,6 +1406,8 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // The service-only registration-readiness store emits the command's minimized event in the save transaction.
       // No route or worker calls that store yet, so this is repository evidence rather than a mounted producer.
       'supabase/migrations/20261009160000_registration_readiness_store.sql',
+      // The expansion RPC preserves the same atomic minimized outbox emission while accepting rolling clients.
+      'supabase/migrations/20261010140000_registration_readiness_timeout_contract.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);

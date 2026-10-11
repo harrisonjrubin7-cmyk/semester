@@ -13,7 +13,12 @@ export const MATURITY_STAGES = [
 
 export type MaturityStage = (typeof MATURITY_STAGES)[number];
 export type Maturity = Record<MaturityStage, boolean>;
-export type MaturityEvidence = Partial<Record<MaturityStage, string[]>>;
+export const EVIDENCE_KINDS = [
+  'design', 'schema', 'code', 'test', 'deployment', 'approval', 'activation', 'monitoring',
+] as const;
+export type EvidenceKind = (typeof EVIDENCE_KINDS)[number];
+export interface EvidenceReference { path: string; kind: EvidenceKind }
+export type MaturityEvidence = Partial<Record<MaturityStage, EvidenceReference[]>>;
 
 export interface CapabilityRecord {
   key: string;
@@ -67,6 +72,13 @@ export interface BacklogItem {
   depends_on: string[];
   evidence: string[];
   blockers: string[];
+}
+
+export type BacklogExecutionStatus = 'ready' | 'active' | 'sequencing_debt' | 'waiting' | 'blocked' | 'verified';
+
+export interface BacklogExecutionItem extends BacklogItem {
+  execution_status: BacklogExecutionStatus;
+  open_dependencies: string[];
 }
 
 export interface PlatformManifest extends RegistryRecord {

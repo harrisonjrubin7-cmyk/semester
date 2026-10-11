@@ -9,8 +9,9 @@
 - Premium responsive Semester shell with Ink navigation, Parchment work surfaces, a persistent context bar, labeled mobile tabs, keyboard command palette, source/status vocabulary, and loading, error, empty, offline, and stale/review language; no invented totals.
 - Owner-scoped source inspection with paginated extracted chunks, document-native location labels, focus-managed source sheet, and authenticated original download.
 - Review resolution UI for confirming, rejecting, or correcting structured extraction payloads without rewriting preserved source files.
+- Calendar editing with a mandatory consequence preview, explicit unspecified-time preservation, authenticated persistence, and one-step session undo.
 - Atomic worker leases with monotonic fencing, scoped progress/terminal writes, expired-lease redelivery, owner-scoped cancellation, and study-asset deletion barriers. These controls prevent stale database commits; they do not promise exactly-once external provider effects.
-- Tests for shell navigation, command focus, source labels and locations, review correction validation, operational states, semantic tokens, automated axe accessibility, ownership isolation, conflicts, missing date/time behavior, invalid citations, deduplication, safe archives, ICS, and exports.
+- Tests for shell navigation, command focus, source labels and locations, review correction validation, calendar preview/undo, operational states, semantic tokens, automated axe accessibility, ownership isolation, conflicts, missing date/time behavior, invalid citations, deduplication, safe archives, migrations, concurrent upload completion, ICS, and exports.
 
 ## Mocked or credential-dependent
 

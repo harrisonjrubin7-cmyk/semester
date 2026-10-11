@@ -92,6 +92,8 @@ export interface RegistrationReadinessEvaluationRecord {
   commandLedger: ReadinessCommandLedgerEntry[];
 }
 
+export type ReadinessTransitionReason = 'evaluator_timeout';
+
 export type ReadinessWorkflowEventType =
   | 'registration.readiness_requested'
   | 'registration.readiness_evaluated'
@@ -102,7 +104,7 @@ export interface ReadinessWorkflowEventDescriptor {
   aggregateId: string;
   idempotencyKey: string;
   correlationId: string;
-  payload: { evaluationId: string; termId: string; version: number };
+  payload: { evaluationId: string; termId: string; version: number; reason?: ReadinessTransitionReason };
 }
 
 export interface ReadinessWorkflowResult {
@@ -127,6 +129,7 @@ export interface TransitionRegistrationReadinessEvaluation {
   expectedVersion: number;
   targetState: RegistrationReadinessEvaluationState;
   projectionVersion?: number;
+  reason?: ReadinessTransitionReason;
   correlationId: string;
   idempotencyKey: string;
   at: string;
@@ -145,7 +148,7 @@ const receiptStatus = (state: RegistrationReadinessEvaluationState): ReadinessEv
   REGISTRATION_READINESS_COMPLETED_OUTCOMES.some((outcome) => outcome === state) ? 'completed' : 'pending';
 
 function eventTypeFor(state: RegistrationReadinessEvaluationState): ReadinessWorkflowEventType {
-  if (state === 'requested') return 'registration.readiness_requested';
+  if (state === 'requested' || state === 'evaluating') return 'registration.readiness_requested';
   if (state === 'reconciling') return 'registration.readiness_reconciliation_requested';
   return 'registration.readiness_evaluated';
 }
@@ -154,13 +157,19 @@ function eventFor(
   record: RegistrationReadinessEvaluationRecord,
   idempotencyKey: string,
   correlationId: string,
+  reason?: ReadinessTransitionReason,
 ): ReadinessWorkflowEventDescriptor {
   return {
     eventType: eventTypeFor(record.state),
     aggregateId: record.id,
     idempotencyKey,
     correlationId,
-    payload: { evaluationId: record.id, termId: record.termId, version: record.version },
+    payload: {
+      evaluationId: record.id,
+      termId: record.termId,
+      version: record.version,
+      ...(reason === undefined ? {} : { reason }),
+    },
   };
 }
 
@@ -225,7 +234,9 @@ export function transitionRegistrationReadinessEvaluation(
   command: TransitionRegistrationReadinessEvaluation,
 ): ReadinessWorkflowResult {
   assertEnvelope(command);
-  const fingerprint = JSON.stringify([command.targetState, command.projectionVersion ?? null]);
+  const fingerprint = command.reason === undefined
+    ? JSON.stringify([command.targetState, command.projectionVersion ?? null])
+    : JSON.stringify([command.targetState, command.projectionVersion ?? null, command.reason]);
   const earlier = current.commandLedger.find((entry) => entry.idempotencyKey === command.idempotencyKey);
   if (earlier) {
     if (earlier.fingerprint !== fingerprint) throw new Error('Readiness evaluation idempotency key was reused for another command.');
@@ -239,15 +250,18 @@ export function transitionRegistrationReadinessEvaluation(
   if (command.expectedVersion !== current.version) {
     throw new Error(`Readiness evaluation is at version ${current.version}, not ${command.expectedVersion}.`);
   }
+  if (command.reason !== undefined && (command.reason !== 'evaluator_timeout' || command.targetState !== 'unknown')) {
+    throw new Error('Readiness transition reason is not valid for this outcome.');
+  }
   if (command.projectionVersion !== undefined && (!Number.isInteger(command.projectionVersion) || command.projectionVersion < 1)) {
     throw new Error('Readiness projection version must be a positive integer.');
   }
 
   if (REGISTRATION_READINESS_COMPLETED_OUTCOMES.some((outcome) => outcome === command.targetState)) {
-    if (command.projectionVersion === undefined) {
+    if (command.projectionVersion === undefined && !(command.targetState === 'unknown' && command.reason === 'evaluator_timeout')) {
       throw new Error('An evaluated readiness outcome requires a projection version.');
     }
-    if (current.projectionVersion !== undefined && command.projectionVersion <= current.projectionVersion) {
+    if (command.projectionVersion !== undefined && current.projectionVersion !== undefined && command.projectionVersion <= current.projectionVersion) {
       throw new Error(`Readiness projection version must be newer than ${current.projectionVersion}.`);
     }
   }
@@ -282,7 +296,7 @@ export function transitionRegistrationReadinessEvaluation(
     ...(command.projectionVersion === undefined ? {} : { projectionVersion: command.projectionVersion }),
   };
   const receipt = makeReceipt(base, command.idempotencyKey, command.correlationId, command.at);
-  const event = eventFor(base, command.idempotencyKey, command.correlationId);
+  const event = eventFor(base, command.idempotencyKey, command.correlationId, command.reason);
   const record: RegistrationReadinessEvaluationRecord = {
     ...base,
     commandLedger: [...base.commandLedger, { idempotencyKey: command.idempotencyKey, fingerprint, receipt, event }],

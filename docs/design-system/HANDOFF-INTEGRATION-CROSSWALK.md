@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-08 · **Base** `origin/main` `55adab11` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-10 · **Latest observed `origin/main`** `9642e983` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -76,7 +76,7 @@ All remaining novel task, behavior, late-addendum, gate and implementation-patte
 
 Current repository evidence resolves the first shared dependency. Projection P1-01 (private registry/watermark/invalidation/rebuild tables and outbox claim columns) and P1-02 (the sanitized event-emission helper) have landed and are existing but incomplete. Pass 9 implements and verifies P1-03 claim/complete/fail/approval-gated replay operations on the branch, so that slice is **existing and verified locally**. Runner pass 2 adds the first SQL-native producer through that helper: tenant feature-policy insert/update/delete writes one bounded `entitlement.changed` event atomically with its audit fact. Runner pass 3 adds the first registered projector transaction: one private school-scoped entitlement read model whose effect, receipt, monotonic watermark and invalidation commit atomically, with delayed earlier events settled as skipped. Runner pass 4 adds a service-only batch and POST-only Edge Function capped at 25 matching events; runner pass 5 adds manual, service-only P1-05 retention for published history, receipts and invalidations with pending/dead-letter and legal-hold preservation. Automation pass 6 adds P1-06: accepted tenant-rollout transitions now emit a history-bound `tenant_rollout.changed` fact and a second private school-scoped projector, and the same dormant worker dispatches only those two exact handlers within its existing 25-row bound. Automation pass 7 adds P1-07: one bounded, exact-tenant read envelope over both private projections with computed `fresh`, `stale`, `failed` and `unknown` states. Activation, UI consumption, additional domain producers/projectors and other query models remain separate missing-and-in-scope slices. Course Studio remains the first domain cluster after the projection foundation; P11 remains non-ready pending owner and authority contracts.
 
-Automation passes 31–42 and current integration slice 51 close bounded parts of the shared consequence-pattern gap. Assignment-workspace, research-project and dataset deletion in the existing AI Toolkit, device-only filed-feedback deletion, device-only assistant-conversation deletion, whole Student Operating workspace deletion, single-plan/whole-rhythm deletion in Operating Rhythm, the reachable Today daily-plan deletion, student-owned Applications-tracker deletion, owner-checked Community-post deletion, owner-scoped published-form withdrawal, student-owned Opportunities-tracker deletion, Start Here result/private Learning Map concept deletion and saved Term-plan schedule deletion now use the repository's governed `ConfirmDialog` and `ActionPreview` with exact scope, non-effects and recovery language. Connected-calendar removal instead follows the repository's preferred reversible-work contract: the shared eight-second Undo snapshot now restores the selected source and all of its imported events without reverting state outside the feed collections, and its control has an exact accessible name. The existing mutations are unchanged and no new server or provider behavior is inferred; the Community preview mirrors the existing RPC's active-review withdrawal/evidence-retention branch and no-active-review permanent deletion branch, form withdrawal preserves the current owner RLS and response cascade, Opportunities remains device-only with no employer/lab/program/office effect, and saved-schedule deletion leaves the cart, catalog and official registration unchanged. The Toolkit recurrence guard refuses browser-native confirmation in those panels. These bounded actions are **existing and verified locally**; permanent file purge and other consequential actions remain separate rows and slices.
+Automation passes 31–42 and integration slices 51–53 close bounded parts of the shared consequence-pattern gap. Assignment-workspace, research-project and dataset deletion in the existing AI Toolkit, device-only filed-feedback deletion, device-only assistant-conversation deletion, whole Student Operating workspace deletion, single-plan/whole-rhythm deletion in Operating Rhythm, the reachable Today daily-plan deletion, student-owned Applications-tracker deletion, owner-checked Community-post deletion, owner-scoped published-form withdrawal, student-owned Opportunities-tracker deletion, Start Here result/private Learning Map concept deletion, saved Term-plan schedule deletion and custom Drive folder-hierarchy deletion now use the repository's governed `ConfirmDialog` and `ActionPreview` with exact scope, non-effects and recovery language. Drive confirmation preserves file bytes and links, moves every direct or nested file to the deleted folder's parent, stops before hierarchy removal when a file move fails and names the manual-only organization recovery boundary. Connected-calendar and student-created-link removal instead follow the repository's preferred reversible-work contract: bounded eight-second Undo snapshots restore respectively the selected calendar plus its imported events, and the exact custom link plus its group and corrected address, without reverting unrelated state. Both controls have exact accessible names. The existing mutations are unchanged and no new server or provider behavior is inferred. These bounded actions are **existing and verified locally**; permanent file purge and other consequential actions remain separate rows and slices.
 
 ## Course Engine current-artifact reconciliation
 
@@ -93,6 +93,8 @@ Automation pass 12 adds the student-source storage-receipt and scan-settlement p
 Automation pass 29 closes the confirmed-correction propagation prerequisite inside CE-07/CE-08 without claiming an extractor. `20261009020000_course_source_correction_bindings.sql` binds every new derived-snapshot receipt to a deterministic count and SHA-256 of the append-only correction chain under the source lock. Conflict recording rejects legacy or stale receipts when the current correction state differs. This is **existing and verified locally** as an integrity sub-contract; CE-07 and CE-08 remain **existing but incomplete** until a trusted runtime incorporates those corrections, current screens use the server path and external reconciliation/publication is proven.
 
 Automation pass 30 reconciles the full repository gates without widening that capability claim. The ordered and shuffled suites are now green at 23,872 passing tests each; the current 222-migration history reapplies with 380 unchanged table fingerprints; generated role/control registers and support copy match their sources; and migration filenames no longer violate the repository's schema-snapshot guard. This strengthens local verification for CE-05/CE-07/CE-08 but does not supply a scanner, extractor, authenticated adapter, deployment or production evidence, so their existing-but-incomplete dispositions do not change.
+
+Automation pass 3 / integration slice 54 extends the shared consequence/recovery pattern to Kept formulas without changing capability breadth. One device-owned `equations` row now enters the existing eight-second Undo path, restoring its formula, note and course/deadline filing while leaving calculator work and unrelated state intact. This bounded path is **existing and verified locally** by a proved-red regression, 142/142 focused tests and green type/lint/university/build plus 78 token/design constituents. Equation removal remains device-local; no server persistence, external-system mutation, deployment or production operation is inferred.
 
 Automation pass 13 adds the versioned tenant authority that the shared-material contract previously lacked. `20261009001500_course_material_retention_policy.sql` consumes one approved `tenant-policy` request under `console:operate`, fresh MFA, exact tenant/target/detail binding and fail-closed audit, then appends an active or withdrawn private version. The service-only resolver fails closed to no row when authority is absent or withdrawn. This policy sub-contract is **existing and verified locally**; shared `course-materials` remains **missing and in scope** until metadata and controlled lifecycle operations bind the exact policy version and exact course-scoped publication authority. No storage/scanner/runtime or route evidence is inferred.
 
@@ -213,7 +215,7 @@ The diff is `docs/execute/01-platform-core-diff.md` §4. Section 8 corrects thre
 | Next-action scoring | Existing but incomplete. |
 | Access matrix | Duplicate or superseded as a second matrix. |
 | Break-glass two-person | Existing and verified in SQL. `decide_approval` plus `console-approvals.check.sql`. |
-| Consequence pattern | Existing but incomplete. `ActionPreview` is used inside leave-university, approve-join and sign-out-other-devices dialogs, all three AI Toolkit irreversible local deletions, device-only filed-feedback deletion, device-only assistant-conversation deletion, whole Student Operating workspace deletion, single-plan plus whole-rhythm Operating Rhythm deletion, the reachable Today daily-plan deletion, student-owned Applications- and Opportunities-tracker deletion, the owner-checked Community-post deletion, owner-scoped published-form withdrawal, Start Here result plus private Learning Map concept/question deletion and saved Term-plan schedule deletion. Reversible connected-calendar removal now restores exactly the source plus its imported events through the shared Undo path. Other confirmations still write their own sentences; permanent file purge and the same-origin demo reset need separate retention/isolation/recovery reconciliation before selection. |
+| Consequence pattern | Existing but incomplete. `ActionPreview` is used inside leave-university, approve-join and sign-out-other-devices dialogs, all three AI Toolkit irreversible local deletions, device-only filed-feedback and assistant-conversation deletion, device-only Support emergency-contact removal, Advisor Meeting preparation deletion, whole Student Operating workspace deletion, single-plan plus whole-rhythm Operating Rhythm deletion, the reachable Today daily-plan deletion, student-owned Applications- and Opportunities-tracker deletion, the owner-checked Community-post deletion, owner-scoped published-form withdrawal, Start Here result plus private Learning Map concept/question deletion and saved Term-plan schedule deletion. The shared Undo path now covers connected-calendar, student-created-link, saved-equation, committed Study-plan, nested task-step, Semester Mail rule, student-entered Bill-row, registrar-date, graph-line, graph-wide Clear, custom-school, university-pack, Study-evidence and opportunity-suggestion removals with bounded snapshots that preserve unrelated state. Other confirmations still write their own sentences; permanent file purge and the same-origin demo reset need separate retention/isolation/recovery reconciliation before selection. |
 | AI class gate | Existing and verified. Ceiling T2. It does not read prose. |
 | Approvals state machine | Existing and verified in SQL. |
 | Red-team corpus for blocked prompts | Not ported. It depended on the scanner `D-1298` declined. |
@@ -232,3 +234,216 @@ Legal review, DPA, insurance, HECVAT, named institutional contacts, live IdP, li
 ## Not complete
 
 The source audit still records 57 missing screen rows and 75 missing workflow steps. Pass 5 dispositions the screen set as 44 missing and in scope, 4 externally blocked, 6 excluded, 1 roadmap-only and 2 consent-bounded existing analogues. Pass 6 dispositions the workflow set as 54 missing and in scope, 18 roadmap-only, 2 externally blocked, 4 excluded and 241 existing incomplete. Role, system, document and execution-stream reconciliation are closed for the identified populations, but implementation is not: P1-07 and slice 16 supply only the first projection query/Console read path, while slices 18–19 supply a pre-ingestion contract plus private student-source metadata/correction/recovery persistence—not storage, scanning, extraction, routes or current-screen wiring. The buildable screen/workflow candidates remain open. The five brief names that looked absent are recorded in `SCREEN-PACKS.md` §4. The folded advisor list is labeled Caseload and is shared plans only. This page does not say the handoff is integrated.
+
+## Pass 5 current-product consequence mapping — integration slice 56
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for removing student-added course material | `app/src/screens/Update.tsx`, `app/src/state/slices/library.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: the **Already added** row now dispatches one bounded `removeUpdate` transition for the selected `CourseUpdate` plus only its recorded `addedItems`, and the shared eight-second Undo restores the pair. The source file and unrelated course data remain outside the mutation. Reducer and rendered-control guards are included in the 140 focused passing tests. |
+| Source Locker material/file cascade | `app/src/components/SourceLocker.tsx`, `app/src/lib/source-locker.ts` | Existing but incomplete and intentionally separate from this slice. File trash, generated-item cascade and recovery semantics remain authoritative there; `deleteUpdate` is retained for that plan rather than silently adopting the Add Material Undo boundary. |
+
+This mapping adds no archive route, role, capability, schema or provider claim. Deployment, HawkScan, external ingestion/scanning and institutional readiness remain unverified.
+
+## Pass 6 current-product consequence mapping — integration slice 57
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for removing a student-created emergency contact | `app/src/screens/Support.tsx`, `app/src/lib/device-library.ts`, `app/src/lib/support.ts` | Existing but incomplete is narrowed: the immediate device-library filter now follows the shared preview-and-choice pattern. The preview binds the selected name and phone number, preserves the remaining Support data and official records, and states the repository-backed lack of workspace-backup recovery. The rendered guard proves cancel/no-write and confirm/one-contact removal. |
+| Support workspace backup/recovery | `app/src/lib/workspace-backup.coverage.test.ts` | The explicit `semester.support.v1` exemption remains authoritative. This slice does not add the sensitive Support module to portable backup or claim an Undo path; recovery is limited to manually re-adding details the student still knows. |
+
+This mapping adds no archive route, role, capability, schema or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 7 current-product consequence mapping — integration slice 58
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for removing one student-created task step | `app/src/screens/Mine.tsx`, `app/src/state/slices/mine.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: `dropStep` now enters the shared eight-second Undo path and snapshots only `tasks`. It uses `onChange` because the nested row disappears while the top-level task count remains constant. Undo restores the exact step text, completion state and order without reverting unrelated completion state. |
+| Whole-task removal and broader recovery | `app/src/lib/undo.ts`, `app/src/components/Undone.tsx` | Existing and unchanged. Whole-task deletion already has its own `deleteTask` Undo entry; this slice adds no history stack, backup claim, server persistence or cross-device rollback. |
+
+This mapping adds no archive route, role, capability, schema or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 8 current-product consequence mapping — integration slice 59
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for deleting a student-created Semester Mail rule | `app/src/components/mail/Rules.tsx`, `app/src/state/slices/mailbox.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: `dropMailRule` now enters the shared eight-second Undo path and snapshots only `mailRules`. Undo restores the exact search/action rule and order while preserving later message marks. The two red-before-green assertions and reducer integration guard are included in 164 focused passing tests. |
+| Provider and mailbox history boundary | `app/src/lib/mailrules.ts`, `app/src/lib/mailbox.ts` | Existing and unchanged. Rules are an account-local derived layer beneath explicit message marks; deleting or restoring one does not mutate provider mail, replay historical effects or overwrite later read, star, label, folder or snooze actions. |
+
+This mapping adds no archive route, role, capability, schema or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 9 current-product consequence mapping — integration slice 60
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for deleting student-entered bill-planning rows | `app/src/screens/Bill.tsx`, `app/src/state/slices/mine.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: `dropCharge`, `dropAid` and `dropPayment` now use the shared eight-second Undo path. Each snapshots only `charges`, `aid` or `payments`; Undo restores the exact row and order while preserving later changes in the other bill lists. The red-before-green registry/snapshot guard and reducer integration are included in 295 focused passing tests. |
+| Official finance and payment boundary | `app/src/lib/bill.ts`, `app/src/screens/Bill.tsx`, `app/src/lib/export.ts` | Existing and unchanged. These rows are student-entered planning data, carry the `student_entered` provenance label and are covered by the core export. They do not edit a university ledger, determine official aid, process a payment or claim provider reconciliation. |
+
+This mapping adds no archive route, role, capability, schema, server operation or provider claim. Deployment, HawkScan, official finance integration, external approvals and institutional readiness remain unverified.
+
+## Pass 10 current-product consequence mapping — integration slice 61
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for clearing one student-managed Registrar date | `app/src/screens/Registrar.tsx`, `app/src/state/slices/library.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: `dropTermDate` now uses the shared eight-second Undo path and snapshots only `registrar`. `onChange` covers the built-in landmark case where the row remains but both dates are blanked; the same contract restores a removed student-added row and its original order. The repeated Clear controls expose row-specific accessible names. The red-before-green registry guard and reducer integration are included in 184 focused passing tests. |
+| Official academic-calendar and registration-record boundary | `app/src/lib/registrar.ts`, `app/src/lib/governance/capability-governance.ts` | Existing and unchanged. The landmarks and student-entered dates are a private planning sheet; clearing or restoring one does not alter the institution's authoritative calendar, enrollment, add/drop status or registration record. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation or provider claim. Deployment, HawkScan, official registrar integration, external approvals and institutional readiness remain unverified.
+
+## Pass 11 current-product consequence mapping — integration slice 62
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for removing one student-authored graph line | `app/src/components/Grapher.tsx`, `app/src/state/slices/made.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: `dropPlot` now uses the shared eight-second Undo path and snapshots only `plots`. Undo restores the exact expression, visibility state and order while preserving later calculator work. The existing row control already exposes its exact position through an accessible name. The red-before-green registry/snapshot guard and reducer integration are included in 157 focused passing tests. |
+| Graph-wide clearing and external authority boundary | `app/src/components/Grapher.tsx`, `app/src/lib/onegraph.test.ts` | Existing and unchanged. This slice does not make the separate all-lines Clear action recoverable, create a second graph implementation, edit course/grade records or invoke any provider or institution system. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 12 current-product consequence mapping — integration slice 63
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for clearing every student-authored graph line | `app/src/components/Grapher.tsx`, `app/src/state/slices/made.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: the graph-wide Clear control now dispatches a dedicated `clearPlots` transition through the shared eight-second Undo path. It snapshots only `plots` and restores all expressions, visibility states and list positions without reverting later calculator work. Example loading remains the separate non-destructive `setPlot` path. The red-before-green UI, registry, snapshot and reducer guards are included in 145 focused passing tests. |
+| Graph authority and external boundary | `app/src/lib/onegraph.test.ts`, `app/src/components/Grapher.tsx` | Existing and unchanged. The repository still has one graphing implementation and this local recovery path does not edit course work, grades, submissions, provider data or institution records. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 13 current-product consequence mapping — integration slice 64
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for forgetting one student-created school profile | `app/src/components/SchoolPicker.tsx`, `app/src/state/slices/settings.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: `forgetSchool` now enters the shared eight-second Undo path and snapshots exactly `mySchools` plus `schoolId`. Undo restores the exact custom profile, order and active selection while preserving unrelated work. The existing row control already exposes the school's name to assistive technology. The red-before-green registry/snapshot guard and reducer integration are included in 217 focused passing tests. |
+| Institution-authored school-pack and provider boundary | `app/src/components/SchoolPackDoor.tsx`, `app/src/state/slices/settings.ts`, `app/src/lib/schoolpack.ts` | Existing and unchanged. This slice does not restore, remove or reclassify an institution-authored pack, claim current institutional data, mutate a server/provider record or change capability authority. Pack removal remains a separate provenance/recovery decision. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 14 current-product consequence mapping — integration slice 65
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for removing one loaded university file | `app/src/components/SchoolPackDoor.tsx`, `app/src/state/slices/settings.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: `forgetSchoolPack` now enters the shared eight-second Undo path and snapshots exactly `schoolPack`. Undo restores the exact institution-authored snapshot and import date while preserving later unrelated work. The red-before-green registry/snapshot guard and reducer integration are included in 165 focused passing tests. |
+| School selection, provenance and external authority boundary | `app/src/lib/schoolpack.ts`, `app/src/state/slices/settings.ts` | Existing and unchanged. Removal and restoration leave `schoolId` intact, use the existing bundled/custom fallback, do not upgrade file verification or freshness, and do not mutate a server, provider or institution record. Import review and current institutional data remain separate authority questions. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 15 current-product consequence mapping — integration slice 66
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for dismissing one shipped opportunity suggestion | `app/src/components/Suggested.tsx`, `app/src/state/slices/settings.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: `dismissProgramme` now enters the shared eight-second Undo path and snapshots exactly `wanted`. Change detection covers the nested dismissal, and Undo restores the exact dismissed list plus year/field filters while preserving unrelated work. The existing **Not for me** control remains keyboard-operable and named by visible text. The red-before-green registry/snapshot guard and reducer integration are included in 190 focused passing tests. |
+| Opportunity provenance and external authority boundary | `app/src/data/fellowships.ts`, `app/src/lib/suggest.ts`, `app/src/components/Suggested.tsx` | Existing and unchanged. The catalog still asserts no deadline, labels opening months as an unchecked rough guide, links to the official page and never creates an application without an explicit student action. Dismissal and Undo do not mutate any provider, employer, campus or institution record. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 16 current-product consequence mapping — integration slice 67
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for deleting a device-owned Advisor Meeting preparation | `app/src/components/AdvisorMeeting.tsx`, `app/src/lib/advisor-meeting.ts` | Existing but incomplete is narrowed: the existing confirmation now uses the shared `ActionPreview` to identify the selected meeting and the agenda, questions, follow-ups and private notes removed from this device. It states that prior shares and official advising records are unchanged. Cancel remains the initial focused action and writes nothing. The focused rendered guard was red before the port and is included in 30 passing Advisor Meeting, preview, backup and root-unmount tests. |
+| Recovery, account isolation and share-authority boundary | `app/src/lib/workspace-backup.ts`, `app/src/lib/workspace-backup.coverage.test.ts`, `app/src/lib/advisor-shares.ts` | Existing and unchanged. Advisor Meeting storage remains account-keyed. A prior device workspace backup can restore the meeting structure but intentionally excludes private notes, so the preview does not promise full recovery. Already-created shares remain separately revocable/deletable server records; local preparation deletion does not revoke them or change official records. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation or provider claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 17 current-product consequence mapping — integration slice 68
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for deleting student-authored assistant context | `app/src/components/AboutMe.tsx`, `app/src/components/TrustCenter.tsx`, `app/src/lib/aboutme.ts` | Existing but incomplete is narrowed across both reachable entry points. Profile no longer dispatches from the first × press; it and Trust & Data use the shared `ConfirmDialog` plus `ActionPreview` to name the exact line, device and post-sync account effect, non-effects and no-Undo boundary. Cancel writes nothing, confirmation keeps every other fact, and the red-before-green regression is included in 146 focused passing tests. |
+| Assistant-memory export, recovery and provider boundary | `app/src/lib/export.ts`, `app/src/state/store.tsx`, `app/src/lib/workspace-backup.private.test.ts` | Existing and unchanged. Full-data export includes `aboutMe`, so a prior downloaded file retains the old text, but no automatic restore is claimed. Workspace backup continues to exclude assistant memory. The existing in-memory context updates from state; this slice sends no provider prompt or request and changes no model, sync or merge policy. |
+
+This mapping adds no archive route, role, capability, schema, policy, provider operation or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 18 current-product consequence mapping — integration slice 69
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for deleting one private Student Operating workflow item | `app/src/components/StudentOperating.tsx`, `app/src/lib/student-operating.ts`, `app/src/state/slices/notes.ts` | Existing but incomplete is narrowed: **Delete this item** now opens the shared `ConfirmDialog` and `ActionPreview` before the existing selected-entry filter writes `operatingWorkspace`. It identifies the item and workflow kind, device/account-sync effect, unaffected items/preferences/exports/official records and open editor/review boundary. Cancel writes nothing. The red-before-green guard is included in 122 focused passing tests. |
+| Recovery, persistence and external-authority boundary | `app/src/lib/export.ts`, `app/src/state/store.tsx` | Existing and unchanged. The core Semester backup contains `operatingWorkspace`, so a pre-deletion backup can restore the earlier workspace. Deletion creates no share or message, changes no official record and invokes no provider or institution system. |
+
+This mapping adds no archive route, role, capability, schema, policy, provider operation or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 19 current-product consequence mapping — integration slice 70
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for deleting saved Student Operating preferences | `app/src/components/StudentOperating.tsx`, `app/src/lib/student-operating.ts`, `app/src/state/slices/notes.ts` | Existing but incomplete is narrowed: **Delete preferences** now opens the shared `ConfirmDialog` and `ActionPreview` before the existing `operatingWorkspace` JSON write. It identifies the saved term, preference families removed, editor reset, device/account-sync effect and non-effects. Cancel writes nothing; confirmation clears only `manual` and preserves all workflow entries. The red-before-green guard is included in 161 focused passing tests. |
+| Recovery, export and external-authority boundary | `app/src/lib/export.ts`, `app/src/state/store.tsx` | Existing and unchanged. The core Semester backup contains `operatingWorkspace`, so a pre-deletion backup can restore the earlier workspace. Existing downloaded exports remain outside the mutation. Preference deletion creates no share or message, changes no official record and invokes no provider or institution system. |
+
+This mapping adds no archive route, role, capability, schema, policy, provider operation or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 6 current-product consequence mapping — integration slice 71
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for permanently deleting one device-local file | `app/src/screens/mine/Drive.tsx`, `app/src/lib/files.ts`, `app/src/components/TypeToConfirm.tsx` | Existing but incomplete is narrowed: **Delete for good** no longer erases the only in-app byte record on its first press. It opens the existing irreversible confirmation, requires the exact file name, names the byte count and explains the surviving-but-broken course/deadline/note links before calling the unchanged single-record IndexedDB delete. Cancellation writes nothing. The regression was red against the prior behavior and is included in 53 focused passing tests. |
+| File recovery, external-copy and authority boundary | `app/src/lib/files.ts`, `app/src/lib/workspace-backup.ts` | Existing and unchanged. Files in the bin remain device-local; Undo and workspace backup do not contain their bytes. An original or downloaded copy outside Semester is not affected and may be added again. This slice does not empty the bin, change 30-day cleanup, add upload/download authority or claim server/provider storage. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation, provider behavior or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 7 current-product consequence mapping — integration slice 72
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for permanently emptying device-local file trash | `app/src/screens/mine/Drive.tsx`, `app/src/components/TypeToConfirm.tsx` | Existing but incomplete is narrowed: **Empty the bin** now previews the exact captured file count and stored-byte total, requires **EMPTY BIN**, preserves cancellation and names surviving broken links, external copies and the no-Undo/no-backup boundary. The two rendered assertions were red against first-press deletion and now pass. |
+| Bulk deletion concurrency and recovery boundary | `app/src/lib/files.ts`, `app/src/lib/files.test.ts` | Existing but incomplete is narrowed: `purgeTrash` accepts only the previewed ids, deduplicates them and re-reads each record inside its delete transaction. Files added later are outside the id set; restored files fail the still-binned check. The storage guard was red before the operation existed and proves both exclusions. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation, provider behavior or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 8 current-product consequence mapping — integration slice 73
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 retention and irreversible-consequence state for automatic Drive-bin cleanup | `app/src/screens/mine/Drive.tsx`, `app/src/components/ui.tsx` | Existing but incomplete is narrowed: Drive now announces the actual number of files permanently removed after the 30-day window, names the no-Undo/no-backup boundary and preserves external copies. A cleanup failure uses the shared assertive notice with inspect-and-retry guidance instead of remaining silent. Rendered success and failure assertions were red against the prior screen and now pass. |
+| Strict retention authority, cutoff and concurrent restore safety | `app/src/lib/files.ts`, `app/src/lib/files.test.ts` | Existing but incomplete is narrowed: ordinary browsing retains its resilient empty-list fallback, while cleanup uses a strict IndexedDB read so refusal propagates. Eligibility begins only when the full 30-day window has elapsed, and each candidate is re-read inside its delete transaction; restored and newer files survive. The cutoff and refusal guards pass after failing against the prior contract. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation, provider behavior or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 9 current-product consequence mapping — integration slice 74
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Device erase, same-origin isolation and controlled reset | `app/src/lib/erase.ts`, `app/src/screens/Privacy.tsx`, `app/src/components/InstitutionalPreviewBar.tsx` | **Existing but incomplete.** The core remains Semester-prefix scoped, attempts provider withdrawal before token removal and, after final upstream reconciliation at `f7dba6e6`, includes classified offline attachments. Both callers now reload only on resolution and expose an assertive close-other-tabs-and-retry state on rejection, so neither claims an incomplete wipe or sample reset succeeded. The combined caller/core/revocation/root/classified-attachment set passes 45/45. Per-store completion receipts and post-reload provider results remain open. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation, provider configuration or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 10 current-product consequence mapping — integration slice 75
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Device-erase completion receipts and partial-failure recovery | `app/src/lib/erase.ts`, `app/src/screens/Privacy.tsx`, `app/src/components/InstitutionalPreviewBar.tsx` | **Existing but incomplete is narrowed.** The core now verifies prefixed Web Storage removal, attempts every local area after failure and either returns the confirmed store list or throws a bounded partial receipt naming unconfirmed areas. Both existing callers continue to reload only after resolution and keep retry/recovery visible on rejection. The red-before-green refusal/no-op guard is included in 104 focused and adjacent passing tests. |
+| Browser-store clear authority | `app/src/state/persist/db.ts`, `app/src/lib/snapshots.ts`, `app/src/lib/sync/outbox.ts`, `app/src/lib/vault/idb.ts`, `app/src/lib/sync/engine/persistent.ts`, `app/src/lib/shared.ts` | **Existing and verified locally for the changed contract.** Transaction abort/error, unavailable handles and adapter refusal no longer become successful erase evidence. Existing throwing file/draft/attachment operations and the history boolean share the same top-level aggregation. This is local completion evidence, not a live-browser restore drill or production execution. |
+| Provider and account boundary | `app/src/lib/revoke.ts`, `app/src/lib/cloud.ts` | **Existing and unchanged.** Provider withdrawal remains attempted before local token removal and account deletion remains a distinct server action. This slice does not claim a post-reload provider result, activate a provider or delete an account. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation, provider configuration or external-system claim. Deployment, HawkScan, external approvals and institutional readiness remain unverified.
+
+## Pass 11 delta — governed study-abroad program removal (slice 76)
+
+| Reference intent | Current repository authority | Disposition and evidence |
+| --- | --- | --- |
+| Student-controlled planning changes with an explicit consequence preview and recovery boundary | `app/src/components/StudyAbroad.tsx`, `app/src/components/ConfirmDialog.tsx`, `app/src/components/unity/ActionPreview.tsx`, `app/src/lib/abroad.ts` | **Existing but incomplete → existing and verified for one program removal.** The first press now previews the program details, course matches, recorded approval states and stage progress that will be removed. Cancel preserves the account-keyed device library; confirmation performs the existing exact-id removal and announces a device-only receipt. |
+| Preserve official academic authority and distinguish student records from school records | `app/src/components/StudyAbroad.tsx`, `app/src/lib/abroad.ts`, `app/src/components/StudyAbroad.test.tsx` | **Existing and verified for this slice.** The preview says other plans, official applications, written approval decisions and school-held records stay unchanged, and that Semester sends no removal request. No provider, route, server operation, schema or policy changed. |
+| Recovery for destructive local planning actions | `app/src/lib/workspace-backup.ts`, `app/src/lib/workspace-backup.coverage.test.ts`, `app/src/components/StudyAbroad.test.tsx` | **Existing and verified for this slice.** The dialog identifies a device workspace backup made before removal as the only restore path; the account-keyed abroad prefix remains in backup coverage. |
+| Security verification after production UI behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST scan, finding result or security pass exists. |
+
+The focused regression failed against the prior immediate removal and passes after restoration. The final focused/adjacent set passes 59/59; TypeScript, lint, university typecheck and production build pass; the design-check constituents pass 78/78, report contracts pass 96/96, and audit/CSS stay within their ledgers. Ordered and shuffled full suites were not rerun. Course-row removal and official study-abroad operations remain outside this slice and require separate authority-aware work.
+
+## Pass 12 delta — governed study-abroad course-match removal (slice 77)
+
+| Reference intent | Current repository authority | Disposition and evidence |
+| --- | --- | --- |
+| Student-controlled removal of one planning match with consequence and recovery evidence | `app/src/components/StudyAbroad.tsx`, `app/src/components/ConfirmDialog.tsx`, `app/src/components/unity/ActionPreview.tsx`, `app/src/lib/abroad.ts` | **Existing but incomplete → existing and verified for one course-match removal.** The first press now previews the exact host-to-home match, credits, recorded approval status and source note. Cancel preserves the account-keyed device plan; confirmation performs the existing exact-id mutation and announces a device-only receipt. |
+| Preserve official academic authority and unaffected plan state | `app/src/components/StudyAbroad.tsx`, `app/src/lib/abroad.ts`, `app/src/components/StudyAbroad.test.tsx` | **Existing and verified for this slice.** The preview says the program, stage progress, other matches and school-held records remain unchanged and that Semester sends no removal request. No registrar, department, provider or institution record changes. |
+| Recovery for destructive local planning actions | `app/src/lib/workspace-backup.ts`, `app/src/lib/workspace-backup.coverage.test.ts`, `app/src/components/StudyAbroad.test.tsx` | **Existing and verified for this slice.** The dialog identifies a device workspace backup made before removal as the only represented restore path; the account-keyed abroad prefix remains in backup coverage. |
+| Security verification after production UI behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST scan, finding result or security pass exists. |
+
+The regression failed against the prior immediate deletion. The final focused/adjacent set passes 76/76; TypeScript, lint, university typecheck and production build pass; token/design-check constituents pass 78/78, report contracts pass 96/96, and audit/CSS stay within their ledgers. Final observed `origin/main` `a607200c` changes none of the six slice files and adds no equivalent flow; it merged cleanly after slice commit `dc4ab398`, and 76/76 focused tests plus TypeScript pass on merged head `b7547bd2`. The aggregate npm launcher and ordered/shuffled full suites were not run. Official study-abroad operations remain outside this device-only slice.
+
+## Pass 13 delta — governed graduation-scenario removal (slice 78)
+
+| Reference intent | Current repository authority | Disposition and evidence |
+| --- | --- | --- |
+| Consequence preview before deleting a student-authored graduation what-if scenario | `app/src/components/GraduationSimulator.tsx`, `app/src/components/ConfirmDialog.tsx`, `app/src/components/unity/ActionPreview.tsx` | **Existing but incomplete → existing and verified for one device scenario removal.** The first press now previews the selected scenario and exact credit-load assumptions; cancel preserves device storage, and confirmation performs the existing exact-id removal and announces a device-only receipt. |
+| Separate device planning state, account draft and official degree authority | `app/src/lib/graduation.ts`, `app/src/lib/graduation-cloud.ts`, `app/src/components/GraduationSimulator.test.tsx` | **Existing and verified for this slice.** The preview says the current plan, other scenarios, downloads and registrar-owned degree audit remain unchanged. When the scenario has a draft for the signed-in account, the preview states that the account draft remains there; this slice invokes no cloud deletion. |
+| Recovery for destructive local degree-planning changes | `app/src/lib/workspace-backup.ts`, `app/src/lib/workspace-backup.coverage.test.ts`, `app/src/components/GraduationSimulator.test.tsx` | **Existing and verified for this slice.** The dialog identifies a device workspace backup made before removal as the only represented restore path; the graduation device-library key remains covered by the backup contract. |
+| Security verification after production UI behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST scan, finding result or security pass exists. |
+
+The regression failed against the prior first-press deletion. The focused/adjacent set passes 57/57; TypeScript, lint, university typecheck and production build pass; the combined token/design/report-contract set passes 147/147, and audit/CSS stay within their ledgers. Aggregate npm design wrappers and ordered/shuffled full suites were not run. Account-draft deletion and official degree operations remain separate authority-aware paths.

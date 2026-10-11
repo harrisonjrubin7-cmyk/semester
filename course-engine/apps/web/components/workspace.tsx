@@ -50,7 +50,7 @@ export function Workspace({ courseId, mode }: { courseId: string; mode: string }
     if (loading) return <LoadingState />;
     if (error || !course.data) return <ErrorState error={error ?? "Course data unavailable"} retry={retry} />;
     if (mode === "overview") return <OverviewPanel course={course.data} events={events.data ?? []} reviews={reviews.data ?? []} />;
-    if (mode === "calendar") return <CalendarPanel events={events.data ?? []} />;
+    if (mode === "calendar") return <CalendarPanel courseId={courseId} events={events.data ?? []} />;
     if (mode === "review") return <ReviewPanel courseId={courseId} reviews={reviews.data ?? []} />;
     if (mode === "uploads") return <UploadPanel courseId={courseId} files={files.data ?? []} offline={!online} />;
     if (mode === "progress") return <ProgressPanel progress={progress.data} />;
