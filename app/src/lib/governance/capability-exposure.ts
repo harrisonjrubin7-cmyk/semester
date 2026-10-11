@@ -1,4 +1,5 @@
 import { DESTINATIONS } from '../nav';
+import type { Seat } from '../launchreadiness';
 import { NON_DESTINATION_FLOWS } from '../rollout-capabilities';
 import {
   CAPABILITY_DEFINITIONS,
@@ -20,8 +21,7 @@ export const CAPABILITY_EXPOSURE_STATES = [
   'pilot',
   'early_access',
   'institution_controlled',
-  'hidden',
-  'retired',
+  'planned_but_not_exposed',
 ] as const;
 
 export const OPERATIONAL_READINESS_CHECKS = [
@@ -32,6 +32,21 @@ export const OPERATIONAL_READINESS_CHECKS = [
 export type CapabilityExposureStatus = (typeof CAPABILITY_EXPOSURE_STATES)[number];
 export type OperationalReadinessCheck = (typeof OPERATIONAL_READINESS_CHECKS)[number];
 export type ExposureSurface = 'navigation' | 'marketing' | 'ai' | 'tenant-control';
+export type CapabilityAudience = 'student' | 'family' | 'institution' | 'partner' | 'operator';
+
+export interface CapabilityCoreEntity {
+  readonly classification: string;
+  readonly authority: CapabilityDefinition['data'][number]['authority'];
+  readonly purpose: string;
+  readonly retention: string;
+}
+
+export interface CapabilityValueMeasure {
+  readonly id: 'successful-task-completion' | 'fallback-use' | 'support-burden';
+  readonly definition: string;
+  readonly collection: 'device-local-or-approved-aggregate';
+  readonly evidenceStatus: 'measurement-requirement-not-live-result';
+}
 
 /**
  * Trusted, server-resolved inputs for one exposure decision. Callers must not
@@ -67,6 +82,18 @@ export interface CapabilityExposureDecision {
 export interface CapabilityExposureIndexEntry {
   capabilityId: CapabilityDefinition['id'];
   routes: readonly string[];
+  coreEntities: readonly CapabilityCoreEntity[];
+  governance: {
+    identity: 'shared-account-and-person-graph';
+    tenant: 'personal-context-or-exact-authorized-tenant' | 'exact-authorized-tenant';
+    permission: 'shared-role-permission-entitlement';
+    consent: 'shared-policy-and-authority-check' | 'explicit-purpose-scoped-consent-when-required';
+    aiActions: 'shared-authorization-no-bypass';
+  };
+  audiences: readonly CapabilityAudience[];
+  productMaturity: CapabilityDefinition['maturity'];
+  permittedExposureStates: typeof CAPABILITY_EXPOSURE_STATES;
+  valueMeasures: readonly CapabilityValueMeasure[];
   profileIds: readonly ReleaseProfileId[];
   requiredOperationalChecks: typeof OPERATIONAL_READINESS_CHECKS;
   dataAuthorities: readonly CapabilityDefinition['data'][number]['authority'][];
@@ -78,7 +105,20 @@ export interface CapabilityExposureIndexEntry {
   rollback: string;
   evidenceRefs: readonly CapabilityDefinition['sources'][number][];
   platforms: readonly ['web', 'pwa'];
-  nativeMobile: 'hidden';
+  nativeMobile: 'planned_but_not_exposed';
+  mobileExperience: {
+    current: 'responsive-web-and-pwa';
+    native: 'planned_but_not_exposed';
+    acceptance: string;
+  };
+  operations: {
+    audit: 'docs/institutional-readiness/AUDIT-LOGGING-EVIDENCE.md';
+    support: 'docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md';
+    incident: 'docs/RELEASE-INCIDENT-OPERATOR-RUNBOOK.md';
+    auditOwner: Seat;
+    supportOwner: CapabilityDefinition['supportOwner'];
+    incidentOwner: 'operations';
+  };
 }
 
 export interface RouteExposureIndexEntry {
@@ -88,10 +128,61 @@ export interface RouteExposureIndexEntry {
 
 const profileEntries = Object.values(RELEASE_PROFILES);
 
+function audiencesFor(capability: CapabilityDefinition): readonly CapabilityAudience[] {
+  const audiences = new Set<CapabilityAudience>(['student']);
+  if (capability.id === 'CAP-041') audiences.add('family');
+  if (capability.activationClass !== 'standard') {
+    audiences.add('institution');
+    audiences.add('operator');
+  }
+  if (capability.data.some((rule) => rule.authority === 'external-provider')) audiences.add('partner');
+  return Object.freeze([...audiences]);
+}
+
+function valueMeasuresFor(capability: CapabilityDefinition): readonly CapabilityValueMeasure[] {
+  const common = {
+    collection: 'device-local-or-approved-aggregate' as const,
+    evidenceStatus: 'measurement-requirement-not-live-result' as const,
+  };
+  return Object.freeze([
+    Object.freeze({
+      id: 'successful-task-completion' as const,
+      definition: `Count an explicitly completed ${capability.name} action only when this canonical acceptance criterion is met: ${capability.acceptance.join(' ')} Never infer completion from attention, content, or time spent.`,
+      ...common,
+    }),
+    Object.freeze({
+      id: 'fallback-use' as const,
+      definition: `Measure how often an eligible ${capability.name} attempt uses the declared unavailable-source fallback, without recording protected content.`,
+      ...common,
+    }),
+    Object.freeze({
+      id: 'support-burden' as const,
+      definition: `Measure support cases and unresolved incidents for ${capability.name} against authorized active use, using approved aggregate thresholds.`,
+      ...common,
+    }),
+  ]);
+}
+
 export const CAPABILITY_EXPOSURE_INDEX: readonly CapabilityExposureIndexEntry[] = Object.freeze(
   CAPABILITY_DEFINITIONS.map((capability) => Object.freeze({
     capabilityId: capability.id,
     routes: Object.freeze([...capability.destinations]),
+    coreEntities: Object.freeze(capability.data.map((rule) => Object.freeze({ ...rule }))),
+    governance: Object.freeze({
+      identity: 'shared-account-and-person-graph' as const,
+      tenant: capability.activationClass === 'standard'
+        ? 'personal-context-or-exact-authorized-tenant' as const
+        : 'exact-authorized-tenant' as const,
+      permission: 'shared-role-permission-entitlement' as const,
+      consent: capability.primitives.includes('permission-consent-authority')
+        ? 'explicit-purpose-scoped-consent-when-required' as const
+        : 'shared-policy-and-authority-check' as const,
+      aiActions: 'shared-authorization-no-bypass' as const,
+    }),
+    audiences: audiencesFor(capability),
+    productMaturity: capability.maturity,
+    permittedExposureStates: CAPABILITY_EXPOSURE_STATES,
+    valueMeasures: valueMeasuresFor(capability),
     profileIds: Object.freeze(profileEntries
       .filter((profile) => profile.capabilityIds.includes(capability.id))
       .map((profile) => profile.id)),
@@ -105,7 +196,20 @@ export const CAPABILITY_EXPOSURE_INDEX: readonly CapabilityExposureIndexEntry[] 
     rollback: capability.fallback,
     evidenceRefs: Object.freeze([...capability.sources]),
     platforms: Object.freeze(['web', 'pwa'] as const),
-    nativeMobile: 'hidden' as const,
+    nativeMobile: 'planned_but_not_exposed' as const,
+    mobileExperience: Object.freeze({
+      current: 'responsive-web-and-pwa' as const,
+      native: 'planned_but_not_exposed' as const,
+      acceptance: capability.accessibility,
+    }),
+    operations: Object.freeze({
+      audit: 'docs/institutional-readiness/AUDIT-LOGGING-EVIDENCE.md' as const,
+      support: 'docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md' as const,
+      incident: 'docs/RELEASE-INCIDENT-OPERATOR-RUNBOOK.md' as const,
+      auditOwner: 'privacy' as const,
+      supportOwner: capability.supportOwner,
+      incidentOwner: 'operations' as const,
+    }),
   })),
 );
 
@@ -118,9 +222,16 @@ export const ROUTE_EXPOSURE_INDEX: readonly RouteExposureIndexEntry[] = Object.f
   })),
 );
 
-export function validateCapabilityExposureIndex(): string[] {
+export function validateCapabilityExposureIndex(
+  exposureIndex: readonly CapabilityExposureIndexEntry[] = CAPABILITY_EXPOSURE_INDEX,
+): string[] {
   const errors: string[] = [];
-  const capabilityIds = CAPABILITY_EXPOSURE_INDEX.map((entry) => entry.capabilityId);
+  const requiredValueMeasureIds: readonly CapabilityValueMeasure['id'][] = [
+    'successful-task-completion',
+    'fallback-use',
+    'support-burden',
+  ];
+  const capabilityIds = exposureIndex.map((entry) => entry.capabilityId);
   const routeIds = ROUTE_EXPOSURE_INDEX.map((entry) => entry.route);
   const registeredRoutes = new Set(DESTINATIONS.map((destination) => destination.screen as string));
   const embeddedFlows = new Set<string>(NON_DESTINATION_FLOWS);
@@ -139,6 +250,103 @@ export function validateCapabilityExposureIndex(): string[] {
     }
   }
 
+  for (const entry of exposureIndex) {
+    const canonicalCapability = capabilityDefinition(entry.capabilityId);
+    const canonicalEntry = CAPABILITY_EXPOSURE_INDEX.find((candidate) => candidate.capabilityId === entry.capabilityId);
+    if (!entry.coreEntities.length || entry.coreEntities.some((entity) =>
+      [entity.classification, entity.authority, entity.purpose, entity.retention].some((value) => !value.trim()))) {
+      errors.push(`Incomplete core entities: ${entry.capabilityId}.`);
+    }
+    if (!entry.audiences.length) errors.push(`Missing audiences: ${entry.capabilityId}.`);
+    if (canonicalCapability) {
+      const canonicalAuthorities = [...new Set(canonicalCapability.data.map((rule) => rule.authority))];
+      const canonicalClassifications = [...new Set(canonicalCapability.data.map((rule) => rule.classification))];
+      const canonicalValueMeasures = valueMeasuresFor(canonicalCapability);
+      if (entry.dataAuthorities.length !== canonicalAuthorities.length
+        || canonicalAuthorities.some((authority) => !entry.dataAuthorities.includes(authority))) {
+        errors.push(`Invalid data authorities: ${entry.capabilityId}.`);
+      }
+      if (entry.securityClassifications.length !== canonicalClassifications.length
+        || canonicalClassifications.some((classification) => !entry.securityClassifications.includes(classification))) {
+        errors.push(`Invalid security classifications: ${entry.capabilityId}.`);
+      }
+      if (entry.productOwner !== canonicalCapability.owner) {
+        errors.push(`Invalid product owner: ${entry.capabilityId}.`);
+      }
+      if (entry.valueMeasures.some((measure) =>
+        measure.definition !== canonicalValueMeasures.find((canonical) => canonical.id === measure.id)?.definition)) {
+        errors.push(`Invalid value measure definitions: ${entry.capabilityId}.`);
+      }
+      const requiredAudiences = audiencesFor(canonicalCapability);
+      if (entry.audiences.length !== requiredAudiences.length
+        || requiredAudiences.some((audience) => !entry.audiences.includes(audience))) {
+        errors.push(`Invalid audiences: ${entry.capabilityId}.`);
+      }
+    }
+    if (canonicalEntry) {
+      const sameValues = <T>(actual: readonly T[], expected: readonly T[]) =>
+        actual.length === expected.length && expected.every((value, index) => actual[index] === value);
+      const sameCoreEntities = entry.coreEntities.length === canonicalEntry.coreEntities.length
+        && canonicalEntry.coreEntities.every((expected, index) => {
+          const actual = entry.coreEntities[index];
+          return actual?.authority === expected.authority
+            && actual.classification === expected.classification
+            && actual.purpose === expected.purpose
+            && actual.retention === expected.retention;
+        });
+      if (!sameValues(entry.routes, canonicalEntry.routes)) errors.push(`Invalid routes: ${entry.capabilityId}.`);
+      if (!sameCoreEntities) errors.push(`Invalid core entities: ${entry.capabilityId}.`);
+      if (Object.keys(canonicalEntry.governance).some((key) =>
+        entry.governance[key as keyof typeof entry.governance]
+          !== canonicalEntry.governance[key as keyof typeof canonicalEntry.governance])) {
+        errors.push(`Invalid governance: ${entry.capabilityId}.`);
+      }
+      if (entry.productMaturity !== canonicalEntry.productMaturity) errors.push(`Invalid product maturity: ${entry.capabilityId}.`);
+      if (!sameValues(entry.profileIds, canonicalEntry.profileIds)) errors.push(`Invalid release profiles: ${entry.capabilityId}.`);
+      if (!sameValues(entry.requiredOperationalChecks, canonicalEntry.requiredOperationalChecks)) {
+        errors.push(`Invalid operational checks: ${entry.capabilityId}.`);
+      }
+      if (entry.supportOwner !== canonicalEntry.supportOwner) errors.push(`Invalid support owner: ${entry.capabilityId}.`);
+      if (entry.rollback !== canonicalEntry.rollback) errors.push(`Invalid fallback: ${entry.capabilityId}.`);
+      if (!sameValues(entry.evidenceRefs, canonicalEntry.evidenceRefs)) errors.push(`Invalid evidence refs: ${entry.capabilityId}.`);
+      if (!sameValues(entry.platforms, canonicalEntry.platforms)
+        || entry.nativeMobile !== canonicalEntry.nativeMobile
+        || entry.mobileExperience.current !== canonicalEntry.mobileExperience.current
+        || entry.mobileExperience.native !== canonicalEntry.mobileExperience.native
+        || entry.mobileExperience.acceptance !== canonicalEntry.mobileExperience.acceptance) {
+        errors.push(`Invalid mobile posture: ${entry.capabilityId}.`);
+      }
+      if (entry.operations.audit !== canonicalEntry.operations.audit
+        || entry.operations.support !== canonicalEntry.operations.support
+        || entry.operations.incident !== canonicalEntry.operations.incident
+        || entry.operations.supportOwner !== canonicalEntry.operations.supportOwner) {
+        errors.push(`Invalid operations contract: ${entry.capabilityId}.`);
+      }
+    }
+    if (!MATURITY_LEVELS.includes(entry.productMaturity)) errors.push(`Unknown product maturity: ${entry.capabilityId}.`);
+    if (entry.permittedExposureStates.length !== CAPABILITY_EXPOSURE_STATES.length
+      || CAPABILITY_EXPOSURE_STATES.some((state, index) => entry.permittedExposureStates[index] !== state)) {
+      errors.push(`Invalid exposure vocabulary: ${entry.capabilityId}.`);
+    }
+    const valueMeasureIds = entry.valueMeasures.map((measure) => measure.id);
+    if (entry.valueMeasures.length !== requiredValueMeasureIds.length
+      || new Set(valueMeasureIds).size !== requiredValueMeasureIds.length
+      || requiredValueMeasureIds.some((id) => !valueMeasureIds.includes(id))
+      || entry.valueMeasures.some((measure) => !measure.definition.trim()
+        || measure.collection !== 'device-local-or-approved-aggregate'
+        || measure.evidenceStatus !== 'measurement-requirement-not-live-result')) {
+      errors.push(`Incomplete value measures: ${entry.capabilityId}.`);
+    }
+    if (!entry.rollback.trim()) errors.push(`Missing fallback: ${entry.capabilityId}.`);
+    if (entry.entitlement !== 'profile-tenant-cohort') errors.push(`Invalid entitlement: ${entry.capabilityId}.`);
+    if (entry.evidenceExpiry !== 'release-profile-controlled') errors.push(`Invalid evidence expiry: ${entry.capabilityId}.`);
+    if (!entry.mobileExperience.acceptance.trim()) errors.push(`Missing mobile acceptance: ${entry.capabilityId}.`);
+    if (Object.values(entry.governance).some((value) => !value.trim())) errors.push(`Incomplete governance: ${entry.capabilityId}.`);
+    if (Object.values(entry.operations).some((value) => !value.trim())) errors.push(`Incomplete operations: ${entry.capabilityId}.`);
+    if (entry.operations.auditOwner !== 'privacy') errors.push(`Invalid audit owner: ${entry.capabilityId}.`);
+    if (entry.operations.incidentOwner !== 'operations') errors.push(`Invalid incident owner: ${entry.capabilityId}.`);
+  }
+
   for (const destination of DESTINATIONS) {
     if (!routeIds.includes(destination.screen)) errors.push(`Missing route exposure entry: ${destination.screen}.`);
     if (!ROUTE_EXPOSURE_INDEX.find((entry) => entry.route === destination.screen)?.capabilityIds.length) {
@@ -155,7 +363,7 @@ function surfaceVisible(
   capability: CapabilityDefinition | undefined,
   context: CapabilityExposureContext,
 ): boolean {
-  if (!capability || status === 'hidden' || status === 'retired') return false;
+  if (!capability || status === 'planned_but_not_exposed') return false;
   if (status === 'institution_controlled') return surface === 'tenant-control';
   if (surface === 'marketing') return status === 'live' || status === 'connected';
   if (surface === 'ai') return context.aiAvailable;
@@ -227,34 +435,34 @@ export function resolveCapabilityExposure(
   context: CapabilityExposureContext,
 ): CapabilityExposureDecision {
   const capability = capabilityDefinition(capabilityId);
-  if (!capability) return decision(capabilityId, capability, context, 'hidden', 'unknown-capability');
-  if (context.retired) return decision(capabilityId, capability, context, 'retired', 'capability-retired');
+  if (!capability) return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'unknown-capability');
+  if (context.retired) return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'capability-retired');
   if (context.release.profileId !== context.profileId) {
-    return decision(capabilityId, capability, context, 'hidden', 'release-profile-mismatch');
+    return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'release-profile-mismatch');
   }
   if (!context.target || !sameReleaseTarget(context.release.target, context.target)) {
-    return decision(capabilityId, capability, context, 'hidden', 'release-target-mismatch');
+    return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'release-target-mismatch');
   }
   if (context.killSwitchActive) {
-    return decision(capabilityId, capability, context, 'hidden', 'kill-switch-active');
+    return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'kill-switch-active');
   }
   if (!context.tenantEntitled || !context.cohortAuthorized) {
-    return decision(capabilityId, capability, context, 'hidden', 'scope-not-authorized');
+    return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'scope-not-authorized');
   }
   if (MATURITY_LEVELS.indexOf(capability.maturity) < MATURITY_LEVELS.indexOf('L2')) {
-    return decision(capabilityId, capability, context, 'hidden', 'capability-not-built');
+    return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'capability-not-built');
   }
 
   const profile = RELEASE_PROFILES[context.profileId];
   const included = profile.capabilityIds.includes(capability.id);
   if (!included) {
     const status = capability.activationClass === 'standard'
-      ? 'hidden'
+      ? 'planned_but_not_exposed'
       : 'institution_controlled';
     return decision(capabilityId, capability, context, status, 'capability-not-in-release-profile');
   }
   if (context.release.technicalStatus !== 'ready') {
-    return decision(capabilityId, capability, context, 'hidden', 'technical-release-not-ready');
+    return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'technical-release-not-ready');
   }
   if (context.release.rolloutStatus !== 'authorized' || !context.release.targetBound) {
     const status = capability.activationClass === 'standard' && context.nativeBaselineAvailable
@@ -271,21 +479,21 @@ export function resolveCapabilityExposure(
 
   if (profile.targetKind === 'public-individual') {
     if (context.target?.environment !== 'production') {
-      return decision(capabilityId, capability, context, 'hidden', 'production-target-required');
+      return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'production-target-required');
     }
     return decision(capabilityId, capability, context, 'live', 'production-release-authorized');
   }
 
   if (profile.targetKind === 'invitation-validation') {
     if (context.target?.environment !== 'production' || !context.target.cohortId) {
-      return decision(capabilityId, capability, context, 'hidden', 'bounded-target-required');
+      return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'bounded-target-required');
     }
     return decision(capabilityId, capability, context, 'pilot', 'bounded-pilot-authorized');
   }
 
   if (profile.targetKind === 'manual-pilot' || profile.targetKind === 'connected-pilot') {
     if (context.target?.environment !== 'pilot' || !context.target.tenantId || !context.target.cohortId) {
-      return decision(capabilityId, capability, context, 'hidden', 'bounded-target-required');
+      return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'bounded-target-required');
     }
     if (profile.targetKind === 'connected-pilot' && !context.connectionHealthy) {
       return decision(capabilityId, capability, context, 'institution_controlled', 'connection-not-healthy');
@@ -303,5 +511,5 @@ export function resolveCapabilityExposure(
     return decision(capabilityId, capability, context, 'connected', 'connected-target-authorized');
   }
 
-  return decision(capabilityId, capability, context, 'hidden', 'unsupported-release-target');
+  return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'unsupported-release-target');
 }

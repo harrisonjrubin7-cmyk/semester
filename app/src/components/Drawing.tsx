@@ -53,42 +53,47 @@ export function Drawing({ code, language }: { code: string; language: Language }
     () => (language === 'svg' ? cleanSvg(code) : null),
     [code, language],
   );
-  const [drawn, setDrawn] = useState('');
-  const [trouble, setTrouble] = useState('');
+  const body = useMemo(
+    () => (language === 'mermaid' ? cleanMermaid(code) : ''),
+    [code, language],
+  );
+  const [result, setResult] = useState({ body: '', drawn: '', trouble: '' });
   const seq = useRef(0);
 
   useEffect(() => {
-    if (language !== 'mermaid') return;
+    if (language !== 'mermaid' || !body) return;
     const mine = ++seq.current;
-    setTrouble('');
-    setDrawn('');
-    const body = cleanMermaid(code);
-    if (!body) {
-      setTrouble('That did not come back as a diagram.');
-      return;
-    }
     let live = true;
     void (async () => {
       try {
         const m = await mermaid();
         const out = await m.render(`d${mine}${Math.random().toString(36).slice(2, 7)}`, body);
         if (!live || seq.current !== mine) return;
-        setDrawn(out.svg);
+        setResult({ body, drawn: out.svg, trouble: '' });
       } catch (e) {
         if (!live || seq.current !== mine) return;
         // Mermaid leaves its failed attempt in the document when it throws.
         document.querySelectorAll('[id^="dmermaid"], .mermaid-error').forEach((n) => n.remove());
-        setTrouble(e instanceof Error ? e.message : 'It would not draw.');
+        setResult({
+          body,
+          drawn: '',
+          trouble: e instanceof Error ? e.message : 'It would not draw.',
+        });
       }
     })();
     return () => {
       live = false;
     };
-  }, [code, language]);
+  }, [body, language]);
 
-  const svg = language === 'svg' ? (direct ?? '') : drawn;
+  const current = result.body === body ? result : { drawn: '', trouble: '' };
+  const svg = language === 'svg' ? (direct ?? '') : current.drawn;
   const failed =
-    language === 'svg' ? (direct ? '' : 'That did not come back as a drawing.') : trouble;
+    language === 'svg'
+      ? (direct ? '' : 'That did not come back as a drawing.')
+      : body
+        ? current.trouble
+        : 'That did not come back as a diagram.';
 
   if (failed) {
     return (

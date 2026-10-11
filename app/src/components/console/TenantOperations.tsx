@@ -1,9 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Notice, SectionLabel } from '../ui';
-import { loadTenantOperations, type TenantOperationFact } from '../../lib/console/client';
+import { useEffect, useId, useMemo, useState } from 'react';
+import { EmptyState, Notice, SectionLabel } from '../ui';
+import { ErrorState, LoadingState, PermissionNotice } from '../unity/States';
+import {
+  loadTenantOperations,
+  loadTenantProjection,
+  type TenantOperationFact,
+  type TenantProjectionEnvelope,
+} from '../../lib/console/client';
 import { Fields, inScope, matches, said, when, type ViewProps } from './Fields';
 
 type Freshness = 'current' | 'stale' | 'missing';
+const RESPONSIVE_COLUMNS = 'repeat(auto-fit, minmax(min(100%, 18rem), 1fr))';
 
 /** Missing and invalid timestamps fail closed; an exact boundary timestamp is still current. */
 export function freshnessOf(fact: TenantOperationFact, now = new Date()): Freshness {
@@ -17,6 +24,189 @@ export function freshnessOf(fact: TenantOperationFact, now = new Date()): Freshn
 interface TenantOperationsProps extends ViewProps {
   now?: Date;
   read?: (includeDemo?: boolean) => Promise<TenantOperationFact[]>;
+  readProjection?: (tenantId: string, afterCapability?: string | null, limit?: number) => Promise<TenantProjectionEnvelope>;
+}
+
+interface TenantProjectionProps {
+  tenantId: string;
+  tenantName: string;
+  onStatus: (said: string) => void;
+  read: NonNullable<TenantOperationsProps['readProjection']>;
+}
+
+function TenantProjection({ tenantId, tenantName, onStatus, read }: TenantProjectionProps) {
+  const regionId = useId();
+  const [open, setOpen] = useState(false);
+  const [snapshot, setSnapshot] = useState<TenantProjectionEnvelope | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const load = async (cursor: string | null = null) => {
+    setLoading(true);
+    setError('');
+    try {
+      const next = await read(tenantId, cursor, 50);
+      setSnapshot((current) => cursor && current
+        ? {
+            ...next,
+            data: {
+              ...next.data,
+              entitlements: [...current.data.entitlements, ...next.data.entitlements],
+            },
+          }
+        : next);
+    } catch (caught) {
+      const detail = said(caught, 'Could not read the tenant projection.');
+      setError(detail);
+      onStatus(detail);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggle = () => {
+    const next = !open;
+    setOpen(next);
+    if (next && !snapshot && !loading) void load();
+  };
+
+  const denied = /required|permission|denied|not authorized/i.test(error);
+  const empty = snapshot && snapshot.data.entitlements.length === 0 && snapshot.data.rollout === null;
+
+  return (
+    <div style={{ display: 'grid', gap: 'var(--sp-3)' }}>
+      <button
+        type="button"
+        className="btn btn-secondary"
+        aria-expanded={open}
+        aria-controls={regionId}
+        onClick={toggle}
+      >
+        {open ? 'Close projected state' : 'View projected state'}
+      </button>
+
+      {open && (
+        <section
+          id={regionId}
+          aria-label={`Projected state for ${tenantName || tenantId}`}
+          className="portal-panel"
+          style={{ display: 'grid', gap: 'var(--sp-4)' }}
+        >
+          <div>
+            <strong>Projected state · read only</strong>
+            <p style={{ marginBottom: 0, color: 'var(--app-dim)' }}>
+              This is an operational projection, not the authoritative tenant policy or rollout record. It cannot be exported or changed here.
+            </p>
+          </div>
+
+          {loading && !snapshot && <LoadingState what={`projected state for ${tenantName || tenantId}`} />}
+
+          {error && denied && (
+            <PermissionNotice
+              changed="Projected state is unavailable"
+              why="The database did not confirm permission for this exact tenant. No projected records are shown."
+              control={{ label: 'Check access again', run: () => { void load(); } }}
+            />
+          )}
+
+          {error && !denied && (
+            <ErrorState
+              title="Projected state could not be loaded"
+              body="No cached projection is shown. The authoritative tenant records are unchanged."
+              recover={{ label: 'Try again', run: () => { void load(); } }}
+              busy={loading}
+            />
+          )}
+
+          {!error && snapshot && snapshot.meta.freshness !== 'fresh' && (
+            <Notice alert={snapshot.meta.freshness === 'failed'}>
+              Projection freshness is {snapshot.meta.freshness}. Verify the source records before any consequential action.
+            </Notice>
+          )}
+
+          {!error && snapshot && snapshot.warnings.map((warning) => <Notice key={warning}>{warning}</Notice>)}
+
+          {!error && empty && (
+            <EmptyState
+              inline
+              title="No projected state"
+              body={snapshot.meta.freshness === 'unknown'
+                ? 'No rollout or entitlement rows have been materialized for this tenant. This is unknown, not fresh or active.'
+                : `No rollout or entitlement rows are present. The projection reports ${snapshot.meta.freshness}; verify the authoritative records before inferring tenant state.`}
+              action={{ label: 'Read again', onClick: () => { void load(); } }}
+            />
+          )}
+
+          {!error && snapshot && !empty && (
+            <>
+              <Fields
+                label={`Projection evidence for ${tenantName || tenantId}`}
+                items={[
+                  { field: 'Authority', value: 'Projection · read only · no export' },
+                  { field: 'Overall freshness', value: snapshot.meta.freshness },
+                  { field: 'Source updated', value: when(snapshot.meta.sourceUpdatedAt, 'unknown') },
+                  { field: 'Computed', value: when(snapshot.meta.computedAt, 'unknown') },
+                  { field: 'Entitlement model', value: `v${snapshot.meta.coverage.entitlements.modelVersion} · ${snapshot.meta.coverage.entitlements.freshness} · worker ${snapshot.meta.coverage.entitlements.workerStatus}` },
+                  { field: 'Rollout model', value: `v${snapshot.meta.coverage.rollout.modelVersion} · ${snapshot.meta.coverage.rollout.freshness} · worker ${snapshot.meta.coverage.rollout.workerStatus}` },
+                  { field: 'Correlation', value: snapshot.meta.correlationId },
+                ]}
+              />
+
+              <section aria-label={`Rollout projection for ${tenantName || tenantId}`} style={{ display: 'grid', gap: 'var(--sp-2)' }}>
+                <SectionLabel>Rollout projection</SectionLabel>
+                {snapshot.data.rollout ? (
+                  <Fields
+                    label={`Rollout fields for ${tenantName || tenantId}`}
+                    items={[
+                      { field: 'State', value: snapshot.data.rollout.state },
+                      { field: 'Resume state', value: snapshot.data.rollout.resumeState ?? 'none' },
+                      { field: 'Revision', value: snapshot.data.rollout.revision },
+                      { field: 'Source occurred', value: when(snapshot.data.rollout.sourceOccurredAt, 'unknown') },
+                      { field: 'Projected', value: when(snapshot.data.rollout.projectedAt, 'unknown') },
+                    ]}
+                  />
+                ) : <p role="status">No rollout projection is present.</p>}
+              </section>
+
+              <section aria-label={`Entitlement projections for ${tenantName || tenantId}`} style={{ display: 'grid', gap: 'var(--sp-3)' }}>
+                <SectionLabel aside={`${snapshot.data.entitlements.length} loaded`}>Entitlement projections</SectionLabel>
+                {snapshot.data.entitlements.length === 0
+                  ? <p role="status">No entitlement projections are present.</p>
+                  : (
+                      <div style={{ display: 'grid', gridTemplateColumns: RESPONSIVE_COLUMNS, gap: 'var(--sp-3)' }}>
+                        {snapshot.data.entitlements.map((entitlement) => (
+                          <article key={entitlement.capability} style={{ paddingTop: 'var(--sp-3)' }}>
+                            <strong>{entitlement.capability}</strong>
+                            <Fields
+                              label={`Projection for ${entitlement.capability}`}
+                              items={[
+                                { field: 'State', value: entitlement.deleted ? 'deleted' : entitlement.state },
+                                { field: 'Revision', value: entitlement.revision },
+                                { field: 'Source occurred', value: when(entitlement.sourceOccurredAt, 'unknown') },
+                                { field: 'Projected', value: when(entitlement.projectedAt, 'unknown') },
+                              ]}
+                            />
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                {snapshot.meta.coverage.entitlements.hasMore && snapshot.meta.coverage.entitlements.nextCursor && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    disabled={loading}
+                    onClick={() => { void load(snapshot.meta.coverage.entitlements.nextCursor); }}
+                  >
+                    {loading ? 'Loading more…' : 'Load more entitlements'}
+                  </button>
+                )}
+              </section>
+            </>
+          )}
+        </section>
+      )}
+    </div>
+  );
 }
 
 /**
@@ -32,6 +222,7 @@ export function TenantOperations({
   onStatus,
   now,
   read = loadTenantOperations,
+  readProjection = loadTenantProjection,
 }: TenantOperationsProps) {
   const [openedAt] = useState(() => new Date());
   const [includeDemo, setIncludeDemo] = useState(false);
@@ -122,7 +313,14 @@ export function TenantOperations({
           </SectionLabel>
           <div style={{ color: 'var(--app-dim)' }}>Tenant {tenantId}</div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 18rem), 1fr))', gap: 'var(--sp-3)' }}>
+          <TenantProjection
+            tenantId={tenantId}
+            tenantName={tenant.name}
+            onStatus={onStatus}
+            read={readProjection}
+          />
+
+          <div style={{ display: 'grid', gridTemplateColumns: RESPONSIVE_COLUMNS, gap: 'var(--sp-3)' }}>
             {tenant.facts.map((fact) => {
               const freshness = freshnessOf(fact, now ?? openedAt);
               return (

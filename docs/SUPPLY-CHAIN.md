@@ -30,12 +30,12 @@ strategic expansion in [`STRATEGIC-EXPANSION-REGISTER.md`](STRATEGIC-EXPANSION-R
 
 | Licence | `app/` | `video/` | `pipeline/` |
 | --- | ---: | ---: | ---: |
-| MIT | 190 | 233 | 4 |
+| MIT | 195 | 233 | 4 |
 | ISC | 35 | 18 |  |
 | Apache-2.0 | 33 | 5 |  |
 | MPL-2.0 | 13 | 4 |  |
 | BSD-3-Clause | 8 | 6 |  |
-| BSD-2-Clause | 3 | 9 |  |
+| BSD-2-Clause | 4 | 9 |  |
 | Remotion License (stated in package) |  | 8 |  |
 | SEE LICENSE IN LICENSE.md |  | 6 |  |
 | Unlicense | 1 | 2 |  |
@@ -50,7 +50,7 @@ strategic expansion in [`STRATEGIC-EXPANSION-REGISTER.md`](STRATEGIC-EXPANSION-R
 | MIT (stated in package) | 1 |  |  |
 | Python-2.0 |  | 1 |  |
 | Remotion License https://remotion.dev/license |  | 1 |  |
-| **total** | **291** | **297** | **4** |
+| **total** | **297** | **297** | **4** |
 
 - `app/` — The app: built and deployed to every user (the workspace root lockfile, which also locks packages/*) **(ships)**.
 - `video/` — Local video rendering; never deployed.
@@ -90,7 +90,7 @@ replaced, before Semester is a company above that threshold.
 | Licence, security and provenance review | supplychain.test.ts (licence, registry, integrity) |
 | Approved, or rejected | supplychain.ts NAMED / ACTIONS — a diff a reviewer must approve |
 | Locked version added | package-lock.json, installed by npm ci |
-| CI scan and test | ci.yml — npm audit --audit-level=high, the suite |
+| CI scan and test | ci.yml — pinned OSV-Scanner over every lockfile, npm audit --audit-level=high, actionlint, the suite |
 | SBOM updated | pages.yml — npm run sbom on every deploy |
 | Release artifact and provenance retained | supply-chain.yml — signed build provenance and SBOM attestation for the main bundle (not yet the Pages bytes: infra/README.md R-3) |
 | Advisory monitoring | .github/dependabot.yml |

@@ -95,6 +95,7 @@ describe('where an import lands', () => {
   const files = new Set([
     'app/src/lib/a.ts',
     'app/src/lib/b.tsx',
+    'app/src/lib/c.jsx',
     'app/src/lib/dir/index.ts',
     'app/server/x.ts',
     'packages/contract/src/index.ts',
@@ -105,6 +106,7 @@ describe('where an import lands', () => {
   it('adds the extension the source leaves off', () => {
     expect(at('app/src/lib/z.ts', './a')).toEqual({ kind: 'file', path: 'app/src/lib/a.ts' });
     expect(at('app/src/lib/z.ts', './b')).toEqual({ kind: 'file', path: 'app/src/lib/b.tsx' });
+    expect(at('app/src/lib/z.ts', './c.jsx')).toEqual({ kind: 'file', path: 'app/src/lib/c.jsx' });
     expect(at('app/src/lib/z.ts', './dir')).toEqual({ kind: 'file', path: 'app/src/lib/dir/index.ts' });
   });
 
@@ -135,6 +137,8 @@ describe('where an import lands', () => {
 
   it('puts a path in its zone', () => {
     expect(zoneOf('packages/contract/src/index.ts')).toBe('packages');
+    expect(zoneOf('packages/platform-control/scripts/build-atlas.ts')).toBe('package-tool');
+    expect(zoneOf('packages/platform-control/tests/validators.test.ts')).toBe('package-tool');
     expect(zoneOf('supabase/functions/_shared/cors.ts')).toBe('functions');
     expect(zoneOf('app/src/main.tsx')).toBe('app-src');
     expect(zoneOf('app/server/institution/gateway.ts')).toBe('app-server');

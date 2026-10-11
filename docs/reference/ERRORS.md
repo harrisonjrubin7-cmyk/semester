@@ -672,6 +672,7 @@ Returned flat, as `{"code", "message"}`, by `/v1/intelligence/respond`, `/policy
 | `mode-disabled` | 403 | yes | The mode is not in the tenant's allowed modes. |
 | `agent-action-refused` | 403 | yes | A role other than `assistant` proposed an action that is not `prepare`. |
 | `source-not-approved` | 403 | yes | No sources, or a source the tenant has not approved for this account. |
+| `source-context-refused` | 403 | yes | A source does not match the verified tenant, AI purpose, source identity, or current-freshness requirement. |
 | `source-scope-unverified` | 403 | yes | A source has no institution-approved policy scope. |
 | `course-scope-required` | 403 | yes | The `tutor` and `course-guide` roles need approved sources from exactly one course. |
 | `course-scope-mismatch` | 403 | yes | The requested course or term does not match the approved scope of the sources. |

@@ -116,7 +116,7 @@ export interface Harness {
   deps: CommandDeps;
   /** Register a store so the unit of work rolls it back. */
   enroll(store: Snapshottable): void;
-  context(tenantId: string, personId: string, opts?: { grants?: RoleGrant[]; headers?: Record<string, string>; mfa?: 'none' | 'standard' | 'fresh'; key?: string }): RequestContext;
+  context(tenantId: string, personId: string, opts?: { grants?: RoleGrant[]; headers?: Record<string, string>; mfa?: 'none' | 'standard' | 'fresh'; key?: string; purpose?: string }): RequestContext;
 }
 
 export const TENANT_A = 'tenant-a';
@@ -170,7 +170,7 @@ export function harness(rules: readonly ActionRule[], setup?: (h: { registry: Ca
         roleGrants: opts.grants ?? [],
       };
       return buildRequestContext(
-        { headers: { ...(opts.key ? { 'idempotency-key': opts.key } : {}), ...(opts.headers ?? {}) } },
+        { headers: { ...(opts.key && { 'idempotency-key': opts.key }), ...opts.headers }, purpose: opts.purpose },
         identity,
         { clock, ids },
       );

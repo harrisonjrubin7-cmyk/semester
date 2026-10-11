@@ -6,6 +6,8 @@ import { useNow, useStore } from '../state/store';
 import { activeManual, critic, defaultManual, emptyEntry, exportOperating, operatingCsv, operatingIcs, operatingMarkdown, PLAYBOOKS, readOperating, visibleEntries } from '../lib/student-operating';
 import type { EntryKind, Manual, OperatingEntry, OperatingWorkspace, Structure } from '../lib/student-operating';
 import { ActionButton, SectionLabel } from './ui';
+import { ConfirmDialog } from './ConfirmDialog';
+import { ActionPreview } from './unity/ActionPreview';
 
 const labels: Record<EntryKind, string> = { plan: 'Daily plan', decision: 'Decision journal', waiting: 'Waiting on', meeting: 'Meeting to action', project: 'Project map', evidence: 'Study evidence', playbook: 'Reusable playbook', group: 'Group charter', service: 'Service packet' };
 function download(name: string, content: string | Uint8Array, mime: string) {
@@ -31,6 +33,8 @@ export function StudentOperating() {
   const [draft, setDraft] = useState('');
   const [recipient, setRecipient] = useState('');
   const [deletePending, setDeletePending] = useState(false);
+  const [preferencesDeletePending, setPreferencesDeletePending] = useState(false);
+  const [deletingEntry, setDeletingEntry] = useState<OperatingEntry | null>(null);
   const [calendarStart, setCalendarStart] = useState('');
   const [calendarReviewed, setCalendarReviewed] = useState('');
   const save = (next: OperatingWorkspace) => dispatch({ type: 'setOperatingWorkspace', value: JSON.stringify(next) });
@@ -68,7 +72,25 @@ export function StudentOperating() {
       {(['quiet','noOpportunities','noAnalytics','noStudyBlocks'] as const).map(k => <label key={k} style={{ display: 'block' }}><input type="checkbox" checked={editingManual[k]} onChange={e => preference(k, e.target.checked)} />{({quiet:'Quiet Mode',noOpportunities:'No opportunity prompts',noAnalytics:'No planning analytics',noStudyBlocks:'No automatic study blocks'})[k]}</label>)}
       <ActionButton onClick={() => { setTemporary(editingManual); setNotice('Preferences applied for this visit only; nothing saved.'); }}>Use for this visit only</ActionButton>
       <ActionButton onClick={() => { if (!editingManual.expires || editingManual.expires < today) { setNotice('Choose a valid term-end date before saving.'); return; } save({ ...workspace, manual: editingManual }); setTemporary(null); setNotice('Preferences saved until your selected term end.'); }}>Save for this term</ActionButton>
-      <button className="bare" onClick={() => { save({ ...workspace, manual: null }); setTemporary(null); setEditingManual(defaultManual()); setNotice('Preferences deleted.'); }}>Delete preferences</button>
+      <button className="bare" onClick={() => setPreferencesDeletePending(true)}>Delete preferences</button>
+      {preferencesDeletePending && <ConfirmDialog
+        title="Delete saved preferences?"
+        preview={<ActionPreview
+          subject={`Student Operating preferences · saved until ${workspace.manual?.expires || 'the selected term end'}`}
+          says="Deletes your saved planning style, starter minutes, representation, help, reminder, planning-time and break preferences. The preferences shown in this editor reset to defaults. When account sync is enabled, the deletion is saved to your account too."
+          doesNotChange={`Your ${workspace.entries.length} saved workflow item${workspace.entries.length === 1 ? '' : 's'}, downloaded exports and official records do not change.`}
+          recovery={{ kind: 'none', how: 'A Semester data backup made before deletion can restore the earlier workspace. You can also enter and save new preferences later.' }}
+        />}
+        confirmLabel="Delete saved preferences"
+        onCancel={() => setPreferencesDeletePending(false)}
+        onConfirm={() => {
+          save({ ...workspace, manual: null });
+          setTemporary(null);
+          setEditingManual(defaultManual());
+          setPreferencesDeletePending(false);
+          setNotice('Preferences deleted.');
+        }}
+      />}
     </details>
     {!hidePrompt && <fieldset><legend>How much planning structure would help right now?</legend>{(['low','medium','high','none'] as const).map(v => <button className="pill-soft tap-y" key={v} aria-pressed={structure === v} onClick={() => setStructure(v)}>{v === 'none' ? 'No preference' : v}</button>)}<button className="bare" onClick={() => { setHidePrompt(true); setStructure('none'); }}>Do not ask again this visit</button></fieldset>}
     {hidePrompt && <button className="bare" onClick={() => setHidePrompt(false)}>Change planning structure</button>}
@@ -85,7 +107,23 @@ export function StudentOperating() {
       <button className="bare" onClick={() => save({ ...workspace, entries: workspace.entries.map(x => x.id === e.id ? { ...x, status: 'done' } : x) })}>Mark resolved</button>{' '}
       <button className="bare" onClick={() => { setEntry({ ...e, kind: 'plan', id: crypto.randomUUID(), status: 'planned', reflection: '', submitted: '' }); setNotice('Private copy ready to edit; choose Save to keep it.'); }}>Reuse as plan</button>
     </article>)}
-    <details><summary>All items, including completed and waiting</summary>{workspace.entries.map(e => <p key={e.id}><button className="bare" onClick={() => setEntry({ ...e })}>{e.title} · {e.status}</button>{' '}<button className="bare" onClick={() => save({ ...workspace, entries: workspace.entries.filter(x => x.id !== e.id) })}>Delete this item</button></p>)}</details>
+    <details><summary>All items, including completed and waiting</summary>{workspace.entries.map(e => <p key={e.id}><button className="bare" onClick={() => setEntry({ ...e })}>{e.title} · {e.status}</button>{' '}<button className="bare" aria-label={`Delete ${e.title}`} onClick={() => setDeletingEntry(e)}>Delete this item</button></p>)}</details>
+    {deletingEntry && <ConfirmDialog
+      title="Delete this saved item?"
+      preview={<ActionPreview
+        subject={`${deletingEntry.title} · ${labels[deletingEntry.kind]}`}
+        says="Deletes this saved workflow item from your private Semester workspace. When account sync is enabled, the deletion is saved to your account too."
+        doesNotChange="Other workflow items, saved preferences, downloaded exports and official records do not change. An editor or review already open on this screen stays open."
+        recovery={{ kind: 'none', how: 'A Semester data backup made before deletion can restore the earlier workspace.' }}
+      />}
+      confirmLabel="Delete item"
+      onCancel={() => setDeletingEntry(null)}
+      onConfirm={() => {
+        save({ ...workspace, entries: workspace.entries.filter((item) => item.id !== deletingEntry.id) });
+        setDeletingEntry(null);
+        setNotice('Saved workflow item deleted.');
+      }}
+    />}
     <details open={mode !== 'low'}><summary>Add or edit a private outcome, decision or workflow</summary>
       <form onSubmit={e => { e.preventDefault(); if (!entry.title.trim()) return; save({ ...workspace, entries: [...workspace.entries.filter(x => x.id !== entry.id), { ...entry, title: entry.title.trim() }] }); setEntry(emptyEntry(entry.kind)); setNotice('Saved privately. No reflection becomes a preference automatically.'); }}>
         <label>Workflow<select className="input" value={entry.kind} onChange={e => patch('kind', e.target.value)}>{Object.entries(labels).map(([k,v]) => <option value={k} key={k}>{v}</option>)}</select></label>
@@ -128,7 +166,18 @@ export function StudentOperating() {
         frame.contentWindow?.focus(); frame.contentWindow?.print(); setTimeout(() => frame.remove(), 1000);
       }}>Print selected plan / save PDF</button>{' '}
       <button className="bare" onClick={() => setDeletePending(true)}>Delete this planning workspace</button>
-      {deletePending && <p>Delete all saved operating preferences and workflow items? <button className="bare" onClick={() => { dispatch({ type: 'setOperatingWorkspace', value: null }); setTemporary(null); setEditingManual(defaultManual()); setReview(null); setDraft(''); setEntry(emptyEntry('plan')); setDeletePending(false); setNotice('Operating workspace deleted.'); }}>Confirm deletion</button>{' '}<button className="bare" onClick={() => setDeletePending(false)}>Keep workspace</button></p>}
+      {deletePending && <ConfirmDialog
+        title="Delete this planning workspace?"
+        preview={<ActionPreview
+          subject={`Planning workspace · ${workspace.entries.length} saved workflow item${workspace.entries.length === 1 ? '' : 's'}`}
+          says={<>Deletes all saved operating preferences and {workspace.entries.length} workflow item{workspace.entries.length === 1 ? '' : 's'} from your private Semester workspace. It also clears this screen’s unsaved editor, review and handoff draft. When account sync is enabled, that deletion is saved to your account too.</>}
+          doesNotChange="Downloaded exports, calendar entries you imported separately and official records stay where they are."
+          recovery={{ kind: 'none', how: 'Export a backup before deleting if you need a copy.' }}
+        />}
+        confirmLabel="Delete workspace"
+        onCancel={() => setDeletePending(false)}
+        onConfirm={() => { dispatch({ type: 'setOperatingWorkspace', value: null }); setTemporary(null); setEditingManual(defaultManual()); setReview(null); setDraft(''); setEntry(emptyEntry('plan')); setDeletePending(false); setNotice('Operating workspace deleted.'); }}
+      />}
     </details>
     <details><summary>Human oversight and boundaries</summary><p>You decide private plans and sharing. Faculty controls course sources and assessment policy. Advisors and registrars make official academic determinations. Messages, calendar writes and shares require exact previews and student confirmation; official writes also require authorized institutional approval. Privacy incidents belong with the named institutional security/privacy owner. This workspace performs none of those external actions.</p><p>Private choices stay under your control; no inferred profiles, peer rankings or automatic staff alerts. Group charters are private preparation; live collaboration and faculty aggregate signals require separately configured institutional access and privacy controls.</p></details>
     <p role="status">{notice}</p>

@@ -63,6 +63,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      # Two repository-only tools, downloaded to a temporary directory with
+      # pinned versions and SHA-256 hashes. They never enter node_modules or
+      # the deployed bundle. actionlint validates all workflow expressions and
+      # embedded shell; OSV-Scanner covers every supported lockfile, including
+      # video/ and pipeline/, which the app-only npm audit below does not see.
+      - name: Verify workflows and all lockfiles
+        run: ./scripts/developer-tools.sh
+
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22
@@ -73,6 +81,30 @@ jobs:
       # so CI cannot pass on a dependency tree nobody has locally.
       - name: Install
         run: npm ci
+
+      # The implementation-control registry is an executable claim boundary.
+      # CI checks that every registry reference and evidence path resolves,
+      # that maturity cannot skip an unproven gate, and that committed reports
+      # are exactly what the current source records generate. The release
+      # report is informational here: a truthful blocked decision is valid
+      # registry output, while `npm run release:check` remains the blocking
+      # command for an actual release attempt.
+      - name: Validate the platform-control registry
+        run: |
+          npx tsc -p packages/platform-control/tsconfig.json
+          npm run registry:validate
+          npm run platform-control:test
+          npm run registry:build
+          npm run release:report
+          git diff --exit-code -- packages/platform-control/generated
+
+      - name: Keep platform-control reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: platform-control-reports
+          path: packages/platform-control/generated/
+          if-no-files-found: error
 
       # ── Advisories published since the lockfile was written ──────────────
       #
@@ -533,9 +565,23 @@ jobs:
       # nine files that could not run twice, and one whose partial re-run left
       # an older function behind that help-requests.check.sql then caught.
       - name: Check the database policies
+        if: always()
         env:
           SEMESTER_CHECK_REAPPLY: '1'
-        run: supabase/check.sh
+        run: supabase/policy-evidence.sh
+
+      # Keep the result for this exact commit even when the gate fails. The
+      # JSON records the configured PostgreSQL major, clean/reapply posture,
+      # per-suite outcomes and the hash of the unresolved-policy register. It
+      # is evidence of this ephemeral run, not a production-isolation claim.
+      - name: Keep the PostgreSQL policy evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: pg17-policy-evidence-${{ github.sha }}
+          path: artifacts/database/pg17-policy-evidence.json
+          if-no-files-found: error
+          retention-days: 30
 
       # The same database, many sessions at once. The suites above each walk
       # one or two accounts through a policy; a race needs two sessions at the
@@ -638,7 +684,8 @@ jobs:
         working-directory: app
         run: |
           export VITE_SUPABASE_URL=http://127.0.0.1:54321
-          export VITE_SUPABASE_KEY="$(supabase status -o json --workdir .. | jq -r .PUBLISHABLE_KEY)"
+          VITE_SUPABASE_KEY="$(supabase status -o json --workdir .. | jq -r .PUBLISHABLE_KEY)"
+          export VITE_SUPABASE_KEY
           npx vite build --outDir /tmp/sync-dist
           npx vite preview --outDir /tmp/sync-dist --port 4174 > /tmp/preview.log 2>&1 &
           timeout 120 bash -c "until curl -sf http://localhost:4174/ >/dev/null; do sleep 1; done"
@@ -661,7 +708,8 @@ jobs:
         run: |
           # This key belongs only to the ephemeral loopback stack. The smoke
           # refuses to send it to any non-loopback origin and never prints it.
-          export SMOKE_SUPABASE_SERVICE_KEY="$(supabase status -o json --workdir .. | jq -er '.SECRET_KEY // .SERVICE_ROLE_KEY')"
+          SMOKE_SUPABASE_SERVICE_KEY="$(supabase status -o json --workdir .. | jq -er '.SECRET_KEY // .SERVICE_ROLE_KEY')"
+          export SMOKE_SUPABASE_SERVICE_KEY
           npm run smoke:sync
 
   # ── A key that got committed ────────────────────────────────────────────

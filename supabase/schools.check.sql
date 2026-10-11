@@ -31,7 +31,7 @@ create or replace function pg_temp.become(who uuid)
 returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims',
-                     json_build_object('sub', who::text, 'role', 'authenticated')::text,
+                     json_build_object('sub', who::text, 'role', 'authenticated', 'aal', 'aal2')::text,
                      true);
   execute 'set local role authenticated';
 end $$;
@@ -82,7 +82,8 @@ begin
   set local role postgres;
   admin  := pg_temp.newuser('ada@vanderbilt.edu');
   person := pg_temp.newuser('bo@vanderbilt.edu');
-  insert into public.app_admins (user_id, note) values (admin, 'founder');
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance)
+  values (admin, 'platform_admin', 'platform', '', 'platform');
   insert into public.profiles (user_id, handle) values (admin, 'ada'), (person, 'bo');
 
   insert into public.schools (id, name, short_name, email_domains)

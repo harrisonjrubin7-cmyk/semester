@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useId, useMemo, useRef, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { focusablesIn, nextInRing } from '../a11y/modal';
 import { useStore } from '../state/store';
@@ -78,7 +78,12 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
   const wide = useMedia(WIDE);
   const touch = useMedia(TOUCH);
   const [full, setFull] = useState(false);
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(seed.text);
+  const [seenSeed, setSeenSeed] = useState(seed.id);
+  if (seed.text && seed.id !== seenSeed) {
+    setSeenSeed(seed.id);
+    setDraft(seed.text);
+  }
 
   // One place that empties the box and sends, because the send button and the
   // Enter key must not drift into doing slightly different things.
@@ -184,16 +189,6 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
       borderRadius: 'var(--r-lg)',
     };
   }, [wide, full, side]);
-
-
-
-  useEffect(() => {
-    if (seed.seeded) {
-      setDraft(seed.seeded);
-      seed.clear();
-    }
-  }, [seed]);
-
   /*
    * Focus is trapped only at full height.
    *

@@ -24,7 +24,7 @@ begin;
 create or replace function pg_temp.become(who uuid)
 returns void language plpgsql as $$
 begin
-  perform set_config('request.jwt.claims', jsonb_build_object('sub', who::text, 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', jsonb_build_object('sub', who::text, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   execute 'set local role authenticated';
 end $$;
 
@@ -77,7 +77,8 @@ begin
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
     (n_admin, 'university_admin', 'school', 'north-mem', 'institution'),
     (s_admin, 'university_admin', 'school', 'south-mem', 'institution');
-  insert into public.app_admins (user_id) values (operator);
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance)
+  values (operator, 'platform_admin', 'platform', '', 'platform');
 
   -- ── DEFAULT OFF: the control ─────────────────────────────────────────────
   -- Everyone joins north's room, whatever school they are at, as they always could.

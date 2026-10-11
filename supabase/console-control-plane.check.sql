@@ -10,7 +10,7 @@
 --     and the console, and `holds_seat` answers only for a live seat;
 --   * `mfa_fresh` is true for a recent second factor in the JWT and false for
 --     no second factor, a stale one, and a first factor spelled as one;
---   * the duty matrix has its eleven rows and is read only with
+--   * the duty matrix has its twelve rows and is read only with
 --     `console:operate`; `party_held` reads a seat, a role, and never a
 --     student;
 --   * the audit chain: the service role cannot insert directly, a signed-in
@@ -35,7 +35,7 @@ create or replace function pg_temp.become(who uuid)
 returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims',
-    json_build_object('sub', who::text, 'role', 'authenticated')::text, true);
+    json_build_object('sub', who::text, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   execute 'set local role authenticated';
 end $$;
 
@@ -157,6 +157,7 @@ declare
   got        text;
   total      bigint;
   audit_rows bigint;
+  audit_day  date := (now() at time zone 'UTC')::date;
 begin
   insert into public.schools (id, name, email_domains, is_demo) values
     ('console-check', 'Console Check University', array['console-check.example'], false),
@@ -277,6 +278,12 @@ begin
   perform pg_temp.become_mfa(operator, 'aal2', 'webauthn', now() - interval '14 minutes');
   reset role;
   if not private.mfa_fresh() then raise exception 'FAILED: a WebAuthn assertion fourteen minutes ago is not fresh'; end if;
+  perform pg_temp.become_mfa(operator, 'aal2', 'mfa/webauthn', now() - interval '4 minutes');
+  reset role;
+  if not private.mfa_fresh() then raise exception 'FAILED: an auth-js WebAuthn assertion four minutes ago is not fresh'; end if;
+  perform pg_temp.become_mfa(operator, 'aal2', 'mfa/phone', now() - interval '2 minutes');
+  reset role;
+  if not private.mfa_fresh() then raise exception 'FAILED: an auth-js phone verification two minutes ago is not fresh'; end if;
   perform pg_temp.become_mfa(operator, 'aal2', 'totp', now() - interval '16 minutes');
   reset role;
   if private.mfa_fresh() then raise exception 'FAILED: a TOTP verified sixteen minutes ago counted as fresh'; end if;
@@ -292,7 +299,7 @@ begin
   perform pg_temp.become_mfa(operator, 'aal2', 'totp', now() - interval '40 minutes');
   reset role;
   if not private.mfa_fresh('1 hour') then raise exception 'FAILED: the window argument is ignored'; end if;
-  raise notice 'ok  mfa_fresh: recent totp/webauthn on aal2 is fresh; stale, aal1, a first factor and no claims are not';
+  raise notice 'ok  mfa_fresh: recent totp/webauthn/phone on aal2 is fresh; stale, aal1, a first factor and no claims are not';
 
   perform pg_temp.become_mfa(operator, 'aal2', 'totp', now() - interval '1 minute');
   reset role;
@@ -312,12 +319,12 @@ begin
   -- ── The duty matrix (rows 3 and 4) ──────────────────────────────────────
 
   select count(*) into n from public.console_duty;
-  perform pg_temp.counted('the duty matrix has its eleven rows', n, 11);
+  perform pg_temp.counted('the duty matrix has its twelve rows', n, 12);
 
   perform pg_temp.become(operator);
   select count(*) into n from public.console_duty;
   reset role;
-  perform pg_temp.counted('console:operate reads all eleven', n, 11);
+  perform pg_temp.counted('console:operate reads all twelve', n, 12);
 
   perform pg_temp.become(stranger);
   select count(*) into n from public.console_duty;
@@ -340,7 +347,7 @@ begin
   end if;
   raise notice 'ok  the duty matrix cannot be rewritten through the API';
 
-  perform set_config('request.jwt.claims', json_build_object('sub', operator::text)::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', operator::text, 'aal', 'aal2')::text, true);
   if not private.party_held('role:platform_admin') then raise exception 'FAILED: party_held misses a live role'; end if;
   if private.party_held('role:university_admin') then raise exception 'FAILED: party_held claims a role not held'; end if;
   if private.party_held('security') then raise exception 'FAILED: party_held gives the operator a seat'; end if;
@@ -445,28 +452,28 @@ begin
 
   -- ── Sealing a day, once ─────────────────────────────────────────────────
 
-  perform private.console_audit_seal(current_date);
+  perform private.console_audit_seal(audit_day);
   select count(*) into n from private.console_audit_manifest m
-   where m.batch_day = current_date and m.first_seq = seq1 and m.row_count >= 4
+   where m.batch_day = audit_day and m.first_seq = seq1 and m.row_count >= 4
      and m.head_hash = (select e.hash from private.console_audit_event e order by e.seq desc limit 1);
   perform pg_temp.counted('today is sealed with its bounds, its count and the head hash', n, 1);
 
   select k.key into key_bytes from private.console_audit_key k;
   select count(*) into n from private.console_audit_manifest m
-   where m.batch_day = current_date
+   where m.batch_day = audit_day
      and m.signature = private.console_audit_hmac(
        private.console_audit_manifest_text(m.batch_day, m.first_seq, m.last_seq, m.row_count, m.head_hash),
        key_bytes);
   perform pg_temp.counted('the manifest signature verifies under the key', n, 1);
 
-  perform private.console_audit_seal(current_date);
+  perform private.console_audit_seal(audit_day);
   select count(*) into n from private.console_audit_manifest;
   perform pg_temp.counted('sealing the same day again is a no-op (manifests)', n, 1);
 
   set local role service_role;
   perform private.console_audit_write(null, 'service', null, 'after.seal', null, '{}'::jsonb, null);
   reset role;
-  if not pg_temp.raises('select private.console_audit_seal(current_date)') then
+  if not pg_temp.raises(format('select private.console_audit_seal(%L)', audit_day)) then
     raise exception 'FAILED: a day whose rows changed was re-sealed';
   end if;
   raise notice 'ok  a day whose rows changed after sealing cannot be sealed again';
@@ -551,7 +558,7 @@ begin
   if r.rows <> (select count(*) from private.console_audit_event)
      or r.last_seq <> (select max(seq) from private.console_audit_event)
      or r.head_hash <> (select hash from private.console_audit_event order by seq desc limit 1)
-     or r.last_sealed <> current_date
+     or r.last_sealed <> audit_day
      or not r.last_verified_ok
      or r.last_verified_at < now() - interval '1 minute' then
     raise exception 'FAILED: console_audit_status disagrees with the tables: %', r;
@@ -628,8 +635,12 @@ begin
   perform pg_temp.counted('a school is not a demo unless flagged', n, 1);
 
   perform pg_temp.become(operator);
-  update public.schools set is_demo = true where id = 'console-check';
-  get diagnostics n = row_count;
+  -- Refused either way: no row reached, or the policy's check raises.
+  begin
+    update public.schools set is_demo = true where id = 'console-check';
+    get diagnostics n = row_count;
+  exception when insufficient_privilege then n := 0;
+  end;
   reset role;
   perform pg_temp.counted('the demo flag cannot be set through the API (rows a client''s update reaches)', n, 0);
 

@@ -119,6 +119,8 @@ import type { Screen } from './lib/types';
 import { InstitutionalPreviewRoot } from './components/institutional/PreviewRoot';
 import { forRole } from './lib/role';
 import { MODULE_FLAGS, moduleOn } from './lib/experience-flags';
+import { cloudConfigured } from './lib/cloud';
+import { PrivilegedMfaBoundary } from './components/PrivilegedMfaBoundary';
 
 // Offline mode (Phase M). The badge is lazy, in screens.tsx, so the flag off costs nothing.
 const OFFLINE_MODE = moduleOn(MODULE_FLAGS.offline_mode);
@@ -1159,7 +1161,7 @@ export default function App() {
 }
 
 function AppFrame() {
-  const { state, dispatch, saveTrouble, asking, settle } = useStore();
+  const { state, dispatch, saveTrouble, asking, settle, account } = useStore();
   /*
    * Which of the three layouts this window is in — see `lib/media.ts`.
    *
@@ -1398,7 +1400,7 @@ function AppFrame() {
     return wide || chrome.railCollapsed ? wideFrame() : phoneFrame();
   };
   return (
-    <>
+    <PrivilegedMfaBoundary subject={cloudConfigured ? account?.id ?? null : null}>
       <Sound />
       {frame()}
       {INSTITUTIONAL_PREVIEW && (
@@ -1406,7 +1408,7 @@ function AppFrame() {
           <InstitutionalPreviewBar />
         </Suspense>
       )}
-    </>
+    </PrivilegedMfaBoundary>
   );
 
   function wideFrame() {

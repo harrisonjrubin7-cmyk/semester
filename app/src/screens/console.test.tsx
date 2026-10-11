@@ -96,10 +96,10 @@ vi.mock('../lib/console/client', async (orig) => ({
   loadPreferences: mock.prefs,
   savePreference: mock.savePref,
   mfaLevel: mock.mfa,
-  totpFactors: mock.factors,
+  mfaFactors: mock.factors,
   enrollTotp: mock.enroll,
-  challengeTotp: mock.challenge,
-  verifyTotp: mock.verify,
+  challengeMfa: mock.challenge,
+  verifyMfa: mock.verify,
   sessionExpiry: mock.session,
   openSupportGrants: mock.support,
 }));
@@ -119,6 +119,7 @@ const INTEGRATION_PLATFORM = [...PLATFORM, { capability: 'integration:view', sco
 const INCIDENT_PLATFORM = [...PLATFORM, { capability: 'incident:communicate', scopeKind: 'platform', scopeId: '' }];
 const FRESH = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 2 * 60_000) };
 const STALE = { currentLevel: 'aal1', nextLevel: 'aal2', verifiedAt: null };
+const STALE_AAL2 = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 20 * 60_000) };
 
 const DUTIES = [
   { id: 'role-grant', action: 'Grant or widen a privileged role', requester: 'role:university_admin', approvers: ['security'], twoPerson: false, evidence: 'The access request, naming the person, the role, the tenant and the reason' },
@@ -596,12 +597,24 @@ describe('the context bar', () => {
     expect(dd(host.querySelector('[aria-label="Context bar"]')!, 'Environment')).toBe('◆ Staging');
   });
 
-  it('says None for support access when no grant is open, and how the MFA stands when it is not aal2', async () => {
+  it('lets an ordinary console role mount at aal1; the app-level boundary handles the two privileged roles', async () => {
     mock.mfa.mockResolvedValue(STALE);
     await render();
-    const bar = host.querySelector('[aria-label="Context bar"]') as Element;
-    expect(dd(bar, 'Support access')).toBe('None');
-    expect(dd(bar, 'MFA')).toContain('Not verified this session');
+    expect(host.querySelector('[aria-label="Context bar"]')).not.toBeNull();
+    expect(mock.approvals).toHaveBeenCalled();
+    expect(mock.support).toHaveBeenCalled();
+    expect(host.querySelector('[aria-label="Second factor"]')).toBeNull();
+  });
+
+  it('keeps ordinary console work mounted when assurance cannot be read', async () => {
+    mock.mfa.mockRejectedValue(new Error('The assurance service is unavailable'));
+    await render();
+    expect(host.querySelector('[aria-label="Context bar"]')).not.toBeNull();
+    expect(mock.approvals).toHaveBeenCalled();
+    expect(mock.support).toHaveBeenCalled();
+    expect(host.textContent).toContain('The assurance service is unavailable');
+    expect(host.textContent).toContain('sensitive changes still require a verified second factor');
+    expect(button('Try again')).toBeDefined();
   });
 });
 
@@ -662,7 +675,7 @@ describe('approvals', () => {
   });
 
   it('puts the second factor in front of a decision when the session is not aal2, and decides once it is', async () => {
-    mock.mfa.mockResolvedValueOnce(STALE).mockResolvedValue(FRESH);
+    mock.mfa.mockResolvedValueOnce(STALE_AAL2).mockResolvedValue(FRESH);
     await render();
     await press('Approve');
     expect(mock.decide).not.toHaveBeenCalled();
@@ -693,7 +706,7 @@ describe('approvals', () => {
   });
 
   it('runs nothing when the second factor is cancelled', async () => {
-    mock.mfa.mockResolvedValue(STALE);
+    mock.mfa.mockResolvedValue(STALE_AAL2);
     await render();
     type(field('Evidence attached'), 'Draft evidence survives MFA.');
     await press('Approve');

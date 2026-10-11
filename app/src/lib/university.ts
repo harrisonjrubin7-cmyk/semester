@@ -28,6 +28,15 @@
  */
 
 import { UNIVERSITY_AREAS as AREAS, UNIVERSITY_ROLES as ROLES } from '@semester/institution';
+import {
+  SemesterApiError,
+  createClient,
+  parseErrorEnvelope,
+  systemIds,
+  systemRng,
+  type ErrorEnvelope,
+  type FetchLike,
+} from '@semester/platform';
 import { currentSession } from './cloud';
 import type {
   ActionInput,
@@ -82,7 +91,7 @@ export const gatewayConfigured = !!import.meta.env.VITE_UNIVERSITY_GATEWAY_URL;
  *  - **A timeout.** A school's system that stops answering must fail, not
  *    hang a screen with a spinner on it forever.
  */
-async function gateway<T>(path: string, body?: unknown): Promise<T> {
+async function gateway<T>(path: string, body?: unknown, options: { retryOnNetwork?: boolean } = {}): Promise<T> {
   if (!gatewayConfigured) {
     throw new Error(
       'An approved university connection has not been configured yet. Your planning tools still work.',
@@ -98,32 +107,54 @@ async function gateway<T>(path: string, body?: unknown): Promise<T> {
     throw new Error('The university gateway must use a secure configured address.');
   }
 
-  const session = await currentSession();
-  if (!session) throw new Error('Sign in to your school-approved Semester account first.');
-
-  /*
-   * One id for this tap, sent ahead and read back. The gateway keeps it on
-   * the audit row and the telemetry line, so the sentence a person is shown
-   * on failure can name the id that finds their request — which is what a
-   * support ticket needs and what a screenshot of an error never has.
-   */
-  const correlationId = crypto.randomUUID();
-  const response = await fetch(`${url.href.replace(/\/$/, '')}${path}`, {
-    method: body ? 'POST' : 'GET',
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-      'X-Correlation-Id': correlationId,
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
+  const transport: FetchLike = async (requestUrl, init) => {
+    const response = await fetch(requestUrl, {
+      ...init,
+      redirect: 'error',
+      credentials: 'omit',
+      // A fresh signal is required for each SDK retry.
+      signal: AbortSignal.timeout(25_000),
+    });
+    return {
+      status: response.status,
+      headers: response.headers,
+      json: async () => {
+        const result = await response.json();
+        if (response.ok || parseErrorEnvelope(result)) return result;
+        return normaliseGatewayErrorBody(
+          result,
+          response.headers.get('X-Correlation-Id') ?? 'correlation-unavailable',
+        );
+      },
+    };
+  };
+  const client = createClient({
+    baseUrl: url.href.replace(/\/$/, ''),
+    fetch: transport,
+    ids: systemIds,
+    rng: systemRng,
+    sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    token: async () => {
+      const session = await currentSession();
+      if (!session) throw new Error('Sign in to your school-approved Semester account first.');
+      return session.access_token;
     },
-    body: body ? JSON.stringify(body) : undefined,
-    redirect: 'error',
-    credentials: 'omit',
-    signal: AbortSignal.timeout(25_000),
   });
 
-  const result = await response.json();
-  if (!response.ok) throw gatewayError(result, response.headers.get('X-Correlation-Id') ?? correlationId);
-  return result as T;
+  try {
+    return body === undefined
+      ? await client.get<T>(path)
+      : await client.post<T>(path, body, { retryOnNetwork: options.retryOnNetwork });
+  } catch (error) {
+    if (!(error instanceof SemesterApiError)) throw error;
+    const cause: GatewayFailure = {
+      code: error.code,
+      correlationId: error.correlationId,
+      retryable: error.retryable,
+      ...(error.userAction ? { userAction: error.userAction } : {}),
+    };
+    throw new Error(error.message, { cause });
+  }
 }
 
 /** What a gateway refusal carries, for a screen that wants more than the sentence. */
@@ -131,7 +162,7 @@ export interface GatewayFailure {
   code: string;
   correlationId: string;
   retryable: boolean;
-  userAction?: { label: string; kind: string; href?: string };
+  userAction?: ErrorEnvelope['error']['user_action'];
 }
 
 /**
@@ -155,10 +186,37 @@ export function gatewayError(result: unknown, correlationId: string): Error {
     retryable: e.retryable === true,
   };
   const action = e.user_action as Record<string, unknown> | undefined;
-  if (action && typeof action.label === 'string' && typeof action.kind === 'string') {
+  if (
+    action &&
+    typeof action.label === 'string' &&
+    (action.kind === 'contact_support' ||
+      action.kind === 'external_link' ||
+      action.kind === 'open_screen' ||
+      action.kind === 'retry_later')
+  ) {
     cause.userAction = { label: action.label, kind: action.kind, ...(typeof action.href === 'string' ? { href: action.href } : {}) };
   }
   return new Error(message, { cause });
+}
+
+/**
+ * Translate the gateway's two pre-envelope refusal shapes at the migration
+ * boundary. New platform clients stay strict; an institution that has not yet
+ * upgraded its gateway still produces the same safe sentence and support id.
+ */
+export function normaliseGatewayErrorBody(result: unknown, correlationId: string): ErrorEnvelope {
+  const error = gatewayError(result, correlationId);
+  const cause = error.cause as GatewayFailure;
+  return {
+    error: {
+      code: cause.code,
+      message: error.message,
+      correlation_id: cause.correlationId,
+      retryable: cause.retryable,
+      ...(cause.userAction ? { user_action: cause.userAction } : {}),
+    },
+    message: error.message,
+  };
 }
 
 /** What the school says this account may see, per area. */
@@ -200,7 +258,7 @@ export const prepareInstitutionAction = (input: ActionInput) => gateway<Review>(
 
 /** Step two: do it, against a review the person has explicitly confirmed. */
 export const commitInstitutionAction = (reviewId: string) =>
-  gateway<Receipt>('/actions/commit', { reviewId, confirmed: true });
+  gateway<Receipt>('/actions/commit', { reviewId, confirmed: true }, { retryOnNetwork: false });
 
 /**
  * Ask again about an action whose outcome was never seen.

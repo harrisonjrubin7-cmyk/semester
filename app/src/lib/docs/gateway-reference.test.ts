@@ -75,7 +75,7 @@ const SRC = {
   entry: 'app/api/institution/[...path].ts',
   provisioning: 'packages/institution/src/provisioning.ts',
   journal: 'app/server/institution/journal.ts',
-  vercel: 'app/vercel.json',
+  vercel: 'vercel.json',
 } as const;
 
 /* ── Reading source text ─────────────────────────────────────────────────── */
@@ -911,7 +911,14 @@ async function intelligenceScenario() {
   const service = createIntelligenceService({
     status: 'configured-sandbox',
     loadPolicy: async () => ({ state: 'sandbox', permittedRoles: ['student'], allowedModes: ['explain'], allowedModels: ['openai:stub'], maxRequestCents: 5, retentionDays: 30 }),
-    loadApprovedSources: async (_i, ids) => ids.map((id) => ({ id, evidenceIds: ['e1'], body: 'Sandbox source text', origin: 'institution', policyScope: 'institution' })),
+    loadApprovedSources: async (context, _i, ids) => ids.map((id) => ({
+      id,
+      labels: {
+        tenantId: context.tenantId, purpose: 'ai_context', source: { id, kind: 'institution' },
+        freshness: { state: 'current', observedAt: '2026-10-01T00:00:00.000Z' },
+      },
+      evidenceIds: ['e1'], body: 'Sandbox source text', origin: 'institution', policyScope: 'institution',
+    })),
     modelTask: async () => ({ candidates: [{ model: 'openai:stub', provider: 'openai', estimatedCents: 1 }] }),
     generate: async (req) => ({ text: 'A stubbed answer.', citedSourceIds: req.sources.map((s) => s.id), inputTokens: 10, outputTokens: 5, providerRequestId: 'stub-1' }),
     execute: async () => ({ verified: false }),
@@ -1106,6 +1113,7 @@ describe('the route set', () => {
     '/health/live', '/health', '/health/ready', '/v1/auth/config', '/status', '/records',
     '/actions/prepare', '/actions/commit', '/actions/reconcile',
     '/v1/intelligence/policy', '/v1/intelligence/respond', '/v1/intelligence/actions/abc/confirm',
+    '/v1/registration-readiness/evaluations', '/v1/registration-readiness/evaluations/abc/evaluate',
     // decoys: near misses that must not route
     '/', '/actions', '/actions/prepare/', '/actions/cancel', '/records/1', '/status/', '/health/x', '/healthz',
     '/v1', '/v1/auth', '/v1/intelligence', '/v1/intelligence/actions', '/v1/intelligence/actions/abc',
@@ -1151,7 +1159,7 @@ describe('the route set', () => {
     const spec = openApiOperations(openApi());
     const gatewaySpec = spec.filter((r) => !r.includes(' /scim/v2/'));
     const scimSpec = spec.filter((r) => r.includes(' /scim/v2/'));
-    expect(gatewaySpec).toHaveLength(12);
+    expect(gatewaySpec).toHaveLength(14);
     expect(scimSpec).toHaveLength(15);
 
     // 1. discovered by driving the real handlers
@@ -1163,6 +1171,7 @@ describe('the route set', () => {
     const paths = new Set([...gatewaySource.matchAll(/path === '(\/[^']+)'/g)].map((m) => m[1]));
     for (const m of gatewaySource.matchAll(/const ACTIONS = \[([^\]]*)\]/g)) for (const p of m[1].matchAll(/'([^']+)'/g)) paths.add(p[1]);
     if (gatewaySource.includes('v1\\/intelligence\\/actions\\/([^/]+)\\/confirm$')) paths.add('/v1/intelligence/actions/{id}/confirm');
+    if (gatewaySource.includes('v1\\/registration-readiness\\/evaluations\\/([^/]+)\\/evaluate$')) paths.add('/v1/registration-readiness/evaluations/{id}/evaluate');
     expect([...paths].sort()).toEqual([...new Set(gatewaySpec.map((r) => r.split(' ')[1]))].sort());
 
     const scimSource = stripComments(read(SRC.scim));
@@ -1319,8 +1328,10 @@ describe('the constants a reader would copy', () => {
     const adapterMs = Number(/AbortSignal\.timeout\(([\d_]+)\)/.exec(src(SRC.gateway))?.[1].replace(/_/g, ''));
     expect(auth).toContain(`${adapterMs / 1000} seconds`);
     expect(auth).toContain(`\`${CORRELATION_ID_PATTERN.source}\``);
-    const vercel = JSON.parse(read(SRC.vercel)) as { functions: Record<string, { maxDuration: number }> };
-    expect(auth).toContain(`${vercel.functions['api/institution/[...path].ts'].maxDuration} seconds`);
+    const vercel = JSON.parse(read(SRC.vercel)) as {
+      services: { api: { functions: Record<string, { maxDuration: number }> } };
+    };
+    expect(auth).toContain(`${vercel.services.api.functions['server/institution/vercel-entrypoint.js'].maxDuration} seconds`);
     expect(/requestTimeout = ([\d_]+)/.exec(src(SRC.start))?.[1].replace(/_/g, '')).toBe('30000');
     expect(/headersTimeout = ([\d_]+)/.exec(src(SRC.start))?.[1].replace(/_/g, '')).toBe('10000');
     expect(auth).toContain('requestTimeout');
@@ -1371,9 +1382,9 @@ describe('the constants a reader would copy', () => {
   });
 
   it('records which entry point honours which switch, so the page cannot say otherwise', () => {
-    // Read-only mode, SCIM and telemetry are wired in exactly one entry point each.
+    // Read-only mode is wired in both entry points; SCIM and telemetry are production-runtime only.
     expect(src(SRC.start)).toMatch(/readOnly:/);
-    expect(src(SRC.runtime)).not.toMatch(/readOnly/);
+    expect(src(SRC.runtime)).toMatch(/readOnly:/);
     expect(src(SRC.runtime)).toMatch(/withScim\(/);
     expect(src(SRC.start)).not.toMatch(/scim/i);
     expect(src(SRC.runtime)).toMatch(/telemetry:/);
@@ -1382,10 +1393,15 @@ describe('the constants a reader would copy', () => {
     expect(src(SRC.runtime)).not.toMatch(/sandbox\.ts|sandboxAdapters|SEMESTER_SANDBOX/);
     expect(src(SRC.start)).toMatch(/sandboxAdapters\(/);
     expect(src(SRC.start)).toMatch(/\(process\.env\.SEMESTER_READ_ONLY \|\| ''\)\.trim\(\)\.toLowerCase\(\) === 'on'/);
+    expect(src(SRC.runtime)).toMatch(/\(env\.SEMESTER_READ_ONLY \|\| ''\)\.trim\(\)\.toLowerCase\(\) === 'on'/);
+    const configuration = read('docs/reference/CONFIGURATION.md');
+    expect(configuration).not.toContain('start.ts only');
+    expect(configuration).not.toContain('production runtime has no read-only switch');
+    expect(configuration).toContain('the gateway, `start.ts` and `runtime.ts`');
     expect(src(SRC.runtime)).toMatch(/refreshIdentity:/);
     expect(src(SRC.start)).toMatch(/refreshIdentity:/);
     const auth = read(PAGES.auth);
-    expect(auth).toMatch(/Read-only mode is wired only into `start\.ts`/);
+    expect(auth).toContain('Both `start.ts` and the Vercel runtime read `SEMESTER_READ_ONLY` through a callback on every request.');
     expect(read(PAGES.scim)).toMatch(/`start\.ts` does not mount SCIM/);
   });
 
@@ -1414,9 +1430,9 @@ describe('the constants a reader would copy', () => {
     const gatewaySource = src(SRC.gateway);
     const set = /const TELEMETRY_ROUTES = new Set\(\[([^\]]*)\]\)/.exec(gatewaySource)?.[1] ?? '';
     const routes = [...set.matchAll(/'([^']+)'/g)].map((m) => m[1]);
-    expect(routes).toHaveLength(11);
+    expect(routes).toHaveLength(12);
     const doc = section(read(PAGES.auth), '## Telemetry and audit');
-    for (const route of [...routes, '/v1/intelligence/actions/:id/confirm', '/unmatched']) expect(doc, route).toContain(`\`${route}\``);
+    for (const route of [...routes, '/v1/intelligence/actions/:id/confirm', '/v1/registration-readiness/evaluations/:id/evaluate', '/unmatched']) expect(doc, route).toContain(`\`${route}\``);
     const events = new Set([...gatewaySource.matchAll(/audit\(who, [^,]+, '([a-z.]+)'/g)].map((m) => m[1]));
     expect(events.size).toBe(7);
     for (const event of events) expect(doc, event).toContain(`\`${event}\``);

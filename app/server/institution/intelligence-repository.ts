@@ -12,6 +12,7 @@ import type {
   IntelligenceBudgetReservation,
   IntelligenceCourseScope,
 } from './intelligence.ts';
+import type { RequestContext } from '../../../packages/platform/src/index.ts';
 
 const STATES = new Set<IntelligenceFeatureState>(['off', 'preview', 'sandbox', 'production']);
 const MODES = new Set<IntelligenceMode>(['explain', 'hint', 'practice', 'review', 'draft']);
@@ -31,7 +32,7 @@ export interface IntelligenceRepository {
   killSwitchEngaged(identity: UniversityIdentity): Promise<boolean>;
   loadCoursePolicy(identity: UniversityIdentity, scope: IntelligenceCourseScope): Promise<CourseAgentPolicy>;
   loadPolicy(identity: UniversityIdentity): Promise<TenantIntelligencePolicy>;
-  loadApprovedSources(identity: UniversityIdentity, sourceIds: string[]): Promise<ApprovedIntelligenceSource[]>;
+  loadApprovedSources(context: RequestContext, identity: UniversityIdentity, sourceIds: string[]): Promise<ApprovedIntelligenceSource[]>;
   reserveBudget(identity: UniversityIdentity, maximumCents: number): Promise<IntelligenceBudgetReservation | null>;
   settleBudget(
     identity: UniversityIdentity,
@@ -157,7 +158,10 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
       return courseAgentPolicy(data);
     },
 
-    async loadApprovedSources(identity, sourceIds) {
+    async loadApprovedSources(context, identity, sourceIds) {
+      if (context.tenantId !== identity.institutionId || context.actor.personId !== identity.userId || context.purpose !== 'ai_context') {
+        return [];
+      }
       if (!sourceIds.length) return [];
       const uniqueIds = [...new Set(sourceIds)];
       const metadata = await client
@@ -176,21 +180,35 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
       if (payloads.error) throw new Error('Approved source content lookup failed.');
       const rows = (payloads.data ?? []) as Array<{ source_id: unknown; body: unknown; evidence_ids: unknown }>;
       const sourceMetadata = new Map((metadata.data ?? []).map((source) => [source.id, source]));
-      return rows.map((row) => ({
-        id: row.source_id as string,
-        courseId: sourceMetadata.get(row.source_id)?.course_id,
-        origin: sourceMetadata.get(row.source_id)?.origin,
-        policyScope: sourceMetadata.get(row.source_id)?.policy_scope,
-        policyCourseCode: sourceMetadata.get(row.source_id)?.policy_course_code,
-        policyTerm: sourceMetadata.get(row.source_id)?.policy_term,
-        title: sourceMetadata.get(row.source_id)?.title,
-        locator: sourceMetadata.get(row.source_id)?.citation_label,
-        verifiedAt: sourceMetadata.get(row.source_id)?.updated_at,
-        body: row.body as string,
-        evidenceIds: Array.isArray(row.evidence_ids)
-          ? row.evidence_ids.filter((id: unknown): id is string => typeof id === 'string')
-          : [],
-      }));
+      return rows.map((row) => {
+        const id = row.source_id as string;
+        const source = sourceMetadata.get(row.source_id);
+        const observedAt = typeof source?.updated_at === 'string' ? source.updated_at : null;
+        return {
+          id,
+          labels: {
+            tenantId: context.tenantId,
+            purpose: 'ai_context' as const,
+            source: { id, kind: typeof source?.origin === 'string' ? source.origin : 'approved_source' },
+            freshness: {
+              state: observedAt && Number.isFinite(Date.parse(observedAt)) ? 'current' as const : 'unknown' as const,
+              observedAt,
+            },
+          },
+          courseId: source?.course_id,
+          origin: source?.origin,
+          policyScope: source?.policy_scope,
+          policyCourseCode: source?.policy_course_code,
+          policyTerm: source?.policy_term,
+          title: source?.title,
+          locator: source?.citation_label,
+          verifiedAt: source?.updated_at,
+          body: row.body as string,
+          evidenceIds: Array.isArray(row.evidence_ids)
+            ? row.evidence_ids.filter((id: unknown): id is string => typeof id === 'string')
+            : [],
+        };
+      });
     },
 
     async reserveBudget(identity, maximumCents) {

@@ -72,6 +72,7 @@ export class ProviderHttpError extends Error {
   readonly retryAfterMs: number | undefined;
   constructor(status: number, retryAfterMs?: number) {
     super(`The provider answered ${status}`);
+    this.name = 'ProviderHttpError';
     this.status = status;
     this.retryAfterMs = retryAfterMs;
   }
@@ -87,6 +88,14 @@ export function retryAfterMs(header: string | null | undefined, now: Date): numb
   const value = header.trim();
   const ms = /^\d+$/.test(value) ? Number(value) * 1000 : Date.parse(value) - now.getTime();
   return Number.isFinite(ms) && ms > 0 ? Math.min(ms, 3_600_000) : undefined;
+}
+
+function providerHttpError(error: unknown): { status: number; retryAfterMs?: number } | null {
+  if (error instanceof ProviderHttpError) return error;
+  if (!(error instanceof Error) || error.name !== 'ProviderHttpError') return null;
+  const candidate = error as Error & { status?: unknown; retryAfterMs?: unknown };
+  if (!Number.isInteger(candidate.status) || (candidate.retryAfterMs !== undefined && typeof candidate.retryAfterMs !== 'number')) return null;
+  return candidate as Error & { status: number; retryAfterMs?: number };
 }
 
 /** The credential could not be obtained. Nothing was sent to the provider. */
@@ -149,14 +158,15 @@ export function classifyFailure(error: unknown, now: Date): Failure {
       ? { category: 'provider_unavailable', code: 'circuit_open', outcome: 'permanent_failure', retryAfterMs: wait }
       : { category: 'rate_limit', code: error.reason, outcome: 'permanent_failure', retryAfterMs: wait };
   }
-  if (error instanceof ProviderHttpError) {
-    const { status } = error;
+  const http = providerHttpError(error);
+  if (http) {
+    const { status } = http;
     if (status === 401 || status === 403) return { category: 'authentication', code: `http_${status}`, outcome: 'permanent_failure' };
     if (status === 429) {
-      return { category: 'rate_limit', code: 'http_429', outcome: 'retryable_failure', ...(error.retryAfterMs ? { retryAfterMs: error.retryAfterMs } : {}) };
+      return { category: 'rate_limit', code: 'http_429', outcome: 'retryable_failure', ...(http.retryAfterMs ? { retryAfterMs: http.retryAfterMs } : {}) };
     }
     if (status === 408 || status >= 500) {
-      return { category: 'provider_unavailable', code: `http_${status}`, outcome: 'retryable_failure', ...(error.retryAfterMs ? { retryAfterMs: error.retryAfterMs } : {}) };
+      return { category: 'provider_unavailable', code: `http_${status}`, outcome: 'retryable_failure', ...(http.retryAfterMs ? { retryAfterMs: http.retryAfterMs } : {}) };
     }
     // Any other 4xx: the provider rejected what we sent. Asking again will not change it.
     return { category: 'schema_validation', code: `http_${status}`, outcome: 'permanent_failure' };
@@ -170,6 +180,8 @@ export interface ClientDeps {
   adapter: { declaration: AdapterDeclaration; oauth?: OAuthBinding };
   tenantId: string;
   connectionPublicId: string;
+  /** Connection-scoped secret-manager pointer. Omitted only by legacy callers/tests. */
+  credentialReference?: string | null;
   guard: ConnectionGuard;
   /** Absent means no credentials can be issued; an adapter that needs one is refused. */
   credentials?: CredentialServices;
@@ -193,10 +205,16 @@ export function providerRuntime(options: { credentials?: CredentialServices } = 
       adapter: { declaration: AdapterDeclaration; oauth?: OAuthBinding };
       tenantId: string;
       connectionPublicId: string;
+      credentialReference?: string | null;
       now: () => Date;
     }): ProviderClient {
       return createProviderClient({
         adapter: context.adapter, tenantId: context.tenantId, connectionPublicId: context.connectionPublicId,
+        // Test fixtures predate connection rows carrying credential pointers.
+        // Live adapters never fall back to their registry declaration.
+        credentialReference: context.credentialReference === undefined && context.adapter.declaration.mock
+          ? context.adapter.declaration.credentialsReference
+          : context.credentialReference,
         guard: new ConnectionGuard({ perMinute: context.adapter.declaration.rateLimitPerMinute }),
         credentials: options.credentials, now: context.now,
       });
@@ -207,6 +225,9 @@ export function providerRuntime(options: { credentials?: CredentialServices } = 
 
 export function createProviderClient(deps: ClientDeps): ProviderClient {
   const { declaration: d } = deps.adapter;
+  const credentialReference = Object.prototype.hasOwnProperty.call(deps, 'credentialReference')
+    ? deps.credentialReference
+    : d.credentialsReference;
   const { tenantId, connectionPublicId: connection } = deps;
   let lease: CredentialLease | null = null;
   let manager: TokenManager | null = null;
@@ -223,7 +244,7 @@ export function createProviderClient(deps: ClientDeps): ProviderClient {
     }
     if (!deps.credentials) throw new CredentialRefused('not_configured');
     const result = await deps.credentials.broker.lease({
-      reference: d.credentialsReference as string, tenantId, connectionId: connection, purpose: 'sync',
+      reference: credentialReference as string, tenantId, connectionId: connection, purpose: 'sync',
     });
     if (!result.ok) throw new CredentialRefused(result.reason);
     lease = result.lease;
@@ -231,7 +252,8 @@ export function createProviderClient(deps: ClientDeps): ProviderClient {
   }
 
   async function authorize(): Promise<CallAuth> {
-    if (d.credentialsReference === null) return { accessToken: null, secret: null };
+    if (credentialReference === null) return { accessToken: null, secret: null };
+    if (!credentialReference) throw new CredentialRefused('not_configured');
     const held = await credential();
     if (d.authentication !== 'oauth2' && d.authentication !== 'oidc') return { accessToken: null, secret: held.reveal() };
 

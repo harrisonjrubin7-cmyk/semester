@@ -371,6 +371,7 @@ function findEventUses(files: readonly { path: string; text: string }[]): EventU
     if (/\bimplements\s+(?:OutboxStore|ReceiptLedger)\b/.test(text)) why.push('implements a store');
     if (/from\s+['"][^'"]*institution\/src\/events(?:\.ts)?['"]/.test(text) || (path.startsWith('packages/institution/src/') && /from\s+['"]\.\/events(?:\.ts)?['"]/.test(text) && !path.endsWith('/index.ts'))) why.push('imports events.ts');
     if (/insert\s+into\s+private\.domain_(?:outbox_events|event_receipts)/i.test(text)) why.push('inserts into the outbox tables');
+    if (/(?:perform|select)\s+private\.emit_domain_event\s*\(/i.test(text)) why.push('emits through the SQL helper');
     if (why.length) out.push({ file: path, why: why.join(', ') });
   }
   return out;
@@ -396,7 +397,30 @@ interface ProducerFacts {
  * and whether anything publishes what they write. Both are facts about imports
  * and calls, so they are read from the source rather than written down.
  */
-const GATEWAY_PLATFORM_IMPORTERS = ['app/server/institution/adapter.ts', 'app/server/institution/context.ts', 'app/server/institution/gateway.ts'];
+const PLATFORM_NON_EVENT_IMPORTERS = [
+  'app/server/institution/adapter.ts',
+  'app/server/institution/context.ts',
+  'app/server/institution/gateway.ts',
+  // Membership imports only the tenant ID validator before carrying the
+  // authoritative row ID into active-context selection.
+  'app/server/institution/membership.ts',
+  'app/server/institution/registration-readiness-commands.ts',
+  'app/server/institution/readiness-repository.ts',
+  // Course sources reuse only the tenant context, error envelope and file
+  // engine through the public package. The intelligence path imports only the
+  // platform retrieval/context contract. None calls event primitives or mounts
+  // the productivity producer.
+  'app/server/course-sources/contract.ts',
+  'app/server/institution/intelligence-repository.ts',
+  'app/server/institution/intelligence.ts',
+  // The integration registry imports only the Canvas adapter, and the provider
+  // client imports only the shared HTTP-error type. Neither reaches the event
+  // emitter or mounts a publisher.
+  'app/server/integration/registry.ts',
+  'app/src/lib/integration/provider-client.ts',
+  'app/server/productivity/http.ts',
+  'app/server/productivity/service.ts',
+];
 
 function producerFactsOf(uses: readonly EventUse[], files: readonly { path: string; text: string }[]): ProducerFacts {
   // A producer's root: the package (packages/x) or the server module (app/server/x) it lives in, not the folder of the file.
@@ -413,7 +437,7 @@ function producerFactsOf(uses: readonly EventUse[], files: readonly { path: stri
       if (f.path.startsWith(`${dir}/`) || !importsIt.test(f.text)) continue;
       // The institution gateway takes the error envelope, correlation ids and request context from the platform package
       // (MIGRATION phase 1). That is the package's gateway half; it does not mount the event producer.
-      if (dir === 'packages/platform' && GATEWAY_PLATFORM_IMPORTERS.includes(f.path)) continue;
+      if (dir === 'packages/platform' && PLATFORM_NON_EVENT_IMPORTERS.includes(f.path)) continue;
       mounts.add(f.path);
     }
   }
@@ -912,9 +936,9 @@ describe('EDGE-FUNCTIONS.md', () => {
   const rows = edgeRows(md);
   const dirs = functionDirs();
 
-  it('has 16 functions to be right or wrong about, and the parser reads every row (control)', () => {
-    expect(dirs).toHaveLength(16);
-    expect(rows).toHaveLength(16);
+  it('has 17 functions to be right or wrong about, and the parser reads every row (control)', () => {
+    expect(dirs).toHaveLength(17);
+    expect(rows).toHaveLength(17);
     for (const r of rows) {
       expect(r.env.length, r.fn).toBeGreaterThan(0);
       expect(r.methods.length, r.fn).toBeGreaterThan(0);
@@ -925,7 +949,7 @@ describe('EDGE-FUNCTIONS.md', () => {
     expect(diff(rows.map((r) => r.fn), dirs)).toEqual(NONE);
     const sections = [...md.matchAll(/^## `([a-z-]+)`$/gm)].map((m) => m[1]);
     expect(diff(sections, dirs)).toEqual(NONE);
-    expect(md).toContain('16 Supabase edge functions');
+    expect(md).toContain('17 Supabase edge functions');
   });
 
   it('gives every function a status word from the vocabulary', () => {
@@ -1231,7 +1255,7 @@ describe('EVENTS.md and its schemas (generated)', () => {
     const all = groups.flatMap((g) => g.types);
     expect(new Set(all).size).toBe(all.length);
     expect(diff(all, Object.keys(EVENT_TYPES))).toEqual(NONE);
-    expect(all.length).toBe(61);
+    expect(all.length).toBe(65);
   });
 
   it('every extracted rejection reason has a stated rule, and no rule is orphaned', () => {
@@ -1345,15 +1369,17 @@ describe('EVENTS.md and its schemas (generated)', () => {
     expect(findEventUses([{ path: 'a.ts', text: 'const e = makeEvent({})' }])).toHaveLength(1);
     expect(findEventUses([{ path: 'b.ts', text: "import { x } from '../../packages/institution/src/events.ts'" }])).toHaveLength(1);
     expect(findEventUses([{ path: 'c.sql', text: 'insert into private.domain_outbox_events (id) values (1)' }])).toHaveLength(1);
+    expect(findEventUses([{ path: 'producer.sql', text: 'perform private.emit_domain_event(' }])).toHaveLength(1);
     expect(findEventUses([{ path: 'd.ts', text: 'class A implements OutboxStore {}' }])).toHaveLength(1);
     expect(findEventUses([{ path: 'e.ts', text: 'the domain outbox and drainOutbox exist, and makeEvent is a function' }])).toEqual([]);
     expect(findEventUses([{ path: 'packages/institution/src/index.ts', text: "export * from './events.ts'" }])).toEqual([]);
   });
 
-  it('the repository has exactly the producers the page lists, none mounted and none published', () => {
-    // The productivity command service (PR 1175) is the one producer: it builds events, and a migration function
-    // writes them to the outbox in the command's transaction. One route imports it, switched off unless a deployment
-    // sets SEMESTER_PRODUCTIVITY=on, and nothing calls drainOutbox.
+  it('the repository has exactly the producers the page lists, mounted off by default and none published', () => {
+    // The productivity command service (PR 1175) builds events, and migration functions write those plus the
+    // feature-policy producer's bounded events to the outbox in each command's transaction. One route imports the
+    // productivity producer and the public API service composes that route; the route remains switched off unless a
+    // deployment sets SEMESTER_PRODUCTIVITY=on, and nothing calls drainOutbox.
     // When that changes this goes red, and the page's status, the event-consumer guide and the example's README
     // (all of which say "no running code writes to the outbox") are revisited in the same change.
     const uses = repoEventUses();
@@ -1368,10 +1394,27 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // the sequence prediction, so the outbox insert appears in both files. It is not a second producer.
       'supabase/migrations/20261004180000_productivity_reads.sql',
       'supabase/migrations/20261004191000_productivity_task_carries_the_apps_task.sql',
+      // Not a producer: private.emit_domain_event is the helper a SQL producer will call (backlog P1-02). Nothing calls it,
+      // so the claims above (one producer, nothing published) still hold; the page lists it because it inserts.
+      'supabase/migrations/20261008183934_emit_domain_event.sql',
+      // Not a producer: P1-03 writes only consumer receipts while settling or dead-lettering an existing event.
+      'supabase/migrations/20261008190500_projection_outbox_operations.sql',
+      // The first SQL-native caller of the helper: one feature-policy audit fact emits one bounded event.
+      'supabase/migrations/20261008193000_tenant_feature_policy_events.sql',
+      // P1-06 binds immutable tenant-rollout history to one bounded event and private projector.
+      'supabase/migrations/20261008230000_tenant_rollout_projection.sql',
+      // The service-only registration-readiness store emits the command's minimized event in the save transaction.
+      // No route or worker calls that store yet, so this is repository evidence rather than a mounted producer.
+      'supabase/migrations/20261009160000_registration_readiness_store.sql',
+      // The expansion RPC preserves the same atomic minimized outbox emission while accepting rolling clients.
+      'supabase/migrations/20261010140000_registration_readiness_timeout_contract.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);
-    expect(facts.mounts, 'something else now imports the producer').toEqual(['app/api/productivity/[...path].ts']);
+    expect(facts.mounts, 'something else now imports the producer').toEqual([
+      'app/api/productivity/[...path].ts',
+      'app/server/institution/vercel-service.ts',
+    ]);
     expect(read('app/api/productivity/[...path].ts')).toContain('if (!productivityEnabled(process.env)) throw');
     expect(facts.drainCallers, 'something now publishes the outbox').toEqual([]);
   });

@@ -6,7 +6,7 @@ Every page the documentation system governs, by audience and by kind. The curate
 
 <!-- Rendered from the cards of every governed page by app/src/lib/docs/docindex.test.ts. Edit a page’s card, then run `REGISTERS=write npx vitest run src/lib/docs/docindex.test.ts` from app/. -->
 
-**105 governed pages:** 2 generated from code, 103 held by a test, 0 reviewed by a person only. The last group is the part a reader leans on least, and the part [`docs:stale`](OWNERSHIP-AND-REVIEW.md#cadence) watches.
+**111 governed pages:** 2 generated from code, 105 held by a test, 4 reviewed by a person only. The last group is the part a reader leans on least, and the part [`docs:stale`](OWNERSHIP-AND-REVIEW.md#cadence) watches.
 
 Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed by this system and are not listed here; [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md) says which of them is authoritative for each company control.
 
@@ -104,6 +104,9 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 
 | Page | Type | Held how | Owner | Reviewed |
 | --- | --- | --- | --- | --- |
+| [Semester Education OS current-state audit](../audit/CURRENT_STATE.md) | explanation | reviewed | `engineering` | 2026-10-08 |
+| [Role and screen gap analysis](../audit/ROLE_AND_SCREEN_GAP_ANALYSIS.md) | explanation | reviewed | `product` | 2026-10-08 |
+| [System and workflow gap analysis](../audit/SYSTEM_AND_WORKFLOW_GAP_ANALYSIS.md) | explanation | reviewed | `engineering` | 2026-10-08 |
 | [Audit and data requests](../guides/institution/AUDIT-AND-DATA-REQUESTS.md) | how-to | held | `privacy` | 2026-10-04 |
 | [Change management](../guides/institution/CHANGE-MANAGEMENT.md) | how-to | held | `success` | 2026-10-04 |
 | [Configuration and approvals](../guides/institution/CONFIGURATION-AND-APPROVALS.md) | how-to | held | `product` | 2026-10-04 |
@@ -130,6 +133,8 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [Gateway error codes](../reference/ERRORS.md) | reference | held | `engineering` | 2026-10-04 |
 | [Event catalog and outbox](../reference/EVENTS.md) | reference | generated | `data` | 2026-10-04 |
 | [Reference](../reference/README.md) | reference | held | `engineering` | 2026-10-04 |
+| [Registration-readiness evaluation workflow](../reference/registration-readiness-workflow.md) | reference | held | `data` | 2026-10-10 |
+| [Semester Education OS P0–P3 implementation plan](../roadmap/P0-P3-IMPLEMENTATION_PLAN.md) | explanation | reviewed | `product` | 2026-10-08 |
 | [Example: event consumer](../../examples/event-consumer/README.md) | reference | held | `engineering` | 2026-10-04 |
 | [Example: gateway client](../../examples/gateway-client/README.md) | reference | held | `engineering` | 2026-10-04 |
 | [Reference applications](../../examples/README.md) | reference | held | `engineering` | 2026-10-04 |
@@ -160,7 +165,11 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | Page | Type | Held how | Owner | Reviewed |
 | --- | --- | --- | --- | --- |
 | [Contributing to Semester](../../CONTRIBUTING.md) | how-to | held | `engineering` | 2026-10-04 |
+| [Semester Education OS current-state audit](../audit/CURRENT_STATE.md) | explanation | reviewed | `engineering` | 2026-10-08 |
+| [Role and screen gap analysis](../audit/ROLE_AND_SCREEN_GAP_ANALYSIS.md) | explanation | reviewed | `product` | 2026-10-08 |
+| [System and workflow gap analysis](../audit/SYSTEM_AND_WORKFLOW_GAP_ANALYSIS.md) | explanation | reviewed | `engineering` | 2026-10-08 |
 | [Coding standards](../developers/CODING-STANDARDS.md) | reference | held | `engineering` | 2026-10-04 |
+| [Course Engine CI](../developers/course-engine-ci.md) | reference | held | `engineering` | 2026-10-10 |
 | [How to add a decision record](../developers/HOW-TO-ADD-A-DECISION-RECORD.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add a dependency](../developers/HOW-TO-ADD-A-DEPENDENCY.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add a route to the institution gateway](../developers/HOW-TO-ADD-A-GATEWAY-ROUTE.md) | how-to | held | `engineering` | 2026-10-04 |
@@ -169,7 +178,7 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [How to add an edge function](../developers/HOW-TO-ADD-AN-EDGE-FUNCTION.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add an event type](../developers/HOW-TO-ADD-AN-EVENT-TYPE.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to change a page that a register renders](../developers/HOW-TO-CHANGE-A-REGISTER-PAGE.md) | how-to | held | `engineering` | 2026-10-04 |
-| [How to ship a change behind a flag](../developers/HOW-TO-SHIP-BEHIND-A-FLAG.md) | how-to | held | `engineering` | 2026-10-04 |
+| [How to ship a change behind a flag](../developers/HOW-TO-SHIP-BEHIND-A-FLAG.md) | how-to | held | `engineering` | 2026-10-08 |
 | [Contributor onboarding](../developers/ONBOARDING.md) | tutorial | held | `engineering` | 2026-10-04 |
 | [Contributor documentation](../developers/README.md) | reference | held | `engineering` | 2026-10-04 |
 | [Repository map](../developers/REPO-MAP.md) | reference | held | `engineering` | 2026-10-04 |
@@ -182,6 +191,7 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [Semester documentation](../README.md) | explanation | held | `engineering` | 2026-10-04 |
 | [Change communication](../releases/CHANGE-COMMUNICATION.md) | reference | held | `success` | 2026-10-04 |
 | [Releases and change communication](../releases/README.md) | how-to | held | `success` | 2026-10-04 |
+| [Semester Education OS P0–P3 implementation plan](../roadmap/P0-P3-IMPLEMENTATION_PLAN.md) | explanation | reviewed | `product` | 2026-10-08 |
 | [Example: event consumer](../../examples/event-consumer/README.md) | reference | held | `engineering` | 2026-10-04 |
 
 ### operators
@@ -264,7 +274,7 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [How to add an edge function](../developers/HOW-TO-ADD-AN-EDGE-FUNCTION.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add an event type](../developers/HOW-TO-ADD-AN-EVENT-TYPE.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to change a page that a register renders](../developers/HOW-TO-CHANGE-A-REGISTER-PAGE.md) | how-to | held | `engineering` | 2026-10-04 |
-| [How to ship a change behind a flag](../developers/HOW-TO-SHIP-BEHIND-A-FLAG.md) | how-to | held | `engineering` | 2026-10-04 |
+| [How to ship a change behind a flag](../developers/HOW-TO-SHIP-BEHIND-A-FLAG.md) | how-to | held | `engineering` | 2026-10-08 |
 | [Testing guide](../developers/TESTING-GUIDE.md) | how-to | held | `engineering` | 2026-10-04 |
 | [Admin guide](../guides/institution/ADMIN-GUIDE.md) | how-to | held | `success` | 2026-10-04 |
 | [Audit and data requests](../guides/institution/AUDIT-AND-DATA-REQUESTS.md) | how-to | held | `privacy` | 2026-10-04 |
@@ -283,6 +293,7 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | Page | Type | Held how | Owner | Reviewed |
 | --- | --- | --- | --- | --- |
 | [Coding standards](../developers/CODING-STANDARDS.md) | reference | held | `engineering` | 2026-10-04 |
+| [Course Engine CI](../developers/course-engine-ci.md) | reference | held | `engineering` | 2026-10-10 |
 | [Contributor documentation](../developers/README.md) | reference | held | `engineering` | 2026-10-04 |
 | [Repository map](../developers/REPO-MAP.md) | reference | held | `engineering` | 2026-10-04 |
 | [Ownership, review and versioning](OWNERSHIP-AND-REVIEW.md) | reference | held | `engineering` | 2026-10-04 |
@@ -301,6 +312,7 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [Gateway error codes](../reference/ERRORS.md) | reference | held | `engineering` | 2026-10-04 |
 | [Event catalog and outbox](../reference/EVENTS.md) | reference | generated | `data` | 2026-10-04 |
 | [Reference](../reference/README.md) | reference | held | `engineering` | 2026-10-04 |
+| [Registration-readiness evaluation workflow](../reference/registration-readiness-workflow.md) | reference | held | `data` | 2026-10-10 |
 | [SCIM provisioning API](../reference/SCIM-API.md) | reference | held | `engineering` | 2026-10-04 |
 | [Change communication](../releases/CHANGE-COMMUNICATION.md) | reference | held | `success` | 2026-10-04 |
 | [Support documentation](../support/README.md) | reference | held | `success` | 2026-10-04 |
@@ -317,6 +329,9 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 
 | Page | Type | Held how | Owner | Reviewed |
 | --- | --- | --- | --- | --- |
+| [Semester Education OS current-state audit](../audit/CURRENT_STATE.md) | explanation | reviewed | `engineering` | 2026-10-08 |
+| [Role and screen gap analysis](../audit/ROLE_AND_SCREEN_GAP_ANALYSIS.md) | explanation | reviewed | `product` | 2026-10-08 |
+| [System and workflow gap analysis](../audit/SYSTEM_AND_WORKFLOW_GAP_ANALYSIS.md) | explanation | reviewed | `engineering` | 2026-10-08 |
 | [The documentation system](README.md) | explanation | held | `engineering` | 2026-10-04 |
 | [Parallel-run evidence](../guides/institution/PARALLEL-RUN-EVIDENCE.md) | explanation | held | `data` | 2026-10-04 |
 | [Guides for institutions](../guides/institution/README.md) | explanation | held | `success` | 2026-10-04 |
@@ -327,6 +342,7 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [Share with an advisor](../help/students/share-with-an-advisor.md) | explanation | held | `product` | 2026-10-04 |
 | [Share with family](../help/students/share-with-family.md) | explanation | held | `privacy` | 2026-10-04 |
 | [Semester documentation](../README.md) | explanation | held | `engineering` | 2026-10-04 |
+| [Semester Education OS P0–P3 implementation plan](../roadmap/P0-P3-IMPLEMENTATION_PLAN.md) | explanation | reviewed | `product` | 2026-10-08 |
 | [Security overview](../trust/SECURITY-OVERVIEW.md) | explanation | held | `security` | 2026-10-04 |
 
 ### runbook

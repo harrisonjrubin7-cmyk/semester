@@ -2,7 +2,7 @@
 
 **As of** 2026-10-06 · **Base** origin/main `7b524eb` · **Asks of this page** `docs/master/SEMESTER_EXECUTION_ROADMAP.md` rows 6–7, `docs/handoff/execute/08-ops-command-center.md`, and the PDFs' Phase 6 ("reconcile existing outbox and event infrastructure before adding new structures").
 
-> **Claim ceiling.** This page itself changes no migration, code, CI or setting; the first slice it proposes (§4) was then built in the same pull request, in separate files (§7). Everything under "What exists" was read from the tree or, where marked, from a read-only query of the production project (`lzrqvlug…`). The proposal is a proposal: no decision is made here, so no `D-` file is written (a decision takes its pull request's number, and this is not one).
+> **Claim ceiling.** This page changes no migration, code, CI or setting. Everything under "What exists" was read from the tree on 6 Oct or, where marked, from a read-only query of the production project (`lzrqvlug…`); main has since moved (see §7). The proposal in §4 is a proposal, and §7 records what became of it.
 
 ## 1. What exists
 
@@ -56,19 +56,19 @@ Tested the way the last slice was: a migration written and run on a throwaway Po
 
 This page wrote no migration, function or test; §7 records the slice that followed. The ADR's "no producer writes yet" sentence is stale (three producers do); it is left for whoever owns that ADR. The 17 contracts, a worker, and any producer are untouched.
 
-## 7. The first slice, built (option C chosen by the owner)
+## 7. Outcome: the registry slice was built, then withdrawn
 
-The owner chose option C. Built in the same pull request, not applied to any database:
+The owner chose option C and a first slice was built and tested on a throwaway PostgreSQL 17: a service-only registry of the operations read contracts and a `console:operate`-gated `ops_projection_dashboard()` over it. **It was never merged and nothing was applied to any database.** This pull request is documentation only.
 
-- `supabase/migrations/20261006140000_ops_contract_registry.sql`: `private.ops_contract_registry` (service-only, written by migration) with 13 rows, and `public.ops_projection_dashboard()` (`console:operate` at platform scope). Every staleness budget is null and reads "no budget set".
-- `supabase/ops-read-contracts.check.sql`: 7 checks, shown to fail against three deliberate breaks.
-- Registered in `grants.check.sql`, `app/src/lib/definerregister.ts`, `database/schema/table-classification.json` and `RETENTION.md`.
+Why it was withdrawn:
 
-**Merging the pull request applies the migration to the connected production project** (as `D-1324`'s update records for the payments migration), so it needs the owner's explicit confirmation. Questions 2 and 3 in §5 were answered by default (registry written by migration only; no budget invented); question 4 is not in this slice.
+- **The projection side landed first.** While the slice was open, main gained `20261006130000_projection_foundation.sql` (a different `private.read_model_registry`, keyed by name and version with a required freshness SLO, plus watermark, invalidation and rebuild tables), then a projector worker, outbox operations and a scoped freshness read (`20261008210000`, `20261008190500`, `20261008233000`). Main's design (`docs/ops/CQRS_READ_MODEL_ARCHITECTURE.md`, `PROJECTION_AND_CACHE_POLICY.md`) defines `ops_projection_dashboard` as a per-projection view of status, version, lag and watermarks. The withdrawn slice used the same name for a different contract.
+- **Three review findings were correct** (Codex, on the pull request): the migration version sorted before versions already applied in production, so a production push would have been refused; the registry row for `console_integration_health` omitted `integration:view`, which the function requires, and the completeness check was one-way so it could not notice; and returning `now()` as `as_of` for every live read claimed a freshness nothing measured.
 
+What a later attempt should keep from it: a live read is not a projection and should not be forced into the projection registry; a null staleness budget must read as "no budget set", never as fresh; a registry that restates a function's gate needs a check in both directions (nothing extra, nothing missing); and a new migration must sort after the newest one on main.
 
-## 8. Collision with the projection foundation, and what changed
+The real `ops_projection_dashboard` belongs on main's watermark tables. It needs its own migration and the owner's explicit confirmation before it is merged, since merging applies it to the connected production project (see `D-1324`).
 
-While this pull request was open, `20261006130000_projection_foundation.sql` (docs/ops/CQRS_READ_MODEL_ARCHITECTURE.md, backlog P1-01) landed and created its own `private.read_model_registry`, keyed by (name, version) with a required capability and a required freshness SLO. That is a registry of *projections*. This slice registers *live reads* whose budget is deliberately null, so it cannot share that table without loosening its constraints, and `create table if not exists` would have skipped silently and then failed on the first insert.
+## 8. Not done by this page
 
-So this slice's table is `private.ops_contract_registry`, and its migration is `20261006140000_ops_contract_registry.sql`. The projection registry stays the one place a projection is declared; when a contract moves from live read to projection, its row moves there. Nothing here reads or writes the projection tables.
+This page wrote no migration, function or test. The ADR's "no producer writes yet" sentence (0008) is stale and is left for whoever owns that ADR.

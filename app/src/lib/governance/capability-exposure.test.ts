@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DESTINATIONS, offered } from '../nav';
 import { NO_SCHOOL } from '../school';
@@ -11,6 +13,7 @@ import {
   resolveCapabilityExposure,
   validateCapabilityExposureIndex,
   type CapabilityExposureContext,
+  type CapabilityExposureIndexEntry,
 } from './capability-exposure';
 import type { ReleaseProfileDecision, ReleaseTarget } from './release-profiles';
 
@@ -37,6 +40,8 @@ const connectedTarget: ReleaseTarget = {
   dataMode: 'connected',
 };
 
+const root = join(import.meta.dirname, '../../../..');
+
 const release = (
   overrides: Partial<ReleaseProfileDecision> = {},
   target: ReleaseTarget = productionTarget,
@@ -48,6 +53,7 @@ const release = (
   missingTechnical: [],
   missingActivation: [],
   missingDependencies: [],
+  missingPrerequisites: [],
   targetBound: true,
   launchVerdict: 'go',
   launchConditions: [],
@@ -77,9 +83,22 @@ describe('capability exposure resolver', () => {
     expect(ROUTE_EXPOSURE_INDEX.map((item) => item.route)).toEqual(DESTINATIONS.map((item) => item.screen));
     expect(ROUTE_EXPOSURE_INDEX.every((item) => item.capabilityIds.length > 0)).toBe(true);
     expect(CAPABILITY_EXPOSURE_STATES).toEqual([
-      'live', 'connected', 'pilot', 'early_access', 'institution_controlled', 'hidden', 'retired',
+      'live', 'connected', 'pilot', 'early_access', 'institution_controlled', 'planned_but_not_exposed',
     ]);
     for (const item of CAPABILITY_EXPOSURE_INDEX) {
+      expect(item.coreEntities.length).toBeGreaterThan(0);
+      expect(item.audiences).toContain('student');
+      expect(item.productMaturity).toMatch(/^L[0-9]$/);
+      expect(item.permittedExposureStates).toBe(CAPABILITY_EXPOSURE_STATES);
+      expect(item.valueMeasures.map((measure) => measure.id)).toEqual([
+        'successful-task-completion', 'fallback-use', 'support-burden',
+      ]);
+      expect(item.valueMeasures.every(Object.isFrozen)).toBe(true);
+      expect(item.valueMeasures.every((measure) =>
+        measure.collection === 'device-local-or-approved-aggregate' &&
+        measure.evidenceStatus === 'measurement-requirement-not-live-result')).toBe(true);
+      const capability = CAPABILITY_DEFINITIONS.find(({ id }) => id === item.capabilityId)!;
+      expect(item.valueMeasures[0]?.definition).toContain(capability.acceptance.join(' '));
       expect(item.requiredOperationalChecks).toEqual(OPERATIONAL_READINESS_CHECKS);
       expect(item.dataAuthorities.length).toBeGreaterThan(0);
       expect(item.securityClassifications.length).toBeGreaterThan(0);
@@ -88,8 +107,167 @@ describe('capability exposure resolver', () => {
       expect(item.rollback.trim()).not.toBe('');
       expect(item.evidenceRefs.length).toBeGreaterThan(0);
       expect(item.platforms).toEqual(['web', 'pwa']);
-      expect(item.nativeMobile).toBe('hidden');
+      expect(item.nativeMobile).toBe('planned_but_not_exposed');
+      expect(item.mobileExperience).toMatchObject({
+        current: 'responsive-web-and-pwa',
+        native: 'planned_but_not_exposed',
+      });
+      expect(item.mobileExperience.acceptance.trim()).not.toBe('');
+      expect(item.operations.supportOwner).toBe(item.supportOwner);
+      expect(item.operations.auditOwner).toBe('privacy');
+      expect(item.operations.incidentOwner).toBe('operations');
+      for (const reference of [item.operations.audit, item.operations.support, item.operations.incident]) {
+        expect(existsSync(join(root, reference))).toBe(true);
+      }
     }
+  });
+
+  it('derives governed audiences without turning every capability into a family, partner, or institutional surface', () => {
+    const entry = (id: string) => CAPABILITY_EXPOSURE_INDEX.find((item) => item.capabilityId === id)!;
+    expect(entry('CAP-001').audiences).toEqual(['student']);
+    expect(entry('CAP-013').audiences).toEqual(['student', 'institution', 'operator', 'partner']);
+    expect(entry('CAP-027').audiences).toEqual(['student', 'institution', 'operator']);
+    expect(entry('CAP-041').audiences).toEqual(['student', 'family', 'institution', 'operator']);
+  });
+
+  it('rejects an incomplete operating contract instead of silently publishing it', () => {
+    const incomplete: CapabilityExposureIndexEntry = {
+      ...CAPABILITY_EXPOSURE_INDEX[0]!,
+      audiences: [],
+      valueMeasures: [],
+    };
+    const mutated = [incomplete, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toEqual(expect.arrayContaining([
+      `Missing audiences: ${incomplete.capabilityId}.`,
+      `Incomplete value measures: ${incomplete.capabilityId}.`,
+    ]));
+  });
+
+  it('rejects duplicate value-measure identities even when three definitions are present', () => {
+    const original = CAPABILITY_EXPOSURE_INDEX[0]!;
+    const duplicated: CapabilityExposureIndexEntry = {
+      ...original,
+      valueMeasures: original.valueMeasures.map((measure) => ({
+        ...measure,
+        id: 'support-burden',
+      })),
+    };
+    const mutated = [duplicated, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toContain(
+      `Incomplete value measures: ${duplicated.capabilityId}.`,
+    );
+  });
+
+  it('rejects an incomplete audience set derived from the canonical capability', () => {
+    const family = CAPABILITY_EXPOSURE_INDEX.find((item) => item.capabilityId === 'CAP-041')!;
+    const incomplete: CapabilityExposureIndexEntry = { ...family, audiences: ['student'] };
+    const mutated = CAPABILITY_EXPOSURE_INDEX.map((item) => item.capabilityId === family.capabilityId ? incomplete : item);
+    expect(validateCapabilityExposureIndex(mutated)).toContain(`Invalid audiences: ${family.capabilityId}.`);
+  });
+
+  it('accepts the exposure-state vocabulary by value after serialization', () => {
+    const cloned = CAPABILITY_EXPOSURE_INDEX.map((item) => ({
+      ...item,
+      permittedExposureStates: [...item.permittedExposureStates] as typeof CAPABILITY_EXPOSURE_STATES,
+    }));
+    expect(validateCapabilityExposureIndex(cloned)).toEqual([]);
+  });
+
+  it('rejects an audit owner outside the canonical accountability seats', () => {
+    const original = CAPABILITY_EXPOSURE_INDEX[0]!;
+    const invalid: CapabilityExposureIndexEntry = {
+      ...original,
+      operations: {
+        ...original.operations,
+        auditOwner: 'privacy-security' as CapabilityExposureIndexEntry['operations']['auditOwner'],
+      },
+    };
+    const mutated = [invalid, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toContain(`Invalid audit owner: ${invalid.capabilityId}.`);
+  });
+
+  it('rejects derived summaries that contradict the canonical governed entities', () => {
+    const original = CAPABILITY_EXPOSURE_INDEX[0]!;
+    const invalid: CapabilityExposureIndexEntry = {
+      ...original,
+      dataAuthorities: [],
+      securityClassifications: [],
+    };
+    const mutated = [invalid, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toEqual(expect.arrayContaining([
+      `Invalid data authorities: ${invalid.capabilityId}.`,
+      `Invalid security classifications: ${invalid.capabilityId}.`,
+    ]));
+  });
+
+  it('rejects product accountability or release controls that differ from the canonical contract', () => {
+    const original = CAPABILITY_EXPOSURE_INDEX[0]!;
+    const invalid: CapabilityExposureIndexEntry = {
+      ...original,
+      productOwner: 'unregistered-owner',
+      entitlement: 'not-canonical' as CapabilityExposureIndexEntry['entitlement'],
+      evidenceExpiry: 'not-canonical' as CapabilityExposureIndexEntry['evidenceExpiry'],
+    };
+    const mutated = [invalid, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toEqual(expect.arrayContaining([
+      `Invalid product owner: ${invalid.capabilityId}.`,
+      `Invalid entitlement: ${invalid.capabilityId}.`,
+      `Invalid evidence expiry: ${invalid.capabilityId}.`,
+    ]));
+  });
+
+  it('rejects value-measure definitions copied from another capability', () => {
+    const original = CAPABILITY_EXPOSURE_INDEX[0]!;
+    const other = CAPABILITY_EXPOSURE_INDEX[1]!;
+    const invalid: CapabilityExposureIndexEntry = { ...original, valueMeasures: other.valueMeasures };
+    const mutated = [invalid, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toContain(
+      `Invalid value measure definitions: ${invalid.capabilityId}.`,
+    );
+  });
+
+  it('rejects a noncanonical incident owner', () => {
+    const original = CAPABILITY_EXPOSURE_INDEX[0]!;
+    const invalid: CapabilityExposureIndexEntry = {
+      ...original,
+      operations: {
+        ...original.operations,
+        incidentOwner: 'privacy' as CapabilityExposureIndexEntry['operations']['incidentOwner'],
+      },
+    };
+    const mutated = [invalid, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toContain(`Invalid incident owner: ${invalid.capabilityId}.`);
+  });
+
+  it('rejects drift across the remaining canonical contract fields', () => {
+    const original = CAPABILITY_EXPOSURE_INDEX[0]!;
+    const invalid: CapabilityExposureIndexEntry = {
+      ...original,
+      routes: [],
+      coreEntities: original.coreEntities.map((entity, index) => index === 0
+        ? { ...entity, retention: 'different retention' }
+        : entity),
+      productMaturity: 'L9',
+      profileIds: [],
+      requiredOperationalChecks: [...OPERATIONAL_READINESS_CHECKS].reverse() as unknown as typeof OPERATIONAL_READINESS_CHECKS,
+      supportOwner: 'operations',
+      rollback: 'different fallback',
+      evidenceRefs: [],
+      platforms: ['pwa', 'web'] as unknown as CapabilityExposureIndexEntry['platforms'],
+      mobileExperience: { ...original.mobileExperience, acceptance: 'different acceptance' },
+    };
+    const mutated = [invalid, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toEqual(expect.arrayContaining([
+      `Invalid routes: ${invalid.capabilityId}.`,
+      `Invalid core entities: ${invalid.capabilityId}.`,
+      `Invalid product maturity: ${invalid.capabilityId}.`,
+      `Invalid release profiles: ${invalid.capabilityId}.`,
+      `Invalid operational checks: ${invalid.capabilityId}.`,
+      `Invalid support owner: ${invalid.capabilityId}.`,
+      `Invalid fallback: ${invalid.capabilityId}.`,
+      `Invalid evidence refs: ${invalid.capabilityId}.`,
+      `Invalid mobile posture: ${invalid.capabilityId}.`,
+    ]));
   });
 
   it('authorizes live only for an exact production release of an included standard capability', () => {
@@ -159,25 +337,25 @@ describe('capability exposure resolver', () => {
   it('fails closed for mismatched profiles, missing scope, unhealthy connections and kill switches', () => {
     expect(resolveCapabilityExposure('CAP-001', context({
       release: release({ profileId: 'institutional-pilot' }),
-    })).status).toBe('hidden');
+    })).status).toBe('planned_but_not_exposed');
     expect(resolveCapabilityExposure('CAP-044', context({
       profileId: 'broad-enterprise-sale',
       release: release({ profileId: 'broad-enterprise-sale' }, connectedTarget),
       target: connectedTarget,
       connectionHealthy: false,
     })).status).toBe('institution_controlled');
-    expect(resolveCapabilityExposure('CAP-001', context({ cohortAuthorized: false })).status).toBe('hidden');
+    expect(resolveCapabilityExposure('CAP-001', context({ cohortAuthorized: false })).status).toBe('planned_but_not_exposed');
     expect(resolveCapabilityExposure('CAP-001', context({
       target: { ...productionTarget, configurationVersion: 'different' },
-    }))).toMatchObject({ status: 'hidden', reason: 'release-target-mismatch' });
+    }))).toMatchObject({ status: 'planned_but_not_exposed', reason: 'release-target-mismatch' });
     expect(resolveCapabilityExposure('CAP-001', context({ killSwitchActive: true }))).toMatchObject({
-      status: 'hidden', visible: false, reason: 'kill-switch-active',
+      status: 'planned_but_not_exposed', visible: false, reason: 'kill-switch-active',
     });
     expect(resolveCapabilityExposure('CAP-999', context())).toMatchObject({
-      status: 'hidden', visible: false, reason: 'unknown-capability',
+      status: 'planned_but_not_exposed', visible: false, reason: 'unknown-capability',
     });
     expect(resolveCapabilityExposure('CAP-001', context({ retired: true }))).toMatchObject({
-      status: 'retired', visible: false, reason: 'capability-retired',
+      status: 'planned_but_not_exposed', visible: false, reason: 'capability-retired',
     });
   });
 

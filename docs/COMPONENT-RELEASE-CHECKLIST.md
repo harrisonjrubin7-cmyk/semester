@@ -19,8 +19,8 @@ landed, stop, and check whether the landed version left a guard unwritten.
 ## The gates
 
 Every command runs from `app/`. The repository root `package.json` is the npm
-workspace manifest (`app/` and `packages/*`, one lockfile) and defines none of
-these scripts, so `npm test` there fails with "Missing script" instead of
+workspace manifest (`app/` and `packages/*`, one lockfile) and defines only
+platform-control orchestration scripts, so `npm test` there fails with "Missing script" instead of
 running the suite. Install from the root with `npm ci`.
 
 ```bash

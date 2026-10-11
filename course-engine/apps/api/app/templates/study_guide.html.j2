@@ -1,0 +1,9 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{{ title }}</title>
+<style>
+@page { size: Letter; margin: .75in .7in .8in; @top-right { content: "COURSE ENGINE"; color:#a88c55; font:700 8pt sans-serif } @bottom-right { content:"Page " counter(page) " of " counter(pages); color:#666; font:8pt sans-serif } }
+@page:first { @top-right { content:none } @bottom-right { content:none } }
+body{font:11pt/1.55 Georgia,serif;color:#202329} h1,h2,h3{font-family:Arial,sans-serif;break-after:avoid} .cover{min-height:8in;display:flex;flex-direction:column;justify-content:center;break-after:page} .cover p{color:#a88c55;letter-spacing:.16em;font:700 9pt sans-serif}.toc{break-after:page}.section{margin-bottom:.25in}.source{border-left:3px solid #b99b61;padding-left:.12in;color:#62666e;font:8pt sans-serif;break-inside:avoid} table{width:100%;border-collapse:collapse}thead{display:table-header-group}th,td{border:1px solid #ddd;padding:7px;text-align:left}tr{break-inside:avoid}
+</style></head><body><section class="cover"><p>VERIFIED COURSE MATERIAL</p><h1>{{ title }}</h1><h2>Source-linked study guide</h2></section>
+<nav class="toc"><h2>Contents</h2><ol>{% for section in content.sections %}<li><a href="#s{{loop.index}}">{{section.heading}}</a></li>{% endfor %}</ol></nav>
+{% for section in content.sections %}<section class="section" id="s{{loop.index}}"><h2>{{section.heading}}</h2><p>{{section.explanation}}</p>{% if section.key_points %}<h3>Key points</h3><ul>{% for p in section.key_points %}<li>{{p}}</li>{% endfor %}</ul>{% endif %}<div class="source"><strong>Sources</strong><ul>{% for cid in section.citation_ids %}<li>{{citations.get(cid|string, {}).get('label', cid)}}</li>{% endfor %}</ul></div></section>{% endfor %}
+</body></html>

@@ -1,0 +1,21 @@
+<!-- @dsCard group="Components" viewport="760x380" name="Data — connection & readiness state" subtitle="ConnectionState, ConnectionLine; ReadinessState: ready as of, blocked, review required, unknown, stale, with an office, done" -->
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{padding:24px;background:var(--surface-canvas);font-family:var(--font-body);color:var(--text-primary)}.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);margin:0 0 8px}</style></head><body><div id="root"></div>
+<script type="text/babel">
+const N0 = window.SemesterDesignSystem_e9f3ba; const CX = { confirmed: ['✓', 'Confirmed'], pending: ['…', 'Pending confirmation'], updating: ['↻', 'Updating'], stale: ['◷', 'Source stale'], blocked: ['⊘', 'Action blocked'], degraded: ['!', 'Connection degraded'], reconcile: ['⇄', 'Reconciliation required'], resolved: ['✓', 'Resolved'] };
+const LS = ({ state = 'confirmed', label, detail, source }) => { const [g, w] = CX[state]; return <span className="cxs" data-state={state}><span aria-hidden="true">{g}</span><span>{label || w}</span>{(detail || source) && <span className="gov-sub">{[detail, source].filter(Boolean).join(' · ')}</span>}</span>; };
+const RSM = { ready_as_of: ['✓', 'Ready'], blocked: ['⊘', 'Blocked'], review_required: ['?', 'Review required'], unknown: ['◌', 'Unknown'], stale: ['◷', 'Out of date'], handoff_pending: ['⇄', 'With an office'], action_completed: ['✓', 'Done'] };
+const LR = ({ state, label, asOf, source }) => { const [g, w] = RSM[state]; const sub = [state === 'ready_as_of' && asOf ? 'as of ' + asOf : asOf, source].filter(Boolean).join(' · '); return <span className="rds" data-state={state}><span aria-hidden="true">{g}</span><span>{label || w}</span>{sub && <span className="gov-sub">{sub}</span>}</span>; };
+const N = { ReadinessState: N0.ReadinessState || LR, ConnectionState: N0.ConnectionState || LS, ConnectionLine: N0.ConnectionLine || (({ items }) => <span className="cxl">{items.map((it, i) => <LS key={i} {...it} />)}</span>) };
+function Demo(){return <div style={{display:'grid',gap:20}}>
+<div><p className="lbl">States</p><div className="row">{['confirmed','pending','updating','stale','blocked','degraded','reconcile','resolved'].map(s=><N.ConnectionState key={s} state={s}/>)}</div></div>
+<div><p className="lbl">With detail</p><div className="row"><N.ConnectionState state="stale" detail="6 h behind" source="StarRez"/><N.ConnectionState state="degraded" label="Ask Semester unavailable" detail="planning still works"/><N.ConnectionState state="pending" label="Payment pending" detail="reconciling before retry"/></div></div>
+<div><p className="lbl">Readiness outcomes · ReadinessState</p><div className="row">{['ready_as_of','blocked','review_required','unknown','stale','handoff_pending','action_completed'].map(s=><N.ReadinessState key={s} state={s} asOf={s==='ready_as_of'?'9:14 am':undefined}/>)}</div></div>
+<div><p className="lbl">Paired fact · ConnectionLine</p><N.ConnectionLine items={[{state:'confirmed',label:'Enrollment confirmed'},{state:'updating',label:'Schedule updating'}]}/></div>
+</div>}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script></body></html>

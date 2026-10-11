@@ -2,7 +2,7 @@
 
 # Service catalog (generated)
 
-69 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
+72 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
 
 | Id | Name | Kind | Class | Role | Journeys | Depends on | Kill switch | Runbook |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -31,6 +31,7 @@
 | `fn:push` | Web Push sender | edge_function | C1 | platform | — | `supabase-edge-runtime`, `supabase-db`, `web-push`, `queue:push_queue` | — | RB-07 |
 | `fn:support-reply-notify` | Support reply email | edge_function | C2 | support | — | `supabase-edge-runtime`, `supabase-db`, `resend`, `queue:support_notification_outbox` | — | RB-07 |
 | `fn:integration-tick` | Integration sync tick | edge_function | C2 | integrations | — | `supabase-edge-runtime`, `supabase-db` | `kill.integration_sync` | RB-14 |
+| `fn:ops-projector` | Operations projector batch | edge_function | C3 | data | — | `supabase-edge-runtime`, `supabase-db` | — | RB-10 |
 | `fn:lead-intake` | Company-site lead intake | edge_function | C3 | support | — | `supabase-edge-runtime`, `supabase-db` | — | RB-04 |
 | `fn:trust-room` | Procurement trust-room links | edge_function | C3 | security | — | `supabase-edge-runtime`, `supabase-db` | — | RB-04 |
 | `fn:delete-account` | Account erasure | edge_function | C0 | data | privacy_request_intake | `supabase-edge-runtime`, `supabase-db`, `supabase-auth` | — | RB-04 |
@@ -41,6 +42,7 @@
 | `queue:community_escalation_deliveries` | Community escalation deliveries | queue | C2 | support | — | `supabase-db` | — | RB-07 |
 | `job:push` | Send due reminders (every 15 min) | job | C1 | platform | — | `fn:push` | — | RB-10 |
 | `job:support-reply-notify` | Drain support outbox (every minute) | job | C2 | support | — | `fn:support-reply-notify` | — | RB-10 |
+| `job:support-ticket-retention` | Purge eligible support tickets (daily) | job | C1 | support | — | `supabase-db` | — | RB-10 |
 | `job:escalation-delivery` | Community escalation delivery (parked) | job | C2 | support | — | `queue:community_escalation_deliveries` | — | RB-10 |
 | `job:media-scan` | Community media scan (parked) | job | C2 | security | — | `supabase-db` | — | RB-10 |
 | `job:integration-sync` | Integration tick (four times an hour) | job | C2 | integrations | — | `fn:integration-tick` | `kill.integration_sync` | RB-10 |
@@ -62,6 +64,7 @@
 | `job:commercial-financial-retention` | Financial retention (monthly) | job | C2 | billing | — | `supabase-db` | — | RB-10 |
 | `job:account-health` | Compute account health (daily) | job | C3 | support | — | `supabase-db` | — | RB-10 |
 | `pipeline:ci` | CI (the merge gate) | pipeline | C2 | platform | — | `github-pages` | — | RB-08 |
+| `pipeline:course-engine` | Course Engine source gate | pipeline | C3 | platform | — | — | — | RB-08 |
 | `pipeline:pages` | Deploy to Pages | pipeline | C2 | platform | — | `github-pages` | — | RB-08 |
 | `pipeline:functions` | Deploy Edge Functions | pipeline | C2 | platform | — | `supabase-edge-runtime` | — | RB-08 |
 | `pipeline:schema-deploy` | Schema deploy (Supabase Branching, db push) | pipeline | C1 | data | — | `supabase-db` | — | RB-09 |

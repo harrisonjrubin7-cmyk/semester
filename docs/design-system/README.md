@@ -17,6 +17,14 @@
 - [COMPONENT-SPEC-MATRIX.md](COMPONENT-SPEC-MATRIX.md) — the 12 fields (purpose, variants, tokens, accessibility, responsive, five states, analytics event, test) for every component.
 - [SCREEN-PACKS.md](SCREEN-PACKS.md) — the 18 named screens against the seven questions, with app and prototype locations.
 - [HANDOFF-INTEGRATION-CROSSWALK.md](HANDOFF-INTEGRATION-CROSSWALK.md) — the design export mapped onto this repository. A merged decision is kept; the free-text scanner is not built.
+- [REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md](REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md) — all 122 mounted-archive capability rows dispositioned against current permission, tenant, data, operation, recovery and test authorities.
+- [REFERENCE-PROTOTYPE-ROUTE-RECONCILIATION.md](REFERENCE-PROTOTYPE-ROUTE-RECONCILIATION.md) — all 281 archive prototype routes mapped to current screens, navigation, catalog/capability evidence and one bounded disposition.
+- [REFERENCE-CATALOG-SCREEN-RECONCILIATION.md](REFERENCE-CATALOG-SCREEN-RECONCILIATION.md) — all 673 archive catalog rows reconciled to the exact 589-row repository baseline and 84 workflow-step aliases.
+- [REFERENCE-WORKFLOW-RECONCILIATION.md](REFERENCE-WORKFLOW-RECONCILIATION.md) — all 319 canonical workflow steps reconciled to the exact repository workflow audit and the 84 non-independent screen aliases.
+- [REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md](REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md) — all 49 archive roles, 88 systems and 82 documents mapped to current authorities, dependencies and release boundaries.
+- [REFERENCE-EXECUTION-STREAM-RECONCILIATION.md](REFERENCE-EXECUTION-STREAM-RECONCILIATION.md) — the remaining novel bundles in streams 00–30 mapped into the current phases, dispositions and cross-stream dependency order.
+- [REFERENCE-COURSE-ENGINE-RECONCILIATION.md](REFERENCE-COURSE-ENGINE-RECONCILIATION.md) — the separately landed Course Engine MVP mapped to current Course Studio/import/study authorities without adopting its second app, auth, schema or infrastructure.
+- [HANDOFF-INTEGRATION-STATUS.md](HANDOFF-INTEGRATION-STATUS.md) — resumable automation status, open gates and the next dependency-ready reconciliation slice.
 
 ## Skills
 - `/build-semester-ui <screen> [figma-url]` — build or change UI from existing primitives.

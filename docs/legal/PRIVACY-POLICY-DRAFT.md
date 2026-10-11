@@ -134,10 +134,15 @@ this policy continues to apply to it. [DECIDE with counsel.]
 
 ## 6. How long we keep it
 
-Until you delete it. Your work is not removed on a schedule. The exceptions
-are records *about* your use: the log of who read your rows (ninety days) and
-the daily usage facts (a little over a year). Queued reminders are deleted
-once sent. For school deployments, retention follows the school's contract.
+Your courses, deadlines, notes, plans and other study work stay until you
+delete them. Individual-beta support questions not associated with a school
+deployment are the one content exception: resolved or closed tickets and their
+replies are deleted 180 days after the last activity, unless a legal hold
+requires preservation. Records *about* your use also age out: the log of who
+read your rows (ninety days) and the daily usage facts (a little over a year).
+Queued reminders are deleted once sent. For school deployments, retention
+follows the school's contract; no automatic ticket purge runs until that rule
+is configured.
 
 Our hosting provider backs up the whole database daily, and each backup
 expires 7 days after it is taken [VERIFY on the provider dashboard before

@@ -243,6 +243,26 @@ describe('privacy request workspace', () => {
     expect(status).toHaveBeenCalledWith(expect.stringContaining('execution remains separate'));
   });
 
+  it.each(['pending', 'approved', 'executed'] as const)('does not duplicate a %s deletion approval', async (approvalStatus) => {
+    await draw([request({
+      assignedTo: 'op-1', assignedToMe: true, status: 'in_progress', identityState: 'verified',
+      deletionApprovalId: 'approval-1', deletionApprovalStatus: approvalStatus,
+    })]);
+    await press('Open case');
+    await press('View request detail');
+    expect(host.querySelector('form[aria-label="Deletion approval DSR-1234567890"]')).toBeNull();
+  });
+
+  it.each(['rejected', 'expired'] as const)('allows a replacement after a %s deletion approval', async (approvalStatus) => {
+    await draw([request({
+      assignedTo: 'op-1', assignedToMe: true, status: 'in_progress', identityState: 'verified',
+      deletionApprovalId: 'approval-1', deletionApprovalStatus: approvalStatus,
+    })]);
+    await press('Open case');
+    await press('View request detail');
+    expect(host.querySelector('form[aria-label="Deletion approval DSR-1234567890"]')).not.toBeNull();
+  });
+
   it('rejects invalid deletion-ticket characters before submission', async () => {
     await draw([request({
       assignedTo: 'op-1', assignedToMe: true, status: 'in_progress', identityState: 'verified',

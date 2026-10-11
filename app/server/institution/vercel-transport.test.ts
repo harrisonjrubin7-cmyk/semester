@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { serveInstitutionRequest } from '../../api/institution/[...path].ts';
+import institution, { serveInstitutionRequest } from '../../api/institution/[...path].ts';
 import { MAX_BODY } from './gateway.ts';
 
 function request(url: string, body = '', method = body ? 'POST' : 'GET'): IncomingMessage {
@@ -29,6 +29,23 @@ function response() {
 }
 
 describe('Vercel institution transport', () => {
+  it('returns structured 503 JSON instead of 404 or app HTML when unconfigured', async () => {
+    vi.stubEnv('SEMESTER_AUTH_URL', '');
+    vi.stubEnv('SEMESTER_AUTH_PUBLIC_KEY', '');
+    vi.stubEnv('SEMESTER_AUTH_SERVICE_KEY', '');
+    vi.stubEnv('SEMESTER_JOURNAL_KEY', '');
+    vi.stubEnv('SEMESTER_APP_ORIGIN', '');
+    const { res, state } = response();
+
+    await institution(request('/api/institution/health'), res);
+
+    expect(state.status).toBe(503);
+    expect(state.headers['Content-Type']).toBe('application/json');
+    expect(() => JSON.parse(state.body.toString())).not.toThrow();
+    expect(state.body.toString()).not.toContain('<html');
+    vi.unstubAllEnvs();
+  });
+
   it('strips only the deployment prefix and preserves query, method and headers', async () => {
     const seen: Request[] = [];
     const { res, state } = response();

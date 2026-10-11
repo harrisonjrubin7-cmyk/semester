@@ -18,6 +18,7 @@ reading:
     canvas            ACTIVE, v230, verify_jwt off  platform
     lti               ACTIVE, v232, verify_jwt off  platform
     integration-tick  ACTIVE, v88, verify_jwt off   platform
+    ops-projector     PENDING, dormant until its dedicated secret is provisioned; no scheduler entry
     trust-room        ACTIVE, v95, verify_jwt off   platform
     delete-account    ACTIVE, v72, verify_jwt off   platform
     billing-cancel    ACTIVE, v2, verify_jwt off    platform
@@ -25,9 +26,21 @@ reading:
     billing-portal    PENDING THIS GATED RELEASE, verify_jwt off
     billing-webhook   ACTIVE, v32, verify_jwt off   platform
     lead-intake       ACTIVE, v32, verify_jwt off   platform
-    support-reply-notify PENDING, live evidence absent; merge/deploy, activate the `support-reply-notify` scheduler job, and receipt UAT required
+    support-reply-notify ACTIVE, v5, verify_jwt off, delivery PARKED by SUPPORT_NOTIFY_VENDOR_APPROVED and SUPPORT_NOTIFY_ACTIVATED_AT pending Resend vendor approval and executed terms/DPA; provider acceptance was reached in the 3 October 2026 UAT, but that historical exercise is not current activation and Outlook inbox receipt remains pending. A future approved release must record a fresh UTC activation instant so parked-period intents are cancelled rather than delivered as backlog
+
+The same release defines `support-ticket-retention`, daily at 05:43 UTC, to
+remove resolved or closed tickets after 180 days unless a legal hold applies.
+The migration installs and explicitly activates that credential-free job when
+pg_cron is present. It is not listed as live until a post-deploy read of
+`cron.job` and its first successful execution are recorded.
 
     productivity-sourcecheck ACTIVE, v2, verify_jwt off   manual (first deploy)
+
+`ops-projector` is source-complete but not activated or deployed by this local
+slice. On a future merge the function remains dormant until an operator sets a
+dedicated `OPS_PROJECTOR_SECRET`; there is no `scheduler.sql` entry. A valid
+manual POST runs one service-role-only database batch capped at 25 matching
+events. Retention sweeps and scheduler activation are later release gates.
 
 The new source-check function was deployed through the authenticated Management API on 1 October 2026; its initial entrypoint is `/tmp/user_fn_.../source/productivity-sourcecheck/index.ts`. This is recorded as `manual` provenance in the snapshot, awaiting the first platform deploy after merge. Every POST verifies the user's JWT with `auth.getUser`; OPTIONS carries no token. It reports public page availability and exact-excerpt presence, caps redirects, bytes and time, and rejects private DNS addresses. `PRODUCTIVITY_SOURCE_HOSTS` adds approved exact hosts outside .edu. It does not store or log source URLs/page bodies.
 

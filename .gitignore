@@ -8,6 +8,9 @@ node_modules/
 .vite/
 .ui-review/
 
+# Runner-mounted design reference. It is untrusted evidence, not repository source.
+.semester-reference/
+
 # Python, for the pipeline.
 __pycache__/
 *.pyc

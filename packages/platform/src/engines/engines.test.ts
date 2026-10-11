@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ASSESSMENT_SUBMISSION_STATES } from '../../../institution/src/index.ts';
+import { ASSESSMENT_SUBMISSION_STATES, UNIVERSITY_ROLES } from '../../../institution/src/index.ts';
 import { fixedClock, sequenceRng } from '../kernel/clock.ts';
 import { PlatformError } from '../gateway/errors.ts';
 import { TENANT_A, TENANT_B, harness } from '../testing/memory.ts';
@@ -285,9 +285,21 @@ describe('files', () => {
 
 describe('search', () => {
   const doc = (over: Partial<Parameters<MemorySearchIndex['index']>[0]> = {}) => ({
-    id: 'd1', tenantId: TENANT_A, kind: 'note', classification: 'student_private' as const, title: 'Macroeconomics grade appeal', excerpt: 'notes on the midterm', acl: ['person:stu'], ...over,
+    id: 'd1', tenantId: TENANT_A, kind: 'note', classification: 'student_private' as const,
+    title: 'Macroeconomics grade appeal', excerpt: 'notes on the midterm', acl: ['person:stu'],
+    purposes: ['search', 'ai_context'] as const, roles: [] as string[],
+    source: { id: 'source-d1', kind: 'student_entered' },
+    freshness: { state: 'current' as const, observedAt: '2026-10-04T12:00:00.000Z' },
+    ...over,
   });
-  const scope = (tenant: string, person: string, acl: string[] = [], includeRecords = false) => scopeFor(h.context(tenant, person), acl, { includeRecords });
+  const scope = (tenant: string, person: string, acl: string[] = [], includeRecords = false, role?: string) => scopeFor(
+    h.context(tenant, person, {
+      purpose: 'search',
+      grants: role ? [{ role, scopeKind: 'tenant', scopeId: tenant }] : [],
+    }),
+    acl,
+    { purpose: 'search', includeRecords },
+  );
 
   it('returns only the tenant\'s own documents', async () => {
     const idx = new MemorySearchIndex();
@@ -295,6 +307,12 @@ describe('search', () => {
     await idx.index(doc({ id: 'd2', tenantId: TENANT_B, acl: ['person:stu'] }));
     const hits = await idx.query(scope(TENANT_A, 'stu'), 'grade', 10);
     expect(hits.map((x) => x.id)).toEqual(['d1']);
+    expect(hits[0].labels).toEqual({
+      tenantId: TENANT_A,
+      purpose: 'search',
+      source: { id: 'source-d1', kind: 'student_entered' },
+      freshness: { state: 'current', observedAt: '2026-10-04T12:00:00.000Z' },
+    });
     // Same person id, same words, other tenant: sees only theirs.
     expect((await idx.query(scope(TENANT_B, 'stu'), 'grade', 10)).map((x) => x.id)).toEqual(['d2']);
   });
@@ -313,6 +331,31 @@ describe('search', () => {
     await idx.index(doc({ classification: 'education_record' }));
     expect(await idx.query(scope(TENANT_A, 'stu'), 'grade', 10)).toEqual([]);
     expect((await idx.query(scope(TENANT_A, 'stu', [], true), 'grade', 10)).length).toBe(1);
+  });
+
+  it('refuses purpose drift before the index is queried', async () => {
+    expect(() => scopeFor(h.context(TENANT_A, 'stu', { purpose: 'ai_context' }), [], { purpose: 'search' }))
+      .toThrowError(/purpose/);
+  });
+
+  it.each(UNIVERSITY_ROLES)('does not let verified role %s retrieve a result restricted to another role', async (role) => {
+    const idx = new MemorySearchIndex();
+    const other = role === 'student' ? 'faculty' : 'student';
+    await idx.index(doc({ roles: [other], acl: ['public'] }));
+    expect(await idx.query(scope(TENANT_A, `person-${role}`, [], false, role), 'grade', 10)).toEqual([]);
+    expect((await idx.query(scope(TENANT_A, `person-${other}`, [], false, other), 'grade', 10))).toHaveLength(1);
+  });
+
+  it('does not treat a role grant scoped to another tenant or resource as a tenant role', async () => {
+    const idx = new MemorySearchIndex();
+    await idx.index(doc({ roles: ['faculty'], acl: ['public'] }));
+    for (const grant of [
+      { role: 'faculty', scopeKind: 'tenant', scopeId: TENANT_B },
+      { role: 'faculty', scopeKind: 'course', scopeId: 'ECON-101' },
+    ]) {
+      const ctx = h.context(TENANT_A, 'stu', { purpose: 'search', grants: [grant] });
+      expect(await idx.query(scopeFor(ctx, [], { purpose: 'search' }), 'grade', 10)).toEqual([]);
+    }
   });
 
   it('refuses a hand-built scope and an empty query', async () => {

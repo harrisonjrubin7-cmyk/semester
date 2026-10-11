@@ -163,7 +163,8 @@ and the three new tests were re-run against main's worker with the corrected sta
 
 - a due connection is pulled from its cursor;
 - a connection that is not due, not pulled, unapproved, paused, disconnected or unregistered is not run;
-- with the empty production registry, nothing runs.
+- the registered Canvas adapter still runs nothing without valid connection-scoped auth, credential reference and hosted-Instructure origin;
+- an invalid Canvas origin opens no run and makes no provider call.
 
 **Kill switches and refusals:**
 
@@ -229,4 +230,3 @@ destination. Restoring the old floor (T2 kept out of Community) turned three tes
 ## Not yet covered
 
 A live provider; webhook signature validation (no webhook endpoint exists); the worker against PostgREST rather than a stand-in; the scheduled tick against a deployed endpoint (the job is parked); tablet hardware and screen-reader software (the pass above is automated). 
-

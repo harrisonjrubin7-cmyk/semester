@@ -63,7 +63,16 @@ email address.
 
 ## Open items
 
-- **No time-based purge of closed support tickets**, recorded in `RETENTION.md`.
+- **Institution-specific support retention terms** remain a contracting and
+  configuration gate before institutional launch. The current individual beta
+  rule deletes creation-time-classified resolved or student-closed tickets 180
+  days after last activity. Pre-classifier legacy tickets remain outside the
+  scheduled sweep and narrow ticket-only deletion pending evidence review,
+  while whole-account erasure detaches and preserves them with an opaque
+  former-account review key so classification cannot strand the account or
+  destroy potentially held evidence. Account, ticket-tenant and platform legal holds still
+  require preservation; `20261008195500_support_ticket_retention.sql`
+  enforces those boundaries.
 - **Pilot outcome measures** (the GTM work in #817) will need their own row in
   the first table before any is reported to a university; the cohort floor
   applies to them as to everything else.

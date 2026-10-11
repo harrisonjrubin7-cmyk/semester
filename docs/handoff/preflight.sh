@@ -9,4 +9,9 @@ npx --yes supabase --version >/dev/null 2>&1 || { echo "MISSING supabase CLI —
 [ -f "${APP:-app}/package.json" ] || { echo "No ${APP:-app}/package.json — set APP=<dir> to the web app"; fail=1; }
 grep -q '"next"' "${APP:-app}/package.json" 2>/dev/null || echo "NOTE  ${APP:-app} is not a Next.js app. API routes in app/api/* need a Next.js app (see BUILD.md §2 'App target')."
 git diff --quiet || echo "NOTE  working tree has uncommitted changes; streams expect a clean branch"
-[ $fail = 0 ] && echo "PREFLIGHT OK" || { echo "PREFLIGHT FAILED"; exit 1; }
+if [ "$fail" = 0 ]; then
+  echo "PREFLIGHT OK"
+else
+  echo "PREFLIGHT FAILED"
+  exit 1
+fi

@@ -165,6 +165,12 @@ declare
     -- which re-checks every grant and logs the read.
     'make_family_share(want_categories text[], want_resources text[], want_days integer, want_items jsonb, want_shown_as text)',
     'read_family_share()',
+    -- 20261009230000_guardian_projection_foundation.sql: an online-only,
+    -- minimized calendar read that rechecks a verified guardian link and the
+    -- student's exact live consent before recording the decision. The second
+    -- entry returns only the caller-student's bounded access history.
+    'read_guardian_calendar_projection(wanted_student uuid, wanted_purpose text)',
+    'read_guardian_projection_access_history()',
     -- 20260928308000_support_shares.sql: an athlete shares with one person
     -- holding athletic_academic_support at their school; staff list and read
     -- through functions that re-check that role on every call and log reads.
@@ -384,6 +390,10 @@ declare
     -- 20260928010000: the caller's own live capabilities, same predicate as
     -- private.has_capability, so staff screens can open for staff.
     'my_capabilities()',
+    -- 20261008223000: the caller's own yes/no signal for whether a live
+    -- platform_admin or support_agent grant still needs aal2. It exposes no
+    -- role roster or capability and is used only to show the elevation gate.
+    'privileged_mfa_required()',
     -- 20260929070000: click-to-cancel. The owner of an individual
     -- subscription ends it at the period end in one call, reason optional;
     -- cancelling must be as easy as signing up. Refuses anyone else's.
@@ -527,6 +537,11 @@ declare
     'publish_course_guidance(want_course text, want_term text, want_body text)',
     'publish_study_pack(want_course text, want_term text, want_pack uuid, want_title text, want_note text, want_items jsonb, want_retired boolean)',
     'my_course_studio_courses()',
+    -- 20261009001500_course_material_retention_policy.sql: consumes one
+    -- independently approved tenant-policy request. The function rechecks
+    -- console:operate, fresh MFA, exact tenant/target/detail, request status,
+    -- expiry and actor participation before fail-closed audit plus append.
+    'publish_course_material_retention_policy(want_request uuid, want_correlation text)',
 
     -- 20260929310000_gradebook.sql: the gradebook of record. Each checks
     -- auth.uid(), the caller's own school and a course-scoped grades:*
@@ -603,6 +618,12 @@ declare
     -- demos by default and never accepts a tenant id from the caller.
     'console_tenant_operations(include_demo boolean)',
 
+    -- The first query-side contract over the private tenant projections. It
+    -- checks platform console or exact-school tenant configuration authority,
+    -- bounds entitlement pagination, and computes freshness from private
+    -- watermarks without exposing either projection table.
+    'read_tenant_projection(want_tenant text, after_capability text, want_limit integer)',
+
     -- Credential-free connector health. It requires the platform console
     -- shell, derives tenants from exact-school integration:view grants,
     -- excludes demos by default, and returns no credential, cursor, payload,
@@ -614,16 +635,27 @@ declare
     -- tenants without exact implementation scope, and performs no mutation.
     'console_release_incidents(include_demo boolean)',
 
+    -- Protected incident-evidence metadata and hash-linked custody. Every
+    -- callable path requires platform console plus incident-response
+    -- authority and fresh MFA; the backing private tables have no client or
+    -- service-role grants.
+    'incident_evidence_custody(want_incident text)',
+    'record_incident_evidence(want_incident text, want_kind text, want_source_system text, want_evidence_locator text, want_sha256 text, want_byte_size bigint, want_captured_at timestamp with time zone, want_retention_until timestamp with time zone, want_classification text)',
+    'record_incident_evidence_custody(want_evidence text, want_action text, want_custodian text, want_reason_code text, want_observed_sha256 text)',
+
+    -- Identity-minimized, three-operator privileged role-grant review. These paths require
+    -- access_review:manage at platform scope and fresh MFA; the private
+    -- snapshot, decisions and signoff have no client or service-role grants.
+    'begin_privileged_access_review(want_request_key text, want_period_start date, want_period_end date, want_next_due date)',
+    'complete_privileged_access_review(want_review text)',
+    'decide_privileged_access_review_item(want_item text, want_decision text, want_reason_code text)',
+    'privileged_access_review(want_review text)',
+    'resolve_privileged_access_review_investigation(want_item text, want_resolution_code text)',
+
     -- Identity-minimized privacy queue. It requires the platform console
     -- shell, derives tenants from exact-school data_request:handle grants and
     -- keeps subject ids and request content out of its result.
     'console_privacy_requests(include_demo boolean)',
-
-    -- The operations read contracts and how fresh each is. It requires
-    -- console:operate at platform scope and returns registry metadata only:
-    -- no tenant, person or credential. ops-read-contracts.check.sql holds its
-    -- refusals and its output.
-    'ops_projection_dashboard()',
 
     -- The privacy lifecycle in 20261005124000. Claim, sensitive-detail read,
     -- identity verification and resolution all require fresh MFA, the
@@ -657,6 +689,14 @@ declare
     'console_approvals(include_demo boolean)',
     'console_break_glass(include_demo boolean)',
     'console_customers(include_demo boolean)',
+
+    -- The approval-bound dead-letter operation in 20261008190000. It requires
+    -- console:operate, fresh MFA and a current two-person projection-replay
+    -- approval bound to the exact tenant, event and consumer. Its focused
+    -- suite proves wrong tenant/consumer, stale MFA and audit failure refuse
+    -- the reset. This is the human control path; worker transitions stay in
+    -- `private` and service-role only.
+    'replay_domain_event(want_event uuid, want_consumer text, want_approval uuid, want_correlation text)',
 
     -- The nine in 20260929300000_registration_transaction.sql. The three
     -- student writers act only on the caller's own enrollment at the

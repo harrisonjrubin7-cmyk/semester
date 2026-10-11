@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../../state/store';
 import { Page } from '../../components/Page';
 import { Blueprint } from '../../components/Blueprint';
@@ -70,38 +70,45 @@ export function Green({
    * camera light on a Mac, and the second light is the part people write in
    * about.
    */
-  const start = useCallback(async (want: Chosen) => {
-    setTrouble('');
-    try {
-      const got = await open(want);
-      setStream((was) => {
-        shut(was);
-        return got;
-      });
-      // Labels arrive only once permission has been granted, which is why the
-      // pickers are populated here rather than on mount.
-      setKit(await devices());
-    } catch (e) {
-      setStream((was) => {
-        shut(was);
-        return null;
-      });
-      setTrouble(
-        e instanceof DOMException && (e.name === 'NotAllowedError' || e.name === 'SecurityError')
-          ? 'The browser refused the camera and microphone. Allow them for this site and try again — on iOS that is Settings → Safari → Camera.'
-          : e instanceof DOMException && e.name === 'NotFoundError'
-            ? 'No camera or microphone on this device. You can still join to listen.'
-            : e instanceof Error
-              ? e.message
-              : String(e),
-      );
-    }
-  }, []);
-
   useEffect(() => {
     if (!supported()) return;
-    void start(chosen);
-  }, [start, chosen]);
+    let live = true;
+    void open(chosen)
+      .then(async (got) => {
+        if (!live) {
+          shut(got);
+          return;
+        }
+        setStream((was) => {
+          shut(was);
+          return got;
+        });
+        // Labels arrive only once permission has been granted, which is why
+        // the pickers are populated after opening rather than on mount.
+        const found = await devices();
+        if (live) setKit(found);
+      })
+      .catch((e: unknown) => {
+        if (!live) return;
+        setStream((was) => {
+          shut(was);
+          return null;
+        });
+        setTrouble(
+          e instanceof DOMException &&
+            (e.name === 'NotAllowedError' || e.name === 'SecurityError')
+            ? 'The browser refused the camera and microphone. Allow them for this site and try again — on iOS that is Settings → Safari → Camera.'
+            : e instanceof DOMException && e.name === 'NotFoundError'
+              ? 'No camera or microphone on this device. You can still join to listen.'
+              : e instanceof Error
+                ? e.message
+                : String(e),
+        );
+      });
+    return () => {
+      live = false;
+    };
+  }, [chosen]);
 
   // The preview never plays its own sound. A green room that echoes is a
   // green room nobody can hear themselves think in.
@@ -118,10 +125,7 @@ export function Green({
   }, [stream, camera]);
 
   useEffect(() => {
-    if (!stream || muted) {
-      setLevel(0);
-      return;
-    }
+    if (!stream || muted) return;
     return meter(stream, (loud) => {
       setLevel(loud);
       setHeard((was) => talk(was, loud, Date.now()));
@@ -137,7 +141,9 @@ export function Green({
    */
   const carried = useRef(false);
   const held = useRef<MediaStream | null>(null);
-  held.current = stream;
+  useEffect(() => {
+    held.current = stream;
+  }, [stream]);
   useEffect(
     () => () => {
       if (!carried.current) shut(held.current);
@@ -216,7 +222,7 @@ export function Green({
         <div
           style={{
             height: '100%',
-            width: `${Math.min(100, Math.round((level / (LOUD * 3)) * 100))}%`,
+            width: `${Math.min(100, Math.round(((muted ? 0 : level) / (LOUD * 3)) * 100))}%`,
             background: 'var(--app-accent)',
             transition: 'width 90ms linear',
           }}
@@ -264,7 +270,10 @@ export function Green({
                 aria-label="Which camera"
                 className="input"
                 value={chosen.camera}
-                onChange={(e) => setChosen((c) => ({ ...c, camera: e.target.value }))}
+                onChange={(e) => {
+                  setTrouble('');
+                  setChosen((c) => ({ ...c, camera: e.target.value }));
+                }}
                 style={{ width: '100%' }}
               >
                 <option value="">Whichever the browser picks</option>
@@ -280,7 +289,10 @@ export function Green({
                 aria-label="Which microphone"
                 className="input"
                 value={chosen.mic}
-                onChange={(e) => setChosen((c) => ({ ...c, mic: e.target.value }))}
+                onChange={(e) => {
+                  setTrouble('');
+                  setChosen((c) => ({ ...c, mic: e.target.value }));
+                }}
                 style={{ width: '100%' }}
               >
                 <option value="">Whichever the browser picks</option>

@@ -2,14 +2,14 @@
 
 > **Type:** reference · **Audience:** implementers, operators · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/platform-reference.test.ts`
 
-This page lists the 16 Supabase edge functions in this repository, what each accepts, how each decides who is calling, and which environment variables and database functions each uses; stop reading if you want the secrets inventory ([`SECRETS.md`](../../SECRETS.md)) or the deploy steps ([`supabase/DEPLOY.md`](../../supabase/DEPLOY.md)).
+This page lists the 17 Supabase edge functions in this repository, what each accepts, how each decides who is calling, and which environment variables and database functions each uses; stop reading if you want the secrets inventory ([`SECRETS.md`](../../SECRETS.md)) or the deploy steps ([`supabase/DEPLOY.md`](../../supabase/DEPLOY.md)).
 
 **Status:** PARTIAL — each function carries its own word in the table below. Only the functions marked LIVE work for a real user without further owner, provider or university action. This page reads the repository, not the running project: it cannot say what is deployed or which secrets are set.
 
 ## How to read this page
 
 - **URL shape.** Every function is served at `https://<project-ref>.supabase.co/functions/v1/<function>`. `<project-ref>` is the Supabase project the deployment belongs to. `lti` also answers four sub-paths (see its section); `calendar` reads its credential from the last path segment.
-- **`verify_jwt`.** All 16 functions are `false` in [`supabase/config.toml`](../../supabase/config.toml). The platform check would reject a CORS preflight, which carries no `Authorization` header, so each function does its own check. The **Guard** column is the kind of credential each one answers to, taken from [`app/src/lib/edgeguards.ts`](../../app/src/lib/edgeguards.ts). A function with `verify_jwt = false` and no check of its own would be open; that register is what stops one being added without saying so.
+- **`verify_jwt`.** All 17 functions are `false` in [`supabase/config.toml`](../../supabase/config.toml). The platform check would reject a CORS preflight, which carries no `Authorization` header, so each function does its own check. The **Guard** column is the kind of credential each one answers to, taken from [`app/src/lib/edgeguards.ts`](../../app/src/lib/edgeguards.ts). A function with `verify_jwt = false` and no check of its own would be open; that register is what stops one being added without saying so.
 - **Status words** are the vocabulary of [`docs/FEATURE-TRUTH-TABLE.md`](../FEATURE-TRUTH-TABLE.md). Where that table has a row for the function, the section names it. Where it has none, the word is read from the function's own gating and the section says so.
 - **Environment variables** are names only. What each one controls, its default and where it is set is in [`CONFIGURATION.md`](CONFIGURATION.md).
 - **Deploy state.** [`supabase/DEPLOY.md`](../../supabase/DEPLOY.md) holds a dated snapshot of what the project reported. This page does not repeat it, and the snapshot is not evidence that a function is on today.
@@ -28,14 +28,15 @@ This page lists the 16 Supabase edge functions in this repository, what each acc
 | `delete-account` | LIVE | `POST` | `user-token` | `false` | `ALLOWED_ORIGIN`, `CORS_ALLOW_DEV`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | `erase_account` |
 | `fetchcal` | LIVE | `POST` | `user-token` | `false` | `ALLOWED_ORIGIN`, `CORS_ALLOW_DEV`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | none |
 | `integration-tick` | IMPLEMENTED_NOT_RELEASED | `POST` | `scheduler-token` | `false` | `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | `integration_refresh_governance`, `integration_tick_authorized`, `integration_tombstone_references` |
+| `ops-projector` | IMPLEMENTED_NOT_RELEASED | `POST` | `shared-secret` | `false` | `OPS_PROJECTOR_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | `run_ops_projector` |
 | `lead-intake` | IMPLEMENTED_NOT_RELEASED | `POST` | `public` | `false` | `LEAD_IP_SALT`, `LEAD_NOTIFY_EMAIL`, `LEAD_NOTIFY_FROM`, `RESEND_API_KEY`, `SITE_ORIGINS`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | `submit_site_lead` |
 | `lti` | IMPLEMENTED_NOT_RELEASED | `GET`, `POST` | `flow-state` | `false` | `ALLOWED_ORIGIN`, `CORS_ALLOW_DEV`, `LTI_PRIVATE_KEY`, `SEMESTER_APP_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | `lti_launch_entitlement_facts`, `lti_launch_membership`, `lti_passback_decision`, `lti_record_context`, `spend_lti_nonce` |
 | `productivity-sourcecheck` | PARTIAL | `POST` | `user-token` | `false` | `ALLOWED_ORIGIN`, `CORS_ALLOW_DEV`, `PRODUCTIVITY_SOURCE_HOSTS`, `SUPABASE_ANON_KEY`, `SUPABASE_URL` | none |
 | `push` | IMPLEMENTED_NOT_RELEASED | any | `shared-secret` | `false` | `CRON_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`, `VAPID_PRIVATE_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_SUBJECT` | `note_access` |
-| `support-reply-notify` | IMPLEMENTED_NOT_RELEASED | `POST` | `user-token`, `shared-secret` | `false` | `ALLOWED_ORIGIN`, `CORS_ALLOW_DEV`, `CRON_SECRET`, `LEAD_NOTIFY_FROM`, `RESEND_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`, `SUPPORT_NOTIFY_FROM`, `SUPPORT_RETURN_URL` | `claim_support_notifications` |
+| `support-reply-notify` | IMPLEMENTED_NOT_RELEASED | `POST` | `user-token`, `shared-secret` | `false` | `ALLOWED_ORIGIN`, `CORS_ALLOW_DEV`, `CRON_SECRET`, `LEAD_NOTIFY_FROM`, `RESEND_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`, `SUPPORT_NOTIFY_ACTIVATED_AT`, `SUPPORT_NOTIFY_FROM`, `SUPPORT_NOTIFY_VENDOR_APPROVED`, `SUPPORT_RETURN_URL` | `claim_support_notifications` |
 | `trust-room` | IMPLEMENTED_NOT_RELEASED | `POST` | `link-token` | `false` | `ALLOWED_ORIGIN`, `CORS_ALLOW_DEV`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | `trust_room_open` |
 
-`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_ANON_KEY` are injected by the platform; nobody sets them. These browser-called functions answer a CORS preflight (`OPTIONS`): `billing-cancel`, `billing-checkout`, `billing-portal`, `canvas`, `claude`, `delete-account`, `fetchcal`, `lead-intake`, `productivity-sourcecheck`, `support-reply-notify`, `trust-room`, and `lti` on `/score`. `billing-webhook` refuses any request that carries an `Origin`. `calendar`, `integration-tick` and `push` have no browser caller. `push` has no method check at all: any method with the right bearer token runs it.
+`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_ANON_KEY` are injected by the platform; nobody sets them. These browser-called functions answer a CORS preflight (`OPTIONS`): `billing-cancel`, `billing-checkout`, `billing-portal`, `canvas`, `claude`, `delete-account`, `fetchcal`, `lead-intake`, `productivity-sourcecheck`, `support-reply-notify`, `trust-room`, and `lti` on `/score`. `billing-webhook` refuses any request that carries an `Origin`. `calendar`, `integration-tick`, `ops-projector` and `push` have no browser caller. `push` has no method check at all: any method with the right bearer token runs it.
 
 The table is held both ways by the test: every function directory is a row, every row is a directory, the `verify_jwt` and Guard cells equal `config.toml` and `edgeguards.ts`, and the environment and RPC cells equal what the function's source (its `index.ts` plus every `_shared` module it imports) actually reads and calls.
 
@@ -138,13 +139,23 @@ Fetches a calendar link the browser cannot fetch, because calendar servers send 
 
 ## `integration-tick`
 
-The 15-minute integration sync tick: pulls each approved connection that is due and runs any replay an operator has asked for. **Status** IMPLEMENTED_NOT_RELEASED. No truth-table row names it; the row "SIS / catalog connectors" is PLANNED because `ADAPTERS` is empty in [`app/server/integration/registry.ts`](../../app/server/integration/registry.ts), so every tick reports every connection as unregistered.
+The 15-minute integration sync tick: pulls each approved connection that is due and runs any replay an operator has asked for. **Status** IMPLEMENTED_NOT_RELEASED. The registry contains one read-only Canvas course-context adapter. Registration is not activation: without a valid tenant connection, approved scope, production feature, hosted-Instructure origin and connection credential reference it makes no call. The current production composition supplies no credential broker, so even an otherwise activated Canvas connection fails closed before provider access. No real Canvas tenant has been exercised.
 
 - **Request.** `POST` with `Authorization: Bearer <integration_cron_secret>`. No body is read. The caller is the `integration-sync` job in [`supabase/scheduler.sql`](../../supabase/scheduler.sql) at minutes 7, 22, 37 and 52 of every hour, with a 60 second timeout. That job is active in the file; whether it is active in the project is not verified here.
 - **Auth.** The token is compared inside the database by `integration_tick_authorized`, against Vault. No copy of the secret is set on the function.
 - **Responses.** 200 the tick's counts (no school, connection or person is named); 401 no or wrong token; 405 `POST only.`; 500 the tick failed; 503 service credentials missing or the database could not say whether the token is right.
 - **Kill switches.** Syncs stop under the integration kill switches in [`docs/FEATURE-FLAG-REGISTRY.md`](../FEATURE-FLAG-REGISTRY.md). The operator steps are in [`docs/INTEGRATION-OPERATOR-RUNBOOK.md`](../INTEGRATION-OPERATOR-RUNBOOK.md).
 - **Source.** [`index.ts`](../../supabase/functions/integration-tick/index.ts), [`_shared/integrationtick.ts`](../../supabase/functions/_shared/integrationtick.ts), [`integrationtick.test.ts`](../../app/src/lib/integrationtick.test.ts). The worker code is `app/server/integration/` (a generated copy sits in `_shared/integration/`).
+
+## `ops-projector`
+
+Runs one bounded tenant-entitlement projection batch. **Status** IMPLEMENTED_NOT_RELEASED. It has no scheduler entry and remains dormant until an operator explicitly provisions its dedicated secret.
+
+- **Request.** `POST` with `Authorization: Bearer <OPS_PROJECTOR_SECRET>`. No body is read and the caller cannot choose the batch size.
+- **Work.** Calls the service-role-only `run_ops_projector(25)` RPC. The database claims only `entitlement.changed` version 1 events for the active `ops_tenant_entitlements` registration. Matching effects, receipts, watermarks and invalidations commit atomically; malformed events dead-letter with a generic bounded reason. Other event types are untouched.
+- **Responses.** 200 with `{claimed, processed, skipped, retrying, deadLettered}` counts; 401 missing or wrong bearer; 405; 500 with no database detail; 503 service credentials or the dedicated secret missing.
+- **Activation boundary.** There is no `scheduler.sql` entry. Deployment does not run a batch, and this repository has not provisioned the secret, deployed the function or produced operational evidence.
+- **Source.** [`index.ts`](../../supabase/functions/ops-projector/index.ts), [`_shared/opsprojector.ts`](../../supabase/functions/_shared/opsprojector.ts), [`opsprojector.test.ts`](../../app/src/lib/opsprojector.test.ts). SQL: [`20261008210000_ops_projector_worker.sql`](../../supabase/migrations/20261008210000_ops_projector_worker.sql), [`ops-projector-worker.check.sql`](../../supabase/ops-projector-worker.check.sql).
 
 ## `lead-intake`
 
@@ -157,7 +168,7 @@ The company site's forms, one endpoint for every route in `cta_routes`. **Status
 
 ## `lti`
 
-LTI 1.3 launch, deep linking and grade passback for a Brightspace registration. **Status** IMPLEMENTED_NOT_RELEASED, and BLOCKED (truth-table rows "LTI 1.3 (launch, deep link, AGS)" and "LTI 1.3 launch validation": never launched from a real platform, not 1EdTech-certified, needs Brightspace registration, NRPS refused, an unbound registration answers `allowed-unbound`).
+LTI 1.3 launch, deep linking and grade passback for a Brightspace registration. **Status** IMPLEMENTED_NOT_RELEASED, and BLOCKED (truth-table rows "LTI 1.3 (launch, deep link, AGS)" and "LTI 1.3 launch validation": never launched from a real platform, not 1EdTech-certified, needs Brightspace registration, NRPS refused, and the database can answer `allowed-unbound` for an unbound registration). The route treats that legacy database verdict as a refusal; no unbound registration may pass back a score.
 
 The caller is a browser arriving from the LMS, so there is no Supabase session. What authenticates a launch is the platform's signed `id_token`, checked against the keys the registration names and then claim by claim.
 
@@ -169,7 +180,7 @@ The caller is a browser arriving from the LMS, so there is no Supabase session. 
 | `/score` | `POST` | Called by the signed-in app with `{code, given, max}`. Looks up the caller's recorded line item, asks `lti_passback_decision` whether passback is allowed, signs a client assertion with `LTI_PRIVATE_KEY`, gets a token from the platform and posts the score. Answers `{"reported": true, "course"}` or `{"reported": false, "reason"}`. |
 
 - **Responses.** A refused launch is an HTML page with a reference code, and the status is 400, 401 (bad header, signature or claims), 403 (not an instructor for placement, or school access not active), 405 (launch not `POST`), 500 or 503. Any other path is a 404 page. `/score` answers 401 without a valid session, 405 for non-`POST`, and 400 for a body that is not JSON; every other refusal is `{"reported": false, "reason"}` with status 200 by default, or 400, 500, 502 or 503 for particular reasons (for example `no-key` is 503 and `token-refused` is 502).
-- **Gating.** A first launch provisions an account on a synthesized address that cannot receive mail; attaching an existing account is never automatic and goes through a ticket (`adopt_lti_identity`). Membership and entitlement checks use `lti_launch_membership` and `lti_launch_entitlement_facts`. Passback needs the bound registration's decision to be `allowed` or `allowed-unbound`.
+- **Gating.** A first launch provisions an account on a synthesized address that cannot receive mail; attaching an existing account is never automatic and goes through a ticket (`adopt_lti_identity`). Membership and entitlement checks use `lti_launch_membership` and `lti_launch_entitlement_facts`. Passback proceeds only when the database positively returns `allowed`; `allowed-unbound`, a missing decision function and every gate-read error refuse before the route signs or sends anything.
 - **Source.** [`index.ts`](../../supabase/functions/lti/index.ts), [`_shared/lti.ts`](../../supabase/functions/_shared/lti.ts), [`_shared/ltiverify.ts`](../../supabase/functions/_shared/ltiverify.ts), [`_shared/ltiags.ts`](../../supabase/functions/_shared/ltiags.ts), [`lti.test.ts`](../../app/src/lib/lti.test.ts), [`ltiags.test.ts`](../../app/src/lib/ltiags.test.ts).
 
 ## `productivity-sourcecheck`
@@ -192,12 +203,12 @@ Sends due reminders to subscribed devices. **Status** IMPLEMENTED_NOT_RELEASED. 
 
 ## `support-reply-notify`
 
-Emails a student a generic hint that support replied, without exposing their address or the reply to the staff browser. **Status** IMPLEMENTED_NOT_RELEASED. No truth-table row names it; the `support-reply-notify` scheduler job is parked in the repository and `DEPLOY.md` records the function as pending live evidence.
+Emails a student a generic hint that support replied, without exposing their address or the reply to the staff browser. **Status** IMPLEMENTED_NOT_RELEASED. No truth-table row names it. The function was deployed and its delivery mechanics reached provider acceptance during the 3 October 2026 production UAT, but that historical exercise is not current activation: the scheduler remains parked, Resend vendor review and executed terms/DPA are outstanding, and Outlook inbox receipt has not been recorded. The dated evidence is in `DEPLOY.md`; this reference does not turn it into current approval.
 
 - **Two callers.** *Staff browser:* `POST` with a bearer token and JSON `{"message_id": "<uuid>"}`. The caller must hold a platform-scope role granting the `support:ticket` capability. *Scheduler:* `POST` with `Authorization: Bearer <CRON_SECRET>` once a minute. It claims up to 100 queued notices and answers counts.
 - **Delivery.** The email is generic (it names a `SUP-…` reference and points to the Help screen) and is sent through Resend with idempotency key `support-<message id>`. After the nth failed attempt the row waits `min(60, 2^n)` minutes; the eighth failed attempt dead-letters it. A recipient who opted out cancels the row.
 - **Responses (browser).** 200 `{"ok": true, "outcome": "accepted"}`; 202 queued or in progress; 400 invalid body or id; 401 no token; 403 origin not allowed or no support access; 405; 409 cancelled before delivery; 502 the provider did not accept; 503 not configured or not available for delivery. *Scheduler:* 200 `{processed, accepted, retrying, dead_lettered, cancelled}`; 503 with the same body when any row dead-lettered; 503 `Support email is not configured.` when email is not configured.
-- **Gating.** Counts as configured only when `RESEND_API_KEY` and a verified sender (`SUPPORT_NOTIFY_FROM`, falling back to `LEAD_NOTIFY_FROM`) are both set.
+- **Gating.** Counts as configured only when `SUPPORT_NOTIFY_VENDOR_APPROVED` is the exact value `true`, `SUPPORT_NOTIFY_ACTIVATED_AT` is a valid recorded UTC activation instant, `RESEND_API_KEY` is set, and a verified sender (`SUPPORT_NOTIFY_FROM`, falling back to `LEAD_NOTIFY_FROM`) is set. The activation instant is passed into the database claim; pending intents older than it are deleted before newer work is claimed, preventing a parked backlog from sending. Credentials do not imply vendor approval. Until the review, executed terms/DPA, accountable owner and explicit activation decision are recorded, leave both activation settings unset and the scheduler parked.
 - **Source.** [`index.ts`](../../supabase/functions/support-reply-notify/index.ts), [`_shared/supportnotify.ts`](../../supabase/functions/_shared/supportnotify.ts), [`supportnotify.test.ts`](../../app/src/lib/supportnotify.test.ts). SQL: [`20261002003000_support_notification_outbox.sql`](../../supabase/migrations/20261002003000_support_notification_outbox.sql).
 
 ## `trust-room`

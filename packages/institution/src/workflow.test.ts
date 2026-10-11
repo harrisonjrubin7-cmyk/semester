@@ -12,6 +12,7 @@ import {
   SUPPORT_ACCESS_STATES,
   WORKFLOWS,
   transition,
+  workflowDefinitionProblems,
   walk,
   type WorkflowDefinition,
 } from './workflow.ts';
@@ -140,5 +141,61 @@ describe('the moves the specification names as illegal', () => {
 
   it('the registry names each machine by its own type', () => {
     for (const [name, def] of Object.entries(WORKFLOWS)) expect(def.type).toBe(name);
+  });
+});
+
+describe('workflow definition validation', () => {
+  it('accepts every registered workflow graph', () => {
+    for (const [name, def] of Object.entries(WORKFLOWS)) {
+      expect(workflowDefinitionProblems(def), name).toEqual([]);
+    }
+  });
+
+  it('reports dangling initial, terminal, transition and exception references', () => {
+    const def: WorkflowDefinition = {
+      type: 'broken_references',
+      initial: 'missing_initial',
+      terminal: ['missing_terminal'],
+      transitions: {
+        draft: ['missing_target'],
+        done: [],
+      },
+      exceptional: [['draft', 'missing_exception_target']],
+    };
+
+    expect(workflowDefinitionProblems(def)).toEqual([
+      'unknown_initial:missing_initial',
+      'unknown_terminal:missing_terminal',
+      'unknown_target:draft:missing_target',
+      'unknown_exception:draft:missing_exception_target',
+      'unreachable:done',
+      'unreachable:draft',
+      'cannot_terminate:done',
+      'cannot_terminate:draft',
+    ]);
+  });
+
+  it('reports reachable dead ends, non-final terminals and unreachable states', () => {
+    const def: WorkflowDefinition = {
+      type: 'broken_paths',
+      initial: 'draft',
+      terminal: ['done'],
+      transitions: {
+        draft: ['review'],
+        review: ['draft'],
+        done: ['draft'],
+        orphan: [],
+      },
+      exceptional: [],
+    };
+
+    expect(workflowDefinitionProblems(def)).toEqual([
+      'terminal_has_exit:done',
+      'unreachable:done',
+      'unreachable:orphan',
+      'cannot_terminate:draft',
+      'cannot_terminate:orphan',
+      'cannot_terminate:review',
+    ]);
   });
 });

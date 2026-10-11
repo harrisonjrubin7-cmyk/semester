@@ -144,7 +144,11 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
     setNow(new Date());
   }, []);
 
-  // The context bar and the preferences: account-backed, read once at open.
+  const mfaKnown = mfa !== null;
+
+  // Read assurance before mounting a workspace. The app-level privileged MFA
+  // boundary keeps platform_admin and support_agent out at aal1; ordinary
+  // console roles are deliberately allowed through by the database.
   useEffect(() => {
     let live = true;
     mfaLevel().then(
@@ -155,6 +159,16 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       },
       (e: unknown) => { if (live) setMfa(said(e, 'Could not read')); },
     );
+    return () => { live = false; };
+  }, []);
+
+  // The context bar and preferences are account-backed and protected by the
+  // same role boundary as the workspaces. Do not ask for them until the first
+  // assurance read settles; ordinary console roles may legitimately remain at
+  // aal1 or continue read-only work while that assurance read is unavailable.
+  useEffect(() => {
+    if (!mfaKnown) return;
+    let live = true;
     sessionExpiry().then(
       (at) => { if (live) setSession(at ?? 'No session'); },
       (e: unknown) => { if (live) setSession(said(e, 'Could not read')); },
@@ -176,7 +190,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       live = false;
       clearInterval(tick);
     };
-  }, [workspaces]);
+  }, [mfaKnown, workspaces]);
 
   const choose = (next: ConsoleWorkspaceId) => {
     setTab(next);
@@ -220,9 +234,22 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
   const sessionEnds = session instanceof Date ? `At session end, ${when(session.toISOString())}` : 'At session end';
   const viewProps = { env, scope, filter, onStatus, privileged };
 
+  if (mfa === null) {
+    return (
+      <Page blurb={BLURB}>
+        <p role="status">Checking the operator session’s second factor…</p>
+      </Page>
+    );
+  }
   return (
     <Page blurb={BLURB}>
       <ContextBar context={{ env, scope, operator, grants, mfa, session, support, now }} />
+      {typeof mfa === 'string' && (
+        <Notice>
+          {mfa}. Ordinary console work remains available, but sensitive changes still require a verified second factor.{' '}
+          <button type="button" className="btn" onClick={() => void readMfa()}>Try again</button>
+        </Notice>
+      )}
       {status && (
         <p role="status" style={{ marginBlock: 0, marginBottom: 'var(--sp-4)' }}>
           {status}

@@ -2,7 +2,7 @@
 
 <!-- Rendered from app/src/lib/knownlimitations.ts by pilotdocs.test.ts. Edit the data, then run `REGISTERS=write npx vitest run src/lib/pilotdocs.test.ts` from app/. -->
 
-**As of 2026-09-28.** What does not work yet, what to do instead, and how to
+**As of 2026-10-03.** What does not work yet, what to do instead, and how to
 report something. Every item names the file in this repository that states it;
 nothing here is a plan or a guess. The same list is printed on the public site
 at `/known-limitations/` and on the Help screen in the app, from the same data.
@@ -77,13 +77,13 @@ either direction, that is a bug: report it the same way.
 
 *Stated in:* `app/src/lib/membership.ts`, `app/src/lib/plans.ts`, `docs/DECISION-LOG.md`
 
-### The in-app support desk is built, but it is not switched on in every environment.
+### The beta support desk is live, but email delivery and formal coverage are gated.
 
-**What does not work yet.** When support tickets are enabled, Help shows your questions, stable SUP references, replies and their 24-hour or 72-hour first-response target. Authorized staff answer through an identity-free queue. A generic account-email notice can be sent after a staff reply only when you opt in for that question and where the support notification service and verified sender are configured. Notices are capped at three per question in 24 hours, and turning them off cancels notices still waiting to send; the reply remains available in Help if email is delayed or unavailable. No production support UAT has been recorded, and no support hours or staffed coverage are promised. The status page checks the service from your own browser and its AI and checkout rows only show that the service answered.
+**What does not work yet.** Help shows your questions, stable SUP references, replies and their non-binding 24-hour or 72-hour first-response target. Authorized staff answer through an identity-free queue. Production ticket creation, staff reply, Help-thread receipt and resolution passed UAT on October 3, 2026, and the founder staffs the current beta queue. Email notices are unavailable: their delivery mechanics reached provider acceptance in that UAT, but the worker and UI are now parked until Resend has a completed vendor review, executed terms/DPA, an owner and an explicit activation decision. Outlook inbox receipt also remains pending. Replies remain available in Help. Newly classified individual-beta tickets without a signed school deployment are deleted 180 days after resolution or closure unless a legal hold applies; a school-domain claim alone remains individual beta. Tickets opened under a signed school deployment await a configured contract rule and are not automatically purged. Tickets created before the durable classifier stay outside automated and ticket-only deletion until their historical authority is verified instead of guessed from today’s profile. Whole-account erasure detaches those legacy records from the deleted account and preserves them with an opaque review key so potentially held evidence is not destroyed. Support still uses the founder’s personal Gmail address, and no support hours, guaranteed response time or 24/7 coverage are promised. The status page checks the service from your own browser and its AI and checkout rows only show that the service answered.
 
 **What to do instead.** If the ticket panel is available, use it and keep the SUP reference. Otherwise write to the address below. For “is it down?”, open the status page from Help; Up means your browser reached it just now.
 
-*Stated in:* `app/src/lib/supporttickets.ts`, `app/src/components/console/SupportQueue.tsx`, `docs/GO-NO-GO-CHECKLIST.md`, `app/public/status.html`
+*Stated in:* `app/src/lib/supporttickets.ts`, `app/src/components/console/SupportQueue.tsx`, `docs/launch-readiness/2026-10-03-support-production-uat.md`, `docs/trust/VENDOR-RISK-REGISTER.md`, `supabase/migrations/20261008195500_support_ticket_retention.sql`, `docs/GO-NO-GO-CHECKLIST.md`, `app/public/status.html`
 
 ### Your own backup is the one that has been rehearsed.
 

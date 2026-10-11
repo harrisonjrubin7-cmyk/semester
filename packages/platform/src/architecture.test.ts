@@ -294,7 +294,7 @@ describe('nobody reaches around the package', () => {
 
   it('the app imports platform through its alias, never a relative path into packages/', () => {
     expect(importsFrom('app/src', /packages\/platform/)).toEqual([]);
-    expect(importsFrom('app/server', /packages\/platform\/src\/(?!index\.ts)/)).toEqual([]);
+    expect(importsFrom('app/server', /packages\/platform\/src\/(?!(?:index|canvas-read-adapter)\.ts)/)).toEqual([]);
   });
 
   it('Supabase functions do not import the platform package (they are not NodeNext/ESM-resolvable from here — CLAUDE.md, TS1287)', () => {

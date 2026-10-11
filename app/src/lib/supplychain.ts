@@ -259,7 +259,7 @@ export const WORKFLOW: readonly { step: string; heldBy: string | null }[] = [
   { step: 'Licence, security and provenance review', heldBy: 'supplychain.test.ts (licence, registry, integrity)' },
   { step: 'Approved, or rejected', heldBy: 'supplychain.ts NAMED / ACTIONS — a diff a reviewer must approve' },
   { step: 'Locked version added', heldBy: 'package-lock.json, installed by npm ci' },
-  { step: 'CI scan and test', heldBy: 'ci.yml — npm audit --audit-level=high, the suite' },
+  { step: 'CI scan and test', heldBy: 'ci.yml — pinned OSV-Scanner over every lockfile, npm audit --audit-level=high, actionlint, the suite' },
   { step: 'SBOM updated', heldBy: 'pages.yml — npm run sbom on every deploy' },
   { step: 'Release artifact and provenance retained', heldBy: 'supply-chain.yml — signed build provenance and SBOM attestation for the main bundle (not yet the Pages bytes: infra/README.md R-3)' },
   { step: 'Advisory monitoring', heldBy: '.github/dependabot.yml' },

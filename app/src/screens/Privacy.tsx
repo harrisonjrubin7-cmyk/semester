@@ -35,7 +35,6 @@ import { eraseDevice } from '../lib/erase';
 import { record, yours } from '../lib/journal';
 import { Toggle } from '../components/ui';
 import { SupportAccess } from '../components/SupportAccess';
-import { DevicePermissions } from '../components/DevicePermissions';
 import { DataRightsRequests } from '../components/DataRightsRequests';
 import { SchoolDataPanel } from '../components/SchoolRecords';
 import { DESTINATIONS, offered } from '../lib/nav';
@@ -52,6 +51,9 @@ import {
 
 /** Read when the screen is open, not when it loads: it asks the network, so it has its own loading state anyway. */
 const WhoCanSeeYou = lazy(() => import('../components/WhoCanSeeYou').then((m) => ({ default: m.WhoCanSeeYou })));
+
+/** Device APIs are checked only when this screen is open; keep their state machine out of the route's initial chunk. */
+const DevicePermissions = lazy(() => import('../components/DevicePermissions').then((m) => ({ default: m.DevicePermissions })));
 
 // The Trust & Data Center (Phase N), at the top of this page.
 const TrustCenter = lazy(() => import('../components/TrustCenter').then((m) => ({ default: m.TrustCenter })));
@@ -103,6 +105,7 @@ export function Privacy({ trustCenter = moduleOn(MODULE_FLAGS.trust_center) }: {
    */
   const [erasing, setErasing] = useState(false);
   const [wiping, setWiping] = useState(false);
+  const [eraseSaid, setEraseSaid] = useState('');
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
   const [saved, setSaved] = useState('');
@@ -161,7 +164,9 @@ export function Privacy({ trustCenter = moduleOn(MODULE_FLAGS.trust_center) }: {
         <WhoCanSeeYou account={account} />
       </Suspense>
 
-      <DevicePermissions openAlerts={() => dispatch({ type: 'go', screen: 'setAlerts' })} />
+      <Suspense fallback={<p role="status" style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>Checking device permissions…</p>}>
+        <DevicePermissions openAlerts={() => dispatch({ type: 'go', screen: 'setAlerts' })} />
+      </Suspense>
 
       <SchoolDataPanel />
 
@@ -419,11 +424,19 @@ export function Privacy({ trustCenter = moduleOn(MODULE_FLAGS.trust_center) }: {
         type="button"
         className="btn btn-block"
         disabled={wiping}
-        onClick={() => setErasing(true)}
+        onClick={() => {
+          setEraseSaid('');
+          setErasing(true);
+        }}
         style={{ marginTop: 'var(--sp-6)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         {wiping ? 'Erasing…' : 'Erase from this device'}
       </button>
+      {eraseSaid && (
+        <p role="alert" style={{ fontSize: 'var(--type-sm-plus)', lineHeight: 'var(--leading-relaxed-plus)' }}>
+          {eraseSaid}
+        </p>
+      )}
 
       {erasing && (
         <TypeToConfirm
@@ -454,7 +467,12 @@ export function Privacy({ trustCenter = moduleOn(MODULE_FLAGS.trust_center) }: {
              * `eraseDevice` stops the writer first, so nothing in flight
              * lands between the erase and the reload.
              */
-            void eraseDevice().finally(() => window.location.reload());
+            void eraseDevice()
+              .then(() => window.location.reload())
+              .catch(() => {
+                setWiping(false);
+                setEraseSaid('The browser did not erase everything. Close other Semester tabs, then try again. Nothing on your account was changed.');
+              });
           }}
           onCancel={() => setErasing(false)}
         />
