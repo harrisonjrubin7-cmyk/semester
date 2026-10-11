@@ -123,7 +123,13 @@ export interface GatewayTelemetryEvent {
   errorClass: 'none' | 'client' | 'server';
 }
 
-const TELEMETRY_ROUTES = new Set([
+/**
+ * Every route this gateway serves, by name. Exported so that the second-tenant
+ * sweep in `gateway.test.ts` can refuse to pass when a route is added here and
+ * not there: a route the sweep does not know is a route whose tenant boundary
+ * nobody has driven.
+ */
+export const TELEMETRY_ROUTES = new Set([
   '/health', '/health/live', '/health/ready', '/v1/auth/config',
   '/v1/intelligence/policy', '/v1/intelligence/respond',
   '/v1/registration-readiness/evaluations',

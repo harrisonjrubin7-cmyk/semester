@@ -60,3 +60,16 @@ Do not weaken `keyless.test.tsx`. The syllabus door stays first. The by-hand doo
 | `curl` and the authorized Vercel fetch on the branch preview | — | 302 (Vercel Authentication) and 403 (team not authorized for this connection). Preview built, not seen. |
 
 Not run: `verify.sh` (no Docker), HawkScan locally (no `HAWK_API_KEY`), a browser walk (one sentence changed in an existing list), any remote migration.
+
+## Phase 1 foundation hardening, first pass (11 October 2026, #1475, second push)
+
+Recorded from `docs/execute/31-phase-1-foundation-report.md`; the full-suite figures below are filled from the gate run on this head.
+
+| Gate | Result |
+| --- | --- |
+| `npx vitest run server/institution/gateway.test.ts` | 48 passed (2 new; both watched red first) |
+| `npx vitest run src/lib/docs/check-suites.test.ts` | 3 passed (red on a dropped manifest line) |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh gradebook` | ✓ 145 checks on PostgreSQL 16, local; red run: "a registrar whose grant was revoked exporting 2026FA — was allowed" |
+| `npm run ecosystem:build` / `ecosystem:check` | 12 passed, twice |
+| `REGISTERS=write` trust docs | 38 passed; CONTROL-FACTS.md regenerated |
+| `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm test` | all exit 0; design-system 69 tests; suite: Test Files 1521 passed, 1 skipped (1522); Tests 24204 passed, 69 skipped (24273) |

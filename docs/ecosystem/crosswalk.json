@@ -6563,12 +6563,14 @@
         "app/src/lib/console/client.test.ts",
         "supabase/capabilities.check.sql",
         "supabase/rolegrants.check.sql",
-        "supabase/my-capabilities.check.sql"
+        "supabase/my-capabilities.check.sql",
+        "app/server/institution/gateway.test.ts",
+        "supabase/gradebook.check.sql"
       ],
       "flags": [
         "capability console:operate"
       ],
-      "note": "The duties matrix (console_duty) is read into the Approvals tab and role_capabilities is the live authority; docs/operations/ROLE_CAPABILITY_MATRIX.md is the written matrix.",
+      "note": "The duties matrix (console_duty) is read into the Approvals tab and role_capabilities is the live authority; docs/operations/ROLE_CAPABILITY_MATRIX.md is the written matrix. Phase 1: gateway.test.ts drives a second tenant through every authenticated gateway route (T01, API surface); gradebook.check.sql refuses a revoked or expired grant at the export (F02, export surface).",
       "gap": "No role-by-capability or FERPA data-class matrix screen."
     },
     "#/trust/monitor": {
@@ -6620,12 +6622,13 @@
       ],
       "tests": [
         "app/src/screens/console.test.tsx",
-        "supabase/my-capabilities.check.sql"
+        "supabase/my-capabilities.check.sql",
+        "supabase/gradebook.check.sql"
       ],
       "flags": [
         "capability console:operate"
       ],
-      "note": "loadMyCapabilities reads the signed-in operator's grants through my_capabilities and the context bar shows them; docs/ACCESS-SIMULATOR.md describes a checker.",
+      "note": "loadMyCapabilities reads the signed-in operator's grants through my_capabilities and the context bar shows them; docs/ACCESS-SIMULATOR.md describes a checker. A revoked grant is refused at gradebook_export (gradebook.check.sql, Phase 1).",
       "gap": "No checker for another user's permissions."
     },
     "#/trust/ranking": {

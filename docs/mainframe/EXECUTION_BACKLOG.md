@@ -14,6 +14,8 @@ Phases follow the mainframe PDF. The operations roadmap’s P0 line (safe delive
 
 ## Next, in dependency order
 
+0. **Phase 1 remainder** (`docs/execute/31-phase-1-foundation-report.md`, "What the next stream needs"): budgets decision; T01 storage sweep and the course-room switch; F02 AI-context and realtime post-revocation assertions and the deprovision trigger's scope; F01 audit-harness workflow (founder sees the CI change first).
+
 1. **Source and freshness on the cart (second half).** The `named` row now says which codes are unmatched; the cart itself does not yet show a named code's catalog match or the import's age beside each selected section. Do not invent seats.
 2. **Coverage matrix, next rows.** The 51 routes still at `specified` are concentrated in trust (docs-only items), social, studio and admissions; the 11 at `schema-present` have tables and no screen. Pick by the phased plan's Phase 1 and 2 exit gates, not by count.
 3. **Security closure OP-01.** Only with explicit approval to add a migration and only against a non-production database the operator names. Do not infer a project id.

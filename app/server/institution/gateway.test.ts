@@ -13,7 +13,7 @@ import {
 } from '../../../packages/institution/src/index.ts';
 import type { InstitutionAdapter } from './adapter.ts';
 import { trustedIdentity } from './auth.ts';
-import { createGateway } from './gateway.ts';
+import { TELEMETRY_ROUTES, createGateway } from './gateway.ts';
 import { ActionJournal, type ActionJournalStore, type SavedReview } from './journal.ts';
 import type { RateLimiter } from './rate-limit.ts';
 import type { GatewayTelemetryEvent } from './gateway.ts';
@@ -121,6 +121,8 @@ function fixture({
   let executedIdempotencyKey: string | undefined;
   let mode = 'ok';
   let reviewTitle = 'Submit coursework';
+  let statusCalls = 0;
+  const intelligenceSeen: string[] = [];
 
   const record: UniversityRecord = {
     id: 'paper',
@@ -140,6 +142,7 @@ function fixture({
     institutionId: 'school-a',
     area: 'assignments',
     status: async () => ({
+      ...(statusCalls++, {}),
       area: 'assignments',
       provider: 'Fixture adapter',
       state: 'connected',
@@ -191,9 +194,16 @@ function fixture({
     loadSsoConfig: async () => ({ enabled: true, label: 'Vanderbilt', domain: 'vanderbilt.edu' }),
     intelligence: {
       status: 'configured-sandbox',
-      policy: async () => ({ status: 200, body: {} }),
-      respond: async () => ({ status: 200, body: {} }),
+      policy: async (who) => {
+        intelligenceSeen.push(who.institutionId);
+        return { status: 200, body: {} };
+      },
+      respond: async (_context, who) => {
+        intelligenceSeen.push(who.institutionId);
+        return { status: 200, body: {} };
+      },
       confirm: async (current) => {
+        intelligenceSeen.push(current.institutionId);
         intelligenceConfirmedRoles = current.roles;
         return { status: 200, body: {} };
       },
@@ -252,6 +262,8 @@ function fixture({
       membershipRoles = roles;
     },
     intelligenceConfirmedRoles: () => intelligenceConfirmedRoles,
+    statusCalls: () => statusCalls,
+    intelligenceSeen: () => [...intelligenceSeen],
     version: (v: string) => {
       version = v;
     },
@@ -918,5 +930,83 @@ describe('read-only mode', () => {
       expect(refused.status, String(confirmed)).toBe(400);
     }
     expect(f.calls()).toBe(0);
+  });
+});
+
+/*
+ * Capability T01, the API surface: a second tenant reaches nothing of the
+ * first's on any authenticated route. The two-tenant proofs above each drive
+ * one route; this one drives every route the gateway serves, and refuses to
+ * pass when a route is added to the gateway and not to this list — a route the
+ * sweep does not know is a route whose tenant boundary nobody has driven.
+ *
+ * The identity is the harder case on purpose: the *same* user, verified for a
+ * different institution. Everything of school-a's that exists before the
+ * switch — an adapter, a prepared review — must be unreachable afterwards, and
+ * the callbacks that resolve a tenant for themselves (intelligence) must be
+ * handed the verified institution, never the one the records belong to.
+ */
+describe('a second tenant on every authenticated route', () => {
+  /** Pre-authentication routes: a deployment check and the sign-in label. */
+  const PUBLIC = new Set(['/health', '/health/live', '/health/ready', '/v1/auth/config']);
+
+  it('names every route the gateway serves, so a new one cannot skip the sweep', () => {
+    const swept = new Set([
+      '/status', '/records', '/actions/prepare', '/actions/commit', '/actions/reconcile',
+      '/v1/intelligence/policy', '/v1/intelligence/respond', '/v1/intelligence/actions/:id/confirm',
+      '/v1/registration-readiness/evaluations', '/v1/registration-readiness/evaluations/:id/evaluate',
+    ]);
+    const authenticated = [...TELEMETRY_ROUTES].filter((r) => !PUBLIC.has(r));
+    // Two routes carry an id and are listed in TELEMETRY_ROUTES only by their
+    // telemetry name; both are in `swept` by that name.
+    authenticated.push('/v1/intelligence/actions/:id/confirm', '/v1/registration-readiness/evaluations/:id/evaluate');
+    expect([...swept].sort()).toEqual([...new Set(authenticated)].sort());
+  });
+
+  it('reaches no adapter, no review and no record of the first tenant, and hands intelligence the verified tenant', async () => {
+    const f = fixture();
+    const r = await f.prepare();
+    // Preparing consulted school-a's adapter; nothing below may consult it again.
+    const before = f.statusCalls();
+    f.identity({ ...actor, institutionId: 'school-b' });
+
+    // /status answers for school-b: every area awaits an adapter, and
+    // school-a's adapter is not asked for its status.
+    const status = await f.request('/status');
+    expect(status.status).toBe(200);
+    const body = await status.json();
+    expect(body.institutionId).toBe('school-b');
+    expect(body.connections.every((c: { state: string }) => c.state === 'not-configured')).toBe(true);
+    expect(f.statusCalls()).toBe(before);
+
+    // Reads and writes through an adapter: there is none for school-b.
+    expect((await f.request('/records?area=assignments')).status).toBe(503);
+    expect((await f.request('/actions/prepare', f.input)).status).toBe(503);
+
+    // School-a's review, by its real id, confirmed, and reconciled: not found,
+    // never "forbidden", so the id's existence is not disclosed either.
+    expect((await f.request('/actions/commit', { reviewId: r.id, confirmed: true })).status).toBe(404);
+    expect((await f.request('/actions/reconcile', { reviewId: r.id })).status).toBe(404);
+
+    // Registration readiness is not configured in this fixture, so the gateway
+    // refuses before any command runs; the tenant check inside the command
+    // path is readiness-repository.test.ts's.
+    const idem = { 'idempotency-key': '0f6f2a7e-2b3c-4d5e-8f90-1234567890ab' };
+    expect((await f.request('/v1/registration-readiness/evaluations', {}, idem)).status).toBe(503);
+    expect((await f.request(`/v1/registration-readiness/evaluations/${r.id}/evaluate`, {}, idem)).status).toBe(503);
+
+    // Intelligence resolves its own policy per tenant; what the gateway owes
+    // it is the verified institution on every call, including a confirm of an
+    // action id that belongs to school-a.
+    expect((await f.request('/v1/intelligence/policy')).status).toBe(200);
+    expect((await f.request('/v1/intelligence/respond', { prompt: 'x' })).status).toBe(200);
+    expect((await f.request(`/v1/intelligence/actions/${encodeURIComponent(r.id)}/confirm`, { confirmed: true })).status).toBe(200);
+    expect(f.intelligenceSeen()).toEqual(['school-b', 'school-b', 'school-b']);
+
+    expect(f.calls()).toBe(0);
+    // And school-a's review is still school-a's: untouched by any of it.
+    f.identity(actor);
+    expect((await f.request('/actions/commit', { reviewId: r.id, confirmed: true })).status).toBe(200);
+    expect(f.calls()).toBe(1);
   });
 });

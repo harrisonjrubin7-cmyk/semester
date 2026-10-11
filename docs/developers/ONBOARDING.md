@@ -151,7 +151,7 @@ To point the app at a local gateway, set `VITE_UNIVERSITY_GATEWAY_URL` in the ap
 
 ## 8. Run the database checks
 
-The database is checked by SQL, not by Vitest. `supabase/check.sh` builds a throwaway PostgreSQL cluster in a temporary directory, applies `supabase/local.stub.sql` and every file in `supabase/migrations/`, then runs every `supabase/*.check.sql` suite. It touches no real project.
+The database is checked by SQL, not by Vitest. `supabase/check.sh` builds a throwaway PostgreSQL cluster in a temporary directory, applies `supabase/local.stub.sql` and every file in `supabase/migrations/`, then runs every suite named in `supabase/check-suites.txt`, which must list every `supabase/*.check.sql` file and nothing else (a disagreement exits 2 before the cluster is built; `app/src/lib/docs/check-suites.test.ts` fails on the same disagreement in the Vitest run). It touches no real project.
 
 ```bash
 cd ..

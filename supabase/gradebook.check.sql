@@ -524,6 +524,27 @@ begin
     'Problem set 1=10.000');
   perform pg_temp.counted('Dan sees his released 81 and nothing of 2026FA',
     pg_temp.seen(dan, 'select * from public.grade_entries'), 1);
+
+  -- Revocation reaches the export (capability F02, the export surface). The
+  -- registrar's export of both terms just worked, which is the control; the
+  -- grant is then revoked, and the same call is refused for want of the grant,
+  -- not for any other reason. An instructor's grant that has expired is the
+  -- same: the export, and a grade entry, both refused. Nothing else about the
+  -- grade book changes — Dan still reads his released grade.
+  update public.role_grants set revoked_at = now() where subject = registrar and role = 'registrar';
+  perform pg_temp.denied('a registrar whose grant was revoked exporting 2026FA', registrar,
+    $q$select * from public.gradebook_export('ECON 1020', '2026FA')$q$);
+  perform pg_temp.denied('and 2027SP', registrar,
+    $q$select * from public.gradebook_export('ECON 1020', '2027SP')$q$);
+  perform pg_temp.counted('and reading no released row either',
+    pg_temp.seen(registrar, $q$select * from public.grade_entries where status = 'released'$q$), 0);
+  update public.role_grants set expires_at = now() - interval '1 minute'
+    where subject = next_prof and scope_id = 'gb-u/ECON 1020/2027SP';
+  perform pg_temp.denied('2027SP''s instructor exporting after the grant expired', next_prof,
+    $q$select * from public.gradebook_export('ECON 1020', '2027SP')$q$);
+  perform pg_temp.denied('or entering a grade', next_prof,
+    format($q$select public.gradebook_enter(%L, %L, 60, null, '', '', 'expired-dan-sp1-key')$q$, sp1, dan));
+  perform pg_temp.counted('Dan still sees his released 81', pg_temp.seen(dan, 'select * from public.grade_entries'), 1);
 end $$;
 
 rollback;
