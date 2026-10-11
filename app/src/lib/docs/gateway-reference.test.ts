@@ -1394,6 +1394,10 @@ describe('the constants a reader would copy', () => {
     expect(src(SRC.start)).toMatch(/sandboxAdapters\(/);
     expect(src(SRC.start)).toMatch(/\(process\.env\.SEMESTER_READ_ONLY \|\| ''\)\.trim\(\)\.toLowerCase\(\) === 'on'/);
     expect(src(SRC.runtime)).toMatch(/\(env\.SEMESTER_READ_ONLY \|\| ''\)\.trim\(\)\.toLowerCase\(\) === 'on'/);
+    const configuration = read('docs/reference/CONFIGURATION.md');
+    expect(configuration).not.toContain('start.ts only');
+    expect(configuration).not.toContain('production runtime has no read-only switch');
+    expect(configuration).toContain('the gateway, `start.ts` and `runtime.ts`');
     expect(src(SRC.runtime)).toMatch(/refreshIdentity:/);
     expect(src(SRC.start)).toMatch(/refreshIdentity:/);
     const auth = read(PAGES.auth);
