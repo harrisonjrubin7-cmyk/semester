@@ -128,6 +128,16 @@ describe('counting what is on a side', () => {
     expect(rows).toBe(5);
   });
 
+  it('does not mistake untouched defaults for authored rows', () => {
+    const defaults = {
+      saved: { e1: true, e16: true },
+      notifs: { due: true, changes: true },
+      tasks: [] as unknown[],
+    };
+    expect(countRows(structuredClone(defaults), defaults).rows).toBe(0);
+    expect(countRows({ ...defaults, tasks: [{ id: 'mine' }] }, defaults).rows).toBe(1);
+  });
+
   it('counts courses separately, because that is the unit people think in', () => {
     expect(countRows({ courses: [1, 2, 3, 4], notes: [] }).courses).toBe(4);
   });
