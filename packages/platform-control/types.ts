@@ -74,6 +74,13 @@ export interface BacklogItem {
   blockers: string[];
 }
 
+export type BacklogExecutionStatus = 'ready' | 'active' | 'sequencing_debt' | 'waiting' | 'blocked' | 'verified';
+
+export interface BacklogExecutionItem extends BacklogItem {
+  execution_status: BacklogExecutionStatus;
+  open_dependencies: string[];
+}
+
 export interface PlatformManifest extends RegistryRecord {
   canonical_domain: string;
   workspace_families: string[];
