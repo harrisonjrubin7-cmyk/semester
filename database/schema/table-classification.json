@@ -76,6 +76,7 @@
    "talent_profiles",
    "tasks",
    "usage",
+   "usage_daily",
    "weekly_checkins"
   ],
   "parent-scoped": [
