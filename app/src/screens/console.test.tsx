@@ -45,6 +45,7 @@ const mock = vi.hoisted(() => ({
   privacyDetail: vi.fn(),
   verifyPrivacy: vi.fn(),
   resolvePrivacy: vi.fn(),
+  rolePolicy: vi.fn(),
   prefs: vi.fn(),
   savePref: vi.fn(),
   mfa: vi.fn(),
@@ -68,6 +69,10 @@ vi.mock('../lib/cloud', () => ({
   cloud: vi.fn(),
 }));
 vi.mock('../lib/capabilities', () => ({ loadMyCapabilities: mock.caps }));
+vi.mock('../lib/console/role-policy', async (orig) => ({
+  ...(await orig<object>()),
+  loadRolePolicy: mock.rolePolicy,
+}));
 vi.mock('../lib/environment', async (orig) => ({ ...(await orig<object>()), environment: () => mock.env }));
 vi.mock('../lib/experience-flags', () => ({ EXPERIENCE_FLAGS: { supportTickets: 'production' } }));
 vi.mock('../lib/console/client', async (orig) => ({
@@ -120,6 +125,20 @@ const INCIDENT_PLATFORM = [...PLATFORM, { capability: 'incident:communicate', sc
 const FRESH = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 2 * 60_000) };
 const STALE = { currentLevel: 'aal1', nextLevel: 'aal2', verifiedAt: null };
 const STALE_AAL2 = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 20 * 60_000) };
+const ROLE_POLICY = {
+  roles: [
+    { role: 'platform_admin', global: true },
+    { role: 'student', global: false },
+  ],
+  capabilities: [
+    { capability: 'console:operate', about: 'Open the operations console.' },
+    { capability: 'student:self', about: 'Read the signed-in student record.' },
+  ],
+  assignments: [
+    { role: 'platform_admin', capability: 'console:operate' },
+    { role: 'student', capability: 'student:self' },
+  ],
+};
 
 const DUTIES = [
   { id: 'role-grant', action: 'Grant or widen a privileged role', requester: 'role:university_admin', approvers: ['security'], twoPerson: false, evidence: 'The access request, naming the person, the role, the tenant and the reason' },
@@ -238,6 +257,7 @@ beforeEach(() => {
   });
   mock.verifyPrivacy.mockResolvedValue('in_progress');
   mock.resolvePrivacy.mockResolvedValue({ status: 'completed', certificateId: 'certificate-1' });
+  mock.rolePolicy.mockResolvedValue(ROLE_POLICY);
   // Existing view tests exercise Approvals first; production defaults to the
   // Command center when no server-side preference exists.
   mock.prefs.mockResolvedValue({ 'console.tab': 'approvals' });
@@ -280,6 +300,102 @@ describe('support tab capability gate', () => {
     mock.caps.mockResolvedValue(SUPPORT_PLATFORM);
     await render();
     expect(button('Support')).toBeDefined();
+  });
+});
+
+describe('roles and capabilities workspace', () => {
+  it('routes a platform console operator to the read-only policy view and reuses the Console filter', async () => {
+    await render();
+    await press('Roles & capabilities');
+    expect(mock.rolePolicy).toHaveBeenCalledTimes(1);
+    expect(host.textContent).toContain('platform_admin');
+    expect(host.textContent).toContain('51 design and governance proposals');
+    type(field('Filter this view'), 'platform_admin');
+    expect(host.textContent).toContain('Semester security operator');
+    expect(host.textContent).not.toContain('student:self');
+    expect(Object.keys(localStorage).filter((key) => /console/i.test(key))).toEqual([]);
+  });
+
+  it('drops account A grants and workspace state while account B grants are pending', async () => {
+    const grantsB = deferred<typeof PLATFORM>();
+    mock.caps.mockResolvedValueOnce(PLATFORM).mockReturnValueOnce(grantsB.promise);
+    await render();
+    await press('Roles & capabilities');
+    expect(host.textContent).toContain('51 design and governance proposals');
+
+    mock.account = { id: 'op-2', email: 'other@semester.example', via: 'an email address and password' };
+    await act(async () => root.render(<Console />));
+    expect(host.textContent).toContain('Reading your grants…');
+    expect(host.textContent).not.toContain('51 design and governance proposals');
+    expect(button('Roles & capabilities')).toBeUndefined();
+
+    grantsB.resolve(PLATFORM);
+    await flush();
+    expect(button('Roles & capabilities')).toBeDefined();
+    expect(host.textContent).not.toContain('51 design and governance proposals');
+    expect(mock.rolePolicy).toHaveBeenCalledTimes(1);
+
+    mock.account = null;
+    await act(async () => root.render(<Console />));
+    const staleA = deferred<typeof PLATFORM>();
+    const currentB = deferred<typeof PLATFORM>();
+    mock.caps.mockReset().mockReturnValueOnce(staleA.promise).mockReturnValueOnce(currentB.promise);
+    mock.account = { id: 'op-1', email: 'ops@semester.example', via: 'an email address and password' };
+    await act(async () => root.render(<Console />));
+    expect(host.textContent).toContain('Reading your grants…');
+
+    mock.account = { id: 'op-2', email: 'other@semester.example', via: 'an email address and password' };
+    await act(async () => root.render(<Console />));
+    expect(host.textContent).toContain('Reading your grants…');
+    staleA.resolve(PLATFORM);
+    await flush();
+    expect(host.textContent).toContain('Reading your grants…');
+    expect(button('Roles & capabilities')).toBeUndefined();
+    expect(mock.rolePolicy).toHaveBeenCalledTimes(1);
+
+    currentB.resolve([]);
+    await flush();
+    expect(host.textContent).toContain('This account holds no console:operate grant');
+  });
+
+  it('suppresses stale A workspace results and new privileged reads through B denial and sign-out', async () => {
+    const policyA = deferred<typeof ROLE_POLICY>();
+    const grantsB = deferred<typeof PLATFORM>();
+    mock.rolePolicy.mockReturnValueOnce(policyA.promise);
+    mock.caps.mockResolvedValueOnce(PLATFORM).mockReturnValueOnce(grantsB.promise);
+    await render();
+    await press('Roles & capabilities');
+    expect(mock.rolePolicy).toHaveBeenCalledTimes(1);
+
+    mock.account = { id: 'op-2', email: 'other@semester.example', via: 'an email address and password' };
+    await act(async () => root.render(<Console />));
+    policyA.resolve(ROLE_POLICY);
+    await flush();
+    expect(host.textContent).toContain('Reading your grants…');
+    expect(host.textContent).not.toContain('platform_admin');
+    expect(mock.rolePolicy).toHaveBeenCalledTimes(1);
+
+    grantsB.resolve([]);
+    await flush();
+    expect(host.textContent).toContain('This account holds no console:operate grant');
+    expect(mock.rolePolicy).toHaveBeenCalledTimes(1);
+
+    const signedOutPolicy = deferred<typeof ROLE_POLICY>();
+    mock.caps.mockResolvedValueOnce(PLATFORM);
+    mock.rolePolicy.mockReturnValueOnce(signedOutPolicy.promise);
+    mock.account = { id: 'op-1', email: 'ops@semester.example', via: 'an email address and password' };
+    await act(async () => root.render(<Console />));
+    await flush();
+    await press('Roles & capabilities');
+    expect(mock.rolePolicy).toHaveBeenCalledTimes(2);
+
+    mock.account = null;
+    await act(async () => root.render(<Console />));
+    signedOutPolicy.resolve(ROLE_POLICY);
+    await flush();
+    expect(host.textContent).toContain('Sign in with an operator account');
+    expect(host.textContent).not.toContain('platform_admin');
+    expect(mock.rolePolicy).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -378,6 +494,13 @@ function field(text: string): HTMLInputElement | HTMLTextAreaElement | HTMLSelec
   const control = label?.querySelector('input, textarea, select');
   if (!control) throw new Error(`No field labelled “${text}”`);
   return control as HTMLInputElement;
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
 }
 
 async function submit(form: Element | null) {
@@ -714,6 +837,33 @@ describe('approvals', () => {
     expect(mock.decide).not.toHaveBeenCalled();
     expect(host.querySelector('[aria-label="Second factor"]')).toBeNull();
     expect(field('Evidence attached').value).toBe('Draft evidence survives MFA.');
+  });
+
+  it('does not execute account A\'s queued privileged callback after account switch and sign-out', async () => {
+    const verifyA = deferred<void>();
+    const grantsB = deferred<typeof PLATFORM>();
+    mock.mfa.mockResolvedValueOnce(STALE_AAL2);
+    mock.verify.mockReturnValueOnce(verifyA.promise);
+    mock.caps.mockResolvedValueOnce(PLATFORM).mockReturnValueOnce(grantsB.promise);
+    await render();
+    await press('Approve');
+    const step = host.querySelector('[aria-label="Second factor"]') as Element;
+    type(step.querySelector('input'), '123456');
+    await submit(step.querySelector('form'));
+    expect(mock.decide).not.toHaveBeenCalled();
+
+    mock.account = { id: 'op-2', email: 'other@semester.example', via: 'an email address and password' };
+    await act(async () => root.render(<Console />));
+    expect(host.textContent).toContain('Reading your grants…');
+    expect(host.querySelector('[aria-label="Second factor"]')).toBeNull();
+    mock.account = null;
+    await act(async () => root.render(<Console />));
+
+    verifyA.resolve();
+    await flush();
+    expect(mock.mfa).toHaveBeenCalledTimes(1);
+    expect(mock.decide).not.toHaveBeenCalled();
+    grantsB.resolve(PLATFORM);
   });
 
   it('offers the action only to the requester or an approver who decided it', async () => {

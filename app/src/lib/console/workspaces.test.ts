@@ -19,9 +19,22 @@ const grant = (capability: string, scopeKind = 'platform', scopeId = ''): Grant 
 describe('console workspace registry', () => {
   it('preserves the current view order and declares a classification for every view', () => {
     expect(CONSOLE_WORKSPACES.map(({ id }) => id)).toEqual([
-      'command', 'support', 'approvals', 'breakglass', 'audit', 'tenant-operations', 'privacy', 'integration-health', 'release-incidents', 'customers', 'figures', 'finance', 'releases', 'launch', 'controls', 'evidence', 'views',
+      'command', 'support', 'approvals', 'breakglass', 'audit', 'role-policy', 'tenant-operations', 'privacy', 'integration-health', 'release-incidents', 'customers', 'figures', 'finance', 'releases', 'launch', 'controls', 'evidence', 'views',
     ]);
     expect(CONSOLE_WORKSPACES.every(({ classification }) => classification.length > 0)).toBe(true);
+  });
+
+  it('offers the restricted Roles & capabilities workspace only through the platform console shell grant', () => {
+    const roles = CONSOLE_WORKSPACES.find(({ id }) => id === 'role-policy');
+    expect(roles).toMatchObject({
+      label: 'Roles & capabilities',
+      capability: 'console:operate',
+      scopeKind: 'platform',
+      scopeId: '',
+      classification: 'restricted',
+    });
+    expect(canDiscoverWorkspace(roles!, [grant('console:operate')])).toBe(true);
+    expect(canDiscoverWorkspace(roles!, [grant('console:operate', 'school', 'vu')])).toBe(false);
   });
 
   it('requires an exact capability and scope match for discoverability', () => {

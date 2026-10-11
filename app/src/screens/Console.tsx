@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, TabList } from '../components/ui';
@@ -32,6 +32,7 @@ import { TenantOperations } from '../components/console/TenantOperations';
 import { PrivacyRequests } from '../components/console/PrivacyRequests';
 import { IntegrationHealth } from '../components/console/IntegrationHealth';
 import { ReleaseIncidents } from '../components/console/ReleaseIncidents';
+import { RolePolicy } from '../components/console/RolePolicy';
 import { said, when } from '../components/console/Fields';
 import {
   isConsoleWorkspaceId,
@@ -77,23 +78,24 @@ const PREF_VIEWS = 'console.views';
  * The caller's grants: `null` until read, so "no grant" is never shown while
  * reading, and not read at all when there is nothing to read them from.
  */
-function useGrants(enabled: boolean): Grant[] | null {
-  const [grants, setGrants] = useState<Grant[] | null>(null);
+function useGrants(authorityKey: string | null): Grant[] | null {
+  const request = useMemo(() => ({ authorityKey }), [authorityKey]);
+  const [result, setResult] = useState<{ request: typeof request; grants: Grant[] } | null>(null);
   useEffect(() => {
-    if (!enabled) return;
+    if (authorityKey === null) return;
     let live = true;
     loadMyCapabilities().then(
-      (g) => { if (live) setGrants(g); },
-      () => { if (live) setGrants([]); },
+      (grants) => { if (live) setResult({ request, grants }); },
+      () => { if (live) setResult({ request, grants: [] }); },
     );
     return () => { live = false; };
-  }, [enabled]);
-  return grants;
+  }, [authorityKey, request]);
+  return result?.request === request ? result.grants : null;
 }
 
 export function Console() {
   const { account } = useStore();
-  const grants = useGrants(cloudConfigured && account !== null);
+  const grants = useGrants(cloudConfigured ? account?.id ?? null : null);
   if (!cloudConfigured || !account) {
     return (
       <Page blurb={BLURB}>
@@ -115,10 +117,11 @@ export function Console() {
       </Page>
     );
   }
-  return <Operations operator={account.email} grants={grants} />;
+  return <Operations operator={account.email} authorityKey={account.id} grants={grants} />;
 }
 
-function Operations({ operator, grants }: { operator: string; grants: Grant[] }) {
+function Operations({ operator, authorityKey, grants }: { operator: string; authorityKey: string; grants: Grant[] }) {
+  const live = useRef(true);
   const env = environment();
   const workspaces = useMemo(() => visibleConsoleWorkspaces(grants), [grants]);
   const [tab, setTab] = useState<ConsoleWorkspaceId>('command');
@@ -134,6 +137,11 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
   const [now, setNow] = useState(() => new Date());
 
   const onStatus = useCallback((s: string) => setStatus(s), []);
+
+  useEffect(() => {
+    live.current = true;
+    return () => { live.current = false; };
+  }, []);
 
   const readMfa = useCallback(async () => {
     try {
@@ -219,13 +227,15 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
   );
 
   const verified = () => {
+    if (!live.current) return;
     const pending = gate;
     if (!pending) return;
     setGateRunning(true);
     void readMfa()
-      .then(() => pending.run())
-      .catch((e: unknown) => setStatus(said(e, 'The change was not recorded.')))
+      .then(() => live.current ? pending.run() : undefined)
+      .catch((e: unknown) => { if (live.current) setStatus(said(e, 'The change was not recorded.')); })
       .finally(() => {
+        if (!live.current) return;
         setGate(null);
         setGateRunning(false);
       });
@@ -281,6 +291,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
         {tab === 'approvals' && <Approvals {...viewProps} />}
         {tab === 'breakglass' && <BreakGlass {...viewProps} />}
         {tab === 'audit' && <Audit {...viewProps} />}
+        {tab === 'role-policy' && <RolePolicy filter={filter} authorityKey={authorityKey} />}
         {tab === 'tenant-operations' && <TenantOperations {...viewProps} now={now} />}
         {tab === 'privacy' && <PrivacyRequests {...viewProps} />}
         {tab === 'integration-health' && <IntegrationHealth {...viewProps} />}
