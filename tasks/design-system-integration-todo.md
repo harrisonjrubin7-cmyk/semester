@@ -2012,3 +2012,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
 - [ ] Keep housing and meal-plan backup/migration closed until legacy term-only records have an explicit account ownership and safe migration rule.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 reversible athletics-hours removal — automation pass 6, integration slice 96
+
+- [x] Start from clean required-branch head `cb84b1707`; inspect selection-time `origin/main` `ccf2d45ff`, then inspect final `8107737a8` and confirm its access-saga files do not overlap athletics/CARA/Undo or the slice controls.
+- [x] Re-rank one student-authored CARA hours entry ahead of housing and meal-plan recovery, whose legacy term-only records still lack a safe account-ownership and migration rule.
+- [x] Give each removal an exact accessible name containing the recorded hours, activity kind and date.
+- [x] Offer an inline polite removal receipt and bounded Undo only after the guarded account/term-scoped device-library write succeeds.
+- [x] Restore the exact entry at its former position against the latest library state, preserving later log work, the weekly limit, season and all official/compliance records.
+- [x] Preserve the existing repository authority: the app records student-entered hours but does not decide countability, the applicable limit or compliance.
+- [x] Prove both component assertions red against the prior generic immediate removal, then pass 27/27 focused Cara, backup-coverage and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the build chunk-size warning.
+- [x] Pass 78/78 design-check constituents and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [ ] Aggregate design-system wrappers — no real `npm`/`npx` executable is available in this shell; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace slice; no new full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep housing and meal-plan backup/migration closed until legacy term-only records have an explicit account ownership and safe migration rule.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

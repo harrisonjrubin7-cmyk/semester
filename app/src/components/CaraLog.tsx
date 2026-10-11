@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { ActionButton, SectionLabel } from './ui';
 import { NotOfficial } from './NotOfficial';
@@ -10,6 +10,7 @@ import {
   type CaraKind,
 } from '../lib/athletics';
 import { fromSeason, limitOf, logged, weekLine, weekOf, weeks } from '../lib/cara';
+import { SHOWN_FOR } from '../lib/undo';
 import { useNow } from '../state/store';
 
 /**
@@ -52,6 +53,13 @@ export function CaraLog({
   const [kind, setKind] = useState<CaraKind>('Practice');
   const [note, setNote] = useState('');
   const [said, setSaid] = useState('');
+  const [undo, setUndo] = useState<{ entry: CaraEntry; index: number } | null>(null);
+
+  useEffect(() => {
+    if (!undo) return;
+    const timer = window.setTimeout(() => setUndo(null), SHOWN_FOR);
+    return () => window.clearTimeout(timer);
+  }, [undo]);
 
   const limit = limitOf(value.caraLimit);
   const rows = weeks(value.cara);
@@ -108,6 +116,29 @@ export function CaraLog({
       setSaid(
         `${fresh.length} brought in from your schedule as your own entries. Check the hours and delete anything that was not required.`,
       );
+    }
+  };
+
+  const remove = (entry: CaraEntry) => {
+    const index = value.cara.findIndex((candidate) => candidate.id === entry.id);
+    if (index < 0) return;
+    if (update((old) => ({ ...old, cara: old.cara.filter((candidate) => candidate.id !== entry.id) }))) {
+      setUndo({ entry, index });
+      setSaid('Hours entry removed.');
+    }
+  };
+
+  const restore = () => {
+    if (!undo) return;
+    const restored = update((old) => {
+      if (old.cara.some((entry) => entry.id === undo.entry.id)) return old;
+      const cara = [...old.cara];
+      cara.splice(Math.min(undo.index, cara.length), 0, undo.entry);
+      return { ...old, cara };
+    });
+    if (restored) {
+      setUndo(null);
+      setSaid('Hours entry restored.');
     }
   };
 
@@ -221,7 +252,12 @@ export function CaraLog({
             textWrap: 'pretty',
           }}
         >
-          {said}
+          {said}{' '}
+          {undo ? (
+            <button type="button" className="workspace-text-button" onClick={restore}>
+              Undo removal
+            </button>
+          ) : null}
         </p>
       )}
 
@@ -253,7 +289,8 @@ export function CaraLog({
                   <button
                     type="button"
                     className="bare tappable"
-                    onClick={() => update((old) => ({ ...old, cara: old.cara.filter((x) => x.id !== e.id) }))}
+                    aria-label={`Remove ${e.hours} ${e.hours === 1 ? 'hour' : 'hours'} of ${e.kind} on ${e.date}`}
+                    onClick={() => remove(e)}
                     style={{ textDecoration: 'underline', display: 'inline', width: 'auto' }}
                   >
                     Remove
