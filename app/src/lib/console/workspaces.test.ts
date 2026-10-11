@@ -19,7 +19,7 @@ const grant = (capability: string, scopeKind = 'platform', scopeId = ''): Grant 
 describe('console workspace registry', () => {
   it('preserves the current view order and declares a classification for every view', () => {
     expect(CONSOLE_WORKSPACES.map(({ id }) => id)).toEqual([
-      'command', 'support', 'approvals', 'breakglass', 'audit', 'tenant-operations', 'privacy', 'integration-health', 'release-incidents', 'customers', 'figures', 'finance', 'releases', 'launch', 'controls', 'evidence', 'views',
+      'command', 'support', 'approvals', 'breakglass', 'audit', 'tenant-operations', 'inbox', 'privacy', 'integration-health', 'release-incidents', 'customers', 'figures', 'finance', 'releases', 'launch', 'controls', 'evidence', 'views',
     ]);
     expect(CONSOLE_WORKSPACES.every(({ classification }) => classification.length > 0)).toBe(true);
   });
@@ -53,6 +53,14 @@ describe('console workspace registry', () => {
     expect(canDiscoverWorkspace(operations, [grant('tenant:implement', 'school', 'vu')])).toBe(true);
     expect(canDiscoverWorkspace(operations, [grant('tenant:implement', 'platform')])).toBe(false);
     expect(canDiscoverWorkspace(operations, [grant('tenant:implement', 'school', '')])).toBe(false);
+  });
+
+  it('offers the shared operations inbox only with an exact-school domain grant', () => {
+    const inbox = CONSOLE_WORKSPACES.find(({ id }) => id === 'inbox');
+    expect(inbox).toMatchObject({ label: 'Operations inbox', capability: 'tenant:implement', scopeKind: 'school', scopeId: null });
+    expect(canDiscoverWorkspace(inbox!, [grant('tenant:implement', 'school', 'vu')])).toBe(true);
+    expect(canDiscoverWorkspace(inbox!, [grant('console:operate')])).toBe(false);
+    expect(canDiscoverWorkspace(inbox!, [grant('tenant:implement', 'platform')])).toBe(false);
   });
 
   it('discovers privacy requests from an exact-school or platform data-rights grant', () => {
