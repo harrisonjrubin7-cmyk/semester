@@ -703,6 +703,7 @@ function vercelUncovered(extra: string): string[] {
  * fails if this list and the tree disagree.
  */
 const MOCKS_MODULES = [
+  'src/components/AboutMe.test.tsx',
   'src/components/TodayActionCenter.shadow.sources.test.tsx',
   'src/composition/react.mount.test.tsx',
   'src/components/ProductivityPreparation.test.tsx',
@@ -726,6 +727,7 @@ const MOCKS_MODULES = [
   'src/screens/mentionbadge.test.tsx',
   'src/screens/mine/Drive.delete-file.test.tsx',
   'src/screens/mine/Drive.delete-folder.test.tsx',
+  'src/screens/mine/Drive.delete-file.test.tsx',
   'src/components/syncstrip.test.tsx',
   'src/components/waitingrow.test.tsx',
   'src/components/pushstalled.test.tsx',
