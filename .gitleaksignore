@@ -15,3 +15,6 @@
 # key used to prove that a credential in a registry file is refused. Not a
 # credential; pinned to commit, path, rule and line.
 5f5b8a883c0685408a73814db64b2f2106553879:packages/platform-control/tests/inception-validator.test.ts:stripe-access-token:155
+# The same fixture, as the working-tree scan (`gitleaks dir`, which the secrets
+# job runs after the history scan) names it: file, rule and line, no commit.
+packages/platform-control/tests/inception-validator.test.ts:stripe-access-token:155
