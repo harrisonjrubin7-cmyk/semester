@@ -2024,6 +2024,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove both component assertions red against the prior generic immediate removal, then pass 27/27 focused Cara, backup-coverage and root-lifecycle tests.
 - [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the build chunk-size warning.
 - [x] Pass 78/78 design-check constituents and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [x] Commit the coherent slice as `beda413e7`, merge final `origin/main` `8107737a8` cleanly as `f41dc507e`, then pass 27/27 focused tests, TypeScript and university gateway typecheck on the combined head.
 - [ ] Aggregate design-system wrappers — no real `npm`/`npx` executable is available in this shell; exact constituents pass, but no aggregate-wrapper pass is claimed.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace slice; no new full-suite result is claimed.
 - [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
