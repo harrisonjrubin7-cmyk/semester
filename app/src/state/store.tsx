@@ -399,6 +399,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ...persisted,
         ...ephemeral,
         screen: landed.screen,
+        workspaceView: landed.view ?? null,
         ...(field && landed.id ? { [field]: landed.id } : {}),
         ...(landed.mode ? { mode: landed.mode } : {}),
         // A link to a screen that has since merged says which part of its
@@ -1781,8 +1782,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       screen: state.screen,
       id: routeId,
       ...(state.screen === 'guide' ? { mode: state.mode } : {}),
+      ...(state.workspaceView ? { view: state.workspaceView } : {}),
     }),
-    [state.screen, routeId, state.mode],
+    [state.screen, routeId, state.mode, state.workspaceView],
   );
   const shown = useRef<Route | null>(null);
 
@@ -1839,7 +1841,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       if (same(asked, shown.current)) return;
       shown.current = asked;
-      dispatch({ type: 'landed', screen: asked.screen, id: asked.id, mode: asked.mode });
+      dispatch({ type: 'landed', screen: asked.screen, id: asked.id, mode: asked.mode, view: asked.view });
     };
     window.addEventListener('popstate', moved);
     window.addEventListener('hashchange', moved);
