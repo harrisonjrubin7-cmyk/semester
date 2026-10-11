@@ -57,6 +57,13 @@ export const WRITES: readonly Write[] = [
     why: 'The student’s own material, chosen by them, expiring on its own and deletable from the same screen. Held, not sent: one tap when they are back, and a share that may already have gone is checked first.',
   },
   {
+    file: 'lib/advisor-checkins.ts',
+    kind: 'share',
+    class: 'never-queued',
+    does: 'An advisor records a check-in on a plan a student shared',
+    why: 'Made by staff to a student, on a share that may have expired or been revoked by the time a held one fired. Refused offline; the draft stays on screen and its key makes the retry safe.',
+  },
+  {
     file: 'lib/course-demand-remote.ts',
     kind: 'send',
     class: 'held-send',

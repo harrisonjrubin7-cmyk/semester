@@ -47,7 +47,7 @@ Every slice ships together:
 
 1. **Agenda view (§94).** Done in #1448. Class meetings were added after review.
 2. **Unmatched named courses.** Done 11 October 2026: after a catalog import, the codes a student named stay listed, matched or unmatched (`matchNamed`, `RegistrationPortal.namedplan.test.tsx`). Seats are never invented.
-3. **Advising, the student-consented part** (Advising #5, #6, #8; P0). Check-ins and a success plan the student can see and revoke. This is built on the existing advisor-share grant, not on a new caseload store. It needs decision Q1 before any staff caseload screen is built.
+3. **Advising, the student-consented part** (Advising #5 and #6; P0). Check-ins done 11 October 2026 in #1448 (D-1448): an advisor writes a note and up to five next steps on a live share, and the student adds each step to their own actions. A standalone success plan (the rest of #6) is still open. No staff caseload store until decision Q1.
 4. **Hold-release notice** (Student finance #12; P0). Through `push` and `support-reply-notify`.
 5. **Faculty P0 steps** (Faculty course lifecycle #1, #9, #10, #13, #19): rubric, assessment builder (wiring `lib/itembank.ts`), review of student work, and office hours. Each is gated on `course_studio`.
 
@@ -101,4 +101,5 @@ Update this section at the end of every session.
   - Added the agenda view, with class meetings.
   - Gates for these changes: listed in the pull request.
   - Named courses stay visible after a catalog import (Phase A item 2).
-  - **Next executable task:** Phase A item 3, the student-consented advising check-ins and success plan.
+  - Advisor check-ins on a share (Phase A item 3, D-1448). The migration is in the tree and has not been applied to any hosted database.
+  - **Next executable task:** Phase A item 4, the hold-release notice.

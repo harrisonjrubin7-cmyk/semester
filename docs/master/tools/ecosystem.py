@@ -39,6 +39,18 @@ STATUS_OVERRIDES = {
          "app/src/screens/Calendar.agenda.test.tsx"],
         "Day, week, month, semester and agenda views (agenda added 10 October 2026, §94)",
     ),
+    "Advising & student success#5": (
+        "implemented",
+        ["supabase/migrations/20261011170000_advisor_check_ins.sql", "supabase/advisor-checkins.check.sql",
+         "app/src/lib/advisor-checkins.ts", "app/src/components/AdvisorCheckIns.tsx",
+         "app/src/components/AdvisorCheckIns.test.tsx"],
+        "An advisor records a check-in on a live share the student made; retry-safe by draft key (D-1448)",
+    ),
+    "Advising & student success#6": (
+        "in progress",
+        ["app/src/components/AdvisorCheckIns.tsx", "app/src/components/AdvisorMeeting.tsx"],
+        "Next steps on a check-in become the student's own actions; no standalone success plan yet (D-1448)",
+    ),
 }
 
 VERDICT = {"exists": "implemented", "partial": "in progress", "missing": "specified"}

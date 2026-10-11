@@ -80,6 +80,7 @@
   ],
   "parent-scoped": [
    "accommodation_access_events",
+   "advisor_check_ins",
    "advisor_share_events",
    "dining_hours",
    "dining_menu_items",

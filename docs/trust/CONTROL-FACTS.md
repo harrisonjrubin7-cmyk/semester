@@ -12,13 +12,13 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 231 |
-| Tables created in `public` and not later dropped | 342 |
-| … of which enable row-level security in a migration | 342 |
+| Migration files | 232 |
+| Tables created in `public` and not later dropped | 343 |
+| … of which enable row-level security in a migration | 343 |
 | Tables created in `private` and not later dropped | 43 |
 | … of which enable row-level security in a migration | 43 |
 | Tables with no `enable row level security` statement found | 0 |
-| Tables named by at least one literal `create policy` statement | 276 |
+| Tables named by at least one literal `create policy` statement | 277 |
 | Tables with RLS found and no literal policy statement | 109 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-150 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+151 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -37,6 +37,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/access.check.sql` | The log of who read your rows, which is only worth anything if it is yours. |
 | `supabase/activity.check.sql` | The pilot's three figures: what the ping may write, and what it may not. |
 | `supabase/admins.check.sql` | The admin list, and the account_role column that is deliberately not it. |
+| `supabase/advisor-checkins.check.sql` | Advisor check-ins on a student's share (20261011170000, D-1448): only the share's advisor writes one, only while the share and their role are live; a retry writes nothing new; the student sees and ma… |
 | `supabase/advisor-reconciliation.check.sql` | The production-advisor reconciliation of 30 September 2026 (D-1026): that a table with row-level security on and no policy is unreachable by any client role — the fact that lets the advisor's 49 noti… |
 | `supabase/advisor.check.sql` | Advisor Meeting Mode shares (Phase G, D-016): who can share with whom, who can read, and that expiry and revocation stop reading. |
 | `supabase/ai-audit-content-free.check.sql` | The AI audit tables hold no prompt and no answer. |
@@ -290,14 +291,14 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 232 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 232 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 234 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 234 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 65 |
-| Register rows in category `sharing` | 23 |
+| Register rows in category `sharing` | 25 |
 | Register rows in category `admin` | 88 |
 | Register rows in category `integration` | 6 |
 | Register rows in category `financial` | 3 |

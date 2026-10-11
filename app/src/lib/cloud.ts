@@ -1125,6 +1125,8 @@ export const OWNED_TABLES: OwnedTable[] = [
   // their read log. `erase_account` runs the RPC before the auth user goes,
   // and an advisor has no delete policy — the RPC removes both sides.
   { table: 'advisor_shares', column: null, via: 'forget_my_advisor_shares' },
+  // An advisor's check-ins on a share (D-1448) go with the share.
+  { table: 'advisor_check_ins', column: null, cascadesFrom: 'advisor_shares' },
   // Course demand (Phase K): the courses a student contributed and their
   // consent. The consent allows no client write, so the RPC removes both;
   // the plan rows are listed too, since the student may delete those directly.

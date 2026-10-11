@@ -506,6 +506,12 @@ declare
     'read_advisor_share(want_share uuid)',
     'share_with_advisor(advisor_email text, share_title text, share_payload jsonb, share_expires timestamp with time zone)',
 
+    -- Advisor check-ins (20261011170000, D-1448): the share's own advisor,
+    -- only while the share is live and their academic_advisor grant holds, as
+    -- read_advisor_share. Held by advisor-checkins.check.sql.
+    'record_advisor_check_in(want_share uuid, check_in_note text, check_in_steps text[], check_in_key uuid)',
+    'list_share_check_ins(want_share uuid)',
+
     -- The six in 20260928302000_office_action_feed.sql (Phase J, D-048).
     -- The feed returns only published rows that reach the caller; the desk
     -- only rows in the caller's own office scope, with a count that is null
