@@ -1839,3 +1839,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep whole-project deletion, broader Toolkit backup coverage, account/institution records and provider operations separate from this one evidence-row mutation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed Research Studio claim removal — automation pass 10, integration slice 88
+
+- [x] Start from clean required-branch head `d3efb16b`; fetch current `origin/main` `ec618dea`, confirm it is already included and inspect exact Research Studio history/code for overlap.
+- [x] Re-rank one student-authored research claim as the earliest bounded consequence gap; keep source rows, whole-project deletion, original files, account/institution records and provider operations outside the mutation.
+- [x] Put the device-library mutation behind the shared `ConfirmDialog` and `ActionPreview`, with Cancel initially focused and no write on the first press or cancellation.
+- [x] Name the exact claim, current citation-audit status and linked-source count; state that the claim and its source links are removed while sources, question, search plan and other claims remain.
+- [x] State the exact recovery boundary: Toolkit keys are outside the device-workspace backup contract, so the student must re-enter the claim and reconnect its sources.
+- [x] Keep a refused device-library update represented as failure; retain the dialog and claim for retry, and announce completion only after the bounded write succeeds.
+- [x] Prove the regression red against prior immediate removal, then pass 36/36 focused Toolkit, ActionPreview/modal and root-lifecycle tests, including cancellation, refusal, retry and source preservation.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain six existing lint warnings and the build chunk-size warning.
+- [x] Pass 78/78 design-check constituents and 96/96 report contracts with zero new audit violation or CSS-ledger increase.
+- [ ] Aggregate design-system wrappers — no real `npm`/`npx` executable is available in this shell; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — mandatory skill preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep whole-project deletion, broader Toolkit backup coverage, account/institution records and provider operations separate from this one claim mutation.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

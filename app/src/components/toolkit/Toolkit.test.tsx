@@ -243,6 +243,48 @@ it('keeps a research source represented when device storage refuses removal', ()
   expect(host.textContent).not.toContain('Source removed from this device.');
 });
 
+it('previews research-claim removal and preserves it when storage refuses the write', () => {
+  mount();
+  tab('Research Studio');
+  click('Start a research project');
+  click('Add a source');
+  const claim = [...host.querySelectorAll('label')].find((label) => label.textContent?.startsWith('A claim you want to make'))!.querySelector('input')!;
+  type(claim, 'The evidence supports this conclusion.');
+  click('Add claim');
+  act(() => (host.querySelector('fieldset input[type="checkbox"]') as HTMLInputElement).click());
+
+  click('Remove claim');
+  let dialog = host.querySelector('[role="dialog"]')!;
+  expect(dialog.textContent).toContain('Removes this claim and its links to supporting sources from this research project.');
+  expect(dialog.textContent).toContain('The linked sources, research question, search plan and other claims stay unchanged.');
+  expect(dialog.textContent).toContain('This Toolkit workspace is not included in a device workspace backup.');
+  expect(dialog.textContent).toContain('linked to 1 source.');
+  expect(host.textContent).toContain('The evidence supports this conclusion.');
+
+  click('Cancel');
+  expect(host.textContent).toContain('The evidence supports this conclusion.');
+
+  const real = Storage.prototype.setItem;
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+    if (key === toolkitKey()) throw new Error('quota');
+    return real.call(this, key, value);
+  });
+  click('Remove claim');
+  dialog = host.querySelector('[role="dialog"]')!;
+  act(() => ([...dialog.querySelectorAll('button')].find((candidate) => candidate.textContent?.trim() === 'Remove claim') as HTMLButtonElement).click());
+  expect(host.querySelector('[role="dialog"]')).not.toBeNull();
+  expect(host.textContent).toContain('The evidence supports this conclusion.');
+  expect(host.textContent).toContain('Changes could not be saved: quota');
+  expect(host.textContent).not.toContain('Claim removed from this device.');
+
+  vi.restoreAllMocks();
+  dialog = host.querySelector('[role="dialog"]')!;
+  act(() => ([...dialog.querySelectorAll('button')].find((candidate) => candidate.textContent?.trim() === 'Remove claim') as HTMLButtonElement).click());
+  expect(host.querySelector('fieldset')).toBeNull();
+  expect(host.querySelectorAll('details.toolkit-evidence')).toHaveLength(1);
+  expect(host.textContent).toContain('Claim removed from this device.');
+});
+
 it('hides the research and data sections when their flags are off', () => {
   mount(toolkitFlags({ VITE_AI_TOOLKIT: 'preview' }));
   const tabs = [...host.querySelectorAll('[role="tab"]')].map((t) => t.textContent);

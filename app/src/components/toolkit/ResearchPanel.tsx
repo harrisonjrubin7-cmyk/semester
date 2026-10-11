@@ -15,6 +15,7 @@ import {
   searchString,
   SOURCE_KINDS,
   verify,
+  type Claim,
   type Evidence,
   type Project,
   type Style,
@@ -62,6 +63,7 @@ export function ResearchPanel({ library }: { library: Library }) {
   const [style, setStyle] = useState<Style>('apa');
   const [claimText, setClaimText] = useState('');
   const [removingSource, setRemovingSource] = useState<Evidence | null>(null);
+  const [removingClaim, setRemovingClaim] = useState<Claim | null>(null);
   const [deleting, setDeleting] = useState(false);
   const project = projects.find((p) => p.id === openId);
 
@@ -316,11 +318,33 @@ export function ResearchPanel({ library }: { library: Library }) {
                   {e.page ? ` (${e.page})` : ''}
                 </label>
               ))}
-              <button onClick={() => save({ ...project, claims: project.claims.filter((x) => x.id !== c.id) })}>Remove claim</button>
+              <button onClick={() => setRemovingClaim(c)}>Remove claim</button>
             </fieldset>
           );
         })}
       </section>
+      {removingClaim ? (
+        <ConfirmDialog
+          title="Remove this research claim?"
+          preview={(
+            <ActionPreview
+              subject={removingClaim.text}
+              says="Removes this claim and its links to supporting sources from this research project."
+              exactly={`${AUDIT_LABEL[audit(removingClaim, project.evidence).status]} · linked to ${removingClaim.evidence.length} source${removingClaim.evidence.length === 1 ? '' : 's'}.`}
+              doesNotChange="The linked sources, research question, search plan and other claims stay unchanged."
+              recovery={{ kind: 'none', how: 'This Toolkit workspace is not included in a device workspace backup. Re-enter the claim and reconnect its sources if you need it again.' }}
+            />
+          )}
+          confirmLabel="Remove claim"
+          onCancel={() => setRemovingClaim(null)}
+          onConfirm={() => {
+            if (save({ ...project, claims: project.claims.filter((claim) => claim.id !== removingClaim.id) })) {
+              setRemovingClaim(null);
+              setMessage('Claim removed from this device.');
+            }
+          }}
+        />
+      ) : null}
 
       <section className="portal-panel" aria-labelledby="rs-export">
         <h3 id="rs-export">References</h3>
