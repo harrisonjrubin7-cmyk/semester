@@ -1034,7 +1034,7 @@ answered 200. Both AI drills ran minutes later and held
 Optional: `MONTHLY_CALL_LIMIT` (default 60 calls per account per month),
 `TOKEN_QUOTA_DAILY` (tokens per account per UTC day; unset, empty or `0` is no
 quota, which is the default — the meter needs
-`supabase/migrations/20261011200000_daily_token_quota.sql` applied before the
+`supabase/migrations/20261011210000_daily_token_quota.sql` applied before the
 variable is set), `ALLOWED_ORIGIN` (extra https origins; the Pages origin is
 built in) and `CORS_ALLOW_DEV` (unset on the live project).
 

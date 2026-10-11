@@ -15,7 +15,7 @@
  * settle to the usage Anthropic reports when the answer ends, and leave the
  * reservation standing when nothing can be read. `add_tokens` does the
  * arithmetic in one statement under the row lock, for the reason `add_spend`
- * and `count_call` do (`supabase/migrations/20261011200000_daily_token_quota.sql`).
+ * and `count_call` do (`supabase/migrations/20261011210000_daily_token_quota.sql`).
  */
 
 import type { Usage } from './aispend.ts';

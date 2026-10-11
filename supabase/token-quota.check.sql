@@ -1,4 +1,4 @@
--- The daily token quota on the shared key (20261011200000_daily_token_quota).
+-- The daily token quota on the shared key (20261011210000_daily_token_quota).
 -- LOCAL/DISPOSABLE DATABASES ONLY; the transaction is always rolled back.
 --
 -- What must hold:

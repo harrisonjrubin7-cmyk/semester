@@ -162,6 +162,9 @@ begin
   -- ── release and flagRecovery ──────────────────────────────────────────
   perform pg_temp.refuses('flagging recovery without the lease', $s$select public.access_saga_flag_recovery('s2', 'forged', 'stuck')$s$, 'SC409');
   perform pg_temp.allows('flagging recovery with it', format($s$select public.access_saga_flag_recovery('s2', %L, 'cleanup_stuck')$s$, tok));
+  perform pg_temp.allows('flagging recovery with the runner''s own uppercase codes', format($s$select public.access_saga_flag_recovery('s2', %L, 'RECOVERY_THRESHOLD_EXCEEDED')$s$, tok));
+  perform pg_temp.allows('and with its enforcement code', format($s$select public.access_saga_flag_recovery('s2', %L, 'ENFORCEMENT_UNKNOWN')$s$, tok));
+  perform pg_temp.refuses('a recovery code that is a sentence', format($s$select public.access_saga_flag_recovery('s2', %L, %L)$s$, tok, repeat('x', 300)), 'check');
   perform pg_temp.counted('flagging recovery did not complete anything', (select (pa_revoked or pep_removed)::int from public.access_sagas where id = 's2')::bigint, 0);
   perform pg_temp.allows('release with a wrong token is a no-op', $s$select public.access_saga_release('s2', 'forged')$s$);
   perform pg_temp.counted('the lease is still held after it', (select (lease_token is not null)::int from public.access_sagas where id = 's2')::bigint, 1);
@@ -208,6 +211,12 @@ begin
   perform pg_temp.allows('a requirements change when nothing is waiting', $s$select public.access_saga_wake('w1', 'sig-2', 'requirements_changed')$s$);
   perform pg_temp.counted('changes nothing either', (select (state = 'VALIDATING')::int from public.access_sagas where id = 'w1')::bigint, 1);
   perform pg_temp.counted('but is recorded as seen', (select count(*) from public.access_saga_signals where saga_id = 'w1'), 3);
+
+  -- Both ids are valid at their own limit; the event id derived from them must still fit.
+  perform pg_temp.saga(repeat('L', 200), 'WAITING_APPROVAL');
+  perform pg_temp.allows('a wake with a 200-character saga id and a 200-character event id',
+    format($s$select public.access_saga_wake(%L, %L, 'requirements_changed')$s$, repeat('L', 200), repeat('E', 200)));
+  perform pg_temp.counted('applies', (select (state = 'VALIDATING')::int from public.access_sagas where id = repeat('L', 200))::bigint, 1);
 
   perform pg_temp.saga('w2', 'ACTIVE');
   perform pg_temp.allows('a revoke signal on an active saga', $s$select public.access_saga_wake('w2', 'sig-r', 'revoke')$s$);

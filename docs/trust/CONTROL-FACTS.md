@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 235 |
+| Migration files | 236 |
 | Tables created in `public` and not later dropped | 343 |
 | … of which enable row-level security in a migration | 343 |
 | Tables created in `private` and not later dropped | 50 |
@@ -182,7 +182,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/tenant-rollout-projection.check.sql` | Tenant-rollout producer and first consumer (P1-06). |
 | `supabase/tenant-rollout.check.sql` | Where a school stands in the pilot-to-production lifecycle (tenant_rollout), the evidence behind each move, and the history. |
 | `supabase/tenant-sso-policy.check.sql` | Whether a school requires campus SSO (tenant_sso_policy), its history, and the launch facts that read it. |
-| `supabase/token-quota.check.sql` | The daily token quota on the shared key (20261011200000_daily_token_quota). |
+| `supabase/token-quota.check.sql` | The daily token quota on the shared key (20261011210000_daily_token_quota). |
 | `supabase/trust-room.check.sql` | The procurement room: an NDA-gated, expiring, logged link to exact versions of the trust packet. |
 | `supabase/workflow-builder.check.sql` | The Workflow Builder (D-1018): who may draft and who may publish a school's workflow definition, that whoever drafted it does not publish it, that a published version is never edited or deleted, that… |
 
