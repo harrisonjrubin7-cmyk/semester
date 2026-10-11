@@ -8,8 +8,8 @@
 
 ## Definition of inception completion
 
-| Claim | Holds | Measured |
-| --- | --- | --- |
+| Claim | Holds |
+| --- | --- |
 | Every OS is deployed in production | no — 0 of 17 pilot scopes carry deployment evidence |
 | Every route has a screen contract and all operational states | no — 1 of 75 routes have a contract |
 | Every capability has a passport, owner, runbook, contract and evidence | no — 0 of 1 capabilities are production-ready |

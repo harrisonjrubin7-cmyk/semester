@@ -7,7 +7,7 @@ interface EvidencePack { required: number; present: number; artifacts: Array<{ a
 
 const cell = (value: string | readonly string[]): string => {
   const text = Array.isArray(value) ? (value.length ? value.join(', ') : '—') : String(value);
-  return text.replace(/\|/g, '\\|');
+  return text.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
 };
 const yesNo = (ok: boolean, detail: string): string => `${ok ? 'yes' : 'no'} — ${detail}`;
 
@@ -38,8 +38,8 @@ export function renderCoverageMarkdown(snapshot: RegistrySnapshot, coverage: Cov
     '',
     '## Definition of inception completion',
     '',
-    '| Claim | Holds | Measured |',
-    '| --- | --- | --- |',
+    '| Claim | Holds |',
+    '| --- | --- |',
     `| Every OS is deployed in production | ${yesNo(deployedWorkspaces === workspaceCount && workspaceCount > 0, `${deployedWorkspaces} of ${workspaceCount} pilot scopes carry deployment evidence`)} |`,
     `| Every route has a screen contract and all operational states | ${yesNo(contractedRoutes >= routes, `${contractedRoutes} of ${routes} routes have a contract`)} |`,
     `| Every capability has a passport, owner, runbook, contract and evidence | ${yesNo(productionReady === capabilities.length && capabilities.length > 0, `${productionReady} of ${capabilities.length} capabilities are production-ready`)} |`,
