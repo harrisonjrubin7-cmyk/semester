@@ -78,23 +78,24 @@ const PREF_VIEWS = 'console.views';
  * The caller's grants: `null` until read, so "no grant" is never shown while
  * reading, and not read at all when there is nothing to read them from.
  */
-function useGrants(enabled: boolean): Grant[] | null {
-  const [grants, setGrants] = useState<Grant[] | null>(null);
+function useGrants(authorityKey: string | null): Grant[] | null {
+  const request = useMemo(() => ({ authorityKey }), [authorityKey]);
+  const [result, setResult] = useState<{ request: typeof request; grants: Grant[] } | null>(null);
   useEffect(() => {
-    if (!enabled) return;
+    if (authorityKey === null) return;
     let live = true;
     loadMyCapabilities().then(
-      (g) => { if (live) setGrants(g); },
-      () => { if (live) setGrants([]); },
+      (grants) => { if (live) setResult({ request, grants }); },
+      () => { if (live) setResult({ request, grants: [] }); },
     );
     return () => { live = false; };
-  }, [enabled]);
-  return grants;
+  }, [authorityKey, request]);
+  return result?.request === request ? result.grants : null;
 }
 
 export function Console() {
   const { account } = useStore();
-  const grants = useGrants(cloudConfigured && account !== null);
+  const grants = useGrants(cloudConfigured ? account?.id ?? null : null);
   if (!cloudConfigured || !account) {
     return (
       <Page blurb={BLURB}>

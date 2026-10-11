@@ -314,6 +314,47 @@ describe('roles and capabilities workspace', () => {
     expect(host.textContent).not.toContain('student:self');
     expect(Object.keys(localStorage).filter((key) => /console/i.test(key))).toEqual([]);
   });
+
+  it('drops account A grants and workspace state while account B grants are pending', async () => {
+    const grantsB = deferred<typeof PLATFORM>();
+    mock.caps.mockResolvedValueOnce(PLATFORM).mockReturnValueOnce(grantsB.promise);
+    await render();
+    await press('Roles & capabilities');
+    expect(host.textContent).toContain('51 design and governance proposals');
+
+    mock.account = { id: 'op-2', email: 'other@semester.example', via: 'an email address and password' };
+    await act(async () => root.render(<Console />));
+    expect(host.textContent).toContain('Reading your grants…');
+    expect(host.textContent).not.toContain('51 design and governance proposals');
+    expect(button('Roles & capabilities')).toBeUndefined();
+
+    grantsB.resolve(PLATFORM);
+    await flush();
+    expect(button('Roles & capabilities')).toBeDefined();
+    expect(host.textContent).not.toContain('51 design and governance proposals');
+    expect(mock.rolePolicy).toHaveBeenCalledTimes(1);
+
+    mock.account = null;
+    await act(async () => root.render(<Console />));
+    const staleA = deferred<typeof PLATFORM>();
+    const currentB = deferred<typeof PLATFORM>();
+    mock.caps.mockReset().mockReturnValueOnce(staleA.promise).mockReturnValueOnce(currentB.promise);
+    mock.account = { id: 'op-1', email: 'ops@semester.example', via: 'an email address and password' };
+    await act(async () => root.render(<Console />));
+    expect(host.textContent).toContain('Reading your grants…');
+
+    mock.account = { id: 'op-2', email: 'other@semester.example', via: 'an email address and password' };
+    await act(async () => root.render(<Console />));
+    expect(host.textContent).toContain('Reading your grants…');
+    staleA.resolve(PLATFORM);
+    await flush();
+    expect(host.textContent).toContain('Reading your grants…');
+    expect(button('Roles & capabilities')).toBeUndefined();
+
+    currentB.resolve([]);
+    await flush();
+    expect(host.textContent).toContain('This account holds no console:operate grant');
+  });
 });
 
 describe('tenant operations capability gate', () => {
@@ -411,6 +452,13 @@ function field(text: string): HTMLInputElement | HTMLTextAreaElement | HTMLSelec
   const control = label?.querySelector('input, textarea, select');
   if (!control) throw new Error(`No field labelled “${text}”`);
   return control as HTMLInputElement;
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
 }
 
 async function submit(form: Element | null) {
