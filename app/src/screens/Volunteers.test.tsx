@@ -169,8 +169,12 @@ describe('Volunteers', () => {
     await act(async () => button(dialog, 'Cancel')!.click());
     expect(mock.manage).not.toHaveBeenCalled();
     await act(async () => button(card('maya'), 'Revoke')!.click());
-    await act(async () => button(host.querySelector('[role="dialog"]') as HTMLElement, 'Revoke access')!.click());
+    await act(async () => {
+      button(host.querySelector('[role="dialog"]') as HTMLElement, 'Revoke access')!.click();
+      await new Promise((resolve) => window.setTimeout(resolve, 0));
+    });
     expect(mock.manage).toHaveBeenCalledWith('u1', 'revoke', 'shared a case outside the queue');
+    expect(document.activeElement).toBe(card('maya'));
     act(() => root.unmount());
     root = createRoot(host);
     mock.roster.mockResolvedValue([person({ status: 'revoked', revokedReason: 'shared a case outside the queue' })]);

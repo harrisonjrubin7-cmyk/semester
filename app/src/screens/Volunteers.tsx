@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -179,6 +179,7 @@ function Manager() {
 }
 
 function VolunteerCard({ v, history, onDone }: { v: RosterEntry; history: VolunteerEvent[]; onDone: (said: string) => Promise<void> }) {
+  const card = useRef<HTMLElement>(null);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -200,7 +201,7 @@ function VolunteerCard({ v, history, onDone }: { v: RosterEntry; history: Volunt
   const ready = !busy && reason.trim().length >= REASON_MIN;
 
   return (
-    <article className="portal-panel" aria-label={`Volunteer ${v.handle}`} style={{ display: 'grid', gap: 'var(--sp-2)', marginBottom: 'var(--sp-4)' }}>
+    <article ref={card} tabIndex={-1} className="portal-panel" aria-label={`Volunteer ${v.handle}`} style={{ display: 'grid', gap: 'var(--sp-2)', marginBottom: 'var(--sp-4)' }}>
       <strong>{v.handle}</strong>
       <span style={{ color: 'var(--app-dim)' }}>
         {stage.text} · applied {day(v.appliedAt)}
@@ -279,7 +280,13 @@ function VolunteerCard({ v, history, onDone }: { v: RosterEntry; history: Volunt
           onCancel={() => setConfirmRevoke(false)}
           onConfirm={() => {
             setConfirmRevoke(false);
-            act('revoke', `${v.handle}’s access is revoked.`);
+            // Let the dialog return focus to its still-enabled opener first.
+            // The stable card then takes focus before the async write disables
+            // and eventually removes that opener.
+            window.setTimeout(() => {
+              act('revoke', `${v.handle}’s access is revoked.`);
+              card.current?.focus({ preventScroll: true });
+            }, 0);
           }}
         />
       ) : null}
