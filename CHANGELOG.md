@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Research Studio now explains source removal before changing a project
+
+In **Research Studio**, **Remove source** now opens the standard consequence preview before changing the device workspace. It says that the evidence row will be removed from the project and detached from every linked claim, while the claim text, research question, search plan, other sources and original files remain. Cancel starts focused and changes nothing. The preview also says that Toolkit work is not included in a device workspace backup, so a removed source must be re-entered from the original.
+
 ### Stopping a claimed family share now shows the full consequence and waits for receipts
 
 On **Family**, **Stop sharing** now opens the standard consequence preview before changing the account. It says which person's selected family items lose access, that Semester's stored copies are removed, and that the family plan, other people's shares, unused codes and read history remain. It also says copies already saved outside Semester cannot be recalled and that sharing again requires a new confirmed share. Cancel starts focused and writes nothing. Semester reports success only after the account returns the exact revoked grants and removed copies; if access ends but copy cleanup fails, the dialog stays open and says that partial result instead of claiming sharing did not stop.

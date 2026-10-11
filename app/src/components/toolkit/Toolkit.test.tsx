@@ -193,6 +193,56 @@ it('will not verify a source until the student says they opened the original', (
   expect(host.textContent).not.toContain('Marked verified.');
 });
 
+it('previews research-source removal and preserves it when cancelled', () => {
+  mount();
+  tab('Research Studio');
+  click('Start a research project');
+  click('Add a source');
+  act(() => (host.querySelector('details.toolkit-evidence') as HTMLDetailsElement).setAttribute('open', ''));
+  const claim = [...host.querySelectorAll('label')].find((label) => label.textContent?.startsWith('A claim you want to make'))!.querySelector('input')!;
+  type(claim, 'The source supports this claim.');
+  click('Add claim');
+  act(() => (host.querySelector('fieldset input[type="checkbox"]') as HTMLInputElement).click());
+
+  click('Remove source');
+  const dialog = host.querySelector('[role="dialog"]')!;
+  expect(dialog.textContent).toContain('Removes this source and detaches it from every claim in this research project.');
+  expect(dialog.textContent).toContain('The research question, search plan, other sources and original files stay unchanged.');
+  expect(dialog.textContent).toContain('This Toolkit workspace is not included in a device workspace backup.');
+  expect(dialog.textContent).toContain('linked to 1 claim.');
+  expect(host.querySelectorAll('details.toolkit-evidence')).toHaveLength(1);
+
+  click('Cancel');
+  expect(host.querySelectorAll('details.toolkit-evidence')).toHaveLength(1);
+
+  click('Remove source');
+  act(() => ([...host.querySelectorAll('[role="dialog"] button')].find((candidate) => candidate.textContent?.trim() === 'Remove source') as HTMLButtonElement).click());
+  expect(host.querySelectorAll('details.toolkit-evidence')).toHaveLength(0);
+  expect(host.textContent).toContain('The source supports this claim.');
+  expect(host.textContent).toContain('Source removed from this device.');
+});
+
+it('keeps a research source represented when device storage refuses removal', () => {
+  mount();
+  tab('Research Studio');
+  click('Start a research project');
+  click('Add a source');
+  act(() => (host.querySelector('details.toolkit-evidence') as HTMLDetailsElement).setAttribute('open', ''));
+  const real = Storage.prototype.setItem;
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+    if (key === toolkitKey()) throw new Error('quota');
+    return real.call(this, key, value);
+  });
+
+  click('Remove source');
+  act(() => ([...host.querySelectorAll('[role="dialog"] button')].find((candidate) => candidate.textContent?.trim() === 'Remove source') as HTMLButtonElement).click());
+
+  expect(host.querySelector('[role="dialog"]')).not.toBeNull();
+  expect(host.querySelectorAll('details.toolkit-evidence')).toHaveLength(1);
+  expect(host.textContent).toContain('Changes could not be saved: quota');
+  expect(host.textContent).not.toContain('Source removed from this device.');
+});
+
 it('hides the research and data sections when their flags are off', () => {
   mount(toolkitFlags({ VITE_AI_TOOLKIT: 'preview' }));
   const tabs = [...host.querySelectorAll('[role="tab"]')].map((t) => t.textContent);

@@ -61,6 +61,7 @@ export function ResearchPanel({ library }: { library: Library }) {
   const [message, setMessage] = useState('');
   const [style, setStyle] = useState<Style>('apa');
   const [claimText, setClaimText] = useState('');
+  const [removingSource, setRemovingSource] = useState<Evidence | null>(null);
   const [deleting, setDeleting] = useState(false);
   const project = projects.find((p) => p.id === openId);
 
@@ -241,15 +242,7 @@ export function ResearchPanel({ library }: { library: Library }) {
                     Mark verified
                   </button>
                 )}
-                <button
-                  onClick={() =>
-                    save({
-                      ...project,
-                      evidence: project.evidence.filter((x) => x.id !== e.id),
-                      claims: project.claims.map((c) => ({ ...c, evidence: c.evidence.filter((id) => id !== e.id) })),
-                    })
-                  }
-                >
+                <button onClick={() => setRemovingSource(e)}>
                   Remove source
                 </button>
               </div>
@@ -257,6 +250,32 @@ export function ResearchPanel({ library }: { library: Library }) {
           );
         })}
       </section>
+      {removingSource ? (
+        <ConfirmDialog
+          title="Remove this research source?"
+          preview={(
+            <ActionPreview
+              subject={removingSource.title || 'Untitled source'}
+              says="Removes this source and detaches it from every claim in this research project."
+              exactly={`${removingSource.verified ? 'Verified' : 'Unverified'} source · linked to ${project.claims.filter((claim) => claim.evidence.includes(removingSource.id)).length} claim${project.claims.filter((claim) => claim.evidence.includes(removingSource.id)).length === 1 ? '' : 's'}.`}
+              doesNotChange="The research question, search plan, other sources and original files stay unchanged."
+              recovery={{ kind: 'none', how: 'This Toolkit workspace is not included in a device workspace backup. Re-enter the source from the original if you need it again.' }}
+            />
+          )}
+          confirmLabel="Remove source"
+          onCancel={() => setRemovingSource(null)}
+          onConfirm={() => {
+            if (save({
+              ...project,
+              evidence: project.evidence.filter((source) => source.id !== removingSource.id),
+              claims: project.claims.map((claim) => ({ ...claim, evidence: claim.evidence.filter((id) => id !== removingSource.id) })),
+            })) {
+              setRemovingSource(null);
+              setMessage('Source removed from this device.');
+            }
+          }}
+        />
+      ) : null}
 
       <section className="portal-panel" aria-labelledby="rs-claims">
         <h3 id="rs-claims">7–9. Claims and citation audit</h3>
