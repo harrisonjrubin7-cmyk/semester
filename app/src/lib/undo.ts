@@ -125,6 +125,8 @@ export const UNDOABLE: Record<string, Undoable> = {
   clearPlan: { label: 'Study plan dropped', fields: ['sessions', 'liveSession'] },
   // The card-level undo stays cleared; restoring it would offer a second, stale rewind.
   forgetCards: { label: 'Study evidence cleared', fields: ['reviews', 'answers'] },
+  // A dismissal changes one nested preference without shortening a top-level list.
+  dismissProgramme: { label: 'Suggestion dismissed', fields: ['wanted'], onChange: true },
   // Student-entered planning rows, never the school's ledger or a money movement.
   dropCharge: { label: 'Charge removed', fields: ['charges'] },
   dropAid: { label: 'Aid entry removed', fields: ['aid'] },

@@ -9,6 +9,7 @@ import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { deleteDraft, draftPreview, draftRow, saveDraft } from '../lib/graduation-cloud';
 import { MORE_PRESETS, comparisonText } from '../lib/scenario-compare';
 import { ErrorState } from './unity/States';
+import { ActionPreview } from './unity/ActionPreview';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
 import {
@@ -64,6 +65,7 @@ export function GraduationSimulator({
   const [confirm, setConfirm] = useState<
     | { kind: 'save'; scenario: Scenario }
     | { kind: 'unsave'; scenario: Scenario }
+    | { kind: 'remove'; scenario: Scenario }
     | { kind: 'share'; text: string }
     | null
   >(null);
@@ -95,18 +97,31 @@ export function GraduationSimulator({
 
   const confirmed = async () => {
     const c = confirm;
-    setConfirm(null);
     if (!c) return;
+    if (c.kind === 'remove') {
+      const removed = library.update((d) => removeScenario(d, c.scenario.id));
+      if (removed) {
+        setConfirm(null);
+        if (compareId === c.scenario.id) setCompareId(null);
+        setStatus(`“${c.scenario.name}” removed from this device. No official degree record changed.`);
+      } else {
+        setStatus(`“${c.scenario.name}” could not be removed from this device.`);
+      }
+      return;
+    }
     try {
       if (c.kind === 'save' && accountId) {
+        setConfirm(null);
         const id = await saveDraft(accountId, draftRow(plan, done, c.scenario), inAccount(c.scenario));
         setCloudId(c.scenario.id, id, accountId);
         setStatus(`“${c.scenario.name}” saved to your account as an estimate.`);
       } else if (c.kind === 'unsave' && inAccount(c.scenario)) {
         await deleteDraft(inAccount(c.scenario)!);
         setCloudId(c.scenario.id, undefined, accountId!);
+        setConfirm(null);
         setStatus(`“${c.scenario.name}” removed from your account. It is still on this device.`);
       } else if (c.kind === 'share') {
+        setConfirm(null);
         try {
           await navigator.clipboard.writeText(c.text);
           setStatus('Copied. Paste it into an email or your advising notes — Semester did not send it anywhere.');
@@ -116,7 +131,12 @@ export function GraduationSimulator({
         }
       }
     } catch (e) {
-      setStatus(`That did not save: ${e instanceof Error ? e.message : String(e)}. Your scenarios are still on this device.`);
+      const reason = e instanceof Error ? e.message : String(e);
+      setStatus(
+        c.kind === 'unsave'
+          ? `“${c.scenario.name}” could not be removed from your account: ${reason}. The account draft and device scenario are unchanged; retry or cancel.`
+          : `That did not save: ${reason}. Your scenarios are still on this device.`,
+      );
     }
   };
 
@@ -398,7 +418,7 @@ export function GraduationSimulator({
                       <button onClick={() => setConfirm({ kind: 'save', scenario: s })}>Save draft to your account</button>
                     )
                   ) : null}
-                  <button aria-label={`Remove scenario ${s.name}`} onClick={() => library.update((d) => removeScenario(d, s.id))}>
+                  <button aria-label={`Remove scenario ${s.name}`} onClick={() => setConfirm({ kind: 'remove', scenario: s })}>
                     Remove
                   </button>
                 </div>
@@ -452,9 +472,19 @@ export function GraduationSimulator({
               ? 'Save this draft to your account?'
               : confirm.kind === 'unsave'
                 ? 'Remove this draft from your account?'
+                : confirm.kind === 'remove'
+                  ? 'Remove this scenario from this device?'
                 : 'Share with your advisor?'
           }
-          confirmLabel={confirm.kind === 'save' ? 'Save to account' : confirm.kind === 'unsave' ? 'Remove from account' : 'Copy to share'}
+          confirmLabel={
+            confirm.kind === 'save'
+              ? 'Save to account'
+              : confirm.kind === 'unsave'
+                ? 'Remove from account'
+                : confirm.kind === 'remove'
+                  ? 'Remove scenario'
+                  : 'Copy to share'
+          }
           onCancel={() => setConfirm(null)}
           onConfirm={() => void confirmed()}
           preview={
@@ -463,6 +493,17 @@ export function GraduationSimulator({
                 <p>Semester does not send this to anyone. It copies this text so you can send it yourself:</p>
                 <pre className="regday-list">{confirm.text}</pre>
               </>
+            ) : confirm.kind === 'remove' ? (
+              <ActionPreview
+                subject={confirm.scenario.name}
+                says="Deletes this what-if scenario and its estimate assumptions from this device."
+                exactly={`${confirm.scenario.extra >= 0 ? `${confirm.scenario.extra} additional credits` : `${Math.abs(confirm.scenario.extra)} fewer credits`}, ${confirm.scenario.perTerm} credits per fall or spring, and ${confirm.scenario.summer} credits each summer${confirm.scenario.abroad ? `; ${confirm.scenario.abroad.terms} term${confirm.scenario.abroad.terms === 1 ? '' : 's'} abroad with ${confirm.scenario.abroad.credits} expected transfer credits` : ''}.`}
+                doesNotChange={`${inAccount(confirm.scenario) ? 'The draft saved to your account stays there. ' : ''}Your current plan, other scenarios, downloaded summaries and the registrar’s official degree audit stay unchanged.`}
+                recovery={{
+                  kind: 'none',
+                  how: 'Restore only from a device workspace backup created before removal.',
+                }}
+              />
             ) : confirm.kind === 'save' ? (
               <>
                 <p>This row is stored in your account, visible only to you:</p>
@@ -470,7 +511,15 @@ export function GraduationSimulator({
                 <p>It stays on this device too. Deleting your account deletes it.</p>
               </>
             ) : (
-              <p>“{confirm.scenario.name}” will be deleted from your account. It stays on this device.</p>
+              <ActionPreview
+                subject={confirm.scenario.name}
+                says="Deletes this estimated scenario draft from your signed-in account."
+                doesNotChange="The scenario on this device, other account drafts, downloaded summaries and the registrar’s official degree audit stay unchanged."
+                recovery={{
+                  kind: 'none',
+                  how: 'This account copy cannot be restored after deletion. The device scenario stays available and can be saved to the account again later.',
+                }}
+              />
             )
           }
         />

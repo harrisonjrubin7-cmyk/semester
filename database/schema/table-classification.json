@@ -224,6 +224,8 @@
    "private.guardian_calendar_projections",
    "private.guardian_projection_access_events",
    "private.integration_simulation_runs",
+   "private.incident_evidence_artifact",
+   "private.incident_evidence_custody_event",
    "private.ledger_chain",
    "private.ledger_chain_key",
    "private.ledger_chain_manifest",
