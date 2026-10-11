@@ -26,7 +26,7 @@ will happily serve you the copy you already had.
 
 ### Revoking volunteer access shows the consequences first
 
-Senior Trust & Safety reviewers now see a preview before revoking a student volunteer. It names the volunteer, says their moderation access ends immediately, identifies the unanswered assigned tasks that will leave their queue, shows the reason that will be kept in programme history, and says the action cannot be undone by sending them back to calibration. Cancel changes nothing; the existing server operation runs only after **Revoke access** is confirmed. Other volunteers, moderation cases, completed reviews and school settings are unchanged.
+Senior Trust & Safety reviewers now see a preview before revoking a student volunteer. It names the volunteer, says their moderation access ends immediately, identifies the unanswered review actions that will leave their queue, shows the reason that will be kept in programme history, and says the action cannot be undone by sending them back to calibration. Cancel changes nothing; the existing server operation runs only after **Revoke access** is confirmed. Other volunteers, moderation cases, completed reviews and school settings are unchanged.
 
 ### Privileged platform accounts verify MFA before Semester opens staff tools
 

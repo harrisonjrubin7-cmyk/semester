@@ -269,7 +269,7 @@ function VolunteerCard({ v, history, onDone }: { v: RosterEntry; history: Volunt
           preview={
             <ActionPreview
               subject={v.handle}
-              says="Their volunteer moderation access ends immediately and every unanswered task currently assigned to them is removed from their queue."
+              says="Their volunteer moderation access ends immediately and every unanswered review action currently assigned to them is removed from their queue."
               exactly={<>The reason “{reason.trim()}” is kept with the revocation event in the volunteer programme history.</>}
               doesNotChange="Their answered reviews and programme history remain. Other volunteers, moderation cases, and school settings stay unchanged."
               recovery={{ kind: 'none', how: 'A revoked volunteer cannot be sent back to calibration.' }}

@@ -163,7 +163,7 @@ describe('Volunteers', () => {
     expect(mock.manage).not.toHaveBeenCalled();
     const dialog = host.querySelector('[role="dialog"]') as HTMLElement;
     expect(dialog.textContent).toContain('Their volunteer moderation access ends immediately');
-    expect(dialog.textContent).toContain('every unanswered task currently assigned to them is removed');
+    expect(dialog.textContent).toContain('every unanswered review action currently assigned to them is removed');
     expect(dialog.textContent).toContain('Their answered reviews and programme history remain');
     expect(dialog.textContent).toContain('A revoked volunteer cannot be sent back to calibration');
     await act(async () => button(dialog, 'Cancel')!.click());
