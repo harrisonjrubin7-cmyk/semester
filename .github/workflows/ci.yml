@@ -98,6 +98,18 @@ jobs:
           npm run release:report
           git diff --exit-code -- packages/platform-control/generated
 
+      # The operator is the agent team's runtime. Its policy, approval,
+      # scheduler, limit and audit modules are deterministic code with tests
+      # that go red when a guard is removed; the generated agent registry and
+      # coverage matrix must match what the current contracts and the
+      # platform-control registry produce.
+      - name: Validate the Semester Operator
+        run: |
+          npm run operator:typecheck
+          npm run operator:test
+          npm run operator:build
+          git diff --exit-code -- packages/operator/generated
+
       - name: Keep platform-control reports
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

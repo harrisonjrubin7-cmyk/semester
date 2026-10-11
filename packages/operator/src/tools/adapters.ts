@@ -1,0 +1,137 @@
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, join, relative, resolve } from 'node:path';
+import type { EvidenceItem, PolicyContext, RiskLevel, ToolAction, ToolName } from '../../types.ts';
+import type { AuditLog } from '../control/audit.ts';
+import type { RunLimiter } from '../control/limits.ts';
+import type { PolicyController } from '../control/policy.ts';
+import { payloadHash, sha256 } from '../store/hash.ts';
+import { redactString } from '../store/redact.ts';
+import { workspaceDiff } from './workspace.ts';
+
+/**
+ * Narrow tool adapters. Each one does exactly one thing, asks the policy
+ * controller first, spends a tool call on the limiter, and records the
+ * decision as evidence. There is no generic shell: `run_check` executes
+ * only an allowlisted argv, without a shell, with a timeout.
+ */
+export class ToolDenied extends Error {
+  readonly tool: ToolName;
+  readonly target: string;
+  readonly code: string;
+  constructor(tool: ToolName, target: string, code: string, reason: string) {
+    super(`${tool} ${target} denied (${code}): ${reason}`);
+    this.tool = tool; this.target = target; this.code = code;
+  }
+}
+
+export interface Toolbox {
+  readFile(path: string): string;
+  listFiles(dir: string, maxEntries?: number): string[];
+  search(dir: string, pattern: RegExp, maxMatches?: number): Array<{ path: string; line: number; text: string }>;
+  writeFile(path: string, content: string): EvidenceItem;
+  runCheck(key: string, cwd?: string): EvidenceItem & { kind: 'command' };
+  gitDiff(): EvidenceItem & { kind: 'diff'; text: string };
+  readonly evidence: EvidenceItem[];
+}
+
+const MAX_READ_BYTES = 512 * 1024;
+
+export function createToolbox(policy: PolicyController, context: PolicyContext, limiter: RunLimiter, audit: AuditLog, onDenied?: (evidence: EvidenceItem) => void): Toolbox {
+  const evidence: EvidenceItem[] = [];
+  const base = context.workspaceRoot || context.repositoryRoot;
+
+  function gate(action: ToolAction): void {
+    const spent = limiter.consume('tool');
+    if (!spent.ok) throw new ToolDenied(action.tool, action.target, spent.code, spent.reason);
+    const decision = policy.evaluate(action, context);
+    const item: EvidenceItem = { kind: 'decision', label: `${action.tool}:${action.target}`, tool: action.tool, target: action.target, allowed: decision.allowed, code: decision.code };
+    evidence.push(item);
+    audit.record('policy.decision', context.agentId, { tool: action.tool, target: action.target, code: decision.code, allowed: decision.allowed, requiresApproval: decision.requiresApproval }, context.taskId);
+    if (!decision.allowed) { onDenied?.(item); throw new ToolDenied(action.tool, action.target, decision.code, decision.reason); }
+  }
+
+  const absolute = (path: string) => resolve(base, path);
+  const risk: RiskLevel = 'low';
+
+  return {
+    evidence,
+    readFile(path) {
+      gate({ tool: 'read_file', target: absolute(path), risk });
+      const stats = statSync(absolute(path));
+      if (stats.size > MAX_READ_BYTES) throw new ToolDenied('read_file', path, 'file_too_large', `${stats.size} bytes exceeds ${MAX_READ_BYTES}.`);
+      return readFileSync(absolute(path), 'utf8');
+    },
+    listFiles(dir, maxEntries = 500) {
+      gate({ tool: 'list_files', target: absolute(dir), risk });
+      const out: string[] = [];
+      const walk = (current: string) => {
+        if (out.length >= maxEntries) return;
+        for (const entry of readdirSync(current, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+          if (entry.name === 'node_modules' || entry.name === '.git' || out.length >= maxEntries) continue;
+          const full = join(current, entry.name);
+          if (entry.isDirectory()) walk(full); else out.push(relative(base, full));
+        }
+      };
+      walk(absolute(dir));
+      return out;
+    },
+    search(dir, pattern, maxMatches = 200) {
+      gate({ tool: 'search', target: absolute(dir), risk });
+      const matches: Array<{ path: string; line: number; text: string }> = [];
+      const walk = (current: string) => {
+        for (const entry of readdirSync(current, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+          if (matches.length >= maxMatches) return;
+          if (entry.name === 'node_modules' || entry.name === '.git') continue;
+          const full = join(current, entry.name);
+          if (entry.isDirectory()) { walk(full); continue; }
+          if (statSync(full).size > MAX_READ_BYTES) continue;
+          readFileSync(full, 'utf8').split('\n').forEach((text, index) => { if (matches.length < maxMatches && pattern.test(text)) matches.push({ path: relative(base, full), line: index + 1, text: redactString(text.slice(0, 200)) }); });
+        }
+      };
+      walk(absolute(dir));
+      return matches;
+    },
+    writeFile(path, content) {
+      const target = absolute(path);
+      gate({ tool: 'write_file', target, risk: 'medium', payloadHash: payloadHash({ path, content }) });
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, content, 'utf8');
+      const item: EvidenceItem = { kind: 'file', label: `wrote ${path}`, path: relative(base, target), sha256: sha256(content), bytes: Buffer.byteLength(content) };
+      evidence.push(item);
+      return item;
+    },
+    runCheck(key, cwd) {
+      gate({ tool: 'run_check', target: key, risk: 'low' });
+      const command = policy.policy.commands[key]!;
+      const runIn = resolve(cwd ?? base, command.cwd);
+      if (!existsSync(runIn)) throw new ToolDenied('run_check', key, 'cwd_missing', `${runIn} does not exist.`);
+      const result = spawnSync(command.argv[0]!, command.argv.slice(1), { cwd: runIn, encoding: 'utf8', timeout: command.timeoutMs, env: minimalEnv(), shell: false, maxBuffer: 16 * 1024 * 1024 });
+      const stdout = result.stdout ?? '';
+      const stderr = result.stderr ?? '';
+      const exitCode = result.status ?? (result.error ? 124 : 1);
+      const tail = redactString(`${stdout}\n${stderr}`.trim().split('\n').slice(-12).join('\n'));
+      const item: EvidenceItem & { kind: 'command' } = { kind: 'command', label: key, command: command.argv.join(' '), cwd: relative(context.repositoryRoot, runIn) || '.', exitCode, stdoutSha256: sha256(stdout), stderrSha256: sha256(stderr), tail };
+      evidence.push(item);
+      audit.record('check.ran', context.agentId, { key, exitCode, timedOut: result.error?.name === 'Error' && /ETIMEDOUT|timeout/i.test(result.error.message) }, context.taskId);
+      return item;
+    },
+    gitDiff() {
+      if (!context.workspaceRoot) throw new ToolDenied('git_diff', '', 'no_workspace', 'This task has no workspace.');
+      gate({ tool: 'git_diff', target: context.workspaceRoot, risk });
+      const diff = workspaceDiff(context.workspaceRoot);
+      const item = { kind: 'diff' as const, label: 'workspace diff', sha256: sha256(diff.text), files: diff.files, bytes: Buffer.byteLength(diff.text), text: diff.text };
+      evidence.push({ kind: 'diff', label: item.label, sha256: item.sha256, files: item.files, bytes: item.bytes });
+      return item;
+    },
+  };
+}
+
+/** Checks run with a minimal environment: no proxy credentials, no API keys, no inherited secrets. */
+function minimalEnv(): NodeJS.ProcessEnv {
+  const keep = ['PATH', 'HOME', 'LANG', 'TZ', 'NODE_OPTIONS', 'CI'];
+  const env: NodeJS.ProcessEnv = {};
+  for (const key of keep) if (process.env[key] !== undefined) env[key] = process.env[key];
+  env.SEMESTER_OPERATOR = '1';
+  return env;
+}

@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "protectedPaths": [
+    "packages/operator/policy/**",
+    "packages/operator/src/control/**",
+    "packages/operator/evidence/**/approvals.json",
+    ".github/**",
+    ".env",
+    ".env.*",
+    "**/.env",
+    "**/.env.*",
+    "supabase/migrations/**",
+    "package-lock.json",
+    "package.json",
+    "app/package.json",
+    "packages/*/package.json",
+    "CLAUDE.md",
+    "REGRESSION-CHECKLIST.md"
+  ],
+  "protectedReads": [
+    ".env",
+    ".env.*",
+    "**/.env",
+    "**/.env.*",
+    "**/*.pem",
+    "**/*.key",
+    "**/id_rsa*",
+    ".git/config"
+  ],
+  "commands": {
+    "registry:validate": {
+      "argv": [
+        "node",
+        "--experimental-strip-types",
+        "packages/platform-control/scripts/validate-registry.ts"
+      ],
+      "cwd": ".",
+      "timeoutMs": 120000
+    },
+    "registry:build": {
+      "argv": [
+        "node",
+        "--experimental-strip-types",
+        "packages/platform-control/scripts/build-atlas.ts"
+      ],
+      "cwd": ".",
+      "timeoutMs": 120000
+    },
+    "platform-control:test": {
+      "argv": [
+        "npm",
+        "run",
+        "platform-control:test"
+      ],
+      "cwd": ".",
+      "timeoutMs": 300000
+    },
+    "operator:test": {
+      "argv": [
+        "npm",
+        "test",
+        "--workspace",
+        "@semester/operator"
+      ],
+      "cwd": ".",
+      "timeoutMs": 300000
+    },
+    "operator:typecheck": {
+      "argv": [
+        "npx",
+        "tsc",
+        "-p",
+        "packages/operator/tsconfig.json"
+      ],
+      "cwd": ".",
+      "timeoutMs": 300000
+    },
+    "platform-control:typecheck": {
+      "argv": [
+        "npx",
+        "tsc",
+        "-p",
+        "packages/platform-control/tsconfig.json"
+      ],
+      "cwd": ".",
+      "timeoutMs": 300000
+    },
+    "app:typecheck": {
+      "argv": [
+        "npx",
+        "tsc",
+        "-b"
+      ],
+      "cwd": "app",
+      "timeoutMs": 900000
+    },
+    "app:lint": {
+      "argv": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "cwd": "app",
+      "timeoutMs": 900000
+    },
+    "app:check:university": {
+      "argv": [
+        "npm",
+        "run",
+        "check:university"
+      ],
+      "cwd": "app",
+      "timeoutMs": 900000
+    },
+    "app:test": {
+      "argv": [
+        "npm",
+        "test"
+      ],
+      "cwd": "app",
+      "timeoutMs": 2700000
+    },
+    "app:design-system:check": {
+      "argv": [
+        "npm",
+        "run",
+        "design-system:check"
+      ],
+      "cwd": "app",
+      "timeoutMs": 900000
+    }
+  },
+  "approvalRequiredFrom": "high",
+  "approvalEnvironments": [
+    "staging",
+    "production"
+  ]
+}
