@@ -99,7 +99,7 @@ These are the controls that sit beside the variables above. The registry is [`do
 
 | Control | Kind | Read by | Effect |
 | --- | --- | --- | --- |
-| `SEMESTER_READ_ONLY` | environment variable | the gateway, `start.ts` only | Every `POST` except `/actions/reconcile` is refused with 503 `read_only` after authentication. Not read by the production runtime, so the Vercel runtime has no read-only switch in code. |
+| `SEMESTER_READ_ONLY` | environment variable | the gateway, `start.ts` and `runtime.ts` | Every `POST` except `/actions/reconcile` is refused with 503 `read_only` after authentication. Both entry points re-read their runtime environment object per request; hosted environment propagation may still require redeploy or restart. |
 | `SHARED_AI_PROVIDER` | environment variable | `claude` | Half of the shared-key gate. The other half is the activation record in [`provideractivation.ts`](../../supabase/functions/_shared/provideractivation.ts); checklist in [`SHARED-PROVIDER-ACTIVATION.md`](../trust/SHARED-PROVIDER-ACTIVATION.md). |
 | `BILLING_LIVE_ENABLED` | environment variable | `billing-checkout` | Requested-operations half of the checkout gate; a constant in the function holds new checkout off regardless. Context: [`COMMERCIAL-CORE.md`](../COMMERCIAL-CORE.md). |
 | `kill.ai_generation` | kill switch (`feature_kill_switch` row) | `claude` | An engaged global row answers 503 before the call is counted. A row that cannot be read counts as engaged. |
