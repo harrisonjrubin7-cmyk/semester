@@ -43,6 +43,12 @@ import {
   readOpportunities,
   withoutWorkStudy,
 } from './opportunities';
+import {
+  HUB_PREFS_PREFIX,
+  keepMessageMarkers,
+  readHubPrefs,
+  withoutMessageMarkers,
+} from './comms';
 
 /**
  * A backup for the device workspaces the main one does not reach.
@@ -226,6 +232,15 @@ const DEFINITIONS: Record<string, Definition> = {
     scope: 'account',
     read: (v) => withoutWorkStudy(readOpportunities(v)),
     restore: (incoming, existing) => keepWorkStudy(incoming, existing),
+  },
+  // Delivery choices travel; read, saved and follow-up ids describe this
+  // device's current message set and would be stale or misleading elsewhere.
+  hubPreferences: {
+    label: 'Hub delivery preferences',
+    prefix: HUB_PREFS_PREFIX,
+    scope: 'account',
+    read: (v) => withoutMessageMarkers(readHubPrefs(v)),
+    restore: (incoming, existing) => keepMessageMarkers(incoming, existing),
   },
   toolkit: { label: 'Toolkit assignments, research and declarations', prefix: TOOLKIT_PREFIX, scope: 'account', read: readToolkit },
   toolkitData: { label: 'Toolkit data projects', prefix: TOOLKIT_DATA_PREFIX, scope: 'account', read: readDataProjects },

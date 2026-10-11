@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `bbf94ea2` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `ccf2d45ff` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -606,3 +606,15 @@ The new guards fail against the former generic backup exemption. Final focused w
 | Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent, `HAWK_API_KEY` / `HAWK_APP_HOST` are unset and a local properties file was detected without reading it. No runnable target, DAST scan, finding result or security pass exists. |
 
 The new guards fail against the former generic backup exemption. Final focused and adjacent backup, privacy and journey verification passes 89/89; TypeScript, lint, university typecheck and production build pass. The exact combined design set passes 147/147, the report set passes 96/96, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Aggregate wrappers and full ordered/shuffled suites are not claimed. Selection-time `origin/main` `a4742f6b` is already included; final `ccf2d45ff` changes account-pull/adoption code and contains no equivalent or overlapping work. Slice commit `19a7374c8` merged that upstream cleanly as `d9dd47eb6`; TypeScript and university gateway typecheck pass on the combined head. A post-merge focused rerun was interrupted by a concurrent full-suite worker-pool holder, so the 89/89 claim remains pre-merge only. No route, dependency, schema, grant, RLS policy, server operation, provider configuration, deployment or external system changed.
+
+## Automation pass 3 update — recoverable Hub delivery preferences (slice 93)
+
+| Reference requirement | Current repository evidence | Disposition |
+| --- | --- | --- |
+| Give account-scoped Hub choices a tested recovery path | `app/src/lib/workspace-backup.ts`, `app/src/lib/workspace-backup.test.ts`, `app/src/lib/workspace-backup.coverage.test.ts` | **Existing but incomplete → existing and verified for portable Hub preferences.** Muted channels, quiet hours and digest cadence enter the validated backup and restore only to the restoring account. |
+| Preserve one Hub storage authority | `app/src/lib/comms.ts`, `app/src/screens/Hub.tsx`, `app/src/lib/workspace-backup.ts` | **Existing and verified.** `HUB_PREFS_PREFIX` is shared by the current UI and backup; values continue through `readHubPrefs` rather than a parallel schema. |
+| Keep notice-state markers device-specific | `app/src/lib/comms.ts`, `app/src/lib/workspace-backup.ts`, `app/src/lib/workspace-backup.test.ts` | **Existing and verified for export and restore.** Read, saved and follow-up ids are empty in the portable file. Restore retains the target device's current markers and a new device starts empty. |
+| Preserve account and data-authority boundaries | `app/src/lib/workspace-backup.ts`, `app/src/lib/workspace-backup.test.ts` | **Existing and verified for this slice.** Exact-key selection excludes another account; official notices, course facts, generated reminders and provider records are not exported. |
+| Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent, `HAWK_API_KEY` and app-host environment values are unset and the detected local properties file was not read. No runnable target, DAST scan, finding result or security pass exists. |
+
+The new guards fail against the former generic backup exemption. Final focused and adjacent backup, coverage, comms and Hub journey verification passes 98/98; TypeScript, lint, university typecheck and production build pass. Token export passes 9/9, design-check contracts pass 69/69, report contracts pass 96/96, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Aggregate wrappers and full ordered/shuffled suites are not claimed. Current `origin/main` `ccf2d45ff` is already included and contains no equivalent work. No route, dependency, schema, grant, RLS policy, server operation, provider configuration, deployment or external system changed.

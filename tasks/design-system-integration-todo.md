@@ -1947,3 +1947,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
 - [ ] Keep Hub preferences/display markers, housing, meals and other unresolved device stores separate until their portability, privacy and term/account semantics are explicit.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 recoverable Hub delivery preferences — automation pass 3, integration slice 93
+
+- [x] Start from clean required-branch head `a075333d`; fetch current `origin/main` `ccf2d45ff`, confirm it is already included and inspect exact Hub/workspace-backup history and code for overlap.
+- [x] Separate portable delivery choices from device-specific display markers; keep official/course/provider records outside this device recovery slice.
+- [x] Add muted channels, quiet hours and digest cadence to the validated account-scoped workspace backup.
+- [x] Remove read, saved and follow-up message ids from the portable record and preserve the restoring device's current marker lists.
+- [x] Exclude other accounts, remap only to the restoring account and give a new device empty marker lists.
+- [x] Export one `HUB_PREFS_PREFIX` authority and reuse it in Hub and backup code.
+- [x] Prove account isolation, marker redaction and restore preservation red against the former exclusion, then pass 98/98 focused and adjacent backup, coverage, comms and Hub journey tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the build chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design-check contracts and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [ ] Aggregate design-system wrappers — `design-system:check` hardcodes unavailable `npm`; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-preference recovery slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` and app-host environment values unset and a local properties file present but unread; no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
+- [ ] Keep housing, meals and other unresolved term/device stores separate until their portability, privacy and account/term semantics are explicit.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

@@ -16,6 +16,7 @@ import { EMPTY_OPPORTUNITIES, OPPORTUNITIES_PREFIX, deadlines, readOpportunities
 import {
   CHANNELS,
   EMPTY_PREFS,
+  HUB_PREFS_PREFIX,
   PRIORITY_LABEL,
   admit,
   digestGroups,
@@ -56,7 +57,7 @@ function Workspace({ who }: { who: string }) {
   const { catalog, state } = useStore();
   const now = useNow();
   const predictable = hasMode(state.access, 'predictable');
-  const prefsLib = useDeviceLibrary(`semester.hub.v1:${who}`, readHubPrefs, EMPTY_PREFS);
+  const prefsLib = useDeviceLibrary(`${HUB_PREFS_PREFIX}:${who}`, readHubPrefs, EMPTY_PREFS);
   const launch = useDeviceLibrary(`${LAUNCHPAD_PREFIX}:${who}`, readLaunchpad, EMPTY_LAUNCHPAD);
   const opps = useDeviceLibrary(`${OPPORTUNITIES_PREFIX}:${who}`, readOpportunities, EMPTY_OPPORTUNITIES);
   const [tab, setTab] = useState<Tab>('inbox');

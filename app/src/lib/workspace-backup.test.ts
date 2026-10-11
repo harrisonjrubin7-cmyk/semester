@@ -480,6 +480,78 @@ describe('the Opportunities workspace', () => {
   });
 });
 
+describe('the Hub preferences', () => {
+  const preferences = {
+    muted: ['semester'],
+    quietFrom: 21 * 60,
+    quietTo: 8 * 60,
+    digest: 'daily',
+    read: ['course:old-deadline'],
+    saved: ['official:old-notice'],
+    followUp: ['opportunity:old-item'],
+  };
+
+  it('backs up one account without exporting device-specific message markers', () => {
+    storage.setItem(`semester.hub.v1:${ACCOUNT}`, JSON.stringify(preferences));
+    storage.setItem('semester.hub.v1:someone-else', JSON.stringify({
+      ...preferences,
+      digest: 'weekly',
+      saved: ['official:other-account'],
+    }));
+
+    const backup = workspaceBackup(ACCOUNT, storage);
+    expect(backup.records.map((record) => record.kind)).toEqual(['hubPreferences']);
+    expect(backup.records[0]?.value).toEqual({
+      muted: ['semester'],
+      quietFrom: 21 * 60,
+      quietTo: 8 * 60,
+      digest: 'daily',
+      read: [],
+      saved: [],
+      followUp: [],
+    });
+    expect(JSON.stringify(backup)).not.toContain('old-deadline');
+    expect(JSON.stringify(backup)).not.toContain('old-notice');
+    expect(JSON.stringify(backup)).not.toContain('old-item');
+    expect(JSON.stringify(backup)).not.toContain('other-account');
+  });
+
+  it('restores portable settings to the restoring account and keeps that device\'s markers', () => {
+    storage.setItem(`semester.hub.v1:${ACCOUNT}`, JSON.stringify(preferences));
+    const backup = workspaceBackup(ACCOUNT, storage);
+    const fresh = new FakeStorage();
+    fresh.setItem('semester.hub.v1:acct-2', JSON.stringify({
+      ...preferences,
+      muted: ['course'],
+      digest: 'weekly',
+      read: ['course:current-deadline'],
+      saved: ['official:current-notice'],
+      followUp: ['opportunity:current-item'],
+    }));
+
+    restoreWorkspaces(backup, 'acct-2', fresh);
+    expect(JSON.parse(fresh.getItem('semester.hub.v1:acct-2')!)).toEqual({
+      muted: ['semester'],
+      quietFrom: 21 * 60,
+      quietTo: 8 * 60,
+      digest: 'daily',
+      read: ['course:current-deadline'],
+      saved: ['official:current-notice'],
+      followUp: ['opportunity:current-item'],
+    });
+    expect(fresh.getItem(`semester.hub.v1:${ACCOUNT}`)).toBeNull();
+
+    const newDevice = new FakeStorage();
+    restoreWorkspaces(backup, 'acct-3', newDevice);
+    expect(JSON.parse(newDevice.getItem('semester.hub.v1:acct-3')!)).toMatchObject({
+      digest: 'daily',
+      read: [],
+      saved: [],
+      followUp: [],
+    });
+  });
+});
+
 /*
  * The study journal, with an entry in it.
  *

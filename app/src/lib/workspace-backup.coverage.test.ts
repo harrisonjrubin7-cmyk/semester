@@ -141,7 +141,7 @@ const STORES: Record<string, 'backed up' | { exempt: string }> = {
   'semester.nil.v1': { exempt: OTHER_MODULE },
   'semester.toolkit.v1': 'backed up',
   'semester.toolkit-data.v1': 'backed up',
-  'semester.hub.v1': { exempt: OTHER_MODULE },
+  'semester.hub.v1': 'backed up',
   'semester.launchpad.v1': 'backed up',
   'semester.opportunities.v1': 'backed up',
   'semester.guide-choices.v1': { exempt: 'Which Guide suggestions the student snoozed, passed on or hid, and until when (lib/guide-bar.ts). A display marker that expires on its own; a restored copy would only hide a suggestion that had already come back.' },
