@@ -275,12 +275,14 @@ export function TrustCenter({ accountId }: { accountId?: string | null } = {}) {
       ) : null}
       {confirm?.kind === 'forget' ? (
         <ConfirmDialog
-          title="Forget this?"
+          title="Forget this remembered line?"
           preview={
-            <>
-              <p>“{confirm.text}”</p>
-              <p>Semester stops using it straight away, on this device and, once it syncs, on your account.</p>
-            </>
+            <ActionPreview
+              subject={`“${confirm.text}”`}
+              says="Semester stops using this line straight away on this device and, once it syncs, on your account."
+              doesNotChange="Your other remembered lines, conversations, notes and plans stay unchanged."
+              recovery={{ kind: 'none', how: 'You can add the line again if you still know it. A data export downloaded before deletion still contains its earlier copy.' }}
+            />
           }
           confirmLabel="Forget"
           onConfirm={() => void confirmed()}

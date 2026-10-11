@@ -223,6 +223,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['gtm_campaign_report', 'admin', ['auth.uid()', 'private.has_capability']],
   ['gtm_pilot_problems', 'admin', ['private.gtm_account_visible']],
   ['help_inbox', 'admin', ['private.answers_for']],
+  ['incident_evidence_custody', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['integration_approve_connection', 'integration', ['auth.uid()', 'private.has_capability']],
   ['integration_approve_scope', 'integration', ['auth.uid()', 'private.has_capability']],
   ['integration_request_replay', 'integration', ['auth.uid()', 'private.has_capability']],
@@ -289,6 +290,8 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['read_support_share', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['read_support_signals', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
   ['read_tenant_projection', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['record_incident_evidence', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
+  ['record_incident_evidence_custody', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['record_offboarding_export', 'admin', ['private.offboarding_operator']],
   ['record_offboarding_notice', 'admin', ['private.is_app_admin', 'private.has_capability']],
   ['referral_standing', 'read-helper', ['auth.uid()']],
@@ -467,6 +470,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * historical snapshot.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261011000000_incident_evidence_custody.sql',
+    functions: ['incident_evidence_custody', 'record_incident_evidence', 'record_incident_evidence_custody'],
+  },
   {
     file: '20261011160000_privileged_access_review.sql',
     functions: ['begin_privileged_access_review', 'complete_privileged_access_review', 'decide_privileged_access_review_item', 'privileged_access_review', 'resolve_privileged_access_review_investigation'],
