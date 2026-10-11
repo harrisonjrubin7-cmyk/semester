@@ -25,7 +25,8 @@ has occurred, that a provider has been approved, or that the migration is live.
    - the existing incident reference;
    - a bounded evidence kind and source system;
    - an opaque `evidence://` locator, never an HTTP URL or signed object URL;
-   - the digest, byte size, capture time and retention date.
+   - the digest, byte size, `restricted` or `confidential` classification,
+     capture time and finite retention date.
 5. Keep the returned evidence reference with the incident timeline. The write
    is refused if the console audit chain cannot accept its audit event.
 
@@ -38,7 +39,10 @@ verification records the digest observed from the retained bytes. Transfer and
 successful verification require the original digest; a mismatch is preserved
 as an explicit `verification_failed` event rather than being called verified.
 The database links each custody event to the prior event's hash and refuses
-updates or deletion of artifacts and custody events.
+updates or deletion of artifacts and custody events. Its canonical hash input
+uses the returned public evidence reference and sequence, every returned
+custody field, and a fixed UTC timestamp, so an authorized reader can
+recompute the chain without access to private table identifiers.
 
 The custody ledger is read only through `incident_evidence_custody`, which
 requires the same platform incident-response authority and fresh MFA and logs

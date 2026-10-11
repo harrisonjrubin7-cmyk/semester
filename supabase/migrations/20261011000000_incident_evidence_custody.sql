@@ -21,14 +21,16 @@ create table if not exists private.incident_evidence_artifact (
                       evidence_locator ~ '^evidence://[A-Za-z0-9][A-Za-z0-9._/-]{2,250}$'),
   sha256            text        not null check (sha256 ~ '^[0-9a-f]{64}$'),
   byte_size         bigint      not null check (byte_size between 1 and 1099511627776),
-  classification    text        not null default 'restricted'
+  classification    text        not null
                     check (classification in ('restricted', 'confidential')),
   captured_at       timestamptz not null,
   retention_until   timestamptz not null,
   recorded_by_sha256 text       not null check (recorded_by_sha256 ~ '^[0-9a-f]{64}$'),
   recorded_at       timestamptz not null default now(),
   constraint incident_evidence_time_bounds check (
-    captured_at <= recorded_at + interval '5 minutes'
+    isfinite(captured_at)
+    and isfinite(retention_until)
+    and captured_at <= recorded_at + interval '5 minutes'
     and retention_until > captured_at
     and retention_until >= recorded_at + interval '30 days')
 );
@@ -49,7 +51,7 @@ create table if not exists private.incident_evidence_custody_event (
   reason_code     text        not null check (reason_code ~ '^[a-z][a-z0-9._-]{2,63}$'),
   observed_sha256 text        not null check (observed_sha256 ~ '^[0-9a-f]{64}$'),
   actor_sha256    text        not null check (actor_sha256 ~ '^[0-9a-f]{64}$'),
-  occurred_at     timestamptz not null default now(),
+  occurred_at     timestamptz not null default now() check (isfinite(occurred_at)),
   previous_hash   text        not null check (previous_hash ~ '^[0-9a-f]{64}$'),
   event_hash      text        not null check (event_hash ~ '^[0-9a-f]{64}$')
 );
@@ -73,6 +75,39 @@ end $$;
 
 revoke all on function private.refuse_incident_evidence_change() from public, anon, authenticated;
 
+create or replace function private.incident_evidence_custody_canonical(
+  want_evidence_ref text,
+  want_seq bigint,
+  want_action text,
+  want_custodian text,
+  want_reason_code text,
+  want_observed_sha256 text,
+  want_actor_sha256 text,
+  want_occurred_at timestamptz,
+  want_previous_hash text
+)
+returns text
+language sql
+immutable
+security invoker
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'evidence_ref', want_evidence_ref,
+    'seq', want_seq,
+    'action', want_action,
+    'custodian', want_custodian,
+    'reason_code', want_reason_code,
+    'observed_sha256', want_observed_sha256,
+    'actor_sha256', want_actor_sha256,
+    'occurred_at', to_char(want_occurred_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
+    'previous_hash', want_previous_hash
+  )::text;
+$$;
+
+revoke all on function private.incident_evidence_custody_canonical(text, bigint, text, text, text, text, text, timestamptz, text)
+  from public, anon, authenticated;
+
 drop trigger if exists keep_incident_evidence_artifact_immutable on private.incident_evidence_artifact;
 create trigger keep_incident_evidence_artifact_immutable
   before update or delete on private.incident_evidence_artifact
@@ -91,6 +126,7 @@ set search_path = ''
 as $$
 declare
   prior text;
+  artifact_ref text;
 begin
   perform pg_advisory_xact_lock(hashtextextended(new.artifact_id::text, 0));
   select e.event_hash into prior
@@ -99,10 +135,17 @@ begin
    order by e.seq desc
    limit 1;
   new.previous_hash := coalesce(prior, repeat('0', 64));
-  new.event_hash := private.console_audit_sha256(concat_ws('|',
-    new.artifact_id::text, new.action, new.custodian, new.reason_code,
-    new.observed_sha256, new.actor_sha256, new.occurred_at::text,
-    new.previous_hash));
+  select a.public_id into artifact_ref
+    from private.incident_evidence_artifact a
+   where a.id = new.artifact_id;
+  if artifact_ref is null then
+    raise exception 'The evidence artifact does not exist.' using errcode = '23503';
+  end if;
+  new.event_hash := private.console_audit_sha256(
+    private.incident_evidence_custody_canonical(
+      artifact_ref, new.seq, new.action, new.custodian, new.reason_code,
+      new.observed_sha256, new.actor_sha256, new.occurred_at,
+      new.previous_hash));
   return new;
 end $$;
 
@@ -121,7 +164,8 @@ create or replace function public.record_incident_evidence(
   want_sha256 text,
   want_byte_size bigint,
   want_captured_at timestamptz,
-  want_retention_until timestamptz
+  want_retention_until timestamptz,
+  want_classification text
 )
 returns text
 language plpgsql
@@ -153,16 +197,19 @@ begin
   perform private.console_audit_write(
     me, 'authenticated', incident.tenant_id, 'incident.evidence_recorded', evidence_ref,
     jsonb_build_object('incident_ref', incident.public_id, 'kind', want_kind,
+      'classification', want_classification,
       'sha256', want_sha256, 'byte_size', want_byte_size),
     'incident-evidence:' || evidence_ref);
 
   insert into private.incident_evidence_artifact (
     id, public_id, incident_id, tenant_id, kind, source_system,
-    evidence_locator, sha256, byte_size, captured_at, retention_until, recorded_by_sha256
+    evidence_locator, sha256, byte_size, classification, captured_at,
+    retention_until, recorded_by_sha256
   ) values (
     artifact_id, evidence_ref, incident.id, incident.tenant_id, want_kind,
     want_source_system, want_evidence_locator, want_sha256, want_byte_size,
-    want_captured_at, want_retention_until, private.role_audit_sha256(me::text)
+    want_classification, want_captured_at, want_retention_until,
+    private.role_audit_sha256(me::text)
   );
 
   insert into private.incident_evidence_custody_event (
@@ -293,12 +340,12 @@ begin
    order by a.captured_at, a.id, c.seq;
 end $$;
 
-revoke all on function public.record_incident_evidence(text, text, text, text, text, bigint, timestamptz, timestamptz)
+revoke all on function public.record_incident_evidence(text, text, text, text, text, bigint, timestamptz, timestamptz, text)
   from public, anon;
 revoke all on function public.record_incident_evidence_custody(text, text, text, text, text)
   from public, anon;
 revoke all on function public.incident_evidence_custody(text) from public, anon;
-grant execute on function public.record_incident_evidence(text, text, text, text, text, bigint, timestamptz, timestamptz)
+grant execute on function public.record_incident_evidence(text, text, text, text, text, bigint, timestamptz, timestamptz, text)
   to authenticated;
 grant execute on function public.record_incident_evidence_custody(text, text, text, text, text)
   to authenticated;
@@ -308,7 +355,7 @@ comment on table private.incident_evidence_artifact is
   'Immutable incident-evidence metadata. Evidence bytes stay in an approved repository behind an opaque evidence:// reference.';
 comment on table private.incident_evidence_custody_event is
   'Append-only, hash-linked custody events for incident evidence.';
-comment on function public.record_incident_evidence(text, text, text, text, text, bigint, timestamptz, timestamptz) is
+comment on function public.record_incident_evidence(text, text, text, text, text, bigint, timestamptz, timestamptz, text) is
   'Records bounded evidence metadata and the initial custody event. Requires platform incident response capability and fresh MFA.';
 comment on function public.record_incident_evidence_custody(text, text, text, text, text) is
   'Appends a transfer or verification to the evidence custody chain. Requires platform incident response capability and fresh MFA.';

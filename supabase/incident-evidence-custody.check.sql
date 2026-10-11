@@ -70,23 +70,32 @@ begin
   perform pg_temp.must('authenticated cannot select the protected custody table',
     pg_temp.refused(operator, 'select count(*) from private.incident_evidence_custody_event', true));
   perform pg_temp.must('fresh MFA is required to record evidence', pg_temp.refused(no_mfa, format(
-    'select public.record_incident_evidence(%L,%L,%L,%L,%L,%s,now(),now()+interval ''90 days'')',
+    'select public.record_incident_evidence(%L,%L,%L,%L,%L,%s,now(),now()+interval ''90 days'',%L)',
     'incident-evidence-test', 'provider-log', 'synthetic provider',
-    'evidence://incident/test-log', repeat('a', 64), 42)));
+    'evidence://incident/test-log', repeat('a', 64), 42, 'restricted')));
   perform pg_temp.must('school-scoped authority cannot use the platform custody path', pg_temp.refused(school_only, format(
-    'select public.record_incident_evidence(%L,%L,%L,%L,%L,%s,now(),now()+interval ''90 days'')',
+    'select public.record_incident_evidence(%L,%L,%L,%L,%L,%s,now(),now()+interval ''90 days'',%L)',
     'incident-evidence-test', 'provider-log', 'synthetic provider',
-    'evidence://incident/school-only', repeat('a', 64), 42), true));
+    'evidence://incident/school-only', repeat('a', 64), 42, 'restricted'), true));
   perform pg_temp.must('signed or query-bearing locators are refused', pg_temp.refused(operator, format(
-    'select public.record_incident_evidence(%L,%L,%L,%L,%L,%s,now(),now()+interval ''90 days'')',
+    'select public.record_incident_evidence(%L,%L,%L,%L,%L,%s,now(),now()+interval ''90 days'',%L)',
     'incident-evidence-test', 'provider-log', 'synthetic provider',
-    'https://provider.example/object?token=secret', repeat('a', 64), 42), true));
+    'https://provider.example/object?token=secret', repeat('a', 64), 42, 'restricted'), true));
+  perform pg_temp.must('non-finite capture times are refused', pg_temp.refused(operator, format(
+    'select public.record_incident_evidence(%L,%L,%L,%L,%L,%s,''-infinity''::timestamptz,now()+interval ''90 days'',%L)',
+    'incident-evidence-test', 'provider-log', 'synthetic provider',
+    'evidence://incident/infinite-capture', repeat('a', 64), 42, 'restricted'), true));
+  perform pg_temp.must('non-finite retention times are refused', pg_temp.refused(operator, format(
+    'select public.record_incident_evidence(%L,%L,%L,%L,%L,%s,now(),''infinity''::timestamptz,%L)',
+    'incident-evidence-test', 'provider-log', 'synthetic provider',
+    'evidence://incident/infinite-retention', repeat('a', 64), 42, 'restricted'), true));
 
+  set local time zone 'Pacific/Honolulu';
   perform pg_temp.become(operator, true);
   evidence_ref := public.record_incident_evidence(
     'incident-evidence-test', 'provider-log', 'synthetic provider',
     'evidence://incident/test-log', repeat('a', 64), 42,
-    now() - interval '10 minutes', now() + interval '90 days');
+    now() - interval '10 minutes', now() + interval '90 days', 'confidential');
   reset role;
   perform pg_temp.must('recording creates one artifact and one initial custody event',
     (select count(*) = 1 from private.incident_evidence_artifact where public_id = evidence_ref)
@@ -98,11 +107,16 @@ begin
        from private.incident_evidence_artifact a
        join public.platform_incident i on i.id = a.incident_id
       where a.public_id = evidence_ref));
+  perform pg_temp.must('the selected evidence classification is preserved',
+    (select a.classification = 'confidential'
+       from private.incident_evidence_artifact a
+      where a.public_id = evidence_ref));
 
   select c.event_hash into first_hash
     from private.incident_evidence_custody_event c
     join private.incident_evidence_artifact a on a.id = c.artifact_id
    where a.public_id = evidence_ref order by c.seq limit 1;
+  set local time zone 'UTC';
   perform pg_temp.become(operator, true);
   perform public.record_incident_evidence_custody(
     evidence_ref, 'verified', 'incident-commander', 'digest-recheck', repeat('a', 64));
@@ -119,6 +133,16 @@ begin
   perform public.record_incident_evidence_custody(
     evidence_ref, 'verification_failed', 'incident-commander', 'digest-mismatch', repeat('b', 64));
   reset role;
+  perform pg_temp.must('every event hash is reproducible from the supported ledger fields',
+    not exists (
+      select 1
+        from private.incident_evidence_custody_event c
+        join private.incident_evidence_artifact a on a.id = c.artifact_id
+       where a.public_id = evidence_ref
+         and c.event_hash <> private.console_audit_sha256(
+           private.incident_evidence_custody_canonical(
+             a.public_id, c.seq, c.action, c.custodian, c.reason_code,
+             c.observed_sha256, c.actor_sha256, c.occurred_at, c.previous_hash))));
 
   perform pg_temp.must('artifact rows cannot be rewritten',
     pg_temp.refused(operator, format(
@@ -140,9 +164,9 @@ begin
   -- A failed audit write must leave no artifact behind.
   revoke insert on table private.console_audit_event from semester_audit_writer;
   perform pg_temp.must('audit failure refuses evidence capture', pg_temp.refused(operator, format(
-    'select public.record_incident_evidence(%L,%L,%L,%L,%L,%s,now(),now()+interval ''90 days'')',
+    'select public.record_incident_evidence(%L,%L,%L,%L,%L,%s,now(),now()+interval ''90 days'',%L)',
     'incident-evidence-test', 'provider-log', 'synthetic provider',
-    'evidence://incident/audit-failure', repeat('c', 64), 43), true));
+    'evidence://incident/audit-failure', repeat('c', 64), 43, 'restricted'), true));
   perform pg_temp.must('audit failure leaves no partial artifact',
     (select count(*) = 0 from private.incident_evidence_artifact
       where evidence_locator = 'evidence://incident/audit-failure'));
