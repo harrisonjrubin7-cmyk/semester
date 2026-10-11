@@ -305,6 +305,68 @@ describe('the learning stores', () => {
   });
 });
 
+describe('the Toolkit stores', () => {
+  const toolkit = {
+    hidden: ['researchStudio'],
+    showLess: true,
+    workspaces: [],
+    research: [{
+      id: 'research-1',
+      question: 'What supports student persistence?',
+      concepts: 'persistence',
+      synonyms: 'retention',
+      databases: 'ERIC',
+      dateRange: '2020-2026',
+      include: 'Higher education',
+      exclude: 'Editorials',
+      evidence: [],
+      claims: [],
+    }],
+    declaration: { assignment: '', course: '', tool: '', version: '', dates: '', uses: [], purpose: '', inputTier: 'T2', interaction: '', outputUsed: '', sourcesChecked: '', verified: '', edits: '', limitations: '', attested: false },
+  };
+  const data = [{
+    id: 'data-1',
+    name: 'Survey extract',
+    tier: 'T1',
+    raw: 'score\n4',
+    imported: '2026-10-11T12:00:00.000Z',
+    dictionary: [{ name: 'score', type: 'number', unit: '', valid: '', source: '', missingRule: '', confirmed: true }],
+    transforms: [],
+    randomized: false,
+    interpretation: { shows: '', method: '', uncertainty: '', conclude: '', cannotConclude: '' },
+  }];
+
+  it('backs up both account-scoped records and restores them only to the restoring account', () => {
+    storage.setItem(`semester.toolkit.v1:${ACCOUNT}`, JSON.stringify(toolkit));
+    storage.setItem(`semester.toolkit-data.v1:${ACCOUNT}`, JSON.stringify(data));
+    storage.setItem('semester.toolkit.v1:someone-else', JSON.stringify({ ...toolkit, hidden: ['other-account'] }));
+
+    const backup = workspaceBackup(ACCOUNT, storage);
+    expect(backup.records.map((record) => record.kind).sort()).toEqual(['toolkit', 'toolkitData']);
+    expect(JSON.stringify(backup)).not.toContain('other-account');
+
+    const fresh = new FakeStorage();
+    restoreWorkspaces(backup, 'acct-2', fresh);
+    expect(JSON.parse(fresh.getItem('semester.toolkit.v1:acct-2')!)).toEqual(toolkit);
+    expect(JSON.parse(fresh.getItem('semester.toolkit-data.v1:acct-2')!)).toEqual(data);
+    expect(fresh.getItem(`semester.toolkit.v1:${ACCOUNT}`)).toBeNull();
+  });
+
+  it('validates Toolkit data before any restore write', () => {
+    const bad = {
+      format: 'semester.workspaces.v1',
+      exported: '',
+      records: [
+        { kind: 'toolkit', term: '', value: toolkit },
+        { kind: 'toolkitData', term: '', value: [{ ...data[0], raw: 42 }] },
+      ],
+    } as unknown as WorkspaceBackup;
+    const fresh = new FakeStorage();
+    expect(() => restoreWorkspaces(bad, 'acct-2', fresh)).toThrow();
+    expect(fresh.length).toBe(0);
+  });
+});
+
 /*
  * The study journal, with an entry in it.
  *
