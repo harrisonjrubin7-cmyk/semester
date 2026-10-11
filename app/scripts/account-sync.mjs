@@ -452,30 +452,30 @@ async function journey(label, viewport) {
     at(STEPS[3]);
     second = await device(viewport, errors);
     const other = second.page;
-    await other.goto(BASE, { waitUntil: 'domcontentloaded' });
-    expect(await visible(other.getByText('Your syllabi. One brain.')), 'the second device did not open on the adoption prompt');
-    await other.getByRole('button', { name: /^skip$/i }).first().click();
-    await go(other, '#/mine', 'Personal');
-    expect(
-      (await other.getByText(title, { exact: true }).count()) === 0,
-      'a fresh second context already had the action before signing in — the contexts are not separate',
-    );
-    // Keep one viewport on the explicit first-sign-in adoption path and make
-    // the other deterministic for the ordinary automatic pull. A previously
-    // synced device legitimately carries an empty row-stamp set after signing
-    // out; the remote state stamp must still make the account copy unseen.
-    // This is the path that intermittently reached “Synced” with no durable
-    // task when the authenticated PostgREST identity lagged the auth event.
     if (label === 'phone') {
-      await other.evaluate(() => {
-        localStorage.setItem('semester.seen', JSON.stringify({ courses: {} }));
-      });
-      notes.push(`${label}: exercised automatic pull with a prior empty seen-marker`);
+      // A direct account link is a genuinely empty second device: no tour
+      // choices, route history or sample adoption can create local rows first.
+      // It deterministically exercises the automatic account-to-device pull.
+      await other.goto(`${BASE}#/login`, { waitUntil: 'domcontentloaded' });
+      expect(await visible(other.getByRole('textbox', { name: /email/i })), 'the empty second device did not open on sign in');
+      const blank = await deviceTask(other, title);
+      expect(!blank.present, 'the empty second device already persisted the account action before signing in');
+      notes.push(`${label}: exercised automatic pull onto an actually empty device`);
+    } else {
+      // Retain the existing both-copies adoption journey independently.
+      await other.goto(BASE, { waitUntil: 'domcontentloaded' });
+      expect(await visible(other.getByText('Your syllabi. One brain.')), 'the second device did not open on the adoption prompt');
+      await other.getByRole('button', { name: /^skip$/i }).first().click();
+      await go(other, '#/mine', 'Personal');
+      expect(
+        (await other.getByText(title, { exact: true }).count()) === 0,
+        'a fresh second context already had the action before signing in — the contexts are not separate',
+      );
     }
 
     // ── 5 · Sign in there, and the action arrives, still done ──────────────
     at(STEPS[4]);
-    await other.evaluate(() => { location.hash = '#/login'; });
+    if (label !== 'phone') await other.evaluate(() => { location.hash = '#/login'; });
     expect(await visible(other.getByRole('textbox', { name: /email/i })), '#/login drew no email field');
     await other.getByRole('textbox', { name: /email/i }).fill(email);
     await local(second.service);
@@ -524,6 +524,14 @@ async function journey(label, viewport) {
       `the second device did not persist the account's finished action within ${SETTLE / 1000}s `
         + `(last state: ${JSON.stringify(pulledTask.state)})`,
     );
+    if (label === 'phone') {
+      await other.reload({ waitUntil: 'domcontentloaded' });
+      const afterReload = await deviceHasDoneTask(other, title);
+      expect(
+        afterReload.ok,
+        `the automatic pull did not survive reload (last state: ${JSON.stringify(afterReload.state)})`,
+      );
+    }
     await go(other, '#/mine', 'Personal');
     expect(await visible(other.getByRole('button', { name: done(title) }), SETTLE), 'the second device, signed in, does not show the action as done');
 
