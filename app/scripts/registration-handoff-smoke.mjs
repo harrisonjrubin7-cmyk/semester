@@ -111,7 +111,7 @@ try {
   const dialog = page.getByRole('dialog');
   await dialog.waitFor({ timeout: WAIT });
   const confirmation = await dialog.innerText();
-  if (!/You are leaving Semester/i.test(confirmation) || !/register\.example\.edu/.test(confirmation)) {
+  if (!/You are leaving Semester/i.test(confirmation) || !confirmation.includes('register.example.edu')) {
     throw new Error('the handoff confirmation did not identify its boundary and destination');
   }
 
