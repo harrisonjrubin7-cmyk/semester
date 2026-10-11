@@ -703,6 +703,7 @@ function vercelUncovered(extra: string): string[] {
  * fails if this list and the tree disagree.
  */
 const MOCKS_MODULES = [
+  'src/components/AboutMe.test.tsx',
   'src/components/TodayActionCenter.shadow.sources.test.tsx',
   'src/composition/react.mount.test.tsx',
   'src/components/ProductivityPreparation.test.tsx',
@@ -725,6 +726,7 @@ const MOCKS_MODULES = [
   'src/components/saysomething.test.tsx',
   'src/screens/mentionbadge.test.tsx',
   'src/screens/mine/Drive.delete-folder.test.tsx',
+  'src/screens/mine/Drive.delete-file.test.tsx',
   'src/components/syncstrip.test.tsx',
   'src/components/waitingrow.test.tsx',
   'src/components/pushstalled.test.tsx',
@@ -785,6 +787,9 @@ const MOCKS_MODULES = [
   'src/screens/dining.test.tsx',
   'src/lib/dining/client.test.ts',
   'src/lib/governance/activation.test.ts',
+  'src/state/account-refresh.test.tsx',
+  // This test reads this list and must not inherit filesystem doubles from a shared worker.
+  'src/isolation.test.ts',
   'src/state/readonly.test.tsx',
   'src/screens/Volunteer.test.tsx',
   'src/screens/Agreements.test.tsx',

@@ -133,10 +133,11 @@ export async function openEngineStore(port: SnapshotPort): Promise<ReturnType<ty
 export type EngineStore = LocalStore & { flush(): Promise<void> };
 
 /** Empties it. Called by Erase device, which has to reach every database. */
-export async function clearEngineStore(): Promise<void> {
+export async function clearEngineStore(): Promise<boolean> {
   try {
     await store(DB, STORE).tx('readwrite', (o) => o.clear());
+    return true;
   } catch {
-    // Nothing was ever stored where it could not be opened.
+    return false;
   }
 }

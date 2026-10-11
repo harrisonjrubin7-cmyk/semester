@@ -89,6 +89,9 @@ export async function saveDraft(userId: string, row: DraftRow, id?: string): Pro
 }
 
 export async function deleteDraft(id: string): Promise<void> {
-  const { error } = await (await cloud()).from('graduation_scenarios').delete().eq('id', id);
+  const { data, error } = await (await cloud()).from('graduation_scenarios').delete().eq('id', id).select('id');
   if (error) throw new Error(error.message);
+  if (!data || data.length === 0) {
+    throw new Error('This draft could not be removed from your account. Reload it and try again.');
+  }
 }

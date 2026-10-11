@@ -7,6 +7,7 @@ import {
   ChipRow,
   EmptyState,
   FilePick,
+  Notice,
   SectionLabel,
   Segmented,
 } from '../../components/ui';
@@ -26,7 +27,7 @@ import {
   addFile,
   sweepTrash,
   deleteFile,
-  emptyTrash,
+  purgeTrash,
   formatBytes,
   listFiles,
   listTrash,
@@ -54,6 +55,7 @@ import {
 import { CoursePicker } from '../../components/CoursePicker';
 import { DeadlinePicker } from '../../components/DeadlinePicker';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { TypeToConfirm } from '../../components/TypeToConfirm';
 import { ActionPreview } from '../../components/unity/ActionPreview';
 import { forLine, nameFor } from '../../lib/forwork';
 
@@ -137,11 +139,16 @@ export function Drive() {
   const [query, setQuery] = useState('');
   const [busy, setBusy] = useState('');
   const [trouble, setTrouble] = useState('');
+  const [cleaned, setCleaned] = useState(0);
   const [moving, setMoving] = useState<Settled | null>(null);
   /** The folder being nested under another, while the picker is open. */
   const [nesting, setNesting] = useState<Shown | null>(null);
   /** The folder hierarchy waiting for a consequence preview before removal. */
   const [deleting, setDeleting] = useState<Shown | null>(null);
+  /** The one binned file waiting for an irreversible typed confirmation. */
+  const [purging, setPurging] = useState<Settled | null>(null);
+  /** The exact bin snapshot waiting for a separate bulk typed confirmation. */
+  const [emptying, setEmptying] = useState<Settled[] | null>(null);
   /* The file whose deadline is being changed. A second panel rather than a
      second control on every row: the row already carries a star, a Move and a
      Bin, and a fourth button on a 390px phone is the point at which the file's
@@ -156,8 +163,19 @@ export function Drive() {
   };
   useEffect(() => {
     // Take out what has been in the bin past its month, then read. `TRASH_DAYS`
-    // was a promise nothing kept until this call existed.
-    void sweepTrash().then(refresh);
+    // was a promise nothing kept until this call existed. A failed strict read
+    // is not "zero due": surface it so the student can inspect and retry.
+    void sweepTrash()
+      .then((removed) => {
+        setCleaned(removed);
+        refresh();
+      })
+      .catch(() => {
+        setTrouble(
+          `Drive could not finish the ${TRASH_DAYS}-day bin cleanup. Open the bin to see what remains, then reopen Drive to try again.`,
+        );
+        refresh();
+      });
     // How full the browser is. Asked once: the number moves slowly, and it is
     // the browser's own estimate rather than a measurement — see `lib/quota.ts`.
     let alive = true;
@@ -391,9 +409,13 @@ export function Drive() {
       />
 
       {trouble !== '' && (
-        <Blueprint style={{ padding: 'var(--sp-5)', marginBottom: 'var(--sp-5)' }}>
-          <div style={{ fontSize: 'var(--type-sm)' }}>{trouble}</div>
-        </Blueprint>
+        <Notice alert style={{ marginTop: 0, marginBottom: 'var(--sp-5)' }}>{trouble}</Notice>
+      )}
+
+      {cleaned > 0 && (
+        <Notice style={{ marginTop: 0, marginBottom: 'var(--sp-5)' }}>
+          Drive permanently removed {cleaned} {cleaned === 1 ? 'file' : 'files'} that had stayed in the bin for {TRASH_DAYS} days. Their stored bytes cannot be restored with Undo or a workspace backup; copies outside Semester are unchanged.
+        </Notice>
       )}
 
       {inDrive && (
@@ -448,7 +470,7 @@ export function Drive() {
             {TRASH_DAYS} days the app stops keeping them for you.
           </div>
           <ActionButton
-            onClick={() => void act(emptyTrash())}
+            onClick={() => setEmptying([...binned])}
             aria-label={`Empty the bin — ${binned.length} files, deleted for good`}
           >
             Empty the bin ({binned.length})
@@ -581,7 +603,7 @@ export function Drive() {
                 onFile={() => setFiling(file)}
                 onTrash={() => void act(trashFile(file.id))}
                 onRestore={() => void act(restoreFile(file.id))}
-                onPurge={() => void act(deleteFile(file.id))}
+                onPurge={() => setPurging(file)}
               />
             ))}
           </div>
@@ -717,6 +739,47 @@ export function Drive() {
               dispatch({ type: 'deleteFolder', id: folder.id });
               refresh();
             })();
+          }}
+        />
+      )}
+      {purging && (
+        <TypeToConfirm
+          title={`Delete ${purging.name} for good?`}
+          what={[
+            `Deletes the only copy of ${purging.name} that Semester keeps on this device, including its ${formatBytes(purging.size)} of stored bytes.`,
+            'Its course, deadline and note links are not deleted, but they will no longer be able to open this file.',
+            'This does not delete an original or downloaded copy kept outside Semester.',
+            'Semester Undo and workspace backup cannot restore these bytes. You can add another copy later only if you still have one.',
+          ]}
+          want={purging.name}
+          describe="the file name"
+          confirmLabel="Delete for good"
+          onCancel={() => setPurging(null)}
+          onConfirm={() => {
+            const file = purging;
+            setPurging(null);
+            void act(deleteFile(file.id), `The file “${file.name}”`);
+          }}
+        />
+      )}
+      {emptying && (
+        <TypeToConfirm
+          title="Empty the bin?"
+          what={[
+            `Permanently deletes the ${emptying.length} ${emptying.length === 1 ? 'file' : 'files'} currently in the bin, including ${formatBytes(emptying.reduce((total, file) => total + file.size, 0))} of stored bytes.`,
+            'Files added to the bin after this preview opened are not deleted. A file restored before confirmation is kept.',
+            'Course, deadline and note links are not deleted, but they will no longer be able to open these files.',
+            'This does not delete originals or downloaded copies kept outside Semester.',
+            'Semester Undo and workspace backup cannot restore these bytes. You can add another copy later only if you still have one.',
+          ]}
+          want="EMPTY BIN"
+          describe="the words"
+          confirmLabel="Delete all"
+          onCancel={() => setEmptying(null)}
+          onConfirm={() => {
+            const files = emptying;
+            setEmptying(null);
+            void act(purgeTrash(files.map((file) => file.id)), 'The bin');
           }}
         />
       )}

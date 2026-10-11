@@ -3,6 +3,7 @@ import type { Plan, Scenario } from './graduation';
 
 const calls: { op: string; args: unknown[] }[] = [];
 let fail = '';
+let deleted = true;
 vi.mock('./cloud', () => ({
   cloud: async () => ({
     from: (table: string) => ({
@@ -11,10 +12,12 @@ vi.mock('./cloud', () => ({
         return { error: fail ? { message: fail } : null };
       },
       delete: () => ({
-        eq: async (col: string, v: string) => {
-          calls.push({ op: `delete:${table}`, args: [col, v] });
-          return { error: fail ? { message: fail } : null };
-        },
+        eq: (col: string, v: string) => ({
+          select: async (fields: string) => {
+            calls.push({ op: `delete:${table}`, args: [col, v, fields] });
+            return { data: deleted ? [{ id: v }] : [], error: fail ? { message: fail } : null };
+          },
+        }),
       }),
     }),
   }),
@@ -28,6 +31,7 @@ const minor: Scenario = { id: 's1', name: 'Add a minor', extra: 18, perTerm: 15,
 beforeEach(() => {
   calls.length = 0;
   fail = '';
+  deleted = true;
 });
 
 describe('a scenario draft for the account', () => {
@@ -60,6 +64,11 @@ describe('a scenario draft for the account', () => {
 
   it('deletes one draft by id', async () => {
     await deleteDraft('abc');
-    expect(calls).toEqual([{ op: 'delete:graduation_scenarios', args: ['id', 'abc'] }]);
+    expect(calls).toEqual([{ op: 'delete:graduation_scenarios', args: ['id', 'abc', 'id'] }]);
+  });
+
+  it('requires a deletion receipt before reporting success', async () => {
+    deleted = false;
+    await expect(deleteDraft('not-owned')).rejects.toThrow('could not be removed');
   });
 });

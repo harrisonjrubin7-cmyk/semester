@@ -82,8 +82,44 @@ export const DATABASES = [
 
 /** What was actually removed, so the screen can say so rather than assume. */
 export interface Erased {
-  /** Keys removed from localStorage and sessionStorage. */
+  /** Keys confirmed removed from localStorage and sessionStorage. */
   keys: number;
+  /** Browser stores whose clear operation completed. */
+  stores: string[];
+}
+
+/** A partial erase: every area was attempted, but these could not be confirmed. */
+export class DeviceEraseIncompleteError extends Error {
+  readonly failed: string[];
+  readonly erased: Erased;
+
+  constructor(
+    failed: string[],
+    erased: Erased,
+  ) {
+    super(`Device erase could not confirm ${failed.length} storage area${failed.length === 1 ? '' : 's'}.`);
+    this.name = 'DeviceEraseIncompleteError';
+    this.failed = failed;
+    this.erased = erased;
+  }
+}
+
+interface KeyRead {
+  keys: string[];
+  complete: boolean;
+}
+
+function readKeys(store: Storage): KeyRead {
+  const keys: string[] = [];
+  try {
+    for (let i = 0; i < store.length; i += 1) {
+      const key = store.key(i);
+      if (key && key.startsWith(PREFIX)) keys.push(key);
+    }
+    return { keys, complete: true };
+  } catch {
+    return { keys, complete: false };
+  }
 }
 
 /**
@@ -94,28 +130,23 @@ export interface Erased {
  * every other key. The list is taken first and removed second.
  */
 export function keysIn(store: Storage): string[] {
-  const out: string[] = [];
-  try {
-    for (let i = 0; i < store.length; i += 1) {
-      const key = store.key(i);
-      if (key && key.startsWith(PREFIX)) out.push(key);
-    }
-  } catch {
-    // A private window with storage switched off has nothing to enumerate.
-  }
-  return out;
+  return readKeys(store).keys;
 }
 
-function empty(store: Storage): number {
-  const keys = keysIn(store);
-  for (const key of keys) {
+function empty(store: Storage): { removed: number; complete: boolean } {
+  const read = readKeys(store);
+  let removed = 0;
+  let complete = read.complete;
+  for (const key of read.keys) {
     try {
       store.removeItem(key);
+      if (store.getItem(key) === null) removed += 1;
+      else complete = false;
     } catch {
-      // Removing what cannot be read is not a failure worth stopping for.
+      complete = false;
     }
   }
-  return keys.length;
+  return { removed, complete };
 }
 
 /** Whether any account is connected, read without loading `lib/connect.ts`. */
@@ -137,9 +168,9 @@ function holdsTokens(): boolean {
  * that lands after the erase would put a row back into an emptied store and
  * leave the app half-erased, which is worse than not erasing at all.
  *
- * Everything after that is independent and none of it throws: a browser that
- * refuses IndexedDB still gets its keys removed, and a store that is already
- * gone is not an error. The caller reloads.
+ * Everything after that is independent. Every area is attempted even when
+ * one refuses access, and the caller reloads only when every clear operation
+ * can confirm completion.
  */
 export async function eraseDevice(): Promise<Erased> {
   stopWriting();
@@ -156,26 +187,45 @@ export async function eraseDevice(): Promise<Erased> {
     await import('./revoke').then((m) => m.disconnectAll()).catch(() => undefined);
   }
 
-  const keys = empty(localStorage) + empty(sessionStorage);
+  const cleared: string[] = [];
+  const failed: string[] = [];
+  const local = empty(localStorage);
+  const session = empty(sessionStorage);
+  if (local.complete) cleared.push('localStorage');
+  else failed.push('localStorage');
+  if (session.complete) cleared.push('sessionStorage');
+  else failed.push('sessionStorage');
+
+  const attempt = async (name: string, operation: () => Promise<void | boolean>) => {
+    try {
+      const result = await operation();
+      if (result === false) failed.push(name);
+      else cleared.push(name);
+    } catch {
+      failed.push(name);
+    }
+  };
 
   // Through each store's own clear rather than `deleteDatabase`: the app holds
   // these open, and a delete blocks on an open handle — silently, with no
   // error and no completion, which is the one failure mode that would leave
   // somebody believing this had worked.
-  await wipe(COLLECTIONS).catch(() => undefined);
-  await clearFiles().catch(() => undefined);
-  await clearSnapshots().catch(() => undefined);
-  await clearVersions().catch(() => undefined);
-  await clearOutbox().catch(() => undefined);
-  await eraseVaults();
-  await clearEngineStore().catch(() => undefined);
-  await clearOfflineAttachmentPersistence().catch(() => undefined);
-  await clearHistory().catch(() => undefined);
+  await attempt('semester-store', () => wipe(COLLECTIONS));
+  await attempt('semester-files', clearFiles);
+  await attempt('semester-snapshots', clearSnapshots);
+  await attempt('semester-drafts', clearVersions);
+  await attempt('semester-outbox', clearOutbox);
+  await attempt('semester-vault', eraseVaults);
+  await attempt('semester-engine', clearEngineStore);
+  await attempt('semester-offline-attachments', clearOfflineAttachmentPersistence);
+  await attempt('semester-history', () => clearHistory());
 
   // Not a database: the service worker leaves a shared file in a Cache
   // Storage entry, and one that arrived and was never collected is still a
   // file somebody handed this device.
-  await clearShared().catch(() => undefined);
+  await attempt('semester-shared', clearShared);
 
-  return { keys };
+  const erased = { keys: local.removed + session.removed, stores: cleared };
+  if (failed.length > 0) throw new DeviceEraseIncompleteError(failed, erased);
+  return erased;
 }

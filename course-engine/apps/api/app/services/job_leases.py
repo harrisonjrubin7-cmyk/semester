@@ -19,6 +19,8 @@ from app.models.entities import (
     User,
 )
 
+QUEUED_REDELIVERY_DELAY = timedelta(minutes=5)
+
 
 @dataclass(frozen=True)
 class JobLease:
@@ -175,11 +177,20 @@ def recovery_candidates(
     now: datetime,
     limit: int = 100,
 ) -> list[tuple[UUID, str]]:
-    """Terminalize deleted-scope leases and return bounded active work to redeliver."""
+    """Terminalize deleted-scope leases and return bounded abandoned work."""
     expired_running = and_(
         BackgroundJob.status == JobStatus.running,
         BackgroundJob.revoked_at.is_(None),
         BackgroundJob.lease_expires_at <= now,
+    )
+    stale_queued = and_(
+        BackgroundJob.status == JobStatus.queued,
+        BackgroundJob.revoked_at.is_(None),
+        BackgroundJob.created_at <= now - QUEUED_REDELIVERY_DELAY,
+        or_(
+            BackgroundJob.heartbeat_at.is_(None),
+            BackgroundJob.heartbeat_at <= now - QUEUED_REDELIVERY_DELAY,
+        ),
     )
     inactive_recoverable = and_(
         BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
@@ -199,11 +210,18 @@ def recovery_candidates(
         )
     )
     rows = db.execute(
-        select(BackgroundJob.id, BackgroundJob.job_type)
-        .where(expired_running, _active_scope())
+        select(BackgroundJob.id, BackgroundJob.job_type, BackgroundJob.status)
+        .where(or_(expired_running, stale_queued), _active_scope())
         .order_by(BackgroundJob.created_at)
         .limit(limit)
     ).all()
+    queued_ids = [row.id for row in rows if row.status == JobStatus.queued]
+    if queued_ids:
+        db.execute(
+            update(BackgroundJob)
+            .where(BackgroundJob.id.in_(queued_ids), BackgroundJob.status == JobStatus.queued)
+            .values(heartbeat_at=now)
+        )
     db.commit()
     return [(row.id, row.job_type) for row in rows]
 

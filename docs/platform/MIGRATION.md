@@ -104,9 +104,11 @@ client supplied, its expiry is capped by both membership and session, and changi
 membership or workspace requires explicit confirmation. The gateway now has an additive
 `contextForSelection` adapter that rechecks the activated person and institution against
 the authenticated identity, carries the selected membership into `RequestContext`, and
-caps its role grants at the active-context expiry. No production authentication result
-provides the verified directory/session-expiry input yet, and no route or UI calls the
-adapter, so this remains an integration seam—not evidence of live context switching.
+caps its role grants at the active-context expiry. Production authentication now carries
+the authoritative membership row id and the signed session expiry after remote token
+validation; it still does not assemble the complete context directory or authorize a
+workspace selection. No route or UI calls the adapter, so this remains an integration
+seam—not evidence of live context switching.
 The browser's `lib/university.ts` now uses the shared SDK. Its transport
 preserves the existing secure-origin, no-redirect, no-cookie and timeout rules;
 mutating calls receive one idempotency key per logical call; only safe reads or
