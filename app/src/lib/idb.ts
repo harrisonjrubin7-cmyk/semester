@@ -79,9 +79,12 @@ export function store(dbName: string, storeName: string, version = 1): Store {
           new Promise<T>((resolve, reject) => {
             const t = db.transaction(storeName, mode);
             const req = run(t.objectStore(storeName));
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => reject(req.error);
-            t.oncomplete = () => db.close();
+            let answer: T | undefined;
+            req.onsuccess = () => { answer = req.result; };
+            req.onerror = () => { /* The transaction error/abort settles the operation. */ };
+            t.oncomplete = () => { db.close(); resolve(answer as T); };
+            t.onerror = () => { db.close(); reject(t.error ?? req.error); };
+            t.onabort = () => { db.close(); reject(t.error ?? req.error ?? new Error('The transaction was aborted.')); };
           }),
       );
     },

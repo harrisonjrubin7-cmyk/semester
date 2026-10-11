@@ -81,6 +81,16 @@ The gateway never trusts anything the client says about who it is. Three facts a
 
 The result is an identity of three fields: `userId`, `institutionId` and `roles`. The institution id picks the adapter, so there is no request input that selects an adapter. `user_metadata` and a stale `app_metadata.semester` role claim play no part. `trustedIdentity` in `auth.ts`, which reads `app_metadata.semester`, is a fixture helper for tests; neither entry point calls it.
 
+The gateway also has an additive `contextForSelection` adapter for a future
+multi-membership flow. It accepts a requested membership and workspace, but derives the
+tenant, person, institution, role-grant identifiers and expiry only from a directory the
+server has already verified. It refuses a directory whose person or institution differs
+from the authenticated identity, and a conflicting `X-Tenant-Id` remains a
+`tenant_mismatch`. The selected membership becomes the request context's membership and
+its expiry caps the request's role grants. No current authentication result supplies the
+directory and session-expiry input, and no route calls this adapter; it is not a live
+workspace-switching API or a client contract.
+
 Both entry points re-run the token check at the moment of a commit (and of an intelligence confirm) and require the same user and institution as before. If the answer changed, the commit is `403 forbidden` ("Your current university access does not permit this action.").
 
 With `SEMESTER_AUTH_URL`, `SEMESTER_AUTH_PUBLIC_KEY` and `SEMESTER_AUTH_SERVICE_KEY` unset, `start.ts` authenticates nobody: a request without a bearer token is `401`, and a request with one is `403`. The Vercel runtime refuses to build without all three and answers `503` to every request ([errors outside the envelope](ERRORS.md#errors-outside-the-envelope)).
@@ -99,7 +109,7 @@ The gateway allows one origin: the value of `SEMESTER_APP_ORIGIN`. Never `*`, be
 
 - A request whose `Origin` matches gets `Access-Control-Allow-Origin: <that origin>` and `Access-Control-Expose-Headers: X-Request-Id, X-Correlation-Id`.
 - A request whose `Origin` differs is refused before anything else.
-- A preflight (`OPTIONS`, any path) adds `Access-Control-Allow-Headers: Authorization, Content-Type, X-Correlation-Id` and `Access-Control-Allow-Methods: GET, POST, OPTIONS`.
+- A preflight (`OPTIONS`, any path) adds `Access-Control-Allow-Headers: Authorization, Content-Type, Idempotency-Key, X-Correlation-Id` and `Access-Control-Allow-Methods: GET, POST, OPTIONS`.
 - There is no `Access-Control-Allow-Credentials`, no `Access-Control-Max-Age` and no cookie. The token travels in the `Authorization` header.
 - `Vary: Origin` is always set.
 
@@ -148,7 +158,7 @@ curl -s -X OPTIONS 'http://127.0.0.1:8787/records' \
 **Response** `204` No Content
 
 ```http
-access-control-allow-headers: Authorization, Content-Type, X-Correlation-Id
+access-control-allow-headers: Authorization, Content-Type, Idempotency-Key, X-Correlation-Id
 access-control-allow-methods: GET, POST, OPTIONS
 access-control-allow-origin: http://localhost:5173
 access-control-expose-headers: X-Request-Id, X-Correlation-Id
@@ -279,7 +289,7 @@ curl -s 'http://127.0.0.1:8787/health/live' \
 | Cursor | 500 characters | `cursor` on `/records`; longer values are cut. |
 | Review lifetime | 10 minutes | From prepare to commit. |
 | Adapter call | 20 seconds | Each request gives its adapters one abort signal that fires 20 seconds after the request reached the route stage. |
-| Vercel function | 30 seconds | `maxDuration` in `app/vercel.json`. |
+| Vercel function | 30 seconds | `services.api.functions` in root `vercel.json`, on the public API service entrypoint. |
 | Standalone server | `requestTimeout` 30 s, `headersTimeout` 10 s | `start.ts`. It listens on `127.0.0.1` only. |
 | Standalone port | 8787 | Default of `SEMESTER_GATEWAY_PORT`. |
 
@@ -393,7 +403,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/reconcile' \
 
 **Telemetry.** After every response the gateway builds one `institution.request` event and passes it to the `telemetry` callback if there is one. A failing callback is ignored and never changes the response. The Vercel runtime supplies a callback that writes the event as a JSON line to the process log. `start.ts` supplies none. The event fields are `event`, `requestId`, `correlationId`, `method`, `route`, `status`, `durationMs` and `errorClass` (`none` below 400, `client` for 400 to 499, `server` from 500). `route` is one of a fixed set, so a client cannot put its own text into a log line:
 
-`/health`, `/health/live`, `/health/ready`, `/v1/auth/config`, `/v1/intelligence/policy`, `/v1/intelligence/respond`, `/status`, `/records`, `/actions/prepare`, `/actions/commit`, `/actions/reconcile`, `/v1/intelligence/actions/:id/confirm`, and `/unmatched` for everything else.
+`/health`, `/health/live`, `/health/ready`, `/v1/auth/config`, `/v1/intelligence/policy`, `/v1/intelligence/respond`, `/v1/registration-readiness/evaluations`, `/status`, `/records`, `/actions/prepare`, `/actions/commit`, `/actions/reconcile`, `/v1/intelligence/actions/:id/confirm`, `/v1/registration-readiness/evaluations/:id/evaluate`, and `/unmatched` for everything else.
 
 The event carries no token, no body and no record content.
 

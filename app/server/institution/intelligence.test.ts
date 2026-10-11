@@ -8,8 +8,20 @@ import type { UniversityIdentity } from '../../../packages/institution/src/index
 import { createGateway } from './gateway.ts';
 import { ActionJournal } from './journal.ts';
 import { courseAgentPolicy } from '../../../packages/institution/src/course-agent-policy.ts';
+import { contextFor } from './context.ts';
 
-const sourceScope = { origin: 'course', policyScope: 'course', policyCourseCode: 'ECON 101', policyTerm: '2026FA' };
+const identity: UniversityIdentity = { userId: 'student-1', institutionId: 'northstar', roles: ['student'] };
+const aiContext = contextFor(new Request('http://local/v1/intelligence/respond'), identity, {
+  requestId: 'request-1', correlationId: 'correlation-1',
+}, 'production', 'ai_context');
+const sourceScope = {
+  origin: 'course', policyScope: 'course', policyCourseCode: 'ECON 101', policyTerm: '2026FA',
+  labels: {
+    tenantId: 'northstar', purpose: 'ai_context' as const,
+    source: { id: 'syllabus', kind: 'course' },
+    freshness: { state: 'current' as const, observedAt: '2026-10-01T00:00:00.000Z' },
+  },
+};
 const loadCoursePolicy = async () => courseAgentPolicy(null);
 
 const request = (patch: Partial<IntelligenceGatewayRequest> = {}): IntelligenceGatewayRequest => ({
@@ -37,7 +49,8 @@ const policy = (patch: Partial<TenantIntelligencePolicy> = {}): TenantIntelligen
 });
 
 const fixture = (patch: Partial<IntelligenceRespondInput> = {}): IntelligenceRespondInput => ({
-  identity: { userId: 'student-1', institutionId: 'northstar', roles: ['student'] },
+  context: aiContext,
+  identity,
   request: request(),
   tenantPolicy: policy(),
   loadCoursePolicy,
@@ -76,6 +89,31 @@ describe('governed institution intelligence', () => {
     const response = await respond(fixture({ approvedSources: [], generate }));
     expect(response.status).toBe(403);
     expect(response.body.code).toBe('source-not-approved');
+    expect(generate).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['another tenant', { ...sourceScope.labels, tenantId: 'eastfield' }],
+    ['another purpose', { ...sourceScope.labels, purpose: 'search' as const }],
+    ['another source', { ...sourceScope.labels, source: { id: 'catalog', kind: 'course' } }],
+    ['stale content', { ...sourceScope.labels, freshness: { state: 'stale' as const, observedAt: '2025-01-01T00:00:00.000Z' } }],
+  ])('refuses %s source labels before a provider sees content', async (_case, labels) => {
+    const generate = vi.fn();
+    const response = await respond(fixture({
+      approvedSources: [{ ...sourceScope, labels, id: 'syllabus', evidenceIds: ['evidence-1'], body: 'Private material' }],
+      generate,
+    }));
+    expect(response).toMatchObject({ status: 403, body: { code: 'source-context-refused' } });
+    expect(generate).not.toHaveBeenCalled();
+  });
+
+  it('refuses a request context that is not explicitly for AI retrieval', async () => {
+    const generate = vi.fn();
+    const searchContext = contextFor(new Request('http://local/v1/intelligence/respond'), identity, {
+      requestId: 'request-2', correlationId: 'correlation-2',
+    }, 'production', 'search');
+    const response = await respond(fixture({ context: searchContext, generate }));
+    expect(response).toMatchObject({ status: 403, body: { code: 'scope-refused' } });
     expect(generate).not.toHaveBeenCalled();
   });
 
@@ -176,8 +214,7 @@ describe('governed institution intelligence', () => {
       generate: async () => ({ text: 'Ready.', citedSourceIds: ['syllabus'], inputTokens: 1, outputTokens: 1, providerRequestId: 'response-2' }),
       execute,
     });
-    const identity: UniversityIdentity = { userId: 'student-1', institutionId: 'northstar', roles: ['student'] };
-    const prepared = await service.respond(identity, request({ proposedActions: [{
+    const prepared = await service.respond(aiContext, identity, request({ proposedActions: [{
       id: 'client-id', label: 'Save plan', effect: 'Create one plan', target: 'plan:7',
       class: 'internal-write', reversible: true, evidenceIds: ['evidence-1'],
     }] }));
@@ -208,8 +245,7 @@ describe('governed institution intelligence', () => {
       execute,
       audit,
     });
-    const identity: UniversityIdentity = { userId: 'student-1', institutionId: 'northstar', roles: ['student'] };
-    const prepared = await service.respond(identity, request({ proposedActions: [{
+    const prepared = await service.respond(aiContext, identity, request({ proposedActions: [{
       id: 'a', label: 'Save plan', effect: 'Create one plan', target: 'plan:7',
       class: 'internal-write', reversible: true, evidenceIds: ['evidence-1'],
     }] }));
@@ -258,9 +294,7 @@ describe('governed institution intelligence', () => {
       execute: async () => ({ verified: false }),
       audit,
     });
-    const identity: UniversityIdentity = { userId: 'student-1', institutionId: 'northstar', roles: ['student'] };
-
-    const stopped = await service.respond(identity, request());
+    const stopped = await service.respond(aiContext, identity, request());
     expect(stopped.status).toBe(503);
     expect(stopped.body).toMatchObject({ code: 'ai-generation-killed' });
     expect(generate).not.toHaveBeenCalled();
@@ -271,7 +305,7 @@ describe('governed institution intelligence', () => {
     // Released, the same service generates again: the check is per request.
     engaged = false;
     generate.mockResolvedValue({ text: 'Review elasticity.', citedSourceIds: ['syllabus'], inputTokens: 1, outputTokens: 1, providerRequestId: 'r' });
-    expect((await service.respond(identity, request())).status).toBe(200);
+    expect((await service.respond(aiContext, identity, request())).status).toBe(200);
     expect((await service.policy(identity)).status).toBe(200);
   });
 
@@ -279,7 +313,6 @@ describe('governed institution intelligence', () => {
     const dir = mkdtempSync(join(tmpdir(), 'semester-intelligence-'));
     const file = join(dir, 'journal.sqlite');
     const journal = new ActionJournal(file, Buffer.alloc(32, 9));
-    const identity: UniversityIdentity = { userId: 'student-1', institutionId: 'northstar', roles: ['student'] };
     const service = createIntelligenceService({
       status: 'policy-disabled',
       loadPolicy: async () => policy({ state: 'off' }),
@@ -369,7 +402,7 @@ describe('course policy cannot be bypassed by switching agents', () => {
     const generate = vi.fn();
     const reserveBudget = vi.fn();
     const response = await respond(fixture({
-      approvedSources: [{ id: 'syllabus', evidenceIds: [], body: 'Unbound source' }], generate, reserveBudget,
+      approvedSources: [{ ...sourceScope, id: 'syllabus', evidenceIds: [], body: 'Unbound source', policyScope: undefined }], generate, reserveBudget,
     }));
     expect(response.body.code).toBe('source-scope-unverified');
     expect(generate).not.toHaveBeenCalled();

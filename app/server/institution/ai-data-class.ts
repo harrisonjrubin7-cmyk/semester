@@ -39,6 +39,7 @@ export const PROVIDER_FIELD_CLASS: Readonly<Record<keyof ProviderGenerationReque
 
 export const SOURCE_FIELD_CLASS: Readonly<Record<keyof ApprovedIntelligenceSource, DataClass>> = {
   id: 'T0',
+  labels: 'T0',
   evidenceIds: 'T0',
   body: 'T1',
   courseId: 'T0',

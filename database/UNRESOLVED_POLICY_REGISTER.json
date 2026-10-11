@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-10-08",
+  "targetPostgresMajor": 17,
+  "scope": "Repository and catalog evidence for PostgreSQL row-level security and client privileges",
+  "items": [
+    {
+      "id": "POL-RLS-001",
+      "status": "open",
+      "severity": "high",
+      "title": "FORCE ROW LEVEL SECURITY decision is incomplete",
+      "evidence": [
+        "database/TENANT_ISOLATION_MATRIX.md",
+        "docs/security/ferpa-risk-and-permission-matrix.md"
+      ],
+      "closureCriteria": "Classify every tenant-bearing table, document owner-role traffic, apply FORCE ROW LEVEL SECURITY where safe, and pass owner-bypass negative tests on PostgreSQL 17."
+    },
+    {
+      "id": "POL-RLS-002",
+      "status": "open",
+      "severity": "high",
+      "title": "Cross-tenant negative coverage is not complete by data class",
+      "evidence": [
+        "database/TENANT_ISOLATION_MATRIX.md",
+        "database/DATA_CLASSIFICATION_REGISTER.md"
+      ],
+      "closureCriteria": "Add and pass PostgreSQL 17 negative suites for every reviewed tenant or owner-scoped data class, including privileged and definer-function paths."
+    },
+    {
+      "id": "POL-RLS-003",
+      "status": "open",
+      "severity": "medium",
+      "title": "Rule-derived table classifications require object-level review",
+      "evidence": [
+        "database/README.md",
+        "database/DATA_CLASSIFICATION_REGISTER.md"
+      ],
+      "closureCriteria": "A named security or data owner reviews every classification exception and the checked-in register records the reviewer and review date."
+    },
+    {
+      "id": "POL-RLS-004",
+      "status": "open",
+      "severity": "high",
+      "title": "Authenticated-role grant allowlist is incomplete",
+      "evidence": [
+        "database/README.md",
+        "database/GRANT_ALLOWLIST.md"
+      ],
+      "closureCriteria": "Check in and test an object-level authenticated-role allowlist for SELECT and write privileges, including an explicit owner and rationale for every exception."
+    },
+    {
+      "id": "POL-RLS-005",
+      "status": "open",
+      "severity": "medium",
+      "title": "Supabase-managed schema privilege coverage is incomplete",
+      "evidence": [
+        "database/GRANT_ALLOWLIST.md"
+      ],
+      "closureCriteria": "Record and independently verify the intended browser-role privileges and policy boundaries for managed storage and GraphQL objects."
+    }
+  ]
+}

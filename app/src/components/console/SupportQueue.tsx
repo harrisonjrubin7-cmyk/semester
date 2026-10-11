@@ -75,11 +75,17 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
       if (wanted.current !== ticketId || request !== caseAccessRequest.current) return false;
       setCaseAccessFailed(false);
       setCaseAccess(metadata);
+      if (!metadata.active) {
+        setSignals(null);
+        setSignalsFailed(false);
+      }
       return true;
     } catch (error) {
       if (wanted.current !== ticketId || request !== caseAccessRequest.current) return false;
       setCaseAccessFailed(true);
       setCaseAccess(null);
+      setSignals(null);
+      setSignalsFailed(false);
       if (reportError) onStatus(said(error, 'Could not read case access metadata.'));
       return false;
     }
@@ -302,7 +308,7 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
               <Notice>This grant is inactive. The database will refuse a sensitive read.</Notice>
             )}
             {signalsFailed && <Notice>Aggregate signals remain unavailable. No cached private result is shown.</Notice>}
-            {signals && (
+            {caseAccess?.active && signals && (
               signals.length === 0
                 ? <p role="status">No aggregate learning evidence has been recorded for this case.</p>
                 : (

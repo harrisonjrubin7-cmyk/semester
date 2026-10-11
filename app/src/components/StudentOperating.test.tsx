@@ -37,8 +37,18 @@ describe('student-owned operating workflow', () => {
   });
   it('keeps deletion concrete and clears all planning content after confirmation', () => {
     act(() => button('Delete this planning workspace').click());
+    const dialog = host.querySelector('[role="dialog"]');
+    expect(dialog).toBeTruthy();
+    expect(dialog!.textContent).toContain('Deletes all saved operating preferences and 4 workflow items from your private Semester workspace.');
+    expect(dialog!.textContent).toContain('It also clears this screen’s unsaved editor, review and handoff draft.');
+    expect(dialog!.textContent).toContain('When account sync is enabled, that deletion is saved to your account too.');
+    expect(dialog!.textContent).toContain('Downloaded exports, calendar entries you imported separately and official records stay where they are.');
+    expect(dialog!.textContent).toContain('This can’t be undone. Export a backup before deleting if you need a copy.');
     expect(readOperating(stored.operatingWorkspace).entries).toHaveLength(4);
-    act(() => button('Confirm deletion').click());
+    act(() => button('Cancel').click());
+    expect(readOperating(stored.operatingWorkspace).entries).toHaveLength(4);
+    act(() => button('Delete this planning workspace').click());
+    act(() => button('Delete workspace').click());
     expect(stored.operatingWorkspace).toBeNull();
     expect(host.querySelectorAll('article')).toHaveLength(0);
   });

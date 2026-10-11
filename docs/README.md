@@ -73,6 +73,7 @@ that is.
 | The proposed target architecture (not yet accepted) | [Target architecture pack](target-architecture/README.md) |
 | What is deliberately not being built | [`DO-NOT-BUILD.md`](DO-NOT-BUILD.md) |
 | Where the product is headed | [`PRODUCT-ROADMAP.md`](PRODUCT-ROADMAP.md) |
+| Revision-bound Education OS audit and gap snapshots | [`audit/CURRENT_STATE.md`](audit/CURRENT_STATE.md) · [`audit/ROLE_AND_SCREEN_GAP_ANALYSIS.md`](audit/ROLE_AND_SCREEN_GAP_ANALYSIS.md) · [`audit/SYSTEM_AND_WORKFLOW_GAP_ANALYSIS.md`](audit/SYSTEM_AND_WORKFLOW_GAP_ANALYSIS.md) · [`roadmap/P0-P3-IMPLEMENTATION_PLAN.md`](roadmap/P0-P3-IMPLEMENTATION_PLAN.md) |
 | Design and in-product wording | [Design system](design/README.md) · [Content standards](design/SEMESTER-CONTENT-STANDARDS.md) |
 | Security, privacy and compliance material | [`SECURITY.md`](../SECURITY.md) · [`SECRETS.md`](../SECRETS.md) · [`RETENTION.md`](../RETENTION.md) · [Compliance](compliance/README.md) · [Subprocessors](SUBPROCESSORS.md) |
 | Launch, pilots and market readiness | [Market readiness](market-readiness/README.md) · [Pilot and individual release profiles](PILOT-AND-INDIVIDUAL-RELEASE-PROFILES.md) · [Operating model](operating-model/README.md) |

@@ -106,4 +106,31 @@ describe('data-rights request surface', () => {
     expect(host.textContent).toContain('Certificate reader unavailable.');
     expect(host.textContent).not.toContain('Could not load privacy requests');
   });
+
+  it('discards requests and certificates loaded for a previous account', async () => {
+    let finishOldRequests!: (value: typeof open[]) => void;
+    let finishOldCertificates!: (value: Array<{ certificateId: string; requestRef: string; kind: 'export'; evidenceReference: string; issuedAt: string }>) => void;
+    mock.load
+      .mockImplementationOnce(() => new Promise((resolve) => { finishOldRequests = resolve; }))
+      .mockResolvedValueOnce([]);
+    mock.certificates
+      .mockImplementationOnce(() => new Promise((resolve) => { finishOldCertificates = resolve; }))
+      .mockResolvedValueOnce([]);
+
+    await act(async () => { root.render(<DataRightsRequests account={account} />); });
+    await act(async () => {
+      root.render(<DataRightsRequests account={{ id: 'student-2', email: 'student2@example.edu', via: 'email' }} />);
+    });
+    await act(async () => {
+      finishOldRequests([open]);
+      finishOldCertificates([{
+        certificateId: 'old-certificate', requestRef: 'DSR-OLD', kind: 'export',
+        evidenceReference: 'delivery://old-account', issuedAt: '2026-10-03T12:00:00Z',
+      }]);
+    });
+
+    expect(host.textContent).not.toContain('My program is wrong.');
+    expect(host.textContent).not.toContain('old-certificate');
+    expect(host.textContent).toContain('You have no open privacy requests.');
+  });
 });

@@ -41,9 +41,21 @@ describe('company-site production availability', () => {
     expect(site).toContain('318 of 318, checked October 1, 2026');
   });
 
+  it('discloses live support content and its conservative retention boundary', () => {
+    expect(site).toContain('"Support questions":["The category, question, approved app details, replies and notification delivery state"');
+    expect(site).toContain('<th scope="row">Support questions</th>');
+    expect(site).toContain('New individual-beta tickets are classified when opened and deleted with their replies 180 days after resolution or closure');
+    expect(site).toContain('Tickets created before the durable classification field stay outside timed and ticket-only deletion until their historical authority is verified');
+    expect(site).toContain('pre-classification legacy tickets stay outside that sweep');
+    expect(site).toContain('ticket-only deletion is not exposed in the app');
+    expect(site).toContain('whole-account erasure detaches those legacy records');
+    expect(site).toContain('<td>Resend</td>');
+    expect(site).toContain('Support path inactive pending approval');
+  });
+
   it('holds every previously non-green roadmap card to code-complete status without erasing its external gate', () => {
     const roadmap = site.slice(site.indexOf('const RM='), site.indexOf('document.getElementById("roadmap-cols")'));
-    expect(site).toContain('Last updated October 1, 2026');
+    expect(site).toContain('Last updated October 3, 2026');
     expect(roadmap).toContain('["Built & tested, evidence pending","dev"');
     expect(roadmap).toContain('["Built & tested, activation gated","ex"');
     expect(roadmap).not.toContain('["In active development"');
@@ -51,8 +63,14 @@ describe('company-site production availability', () => {
     expect(roadmap).toContain('live-payment evidence and commercial activation remain open');
     expect(roadmap).toContain('provider credentials and live activation remain open');
     expect(roadmap).toContain('no institution platform is registered or verified');
-    expect(roadmap).toContain('notification deployment, staffed production enablement and UAT remain open');
+    expect(roadmap).toContain('Production ticket creation, staff reply, Help-thread receipt and resolution passed UAT October 3, 2026');
+    expect(roadmap).toContain('worker, function and app control are parked until Resend vendor review');
+    expect(roadmap).toContain('Outlook inbox receipt remains pending');
     expect(roadmap).toContain('an approved institution feed remains open');
+    const evidencePending = roadmap.slice(roadmap.indexOf('["Built & tested, evidence pending"'), roadmap.indexOf('["Built & tested, activation gated"'));
+    const activationGated = roadmap.slice(roadmap.indexOf('["Built & tested, activation gated"'));
+    expect(evidencePending).not.toContain('Email reply notifications');
+    expect(activationGated).toContain('Email reply notifications');
 
     for (const path of [
       'app/src/lib/captions.test.ts',

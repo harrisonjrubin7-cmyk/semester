@@ -1,0 +1,16 @@
+<!-- @dsCard group="Components" viewport="700x340" name="Surfaces — guides & routes" subtitle="ScreenGuide, OpenIn, QuickActions, Avatar" -->
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{padding:24px;background:var(--surface-canvas)}.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.col{display:grid;gap:16px;align-content:start}.lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:6px}</style></head><body><div id="root"></div>
+<script type="text/babel">
+const N = window.SemesterDesignSystem_e9f3ba;
+function Demo(){return <div className="col">
+<N.QuickActions actions={[{label:'Add a syllabus',icon:'import'},{label:'Connect a calendar',icon:'calendar'},{label:'Use sample data',icon:'folder'}]}/>
+<N.OpenIn about="BIO 210" targets={['Plan','Study','Calendar','Grades']}/>
+<div className="row"><N.Avatar name="Maya Lindqvist"/><N.Avatar name="Ben Hartley" size={32}/><N.Avatar name="" size={32}/><span style={{fontSize:13,color:'var(--text-secondary)'}}>Initials, never photos; empty name shows the profile glyph</span></div>
+<N.ScreenGuide open items={[{q:'What is this screen for?',a:'Your degree requirements and how far along each one is.'},{q:'Where does this information come from?',a:'Your registrar’s degree audit, updated nightly. Plans and what-ifs are yours.'}]}/></div>}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script></body></html>

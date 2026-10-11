@@ -120,6 +120,7 @@ const ROWS: Row[] = [
   ['fn:push', 'Web Push sender', 'edge_function', 'C1', 'platform', '', 'supabase-edge-runtime supabase-db web-push queue:push_queue', 'Reminders queue and are sent late; nothing is dropped while the queue holds.', null, 'RB-07', 'supabase/functions/push/index.ts'],
   ['fn:support-reply-notify', 'Support reply email', 'edge_function', 'C2', 'support', '', 'supabase-edge-runtime supabase-db resend queue:support_notification_outbox', 'Replies still appear in the app; the email nudge is delayed, retried eight times, then dead-lettered.', null, 'RB-07', 'supabase/functions/support-reply-notify/index.ts'],
   ['fn:integration-tick', 'Integration sync tick', 'edge_function', 'C2', 'integrations', '', 'supabase-edge-runtime supabase-db', 'Connections report stale with a freshness label; nothing writes back.', 'kill.integration_sync', 'RB-14', 'supabase/functions/integration-tick/index.ts'],
+  ['fn:ops-projector', 'Operations projector batch', 'edge_function', 'C3', 'data', '', 'supabase-edge-runtime supabase-db', 'Private operations projections become stale; authoritative command tables and live reads remain available.', null, 'RB-10', 'supabase/functions/ops-projector/index.ts'],
   ['fn:lead-intake', 'Company-site lead intake', 'edge_function', 'C3', 'support', '', 'supabase-edge-runtime supabase-db', 'The company site form errors; the product is unaffected.', null, 'RB-04', 'supabase/functions/lead-intake/index.ts'],
   ['fn:trust-room', 'Procurement trust-room links', 'edge_function', 'C3', 'security', '', 'supabase-edge-runtime supabase-db', 'A reviewer cannot open the packet; no student is affected.', null, 'RB-04', 'supabase/functions/trust-room/index.ts'],
   ['fn:delete-account', 'Account erasure', 'edge_function', 'C0', 'data', 'privacy_request_intake', 'supabase-edge-runtime supabase-db supabase-auth', 'Deletion fails closed and says so; the request must be retried, never silently dropped.', null, 'RB-04', 'supabase/functions/delete-account/index.ts'],
@@ -134,6 +135,7 @@ const ROWS: Row[] = [
   // ── Scheduled jobs (one row per cron.schedule in supabase/scheduler.sql) ──
   ['job:push', 'Send due reminders (every 15 min)', 'job', 'C1', 'platform', '', 'fn:push', 'Reminders stop being sent until it runs again.', null, 'RB-10', 'supabase/scheduler.sql'],
   ['job:support-reply-notify', 'Drain support outbox (every minute)', 'job', 'C2', 'support', '', 'fn:support-reply-notify', 'Support email nudges are delayed.', null, 'RB-10', 'supabase/scheduler.sql'],
+  ['job:support-ticket-retention', 'Purge eligible support tickets (daily)', 'job', 'C1', 'support', '', 'supabase-db', 'Resolved individual-beta support records outlive their retention rule.', null, 'RB-10', 'supabase/scheduler.sql'],
   ['job:escalation-delivery', 'Community escalation delivery (parked)', 'job', 'C2', 'support', '', 'queue:community_escalation_deliveries', 'Parked until its function exists; the table keeps the rows.', null, 'RB-10', 'supabase/scheduler.sql'],
   ['job:media-scan', 'Community media scan (parked)', 'job', 'C2', 'security', '', 'supabase-db', 'Parked until its function exists.', null, 'RB-10', 'supabase/scheduler.sql'],
   ['job:integration-sync', 'Integration tick (four times an hour)', 'job', 'C2', 'integrations', '', 'fn:integration-tick', 'Connections go stale and say so.', 'kill.integration_sync', 'RB-10', 'supabase/scheduler.sql'],
@@ -157,6 +159,7 @@ const ROWS: Row[] = [
 
   // ── Delivery pipelines and monitors ───────────────────────────────────────
   ['pipeline:ci', 'CI (the merge gate)', 'pipeline', 'C2', 'platform', '', 'github-pages', 'Nothing ships; production keeps running what it has.', null, 'RB-08', '.github/workflows/ci.yml'],
+  ['pipeline:course-engine', 'Course Engine source gate', 'pipeline', 'C3', 'platform', '', '', 'Course Engine source changes cannot merge; no deployed service is affected.', null, 'RB-08', '.github/workflows/course-engine.yml'],
   ['pipeline:pages', 'Deploy to Pages', 'pipeline', 'C2', 'platform', '', 'github-pages', 'A fix cannot ship by the normal route.', null, 'RB-08', '.github/workflows/pages.yml'],
   ['pipeline:functions', 'Deploy Edge Functions', 'pipeline', 'C2', 'platform', '', 'supabase-edge-runtime', 'A function fix cannot ship by the normal route.', null, 'RB-08', '.github/workflows/functions.yml'],
   ['pipeline:schema-deploy', 'Schema deploy (Supabase Branching, db push)', 'pipeline', 'C1', 'data', '', 'supabase-db', 'Production silently stops receiving migrations; the repository stays green. This failed unseen for three days on 18 September.', null, 'RB-09', 'supabase/DEPLOY.md'],

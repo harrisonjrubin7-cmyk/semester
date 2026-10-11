@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { SectionLabel } from './ui';
 import { ErrorState, LoadingState, PermissionNotice } from './unity/States';
+import { PermissionRow, SemesterDesignSurface } from './semester-design';
 import {
   CAPABILITIES,
-  GRANT_WORDS,
   allowAgainSteps,
   allowedCount,
   grantOf,
@@ -17,6 +17,13 @@ type Grants = Record<CapabilityId, Grant>;
 type Load = { status: 'loading' } | { status: 'ready'; grants: Grants } | { status: 'error' };
 
 const LINE = { fontSize: 'var(--type-sm-plus)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' } as const;
+const ROW_STATE: Record<Grant, 'on' | 'blocked' | 'notAsked' | 'unknown' | 'unsupported'> = {
+  granted: 'on',
+  denied: 'blocked',
+  ask: 'notAsked',
+  unknown: 'unknown',
+  unsupported: 'unsupported',
+};
 
 /**
  * What this app may use on this device, one entry each, and how to take it back.
@@ -105,24 +112,16 @@ export function DevicePermissions({ openAlerts }: { openAlerts: () => void }) {
           <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
             {CAPABILITIES.map((c) => {
               const grant = load.grants[c.id];
-              const word = GRANT_WORDS[grant];
               return (
-                <li key={c.id} style={{ paddingBlock: 'var(--sp-5)', borderBottom: '1px solid var(--app-line-soft)' }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--sp-4)' }}>
-                    <strong style={{ fontSize: 'var(--type-base-plus)' }}>{c.label}</strong>
-                    <span className="status-chip" data-tone={word.tone}>
-                      <span className="status-glyph" aria-hidden="true">
-                        {word.glyph}
-                      </span>
-                      {word.word}
-                    </span>
-                  </div>
-                  <p style={{ ...LINE, marginBlock: 'var(--sp-4) var(--sp-2)' }}>
-                    <strong>Used for.</strong> {c.purpose}
-                  </p>
-                  <p style={{ ...LINE, color: 'var(--app-dim)', margin: 0 }}>
-                    <strong>Without it.</strong> {c.fallback}
-                  </p>
+                <li key={c.id}>
+                  <SemesterDesignSurface label={`${c.label} permission`}>
+                    <PermissionRow
+                      capability={c.label}
+                      use={`Used for. ${c.purpose}`}
+                      detail={`Without it. ${c.fallback}`}
+                      state={ROW_STATE[grant]}
+                    />
+                  </SemesterDesignSurface>
                   {grant === 'denied' ? (
                     <div style={{ marginTop: 'var(--sp-5)' }}>
                       <PermissionNotice changed={`${c.label} is blocked`} why={allowAgainSteps(c.id)} />

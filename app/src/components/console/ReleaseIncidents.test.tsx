@@ -129,6 +129,11 @@ describe('release and incident workspace', () => {
     expect(button('Request release approval')).toBeUndefined();
   });
 
+  it('does not duplicate an executed release approval', async () => {
+    await draw(async () => [row({ state: 'release_candidate', approvalId: 'approval-2', approvalStatus: 'executed' })]);
+    expect(button('Request release approval')).toBeUndefined();
+  });
+
   it('does not request a release approval until an exact candidate commit is established', async () => {
     await draw(async () => [row({ state: 'release_candidate', releaseCommit: null })]);
     expect(button('Request release approval')).toBeUndefined();

@@ -23,7 +23,7 @@
  */
 
 import type { IdSource, Rng } from '../kernel/clock.ts';
-import { parseErrorEnvelope } from '../gateway/errors.ts';
+import { parseErrorEnvelope, type ErrorEnvelope } from '../gateway/errors.ts';
 import { HEADERS } from '../gateway/headers.ts';
 import { backoffMs } from '../kernel/backoff.ts';
 
@@ -33,14 +33,23 @@ export class SemesterApiError extends Error {
   readonly status: number;
   readonly retryable: boolean;
   readonly correlationId: string;
+  readonly userAction?: ErrorEnvelope['error']['user_action'];
 
-  constructor(code: SemesterApiError['code'], message: string, status: number, retryable: boolean, correlationId: string) {
+  constructor(
+    code: SemesterApiError['code'],
+    message: string,
+    status: number,
+    retryable: boolean,
+    correlationId: string,
+    userAction?: ErrorEnvelope['error']['user_action'],
+  ) {
     super(message);
     this.name = 'SemesterApiError';
     this.code = code;
     this.status = status;
     this.retryable = retryable;
     this.correlationId = correlationId;
+    this.userAction = userAction;
   }
 }
 
@@ -69,6 +78,12 @@ export interface CallOptions {
   /** Supply to make a call replayable across *sessions* (e.g. a queued offline command). */
   idempotencyKey?: string;
   correlationId?: string;
+  /**
+   * Set false for a legacy mutation whose server has not adopted the shared
+   * idempotency store. The key is still sent, but an uncertain network outcome
+   * is surfaced for reconciliation instead of being sent a second time.
+   */
+  retryOnNetwork?: boolean;
 }
 
 const MUTATING = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
@@ -100,7 +115,8 @@ export function createClient(opts: ClientOptions) {
         res = await opts.fetch(`${opts.baseUrl}${path}${qs}`, { method, headers, ...(c.body !== undefined ? { body: JSON.stringify(c.body) } : {}) });
       } catch {
         // The request may or may not have arrived. For a mutating call with a key, retrying is safe; without, it is not.
-        if ((key || !MUTATING.has(method)) && attempt < maxAttempts) {
+        const mayRetryNetwork = !MUTATING.has(method) || (Boolean(key) && c.retryOnNetwork !== false);
+        if (mayRetryNetwork && attempt < maxAttempts) {
           await opts.sleep(backoffMs(attempt, opts.rng));
           continue;
         }
@@ -119,7 +135,14 @@ export function createClient(opts: ClientOptions) {
         await opts.sleep(Number.isFinite(ra) && ra > 0 ? Math.min(ra * 1000, 60_000) : backoffMs(attempt, opts.rng));
         continue;
       }
-      throw new SemesterApiError(env.error.code, env.error.message, res.status, env.error.retryable, env.error.correlation_id);
+      throw new SemesterApiError(
+        env.error.code,
+        env.error.message,
+        res.status,
+        env.error.retryable,
+        env.error.correlation_id,
+        env.error.user_action,
+      );
     }
   }
 

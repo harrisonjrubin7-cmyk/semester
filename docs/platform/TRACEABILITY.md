@@ -9,14 +9,14 @@ names a test file; a claim with no test says so.
 | --- | --- | --- | --- | --- |
 | 1 | Multi-tenancy and organization model | `tenancy/organization.ts`, `tenancy/context.ts` | `tenancy/tenancy.test.ts` | Built, in memory; SQL contract proposed |
 | 2 | Identity, affiliations, roles, relationships, consent, capabilities, policy, approval, audit | `identity/*`, `policy/engine.ts` | `identity/identity.test.ts`, `policy/policy.test.ts`, `gateway/command.test.ts` | Built, in memory |
-| 3 | Gateway/BFF standards: auth, context, idempotency, correlation, errors, pagination, versioning | `gateway/*`, `sdk/client.ts` | `gateway/gateway.test.ts`, `sdk/sdk.test.ts` | Built; **not mounted on any route** |
+| 3 | Gateway/BFF standards: auth, context, idempotency, correlation, errors, pagination, versioning | `gateway/*`, `sdk/client.ts`, `app/src/lib/university.ts` | `gateway/gateway.test.ts`, `sdk/sdk.test.ts`, `app/src/lib/university.test.ts` | Gateway context/error slice and browser university client adopted; commands, policy and engines are **not mounted on a production route** |
 | 4 | Workflow, notification, file, search, flags, entitlement, reporting, integration | `engines/*` | `engines/engines.test.ts` | Built, pure/in-memory; flags/entitlement **overlap** existing chains (MIGRATION phase 5) |
 | 5 | Event schema and outbox | reuses `packages/institution/src/events.ts`; adds `events/emit.ts` | `reference/reference.test.ts`, `isolation/isolation.test.ts` | Atomic write proven in memory; **no production producer** |
 | 6 | Isolation across DB, storage, queues, cache, search, analytics, support tools, AI retrieval | `isolation/layers.ts`, `testing/conformance.ts`, `schema/platform_primitives.sql` | `isolation/isolation.test.ts`, `schema.test.ts` | Reference adapters pass; suite proven red on 7 leaky adapters; **no real adapter, SQL never run** |
 | 7 | Observability standards and operational metadata | `observability/*` | `observability/observability.test.ts` | Standards and descriptors; **no SLO measured** |
-| 8 | Reference implementations and shared SDKs | `reference/tasks.ts`, `sdk/client.ts`, `testing/memory.ts` | `reference/reference.test.ts`, `sdk/sdk.test.ts` | Built |
+| 8 | Reference implementations and shared SDKs | `reference/tasks.ts`, `sdk/client.ts`, `testing/memory.ts`, `app/src/lib/university.ts` | `reference/reference.test.ts`, `sdk/sdk.test.ts`, `app/src/lib/university.test.ts` | Built; SDK adopted by the browser university client |
 | 9 | ADRs and architecture tests | `adr/*`, `architecture.test.ts` | `architecture.test.ts`, `docs.test.ts` | Built |
-| 10 | Migration path | `MIGRATION.md` | `docs.test.ts` (paths exist) | Plan; **phase 1 onward not started** |
+| 10 | Migration path | `MIGRATION.md` | `docs.test.ts` (paths exist) | Phase 1 partially adopted; phase 2 onward not started |
 
 ## Requirements the audit makes of this layer
 
@@ -50,8 +50,9 @@ names a test file; a claim with no test says so.
 
 ### Risks and unresolved questions
 
-- **Almost nothing is adopted.** Only the institution gateway's error envelope,
-  correlation ids and request context run through it (phase 1, equivalence-tested);
+- **Most primitives are not adopted.** The institution gateway's error envelope,
+  correlation ids and request context run through it, and the browser university
+  client now uses the SDK (phase 1, equivalence-tested);
   commands, policy, idempotency and every engine are still proven in memory only,
   so they prove nothing about production.
 - **The SQL contract has never executed.** It was parsed (libpg_query) and mirrored

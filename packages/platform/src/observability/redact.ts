@@ -18,16 +18,27 @@ const MAX_DEPTH = 6;
 const MAX_STRING = 256;
 
 export function redact(value: unknown, depth = 0): unknown {
+  return redactValue(value, depth, new WeakSet<object>());
+}
+
+function redactValue(value: unknown, depth: number, ancestors: WeakSet<object>): unknown {
   if (value === null || value === undefined) return value;
   if (depth > MAX_DEPTH) return '[truncated]';
   if (typeof value === 'string') return value.length > MAX_STRING ? `${value.slice(0, MAX_STRING)}…` : value;
   if (typeof value !== 'object') return value;
-  if (Array.isArray(value)) return value.slice(0, 50).map((v) => redact(v, depth + 1));
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-    if (SECRET_KEY.test(k) || PERSONAL_KEY.test(k)) out[k] = REDACTED;
-    else if (CONTENT_KEY.test(k)) out[k] = typeof v === 'string' ? `[${v.length} chars]` : REDACTED;
-    else out[k] = redact(v, depth + 1);
+  if (ancestors.has(value)) return '[circular]';
+
+  ancestors.add(value);
+  try {
+    if (Array.isArray(value)) return value.slice(0, 50).map((v) => redactValue(v, depth + 1, ancestors));
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (SECRET_KEY.test(k) || PERSONAL_KEY.test(k)) out[k] = REDACTED;
+      else if (CONTENT_KEY.test(k)) out[k] = typeof v === 'string' ? `[${v.length} chars]` : REDACTED;
+      else out[k] = redactValue(v, depth + 1, ancestors);
+    }
+    return out;
+  } finally {
+    ancestors.delete(value);
   }
-  return out;
 }

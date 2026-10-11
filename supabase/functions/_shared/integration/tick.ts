@@ -52,6 +52,8 @@ export const TICK_MINUTES = 15;
 export interface PullRequest {
   connectionPublicId: string;
   tenantId: string;
+  /** Server-approved provider origin. Adapters must still enforce their own host policy. */
+  providerBaseUrl?: string;
   /** The connection's `cursor_state`: where the last successful pull stopped. */
   cursor: Record<string, unknown>;
   trigger: 'scheduled' | 'replay';
@@ -84,6 +86,13 @@ export interface ProviderClient {
 export interface RegisteredAdapter {
   declaration: AdapterDeclaration;
   pull(request: PullRequest, client: ProviderClient): Promise<ProviderBatch>;
+  /** Provider-specific connection checks performed before a run is opened. */
+  validateConnection?(configuration: {
+    tenantId: string;
+    providerBaseUrl?: string;
+    authenticationType?: string;
+    credentialReference?: string | null;
+  }): string | null;
   /** How this adapter gets a new OAuth access token. Required when it authenticates with OAuth. */
   oauth?: OAuthBinding;
 }
@@ -102,6 +111,8 @@ export interface ProviderRuntime {
     adapter: RegisteredAdapter;
     tenantId: string;
     connectionPublicId: string;
+    /** The approved connection's pointer; never a credential value. */
+    credentialReference?: string | null;
     now: () => Date;
   }): ProviderClient;
   /** What a failed pull means. */
@@ -149,6 +160,9 @@ interface ConnectionRow {
   provider_domain: string;
   provider_name: string;
   provider_product: string | null;
+  provider_base_url?: string | null;
+  authentication_type?: string;
+  credentials_reference?: string | null;
   status: ConnectionStatus;
   sync_mode: string;
   cursor_state: Record<string, unknown> | null;
@@ -157,7 +171,7 @@ interface ConnectionRow {
 }
 
 const CONNECTION_COLUMNS =
-  'id,public_id,tenant_id,provider_domain,provider_name,provider_product,status,sync_mode,cursor_state,last_attempt_at,freshness_target';
+  'id,public_id,tenant_id,provider_domain,provider_name,provider_product,provider_base_url,authentication_type,credentials_reference,status,sync_mode,cursor_state,last_attempt_at,freshness_target';
 const RUNNABLE: readonly ConnectionStatus[] = ['configuring', 'healthy', 'degraded', 'error'];
 const PULLED = ['incremental_api', 'batch'];
 
@@ -169,6 +183,20 @@ export function adapterFor(adapters: readonly RegisteredAdapter[], c: Pick<Conne
     && (c.provider_product === null || same(d.product, c.provider_product)));
   // Two adapters claiming one connection is a registry fault; run neither.
   return hits.length === 1 ? hits[0] : null;
+}
+
+/** A live adapter is eligible only with matching, connection-scoped configuration. */
+export function connectionIssue(adapter: RegisteredAdapter, c: Pick<ConnectionRow,
+  'tenant_id' | 'provider_base_url' | 'authentication_type' | 'credentials_reference'>): string | null {
+  if (adapter.declaration.mock) return null;
+  if (c.authentication_type !== adapter.declaration.authentication) return 'authentication type does not match adapter';
+  if (adapter.declaration.credentialsReference !== null && !c.credentials_reference) return 'credential reference missing';
+  return adapter.validateConnection?.({
+    tenantId: c.tenant_id,
+    providerBaseUrl: c.provider_base_url ?? undefined,
+    authenticationType: c.authentication_type,
+    credentialReference: c.credentials_reference,
+  }) ?? null;
 }
 
 export { intervalMinutes } from './freshness.ts';
@@ -241,8 +269,10 @@ export async function tick(db: SupabaseClient, options: TickOptions): Promise<Ti
         // pull. What carries a failure from tick to tick is the stored run
         // history and the dead-letter hold below, not memory in this process.
         fetchBatch: () => adapter.pull(
-          { connectionPublicId: c.public_id, tenantId: c.tenant_id, cursor: c.cursor_state ?? {}, trigger },
-          options.runtime.clientFor({ adapter, tenantId: c.tenant_id, connectionPublicId: c.public_id, now }),
+          { connectionPublicId: c.public_id, tenantId: c.tenant_id, providerBaseUrl: c.provider_base_url ?? undefined,
+            cursor: c.cursor_state ?? {}, trigger },
+          options.runtime.clientFor({ adapter, tenantId: c.tenant_id, connectionPublicId: c.public_id,
+            credentialReference: c.credentials_reference, now }),
         ),
       });
     } catch {
@@ -289,6 +319,7 @@ export async function tick(db: SupabaseClient, options: TickOptions): Promise<Ti
       if (!c || mine.some((l) => l.tenant_id !== c.tenant_id)) { skip('replay connection missing'); continue; }
       const adapter = adapterFor(options.adapters, c);
       if (!adapter) { skip('no registered adapter'); continue; }
+      if (connectionIssue(adapter, c)) { skip('connection configuration invalid'); continue; }
       if (!room()) break;
       replayed.add(c.id);
       // One pull serves every open replay on a connection.
@@ -317,6 +348,7 @@ export async function tick(db: SupabaseClient, options: TickOptions): Promise<Ti
   for (const c of candidates) {
     const adapter = adapterFor(options.adapters, c);
     if (!adapter) { skip('no registered adapter'); continue; }
+    if (connectionIssue(adapter, c)) { skip('connection configuration invalid'); continue; }
     const cadence = cadenceMinutes(adapter.declaration, c.status, intervalMinutes(c.freshness_target));
     if (!isDue(c.last_attempt_at, cadence, now())) { skip('not due'); continue; }
     due.push({ c, adapter });

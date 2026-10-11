@@ -58,6 +58,15 @@ describe('consented support access surface', () => {
     expect(mock.load).not.toHaveBeenCalled();
   });
 
+  it('does not mislabel a load failure as an empty support-access state', async () => {
+    mock.load.mockRejectedValue(new Error('Support access is temporarily unavailable.'));
+    await renderSignedIn();
+    expect(host.textContent).toContain('Could not load support access');
+    expect(host.textContent).toContain('Support access is temporarily unavailable.');
+    expect(host.textContent).not.toContain('Open a support question in Help');
+    expect(host.textContent).not.toContain('has not provisioned a verified support recipient');
+  });
+
   it('lets a student see and immediately revoke only their named window', async () => {
     mock.load.mockResolvedValue({
       supporters: [{ supporterId: 'staff', label: 'Advisor Rivera' }],
@@ -165,5 +174,29 @@ describe('consented support access surface', () => {
     expect(host.textContent).toContain('Operations Console');
     expect(host.textContent).not.toContain('View aggregate signals');
     expect(mock.read).not.toHaveBeenCalled();
+  });
+
+  it('discards support windows and tickets loaded for a previous account', async () => {
+    let finishOld!: (value: {
+      supporters: Array<{ supporterId: string; label: string }>;
+      tickets: Array<{ ticketId: string; subject: string }>;
+      windows: Array<never>;
+    }) => void;
+    mock.load
+      .mockImplementationOnce(() => new Promise((resolve) => { finishOld = resolve; }))
+      .mockResolvedValueOnce({ supporters: [], tickets: [], windows: [] });
+    await act(async () => {
+      root.render(<SupportAccess account={{ id: 'first', email: 'first@example.edu', via: 'email' }} />);
+    });
+    await act(async () => {
+      root.render(<SupportAccess account={{ id: 'second', email: 'second@example.edu', via: 'email' }} />);
+    });
+    await act(async () => finishOld({
+      supporters: [{ supporterId: 'old-staff', label: 'Old account advisor' }],
+      tickets: [{ ticketId: '123e4567-e89b-12d3-a456-426614174000', subject: 'Old account ticket' }],
+      windows: [],
+    }));
+    expect(host.textContent).not.toContain('Old account advisor');
+    expect(host.textContent).not.toContain('Old account ticket');
   });
 });

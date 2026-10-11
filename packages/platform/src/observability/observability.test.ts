@@ -37,6 +37,21 @@ describe('redaction', () => {
     expect((redact(Array.from({ length: 500 }, (_, i) => i)) as number[]).length).toBe(50);
   });
 
+  it('bounds cyclic metadata without skipping redaction inside the cycle owner', () => {
+    const cyclic: Record<string, unknown> = { password: 'hunter2' };
+    const shared = { token: 'abc', ok: true };
+    cyclic.self = cyclic;
+    cyclic.first = shared;
+    cyclic.second = shared;
+
+    expect(redact(cyclic)).toEqual({
+      password: REDACTED,
+      self: '[circular]',
+      first: { token: REDACTED, ok: true },
+      second: { token: REDACTED, ok: true },
+    });
+  });
+
   it('passes through null, undefined and primitives', () => {
     expect(redact(null)).toBeNull();
     expect(redact(undefined)).toBeUndefined();

@@ -1,0 +1,72 @@
+:root {
+  color-scheme: light;
+  --ink-950: #090a0e;
+  --ink-900: #111319;
+  --ink-800: #1c2028;
+  --ink-700: #2b303a;
+  --parchment-100: #fbf9f4;
+  --parchment-200: #f4f1ea;
+  --parchment-300: #e9e4da;
+  --paper: #fffefa;
+  --semester-700: #234fb8;
+  --semester-600: #2f62d6;
+  --semester-300: #9db8ff;
+  --brass-500: #a88742;
+  --surface-canvas: var(--parchment-200);
+  --surface-panel: var(--paper);
+  --surface-subtle: var(--parchment-100);
+  --text-primary: #17191e;
+  --text-secondary: #5f625f;
+  --text-inverse: #f8f5ee;
+  --text-inverse-muted: #aeb2bb;
+  --border-default: #d8d2c7;
+  --border-strong: #aca69c;
+  --action: var(--semester-700);
+  --action-hover: #183c96;
+  --focus: var(--semester-600);
+  --success: #286747;
+  --warning: #8a5716;
+  --danger: #9c352e;
+  --info: #285d83;
+  --font-editorial: "Cinzel", Georgia, serif;
+  --font-heading: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-interface: Barlow, Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --leading-reading: 1.65;
+  --space-1: 0.125rem;
+  --space-2: 0.25rem;
+  --space-3: 0.5rem;
+  --space-4: 0.75rem;
+  --space-5: 1rem;
+  --space-6: 1.5rem;
+  --space-7: 2rem;
+  --space-8: 3rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --rail-width: 15.5rem;
+  --content-max: 73.75rem;
+  --tap-target: 2.75rem;
+  --motion-hover: 130ms;
+  --motion-state: 180ms;
+  --motion-panel: 240ms;
+  --motion-sheet: 280ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+[data-density="snug"] { --space-5: 0.875rem; --space-6: 1.25rem; --space-7: 1.75rem; }
+[data-density="tight"] { --space-5: 0.75rem; --space-6: 1rem; --space-7: 1.5rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-hover: 0ms; --motion-state: 0ms; --motion-panel: 0ms; --motion-sheet: 0ms; }
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  :root { --border-default: CanvasText; --border-strong: CanvasText; }
+}

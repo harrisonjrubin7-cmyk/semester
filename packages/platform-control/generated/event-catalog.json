@@ -1,0 +1,14 @@
+[
+  {
+    "event": "registration.readiness_evaluated",
+    "capability": "registration.readiness"
+  },
+  {
+    "event": "registration.readiness_reconciliation_requested",
+    "capability": "registration.readiness"
+  },
+  {
+    "event": "registration.readiness_requested",
+    "capability": "registration.readiness"
+  }
+]

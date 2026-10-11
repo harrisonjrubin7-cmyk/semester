@@ -34,6 +34,29 @@ Editing the page by hand makes its test fail. Edit the data.
 6. Read the diff of the generated page. The diff is what reviewers see.
 7. If you wrote a new register test, add its path to the `registers` script in `app/package.json`, or `npm run registers` will not regenerate it and its page will go stale unnoticed.
 
+The system passport catalog follows this same contract. Edit
+`app/src/lib/systempassports.ts`, then regenerate its index and 25 passport pages
+with:
+
+```bash
+REGISTERS=write npx vitest run src/lib/systempassports.test.ts
+```
+
+Run the test again without `REGISTERS=write` before pushing. The test also checks
+that every governed capability has exactly one passport owner and that every
+declared dependency and external activation gate resolves.
+
+Feature-completion evidence is generated the same way. Edit
+`app/src/lib/featurecompletion.ts`, then run:
+
+```bash
+REGISTERS=write pnpm exec vitest run src/lib/featurecompletion.test.ts
+```
+
+The feature test preserves the ordered eighteen-point gate, verifies referenced
+repository evidence exists, and refuses a complete claim while any gate is
+partial or missing.
+
 ## What fails if you get it wrong
 
 This was followed in a scratch copy on 2026-10-04.

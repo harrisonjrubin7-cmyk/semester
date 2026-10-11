@@ -6,7 +6,7 @@ create or replace function pg_temp.become(who uuid)
 returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims',
-    jsonb_build_object('sub', who::text, 'role', 'authenticated')::text, true);
+    jsonb_build_object('sub', who::text, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   execute 'set local role authenticated';
 end $$;
 
@@ -82,9 +82,10 @@ begin
   delete from auth.users where id = departing;
   select count(*) into n from public.data_subject_request
    where id = departing_request and assigned_to is null and assigned_at is null
-     and verified_by is null and verified_at is null
-     and verification_basis is null and verification_evidence is null;
-  perform pg_temp.counted('deleting a steward preserves the request and clears coupled assignment and verification fields', n, 1);
+     and verified_by is null and verified_at is not null
+     and verification_basis = 'signed-in account holder'
+     and verification_evidence = 'case://departing-1';
+  perform pg_temp.counted('deleting a steward clears identity links but preserves verification evidence', n, 1);
   delete from public.data_subject_request where id = departing_request;
 
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance, expires_at) values

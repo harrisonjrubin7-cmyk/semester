@@ -446,6 +446,7 @@ function Kept() {
               Draw it
             </ActionButton>
             <ActionButton
+              aria-label={`Remove ${saved.name} equation`}
               onClick={() => {
                 dispatch({ type: 'deleteEquation', id: saved.id });
                 say('Removed.');

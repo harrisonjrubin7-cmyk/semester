@@ -78,6 +78,27 @@ describe('the envelope, the ids, and who is asking', () => {
     expect(h.repo.outbox.rows[0]!.event.correlationId).toBe('trace-0123456789');
   });
 
+  it('refuses a client-selected tenant before any tenant data is read', async () => {
+    const { call, h } = setup();
+    h.repo.faults.read = new Error('a repository read proves the boundary was crossed');
+    const refused = await call('/v1/tasks', { headers: { 'x-tenant-id': 'school-b' } });
+    expect(refused.status).toBe(403);
+    expect((await errorOf(refused)).error).toMatchObject({ code: 'tenant_mismatch', retryable: false });
+    expect(h.repo.auditRows).toHaveLength(0);
+    expect(h.repo.outbox.rows).toHaveLength(0);
+
+    h.repo.faults.read = null;
+    const matching = await call('/v1/tasks', { headers: { 'x-tenant-id': 'school-a' } });
+    expect(matching.status).toBe(200);
+  });
+
+  it('refuses a malformed HTTP idempotency key instead of silently dropping it', async () => {
+    const { call } = setup();
+    const r = await call('/v1/tasks', { headers: { 'idempotency-key': 'short' } });
+    expect(r.status).toBe(400);
+    expect((await errorOf(r)).error.code).toBe('invalid_request');
+  });
+
   it('says 404 for an unknown path and 405, with Allow, for a wrong method', async () => {
     const { call } = setup();
     expect((await call('/v1/nothing')).status).toBe(404);

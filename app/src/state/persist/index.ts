@@ -402,21 +402,32 @@ export function whileWriting(fn: ((failing: boolean) => void) | null): void {
   watching = fn;
 }
 
-async function flush(): Promise<void> {
-  const next = pending;
-  const nextSeq = pendingSeq;
-  const tell = told;
-  pending = null;
-  told = null;
-  if (!next || !last) return;
+async function flushValue(
+  next: Partial<Persisted> | null,
+  nextSeq: number,
+  tell: (() => void) | null,
+  exact = false,
+): Promise<boolean> {
+  if (!next || !last) return true;
   const before = last;
   const beforeSeq = lastSeq;
-  const writes = writesFor(last, next);
+  /*
+   * Ordinary coalesced writes follow `last`, the state the preceding write is
+   * expected to leave behind. An explicit flush is a durability boundary, so
+   * expectation is not enough: build it from `confirmed`, which moves only
+   * after IndexedDB completes successfully. `flushOnLeave()` can advance
+   * `last` while its out-of-queue transaction is still able to abort.
+   */
+  const base = exact ? (confirmed ?? last) : last;
+  const writes = writesFor(base, next);
   last = next;
   lastSeq = nextSeq;
   // Nothing to write is not something to announce. A tab told to re-read a
   // disk that did not change is the first step of a loop, not an update.
-  if (writes.length === 0) return;
+  if (writes.length === 0) {
+    if (exact) confirmed = next;
+    return true;
+  }
   /*
    * `write` reports a failure by answering false, not by throwing.
    *
@@ -467,7 +478,7 @@ async function flush(): Promise<void> {
     last = before;
     lastSeq = beforeSeq;
     watching?.(true);
-    return;
+    return false;
   }
 
   /*
@@ -478,7 +489,7 @@ async function flush(): Promise<void> {
    * missing. Then nothing is confirmed and the journal stays; the failure
    * already put `last` back, so the next write carries it again.
    */
-  if (before === confirmed) {
+  if (exact || before === confirmed) {
     confirmed = next;
     // Everything the leaving journal held has now landed, or something newer
     // has. Replaying it next load would put an older value over a newer one.
@@ -489,6 +500,16 @@ async function flush(): Promise<void> {
   // has since passed — a browser that made room, or a transaction that lost a
   // race and won the next one.
   watching?.(false);
+  return true;
+}
+
+async function flush(): Promise<void> {
+  const next = pending;
+  const nextSeq = pendingSeq;
+  const tell = told;
+  pending = null;
+  told = null;
+  await flushValue(next, nextSeq, tell);
 }
 
 /** What the app last read or wrote, so the first diff has something to be against. */
@@ -546,14 +567,40 @@ export function stopWriting(): void {
   }
 }
 
-/** Write whatever is owing right now. For a tab closing, and for tests. */
-export async function flushNow(): Promise<void> {
+/**
+ * Write whatever is owing right now against what is confirmed on disk.
+ * False means the transaction did not land.
+ */
+export async function flushNow(): Promise<boolean> {
   if (timer) {
     clearTimeout(timer);
     timer = null;
   }
-  inFlight = inFlight.then(flush);
+  /*
+   * Capture the exact owed value before waiting behind an earlier write.
+   *
+   * Calling `inFlight.then(flush)` used to defer reading `pending` until the
+   * earlier transaction finished. A render during that wait could call
+   * `persist()` again and replace the value the caller explicitly asked to
+   * flush. Account adoption hit exactly that race: the accepted remote copy
+   * was queued, a stale pre-adoption render replaced it, and `flushNow()`
+   * resolved even though the remote task had never reached IndexedDB.
+   *
+   * A later call remains pending for its own turn. This one writes the value
+   * that was owing at the instant `flushNow()` was called, in order behind
+   * any transaction already in flight.
+   */
+  const next = pending;
+  const nextSeq = pendingSeq;
+  const tell = told;
+  pending = null;
+  told = null;
+  let landed = false;
+  inFlight = inFlight.then(async () => {
+    landed = await flushValue(next, nextSeq, tell, true);
+  });
   await inFlight;
+  return landed;
 }
 
 /**

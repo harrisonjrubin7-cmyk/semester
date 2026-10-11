@@ -1,7 +1,8 @@
 # Why there are exceptions here at all, and what was measured before adding one.
 #
-# `gitleaks` with its stock rules finds nine things in this repository. None of
-# the nine is a credential a stranger could use, and all nine are the same
+# `gitleaks` with its stock rules originally found nine things in this
+# repository. None of the nine is a credential a stranger could use, and all
+# nine are the same
 # rule — `generic-api-key`, which fires on a high-entropy string sitting near
 # the word "key". Left alone, the secret-scanning job in `ci.yml` is red on
 # every push for ever, and a check that is always red is a check nobody reads.
@@ -20,6 +21,9 @@
 # signature `sig`) that company-site scan tests put next to the word `token`.
 # It is not a credential anyone can present. The tests no longer contain it;
 # the history scan still sees the commits that added it.
+# A sixth shape covers deterministic course-material SQL fixtures named
+# `corr-material-*` or `material-withdraw-key-*`; these are correlation and
+# idempotency labels, not authentication material.
 #
 # ## Every exception is scoped to a value, and none to a file
 #
@@ -135,8 +139,15 @@ useDefault = true
 #      because the secrets job also scans commits that already added it, and
 #      removing the line does not remove those commits. A longer bearer, or
 #      any other `eyJ` string, does not match.
+#
+#   6. **Course-material SQL fixture labels.** The course-material metadata
+#      verification script uses deterministic `corr-material-*` correlation
+#      IDs and `material-withdraw-key-*` idempotency labels. They authorize
+#      nothing and contain only a fixed product prefix plus a small decimal
+#      suffix. The exception is value-scoped, so a credential elsewhere in the
+#      same SQL file remains visible.
 [allowlist]
-description = 'Five string shapes this repository contains that are named "key" or "token" and are not credentials. See the header.'
+description = 'Six string shapes this repository contains that are named "key" or "token" and are not credentials. See the header.'
 regexTarget = 'secret'
 regexes = [
   '''^sb_publishable_[A-Za-z0-9_-]{8,}$''',
@@ -144,4 +155,5 @@ regexes = [
   '''^[a-z][a-z0-9-]*/[A-Z]{2,4}$''',
   '''^[0-9a-f]{16}$''',
   '''^eyJhbGciOiJub25lIn0\.eyJzdWIiOiJ0ZXN0In0\.c2ln$''',
+  '''^(?:corr-material-(?:plan|policy)-[0-9]+|corr-material-withdraw(?:-[0-9]+)?|material-withdraw-key-[0-9]+)$''',
 ]

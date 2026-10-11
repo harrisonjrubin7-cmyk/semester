@@ -726,6 +726,16 @@ declare
   said jsonb;
 begin
   reset role;
+  -- A pre-classifier support row is deliberately not eligible for the timed
+  -- or narrow ticket-only deletion paths. Full account erasure detaches it
+  -- from auth.users without destroying evidence whose historical tenant is
+  -- still unknown.
+  insert into public.support_tickets
+    (student_id, retention_classified, category, subject, body, priority,
+     status, first_response_due)
+  values
+    (leaver, false, 'privacy', 'legacy erasure fixture', 'delete with my account',
+     'high', 'resolved', now() + interval '1 day');
   perform set_config('request.jwt.claims', json_build_object('role', 'service_role')::text, true);
   -- Supabase grants the service role this; the stub does not.
   grant usage on schema public to service_role;
@@ -737,6 +747,9 @@ begin
   perform pg_temp.counted('it reports what it removed',
     ((said -> 'removed' ->> 'courses')::bigint), 1);
   perform pg_temp.counted('and hands back a receipt', (said ->> 'receipt' is not null)::int, 1);
+  perform pg_temp.counted('whole-account erasure detaches a pre-classifier support ticket',
+    (select count(*) from public.support_tickets
+      where student_id is null and retention_subject_id = leaver and status = 'closed'), 1);
   perform pg_temp.counted('no column that references auth.users still names the account',
     pg_temp.naming(leaver), 0);
 end $$;

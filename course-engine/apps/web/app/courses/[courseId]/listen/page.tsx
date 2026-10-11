@@ -1,0 +1,1 @@
+import {Workspace} from "@/components/workspace";export default async function Page({params}:{params:Promise<{courseId:string}>}){return <Workspace courseId={(await params).courseId} mode="listen"/>}

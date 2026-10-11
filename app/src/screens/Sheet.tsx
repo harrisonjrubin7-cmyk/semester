@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
@@ -920,7 +920,27 @@ const EDGES = [
   { id: 'box', label: 'Outline' },
 ] as const;
 
+interface SheetLayout {
+  names: readonly NamedRange[];
+  joins: readonly Span[];
+  covered: ReadonlyMap<string, string>;
+  spans: ReadonlyMap<string, Span>;
+}
+
+const layoutCache = new WeakMap<SheetModel, SheetLayout>();
+
+function layoutOf(sheet: SheetModel): SheetLayout {
+  const cached = layoutCache.get(sheet);
+  if (cached) return cached;
+  const names = Object.freeze(namesOf(sheet));
+  const joins = Object.freeze(joinsOf(sheet));
+  const layout = Object.freeze({ names, joins, covered: coveredBy(joins), spans: spansAt(joins) });
+  layoutCache.set(sheet, layout);
+  return layout;
+}
+
 function Grid({ sheet }: { sheet: SheetModel }) {
+  const now = useNow();
   const { state, dispatch, say } = useStore();
   const [sel, setSel] = useState<Range>(() => oneCell('A1'));
   /** Which cell has the text cursor in it, so it shows its formula not its answer. */
@@ -1300,7 +1320,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
    */
   const rules = useMemo(() => rulesOf(sheet, INKS), [sheet]);
   /** The names this sheet defines, and the summaries drawn under it. */
-  const names = useMemo(() => namesOf(sheet), [sheet]);
+  const { names, joins, covered, spans } = layoutOf(sheet);
   const pivots = useMemo(() => pivotsOf(sheet), [sheet]);
   const ruleRanges = useMemo(
     () => new Map(rules.map((r) => [r.range, rangeOf(r.range)])),
@@ -1313,9 +1333,6 @@ function Grid({ sheet }: { sheet: SheetModel }) {
    * `rows × cols` components and each one needs to know whether it is drawn at
    * all, which is a `Map.has` here and was a walk of every join without it.
    */
-  const joins = useMemo(() => joinsOf(sheet), [sheet]);
-  const covered = useMemo(() => coveredBy(joins), [joins]);
-  const spans = useMemo(() => spansAt(joins), [joins]);
   /** What the cells are allowed to hold, and the blocks those rules cover. */
   const checks = useMemo(() => checksOf(sheet), [sheet]);
   const checkRanges = useMemo(
@@ -1450,7 +1467,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
 
   const addChart = () => {
     const where = rangeLabel(sel);
-    setCharts([...charts, suggestChart(sheet.cells, where, Date.now(), over)]);
+    setCharts([...charts, suggestChart(sheet.cells, where, now.getTime(), over)]);
     say(`Chart of ${where} added under the grid.`);
   };
 
@@ -1520,7 +1537,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
 
   const addPivot = () => {
     const where = many(sel) ? rangeLabel(sel) : rangeLabel(fullRange());
-    setPivots([...pivots, suggestPivot(sheet.cells, where, Date.now(), over)]);
+    setPivots([...pivots, suggestPivot(sheet.cells, where, now.getTime(), over)]);
     say(`Summary of ${where} added under the grid.`);
   };
 
@@ -3720,7 +3737,7 @@ function NameStrip({
   onNames,
   onClose,
 }: {
-  names: NamedRange[];
+  names: readonly NamedRange[];
   /** What is selected in the grid, which is what a new name will cover. */
   selection: string;
   sheetTitle: string;

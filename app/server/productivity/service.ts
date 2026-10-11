@@ -12,6 +12,11 @@ import {
   type UserAction,
 } from '../../../packages/institution/src/index.ts';
 import {
+  buildRequestContext,
+  type RequestContext,
+  type TrustedIdentity,
+} from '../../../packages/platform/src/index.ts';
+import {
   AUTHORITATIVE_FIELDS,
   TASK_FIELDS,
   LIMITS,
@@ -60,8 +65,22 @@ export interface Principal {
 
 export interface RequestMeta {
   correlationId: string;
+  /** Minted by the HTTP host. Never read from a client request header. */
+  requestId?: string;
   /** Said by the caller, recorded, and required for anything that is not the person's own data. */
   purpose?: string;
+  /** Untrusted client hint. It may agree with the verified tenant, never select it. */
+  tenantHint?: string;
+  /** Untrusted HTTP key. Command ids remain the write idempotency boundary. */
+  idempotencyKey?: string;
+}
+
+interface ProductivityContext {
+  request: RequestContext;
+  purposeExplicit: boolean;
+  featureFlags: readonly string[];
+  policyVersions: Readonly<Record<string, string>>;
+  consentGrantsFor?: Principal['consentGrantsFor'];
 }
 
 /** A refusal the HTTP layer turns into the error envelope. `code` is something a client may switch on. */
@@ -149,6 +168,57 @@ export class ProductivityService {
     this.onError = deps.onError ?? (() => undefined);
   }
 
+  /**
+   * Normalize the verified productivity identity and untrusted request metadata
+   * through the platform context builder before policy or repository access.
+   * This is deliberately the only bridge from the service's legacy Principal
+   * shape; downstream code reads tenant, actor, roles, purpose and trace ids
+   * from the immutable RequestContext.
+   */
+  private context(principal: Principal, meta: RequestMeta): ProductivityContext {
+    const identity: TrustedIdentity = {
+      actor: {
+        personId: principal.actor.id,
+        type: principal.actor.type,
+        authenticatedAt: principal.actor.authenticatedAt,
+        ...(principal.actor.sessionId ? { sessionId: principal.actor.sessionId } : {}),
+        ...(principal.actor.mfaLevel ? { mfaLevel: principal.actor.mfaLevel } : {}),
+      },
+      tenant: {
+        id: principal.tenant.id,
+        environment: principal.tenant.environment,
+        verifiedBy: principal.tenant.verifiedBy,
+        status: 'active',
+      },
+      membershipIds: [...principal.membershipIds],
+      roleGrants: [...principal.roleGrants],
+      capabilities: [...principal.capabilities],
+    };
+    const request = buildRequestContext(
+      {
+        headers: {
+          'x-correlation-id': meta.correlationId,
+          ...(meta.tenantHint !== undefined ? { 'x-tenant-id': meta.tenantHint } : {}),
+          ...(meta.idempotencyKey !== undefined ? { 'idempotency-key': meta.idempotencyKey } : {}),
+        },
+        ...(meta.purpose !== undefined ? { purpose: meta.purpose } : {}),
+      },
+      identity,
+      {
+        clock: { now: () => new Date(this.now()) },
+        ids: { next: () => randomUUID() },
+        ...(meta.requestId !== undefined ? { requestId: meta.requestId } : {}),
+      },
+    );
+    return Object.freeze({
+      request,
+      purposeExplicit: meta.purpose !== undefined,
+      featureFlags: Object.freeze([...principal.featureFlags]),
+      policyVersions: Object.freeze({ ...principal.policyVersions }),
+      ...(principal.consentGrantsFor ? { consentGrantsFor: principal.consentGrantsFor } : {}),
+    });
+  }
+
   // ── Commands ───────────────────────────────────────────────────────────
 
   /**
@@ -164,8 +234,9 @@ export class ProductivityService {
    * name another.
    */
   async execute(principal: Principal, raw: unknown[], meta: RequestMeta, options: { ownerId?: string } = {}): Promise<CommandResult[]> {
-    const ownerId = this.ownerFor(principal, options.ownerId);
-    const scope: Scope = { tenantId: principal.tenant.id, ownerId };
+    const context = this.context(principal, meta);
+    const ownerId = this.ownerFor(context.request, options.ownerId);
+    const scope: Scope = { tenantId: context.request.tenantId, ownerId };
     const results: CommandResult[] = [];
     let stopped = false;
 
@@ -179,30 +250,30 @@ export class ProductivityService {
       if (!checked.ok) {
         const first = checked.issues[0]!;
         results.push(this.rejected(hint, 'validation_failed', `${first.path} ${first.issue}.`));
-        this.onCommand({ type: 'invalid', status: 'rejected', actorType: principal.actor.type });
+        this.onCommand({ type: 'invalid', status: 'rejected', actorType: context.request.actor.type });
         continue;
       }
       const command = checked.value;
       let result: CommandResult;
       try {
-        result = await this.applyOne(principal, scope, command, meta);
+        result = await this.applyOne(context, scope, command);
       } catch (error) {
-        this.onError(error, { where: 'command', correlationId: meta.correlationId });
+        this.onError(error, { where: 'command', correlationId: context.request.correlationId });
         // The store failed or lost its answer. The outcome is unknown, so say that and
         // say what is safe: the same command, sent again, is applied once or answered from the ledger.
         result = { commandId: command.commandId, status: 'failed', code: 'unavailable', message: 'Semester could not finish this just now. Send it again; it will not be applied twice.', retryable: true };
         stopped = true;
       }
-      this.onCommand({ type: command.type, status: result.status, actorType: principal.actor.type });
+      this.onCommand({ type: command.type, status: result.status, actorType: context.request.actor.type });
       results.push(result);
     }
     return results;
   }
 
-  private ownerFor(principal: Principal, requested: string | undefined): string {
-    if (principal.actor.type === 'user') {
-      if (requested !== undefined && requested !== principal.actor.id) throw new Error('a person\'s commands apply to their own data');
-      return principal.actor.id;
+  private ownerFor(request: RequestContext, requested: string | undefined): string {
+    if (request.actor.type === 'user') {
+      if (requested !== undefined && requested !== request.actor.personId) throw new Error('a person\'s commands apply to their own data');
+      return request.actor.personId;
     }
     if (!requested) throw new Error('a job must say whose data it is acting on');
     return requested;
@@ -212,15 +283,15 @@ export class ProductivityService {
     return { commandId, status: 'rejected', code, message, ...(userAction ? { userAction: { label: userAction.label, kind: userAction.kind } } : {}) };
   }
 
-  private async applyOne(principal: Principal, scope: Scope, command: Command, meta: RequestMeta): Promise<CommandResult> {
+  private async applyOne(context: ProductivityContext, scope: Scope, command: Command): Promise<CommandResult> {
     const now = this.now();
     if (now - Date.parse(command.createdAt) > LIMITS.commandMaxAgeMs) {
       return this.rejected(command.commandId, 'command_expired', 'This change was made too long ago to apply safely. Look at the current version and make it again.', { label: 'Review the current version', kind: 'open_screen' });
     }
-    if (principal.actor.type !== 'integration' && command.type === 'calendar_event.create' && command.source) {
+    if (context.request.actor.type !== 'integration' && command.type === 'calendar_event.create' && command.source) {
       return this.rejected(command.commandId, 'source_forbidden', 'Only an import can say where an event came from.');
     }
-    if (principal.actor.type === 'integration' && command.type === 'calendar_event.create' && !command.source) {
+    if (context.request.actor.type === 'integration' && command.type === 'calendar_event.create' && !command.source) {
       return this.rejected(command.commandId, 'source_required', 'An imported event must say which feed and entry it came from.');
     }
     const requestSha256 = sha256(canonical(command));
@@ -234,15 +305,14 @@ export class ProductivityService {
         }
         return { commandId: command.commandId, status: 'duplicate', original: seen.result };
       }
-      return this.applyFresh(principal, scope, command, meta, { tx, now, clock, clamped, requestSha256 });
+      return this.applyFresh(context, scope, command, { tx, now, clock, clamped, requestSha256 });
     });
   }
 
   private async applyFresh(
-    principal: Principal,
+    context: ProductivityContext,
     scope: Scope,
     command: Command,
-    meta: RequestMeta,
     ctx: { tx: ProductivityTx; now: number; clock: string; clamped: boolean; requestSha256: string },
   ): Promise<CommandResult> {
     const { tx, now, clock, clamped } = ctx;
@@ -254,27 +324,27 @@ export class ProductivityService {
     const touchesAuthoritative = existing !== null
       && existing.source.kind !== 'student_entered'
       && (verb === 'delete' || Object.keys(changes).some((f) => AUTHORITATIVE_FIELDS[type].includes(f)));
-    const sourceKind = existing?.source.kind ?? (principal.actor.type === 'integration' ? 'imported' : 'student_entered');
+    const sourceKind = existing?.source.kind ?? (context.request.actor.type === 'integration' ? 'imported' : 'student_entered');
 
     // Decided inside the transaction, against the record as it stands in it: the
     // check and the write cannot see two different states.
-    const decision = this.ask(this.request(principal, type === 'task' ? 'task.write' : 'calendar.event.write', {
+    const decision = this.ask(this.request(context, type === 'task' ? 'task.write' : 'calendar.event.write', {
       type,
       id: command.id,
       ownerId: scope.ownerId,
       classification: 'student_private',
       sourceKind,
       attributes: { command: verb, touchesAuthoritative },
-    }, meta, [], command.commandId), now);
+    }, [], command.commandId), now);
 
     if (!decision.allow) {
-      this.audit(tx, principal, scope, meta, command, { action: type === 'task' ? 'task.write' : 'calendar.event.write', outcome: 'denied', reasonCode: decision.reasonCode });
+      this.audit(tx, context, scope, command, { action: type === 'task' ? 'task.write' : 'calendar.event.write', outcome: 'denied', reasonCode: decision.reasonCode });
       return this.rejected(command.commandId, decision.reasonCode, decision.userMessage, decision.userAction);
     }
     const { remaining } = applyObligations({}, decision.obligations);
     const unmet = remaining.find((o) => !HONOURED.has(o.type));
     if (unmet) {
-      this.audit(tx, principal, scope, meta, command, { action: type === 'task' ? 'task.write' : 'calendar.event.write', outcome: 'denied', reasonCode: 'obligation_unsupported' });
+      this.audit(tx, context, scope, command, { action: type === 'task' ? 'task.write' : 'calendar.event.write', outcome: 'denied', reasonCode: 'obligation_unsupported' });
       return this.rejected(command.commandId, 'obligation_unsupported', 'This change needs a step this version cannot perform, so it was not made.');
     }
     const auditObligation = decision.obligations.find((o): o is Extract<PolicyObligation, { type: 'audit' }> => o.type === 'audit');
@@ -286,8 +356,8 @@ export class ProductivityService {
         commandId: command.commandId, status: 'applied', entity: { type, id: entity.id, version: entity.version },
         seq, appliedFields, supersededFields, clockClamped: clamped,
       };
-      this.audit(tx, principal, scope, meta, command, { action: eventType, outcome: 'allowed', fields: appliedFields });
-      tx.emit(this.event(principal, scope, meta, command, eventType, { entityType: type, entityId: entity.id, version: entity.version, seq, fields: appliedFields }));
+      this.audit(tx, context, scope, command, { action: eventType, outcome: 'allowed', fields: appliedFields });
+      tx.emit(this.event(context, scope, command, eventType, { entityType: type, entityId: entity.id, version: entity.version, seq, fields: appliedFields }));
       tx.recordCommand({ commandId: command.commandId, requestSha256: ctx.requestSha256, result, storedAt: iso(now) });
       return result;
     };
@@ -386,43 +456,48 @@ export class ProductivityService {
   }
 
   private request(
-    principal: Principal,
+    context: ProductivityContext,
     action: PolicyAction,
     resource: AuthorizationRequest['resource'],
-    meta: RequestMeta,
     consentGrants: ConsentGrant[],
     idempotencyKey?: string,
   ): AuthorizationRequest {
+    const request = context.request;
     return {
-      actor: principal.actor,
-      tenant: principal.tenant,
+      actor: {
+        id: request.actor.personId,
+        type: request.actor.type,
+        authenticatedAt: request.actor.authenticatedAt,
+        ...(request.actor.mfaLevel ? { mfaLevel: request.actor.mfaLevel } : {}),
+        ...(request.actor.sessionId ? { sessionId: request.actor.sessionId } : {}),
+      },
+      tenant: { id: request.tenantId, environment: request.environment, verifiedBy: request.verifiedBy },
       action,
       resource,
       context: {
-        membershipIds: principal.membershipIds,
-        roleGrants: principal.roleGrants,
-        capabilities: principal.capabilities,
+        membershipIds: [...request.membershipIds],
+        roleGrants: [...request.roleGrants],
+        capabilities: [...request.capabilities],
         consentGrants,
-        featureFlags: principal.featureFlags,
-        policyVersions: principal.policyVersions,
-        ...(meta.purpose ? { purpose: meta.purpose } : {}),
+        featureFlags: [...context.featureFlags],
+        policyVersions: { ...context.policyVersions },
+        ...(context.purposeExplicit ? { purpose: request.purpose } : {}),
         ...(idempotencyKey ? { idempotencyKey } : {}),
-        correlationId: meta.correlationId,
+        correlationId: request.correlationId,
       },
     };
   }
 
   private audit(
     tx: ProductivityTx,
-    principal: Principal,
+    context: ProductivityContext,
     scope: Scope,
-    meta: RequestMeta,
     command: Command,
     what: { action: string; outcome: 'allowed' | 'denied'; reasonCode?: string; fields?: string[] },
   ): void {
     tx.audit({
-      id: this.newId(), tenantId: scope.tenantId, ownerId: scope.ownerId, correlationId: meta.correlationId,
-      actorId: principal.actor.id, actorType: principal.actor.type, deviceId: command.deviceId,
+      id: this.newId(), tenantId: scope.tenantId, ownerId: scope.ownerId, correlationId: context.request.correlationId,
+      actorId: context.request.actor.personId, actorType: context.request.actor.type, deviceId: command.deviceId,
       action: what.action, objectKind: entityTypeOf(command.type), objectId: command.id, outcome: what.outcome,
       ...(what.reasonCode ? { reasonCode: what.reasonCode } : {}),
       ...(what.fields ? { fields: what.fields } : {}),
@@ -431,9 +506,8 @@ export class ProductivityService {
   }
 
   private event(
-    principal: Principal,
+    context: ProductivityContext,
     scope: Scope,
-    meta: RequestMeta,
     command: Command,
     eventType: string,
     payload: Record<string, unknown>,
@@ -443,11 +517,11 @@ export class ProductivityService {
       eventType: eventType as SemesterEvent['eventType'],
       occurredAt: iso(this.now()),
       producer: 'productivity-api',
-      environment: principal.tenant.environment,
+      environment: context.request.environment,
       tenantId: scope.tenantId,
-      actor: { id: principal.actor.id, type: principal.actor.type },
+      actor: { id: context.request.actor.personId, type: context.request.actor.type },
       subject: { type: entityTypeOf(command.type), id: command.id },
-      correlationId: meta.correlationId,
+      correlationId: context.request.correlationId,
       causationId: command.commandId,
       idempotencyKey: command.commandId,
       payload: { ownerId: scope.ownerId, ...payload },
@@ -461,49 +535,47 @@ export class ProductivityService {
    * *before* anything is returned. A read that cannot be recorded is not made.
    */
   private async authorizeRead(
-    principal: Principal,
+    context: ProductivityContext,
     kind: 'task' | 'calendar_event',
     ownerId: string,
-    meta: RequestMeta,
   ): Promise<PolicyObligation[]> {
-    const own = ownerId === principal.actor.id;
-    const grants = own || !principal.consentGrantsFor ? [] : await principal.consentGrantsFor(ownerId);
+    const own = ownerId === context.request.actor.personId;
+    const grants = own || !context.consentGrantsFor ? [] : await context.consentGrantsFor(ownerId);
     const action: PolicyAction = kind === 'task' ? 'task.read' : 'calendar.event.read';
-    const decision = this.ask(this.request(principal, action, { type: kind, ownerId, classification: 'student_private' }, meta, grants), this.now());
+    const decision = this.ask(this.request(context, action, { type: kind, ownerId, classification: 'student_private' }, grants), this.now());
     if (!decision.allow) {
-      if (!own) await this.recordSharedRead(principal, kind, ownerId, meta, 'denied', decision.reasonCode);
+      if (!own) await this.recordSharedRead(context, kind, ownerId, 'denied', decision.reasonCode);
       throw new ApiError(403, decision.reasonCode, decision.userMessage, decision.userAction ? { userAction: decision.userAction } : {});
     }
     const { remaining } = applyObligations({}, decision.obligations);
     if (remaining.some((o) => !HONOURED.has(o.type))) {
       throw new ApiError(403, 'obligation_unsupported', 'This needs a step this version cannot perform, so nothing was shown.');
     }
-    if (!own) await this.recordSharedRead(principal, kind, ownerId, meta, 'allowed');
+    if (!own) await this.recordSharedRead(context, kind, ownerId, 'allowed');
     return decision.obligations;
   }
 
   private async recordSharedRead(
-    principal: Principal,
+    context: ProductivityContext,
     kind: EntityType,
     ownerId: string,
-    meta: RequestMeta,
     outcome: 'allowed' | 'denied',
     reasonCode?: string,
   ): Promise<void> {
-    const scope: Scope = { tenantId: principal.tenant.id, ownerId };
+    const scope: Scope = { tenantId: context.request.tenantId, ownerId };
     await this.repo.transaction(scope, (tx) => {
       const row: AuditRow = {
-        id: this.newId(), tenantId: scope.tenantId, ownerId, correlationId: meta.correlationId,
-        actorId: principal.actor.id, actorType: principal.actor.type, action: 'productivity.shared_read',
+        id: this.newId(), tenantId: scope.tenantId, ownerId, correlationId: context.request.correlationId,
+        actorId: context.request.actor.personId, actorType: context.request.actor.type, action: 'productivity.shared_read',
         objectKind: kind, objectId: ownerId, outcome, ...(reasonCode ? { reasonCode } : {}), occurredAt: iso(this.now()),
       };
       tx.audit(row);
       if (outcome === 'allowed') {
         tx.emit(makeEvent({
           eventId: this.newId(), eventType: 'productivity.shared_read', occurredAt: row.occurredAt, producer: 'productivity-api',
-          environment: principal.tenant.environment, tenantId: scope.tenantId, actor: { id: principal.actor.id, type: principal.actor.type },
-          subject: { type: kind, id: ownerId }, correlationId: meta.correlationId,
-          payload: { ownerId, entityType: kind, purpose: meta.purpose ?? '' },
+          environment: context.request.environment, tenantId: scope.tenantId, actor: { id: context.request.actor.personId, type: context.request.actor.type },
+          subject: { type: kind, id: ownerId }, correlationId: context.request.correlationId,
+          payload: { ownerId, entityType: kind, purpose: context.purposeExplicit ? context.request.purpose : '' },
         }));
       }
     });
@@ -521,10 +593,11 @@ export class ProductivityService {
     params: { ownerId?: string; status?: 'open' | 'done'; dueBefore?: string; dueAfter?: string; after: CursorPosition | null; limit?: number },
     meta: RequestMeta,
   ): Promise<Page<Wire>> {
-    const ownerId = params.ownerId ?? principal.actor.id;
-    const obligations = await this.authorizeRead(principal, 'task', ownerId, meta);
+    const context = this.context(principal, meta);
+    const ownerId = params.ownerId ?? context.request.actor.personId;
+    const obligations = await this.authorizeRead(context, 'task', ownerId);
     const limit = Math.min(params.limit ?? LIMITS.pageDefault, LIMITS.pageMax);
-    const rows = await this.repo.listTasks({ tenantId: principal.tenant.id, ownerId }, {
+    const rows = await this.repo.listTasks({ tenantId: context.request.tenantId, ownerId }, {
       ...(params.status ? { status: params.status } : {}),
       ...(params.dueBefore ? { dueBefore: params.dueBefore } : {}),
       ...(params.dueAfter ? { dueAfter: params.dueAfter } : {}),
@@ -533,7 +606,7 @@ export class ProductivityService {
     const shown = rows.slice(0, limit);
     const last = shown[shown.length - 1];
     return {
-      data: shown.map((t) => this.project(t, obligations, ownerId === principal.actor.id)),
+      data: shown.map((t) => this.project(t, obligations, ownerId === context.request.actor.personId)),
       page: { has_more: rows.length > limit, next_cursor: rows.length > limit && last ? encodeCursor({ k: 'k', key: taskSortKey(last), id: last.id }) : null },
     };
   }
@@ -543,14 +616,15 @@ export class ProductivityService {
     params: { ownerId?: string; from: string; to: string; after: CursorPosition | null; limit?: number },
     meta: RequestMeta,
   ): Promise<Page<Wire>> {
-    const ownerId = params.ownerId ?? principal.actor.id;
-    const obligations = await this.authorizeRead(principal, 'calendar_event', ownerId, meta);
+    const context = this.context(principal, meta);
+    const ownerId = params.ownerId ?? context.request.actor.personId;
+    const obligations = await this.authorizeRead(context, 'calendar_event', ownerId);
     const limit = Math.min(params.limit ?? LIMITS.pageDefault, LIMITS.pageMax);
-    const rows = await this.repo.listEvents({ tenantId: principal.tenant.id, ownerId }, { from: params.from, to: params.to, after: params.after, limit: limit + 1 });
+    const rows = await this.repo.listEvents({ tenantId: context.request.tenantId, ownerId }, { from: params.from, to: params.to, after: params.after, limit: limit + 1 });
     const shown = rows.slice(0, limit);
     const last = shown[shown.length - 1];
     return {
-      data: shown.map((e) => this.project(e, obligations, ownerId === principal.actor.id)),
+      data: shown.map((e) => this.project(e, obligations, ownerId === context.request.actor.personId)),
       page: { has_more: rows.length > limit, next_cursor: rows.length > limit && last ? encodeCursor({ k: 'k', key: last.startsAt, id: last.id }) : null },
     };
   }
@@ -558,18 +632,20 @@ export class ProductivityService {
   /** One of the caller's own records. Somebody else's is "not found", not "forbidden": existence is not shared either. */
   async get(principal: Principal, type: EntityType, id: string, meta: RequestMeta): Promise<Wire> {
     if (!isUuid(id)) throw new ApiError(404, 'not_found', 'That item does not exist.');
-    await this.authorizeRead(principal, type, principal.actor.id, meta);
-    const found = await this.repo.get({ tenantId: principal.tenant.id, ownerId: principal.actor.id }, type, id);
+    const context = this.context(principal, meta);
+    await this.authorizeRead(context, type, context.request.actor.personId);
+    const found = await this.repo.get({ tenantId: context.request.tenantId, ownerId: context.request.actor.personId }, type, id);
     if (!found) throw new ApiError(404, 'not_found', 'That item does not exist.');
     return wire(found);
   }
 
   /** The caller's tasks due and events happening in a window, as one time-ordered list. */
   async agenda(principal: Principal, params: { from: string; to: string }, meta: RequestMeta): Promise<{ data: Wire[]; truncated: boolean }> {
-    const ownerId = principal.actor.id;
-    await this.authorizeRead(principal, 'task', ownerId, meta);
-    await this.authorizeRead(principal, 'calendar_event', ownerId, meta);
-    const scope: Scope = { tenantId: principal.tenant.id, ownerId };
+    const context = this.context(principal, meta);
+    const ownerId = context.request.actor.personId;
+    await this.authorizeRead(context, 'task', ownerId);
+    await this.authorizeRead(context, 'calendar_event', ownerId);
+    const scope: Scope = { tenantId: context.request.tenantId, ownerId };
     const cap = 250;
     const [tasks, events] = await Promise.all([
       this.repo.listTasks(scope, { status: 'open', dueAfter: new Date(Date.parse(params.from) - 1).toISOString(), dueBefore: params.to, after: null, limit: cap + 1 }),
@@ -588,12 +664,13 @@ export class ProductivityService {
    * client that sees a jump knows it missed something and asks again.
    */
   async changes(principal: Principal, params: { after: CursorPosition | null; limit?: number }, meta: RequestMeta): Promise<Page<Wire>> {
-    const ownerId = principal.actor.id;
-    await this.authorizeRead(principal, 'task', ownerId, meta);
-    await this.authorizeRead(principal, 'calendar_event', ownerId, meta);
+    const context = this.context(principal, meta);
+    const ownerId = context.request.actor.personId;
+    await this.authorizeRead(context, 'task', ownerId);
+    await this.authorizeRead(context, 'calendar_event', ownerId);
     const limit = Math.min(params.limit ?? LIMITS.pageDefault, LIMITS.pageMax);
     const after = params.after?.k === 's' ? params.after.seq! : 0;
-    const rows = await this.repo.changes({ tenantId: principal.tenant.id, ownerId }, after, limit + 1);
+    const rows = await this.repo.changes({ tenantId: context.request.tenantId, ownerId }, after, limit + 1);
     const shown = rows.slice(0, limit);
     const last = shown[shown.length - 1];
     return {

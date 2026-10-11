@@ -37,7 +37,7 @@ Each line **requires qualified human counsel review** before it is relied on ext
 | Guardian and minor controls | `docs/security/guardian-data-model.md`, `docs/SUPPORTER-FAMILY-PRIVACY-MODEL.md`, `docs/COMMUNITY-PRIVACY-MODEL.md`, D-139/D-140 | Guardian authority (Q-14); minors posture (Q-02, Q-04) |
 | Cross-border and vendor review | `docs/SUBPROCESSORS.md`, `docs/trust/SUBPROCESSOR-GOVERNANCE-PROGRAM.md`, `VENDOR-RISK-REGISTER.md`, `PROVIDER-TERMS.md` | Transfer mechanisms and regions (L2); AI provider terms (Q-09) |
 | Subject-rights operations | `docs/DATA-RIGHTS-REQUEST-RUNBOOK.md`, `docs/trust/DATA-SUBJECT-REQUEST-RUNBOOK.md` | **No one named; no response time promised (C1)** |
-| Impact assessment | PIA register + [`DPIA-FRAMEWORK-DRAFT.md`](DPIA-FRAMEWORK-DRAFT.md) | Privacy seat vacant; 6 surfaces owe answers |
+| Impact assessment | PIA register + [`DPIA-FRAMEWORK-DRAFT.md`](DPIA-FRAMEWORK-DRAFT.md) | Privacy seat vacant; 7 surfaces owe answers |
 
 ## 3. Contracting artifact list
 

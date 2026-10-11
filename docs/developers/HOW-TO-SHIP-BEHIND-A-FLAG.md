@@ -1,6 +1,6 @@
 # How to ship a change behind a flag
 
-> **Type:** how-to · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`
+> **Type:** how-to · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-08 · **Held by:** `app/src/lib/docs/developers.test.ts`
 
 This page is for registering a tenant feature flag and gating a change on it; stop reading if the change is safe to ship on, because a flag is a cost that the complexity budget counts.
 
@@ -10,6 +10,15 @@ There are two layers and they are different.
 
 - **Tenant flags** are registered in `app/src/lib/flags.ts`. A school's state is a row in `public.tenant_feature_policy`, and a kill switch is a row in `public.feature_kill_switch`. This page is about them.
 - **Build-time switches** are `VITE_*` variables read in `app/src/lib/experience-flags.ts` and `app/src/lib/aiflags.ts`. They decide whether code ships in a build. They never turn a feature on for a school by themselves. The names are in `app/.env.example`.
+
+For a new build-time switch, make the deploy path explicit as well as the reader:
+
+1. Add the name and fail-closed default to `app/.env.example`, the relevant flag reader and `SECRETS.md`.
+2. Add it explicitly to the Pages workflow's build environment and to that workflow's allowlist of variables carried into the exact-SHA deploy. A repository variable that is not mapped there does not reach the build.
+3. Cover both the off and on readings in the flag tests, and cover the workflow mapping in `app/src/lib/pagesdeploy.test.ts`.
+4. Keep external authorization separate. A browser flag may reveal an approved control, but it must not stand in for a server approval switch, provider contract, tenant policy, institution registration or production UAT.
+
+`VITE_SUPPORT_EMAIL_NOTICES` is the concrete example: only exact `true` exposes the student's opt-in, while the server still refuses delivery unless its independent `SUPPORT_NOTIFY_VENDOR_APPROVED` gate and sender credentials are configured. The Pages deploy carries the variable but leaves it unset by default.
 
 1. Check main for the flag.
 2. Choose the type. The key prefix must match it: `module.`, `integration.` (type `connector`), `scope.`, `release.`, `experiment.`, `ops.`, `safety.` or `writeback.`.

@@ -391,7 +391,7 @@ describe('tenants and owners do not see each other', () => {
     const h = harness();
     const unverified = person();
     delete (unverified.tenant as { verifiedBy?: string }).verifiedBy;
-    expect(only(await h.service.execute(unverified, [createTask()], h.meta))).toMatchObject({ status: 'rejected', code: 'tenant_unverified' });
+    await expect(h.service.execute(unverified, [createTask()], h.meta)).rejects.toMatchObject({ code: 'tenant_unresolved', status: 403 });
   });
 
   it('records the refusal, with its reason and no content', async () => {

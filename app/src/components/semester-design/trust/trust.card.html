@@ -1,0 +1,20 @@
+<!-- @dsCard group="Components" viewport="700x400" name="Trust & provenance" subtitle="SourceBadge, StatusChip, ProvenanceChips, AIResponse" -->
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{padding:24px;background:var(--surface-canvas)}.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.col{display:grid;gap:16px}.lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:6px}</style></head><body><div id="root"></div>
+<script type="text/babel">
+const NS = window.SemesterDesignSystem_e9f3ba;
+
+const { SourceBadge, StatusChip, ProvenanceChips, AIResponse, Button } = NS;
+function Demo(){return <div className="col">
+<div className="row">{['official','connected','personal','ai','estimated','review','stale','sample'].map(s=><SourceBadge key={s} source={s}/>)}</div>
+<div className="row">{['pending','approved','verified','hold','syncing','offline','conflict','draft'].map(s=><StatusChip key={s} status={s}/>)}</div>
+<ProvenanceChips origin="official" by="Registrar" cues={['action-required']} age="Updated 2h ago"/>
+<AIResponse scope={['BIO 210 materials','Your calendar']} sources={[{title:'BIO 210 Syllabus, §4 Lab reports',kind:'official'},{title:'Your lab notes, Oct 1',kind:'personal'}]} confidence="Moderate" cost="1 request · 3 left today" policy="Instructor allows AI for outlining only">
+<p>Your lab report is due <b>Thursday at 23:59</b><span className="ai-cite">1</span>. Based on your notes, the methods section is drafted; results and discussion remain<span className="ai-cite">2</span>.</p></AIResponse>
+</div>}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script></body></html>

@@ -10,7 +10,7 @@ Every capability must pass product, data, trust, operations, commercial, adoptio
 
 | Gate | State | Evidence / blocker |
 | --- | --- | --- |
-| Student product | Partial | Broad PWA and workflows exist; lint is over its warning cap. Two exact-commit full runs failed with different sets (8 failures, then 18), while targeted institutional and accessibility reruns passed and a targeted timeout-file rerun isolated 4 `DemandContribution.test.tsx` failures. |
+| Student product | Partial | Broad PWA and workflows exist. The original local assessment recorded lint and suite instability; subsequent exact-SHA PR and post-merge CI passed lint, full tests, shuffled tests, build, CodeQL and HawkScan. Product readiness remains partial because capability-level UAT and the other gates below are still open. |
 | Data/source | Partial | Provenance contracts and source labels exist; no live provider registry and no universal source map. |
 | Trust/security | Partial | Strong RLS/audit/support foundations; PostgreSQL 17 checks not rerun here; independent review absent. |
 | Institution integration | Blocked | Zero live adapters registered; no named tenant credentials, mapping, UAT, or sign-off. |
@@ -37,7 +37,6 @@ Every capability must pass product, data, trust, operations, commercial, adoptio
 
 | Risk | Current evidence | Required exit |
 | --- | --- | --- |
-| Baseline quality gate red | Lint has 50 warnings against a 25-warning cap. Full runs are unstable (8 then 18 failures); institutional-package and accessibility suites pass alone, while a targeted timeout-file rerun leaves 4 `DemandContribution.test.tsx` failures involving timeout/React test isolation and missing rendered state. | Repair test isolation and the demand-flow assertions, then prove a clean full lint/test/build/CI run on the target commit. |
 | Database/RLS evidence unavailable locally | PostgreSQL 17 absent | Green clean + reapply + negative suites on PG17 and representative restored schema. |
 | No live SIS/LMS adapters | Production registry is empty by design | One approved read-only SIS path and one approved LMS/LTI path with mapping, health, reconciliation and UAT. |
 | Guardian not production-operational | Local planning and sandbox grants only | Verified relationship, projection service, immediate revocation, audit, support and tenant approval. |
@@ -61,18 +60,23 @@ Every capability must pass product, data, trust, operations, commercial, adoptio
 - Longitudinal alumni/credential portability after issuer agreements.
 - Deeper localization, cognitive-load modes, and independent usability research.
 
-## First ten PR-sized milestones
+## First 15 PR-sized milestones
 
 1. Canonical capability-state resolver and claim gate: join the existing capability register, maturity definitions, audience release profiles, DB entitlements and evidence records into one runtime decision; add required exposure status, eight-test evidence, platforms, source, classification, owners, expiry, support and rollback metadata; map all current capabilities and routes.
 2. Restore green baseline: fix the 50 lint warnings and exact-commit full-suite failures without weakening checks or increasing timeouts as a substitute for diagnosis.
 3. PG17 policy evidence: run clean/reapply migration suites; add a machine-readable report and unresolved-policy register.
 4. Authorization context contract: inventory existing helpers, normalize server-derived tenant/person/membership/purpose/request context, and add cross-tenant negative tests.
-5. Search/AI authorization parity: one policy-filtered result contract with tenant, purpose, source and freshness labels; negative tests for every role.
+5. Search/AI authorization parity: repository contract implemented with tenant, purpose, source and freshness labels plus every-role negative tests. Production server search, deployment and tenant activation remain unverified; see `docs/architecture/tenancy/search-ai-authorization-parity.md`.
 6. Read-only integration registry vertical slice: one approved provider adapter behind tenant activation, with credential reference, reconciliation, health, kill switch and no writeback.
-7. Guardian projection foundation: verified relationship interface, scoped consent, minimized expiring projection, immediate invalidation and audit; no raw table grants.
-8. Classified offline storage policy: central allow/deny classifier, purge hooks and tests proving grades/transcripts/aid/guardian data never persist offline.
+7. Guardian projection foundation: first calendar-only repository slice implemented with a verified K–12 relationship, exact-resource student consent, minimized 24-hour projection, read-time reauthorization, immediate consent/link/restriction invalidation, student-visible decision audit and no raw table grants. PostgreSQL 17 CI, deployment, institution policy approval and live provider publication remain separate gates.
+8. Classified offline storage policy: repository foundation implemented with one fail-closed persistence classifier, startup/policy-change purge hooks, server-feed admission enforcement, immediate expired-file deletion and tests proving source-issued grades/transcripts/aid/guardian data never persist offline. Adoption by every legacy PWA store, native secure-storage implementation, deployment and institutional approval remain separate gates.
 9. Notification/inbox foundation: category/channel preferences, quiet hours, delivery state, generic sensitive previews, retry and audit model.
 10. Support and recovery evidence: contextual help, JIT support workflow, current escalation roster, synthetic checks, restore drill artifact and release gate integration.
+11. Universal state contract: typed states, accessible shared renderers, route mapping, recovery actions and state/claim parity tests.
+12. Data quality control plane: provider-scoped contracts, lineage/freshness, discrepancy ownership, safe replay and user correction workflow.
+13. Workflow runtime slice: versioned instances and receipts for one reversible internal approval flow before any high-risk migration.
+14. Accessibility/content/community assurance: manual assistive-technology matrix, file trust boundary, moderation/safety tabletop and remediation register.
+15. Company launch simulation harness: machine-readable run records for all 17 journeys, severity/owner/due-date enforcement and independent retest closure.
 
 ## Exact recommended first PR
 

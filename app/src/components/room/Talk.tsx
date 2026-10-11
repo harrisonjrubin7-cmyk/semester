@@ -151,9 +151,6 @@ export function Talk({
 
   useEffect(() => {
     let live = true;
-    setMessages([]);
-    setReactions([]);
-    setPresent([]);
 
     void Promise.all([recent(term, roomKey), whoIsIn(term, roomKey), reactionsIn(term, roomKey)])
       .then(([said, who, faces]) => {

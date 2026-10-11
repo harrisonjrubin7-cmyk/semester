@@ -107,8 +107,10 @@ select cron.schedule(
   $job$
 );
 
--- Parked until the function deployment and all sender/secret configuration
--- are verified. Production activation is a separate, visible release step.
+-- Delivery mechanics and sender configuration were exercised on 3 October
+-- 2026, but Resend's vendor review and executed terms/DPA are not on file.
+-- Keep the worker parked until that approval is recorded and the function's
+-- SUPPORT_NOTIFY_VENDOR_APPROVED switch is enabled.
 select cron.alter_job(
   (select jobid from cron.job where jobname = 'support-reply-notify'),
   active := false
@@ -161,6 +163,21 @@ select cron.schedule(
   'tombstones',
   '17 4 * * 0',
   $job$select public.sweep_tombstones('90 days')$job$
+);
+
+-- ── Support ticket retention ─────────────────────────────────────────────
+--
+-- Resolved and student-closed tickets age out after 180 days. The sweep
+-- preserves every ticket whose account is under an active legal hold; child
+-- messages and notification intents follow the ticket by foreign-key cascade.
+select cron.schedule(
+  'support-ticket-retention',
+  '43 5 * * *',
+  $job$select private.sweep_support_ticket_retention()$job$
+);
+select cron.alter_job(
+  (select jobid from cron.job where jobname = 'support-ticket-retention'),
+  active := true
 );
 
 -- Spent and stale hand-offs. A hand-off lives fifteen minutes at most and is used

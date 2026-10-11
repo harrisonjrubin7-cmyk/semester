@@ -6,7 +6,7 @@ create or replace function pg_temp.become(who uuid)
 returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims',
-    jsonb_build_object('sub', who::text, 'role', 'authenticated')::text, true);
+    jsonb_build_object('sub', who::text, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   execute 'set local role authenticated';
 end $$;
 
@@ -202,6 +202,21 @@ begin
   reset role;
   if not denied then raise exception 'FAILED: cross-tenant integration approval request was accepted'; end if;
   raise notice 'ok  exact-school integration authority is enforced at the write boundary';
+
+  denied := false;
+  perform pg_temp.become(operator);
+  begin
+    perform public.request_approval(
+      'integration-config', 'health-north',
+      (select c.public_id from public.integration_connections c where c.id = other_connection),
+      jsonb_build_object('requested_change', 'configure', 'credential_expiry', (current_date + 30)::text),
+      'Institution approval and rollback references.', 'INT-WRONG-TARGET', null
+    );
+  exception when check_violation then denied := true;
+  end;
+  reset role;
+  if not denied then raise exception 'FAILED: a school-scoped request accepted another school''s target'; end if;
+  raise notice 'ok  the integration target is bound to the authorized school';
 
   denied := false;
   perform pg_temp.become(operator);

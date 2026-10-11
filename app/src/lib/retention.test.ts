@@ -165,8 +165,16 @@ describe('the document exists and says what it is for', () => {
   it('rests on the promise the privacy page actually makes', async () => {
     const { CLAIMS } = await import('./privacy');
     const said = JSON.stringify(CLAIMS);
-    expect(said).toContain('There is no retention schedule that quietly removes your work');
-    expect(flat()).toContain('There is no retention schedule that quietly removes your work');
+    expect(said).toContain('Your courses, deadlines, notes, plans and other study work stay until you delete them');
+    expect(said).toContain('Newly classified individual-beta support questions that are not associated with a school deployment');
+    expect(said).toContain('after a ticket is resolved or closed and has no new activity for 180 days');
+    expect(said).toContain('no automatic school-ticket purge runs until that rule is configured');
+    expect(said).toContain('Tickets created before the durable creation-time classifier remain outside automated and ticket-only deletion');
+    expect(said).toContain('Whole-account erasure detaches those legacy records');
+    expect(flat()).toContain('Your courses, deadlines, notes, plans and other study work stay until you delete them');
+    expect(flat()).toContain('Individual-beta support questions not associated with a school deployment');
+    expect(flat()).toContain('a resolved or closed ticket and its replies are deleted 180 days after the last activity');
+    expect(flat()).toContain('no automatic school-ticket purge runs until that rule is configured');
   });
 });
 

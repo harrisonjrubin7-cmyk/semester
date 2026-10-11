@@ -66,7 +66,7 @@ outcome:                      conditions + dates:
 
 1. The PR template's item 10 links to this triage, not just the PIA.
 2. The privacy seat is filled, and a named backup exists, before any new surface launches.
-3. The six owed surfaces are assessed in this order: school records, Community, support access, LTI, Course Studio, Transfer/Career/Basic-Needs. The order follows exposure of education records and minors.
+3. The seven owed surfaces are assessed in this order: Course Engine before activation, school records, Community, support access, LTI, Course Studio, Transfer/Career/Basic-Needs. The order follows exposure of uploaded education records and minors.
 4. Marketing, GTM, lead capture, trust room and sponsorship are added to the PIA's surface list.
 5. A release gate, not advice: a surface that is *owed* an assessment may not be switched on for a school.
 6. Re-review when the answer to any triage question changes, and annually for AI features.

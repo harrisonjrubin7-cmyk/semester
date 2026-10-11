@@ -21,6 +21,65 @@ const companyJob = workflow.split('\n  company_site:')[1] ?? '';
 const capturePaths = ['search', 'today', 'courses', 'calendar', 'path', 'discover'].flatMap(screen => [`/screenshots/${screen}-desktop.jpg`, `/screenshots/${screen}-mobile.jpg`]);
 const companyAssets = ['/site.css', '/site.js'];
 
+async function installedCacheNamesAt(base) {
+  const opened = [];
+  const listeners = new Map();
+  const waiting = [];
+  const self = {
+    location: new URL(`https://www.semesterintel.tech${base}sw.js`),
+    addEventListener: (name, fn) => listeners.set(name, fn),
+    skipWaiting: () => Promise.resolve(),
+    registration: { showNotification: () => Promise.resolve() },
+    clients: { claim: () => Promise.resolve(), matchAll: () => Promise.resolve([]), openWindow: () => Promise.resolve(null) },
+  };
+  const caches = {
+    keys: () => Promise.resolve([]),
+    delete: () => Promise.resolve(true),
+    open: name => {
+      opened.push(name);
+      return Promise.resolve({ addAll: () => Promise.resolve(), match: () => Promise.resolve(null), put: () => Promise.resolve() });
+    },
+    match: () => Promise.resolve(null),
+  };
+  new Function('self', 'caches', 'URL', 'Response', 'fetch', read('app/public/sw.js'))(
+    self,
+    caches,
+    URL,
+    Response,
+    () => Promise.reject(new Error('no network in this test')),
+  );
+  const install = listeners.get('install');
+  assert.ok(install, 'sw.js registered no install handler');
+  install({ waitUntil: promise => waiting.push(promise) });
+  await Promise.all(waiting);
+  return opened;
+}
+
+test('a non-root app build cannot share shell caches with the legacy root worker', async () => {
+  const rootCaches = await installedCacheNamesAt('/');
+  const appCaches = await installedCacheNamesAt('/app/');
+  assert.ok(rootCaches.includes('semester-v1-shell'), 'the current root cache name remains stable');
+  assert.ok(appCaches.includes('semester-v1-app-shell'), 'the /app worker owns a path-scoped cache');
+  assert.ok(!appCaches.includes('semester-v1-shell'), 'the /app worker cannot prune the legacy root shell');
+});
+
+test('the installable-app manifest keeps every launch target inside /app', () => {
+  const manifest = JSON.parse(read('app/public/manifest.webmanifest'));
+  const targets = [
+    manifest.id,
+    manifest.start_url,
+    manifest.scope,
+    ...manifest.shortcuts.map(shortcut => shortcut.url),
+    manifest.share_target.action,
+    ...manifest.file_handlers.map(handler => handler.action),
+    ...manifest.protocol_handlers.map(handler => handler.url.replace('%s', 'study')),
+  ];
+  for (const target of targets) {
+    const resolved = new URL(target, 'https://www.semesterintel.tech/app/');
+    assert.match(resolved.pathname, /^\/app(?:\/|$)/, target);
+  }
+});
+
 test('the existing app scan remains intact (control)', () => {
   assert.match(workflow, /working-directory: app/);
   assert.match(workflow, /APP_HOST: http:\/\/localhost:4173/);

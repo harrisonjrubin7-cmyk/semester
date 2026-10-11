@@ -126,6 +126,10 @@ export const BROAD_INDIVIDUAL_ACTIVATION_GATES = [
   'broad-individual-rollout-approval',
 ] as const;
 
+export const PREREQUISITE_COMPLETION_GATES = [
+  'validation-cohort-closeout-accepted',
+] as const;
+
 export const ACTIVATION_GATES = [
   ...new Set([
     ...VALIDATION_ACTIVATION_GATES,
@@ -134,6 +138,7 @@ export const ACTIVATION_GATES = [
     ...PAID_ASSURANCE_GATES,
     ...ENTERPRISE_ACTIVATION_GATES,
     ...BROAD_INDIVIDUAL_ACTIVATION_GATES,
+    ...PREREQUISITE_COMPLETION_GATES,
   ]),
 ] as const;
 
@@ -186,6 +191,8 @@ export interface ReleaseProfile {
   readonly requiredTechnicalGates: readonly TechnicalReleaseGate[];
   readonly requiredActivationGates: readonly ActivationGate[];
   readonly requiredDependencies: readonly string[];
+  readonly requiredPrerequisiteProfiles: readonly ReleaseProfileId[];
+  readonly requiredPrerequisiteCompletionGates: readonly ActivationGate[];
   readonly defaultOff: boolean;
   readonly allowedOperations: readonly string[];
   readonly forbiddenOperations: readonly string[];
@@ -250,6 +257,8 @@ function freezeProfile(profile: ReleaseProfile): ReleaseProfile {
   Object.freeze(profile.requiredTechnicalGates);
   Object.freeze(profile.requiredActivationGates);
   Object.freeze(profile.requiredDependencies);
+  Object.freeze(profile.requiredPrerequisiteProfiles);
+  Object.freeze(profile.requiredPrerequisiteCompletionGates);
   Object.freeze(profile.allowedOperations);
   Object.freeze(profile.forbiddenOperations);
   return Object.freeze(profile);
@@ -263,14 +272,16 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
     capabilityIds: CORE_INDIVIDUAL_CAPABILITIES,
     requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
     requiredActivationGates: [
-      ...VALIDATION_ACTIVATION_GATES,
+      ...BASE_ACTIVATION_GATES,
       ...BROAD_INDIVIDUAL_ACTIVATION_GATES,
     ],
     requiredDependencies: unsatisfiedCapabilityDependencies(CORE_INDIVIDUAL_CAPABILITIES),
+    requiredPrerequisiteProfiles: ['invitation-only-individual-validation'],
+    requiredPrerequisiteCompletionGates: PREREQUISITE_COMPLETION_GATES,
     defaultOff: true,
     allowedOperations: ['personal planning', 'source-aware course organization', 'study and creation', 'export', 'account deletion'],
     forbiddenOperations: ['official registration', 'official grading', 'institutional record writes', 'financial aid', 'payments', 'payroll', 'general ledger'],
-    claimBoundary: 'Broad individual rollout remains held until the invitation-validation controls and a separate broad-rollout approval are current; no institutional connection, certification, or system-of-record claim.',
+    claimBoundary: 'Broad individual rollout remains held until a same-artifact invitation cohort is authorized and has an accepted closeout, public-target dependencies are current, and a separate broad-rollout approval is current; no institutional connection, certification, or system-of-record claim.',
     authorizedClaim: 'Authorized for broad individual use on the evaluated production target; no institutional connection, certification, or system-of-record claim.',
     fallback: 'Continue device-first use, preserve export, and disable unavailable cloud or provider-dependent surfaces.',
   }),
@@ -282,6 +293,8 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
     requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
     requiredActivationGates: VALIDATION_ACTIVATION_GATES,
     requiredDependencies: unsatisfiedCapabilityDependencies(CORE_INDIVIDUAL_CAPABILITIES),
+    requiredPrerequisiteProfiles: [],
+    requiredPrerequisiteCompletionGates: [],
     defaultOff: true,
     allowedOperations: ['invitation-only unpaid validation', 'personal planning', 'source-aware course organization', 'export', 'account deletion'],
     forbiddenOperations: ['paid promotion', 'official registration', 'institutional data access', 'institutional record writes', 'outcome claims', 'act as a staffed institutional service'],
@@ -297,6 +310,8 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
     requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
     requiredActivationGates: PILOT_ACTIVATION_GATES,
     requiredDependencies: unsatisfiedCapabilityDependencies(MANUAL_PILOT_CAPABILITIES),
+    requiredPrerequisiteProfiles: [],
+    requiredPrerequisiteCompletionGates: [],
     defaultOff: true,
     allowedOperations: ['student-confirmed manual import', 'manual course and deadline correction', 'personal planning', 'export', 'account deletion'],
     forbiddenOperations: [
@@ -315,6 +330,8 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
     requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
     requiredActivationGates: PILOT_ACTIVATION_GATES,
     requiredDependencies: planningOnlyPilotDependencies(),
+    requiredPrerequisiteProfiles: [],
+    requiredPrerequisiteCompletionGates: [],
     defaultOff: true,
     allowedOperations: ['Path planning', 'term planning', 'schedule comparison', 'conflict validation', 'advisor agenda', 'official-system handoff'],
     forbiddenOperations: ['enroll', 'waitlist', 'drop', 'withdraw', 'write to SIS', 'certify degree progress', 'act as system of record'],
@@ -330,6 +347,8 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
     requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
     requiredActivationGates: [...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...PAID_ASSURANCE_GATES],
     requiredDependencies: unsatisfiedCapabilityDependencies(MANUAL_PILOT_CAPABILITIES),
+    requiredPrerequisiteProfiles: [],
+    requiredPrerequisiteCompletionGates: [],
     defaultOff: true,
     allowedOperations: ['contracted manual-data pilot', 'student-confirmed manual import', 'manual course and deadline correction', 'personal planning', 'export', 'account deletion', 'authorized billing'],
     forbiddenOperations: [
@@ -348,6 +367,8 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
     requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
     requiredActivationGates: [...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...PAID_ASSURANCE_GATES],
     requiredDependencies: planningOnlyPilotDependencies(),
+    requiredPrerequisiteProfiles: [],
+    requiredPrerequisiteCompletionGates: [],
     defaultOff: true,
     allowedOperations: ['contracted planning-only pilot', 'term planning', 'schedule comparison', 'conflict validation', 'advisor agenda', 'official-system handoff', 'authorized billing'],
     forbiddenOperations: ['unapproved charge', 'enroll', 'waitlist', 'drop', 'withdraw', 'write to SIS', 'certify degree progress', 'act as system of record'],
@@ -368,6 +389,8 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
       ...ENTERPRISE_ACTIVATION_GATES,
     ],
     requiredDependencies: planningOnlyPilotDependencies(),
+    requiredPrerequisiteProfiles: [],
+    requiredPrerequisiteCompletionGates: [],
     defaultOff: true,
     allowedOperations: ['contracted enterprise planning deployment', 'repeatable implementation', 'term planning', 'schedule comparison', 'conflict validation', 'advisor agenda', 'official-system handoff', 'authorized billing'],
     forbiddenOperations: ['unapproved charge', 'enroll', 'waitlist', 'drop', 'withdraw', 'write to SIS', 'certify degree progress', 'replace the SIS or LMS', 'act as system of record'],
@@ -400,6 +423,7 @@ export interface ReleaseProfileDecision {
   missingTechnical: readonly TechnicalReleaseGate[];
   missingActivation: readonly ActivationGate[];
   missingDependencies: readonly string[];
+  missingPrerequisites: readonly ReleaseProfileId[];
   targetBound: boolean;
   launchVerdict: 'not-applicable' | 'go' | 'go-with-conditions' | null;
   launchConditions: readonly Condition[];
@@ -456,6 +480,9 @@ const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApprove
   'broad-individual-rollout-approval': [
     'executive-owner', 'legal-owner', 'product-owner', 'security-owner',
     'privacy-owner', 'accessibility-owner', 'support-owner', 'operations-owner',
+  ],
+  'validation-cohort-closeout-accepted': [
+    'participant-representative', 'product-owner', 'trust-owner',
   ],
   'counsel-approved-commercial-paper': ['executive-owner', 'legal-owner', 'privacy-owner'],
   'pricing-and-signing-authority': ['executive-owner', 'finance-owner'],
@@ -658,11 +685,21 @@ export function evaluateReleaseProfile(
     || !counts(evidenceRecords, gate, asOf, target));
   const missingDependencies = profile.requiredDependencies.filter((dependency) => !targetBound
     || !counts(evidenceRecords, `dependency:${dependency}`, asOf, target));
+  const evidenceTargets = evidenceRecords
+    .map((item) => item.target)
+    .filter((candidate): candidate is ReleaseTarget => Boolean(candidate)
+      && candidate?.deployedSha === target?.deployedSha);
+  const missingPrerequisites = profile.requiredPrerequisiteProfiles.filter((prerequisiteId) =>
+    !evidenceTargets.some((candidate) =>
+      evaluateReleaseProfile(prerequisiteId, evidenceRecords, asOf, candidate).rolloutStatus === 'authorized'
+      && profile.requiredPrerequisiteCompletionGates.every((gate) =>
+        counts(evidenceRecords, gate, asOf, candidate))));
   const technicalStatus = missingTechnical.length === 0 ? 'ready' : 'not-ready';
   const rolloutStatus = technicalStatus === 'ready'
     && targetBound
     && missingActivation.length === 0
     && missingDependencies.length === 0
+    && missingPrerequisites.length === 0
     ? 'authorized'
     : 'held';
   const decisionGate = profile.requiredActivationGates.includes('canonical-launch-decision')
@@ -703,6 +740,7 @@ export function evaluateReleaseProfile(
     missingTechnical,
     missingActivation,
     missingDependencies,
+    missingPrerequisites,
     targetBound,
     launchVerdict,
     launchConditions,
@@ -717,6 +755,7 @@ export function evaluateReleaseProfile(
           ...(targetBound ? [] : ['a complete deployment target']),
           ...missingActivation,
           ...missingDependencies.map((item) => `dependency:${item}`),
+          ...missingPrerequisites.map((item) => `prerequisite:${item}`),
         ].join(', ')}.`
         : `Not technically ready; missing: ${missingTechnical.join(', ')}.`,
   };

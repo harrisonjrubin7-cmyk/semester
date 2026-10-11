@@ -1,11 +1,17 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { handleSupportNotice } from '../_shared/supportnotify.ts';
+import { handleSupportNotice, normalizeUtcActivationInstant } from '../_shared/supportnotify.ts';
 
 const url = Deno.env.get('SUPABASE_URL') ?? '';
 const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
 const resendKey = Deno.env.get('RESEND_API_KEY');
 const supportSender = Deno.env.get('SUPPORT_NOTIFY_FROM') ?? Deno.env.get('LEAD_NOTIFY_FROM');
+// Technical credentials are not vendor approval. Keep student data away from
+// Resend until the risk review, executed terms/DPA, owner and activation
+// decision are recorded, then enable this explicit deployed-function switch.
+const supportVendorApproved = Deno.env.get('SUPPORT_NOTIFY_VENDOR_APPROVED') === 'true';
+const supportActivatedAtRaw = Deno.env.get('SUPPORT_NOTIFY_ACTIVATED_AT') ?? '';
+const supportActivatedAt = normalizeUtcActivationInstant(supportActivatedAtRaw);
 const cronSecret = Deno.env.get('CRON_SECRET');
 
 interface OutboxRow { message_id: string; ticket_id: string; attempts: number; claim_id: string }
@@ -51,7 +57,12 @@ async function target(row: OutboxRow) {
 }
 
 async function claim(messageId: string | null, limit: number): Promise<OutboxRow[]> {
-  const { data, error } = await admin.rpc('claim_support_notifications', { want_message: messageId, want_limit: limit });
+  if (!supportActivatedAt) return [];
+  const { data, error } = await admin.rpc('claim_support_notifications', {
+    want_message: messageId,
+    want_limit: limit,
+    want_not_before: supportActivatedAt,
+  });
   if (error) throw new Error('Could not claim the support-notification outbox.');
   return (data ?? []) as OutboxRow[];
 }
@@ -61,7 +72,7 @@ Deno.serve((req) => handleSupportNotice(req, {
   devOrigin: Deno.env.get('CORS_ALLOW_DEV'),
   // Resend's onboarding sender cannot deliver to arbitrary students. Treat
   // support email as configured only when a verified sender is explicit.
-  resendKey: resendKey && supportSender ? resendKey : undefined,
+  resendKey: supportVendorApproved && supportActivatedAt && resendKey && supportSender ? resendKey : undefined,
   cronSecret,
   // An origin has no path and ALLOWED_ORIGIN may contain several entries, so
   // it cannot be used as the application link in an email.

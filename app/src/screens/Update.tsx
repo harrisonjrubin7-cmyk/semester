@@ -549,15 +549,7 @@ export function AddMaterial({
    * putting the old one back. Said here rather than left to be discovered.
    */
   const undoImport = (u: (typeof updates)[number]) => {
-    dispatch({ type: 'deleteUpdate', id: u.id });
-    const module_ = state.courses.find((c) => c.course.id === courseId);
-    const added = u.addedItems ?? [];
-    if (module_ && added.length > 0) {
-      dispatch({
-        type: 'replaceCourse',
-        module: { ...module_, items: module_.items.filter((i) => !added.includes(i.id)) },
-      });
-    }
+    dispatch({ type: 'removeUpdate', id: u.id });
   };
 
   /**
@@ -1328,6 +1320,7 @@ export function AddMaterial({
                 type="button"
                 className="bare"
                 onClick={() => undoImport(u)}
+                aria-label={`Remove ${u.title}`}
                 style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none' }}
               >
                 REMOVE

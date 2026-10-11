@@ -53,6 +53,8 @@ import {
 } from '../../lib/folders';
 import { CoursePicker } from '../../components/CoursePicker';
 import { DeadlinePicker } from '../../components/DeadlinePicker';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { ActionPreview } from '../../components/unity/ActionPreview';
 import { forLine, nameFor } from '../../lib/forwork';
 
 /**
@@ -138,6 +140,8 @@ export function Drive() {
   const [moving, setMoving] = useState<Settled | null>(null);
   /** The folder being nested under another, while the picker is open. */
   const [nesting, setNesting] = useState<Shown | null>(null);
+  /** The folder hierarchy waiting for a consequence preview before removal. */
+  const [deleting, setDeleting] = useState<Shown | null>(null);
   /* The file whose deadline is being changed. A second panel rather than a
      second control on every row: the row already carries a star, a Move and a
      Bin, and a fourth button on a 390px phone is the point at which the file's
@@ -351,6 +355,9 @@ export function Drive() {
    * a desktop leaves half the window empty.
    */
   const beside = useTier() !== 'phone';
+  const deletingIds = deleting ? subtree(folders, deleting.id) : null;
+  const deletingFiles = deletingIds ? files.filter((file) => file.folderId && deletingIds.has(file.folderId)) : [];
+  const nestedFolders = deletingIds ? deletingIds.size - 1 : 0;
 
   return (
     <div>
@@ -505,25 +512,7 @@ export function Drive() {
                 dispatch({ type: 'renameFolder', id: folder.id, name: freeName(folders, folder.parentId, next) })
               }
               onMove={() => setNesting(folder)}
-              onDelete={async () => {
-                /*
-                 * The files come out first, then the folder goes — and it is
-                 * every folder in the subtree, not just this one.
-                 *
-                 * `deleteFolder` removes the descendants too, so relocating
-                 * only the files directly in this folder left the ones a level
-                 * down pointing at an id that no longer existed. `homeOf` now
-                 * catches that as a last resort, but a file quietly relocated
-                 * to the drive's root by a repair is worse than one moved
-                 * deliberately to where its folder used to be.
-                 */
-                const gone = subtree(folders, folder.id);
-                for (const f of files.filter((x) => x.folderId && gone.has(x.folderId))) {
-                  await moveFile(f.id, folder.parentId);
-                }
-                dispatch({ type: 'deleteFolder', id: folder.id });
-                refresh();
-              }}
+              onDelete={() => setDeleting(folder)}
             />
           ))}
         </div>
@@ -690,6 +679,44 @@ export function Drive() {
               ),
             });
             setNesting(null);
+          }}
+        />
+      )}
+      {deleting && deletingIds && (
+        <ConfirmDialog
+          title="Delete this folder?"
+          preview={(
+            <ActionPreview
+              subject={deleting.name}
+              says={`${nestedFolders === 0 ? `Deletes ${deleting.name}.` : `Deletes ${deleting.name} and ${nestedFolders} ${nestedFolders === 1 ? 'folder' : 'folders'} inside it.`} ${deletingFiles.length === 0 ? 'No files are moved.' : `${deletingFiles.length} ${deletingFiles.length === 1 ? 'file stays' : 'files stay'} on this device and ${deletingFiles.length === 1 ? 'moves' : 'move'} up to the level above ${deleting.name}.`}`}
+              doesNotChange={`Course folders, folders outside ${deleting.name}, file contents, course links and deadline links stay unchanged.`}
+              recovery={{ kind: 'none', how: 'Recreate the folder structure and move the files back manually.' }}
+            />
+          )}
+          confirmLabel="Delete folder"
+          onCancel={() => setDeleting(null)}
+          onConfirm={() => {
+            const folder = deleting;
+            const filesToMove = deletingFiles;
+            setDeleting(null);
+            void (async () => {
+              /*
+               * The files come out first, then the folder goes — and it is
+               * every folder in the subtree, not just this one.
+               *
+               * `deleteFolder` removes the descendants too, so relocating
+               * only the files directly in this folder left the ones a level
+               * down pointing at an id that no longer existed. Stop on the
+               * first failed move and keep the hierarchy: the files already
+               * moved remain reachable and nothing is left pointing at a
+               * folder that was removed.
+               */
+              for (const file of filesToMove) {
+                if (!(await act(moveFile(file.id, folder.parentId), `The file “${file.name}”`))) return;
+              }
+              dispatch({ type: 'deleteFolder', id: folder.id });
+              refresh();
+            })();
           }}
         />
       )}

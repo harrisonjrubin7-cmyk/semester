@@ -1,0 +1,4 @@
+[[IgnoredVulns]]
+id = "GHSA-vfj7-8cjw-p6xm"
+ignoreUntil = 2026-11-07
+reason = "No patched braces release exists; exposure is limited to a transitive development dependency used by micromatch. Reassess before this exception expires."

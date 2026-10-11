@@ -1,8 +1,9 @@
 # 0008 · One event envelope, written through a transactional outbox
 
-**Status:** Accepted for the envelope, the catalog and the two tables; **no
-producer writes to the outbox yet** — see the roadmap for the order in which
-they will.
+**Status:** Accepted and locally implemented for the envelope, catalog, tables,
+bounded productivity/feature-policy/tenant-rollout producers, two private
+projectors, and a dormant manually invoked worker. No publisher or scheduler is
+active, and no deployment is inferred from repository state.
 
 ## Decision
 
