@@ -2034,3 +2034,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep housing and meal-plan backup/migration closed until legacy term-only records have an explicit account ownership and safe migration rule.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed graduation cost-line removal — automation pass 7, integration slice 97
+
+- [x] Start from clean required-branch head `9d627db64`; fetch current `origin/main` `8107737a8`, confirm it is already included and inspect exact cost-planner history and code for overlap.
+- [x] Re-rank one graduation cost estimate ahead of housing and meal-plan backup/migration, whose legacy term-only records still lack a safe account-ownership rule.
+- [x] Reuse `ConfirmDialog` and `ActionPreview` to name the exact label, amount, cadence, source, recalculated device totals, preserved records and recovery boundary before any write.
+- [x] Keep Cancel side-effect free with initial focus and route confirmation through the existing validated graduation device library.
+- [x] Keep a refused write and exact line represented for retry; announce success only after the exact-id removal is accepted and the affected total is recomputed.
+- [x] Preserve other cost lines, scenarios, downloaded copies, aid/official records, account drafts and provider state.
+- [x] Prove both regression assertions red against the former first-press removal, then pass 100/100 focused and adjacent graduation, cost, device-library, backup, preview/modal and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the existing build chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design contracts and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [ ] Aggregate design-system check — its hardcoded `npm` launcher is unavailable; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace consequence slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep housing and meal-plan backup/migration closed until legacy term-only records have an explicit account ownership and safe migration rule.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
