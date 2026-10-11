@@ -15,8 +15,17 @@ export interface Copy5RoleProposal {
   requiredDecision: string;
 }
 
+// Copy 7 carries the same roles-data.js bytes as Copy 5. Keep the historical
+// type name so the reconciliation lineage remains reviewable while making the
+// current product authority explicit to callers.
+export const ROLE_PROPOSAL_AUTHORITY = {
+  current: 'Copy 7',
+  inheritedFrom: 'Copy 5',
+  relationship: 'byte-identical role dataset',
+} as const;
+
 const SOURCE = `sem_support\tSemester support operator\tPlatform operations\tsupport_agent\tcandidate_alias\tConfirm support session scope, expiry, audit and allowed capabilities; do not inherit student-record access
-sem_security\tSemester security operator\tPlatform operations\tincident_responder|platform_admin\tgovernance_decision\tSplit incident response from platform administration; map each Copy 5 capability explicitly
+sem_security\tSemester security operator\tPlatform operations\tincident_responder|platform_admin\tgovernance_decision\tSplit incident response from platform administration; map each Copy 7 capability explicitly
 sem_product\tSemester product operator\tPlatform operations\tcontent_owner|platform_admin\tgovernance_decision\tDefine a release/feature-flag operator role or prove existing roles are sufficient; no implicit data access
 sem_privacy\tSemester privacy/legal operator\tPlatform operations\ttrust_officer|compliance_owner\tgovernance_decision\tSeparate privacy-case handling, legal holds and compliance oversight
 sem_impl\tSemester implementation lead\tPlatform operations\timplementation_manager\tcandidate_alias\tConfirm tenant onboarding and cutover scope; preserve tenant isolation

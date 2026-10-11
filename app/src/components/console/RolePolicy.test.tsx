@@ -59,7 +59,7 @@ describe('Roles & capabilities workspace', () => {
     expect(host.textContent).not.toContain('platform_admin');
   });
 
-  it('renders responsive server truth and all non-authoritative Copy 5 proposals', async () => {
+  it('renders responsive server truth and all non-authoritative Copy 7 proposals', async () => {
     await draw();
     expect(host.querySelectorAll('table.table-stack')).toHaveLength(3);
     expect(host.textContent).toContain('platform_admin');
@@ -68,7 +68,8 @@ describe('Roles & capabilities workspace', () => {
     expect(host.textContent).toContain('51 design and governance proposals');
     expect(host.textContent).toContain('Exact identifier match · not activation evidence');
     expect(host.textContent).toContain('Table membership is vocabulary and policy, not a user’s active grants.');
-    expect(host.textContent).toContain('Copy 5 proposals are non-authoritative');
+    expect(host.textContent).toContain('Copy 7 proposals are non-authoritative');
+    expect(host.textContent).toContain('identical to the Copy 5 role dataset');
     expect(host.querySelectorAll('button')).toHaveLength(0);
   });
 
@@ -94,7 +95,7 @@ describe('Roles & capabilities workspace', () => {
     expect(host.textContent).toContain('Semester support operator');
   });
 
-  it('applies the Console filter to server truth and Copy 5 proposals', async () => {
+  it('applies the Console filter to server truth and Copy 7 proposals', async () => {
     await draw('platform_admin');
     expect(host.textContent).toContain('platform_admin');
     expect(host.textContent).toContain('Semester security operator');

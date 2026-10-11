@@ -10,6 +10,7 @@ import {
 } from '../../lib/console/role-policy';
 import {
   COPY5_ROLE_PROPOSALS,
+  ROLE_PROPOSAL_AUTHORITY,
   proposalMatchLabel,
   type Copy5RoleProposal,
 } from '../../lib/copy5-role-governance';
@@ -103,7 +104,7 @@ export function RolePolicy({ filter, authorityKey, read = loadRolePolicy }: Role
     { id: 'roles', header: 'Assigned roles', cell: (capability) => capability.roles.length ? capability.roles.join(', ') : 'None assigned' },
   ];
   const proposalColumns: Column<Copy5RoleProposal>[] = [
-    { id: 'proposal', header: 'Copy 5 proposal', rowHeader: true, cell: (proposal) => <><strong>{proposal.title}</strong><br /><code>{proposal.id}</code></> },
+    { id: 'proposal', header: 'Copy 7 proposal', rowHeader: true, cell: (proposal) => <><strong>{proposal.title}</strong><br /><code>{proposal.id}</code></> },
     { id: 'family', header: 'Family', cell: (proposal) => proposal.family },
     { id: 'candidate', header: 'Repository candidate', cell: (proposal) => proposal.candidateRoles.length ? proposal.candidateRoles.join(', ') : 'No canonical role proposed' },
     { id: 'status', header: 'Reconciliation status', cell: (proposal) => proposalMatchLabel(proposal) },
@@ -148,19 +149,19 @@ export function RolePolicy({ filter, authorityKey, read = loadRolePolicy }: Role
         )}
       </section>
 
-      <section aria-label="Copy 5 role proposals" style={{ display: 'grid', gap: 'var(--sp-4)' }}>
-        <SectionLabel aside={`${proposals.length} shown`}>Copy 5 role proposals</SectionLabel>
+      <section aria-label="Copy 7 role proposals" style={{ display: 'grid', gap: 'var(--sp-4)' }}>
+        <SectionLabel aside={`${proposals.length} shown`}>Copy 7 role proposals</SectionLabel>
         <p style={{ marginBlock: 0 }}>
-          51 design and governance proposals. Copy 5 proposals are non-authoritative: candidates and exact identifier matches do not create roles, grants, permissions, or activation.
+          51 design and governance proposals. {ROLE_PROPOSAL_AUTHORITY.current} proposals are non-authoritative: candidates and exact identifier matches do not create roles, grants, permissions, or activation. The current source is identical to the Copy 5 role dataset.
         </p>
         <Table
-          caption="Copy 5 role proposals and reconciliation decisions"
+          caption="Copy 7 role proposals and reconciliation decisions"
           captionHidden
           columns={proposalColumns}
           rows={[...proposals]}
           rowKey={(proposal) => proposal.id}
           compact="stack"
-          empty={<p role="status">No Copy 5 proposals match this filter.</p>}
+          empty={<p role="status">No Copy 7 proposals match this filter.</p>}
         />
       </section>
     </div>

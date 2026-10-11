@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { COPY5_ROLE_PROPOSALS, proposalMatchLabel } from './copy5-role-governance';
+import { COPY5_ROLE_PROPOSALS, ROLE_PROPOSAL_AUTHORITY, proposalMatchLabel } from './copy5-role-governance';
 
 describe('Copy 5 role governance proposals', () => {
+  it('records Copy 7 as current authority without disguising the byte-identical Copy 5 lineage', () => {
+    expect(ROLE_PROPOSAL_AUTHORITY).toEqual({
+      current: 'Copy 7',
+      inheritedFrom: 'Copy 5',
+      relationship: 'byte-identical role dataset',
+    });
+  });
+
   it('preserves all 51 unique source proposals and the hand-checked status totals', () => {
     expect(COPY5_ROLE_PROPOSALS).toHaveLength(51);
     expect(new Set(COPY5_ROLE_PROPOSALS.map(({ id }) => id)).size).toBe(51);
