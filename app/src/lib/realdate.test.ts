@@ -270,6 +270,7 @@ describe('restoring the process timezone', () => {
     expect(sources.length).toBeGreaterThan(400);
     expect(holders.map((f) => f.slice(root.length + 1)).sort()).toEqual([
       'lib/fromschool.test.ts',
+      'lib/maintenance.test.ts',
       'lib/realdate.test.ts',
     ]);
 
