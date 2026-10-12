@@ -135,6 +135,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/offboarding-grants.check.sql` | A person deprovisioned by their school stops holding that school's authority. |
 | `supabase/officeactions.check.sql` | The campus office action feed (Phase J, D-048): who may publish as which office, the draft → review → published workflow, who a published action reaches, and that an office learns a completion count… |
 | `supabase/onboarding-journeys.check.sql` | Onboarding journeys and the one-use hand-off (20261006000000_onboarding_journeys_and_handoff). |
+| `supabase/ops-projection-dashboard.check.sql` | ops_projection_dashboard (20261012000000). |
 | `supabase/ops-projector-worker.check.sql` | Bounded, manually invoked ops-projector worker boundary (P1-04). |
 | `supabase/organizations.check.sql` | Who may say what about whom, in an organization. |
 | `supabase/outbox.check.sql` | The transactional outbox and the consumer receipts: service-role only, and the constraints that make a mislabelled or a duplicated event fail in the transaction that tried to write it. |
@@ -293,15 +294,15 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 240 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 240 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 241 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 241 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 65 |
 | Register rows in category `sharing` | 23 |
-| Register rows in category `admin` | 96 |
+| Register rows in category `admin` | 97 |
 | Register rows in category `integration` | 6 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |
