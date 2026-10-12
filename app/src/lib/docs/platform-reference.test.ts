@@ -1415,6 +1415,9 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // The gradebook RPC is callable by instructors today, so this is the first producer a signed-in user reaches;
       // nothing drains the outbox yet, so "none published" still holds.
       'supabase/migrations/20261012010000_gradebook_release_emits_event.sql',
+      // Phase 5 second pass: a Migration Center stage move emits migration.stage_changed in the move's own transaction
+      // (P5-R6, D-1475 §19). Nothing drains it yet, so "none published" still holds.
+      'supabase/migrations/20261012090000_migration_stage_changed_event.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);

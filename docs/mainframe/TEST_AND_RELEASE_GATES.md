@@ -119,3 +119,12 @@ Recorded from `docs/execute/31-phase-1-foundation-report.md`; the full-suite fig
 | `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh` (every suite on the manifest, 154) | every policy check passed, exit 0 (PostgreSQL 16, local) |
 | `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm run build`, `budgets` (first load 467.5 KB of 479.0 KB, largest file 435.7 KB of 480.0 KB, 93 routes), `npm test`, `npm run test:shuffle` (seed 1791819496054) | all exit 0; Test Files 1531 passed, 2 skipped (1533); Tests 24302 passed, 81 skipped (24383), in file order and shuffled |
 
+## Phase 5 enable and replace by domain, second pass (12 October 2026, #1475, seventh push)
+
+| Gate | Result |
+| --- | --- |
+| Merged head before any change (main +2 merges: two migrations shared `20261012040000`; `killswitch-release` unlisted in `check-suites.txt`) | version-uniqueness and `check-suites.test.ts` both red on main itself; the kill-switch release moved to `20261012080000`, the suite listed |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh migration-center` | red before `20261012090000` existed (`expected 13, got 0`; the first attempt's literal 12 was my miscount, the audit trail shows 13 moves); then ✓ 90 checks (was 86) |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh` (every suite on the manifest) | 155 suites ✓, `every policy check passed`, exit 0 (PostgreSQL 16, local); `killswitch-release` 17 checks |
+| `REGISTERS=write` docs, definer-register, role-launch and master-register guards | 880 passed; `CONTROL-FACTS.md` and `EVENTS.md` regenerated |
+| `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm run build`, `budgets` (first load 471.1 KB of 479.0 KB, largest file 435.7 KB of 480.0 KB, 93 routes), `npm test`, `npm run test:shuffle` (seed 1791835478685) | all exit 0; Test Files 1534 passed, 2 skipped (1536); Tests 24390 passed, 81 skipped (24471), in file order and shuffled |

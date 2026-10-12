@@ -328,6 +328,30 @@ begin
      where e.entity_type = 'migration_projects' and e.entity_id = m::text and e.action = 'update'
        and e.new_data ->> 'stage' = 'monitoring' and g.subject = lead), 1);
 
+  -- ── a stage move is told to the rest of the platform ───────────────────
+  -- One event per move that succeeded (P5-R6): the audit row says who and
+  -- when, the event says it to whatever drains the outbox, in the same
+  -- transaction. A refused move writes neither: thirteen moves above (twelve
+  -- forward, one back), thirteen events.
+  perform pg_temp.counted('every stage move leaves one domain event, and nothing else does',
+    (select count(*) from private.domain_outbox_events o
+      where o.aggregate_type = 'migration_project' and o.aggregate_id = m::text
+        and o.event_type = 'migration.stage_changed' and o.tenant_id = 'mc-u'), 13);
+  perform pg_temp.counted('as many as the audit trail shows moves',
+    (select count(*) from public.tenant_policy_audit_event e
+      where e.entity_type = 'migration_projects' and e.entity_id = m::text and e.action = 'update'
+        and e.old_data ->> 'stage' is distinct from e.new_data ->> 'stage'), 13);
+  perform pg_temp.counted('the last one says archive to monitoring, forward, and carries no name',
+    (select count(*) from private.domain_outbox_events o
+      where o.aggregate_id = m::text and o.event_type = 'migration.stage_changed'
+        and o.payload ->> 'from' = 'archive' and o.payload ->> 'to' = 'monitoring'
+        and o.payload ->> 'direction' = 'forward' and o.payload ->> 'project' = m::text
+        and not (o.payload ? 'name')), 1);
+  perform pg_temp.counted('the one back-move is told as a back-move',
+    (select count(*) from private.domain_outbox_events o
+      where o.aggregate_id = m::text and o.event_type = 'migration.stage_changed'
+        and o.payload ->> 'direction' = 'back'), 1);
+
   -- ── an account goes; the school's migration stays ──────────────────────
   gone := lead;
   perform set_config('request.jwt.claims', '', true);

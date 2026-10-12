@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 243 |
+| Migration files | 244 |
 | Tables created in `public` and not later dropped | 343 |
 | … of which enable row-level security in a migration | 343 |
 | Tables created in `private` and not later dropped | 50 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-155 files. `supabase/check.sh` does NOT run every file: `supabase/check-suites.txt` and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+155 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
