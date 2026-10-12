@@ -193,7 +193,13 @@ export function droppedOnRead(raw: Record<string, unknown>, read: Record<string,
   const out: string[] = [];
   for (const field of DELETABLE) {
     const before = raw[field];
-    if (!Array.isArray(before)) continue;
+    // A copy that did not carry the list says nothing about it.
+    if (before === undefined) continue;
+    // Stored as something else, the reader made it empty: every row was lost.
+    if (!Array.isArray(before)) {
+      out.push(field);
+      continue;
+    }
     const after = read[field];
     const kept = Array.isArray(after) ? after.filter((row) => idOf(row) !== null).length : 0;
     if (before.length > kept) out.push(field);

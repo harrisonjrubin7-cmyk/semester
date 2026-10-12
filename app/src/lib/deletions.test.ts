@@ -191,6 +191,15 @@ describe('rows lost on the way in', () => {
     expect(droppedOnRead({}, { notes: [] })).toEqual([]);
   });
 
+  it('counts a list stored as something other than a list as lost', () => {
+    // The reader makes `{}` into `[]`; pushed as it is, that empties the account's list.
+    expect(droppedOnRead({ notes: {}, tasks: 'x', courses: null }, { notes: [], tasks: [], courses: [] })).toEqual([
+      'courses',
+      'notes',
+      'tasks',
+    ]);
+  });
+
   it('remembers the lists until a pull clears them, across more than one boot', () => {
     expect(ingressDrops()).toEqual([]);
     noteIngressDrops(['notes']);
