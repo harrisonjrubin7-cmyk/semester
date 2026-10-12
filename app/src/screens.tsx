@@ -98,6 +98,7 @@ const Classmates = lazy(() => import('./screens/Classmates').then((m) => ({ defa
 const Community = lazy(() => import('./screens/Community').then((m) => ({ default: m.Community })));
 const Moderation = lazy(() => import('./screens/Moderation').then((m) => ({ default: m.Moderation })));
 const Console = lazy(() => import('./screens/Console').then((m) => ({ default: m.Console })));
+const Company = lazy(() => import('./screens/Company').then((m) => ({ default: m.Company })));
 const Volunteers = lazy(() => import('./screens/Volunteers').then((m) => ({ default: m.Volunteers })));
 const Agreements = lazy(() => import('./screens/Agreements').then((m) => ({ default: m.Agreements })));
 const Volunteer = lazy(() => import('./screens/Volunteer').then((m) => ({ default: m.Volunteer })));
@@ -208,6 +209,7 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   community: Community,
   moderation: Moderation,
   console: Console,
+  company: Company,
   volunteer: Volunteer,
   agreements: Agreements,
   volunteers: Volunteers,

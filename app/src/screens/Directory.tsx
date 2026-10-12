@@ -57,6 +57,7 @@ import type { Screen } from '../lib/types';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { forSchool, useCapabilityDiscovery } from '../lib/capabilities';
 import { holdsConsole } from '../lib/console/capability';
+import { holdsCompanyAccess } from '../lib/company/procurement';
 import { journeyFor } from '../lib/rolejourney';
 
 export function WorkspaceEntry() {
@@ -64,6 +65,7 @@ export function WorkspaceEntry() {
   const access = useCapabilityDiscovery(account?.id ?? '');
   const schoolCapabilities = forSchool(access.grants, school.id);
   const operator = access.status === 'ready' && holdsConsole(access.grants);
+  const company = access.status === 'ready' && holdsCompanyAccess(access.grants);
   const listings = access.status === 'ready'
     && schoolCapabilities.some((capability) => capability === 'opportunity:publish' || capability === 'opportunity:moderate');
   const local = journeyFor(state.role);
@@ -125,13 +127,26 @@ export function WorkspaceEntry() {
             <span aria-hidden="true" className="deskdir-favgo">↗</span>
           </button>
         ) : null}
+        {company ? (
+          <button
+            type="button"
+            className="bare deskdir-favcard"
+            onClick={() => dispatch({ type: 'go', screen: 'company' })}
+          >
+            <span className="deskdir-favsays">
+              <strong>Company procurement</strong>
+              <span className="deskdir-favgroup" style={secondLine()}>Review account trust-room access and reconciled revocations.</span>
+            </span>
+            <span aria-hidden="true" className="deskdir-favgo">↗</span>
+          </button>
+        ) : null}
       </div>
 
       <div role={access.status === 'error' ? 'alert' : access.status === 'loading' ? 'status' : undefined} style={{ ...secondLine(), marginTop: 'var(--sp-3)' }}>
         {access.status === 'signed-out' ? 'Sign in to check connected access for this account.' : null}
         {access.status === 'loading' ? 'Checking connected access for this account…' : null}
-        {access.status === 'ready' && !operator && !listings ? 'No additional connected workspace was found for this account and university.' : null}
-        {access.status === 'ready' && (operator || listings) ? 'Connected access shown above was reported by the server and is checked again at each destination.' : null}
+        {access.status === 'ready' && !operator && !listings && !company ? 'No additional connected workspace was found for this account and university.' : null}
+        {access.status === 'ready' && (operator || listings || company) ? 'Connected access shown above was reported by the server and is checked again at each destination.' : null}
         {access.status === 'error' ? access.error : null}
       </div>
       {access.status === 'error' ? <button type="button" className="bare tappable" onClick={access.retry}>Try again</button> : null}

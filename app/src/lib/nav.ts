@@ -1040,6 +1040,9 @@ const NESTED: Partial<Record<Screen, Screen>> = {
    * offered from nothing a student sees.
    */
   console: 'me',
+  // Company is the account team's procurement workspace. Like Console, its
+  // offer and its screen gate both require an exact platform capability.
+  company: 'me',
   /*
    * The school's dining. It is behind a module flag that is off at every
    * school today, so a shelf tile would open onto "your school has not turned
@@ -1142,6 +1145,7 @@ const NESTED_NAMES: Partial<Record<Screen, string>> = {
   community: 'Community',
   moderation: 'the review queue',
   console: 'the operations console',
+  company: 'Company',
   dining: 'dining at your school',
   // What each does: enroll, wait, drop and withdraw in the school's own
   // registration; and a course's official grades, entered, released and read.

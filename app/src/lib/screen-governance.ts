@@ -35,7 +35,7 @@ export interface ScreenGovernance {
   replacementOrMergeTarget: Screen | null;
 }
 
-const INTERNAL = new Set<Screen>(['console', 'moderation', 'registrar', 'registration', 'gradebook']);
+const INTERNAL = new Set<Screen>(['console', 'company', 'moderation', 'registrar', 'registration', 'gradebook']);
 const EXPERIMENTAL = new Set<Screen>(['analyse', 'guess', 'launchpad']);
 const TRANSITIONAL = new Set<Screen>([
   'mine',
@@ -104,7 +104,7 @@ export function governanceFor(screen: Screen): ScreenGovernance {
     route: `#/${screen}`,
     canonicalDestination: canonical,
     contextualModule: isCanonical ? null : nav?.label ?? screen,
-    primaryUser: internal ? (screen === 'console' ? 'semester-operator' : 'institution') : 'student',
+    primaryUser: internal ? (screen === 'console' || screen === 'company' ? 'semester-operator' : 'institution') : 'student',
     primaryJob: nav?.blurb ?? `Complete this ${canonicalName} workflow in context.`,
     primaryAction: PRIMARY_ACTION[canonical] ?? `Continue in ${canonicalName}`,
     dataSources: internal
