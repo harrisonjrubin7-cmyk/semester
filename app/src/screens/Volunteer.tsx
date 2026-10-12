@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
+import { useConfirm } from '../components/ConfirmDialog';
+import { ActionPreview } from '../components/unity/ActionPreview';
 import { ActionButton, Notice, SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { CATEGORY_TEXT } from '../components/community/ReportSheet';
@@ -96,6 +98,7 @@ function VolunteerSignedIn() {
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
+  const { confirmFirst, dialog } = useConfirm();
 
   const refresh = useCallback(async () => {
     try {
@@ -127,6 +130,39 @@ function VolunteerSignedIn() {
   };
 
   const blurb = 'Help keep course and study-group spaces on topic, under Trust & Safety’s rules.';
+
+  const decide = (task: VolunteerTask, action: VolunteerAction, reason: string) => {
+    const recordDecision = async () => {
+      await decideTask(task.taskId, action, reason);
+      setQueue((all) => all.filter((candidate) => candidate.taskId !== task.taskId));
+    };
+    if (action !== 'remove') {
+      act(recordDecision, 'Recorded.');
+      return;
+    }
+    const reasonText = REASONS.find(([value]) => value === reason)?.[1] ?? reason;
+    confirmFirst({
+      title: 'Submit this removal vote?',
+      confirmLabel: 'Submit removal vote',
+      preview: (
+        <ActionPreview
+          subject="This reported post"
+          says="Records your removal vote. If another independent volunteer already voted to remove it, the post is removed immediately; otherwise the case waits. A disagreement sends the case to a professional reviewer."
+          exactly={(
+            <>
+              <span style={{ whiteSpace: 'pre-wrap' }}>{task.body}</span>
+              <br />
+              Reason: {reasonText}
+            </>
+          )}
+          doesNotChange="The author’s account, their other posts and the retained review evidence stay unchanged by this vote. You still are not shown who wrote the post."
+          recovery={{ kind: 'none', how: 'You cannot withdraw or edit this vote after it is recorded. An author can appeal a removal, and Trust & Safety reviews disagreements.' }}
+          whoCanHelp="Trust & Safety can review the case and its retained evidence."
+        />
+      ),
+      run: async () => { act(recordDecision, 'Recorded.'); },
+    });
+  };
 
   if (on === false) {
     return (
@@ -281,15 +317,11 @@ function VolunteerSignedIn() {
             key={t.taskId}
             task={t}
             busy={busy}
-            onDecide={(action, reason) =>
-              act(async () => {
-                await decideTask(t.taskId, action, reason);
-                setQueue((all) => all.filter((x) => x.taskId !== t.taskId));
-              }, 'Recorded.')
-            }
+            onDecide={(action, reason) => decide(t, action, reason)}
           />
         ))}
       </ol>
+      {dialog}
     </Page>
   );
 }
