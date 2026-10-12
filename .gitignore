@@ -78,3 +78,7 @@ override.tf.json
 .gallery/
 # Generated design-system reports (uploaded as CI artifacts, not committed)
 app/reports/
+
+# The md-linker plugin's local link graph (graph.json, snapshots/), rebuilt by
+# the plugin's session hook. Generated per machine; not source.
+.md-linker/
