@@ -169,7 +169,7 @@ def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed(
         expected_revision = (
             "0002_review_first_confidence"
             if engine.dialect.name == "sqlite"
-            else "0005_active_extraction_guard"
+            else "0006_study_session_results"
         )
         assert MigrationContext.configure(connection).get_current_revision() == expected_revision
         assert connection.scalar(
