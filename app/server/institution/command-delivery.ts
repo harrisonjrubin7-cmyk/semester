@@ -34,30 +34,46 @@ export interface CommandDeliveryLease {
 }
 
 export type DeliverySettlement =
+  | { state: 'queued'; error: string }
   | { state: 'delivered'; receipt: Receipt }
   | { state: 'refused'; error: string }
   | { state: 'uncertain'; error: string };
 
 export interface CommandDeliveryStore {
   claim(id: string, now: number, leaseMs: number): CommandDeliveryLease | null | Promise<CommandDeliveryLease | null>;
+  validate?(lease: CommandDeliveryLease, now: number): boolean | Promise<boolean>;
   settle(lease: CommandDeliveryLease, next: DeliverySettlement, now: number): boolean | Promise<boolean>;
 }
 
 /** `query` is read-only and is the only operation allowed after uncertainty. */
 export interface CommandDeliveryAdapter {
-  submit(row: OutboxRow, idempotencyKey: string): Promise<Receipt>;
-  query(row: OutboxRow, idempotencyKey: string): Promise<Receipt | null>;
+  submit(row: OutboxRow, idempotencyKey: string, lease: CommandDeliveryLease): Promise<Receipt>;
+  query(row: OutboxRow, idempotencyKey: string, lease: CommandDeliveryLease): Promise<Receipt | null>;
 }
 
 export type CommandDeliveryResult =
   | { outcome: 'idle' }
   | { outcome: 'lost_lease' }
+  | { outcome: 'paused' }
   | { outcome: 'uncertain' }
   | { outcome: 'refused'; error: string }
   | { outcome: 'delivered'; receipt: Receipt };
 
 const terminal = (state: CommandDeliveryState): boolean => state === 'delivered' || state === 'refused';
 const copy = (record: CommandDeliveryRecord): CommandDeliveryRecord => ({ ...record });
+
+export type CommandDeliveryPreflight =
+  | { outcome: 'ready' }
+  | { outcome: 'paused' }
+  | { outcome: 'lost_lease' }
+  | { outcome: 'refused'; error: string }
+  | { outcome: 'uncertain'; error: string };
+
+export interface CommandDeliveryOptions {
+  now: () => number;
+  leaseMs?: number;
+  beforeSubmit?(lease: CommandDeliveryLease, idempotencyKey: string): CommandDeliveryPreflight | Promise<CommandDeliveryPreflight>;
+}
 
 function commandKey(command: QueuedCommandDelivery): string {
   if (command.outbox.event.tenantId !== command.identity.institutionId) {
@@ -105,6 +121,18 @@ export class MemoryCommandDeliveryStore implements CommandDeliveryStore {
     return { id, fence: row.fence, revision: row.revision, record: copy(row) };
   }
 
+  validate(lease: CommandDeliveryLease, now: number): boolean {
+    const row = this.rows.get(lease.id);
+    return Boolean(
+      row &&
+      row.fence === lease.fence &&
+      row.revision === lease.revision &&
+      row.leaseUntil !== null &&
+      row.leaseUntil > now &&
+      (row.state === 'delivering' || row.state === 'reconciling'),
+    );
+  }
+
   settle(lease: CommandDeliveryLease, next: DeliverySettlement, now: number): boolean {
     const row = this.rows.get(lease.id);
     if (!row || row.fence !== lease.fence || row.revision !== lease.revision || row.leaseUntil === null || row.leaseUntil <= now || (row.state !== 'delivering' && row.state !== 'reconciling')) return false;
@@ -119,21 +147,25 @@ export class MemoryCommandDeliveryStore implements CommandDeliveryStore {
   }
 }
 
-const errorText = (error: unknown): string =>
-  (error instanceof Error ? error.message : String(error)).slice(0, 500) || 'Provider outcome is unknown.';
+const errorText = (error: unknown): string => {
+  if (!isRefusal(error)) return 'provider_outcome_unknown';
+  return error.message === 'authority_revoked' || error.message === 'confirmation_expired'
+    ? error.message
+    : 'provider_refused';
+};
 
 export class CommandDelivery {
   private readonly leaseMs: number;
   private readonly store: CommandDeliveryStore;
   private readonly journal: Pick<ActionJournalStore, 'audit'>;
   private readonly adapter: CommandDeliveryAdapter;
-  private readonly options: { now: () => number; leaseMs?: number };
+  private readonly options: CommandDeliveryOptions;
 
   constructor(
     store: CommandDeliveryStore,
     journal: Pick<ActionJournalStore, 'audit'>,
     adapter: CommandDeliveryAdapter,
-    options: { now: () => number; leaseMs?: number },
+    options: CommandDeliveryOptions,
   ) {
     this.store = store;
     this.journal = journal;
@@ -153,8 +185,22 @@ export class CommandDelivery {
   }
 
   private async submit(lease: CommandDeliveryLease, key: string): Promise<CommandDeliveryResult> {
+    let preflight: CommandDeliveryPreflight;
     try {
-      const receipt = await this.adapter.submit(lease.record.outbox, key);
+      preflight = await this.options.beforeSubmit?.(lease, key) ?? { outcome: 'ready' };
+    } catch {
+      preflight = { outcome: 'uncertain', error: 'provider_outcome_unknown' };
+    }
+    if (preflight.outcome === 'lost_lease') return { outcome: 'lost_lease' };
+    if (preflight.outcome === 'paused') {
+      return this.finish(lease, { state: 'queued', error: 'delivery_paused' }, 'command.delivery.paused');
+    }
+    if (preflight.outcome === 'refused') {
+      return this.finish(lease, { state: 'refused', error: preflight.error }, 'command.delivery.refused');
+    }
+    if (preflight.outcome === 'uncertain') return this.unknown(lease, preflight.error);
+    try {
+      const receipt = await this.adapter.submit(lease.record.outbox, key, lease);
       return this.finish(lease, { state: 'delivered', receipt }, 'command.delivery.delivered');
     } catch (error) {
       const message = errorText(error);
@@ -165,9 +211,9 @@ export class CommandDelivery {
 
   private async reconcile(lease: CommandDeliveryLease, key: string): Promise<CommandDeliveryResult> {
     try {
-      const receipt = await this.adapter.query(lease.record.outbox, key);
+      const receipt = await this.adapter.query(lease.record.outbox, key, lease);
       if (receipt) return this.finish(lease, { state: 'delivered', receipt }, 'command.delivery.delivered');
-      return this.unknown(lease, 'The provider has not reported an outcome yet.');
+      return this.unknown(lease, 'provider_outcome_unknown');
     } catch (error) {
       return this.unknown(lease, errorText(error));
     }
@@ -183,6 +229,8 @@ export class CommandDelivery {
     await this.journal.audit(lease.record.identity, lease.record.area, event, lease.record.id, lease.record.outbox.event.correlationId);
     if (settlement.state === 'delivered') return { outcome: 'delivered', receipt: settlement.receipt };
     if (settlement.state === 'refused') return { outcome: 'refused', error: settlement.error };
+    if (settlement.state === 'queued') return { outcome: 'paused' };
     return { outcome: 'uncertain' };
   }
 }
+

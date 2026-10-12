@@ -2,7 +2,7 @@
 
 <!-- Rendered from app/src/lib/featurecompletion.ts by featurecompletion.test.ts. Edit the registry, then run npm run registers from app/. -->
 
-> **Status:** not complete · 14 met · 3 partial · 1 missing · 0 not applicable
+> **Status:** not complete · 15 met · 3 partial · 0 missing · 0 not applicable
 
 This page is repository evidence, not a deployment, institution approval, live
 integration, production activation or general-availability claim.
@@ -38,12 +38,11 @@ A repository persistence adapter does not prove a deployed database migration, l
 | FC-14 | Complete state matrix exists | partial | `app/src/screens/registration.test.tsx` — Registration route states and recovery behavior under test. | The design archive still lacks one end-to-end proof covering every ready, loading, empty, error, forbidden, offline and stale state. |
 | FC-15 | Keyboard, mobile and accessibility behavior passes | partial | `app/src/components/RegistrationReadiness.test.tsx` — Component interaction and accessible text coverage. | No representative student keyboard, mobile and assistive-technology UAT has been recorded. |
 | FC-16 | Unit and integration tests pass | met | `packages/institution/src/readiness-workflow.test.ts` — Workflow state, retry, concurrency, receipt and event tests.<br>`app/server/institution/registration.test.ts` — Server registration transaction tests. | None. |
-| FC-17 | End-to-end flow passes with seeded data | missing | None. | No seeded end-to-end run proves the complete student-to-authoritative-handoff flow. |
-| FC-18 | Runbook, metrics, owner and feature flag exist | partial | `app/src/lib/institution-ops.ts` — The registration_ready metric and registrar owner.<br>`app/src/lib/systempassports.ts` — The operational owner, alerts, rollback boundary and disabled-by-default system flag contract. | A feature-specific runbook, named pilot owner and verified tenant flag configuration are not present. |
+| FC-17 | End-to-end flow passes with seeded data | met | `app/scripts/registration-handoff-smoke.mjs` — A production-bundle browser journey seeds a complete student plan, confirms the official-system destination, records only the student-reported outcome and proves it survives reload without making an external request. | None. |
+| FC-18 | Runbook, metrics, owner and feature flag exist | partial | `app/src/lib/institution-ops.ts` — The registration_ready metric and registrar owner.<br>`app/src/lib/systempassports.ts` — The operational owner, alerts, rollback boundary and feature-specific runbook contract.<br>`app/src/lib/registration-operations.ts` — The fail-closed evidence evaluator requires the exact tenant, named human pilot owner, live approved read connection, safe flags, kill switches and a recent rollback rehearsal.<br>`docs/runbooks/registration.md` — The responder procedure names diagnosis, mitigation, escalation, verification and evidence boundaries for the read-only pilot. | No authorized production evidence packet yet names the tenant and human pilot owner or proves the live flag, connection and rollback-rehearsal state. |
 
 ## Blocking gates
 
 - FC-14: Complete state matrix exists
 - FC-15: Keyboard, mobile and accessibility behavior passes
-- FC-17: End-to-end flow passes with seeded data
 - FC-18: Runbook, metrics, owner and feature flag exist
