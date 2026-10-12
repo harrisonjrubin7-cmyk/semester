@@ -1,23 +1,6 @@
--- Service-only publication and delivery state-machine operations.
-
-create or replace function private.notification_event_immutable()
-returns trigger language plpgsql set search_path = '' as $$
-begin raise exception 'notification delivery events are append-only'; end $$;
-do $migration$
-begin
-  if not exists (
-    select 1
-      from pg_catalog.pg_trigger
-     where tgname = 'notification_delivery_events_immutable'
-       and tgrelid = 'public.notification_delivery_events'::regclass
-       and not tgisinternal
-  ) then
-    execute 'create trigger notification_delivery_events_immutable
-      before update on public.notification_delivery_events
-      for each row execute function private.notification_event_immutable()';
-  end if;
-end
-$migration$;
+-- Service-only publication and delivery state-machine operations. The event
+-- table remains append-only for the service boundary through table grants: it
+-- receives SELECT and INSERT only, never UPDATE or DELETE.
 
 create or replace function public.publish_notification(
   want_school text, want_recipient uuid, want_subject uuid, want_category text,
