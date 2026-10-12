@@ -38,20 +38,20 @@ launch proceeds under (D-117).
 
 ## The seats
 
-| Seat | Decides | Interim accountable owner | Accepted / appointed holder |
-| --- | --- | --- | --- |
-| `founder` — Founder / CEO | Risk acceptance, customer commitment, commercial launch | Harrison Rubin | Founder |
-| `product` — Product lead | Golden path and its acceptance criteria | Harrison Rubin | Founder, acting |
-| `engineering` — Engineering lead | Reliability, release, rollback | Harrison Rubin | Founder, acting |
-| `security` — Security / vCISO | Threat model, pen-test findings, access controls | Harrison Rubin | Vacant |
-| `privacy` — Privacy / legal | Terms, privacy, DPA/FERPA/COPPA posture, consent | Harrison Rubin | Outside counsel |
-| `accessibility` — Accessibility lead | WCAG/VPAT status, blockers, remediation | Harrison Rubin | Founder, acting |
-| `success` — Customer success | Onboarding, training, support, communication | Harrison Rubin | Founder, acting |
-| `trust` — Trust & Safety | Reporting, escalation, moderation scope | Harrison Rubin | Vacant |
-| `data` — Data / integration owner | Source quality, freshness, connector health | Harrison Rubin | Vacant |
-| `finance` — Finance / commercial | Price floors, discount and pilot-credit approvals at the deal desk, margin, contract terms | Harrison Rubin | Vacant |
-| `operations` — Operations / SRE | Monitoring, on-call, incident readiness, support operations, release readiness | Harrison Rubin | Founder, acting |
-| `champion` — Pilot institution champion | Institutional workflow and communications | Harrison Rubin | Vacant; must be someone at the institution |
+| Seat | Decides | Accountability record |
+| --- | --- | --- |
+| `founder` — Founder / CEO | Risk acceptance, customer commitment, commercial launch | Founder — accepted holder; Harrison Rubin — interim accountable owner |
+| `product` — Product lead | Golden path and its acceptance criteria | Founder, acting — accepted holder; Harrison Rubin — interim accountable owner |
+| `engineering` — Engineering lead | Reliability, release, rollback | Founder, acting — accepted holder; Harrison Rubin — interim accountable owner |
+| `security` — Security / vCISO | Threat model, pen-test findings, access controls | Vacant — accepted holder; Harrison Rubin — interim accountable owner |
+| `privacy` — Privacy / legal | Terms, privacy, DPA/FERPA/COPPA posture, consent | Outside counsel — accepted holder; Harrison Rubin — interim accountable owner |
+| `accessibility` — Accessibility lead | WCAG/VPAT status, blockers, remediation | Founder, acting — accepted holder; Harrison Rubin — interim accountable owner |
+| `success` — Customer success | Onboarding, training, support, communication | Founder, acting — accepted holder; Harrison Rubin — interim accountable owner |
+| `trust` — Trust & Safety | Reporting, escalation, moderation scope | Vacant — accepted holder; Harrison Rubin — interim accountable owner |
+| `data` — Data / integration owner | Source quality, freshness, connector health | Vacant — accepted holder; Harrison Rubin — interim accountable owner |
+| `finance` — Finance / commercial | Price floors, discount and pilot-credit approvals at the deal desk, margin, contract terms | Vacant — accepted holder; Harrison Rubin — interim accountable owner |
+| `operations` — Operations / SRE | Monitoring, on-call, incident readiness, support operations, release readiness | Founder, acting — accepted holder; Harrison Rubin — interim accountable owner |
+| `champion` — Pilot institution champion | Institutional workflow and communications | Vacant; must be someone at the institution — accepted holder; Harrison Rubin — interim accountable owner |
 
 **Why all twelve seats name one interim owner without filling five vacant
 seats.** `interimOwner` records who coordinates the work and owns follow-up.
