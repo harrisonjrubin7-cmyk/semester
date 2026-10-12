@@ -138,6 +138,9 @@ export const STRATEGY: Record<string, Strategy> = {
   payments: 'union',
   balances: 'union',
   residences: 'union',
+  // Each request stamps `updated` on every move, so where two devices both
+  // changed one, the later change is the one kept.
+  maintenance: 'union',
   feeds: 'union',
   feedEvents: 'union',
   extraLinks: 'union',
