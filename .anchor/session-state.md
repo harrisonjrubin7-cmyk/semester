@@ -1,6 +1,6 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-12 14:41:40_  ·  branch: `claude/busy-babbage-w7um9b`
+_Updated: 2026-10-12 14:42:01_  ·  branch: `claude/busy-babbage-w7um9b`
 
 ## Uncommitted changes
 ```
@@ -12,12 +12,13 @@ _Updated: 2026-10-12 14:41:40_  ·  branch: `claude/busy-babbage-w7um9b`
 
 Diff stat:
 ```
- .anchor/session-state.md | 24 ++++--------------------
- 1 file changed, 4 insertions(+), 20 deletions(-)
+ .anchor/session-state.md | 21 +--------------------
+ 1 file changed, 1 insertion(+), 20 deletions(-)
 ```
 
 ## Recent commits
 ```
+60a114b2 chore: update the auto-saved session state snapshot
 3198b534 chore: update the auto-saved session state snapshot
 4b769156 chore: update the auto-saved session state snapshot
 de3468fb chore: update the auto-saved session state snapshot
@@ -25,7 +26,6 @@ de3468fb chore: update the auto-saved session state snapshot
 9f64a25b chore: update the auto-saved session state snapshot
 9cac9f7a chore: update the auto-saved session state snapshot
 587ba377 chore: update the auto-saved session state snapshot
-d6eaf052 chore: update the auto-saved session state snapshot
 ```
 
 ## Resume
