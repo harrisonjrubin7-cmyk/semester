@@ -17,7 +17,7 @@ const review = {
 
 function renderPanel() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  return render(<QueryClientProvider client={client}><ReviewPanel courseId="course-1" reviews={[review]} /></QueryClientProvider>);
+  return { client, ...render(<QueryClientProvider client={client}><ReviewPanel courseId="course-1" reviews={[review]} /></QueryClientProvider>) };
 }
 
 describe("review resolution", () => {
@@ -25,7 +25,8 @@ describe("review resolution", () => {
 
   it("submits corrected structured details with a confirmation decision", async () => {
     mockedApi.mockResolvedValue({ ...review, status: "confirmed" });
-    renderPanel();
+    const { client } = renderPanel();
+    const invalidate = vi.spyOn(client, "invalidateQueries");
     fireEvent.click(screen.getByRole("button", { name: "Correct details" }));
     fireEvent.change(screen.getByLabelText("Corrected details"), { target: { value: '{"due_date":"2026-10-22"}' } });
     fireEvent.change(screen.getByLabelText(/Decision note/), { target: { value: "Checked against page 4" } });
@@ -34,6 +35,7 @@ describe("review resolution", () => {
       method: "PATCH",
       body: JSON.stringify({ status: "confirmed", resolution_note: "Checked against page 4", corrected_payload: { due_date: "2026-10-22" } }),
     })));
+    await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: ["assets", "course-1"] }));
   });
 
   it("blocks malformed correction payloads before the API call", () => {

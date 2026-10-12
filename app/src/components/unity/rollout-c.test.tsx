@@ -276,7 +276,9 @@ describe('SupportAccess: permission changes and a failed load', () => {
     await mount(<SupportAccess account={ACCOUNT} />, false);
     // The shared DelegationRow confirms inline: Revoke, then Revoke now.
     await press('Revoke');
+    expect(text()).toContain('Advisor Rivera loses access right away');
     await press('Revoke now');
+    await flush();
     const notice = host.querySelector('.state-permission')!;
     expect(notice.querySelector('.state-title')!.textContent).toBe('Support access revoked');
     expect(notice.textContent).toContain('The supporter can no longer open this summary.');
