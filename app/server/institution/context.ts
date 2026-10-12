@@ -1,4 +1,4 @@
-import type { PolicyEnvironment, UniversityIdentity } from '../../../packages/institution/src/index.ts';
+import type { PolicyEnvironment, UniversityIdentity, UniversityRole } from '../../../packages/institution/src/index.ts';
 import {
   activateContext,
   buildRequestContext,
@@ -9,7 +9,9 @@ import {
   type ContextSelection,
   type RequestContext,
   type TrustedIdentity,
+  type Workspace,
 } from '../../../packages/platform/src/index.ts';
+import type { VerifiedMembershipIdentity } from './membership.ts';
 
 /**
  * The gateway's verified identity, as the platform's request context.
@@ -63,6 +65,46 @@ export function trustedIdentityFor(identity: UniversityIdentity, opts: TrustedId
 
 export interface ActiveInstitutionRequestContext extends RequestContext {
   readonly activeContext: ActiveContext;
+}
+
+const WORKSPACE_FOR_ROLE: Readonly<Record<UniversityRole, Workspace>> = Object.freeze({
+  student: 'student',
+  faculty: 'staff',
+  teaching_assistant: 'staff',
+  advisor: 'staff',
+  admin: 'institution',
+  staff: 'staff',
+  applicant: 'external',
+  payer: 'external',
+  family: 'external',
+  alumni: 'external',
+});
+
+/**
+ * Assemble the directory entry the current production authentication flow can
+ * prove today: one active institutional membership.
+ *
+ * Workspace availability is closed over the institution role vocabulary.
+ * Nothing in that vocabulary can grant company, operations, or developer
+ * access. The membership row id is retained as the evidence identifier; no
+ * synthetic role-grant row is claimed, and the signed session expiry remains
+ * the only expiry because institution_membership has no expiry column.
+ */
+export function contextDirectoryForVerifiedIdentity(identity: VerifiedMembershipIdentity): ContextDirectory {
+  const workspaces = [...new Set(identity.roles.map((role) => WORKSPACE_FOR_ROLE[role]))];
+  return Object.freeze({
+    personId: identity.userId,
+    sessionExpiresAt: identity.sessionExpiresAt,
+    memberships: Object.freeze([Object.freeze({
+      id: identity.membershipId,
+      tenantId: identity.institutionId,
+      institutionId: identity.institutionId,
+      personId: identity.userId,
+      status: 'active' as const,
+      workspaces: Object.freeze(workspaces),
+      roleGrantIds: Object.freeze([identity.membershipId]),
+    })]),
+  });
 }
 
 /** Only the request headers that the shared platform context is allowed to trust. */
@@ -155,4 +197,23 @@ export function contextForSelection(
     { clock: { now: () => now }, ids: { next: () => ids.correlationId }, requestId: ids.requestId },
   );
   return Object.freeze({ ...base, activeContext });
+}
+
+/** The production-authenticated, single-membership adoption seam. */
+export function contextForVerifiedSelection(
+  request: Request,
+  identity: VerifiedMembershipIdentity,
+  selection: ContextSelection,
+  ids: { requestId: string; correlationId: string },
+  environment: PolicyEnvironment = 'production',
+  purpose?: string,
+): ActiveInstitutionRequestContext {
+  return contextForSelection(
+    request,
+    identity,
+    { directory: contextDirectoryForVerifiedIdentity(identity), selection },
+    ids,
+    environment,
+    purpose,
+  );
 }
