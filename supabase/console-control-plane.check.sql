@@ -10,7 +10,7 @@
 --     and the console, and `holds_seat` answers only for a live seat;
 --   * `mfa_fresh` is true for a recent second factor in the JWT and false for
 --     no second factor, a stale one, and a first factor spelled as one;
---   * the duty matrix has its thirteen rows and is read only with
+--   * the duty matrix has its fourteen rows and is read only with
 --     `console:operate`; `party_held` reads a seat, a role, and never a
 --     student;
 --   * the audit chain: the service role cannot insert directly, a signed-in
@@ -319,12 +319,12 @@ begin
   -- ── The duty matrix (rows 3 and 4) ──────────────────────────────────────
 
   select count(*) into n from public.console_duty;
-  perform pg_temp.counted('the duty matrix has its thirteen rows', n, 13);
+  perform pg_temp.counted('the duty matrix has its fourteen rows', n, 14);
 
   perform pg_temp.become(operator);
   select count(*) into n from public.console_duty;
   reset role;
-  perform pg_temp.counted('console:operate reads all twelve', n, 13);
+  perform pg_temp.counted('console:operate reads all fourteen', n, 14);
 
   perform pg_temp.become(stranger);
   select count(*) into n from public.console_duty;

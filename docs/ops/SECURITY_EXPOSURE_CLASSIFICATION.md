@@ -81,7 +81,7 @@ only by RLS policies. Those policies were read for the operations-relevant ones:
 | `tenant_sso_policy` I/U | `tenant:configure` | SSO policy changed directly. |
 | `scim_group_mapping` I/U | `tenant:configure` | Same. |
 | `feature_cohort_members` I/U | `tenant:configure` | Same. |
-| `provider_registry` I/U | `platform:configure` | AI/provider registry directly writable (duty `ai-provider` exists). |
+| `provider_registry` I/U | `platform:configure` | Low maturities and demotions stay direct. Raising a row to `incremental` or above is closed (`20261012060000`, duty `provider-maturity`, two approvers). Other columns remain directly writable; the AI model/policy side of duty `ai-provider` is not on this table. |
 | `trust_artifacts` I/U, `trust_artifact_versions` I | `trust:publish` | Direct publish. |
 | `gtm_pilot_metrics` I/U/**D**, `gtm_accounts`, `gtm_pilots`, `gtm_decision_log` | `account:manage` platform | Direct CRUD including **delete** of pilot metrics. |
 | `legal_holds` I, release U | `hold:place` / `hold:release` | Two-person release is a check constraint, not an approval. |
