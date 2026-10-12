@@ -167,11 +167,13 @@ describe('Volunteers', () => {
     expect(dialog.textContent).toContain('Their answered reviews and programme history remain');
     expect(dialog.textContent).toContain('A revoked volunteer cannot be sent back to calibration');
     expect(button(dialog, 'Revoke access')!.disabled).toBe(true);
-    await act(async () => button(dialog, 'Keep it')!.click());
+    act(() => { button(dialog, 'Keep it')!.click(); });
     expect(mock.manage).not.toHaveBeenCalled();
     await act(async () => button(card('maya'), 'Revoke')!.click());
     const typedDialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
-    type(typedDialog.querySelector('input')!, 'maya');
+    const confirmationInput = typedDialog.querySelector('input');
+    expect(confirmationInput).toBeInstanceOf(HTMLInputElement);
+    type(confirmationInput as HTMLInputElement, 'maya');
     expect(button(typedDialog, 'Revoke access')!.disabled).toBe(false);
     await act(async () => {
       button(typedDialog, 'Revoke access')!.click();

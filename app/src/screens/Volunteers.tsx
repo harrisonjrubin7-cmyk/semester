@@ -251,7 +251,7 @@ function VolunteerCard({ v, history, onDone }: { v: RosterEntry; history: Volunt
                 Send back to calibration
               </button>
             )}
-            <button type="button" className="btn btn-secondary" disabled={!ready} onClick={() => setConfirmRevoke(true)}>
+            <button type="button" className="btn btn-secondary" disabled={!ready} onClick={() => { setConfirmRevoke(true); }}>
               Revoke
             </button>
           </div>
@@ -275,7 +275,7 @@ function VolunteerCard({ v, history, onDone }: { v: RosterEntry; history: Volunt
           want={v.handle}
           describe="the volunteer handle"
           confirmLabel="Revoke access"
-          onCancel={() => setConfirmRevoke(false)}
+          onCancel={() => { setConfirmRevoke(false); }}
           onConfirm={() => {
             setConfirmRevoke(false);
             // Let the dialog return focus to its still-enabled opener first.
