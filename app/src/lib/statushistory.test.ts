@@ -354,7 +354,9 @@ describe('the workflow', () => {
     const publicJob = job('public');
     expect(publicJob).toContain('name: Probe Vercel production availability');
     expect(publicJob).toContain('SEMESTER_PUBLIC_APP_TARGET: vercel');
-    expect(publicJob).toContain('SEMESTER_PUBLIC_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}');
+    expect(publicJob).toContain('SEMESTER_PUBLIC_APP_URL: ${{ vars.SEMESTER_PUBLIC_APP_URL }}');
+    expect(publicJob).not.toContain('SEMESTER_PRODUCTION_APP_URL');
+    expect(publicJob).not.toContain('SEMESTER_PRODUCTION_GATEWAY_URL');
 
     const pagesJob = job('pages');
     expect(pagesJob).toContain('name: Probe GitHub Pages availability');
