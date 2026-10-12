@@ -2,10 +2,10 @@
 
 | Control | Value |
 | --- | --- |
-| Status | **INDEX. NOTHING LISTED IS APPROVED BY A NAMED OWNER.** |
+| Status | **CONTROLLED INDEX — FOUNDER OPERATING AUTHORITY APPROVED; ARTIFACT-SPECIFIC REVIEW LABELS STILL APPLY.** |
 | Owner | Harrison Rubin (interim) |
 | Evidence date | 2026-10-05 at repository revision `5eba494` plus this branch |
-| Labels used | `[VERIFIED]` `[ASSUMPTION]` `[DRAFT]` `[INTERNAL]` `[REVIEW: ...]`. `[APPROVED]` count: **0** |
+| Labels used | `[VERIFIED]` `[ASSUMPTION]` `[DRAFT]` `[INTERNAL]` `[REVIEW: ...]`. Founder operating authority: **approved 2026-10-12**; see [`PRODUCTION-OPERATING-AUTHORITY.md`](../company/PRODUCTION-OPERATING-AUTHORITY.md). |
 
 > Operating documents. Not legal, tax, accounting, insurance, privacy, security or accessibility advice.
 
