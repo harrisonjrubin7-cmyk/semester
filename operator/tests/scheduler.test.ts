@@ -13,6 +13,7 @@ import { tempDir } from './helpers.ts';
 const accept: AcceptanceCriterion[] = [{ id: 'c1', statement: 'exists', check: { kind: 'file_exists', path: 'x' } }];
 const lookup: AgentLookup = {
   limitsFor: (id) => agent(id)?.limits,
+  mayOperate: (id) => !!agent(id)?.tools.includes('release_adapter'),
   modeFor: () => 'develop',
   routeAllowed: (a, b) => { const x = agent(a); const y = agent(b); return !!x && !!y && suiteRouteAllowed(x.suite, y.suite); },
 };

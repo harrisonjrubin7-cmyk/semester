@@ -49,7 +49,7 @@ Thirty-three agents, each a bounded responsibility sharing one runtime (`src/run
 | A17 | security-privacy-review | quality | repair | Scoped risk reviews and remediation proposals. | security.review (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
 | A18 | incident-investigator | quality | repair | Read-only access to authorized operational signals. | incident.investigate (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
 | A19 | repair-engineer | quality | repair | Isolated editing access, bounded attempts and mandatory verification. | implement.patch (deterministic)<br>implement.task (model loop)<br>repair (deterministic) | read_file, list_files, search, registry_read, store_read, write_file, run_check, git_diff | app/**, packages/**, supabase/functions/** | 15 | 120 | 10 min | 2 | $1 |
-| A20 | release-controller | quality | release | Behind exact-target and exact-artifact approval gates. | release.prepare (deterministic)<br>release.execute (model loop) | read_file, list_files, search, store_read, release_adapter | none | 15 | 60 | 10 min | 1 | $1 |
+| A20 | release-controller | quality | release | Behind exact-target and exact-artifact approval gates. | release.prepare (deterministic)<br>release.execute (deterministic) | read_file, list_files, search, store_read, release_adapter | none | 15 | 60 | 10 min | 1 | $1 |
 | A21 | reliability-capacity | quality | capacity | Operational readiness and scheduled capacity analysis. | capacity.review (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
 | A22 | recovery-operator | quality | release | Backup verification and approved recovery drills. | recovery.assess (model loop)<br>recovery.drill (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
 | A23 | support-assistant | customer | growth | Issue classification, knowledge retrieval and response drafts. | support.triage (model loop)<br>support.draft (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
@@ -1594,7 +1594,7 @@ Execute only approved deployment actions through controlled adapters. Verify dep
 Do not equate build success with deployment success or deployment success with ecosystem completeness.
 ```
 
-**Accepted task types.** release.prepare (deterministic); release.execute (model loop)
+**Accepted task types.** release.prepare (deterministic); release.execute (deterministic)
 
 **Required inputs.** verified artifact hash; exact target; approval
 

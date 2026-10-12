@@ -7,6 +7,7 @@ import type { RunLimiter } from '../control/limits.ts';
 import { ToolDenied, literalPattern, type Toolbox } from '../tools/adapters.ts';
 import { modelDriven } from './agentloop.ts';
 import type { ModelPort } from './model.ts';
+import { ReleaseUnavailable, type ReleaseAdapter } from './release.ts';
 
 /**
  * Deterministic worker handlers. Each one executes a structured task spec
@@ -19,6 +20,7 @@ export interface HandlerContext {
   tools: Toolbox;
   store: OperatorStore;
   model: ModelPort;
+  release: ReleaseAdapter;
   /** The run's limiter: a handler may only spend. */
   limiter: RunLimiter;
   workspaceRoot: string;
@@ -227,6 +229,54 @@ export const releasePrepare: Handler = async (context) => {
   });
 };
 
+/**
+ * A20 — release.execute: the one path that leaves the repository. Order matters:
+ * refuse before spending when no adapter exists; let the gate consume the
+ * approval bound to this exact target and artifact; record the external action
+ * as pending before it fires, so an interruption leaves a record and never a
+ * repeat; clear it only on a confirmed result.
+ */
+export const releaseExecute: Handler = async (context) => {
+  const target = context.task.spec.target;
+  const artifactHash = context.task.spec.artifactHash;
+  if (typeof target !== 'string' || typeof artifactHash !== 'string') throw new Error('spec.target and spec.artifactHash must be strings.');
+  const needed = `release_adapter target=${target} artifact=${artifactHash}`;
+  if (context.release.name === 'none') {
+    return report(context, { outcome: 'blocked', status: 'release_adapter_unavailable', risks: [new ReleaseUnavailable().message], approvalsRequired: [needed], nextStep: 'An owner wires a release adapter with its credential in the operator process.' });
+  }
+  let decision: EvidenceItem & { kind: 'decision' };
+  try {
+    decision = context.tools.release(target, artifactHash);
+  } catch (error) {
+    if (error instanceof ToolDenied) {
+      const needsApproval = APPROVAL_CODES.includes(error.code);
+      return report(context, {
+        outcome: needsApproval ? 'needs_approval' : 'blocked', status: error.code, risks: [error.message], approvalsRequired: needsApproval ? [needed] : [],
+        nextStep: needsApproval ? `An owner grants an approval for ${needed}: tool release_adapter, target ${target}, payload {target, artifactHash}, artifact ${artifactHash}, approver not ${context.task.agentId}.` : 'Grant operate mode to this task by a planner decision, or stop.',
+      });
+    }
+    throw error;
+  }
+  const pending = `${needed} via ${context.release.name}`;
+  context.execution.pendingExternalActions.push(pending);
+  try {
+    const result = await context.release.release({ target, artifactHash, taskId: context.task.id, environment: context.task.environment });
+    context.execution.pendingExternalActions.splice(context.execution.pendingExternalActions.indexOf(pending), 1);
+    context.execution.evidence.push({ kind: 'note', label: 'release', detail: `${context.release.name} released ${artifactHash} to ${target}: ${result.reference}${result.detail ? ` (${result.detail})` : ''}` });
+    return report(context, {
+      outcome: 'completed', status: `released to ${target}`, changes: [`${target} now serves ${artifactHash}`], artifacts: [`release ${result.reference}`, `approval ${decision.code}`],
+      verification: [{ name: 'adapter confirmed', passed: true, detail: result.reference }], nextStep: 'Verify the deployed target against the artifact hash; keep the rollback written before this release at hand.',
+    });
+  } catch (error) {
+    // The action may have happened. It stays pending in the record and is never retried by the runtime.
+    const message = (error instanceof Error ? error.message : String(error)).slice(0, 300);
+    return report(context, { outcome: 'failed', status: 'release_adapter_error', risks: [`The external action may have taken effect: ${message}. It stays recorded as pending for a person to confirm; the runtime never repeats it.`], artifacts: [`approval ${decision.code}`], nextStep: 'A person confirms the state of the target before anything else touches it.' });
+  }
+};
+
+/** Gate denials that an approval, granted by someone other than the actor, would clear. */
+const APPROVAL_CODES = ['approval_required', 'payload_hash_required', 'artifact_changed', 'payload_changed', 'target_mismatch', 'tool_mismatch', 'task_mismatch', 'self_approval', 'expired', 'consumed', 'revoked'];
+
 export const HANDLERS: Record<string, Handler> = {
   'inspect.repository': inspectRepository,
   'implement.patch': implementPatch,
@@ -236,6 +286,7 @@ export const HANDLERS: Record<string, Handler> = {
   'coverage.refresh': coverageRefresh,
   'docs.continuation': docsContinuation,
   'release.prepare': releasePrepare,
+  'release.execute': releaseExecute,
 };
 
 export function handlerFor(type: string): Handler { return HANDLERS[type] ?? modelDriven; }

@@ -40,11 +40,15 @@ export interface EnqueueInput {
   depth?: number;
   /** A coordinator may tighten the agent's contract limits for one task; a value above the contract's is ignored. */
   limits?: Partial<ExecutionLimits>;
+  /** Operate mode, granted per task by the planner and only to an agent whose contract holds a release or sending adapter. Recorded in the audit. */
+  mode?: 'operate';
 }
 
 export interface AgentLookup {
   /** The contract, or undefined when the agent id is unknown. */
   limitsFor(agentId: string): ExecutionLimits | undefined;
+  /** Whether the agent's contract holds an adapter that operate mode exists for. */
+  mayOperate(agentId: string): boolean;
   modeFor(agentId: string): Task['mode'];
   /** Whether the sender's suite may hand off to the receiver's suite. */
   routeAllowed(senderAgentId: string, receiverAgentId: string): boolean;
@@ -115,14 +119,20 @@ export function createScheduler(store: OperatorStore, clock: Clock, ids: IdFacto
     const depth = input.depth ?? 0;
     if (depth > MAX_HANDOFF_DEPTH) throw new Error(`Handoff depth ${depth} exceeds ${MAX_HANDOFF_DEPTH}.`);
     const now = clock.now().toISOString();
+    let mode = agents.modeFor(input.agentId);
+    if (input.mode === 'operate') {
+      if (!agents.mayOperate(input.agentId)) throw new Error(`${input.agentId} holds no adapter that operate mode exists for.`);
+      mode = 'operate';
+    }
     const task: Task = {
       id, goalId: input.goalId, type: input.type, title: input.title, agentId: input.agentId, status: 'ready', priority: input.priority ?? 50,
       dependsOn: input.dependsOn ?? [], depth, dedupeKey, acceptance: input.acceptance, spec: input.spec ?? {}, registryKeys: input.registryKeys ?? [],
-      mode: agents.modeFor(input.agentId), environment: options.environment, limits, attempts: 0, createdAt: now, updatedAt: now,
+      mode, environment: options.environment, limits, attempts: 0, createdAt: now, updatedAt: now,
       ...(input.parentId ? { parentId: input.parentId } : {}),
     };
     store.saveTask(task);
     audit.record('task.enqueued', 'scheduler', { type: task.type, agentId: task.agentId, dependsOn: task.dependsOn, depth }, task.id);
+    if (mode === 'operate') audit.record('mode.granted', 'planner', { mode, agentId: task.agentId, type: task.type }, task.id);
     return task;
   }
 

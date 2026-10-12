@@ -37,6 +37,8 @@ export interface Toolbox {
   writeFile(path: string, content: string): EvidenceItem;
   runCheck(key: string, cwd?: string): EvidenceItem & { kind: 'command' };
   gitDiff(): EvidenceItem & { kind: 'diff'; text: string };
+  /** Asks the gate for a release of one exact artifact to one exact target; consumes the bound approval. Returns the decision evidence; the adapter call is the handler's, bracketed by a pending record. */
+  release(target: string, artifactHash: string): EvidenceItem & { kind: 'decision' };
   readonly evidence: EvidenceItem[];
 }
 
@@ -133,6 +135,10 @@ export function createToolbox(policy: PolicyController, context: PolicyContext, 
       evidence.push(item);
       audit.record('check.ran', context.agentId, { key, exitCode, timedOut: result.error?.name === 'Error' && /ETIMEDOUT|timeout/i.test(result.error.message) }, context.taskId);
       return item;
+    },
+    release(target, artifactHash) {
+      gate({ tool: 'release_adapter', target, risk: 'high', external: true, payloadHash: payloadHash({ target, artifactHash }), artifactHash });
+      return evidence.at(-1) as EvidenceItem & { kind: 'decision' };
     },
     gitDiff() {
       if (!context.workspaceRoot) throw new ToolDenied('git_diff', '', 'no_workspace', 'This task has no workspace.');

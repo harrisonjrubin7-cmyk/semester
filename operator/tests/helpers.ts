@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { PolicySet } from '../types.ts';
 import type { ModelPort, ModelRequest, ModelResponse } from '../src/runtime/model.ts';
+import type { ReleaseAdapter, ReleaseRequest } from '../src/runtime/release.ts';
 
 export function tempDir(prefix = 'operator-'): string { return mkdtempSync(join(tmpdir(), prefix)); }
 
@@ -56,6 +57,19 @@ export function scriptedModel(script: Array<string | object | ((request: ModelRe
       if (entry === undefined) throw new Error('scripted model has no reply left');
       const reply = typeof entry === 'function' ? entry(request, turn) : entry;
       return { text: typeof reply === 'string' ? reply : JSON.stringify(reply), inputTokens: 10, outputTokens: 5, costUsd };
+    },
+  };
+}
+
+/** A recording release adapter: remembers every request and answers with a reference, or throws when told to fail. */
+export function recordingRelease(options: { fail?: boolean } = {}): ReleaseAdapter & { requests: ReleaseRequest[] } {
+  const requests: ReleaseRequest[] = [];
+  return {
+    name: 'recording', requests,
+    async release(request) {
+      requests.push(request);
+      if (options.fail) throw new Error('provider returned 502 after accepting the deploy');
+      return { reference: `deploy-${requests.length}`, detail: `${request.target}@${request.artifactHash.slice(0, 8)}` };
     },
   };
 }

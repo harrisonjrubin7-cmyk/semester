@@ -16,6 +16,7 @@ import { createToolbox } from '../tools/adapters.ts';
 import { createWorkspace } from '../tools/workspace.ts';
 import { handlerFor } from './handlers.ts';
 import { noModel, type ModelPort } from './model.ts';
+import { noRelease, type ReleaseAdapter } from './release.ts';
 
 /**
  * The runtime. One process, many bounded responsibilities. It owns the
@@ -29,6 +30,8 @@ export interface RuntimeOptions {
   environment?: Environment;
   policy?: PolicySet;
   model?: ModelPort;
+  /** The release adapter behind release_adapter. Absent means release.execute is blocked before any approval is spent. */
+  release?: ReleaseAdapter;
   clock?: Clock;
   ids?: IdFactory;
   aggregate?: AggregateLimits;
@@ -92,6 +95,7 @@ export function createRuntime(options: RuntimeOptions): Runtime {
   const stateRoot = resolve(options.stateRoot);
   const environment = options.environment ?? 'development';
   const model = options.model ?? noModel;
+  const release = options.release ?? noRelease;
   const store = createFileStore(stateRoot);
   const audit = createAuditLog(store, clock);
   const killSwitch = createKillSwitch(store, clock, audit);
@@ -100,6 +104,7 @@ export function createRuntime(options: RuntimeOptions): Runtime {
   const limits = createAggregateLimiter(options.aggregate ?? { maxToolCallsTotal: 5000, maxElapsedTotalMs: 8 * 60 * 60 * 1000, costCeilingUsd: 25 }, clock);
   const scheduler = createScheduler(store, clock, ids, audit, {
     limitsFor: (id) => findAgent(id)?.limits,
+    mayOperate: (id) => { const contract = findAgent(id); return !!contract && (contract.tools.includes('release_adapter') || contract.tools.includes('external_send')); },
     modeFor: (id) => { const contract = findAgent(id); return contract && contract.tools.includes('release_adapter') ? 'observe' : contract && contract.tools.includes('write_file') || contract?.tools.includes('run_check') ? 'develop' : 'observe'; },
     routeAllowed: (sender, receiver) => { const a = findAgent(sender); const b = findAgent(receiver); return !!a && !!b && suiteRouteAllowed(a.suite, b.suite); },
   }, { maxConcurrent: options.maxConcurrent ?? 2, environment });
@@ -132,11 +137,13 @@ export function createRuntime(options: RuntimeOptions): Runtime {
       const tools = createToolbox(policy, contextFor(task, contract, workspaceRoot), limiter, audit);
       const handler = handlerFor(task.type);
       if (!contract.taskTypes.includes(task.type)) throw new Error(`${contract.id} does not accept task type ${task.type}.`);
-      const report = redact(await handler({ task, tools, store, model, limiter, workspaceRoot, repositoryRoot, execution }));
+      const report = redact(await handler({ task, tools, store, model, release, limiter, workspaceRoot, repositoryRoot, execution }));
       execution = { ...execution, status: report.outcome === 'failed' ? 'failed' : report.outcome === 'blocked' || report.outcome === 'insufficient_evidence' ? 'blocked' : 'succeeded', endedAt: clock.now().toISOString(), usage: limiter.usage(), evidence: [...execution.evidence, ...tools.evidence], report };
       store.saveExecution(execution);
       const next = workerStatus(report.outcome);
-      task = scheduler.transition(task.id, next, next === 'blocked' || next === 'awaiting_approval' ? { blockedReason: report.status } : {});
+      // Waiting on an owner's approval is not an attempt at the work: the attempt is handed back so a task can wait as many times as it is asked to.
+      const refund = next === 'awaiting_approval' ? { attempts: Math.max(0, task.attempts - 1) } : {};
+      task = scheduler.transition(task.id, next, next === 'blocked' || next === 'awaiting_approval' ? { blockedReason: report.status, ...refund } : {});
       if (report.outcome === 'accepted' || report.outcome === 'rejected') {
         for (const reviewed of (task.spec.reviews as string[] | undefined) ?? []) {
           const target = store.task(reviewed);
