@@ -74,7 +74,7 @@ import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
 import { JourneyCards } from '../components/JourneyCards';
 import { journeysFor, recommendJourney } from '../lib/journeys';
 import { offered } from '../lib/nav';
-import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { EXPERIENCE_FLAGS, MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { useTaskActions } from '../composition/taskactions';
 import { CommandCenter, FirstGoal } from '../components/unity/CommandCenter';
 import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
@@ -2114,10 +2114,13 @@ export function nothingOnToday(
   catalog: Catalog,
   state: Pick<State, 'tasks' | 'appointments' | 'feedEvents'> & { maintenance?: State['maintenance'] },
   now: number = Date.now(),
+  /** Whether the Action Center, the only surface that draws repairs, is on. */
+  actionCenter: boolean = moduleOn(MODULE_FLAGS.today_action_center),
 ): boolean {
   // A repair whose follow-up has come is something to do today, and both
-  // homes draw it through the Action Center — the first-run screen would hide it.
-  if ((state.maintenance ?? []).some((r) => isOpen(r) && needsFollowUp(r, now))) return false;
+  // homes draw it through the Action Center — the first-run screen would hide
+  // it. With the Action Center rolled back, nothing draws it, so it does not count.
+  if (actionCenter && (state.maintenance ?? []).some((r) => isOpen(r) && needsFollowUp(r, now))) return false;
   return shape === 'feed' ? catalog.empty : nothingYet(catalog, state);
 }
 

@@ -207,6 +207,25 @@ describe('MaintenanceRequests, review findings on #1501', () => {
     expect(saved.checkBackAt).toBe(new Date(2026, 9, 13, 9, 0).getTime());
   });
 
+  it('clips an over-long room from the residence on file in the form, so what shows is what saves', async () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        schemaVersion: 6, seenOnboarding: true, sample: false, term: '2026FA',
+        residences: [{ id: 'h1', hall: 'Branscomb', room: 'R'.repeat(60), term: '2026FA', moveOut: '', hoursAfterLastExam: 0, created: 1 }],
+        maintenance: [],
+      }),
+    );
+    await render();
+    await click('Record a repair');
+    const room = host.querySelector<HTMLInputElement>('#maintenance-room')!;
+    expect(room.value).toHaveLength(40);
+    await type('What is wrong', 'Window will not close');
+    await click('Save repair');
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}').maintenance[0];
+    expect(saved.room).toBe(room.value);
+  });
+
   it('takes the new ticket number when a repair is reported again', async () => {
     seed([existing({ status: 'not_fixed', updated: NOW.getTime() })]);
     await render();

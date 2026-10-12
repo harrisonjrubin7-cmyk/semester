@@ -502,6 +502,14 @@ describe('review findings on 5200c9c', () => {
     expect(keyOf('mr1')).toBe('mr1');
   });
 
+  it('rebuilds a synced check-back dated before the report, and stops calling it stated by housing', () => {
+    const r = request({ urgency: 'urgent', checkBackStated: true });
+    const read = readMaintenance({ ...r, checkBackAt: r.reportedAt - HOUR })!;
+    expect(read.checkBackAt).toBe(r.reportedAt + 4 * HOUR);
+    expect(read.checkBackStated).toBe(false);
+    expect(readMaintenance({ ...r, checkBackAt: r.reportedAt + HOUR })!.checkBackStated).toBe(true);
+  });
+
   it('bounds the building and room as the reader does, so a saved request survives a reload unchanged', () => {
     expect(checkDraft(draft({ hall: 'B'.repeat(LIMITS.hall + 1) }), NOW).hall).toMatch(/characters/);
     const r = newMaintenance('long', '2026FA', draft({ hall: 'B'.repeat(LIMITS.hall), room: 'R'.repeat(LIMITS.room + 9) }), NOW);

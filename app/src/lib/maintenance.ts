@@ -411,8 +411,10 @@ export function readMaintenance(row: unknown): MaintenanceRequest | null {
     channel: oneOf(CHANNELS, r.channel, 'other'),
     reference: isStr(r.reference) ? r.reference.trim().slice(0, LIMITS.reference) : '',
     reportedAt,
-    checkBackAt: isNum(r.checkBackAt) ? r.checkBackAt : suggestedCheckBack(oneOf(URGENCIES, r.urgency, 'routine'), reportedAt),
-    checkBackStated: r.checkBackStated === true,
+    // A check-back before the report is a timeline `checkDraft` refuses; it is
+    // rebuilt from the report, and housing is no longer said to have stated it.
+    checkBackAt: isNum(r.checkBackAt) && r.checkBackAt >= reportedAt ? r.checkBackAt : suggestedCheckBack(oneOf(URGENCIES, r.urgency, 'routine'), reportedAt),
+    checkBackStated: r.checkBackStated === true && isNum(r.checkBackAt) && r.checkBackAt >= reportedAt,
     // A visit before the report is the same impossible timeline `visitProblem`
     // refuses on screen; arriving by sync or restore, it is dropped the same way.
     scheduledFor: isNum(r.scheduledFor) && r.scheduledFor >= reportedAt ? r.scheduledFor : null,

@@ -266,8 +266,10 @@ function RequestForm({ onDone }: { onDone: () => void }) {
   const [urgency, setUrgency] = useState<Urgency>('routine');
   const [what, setWhat] = useState('');
   const [where, setWhere] = useState('');
-  const [hall, setHall] = useState(home?.hall ?? '');
-  const [room, setRoom] = useState(home?.room ?? '');
+  // Prefilled from the room on file, whose form has no length limit: clipped
+  // here, in view, so what is shown is what is saved.
+  const [hall, setHall] = useState((home?.hall ?? '').slice(0, LIMITS.hall));
+  const [room, setRoom] = useState((home?.room ?? '').slice(0, LIMITS.room));
   const [channel, setChannel] = useState<Channel>('portal');
   const [reference, setReference] = useState('');
   const [reported, setReported] = useState(toLocalInput(now));
