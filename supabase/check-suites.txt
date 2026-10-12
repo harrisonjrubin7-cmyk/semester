@@ -1,6 +1,7 @@
 academic-record
 access
 access-saga-store
+access-saga-tick-auth
 activity
 admins
 advisor
