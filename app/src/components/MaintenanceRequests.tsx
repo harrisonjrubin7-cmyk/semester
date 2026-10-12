@@ -147,7 +147,8 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
       return;
     }
     if (to === 'reported') {
-      setNewRef('');
+      // The ticket on file, to keep, replace, or clear if housing gave none.
+      setNewRef(r.reference);
       setReReporting(true);
       return;
     }
@@ -191,10 +192,10 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
 
       {reReporting ? (
         <div className="maintenance-visit">
-          <label htmlFor={refId}>New reference number, if housing gave one</label>
+          <label htmlFor={refId}>Reference number (clear it if housing gave no new one)</label>
           <input
             id={refId}
-            aria-label="New reference number, if housing gave one"
+            aria-label="Reference number (clear it if housing gave no new one)"
             className="input"
             value={newRef}
             maxLength={LIMITS.reference}
@@ -205,7 +206,7 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
               type="button"
               className="btn btn-primary"
               onClick={() => {
-                dispatch({ type: 'moveMaintenance', id: r.id, change: { to: 'reported', at: Date.now(), ...(newRef.trim() ? { reference: newRef } : {}) } });
+                dispatch({ type: 'moveMaintenance', id: r.id, change: { to: 'reported', at: Date.now(), reference: newRef } });
                 setReReporting(false);
               }}
             >

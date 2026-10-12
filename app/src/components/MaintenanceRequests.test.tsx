@@ -226,11 +226,23 @@ describe('MaintenanceRequests, review findings on #1501', () => {
     expect(saved.room).toBe(room.value);
   });
 
+  it('clears the old ticket number when a repair is reported again with none', async () => {
+    seed([existing({ status: 'not_fixed', updated: NOW.getTime() })]);
+    await render();
+    await click('Reported it again');
+    await type('Reference number', '');
+    await click('Save');
+    const list = host.querySelector('ul[aria-label="Open repair requests"]');
+    expect(list?.textContent).not.toContain('WO-1001');
+    expect(list?.textContent).toContain('No reference recorded');
+  });
+
   it('takes the new ticket number when a repair is reported again', async () => {
     seed([existing({ status: 'not_fixed', updated: NOW.getTime() })]);
     await render();
     await click('Reported it again');
-    await type('New reference number', 'WO-2002');
+    expect(field('Reference number').value).toBe('WO-1001');
+    await type('Reference number', 'WO-2002');
     await click('Save');
     const list = host.querySelector('ul[aria-label="Open repair requests"]');
     expect(list?.textContent).toContain('Reference WO-2002');
