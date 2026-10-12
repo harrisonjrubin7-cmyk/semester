@@ -87,10 +87,13 @@ tenant, person, institution, role-grant identifiers and expiry only from a direc
 server has already verified. It refuses a directory whose person or institution differs
 from the authenticated identity, and a conflicting `X-Tenant-Id` remains a
 `tenant_mismatch`. The selected membership becomes the request context's membership and
-its expiry caps the request's role grants. Authentication now supplies the verified
-membership id and session expiry, but it does not yet assemble the complete directory or
-authorize a workspace selection. No route calls this adapter; it is not a live workspace-
-switching API or a client contract.
+its expiry caps the request's role grants. Authentication supplies the verified
+membership id and session expiry. `contextDirectoryForVerifiedIdentity` can now assemble
+the one active membership that production authentication actually proved and authorize
+only its role-derived workspace set: student, staff, institution, or external. No current
+membership role can manufacture company, operations, or developer access. This is not yet
+a multi-membership directory: there is no loader for additional memberships, and no route
+calls the adapter. It is not a live workspace-switching API or a client contract.
 
 Both entry points re-run the token check at the moment of a commit (and of an intelligence confirm) and require the same user and institution as before. If the answer changed, the commit is `403 forbidden` ("Your current university access does not permit this action.").
 
