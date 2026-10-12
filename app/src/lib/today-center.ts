@@ -56,7 +56,8 @@ export function doneForToday(
     now: number;
     /**
      * Action ids due now that are not course deadlines (a repair to chase,
-     * say). While one is open the day is not done, whatever the coursework.
+     * say), already filtered to the ones still open by `effectiveStatus`.
+     * While one is listed the day is not done, whatever the coursework.
      */
     alsoDue?: readonly string[];
   },
@@ -67,7 +68,7 @@ export function doneForToday(
   const pressing = input.upcoming.some(
     (item) => !item.isPast && item.daysAway <= 1 && !input.done[item.id]
       && choices[`deadline:${item.id}`]?.status !== 'completed',
-  ) || (input.alsoDue ?? []).some((id) => choices[id]?.status !== 'completed');
+  ) || (input.alsoDue ?? []).length > 0;
   if (pressing) return null;
   const closedToday = Object.values(choices).some((c) => c.history.some((h) => h.event === 'complete' && h.at >= midnight))
     || input.upcoming.some((item) => item.isToday && input.done[item.id]);

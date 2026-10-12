@@ -341,9 +341,14 @@ export function placeLine(r: Pick<MaintenanceRequest, 'hall' | 'room' | 'where'>
   return r.where.trim() ? `${home} · ${r.where.trim()}` : home;
 }
 
-/** A finite number that is also a valid `Date`: ±8.64e15 ms. `1e300` is finite and throws in `Intl`. */
-const MAX_TIME = 8.64e15;
-const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && Math.abs(v) <= MAX_TIME;
+/**
+ * A time a repair could really carry: 1970 to the end of 9999. Not merely a
+ * valid `Date` (±8.64e15 ms) — a value at that edge is valid until the reader
+ * adds three days for a fallback check-back or a day after a visit, and then
+ * `Intl` throws on Housing and Today. This bound leaves millennia of room.
+ */
+const MAX_TIME = Date.UTC(9999, 11, 31);
+const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= MAX_TIME;
 const isStr = (v: unknown): v is string => typeof v === 'string';
 const oneOf = <T extends string>(all: readonly T[], v: unknown, fallback: T): T =>
   (all as readonly unknown[]).includes(v) ? (v as T) : fallback;

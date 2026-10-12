@@ -103,11 +103,10 @@ describe('done for today', () => {
       .toBe('You are set for today. Your next deadline is in 4 days.');
   });
 
-  it('is not shown while a repair follow-up is due, unless that action was completed', () => {
+  it('is not shown while a repair follow-up is still open, and is once none is', () => {
     const base = { upcoming: [item('today', 0)], done: { today: true }, now: NOW };
-    const repair = 'maintenance:mr1:reported:1';
-    expect(doneForToday({ ...base, alsoDue: [repair] }, {})).toBeNull();
-    expect(doneForToday({ ...base, alsoDue: [repair] }, { [repair]: choose('complete') })?.line)
+    expect(doneForToday({ ...base, alsoDue: ['maintenance:mr1:reported:1'] }, {})).toBeNull();
+    expect(doneForToday({ ...base, alsoDue: [] }, {})?.line)
       .toBe('You are set for today. Nothing else is recorded as due.');
   });
 });

@@ -34,6 +34,7 @@ import {
   type MaintenanceRequest,
 } from './maintenance';
 import { maintenanceActions } from './maintenance-actions';
+import { effectiveStatus, transition } from './actions';
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -171,7 +172,8 @@ describe('maintenanceActions', () => {
   it('proposes one calm, sourced follow-up per due request', () => {
     const r = request({ urgency: 'urgent' });
     const [action] = maintenanceActions([r], r.checkBackAt + 1);
-    expect(action.id).toMatch(new RegExp(`^maintenance:mr1:reported:${r.checkBackAt}:`));
+    expect(action.id).toBe(`maintenance:mr1:reported:${r.checkBackAt}`);
+    expect(action.reopensNextDay).toBe(true);
     expect(action.priority).toBe('high');
     expect(action.source.label).toBe('student_entered');
     expect(action.primary).toMatchObject({ kind: 'navigate', requiresConfirmation: false });
@@ -383,12 +385,38 @@ describe('review findings on 5200c9c', () => {
     expect(read.scheduledFor).toBeNull();
   });
 
-  it('brings a follow-up marked done back the next day while the repair is still open', () => {
+  it('brings a follow-up marked done back the next day, and keeps a snooze or dismissal past midnight', () => {
     const r = request();
-    const today = maintenanceActions([r], r.checkBackAt + 1)[0].id;
-    const tomorrow = maintenanceActions([r], addDays(r.checkBackAt + 1, 1))[0].id;
-    expect(maintenanceActions([r], r.checkBackAt + 2)[0].id).toBe(today);
-    expect(tomorrow).not.toBe(today);
+    const at = r.checkBackAt + 1;
+    const [action] = maintenanceActions([r], at);
+    const nextMorning = new Date(new Date(at).getFullYear(), new Date(at).getMonth(), new Date(at).getDate() + 1, 0, 5).getTime();
+    const step = (event: Parameters<typeof transition>[1], options?: { until: number }) => {
+      const moved = transition(undefined, event, at, options);
+      if (!moved.ok) throw new Error(moved.why);
+      return moved.choice;
+    };
+    // Same id the next day, so choices keyed by it survive the rollover.
+    expect(maintenanceActions([r], nextMorning)[0].id).toBe(action.id);
+    expect(effectiveStatus(action, step('complete'), at + 60_000)).toBe('completed');
+    expect(effectiveStatus(action, step('complete'), nextMorning)).toBe('open');
+    expect(effectiveStatus(action, step('snooze', { until: addDays(nextMorning, 0) + 8 * HOUR }), nextMorning)).toBe('snoozed');
+    expect(effectiveStatus(action, step('dismiss'), nextMorning)).toBe('dismissed');
+  });
+
+  it('keeps a plain action done once it is done', () => {
+    const r = request();
+    const [action] = maintenanceActions([r], r.checkBackAt + 1);
+    const done = transition(undefined, 'complete', r.checkBackAt + 1);
+    if (!done.ok) throw new Error(done.why);
+    expect(effectiveStatus({ ...action, reopensNextDay: false }, done.choice, addDays(r.checkBackAt, 3))).toBe('completed');
+  });
+
+  it('treats a time near the edge of the Date range as missing, so a fallback cannot overflow', () => {
+    const edge = 8.64e15 - HOUR;
+    const read = readMaintenance({ ...request(), reportedAt: edge, checkBackAt: 'x', created: 1 })!;
+    expect(Number.isFinite(read.checkBackAt)).toBe(true);
+    expect(() => whenLine(read.checkBackAt)).not.toThrow();
+    expect(() => whenLine(followUpAt(read))).not.toThrow();
   });
 
   it('says how to correct a repair the way the screen actually allows', () => {

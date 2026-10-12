@@ -20,12 +20,6 @@ import {
  * back through the store (architecture guard `legacy-cycles-do-not-grow`).
  */
 
-/** This device's calendar day, so a follow-up marked done in the Action Center comes back tomorrow while the repair is still open. */
-const dayKey = (ms: number): string => {
-  const d = new Date(ms);
-  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-};
-
 const short = (text: string) => (text.length > 60 ? `${text.slice(0, 57).trimEnd()}…` : text);
 
 function priorityOf(r: MaintenanceRequest): Priority {
@@ -39,9 +33,10 @@ function priorityOf(r: MaintenanceRequest): Priority {
  * One per open request whose follow-up time has come. The id carries the
  * status and the follow-up time, so "still waiting, check tomorrow" or a
  * scheduled visit is a new action rather than one the student already
- * dismissed. The id also carries the calendar day, because "Done" in the
- * Action Center changes nothing about the repair: it holds for today, and the
- * follow-up comes back tomorrow while the request is still open.
+ * dismissed. `reopensNextDay`, because "Done" in the Action Center changes
+ * nothing about the repair: it holds for today and the follow-up comes back
+ * tomorrow while the request is still open, while a snooze or a dismissal
+ * keeps its own terms against the same id.
  */
 export function maintenanceActions(list: MaintenanceRequest[], now: number): Action[] {
   const out: Action[] = [];
@@ -54,7 +49,8 @@ export function maintenanceActions(list: MaintenanceRequest[], now: number): Act
     const visit = r.status === 'scheduled';
     const again = r.status === 'not_fixed';
     out.push({
-      id: `maintenance:${r.id}:${r.status}:${at}:${dayKey(now)}`,
+      id: `maintenance:${r.id}:${r.status}:${at}`,
+      reopensNextDay: true,
       type: 'housing',
       group: 'Housing',
       title: again ? `Report again: ${what}` : visit ? `Did the repair visit happen? ${what}` : `Check on your repair: ${what}`,

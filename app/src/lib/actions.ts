@@ -135,6 +135,13 @@ export interface Action {
   dueAt?: number | null;
   /** After this the action no longer applies, and it expires. */
   expiresAt?: number | null;
+  /**
+   * "Done" holds for the rest of the calendar day it was pressed, then the
+   * action is open again. For a reminder whose underlying record "Done" does
+   * not change — a repair still waiting on housing — so completing it cannot
+   * hide it for good. Snoozes and dismissals are unaffected.
+   */
+  reopensNextDay?: boolean;
   estimatedMinutes?: number | null;
   /** Actions in the same workflow group together ("Registration readiness"). */
   group?: string;
@@ -211,6 +218,13 @@ export function transition(
 export function effectiveStatus(action: Action, choice: Choice | undefined, now: number): ActionStatus {
   const status = choice?.status ?? 'open';
   if (status === 'snoozed' && typeof choice?.snoozedUntil === 'number' && choice.snoozedUntil <= now) return 'open';
+  if (status === 'completed' && action.reopensNextDay) {
+    const done = [...(choice?.history ?? [])].reverse().find((h) => h.event === 'complete')?.at;
+    if (typeof done === 'number') {
+      const d = new Date(done);
+      if (now >= new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime()) return 'open';
+    }
+  }
   const live = status === 'open' || status === 'in_progress' || status === 'blocked' || status === 'snoozed';
   if (live && typeof action.expiresAt === 'number' && action.expiresAt <= now) return 'expired';
   return status;
