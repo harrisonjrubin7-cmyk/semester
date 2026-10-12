@@ -95,6 +95,7 @@ export function push(state: State, screen: Screen): State {
   return {
     ...state,
     screen,
+    workspaceView: null,
     history,
     recent: remember(state.recent, screen),
     // Written on the way in rather than counted: how many times somebody
@@ -146,6 +147,12 @@ export function navigate(state: State, action: Action): State | null {
       return push(next, screenForRole(action.screen, state.role));
     }
 
+    case 'openWorkspace':
+      return { ...push(state, screenForRole(action.screen, state.role)), workspaceView: action.view };
+
+    case 'setWorkspaceView':
+      return { ...state, workspaceView: action.view };
+
     /**
      * The browser went somewhere, so the app follows it there.
      *
@@ -168,7 +175,7 @@ export function navigate(state: State, action: Action): State | null {
       state = dismiss(state);
       const landed = screenForRole(action.screen, state.role);
       const library = LIBRARIES.includes(landed);
-      if (landed === state.screen && !action.id && !action.mode && !library) return state;
+      if (landed === state.screen && !action.id && !action.mode && !library && (action.view ?? null) === state.workspaceView) return state;
       const back = state.history[state.history.length - 1] === landed;
       /*
        * Which field the id in the address belongs in.
@@ -185,6 +192,7 @@ export function navigate(state: State, action: Action): State | null {
         ...state,
         recoveryIntent: null,
         screen: landed,
+        workspaceView: action.view ?? null,
         history: back ? state.history.slice(0, -1) : state.history,
         // `|| null` for the library case: landing on the shelf means no file
         // is open, and leaving the old id in place would reopen it instead.
@@ -196,7 +204,7 @@ export function navigate(state: State, action: Action): State | null {
     case 'back': {
       const history = [...state.history];
       const prev = history.pop();
-      return { ...dismiss(state), recoveryIntent: null, screen: prev ?? 'home', history };
+      return { ...dismiss(state), recoveryIntent: null, screen: prev ?? 'home', workspaceView: null, history };
     }
 
     case 'openItem':
