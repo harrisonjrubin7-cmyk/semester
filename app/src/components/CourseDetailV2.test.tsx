@@ -8,6 +8,26 @@ import { STORAGE_KEY } from '../state/shape';
 import { StoreProvider } from '../state/store';
 import { RegistrationPortal } from './RegistrationPortal';
 
+const publicationMock = vi.hoisted(() => ({
+  current: { status: 'disabled', publications: {} } as {
+    status: 'disabled' | 'loading' | 'ready' | 'empty' | 'error';
+    publications: Record<string, unknown>;
+  },
+  retry: vi.fn(),
+  calls: [] as unknown[][],
+}));
+
+vi.mock('../lib/courserules', async () => {
+  const actual = await vi.importActual<typeof import('../lib/courserules')>('../lib/courserules');
+  return {
+    ...actual,
+    useCoursePublicationsState: (...args: unknown[]) => {
+      publicationMock.calls.push(args);
+      return { ...publicationMock.current, retry: publicationMock.retry };
+    },
+  };
+});
+
 /**
  * Phase F on screen, through the registration workspace: with the flag off,
  * the old side panel (the control); with it on, Course Detail V2 as a sheet on
@@ -61,6 +81,7 @@ beforeEach(() => {
       schemaVersion: 6,
       seenOnboarding: true,
       sample: false,
+      term: '2027SP',
       courses: [],
       requirements: [{ id: 'core', programme: 'Economics major', name: 'Core theory', need: 'courses', count: 2, accepts: ['ECON 2010', 'ECON 2020'], note: '' }],
       taken: [{ id: 't1', code: 'ECON 1010', title: 'Principles', term: 'Fall 2026', hours: 3, grade: 'A', current: false }],
@@ -82,6 +103,9 @@ beforeEach(() => {
       plans: [],
     }),
   );
+  publicationMock.current = { status: 'disabled', publications: {} };
+  publicationMock.retry.mockReset();
+  publicationMock.calls.length = 0;
   host = document.createElement('div');
   host.className = 'device';
   document.body.append(host);
@@ -200,6 +224,83 @@ describe('with course_detail_v2 on', () => {
     expect(opened).not.toHaveBeenCalled();
     await act(async () => button(/^Open catalog$/).click());
     expect(opened).toHaveBeenCalledWith('https://catalog.example.edu/econ-2010', '_blank', 'noopener,noreferrer');
+  });
+
+  it('shows published guidance and study packs with provenance and confirms an external reference', async () => {
+    publicationMock.current = {
+      status: 'ready',
+      publications: {
+        'ECON 2010': {
+          guidance: { body: 'Work the practice set before office hours.', published: '2026-10-05' },
+          packs: [
+            {
+              id: 'pack-1',
+              title: 'Midterm review',
+              note: 'Use these after lecture 4.',
+              published: '2026-10-06',
+              items: [
+                {
+                  title: 'Week 4 slides',
+                  citation: 'Slides 12–24',
+                  link: 'https://lms.example.edu/week-4',
+                  authority: 'supplemental',
+                },
+              ],
+            },
+          ],
+        },
+      },
+    };
+    const opened = vi.spyOn(window, 'open').mockReturnValue(null);
+
+    await mount(true);
+    await open('ECON 2010');
+
+    expect(text()).toContain('Instructor publications');
+    expect(host.querySelector('[data-source="connected"]')).not.toBeNull();
+    expect(publicationMock.calls.at(-1)?.slice(0, 4)).toEqual([['ECON 2010'], '2027SP', '', 'vanderbilt']);
+    expect(text()).toContain('Work the practice set before office hours.');
+    expect(text()).toContain('From your instructor · published 2026-10-05');
+    expect(text()).toContain('Midterm review');
+    expect(text()).toContain('Use these after lecture 4.');
+    expect(text()).toContain('Week 4 slides · Supplemental · Slides 12–24');
+    expect(text()).toContain('From your instructor · published 2026-10-06');
+    expect(text()).not.toContain('A faculty-approved study pack, when an instructor publishes one.');
+
+    await act(async () => button(/^Open Week 4 slides…$/).click());
+    expect(text()).toContain('You are leaving Semester');
+    expect(text()).toContain('https://lms.example.edu/week-4');
+    expect(opened).not.toHaveBeenCalled();
+    await act(async () => button(/^Open reference$/).click());
+    expect(opened).toHaveBeenCalledWith('https://lms.example.edu/week-4', '_blank', 'noopener,noreferrer');
+  });
+
+  it.each([
+    ['loading', 'Loading published guidance and study packs…'],
+    ['empty', 'No published guidance or study packs for this course.'],
+  ] as const)('shows the %s publication state distinctly', async (status, expected) => {
+    publicationMock.current = { status, publications: {} };
+    await mount(true);
+    await open('ECON 2010');
+    expect(text()).toContain(expected);
+  });
+
+  it('does not ask for another term’s publications', async () => {
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') as Record<string, unknown>;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...stored, term: '2026FA' }));
+    await mount(true);
+    await open('ECON 2010');
+    expect(publicationMock.calls.at(-1)?.slice(0, 2)).toEqual([['ECON 2010'], '']);
+    expect(text()).not.toContain('Instructor publications');
+  });
+
+  it('shows a recoverable publication error', async () => {
+    publicationMock.current = { status: 'error', publications: {} };
+    await mount(true);
+    await open('ECON 2010');
+    expect(host.querySelector('[role="alert"]')?.textContent).toContain('Published course content could not be loaded.');
+    await act(async () => button(/^Try again$/).click());
+    expect(publicationMock.retry).toHaveBeenCalledTimes(1);
   });
 
   it('is a drawer on a desktop, and another result replaces it', async () => {

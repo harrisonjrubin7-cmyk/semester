@@ -24,12 +24,16 @@ import {
   whyItMayFit,
 } from '../lib/course-detail';
 import { useDeviceLibrary } from '../lib/device-library';
+import { AUTHORITY_TEXT, courseCode, useCoursePublicationsState, type CoursePublicationsState } from '../lib/courserules';
 import { DESKTOP, useMedia } from '../lib/media';
 import type { CatalogCourse } from '../lib/registration';
 import { useRegistrationPlan } from '../lib/registration-plan';
+import { readTerm } from '../lib/term';
 import { useNow, useStore } from '../state/store';
 import { ConfirmDialog } from './ConfirmDialog';
 import { SourceBadge } from './SourceBadge';
+import { EmptyState } from './ui';
+import { ErrorState, LoadingState } from './unity/States';
 
 const STATE_MARK = { recorded: '✓', in_progress: '…', in_cart: '✓', not_recorded: '?' } as const;
 
@@ -63,7 +67,7 @@ export function CourseDetailV2({
   onOpen: (id: string) => void;
   onClose: () => void;
 }) {
-  const { state, account } = useStore();
+  const { state, account, school } = useStore();
   const wide = useMedia(DESKTOP);
   const headingId = useId();
   const first = useRef<HTMLHeadingElement>(null);
@@ -78,8 +82,13 @@ export function CourseDetailV2({
   };
   const career = useDeviceLibrary(`semester.career.v1:${account?.id || 'device'}:${state.term}`, readCareer, EMPTY_CAREER).value;
   const [confirm, setConfirm] = useState<'add' | 'remove' | 'leave' | null>(null);
+  const [reference, setReference] = useState<{ courseId: string; title: string; url: string } | null>(null);
   const [said, setSaid] = useState('');
   const now = useNow();
+  const publicationTerm = course.term === state.term || course.term === readTerm(state.term).label ? state.term : '';
+  const publications = useCoursePublicationsState([course.code], publicationTerm, account?.id ?? '', school.id);
+  const published = publications.publications[courseCode(course.code)];
+  const currentReference = reference?.courseId === course.id ? reference : null;
 
   useEffect(() => {
     if (!wide) return undefined;
@@ -273,14 +282,20 @@ export function CourseDetailV2({
           )}
         </Section>
 
+        <PublishedCourseContent
+          code={course.code}
+          read={publications}
+          publication={published}
+          onOpenReference={(title, url) => setReference({ courseId: course.id, title, url })}
+        />
+
         <details className="balance-more">
           <summary>Coming later</summary>
           <ul>
             <li>Student workload and usefulness insights — only moderated, verified reports will appear here. Semester shows no professor ratings.</li>
-            <li>A faculty-approved study pack, when an instructor publishes one.</li>
             <li>Links to the syllabus this course is taught from.</li>
           </ul>
-          <p className="balance-muted">None of these is available yet, and nothing is estimated in their place.</p>
+          <p className="balance-muted">Neither is available yet, and nothing is estimated in their place.</p>
         </details>
       </div>
 
@@ -314,6 +329,19 @@ export function CourseDetailV2({
             setConfirm(null);
           }}
           onCancel={() => setConfirm(null)}
+        />
+      ) : null}
+      {currentReference ? (
+        <ConfirmDialog
+          title={`Open “${currentReference.title}”?`}
+          tone="external"
+          preview={<p className="dialog-url">{currentReference.url}</p>}
+          confirmLabel="Open reference"
+          onConfirm={() => {
+            window.open(currentReference.url, '_blank', 'noopener,noreferrer');
+            setReference(null);
+          }}
+          onCancel={() => setReference(null)}
         />
       ) : null}
     </>
@@ -354,7 +382,78 @@ export function CourseDetailV2({
   return host ? createPortal(sheet, host) : sheet;
 }
 
-function Section({ title, badge, children }: { title: string; badge: 'imported' | 'estimated'; children: ReactNode }) {
+function PublishedCourseContent({
+  code,
+  read,
+  publication,
+  onOpenReference,
+}: {
+  code: string;
+  read: CoursePublicationsState;
+  publication: CoursePublicationsState['publications'][string] | undefined;
+  onOpenReference: (title: string, url: string) => void;
+}) {
+  if (read.status === 'disabled') return null;
+  const guidance = publication?.guidance;
+  const packs = publication?.packs ?? [];
+  const empty = read.status === 'empty' || (read.status === 'ready' && !guidance && packs.length === 0);
+  return (
+    <Section title="Instructor publications" badge="connected">
+      {read.status === 'loading' ? <LoadingState what="published guidance and study packs" /> : null}
+      {read.status === 'error' ? (
+        <ErrorState
+          title="Published course content could not be loaded."
+          body={`Semester could not read the guidance and study packs published for ${code}. Nothing has been filled in for them.`}
+          recover={{ label: 'Try again', run: read.retry }}
+        />
+      ) : null}
+      {empty ? (
+        <EmptyState
+          inline
+          title="No published guidance or study packs for this course."
+          body="If your instructor publishes either one for this term, it will appear here with its publication date."
+        />
+      ) : null}
+      {read.status === 'ready' && guidance ? (
+        <div className="studio-guidance">
+          <strong>Guidance</strong>
+          <p className="sharing-meta">From your instructor · published {guidance.published}</p>
+          <p>{guidance.body}</p>
+        </div>
+      ) : null}
+      {read.status === 'ready' && packs.length > 0 ? (
+        <div>
+          <h4>Study packs</h4>
+          {packs.map((pack) => (
+            <article key={pack.id} className="study-pack">
+              <strong>{pack.title}</strong>
+              <p className="sharing-meta">From your instructor · published {pack.published}</p>
+              {pack.note ? <p>{pack.note}</p> : null}
+              <ul className="sharing-list">
+                {pack.items.map((item, index) => (
+                  <li key={`${pack.id}:${index}`}>
+                    <div>
+                      {item.title}
+                      <span className="sharing-meta"> · {AUTHORITY_TEXT[item.authority]}{item.citation ? ` · ${item.citation}` : ''}</span>
+                    </div>
+                    {item.link ? (
+                      <button type="button" className="workspace-text-button" onClick={() => onOpenReference(item.title, item.link)}>
+                        Open {item.title}…
+                      </button>
+                    ) : null}
+                    {item.authority === 'prohibited' ? <p className="sharing-meta">Your instructor marked this reference “Do not use.”</p> : null}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+      ) : null}
+    </Section>
+  );
+}
+
+function Section({ title, badge, children }: { title: string; badge: 'imported' | 'estimated' | 'connected'; children: ReactNode }) {
   const id = useId();
   return (
     <section className="course-v2-section" aria-labelledby={id}>
