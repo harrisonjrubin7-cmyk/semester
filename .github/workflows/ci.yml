@@ -540,6 +540,10 @@ jobs:
       # line is wrong for the runner's release, and a missing binary reported
       # two steps later reads as a broken script rather than a missing package.
       - name: Install the PostgreSQL the live project runs
+        # `always()`, like the policy step it serves: with it skipped after a failed
+        # test step, that step ran without a server and reported "no PostgreSQL 17"
+        # on every red build, which read as a CI fault rather than the test it was.
+        if: always()
         run: |
           want=$(sed -nE 's/^[[:space:]]*major_version[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' \
             supabase/config.toml | head -1)
