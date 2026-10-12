@@ -101,6 +101,7 @@ my-sessions
 offboarding-grants
 officeactions
 onboarding-journeys
+ops-projection-dashboard
 ops-projector-worker
 organizations
 outbox
