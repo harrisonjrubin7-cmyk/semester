@@ -147,7 +147,7 @@ function VolunteerSignedIn() {
       preview: (
         <ActionPreview
           subject="This reported post"
-          says="Records your answer. If this is a real report, it records a removal vote: another independent removal vote removes the post immediately, a first vote waits, and a disagreement sends the case to a professional reviewer. Practice answers only update your calibration."
+          says="Records your answer. If this is a real report, it records a removal vote: another independent removal vote removes the post immediately, a first vote waits, and a disagreement sends the case to a professional reviewer. A hidden practice answer updates your calibration. During onboarding, that helps decide whether your queue opens. After onboarding, recent practice accuracy can move your standing between active, probation and paused, including pausing queue access."
           exactly={(
             <>
               <span style={{ whiteSpace: 'pre-wrap' }}>{task.body}</span>

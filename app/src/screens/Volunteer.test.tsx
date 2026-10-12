@@ -153,7 +153,9 @@ describe('Volunteer', () => {
     await click('Remove it');
     expect(mock.decide).not.toHaveBeenCalled();
     expect(host.textContent).toContain('If this is a real report');
-    expect(host.textContent).toContain('Practice answers only update your calibration');
+    expect(host.textContent).toContain('A hidden practice answer updates your calibration');
+    expect(host.textContent).toContain('recent practice accuracy can move your standing between active, probation and paused');
+    expect(host.textContent).toContain('including pausing queue access');
     expect(host.textContent).toContain('Reason: Suspicious link');
     expect(host.textContent).toContain('You cannot withdraw or edit this answer');
     await click('Cancel');
