@@ -179,7 +179,7 @@ export function createRuntime(options: RuntimeOptions): Runtime {
         // Within one plan, tasks may name each other by title; the ids are assigned here.
         const resolveRef = (ref: string) => byTitle.get(ref) ?? ref;
         const dependsOn = (input.dependsOn ?? []).map(resolveRef);
-        const spec = { ...(input.spec ?? {}) };
+        const spec = { ...input.spec };
         if (typeof spec.workspaceOf === 'string') spec.workspaceOf = resolveRef(spec.workspaceOf);
         if (Array.isArray(spec.reviews)) spec.reviews = spec.reviews.map((ref) => (typeof ref === 'string' ? resolveRef(ref) : ref));
         const task = scheduler.enqueue({ ...input, spec, goalId, dependsOn });
