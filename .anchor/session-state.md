@@ -1,6 +1,6 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-12 15:17:15_  ·  branch: `claude/busy-babbage-w7um9b`
+_Updated: 2026-10-12 15:17:35_  ·  branch: `claude/busy-babbage-w7um9b`
 
 ## Uncommitted changes
 ```
@@ -15,6 +15,7 @@ Diff stat:
 
 ## Recent commits
 ```
+971f0b47 chore: update the auto-saved session state snapshot
 69a86611 chore: update the auto-saved session state snapshot
 bb5f2be5 chore: update the auto-saved session state snapshot
 08afc73a chore: update the auto-saved session state snapshot
@@ -22,7 +23,6 @@ bb5f2be5 chore: update the auto-saved session state snapshot
 6f2e8bfc chore: update the auto-saved session state snapshot
 599fc4c1 chore: track Claude Code permission rules and ignore list
 f9f6af21 chore: update the auto-saved session state snapshot
-7890490b chore: update the auto-saved session state snapshot
 ```
 
 ## Resume
