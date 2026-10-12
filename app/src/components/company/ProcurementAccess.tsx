@@ -100,6 +100,7 @@ export function ProcurementAccess({
   const requestRows = requests?.key === requestKey && requests.page === requestPage ? requests.rows : null;
 
   useEffect(() => { setAccountPage(0); }, [subject]);
+  useEffect(() => { if (!online) setPreview(null); }, [online]);
   const detailKey = `${subject}:${selectedAccount}:${selectedRequest}`;
   const currentDetail = detail?.key === detailKey ? detail.value : null;
   const currentAccount = accountRows?.find((item) => item.id === selectedAccount) ?? null;
@@ -280,7 +281,7 @@ export function ProcurementAccess({
             grants: was.value.grants.map((item) => item.id === outcome.grant.id ? { ...item, ...outcome.grant } : item),
           },
         } : was);
-        setWithdrawGrant('');
+        setWithdrawGrant(currentDetail.grants.find((item) => item.id !== outcome.grant.id && withdrawable(item))?.id ?? '');
         setWithdrawOpen(false);
         setReason('');
       } else if (outcome.visibilityLost) {
@@ -342,14 +343,14 @@ export function ProcurementAccess({
       <SectionLabel>Accounts</SectionLabel>
       <div className="segmented" aria-label="Company accounts">
         {accountRows.map((item) => (
-          <button key={item.id} type="button" className="btn segmented-option" aria-pressed={item.id === selectedAccount} onClick={() => chooseAccount(item.id)}>
-            {item.name}
+          <button key={item.id} type="button" className="btn segmented-option" aria-pressed={item.id === selectedAccount} disabled={actionPending} onClick={() => chooseAccount(item.id)}>
+            {item.name} · {item.publicId}
           </button>
         ))}
       </div>
       <nav aria-label="Company account pages">
-        <button type="button" className="btn" disabled={accountPage === 0} onClick={() => setAccountPage((page) => Math.max(0, page - 1))}>Previous accounts</button>
-        <button type="button" className="btn" disabled={accountRows.length < COMPANY_PAGE_SIZE} onClick={() => setAccountPage((page) => page + 1)}>Next accounts</button>
+        <button type="button" className="btn" disabled={actionPending || accountPage === 0} onClick={() => setAccountPage((page) => Math.max(0, page - 1))}>Previous accounts</button>
+        <button type="button" className="btn" disabled={actionPending || accountRows.length < COMPANY_PAGE_SIZE} onClick={() => setAccountPage((page) => page + 1)}>Next accounts</button>
       </nav>
 
       {currentAccount && (
@@ -371,7 +372,7 @@ export function ProcurementAccess({
       ) : (
         <div className="segmented" aria-label="Procurement requests">
           {requestRows.map((item) => (
-            <button key={item.id} type="button" className="btn segmented-option" aria-pressed={item.id === selectedRequest} onClick={() => chooseRequest(item.id)}>
+            <button key={item.id} type="button" className="btn segmented-option" aria-pressed={item.id === selectedRequest} disabled={actionPending} onClick={() => chooseRequest(item.id)}>
               {item.requesterName} · {date(item.requestedAt)}
             </button>
           ))}
@@ -379,8 +380,8 @@ export function ProcurementAccess({
       )}
       {requestRows && (requestRows.length > 0 || requestPage > 0) && (
         <nav aria-label="Procurement request pages">
-          <button type="button" className="btn" disabled={requestPage === 0} onClick={() => setRequestPage((page) => Math.max(0, page - 1))}>Previous requests</button>
-          <button type="button" className="btn" disabled={requestRows.length < COMPANY_PAGE_SIZE} onClick={() => setRequestPage((page) => page + 1)}>Next requests</button>
+          <button type="button" className="btn" disabled={actionPending || requestPage === 0} onClick={() => setRequestPage((page) => Math.max(0, page - 1))}>Previous requests</button>
+          <button type="button" className="btn" disabled={actionPending || requestRows.length < COMPANY_PAGE_SIZE} onClick={() => setRequestPage((page) => page + 1)}>Next requests</button>
         </nav>
       )}
 
@@ -416,7 +417,7 @@ export function ProcurementAccess({
               )}
               <h4>Access history</h4>
               <p>Each row means room authorization succeeded. It does not prove a download, reading, or acceptance.</p>
-              {grant.accesses.length === 0 ? <p>No authorized room opens are recorded.</p> : (
+              {grant.accesses.length === 0 ? <p>{currentDetail.hasMoreAccesses ? 'No opens for this grant are included in the latest 100 access events shown.' : 'No authorized room opens are recorded.'}</p> : (
                 <ul>{grant.accesses.map((access) => <li key={access.id}>Room authorization succeeded · {moment(access.accessedAt)} · {access.versionId ? `document version ${access.versionId}` : 'room list'}</li>)}</ul>
               )}
             </section>
@@ -489,7 +490,7 @@ export function ProcurementAccess({
           onConfirm={() => void runWithdrawal()}
           preview={(
             <ActionPreview
-              subject={`${currentAccount.name} · grant ${chosenGrant.id}`}
+              subject={`${currentAccount.name} · ${currentAccount.publicId} · grant ${chosenGrant.id}`}
               says={<>Prevents new room opens for {currentDetail.request.requesterName} ({currentDetail.request.requesterEmail}).</>}
               exactly={(
                 <>

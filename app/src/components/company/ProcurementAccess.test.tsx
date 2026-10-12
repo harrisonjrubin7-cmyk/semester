@@ -121,6 +121,7 @@ describe('Company procurement access', () => {
     await act(async () => button(/Review withdrawal/).click());
     const dialog = document.querySelector('[role="dialog"]')!;
     expect(dialog.textContent).toContain('North College');
+    expect(dialog.textContent).toContain('acct_north');
     expect(dialog.textContent).toContain('<Procurement Reviewer>');
     expect(dialog.textContent).toContain('grant-1');
     expect(dialog.textContent).toContain('HECVAT readiness register · version 1.0');
@@ -166,7 +167,7 @@ describe('Company procurement access', () => {
     expect(api.withdraw).not.toHaveBeenCalled();
   });
 
-  it('does not dispatch a verified withdrawal after the selected account changes', async () => {
+  it('locks account selection while a withdrawal is being verified', async () => {
     const accountB = { ...ACCOUNT, id: 'account-2', name: 'South College' };
     const requestB = { ...REQUEST, id: 'request-2', accountId: accountB.id, requesterName: 'South reviewer' };
     let releaseVerification!: (subject: string) => void;
@@ -179,15 +180,16 @@ describe('Company procurement access', () => {
     await act(async () => typeInto(host.querySelector('textarea') as HTMLTextAreaElement, 'Evidence superseded'));
     await act(async () => button(/Review withdrawal/).click());
     await act(async () => button(/^Withdraw access$/).click());
+    expect(button(/South College/).disabled).toBe(true);
     await act(async () => button(/South College/).click());
     await act(async () => releaseVerification('account-team-1'));
     await settle();
-    expect(api.withdraw).not.toHaveBeenCalled();
-    expect(host.textContent).toContain('South reviewer');
-    expect(host.textContent).not.toContain('Access withdrawn');
+    expect(api.withdraw).toHaveBeenCalledTimes(1);
+    expect(host.textContent).toContain('<Procurement Reviewer>');
+    expect(host.textContent).toContain('Access withdrawn');
   });
 
-  it('does not render a late withdrawal result under a newly selected account', async () => {
+  it('keeps account selection locked until withdrawal readback settles', async () => {
     const accountB = { ...ACCOUNT, id: 'account-2', name: 'South College' };
     const requestB = { ...REQUEST, id: 'request-2', accountId: accountB.id, requesterName: 'South reviewer' };
     let releaseWithdrawal!: (outcome: WithdrawalOutcome) => void;
@@ -202,17 +204,18 @@ describe('Company procurement access', () => {
     await act(async () => button(/^Withdraw access$/).click());
     await settle(2);
     expect(api.withdraw).toHaveBeenCalledTimes(1);
+    expect(button(/South College/).disabled).toBe(true);
     await act(async () => button(/South College/).click());
     await act(async () => releaseWithdrawal({
       kind: 'confirmed', concurrent: false,
       grant: { ...GRANT, revokedAt: '2026-10-11T22:00:00Z', revokedBy: 'account-team-1', revokeReason: 'Evidence superseded' },
     }));
     await settle();
-    expect(host.textContent).toContain('South reviewer');
-    expect(host.textContent).not.toContain('Access withdrawn');
+    expect(host.textContent).toContain('<Procurement Reviewer>');
+    expect(host.textContent).toContain('Access withdrawn');
   });
 
-  it('does not dispatch a verified withdrawal after request-page navigation', async () => {
+  it('locks request pagination while a withdrawal is being verified', async () => {
     const firstPage = Array.from({ length: 50 }, (_, index) => ({ ...REQUEST, id: `request-${index}`, requesterName: `Reviewer ${index}` }));
     const nextRequest = { ...REQUEST, id: 'request-next', requesterName: 'Next-page reviewer' };
     let releaseVerification!: (subject: string) => void;
@@ -224,15 +227,16 @@ describe('Company procurement access', () => {
     await act(async () => typeInto(host.querySelector('textarea') as HTMLTextAreaElement, 'Evidence superseded'));
     await act(async () => button(/Review withdrawal/).click());
     await act(async () => button(/^Withdraw access$/).click());
+    expect(button(/Next requests/).disabled).toBe(true);
     await act(async () => button(/Next requests/).click());
     await act(async () => releaseVerification('account-team-1'));
     await settle();
-    expect(api.withdraw).not.toHaveBeenCalled();
-    expect(host.textContent).toContain('Next-page reviewer');
-    expect(host.textContent).not.toContain('Access withdrawn');
+    expect(api.withdraw).toHaveBeenCalledTimes(1);
+    expect(host.textContent).toContain('Reviewer 0');
+    expect(host.textContent).toContain('Access withdrawn');
   });
 
-  it('does not render a late withdrawal result after request-page navigation', async () => {
+  it('keeps request pagination locked until withdrawal readback settles', async () => {
     const firstPage = Array.from({ length: 50 }, (_, index) => ({ ...REQUEST, id: `request-${index}`, requesterName: `Reviewer ${index}` }));
     const nextRequest = { ...REQUEST, id: 'request-next', requesterName: 'Next-page reviewer' };
     let releaseWithdrawal!: (outcome: WithdrawalOutcome) => void;
@@ -245,14 +249,15 @@ describe('Company procurement access', () => {
     await act(async () => button(/Review withdrawal/).click());
     await act(async () => button(/^Withdraw access$/).click());
     await settle(2);
+    expect(button(/Next requests/).disabled).toBe(true);
     await act(async () => button(/Next requests/).click());
     await act(async () => releaseWithdrawal({
       kind: 'confirmed', concurrent: false,
       grant: { ...GRANT, revokedAt: '2026-10-11T22:00:00Z', revokedBy: 'account-team-1', revokeReason: 'Evidence superseded' },
     }));
     await settle();
-    expect(host.textContent).toContain('Next-page reviewer');
-    expect(host.textContent).not.toContain('Access withdrawn');
+    expect(host.textContent).toContain('Reviewer 0');
+    expect(host.textContent).toContain('Access withdrawn');
   });
 
   it('does not offer or queue a withdrawal while offline', async () => {
@@ -261,6 +266,17 @@ describe('Company procurement access', () => {
     expect(host.textContent).toContain('nothing is queued');
     expect(button(/Withdraw access/).disabled).toBe(true);
     expect(api.withdraw).not.toHaveBeenCalled();
+  });
+
+  it('closes an open confirmation when connectivity is lost', async () => {
+    await mount();
+    await act(async () => button(/Withdraw access/).click());
+    await act(async () => typeInto(host.querySelector('textarea') as HTMLTextAreaElement, 'Evidence superseded'));
+    await act(async () => button(/Review withdrawal/).click());
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+    await act(async () => root.render(<ProcurementAccess subject="account-team-1" online={false} api={api} onAuthorizationLost={authorizationLost} />));
+    await settle();
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
   });
 
   it('shows an unknown outcome and requires a fresh grant read before another attempt', async () => {
@@ -321,10 +337,31 @@ describe('Company procurement access', () => {
   });
 
   it('states when access history is capped in the UI', async () => {
-    vi.mocked(api.loadDetail).mockResolvedValueOnce({ ...DETAIL, hasMoreAccesses: true });
+    vi.mocked(api.loadDetail).mockResolvedValueOnce({
+      ...DETAIL,
+      hasMoreAccesses: true,
+      grants: [{ ...DETAIL.grants[0], accesses: [] }],
+    });
     await mount();
+    expect(host.textContent).toContain('No opens for this grant are included in the latest 100 access events shown');
+    expect(host.textContent).not.toContain('No authorized room opens are recorded');
     expect(host.textContent).toContain('Showing the latest 100 access events');
     expect(host.textContent).toContain('complete append-only history remains in the audit system');
+  });
+
+  it('selects the next live grant after one withdrawal is confirmed', async () => {
+    const second = { ...DETAIL.grants[0], id: 'grant-2' };
+    vi.mocked(api.loadDetail).mockResolvedValueOnce({ ...DETAIL, grants: [DETAIL.grants[0], second] });
+    await mount();
+    await act(async () => button(/Withdraw access/).click());
+    await act(async () => typeInto(host.querySelector('textarea') as HTMLTextAreaElement, 'Evidence superseded'));
+    await act(async () => button(/Review withdrawal/).click());
+    await act(async () => button(/^Withdraw access$/).click());
+    await settle();
+    await act(async () => button(/Withdraw access/).click());
+    expect((host.querySelector('select') as HTMLSelectElement).value).toBe('grant-2');
+    await act(async () => typeInto(host.querySelector('textarea') as HTMLTextAreaElement, 'Second withdrawal'));
+    expect(button(/Review withdrawal/).disabled).toBe(false);
   });
 
   it('clears sensitive detail when a protected refresh reports authorization loss', async () => {
