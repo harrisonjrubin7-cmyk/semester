@@ -1,0 +1,1493 @@
+{
+  "rows": [
+    {
+      "identifier": "workspace.public-web",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "public-web",
+      "module": "public-web",
+      "userRole": "Prospective students, institutions, and partners",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Public visitor Discover, contact, sign up, or recover an account Published product or trust content: Destination and data-use explanation",
+      "dataDependencies": [
+        "public"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Submission or recovery receipt; rollback: Withdraw request or revoke session",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.student-os",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "student-os",
+      "module": "student-os",
+      "userRole": "Students",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Authorized student Review, study, request, or share Owned course or institution context: Source, scope, and sharing consequence",
+      "dataDependencies": [
+        "student-records"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Student-visible audit receipt; rollback: Revoke sharing or reverse local change",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.faculty-os",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "faculty-os",
+      "module": "faculty-os",
+      "userRole": "Faculty and teaching assistants",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Assigned faculty or teaching assistant Author, publish, assess, or release Assigned course record: Student visibility and official-authority consequence",
+      "dataDependencies": [
+        "educational-records"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Course audit receipt; rollback: Unpublish, revoke role, or compensate release",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.advisor-os",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "advisor-os",
+      "module": "advisor-os",
+      "userRole": "Advisors and student-success staff",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Assigned advisor Plan, refer, outreach, or close Permitted caseload context: Student disclosure and referral consequence",
+      "dataDependencies": [
+        "educational-records"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Advising audit receipt; rollback: Revoke assignment, sharing, or reopen case",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.registrar-os",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "registrar-os",
+      "module": "registrar-os",
+      "userRole": "Registrar staff",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Authorized registrar staff Review, decide, refer, or reconcile Source-aware readiness or exception record: Policy basis and non-enrollment consequence",
+      "dataDependencies": [
+        "high-impact-educational-records"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Decision and reconciliation receipt; rollback: Reverse local decision or compensate official effect",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.finance-os",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "finance-os",
+      "module": "finance-os",
+      "userRole": "Finance staff and students",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Authorized student or finance staff Request, review, approve, reconcile, or dispute Scoped financial account or request: Money, ledger, and provider consequence",
+      "dataDependencies": [
+        "financial-records"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Immutable finance receipt; rollback: Cancel request or create governed compensation",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.student-affairs-os",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "student-affairs-os",
+      "module": "student-affairs-os",
+      "userRole": "Student-affairs staff",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Category-authorized staff or student Intake, triage, refer, follow up, or close Minimized service or protected case record: Category, recipient, and disclosure consequence",
+      "dataDependencies": [
+        "sensitive-case-records"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Protected case audit receipt; rollback: Revoke grant, redirect, or reopen case",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.institution-console",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "institution-console",
+      "module": "institution-console",
+      "userRole": "Tenant administrators, IT, and security",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Authorized institution administrator Configure, approve, inspect, or revoke Tenant configuration or evidence record: Tenant, cohort, and capability consequence",
+      "dataDependencies": [
+        "tenant-administration"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Institution audit receipt; rollback: Disable capability or revert configuration",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.company-os",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "company-os",
+      "module": "company-os",
+      "userRole": "Semester company team",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Authorized company operator Advance, approve, renew, or close Business account, deal, contract, or implementation record: Commercial, legal, or customer consequence",
+      "dataDependencies": [
+        "business-records"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Business decision receipt; rollback: Withdraw approval or compensate business action",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.operations-os",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "operations-os",
+      "module": "operations-os",
+      "userRole": "Platform operators, security, and support",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Authorized operator Assign, approve, reconcile, resolve, or reopen Incident, release, support, privacy, or access work item: Operational and affected-tenant consequence",
+      "dataDependencies": [
+        "operational-security-records"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Resolution and approval receipt; rollback: Rollback release, revoke access, or reopen work",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.applicant-portal",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "applicant-portal",
+      "module": "external-portals",
+      "userRole": "Applicants and assigned admissions staff",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Verified applicant or assigned staff Submit, respond, or review status Owned application record: Submission and disclosure consequence",
+      "dataDependencies": [
+        "consent-or-contract-scoped-records"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Application receipt; rollback: Withdraw application material or revoke access",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.guardian-portal",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "guardian-portal",
+      "module": "external-portals",
+      "userRole": "Student-approved guardians",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Verified consented guardian View the approved category Explicitly shared student record: Scope, expiry, and recipient consequence",
+      "dataDependencies": [
+        "consent-or-contract-scoped-records"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Consent access receipt; rollback: Immediate consent revocation",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.alumni-portal",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "alumni-portal",
+      "module": "external-portals",
+      "userRole": "Verified alumni",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Verified alumnus Update, join, mentor, or connect Owned alumni profile or opted-in relationship: Audience and visibility consequence",
+      "dataDependencies": [
+        "consent-or-contract-scoped-records"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Alumni action receipt; rollback: Withdraw visibility or leave program",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.employer-portal",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "employer-portal",
+      "module": "external-portals",
+      "userRole": "Verified employers and opted-in candidates",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Verified employer or consenting candidate Post, apply, review, or report outcome Opportunity or explicitly disclosed candidate record: Disclosure and retention consequence",
+      "dataDependencies": [
+        "consent-or-contract-scoped-records"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Opportunity action receipt; rollback: Withdraw opportunity, application, or disclosure",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.partner-portal",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "partner-portal",
+      "module": "external-portals",
+      "userRole": "Contracted and tenant-approved partners",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Authorized partner operator Onboard, request scope, operate, or offboard Contract-scoped integration or task: Tenant data and persistent-access consequence",
+      "dataDependencies": [
+        "consent-or-contract-scoped-records"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Partner action receipt; rollback: Offboard and revoke partner access",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.developer-portal",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "developer-portal",
+      "module": "developer-portal",
+      "userRole": "Developers and approved partners",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Authorized developer Register, request, rotate, replay, or revoke Application, credential, webhook, or usage record: Credential, tenant, and delivery consequence",
+      "dataDependencies": [
+        "integration-security-records"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Credential or delivery receipt; rollback: Rotate or revoke access and deliveries",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "workspace.community-marketplace",
+      "kind": "workspace",
+      "system": "semester",
+      "workspace": "community-marketplace",
+      "module": "community-marketplace",
+      "userRole": "Campus-verified opted-in members",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Campus-verified member or scoped moderator Post, transact, report, moderate, dispute, or appeal Community content, listing, report, or appeal: Audience, safety, and enforcement consequence",
+      "dataDependencies": [
+        "community-content"
+      ],
+      "permissions": "pilot_required=true; activation=disabled",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "Receipt: Moderation or marketplace receipt; rollback: Remove content, reverse local action, or appeal",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "packages/platform-control/README.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Operational implementation and evidence are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "capability.registration.readiness",
+      "kind": "capability",
+      "system": "semester",
+      "workspace": "student",
+      "module": "registration",
+      "userRole": "student, advisor, registrar, institution_admin, operations",
+      "screenOrWorkflow": "app.semester.com/registration/readiness, staff.semester.com/advising/readiness, institution.semester.com/registration/readiness, ops.semester.com/workflows/registration",
+      "requiredBehavior": "Registration readiness",
+      "dataDependencies": [
+        "identity",
+        "authorization",
+        "provenance",
+        "workflow",
+        "integrations.sis",
+        "notifications",
+        "audit"
+      ],
+      "permissions": "student=full; advisor=scoped; registrar=scoped; institution_admin=audited; operations=audited",
+      "integrationDependencies": [
+        "integrations.sis"
+      ],
+      "acceptanceCriteria": "events: registration.readiness_requested, registration.readiness_evaluated, registration.readiness_reconciliation_requested",
+      "implementationStatus": "in_progress",
+      "verificationEvidence": [
+        "docs/reference/registration-readiness-workflow.md",
+        "packages/institution/src/readiness.ts",
+        "supabase/migrations/20261009160000_registration_readiness_store.sql",
+        "supabase/registration-readiness-store.check.sql",
+        "packages/institution/src/policy.ts",
+        "packages/institution/src/policy.test.ts",
+        "packages/platform/src/tenancy/context.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "risk=high; data=restricted"
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "system.identity",
+      "kind": "system",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Identity",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "implemented",
+      "verificationEvidence": [
+        "packages/platform/src/tenancy/context.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "system.authorization",
+      "kind": "system",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Authorization",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "implemented",
+      "verificationEvidence": [
+        "packages/institution/src/policy.ts",
+        "packages/institution/src/policy.test.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "system.provenance",
+      "kind": "system",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Provenance",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "implemented",
+      "verificationEvidence": [
+        "packages/institution/src/readiness.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "system.workflow",
+      "kind": "system",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Workflow",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "implemented",
+      "verificationEvidence": [
+        "packages/institution/src/workflow.ts",
+        "packages/institution/src/readiness-workflow.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "system.integrations.sis",
+      "kind": "system",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "SIS integration",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "docs/UNIVERSITY_CONNECTIONS.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "registry status: blocked"
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "system.notifications",
+      "kind": "system",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Notifications",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "implemented",
+      "verificationEvidence": [
+        "packages/platform/src/engines/notifications.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "system.audit",
+      "kind": "system",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Audit",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "implemented",
+      "verificationEvidence": [
+        "packages/platform/src/identity/audit.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "role.student",
+      "kind": "role",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Student",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "specified",
+      "verificationEvidence": [
+        "docs/ROLE-PERMISSION-MATRIX.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "role.advisor",
+      "kind": "role",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Advisor",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "specified",
+      "verificationEvidence": [
+        "docs/ROLE-PERMISSION-MATRIX.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "role.registrar",
+      "kind": "role",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Registrar",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "specified",
+      "verificationEvidence": [
+        "docs/ROLE-PERMISSION-MATRIX.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "role.institution_admin",
+      "kind": "role",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Institution administrator",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "specified",
+      "verificationEvidence": [
+        "docs/ROLE-PERMISSION-MATRIX.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "role.operations",
+      "kind": "role",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Operations",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "specified",
+      "verificationEvidence": [
+        "docs/ROLE-PERMISSION-MATRIX.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "screen.student.registration.readiness",
+      "kind": "screen",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Student registration readiness",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "specified",
+      "verificationEvidence": [
+        "docs/reference/registration-readiness-workflow.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "screen.staff.advising.readiness",
+      "kind": "screen",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Advisor readiness",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "specified",
+      "verificationEvidence": [
+        "docs/reference/registration-readiness-workflow.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "screen.institution.registration.readiness",
+      "kind": "screen",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Institution registration readiness",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "specified",
+      "verificationEvidence": [
+        "docs/reference/registration-readiness-workflow.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "screen.ops.workflows.registration",
+      "kind": "screen",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Registration workflow operations",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "specified",
+      "verificationEvidence": [
+        "docs/reference/registration-readiness-workflow.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "integration.integrations.sis",
+      "kind": "integration",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Student information system",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "docs/UNIVERSITY_CONNECTIONS.md",
+        "packages/institution/src/readiness.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "registry status: blocked"
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "control.operator-policy",
+      "kind": "control",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Semester Operator policy, approval and kill-switch enforcement",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "implemented",
+      "verificationEvidence": [
+        "operator/src/control/policy.ts",
+        "operator/src/control/approvals.ts",
+        "operator/src/control/audit.ts",
+        "operator/policy/policy.json",
+        "operator/tests/controls.test.ts",
+        "operator/tests/runtime.test.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": [
+        {
+          "id": "task_002",
+          "status": "verified"
+        },
+        {
+          "id": "task_003",
+          "status": "verified"
+        },
+        {
+          "id": "task_004",
+          "status": "verified"
+        },
+        {
+          "id": "task_005",
+          "status": "verified"
+        },
+        {
+          "id": "task_006",
+          "status": "verified"
+        }
+      ]
+    },
+    {
+      "identifier": "control.tenant-isolation",
+      "kind": "control",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Tenant context and cross-tenant denial",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "implemented",
+      "verificationEvidence": [
+        "packages/platform/src/tenancy/context.ts",
+        "packages/platform/src/tenancy/tenancy.test.ts",
+        "packages/platform/src/isolation/isolation.test.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": [
+        {
+          "id": "task_001",
+          "status": "awaiting_verification"
+        }
+      ]
+    },
+    {
+      "identifier": "document.document.registration-readiness-workflow",
+      "kind": "document",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Registration readiness workflow reference",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "verified",
+      "verificationEvidence": [
+        "docs/reference/registration-readiness-workflow.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "tenant.tenant.synthetic",
+      "kind": "tenant",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Synthetic validation tenant",
+      "dataDependencies": [],
+      "permissions": "",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "specified",
+      "verificationEvidence": [
+        "packages/platform/src/testing/memory.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "workflow.registration.readiness.evaluation",
+      "kind": "workflow",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "registration.readiness.evaluation",
+      "requiredBehavior": "Registration readiness evaluation: requested → continuous",
+      "dataDependencies": [],
+      "permissions": "escalation=operations",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "idempotency=Every command requires an idempotency key and replays the recorded receipt.; retry=Ambiguous results enter reconciliation before a new evaluation generation. Expired evaluator claims first record unknown, then enter reconciliation.",
+      "implementationStatus": "implemented",
+      "verificationEvidence": [
+        "packages/institution/src/readiness-workflow.ts",
+        "packages/institution/src/readiness-workflow.test.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-001",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Repository baseline and CI",
+      "dataDependencies": [],
+      "permissions": "owner=platform-engineering",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "control.tenant-isolation",
+      "implementationStatus": "verified",
+      "verificationEvidence": [
+        "package.json",
+        ".github/workflows/ci.yml",
+        "docs/operating-model/evidence/P0-001-repository-ci.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-002",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Shared tokens and component package",
+      "dataDependencies": [
+        "P0-001"
+      ],
+      "permissions": "owner=design-systems",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "",
+      "implementationStatus": "in_progress",
+      "verificationEvidence": [
+        "app/src/styles/tokens.css",
+        "app/src/components"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "The complete catalog has not been registered in platform control."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-003",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Tenants, memberships, role grants, and workspace context",
+      "dataDependencies": [
+        "P0-001"
+      ],
+      "permissions": "owner=platform-security",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "identity, authorization",
+      "implementationStatus": "in_progress",
+      "verificationEvidence": [
+        "packages/platform/src/tenancy/context.ts",
+        "packages/platform/src/tenancy/tenancy.test.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Target-environment and named-tenant verification remain open."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-004",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "RLS test harness and tenant-isolation gate",
+      "dataDependencies": [
+        "P0-003"
+      ],
+      "permissions": "owner=platform-security",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "control.tenant-isolation",
+      "implementationStatus": "in_progress",
+      "verificationEvidence": [
+        "packages/platform/src/isolation/isolation.test.ts",
+        "supabase"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Hosted database isolation evidence remains open."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-005",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Policy-decision service and obligations",
+      "dataDependencies": [
+        "P0-003"
+      ],
+      "permissions": "owner=platform-security",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "authorization",
+      "implementationStatus": "in_progress",
+      "verificationEvidence": [
+        "packages/institution/src/policy.ts",
+        "packages/institution/src/policy.test.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Runtime enforcement coverage is not registered across every command."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-006",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Provenance, source, and freshness package",
+      "dataDependencies": [
+        "P0-001"
+      ],
+      "permissions": "owner=data-governance",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "provenance, registration.readiness",
+      "implementationStatus": "in_progress",
+      "verificationEvidence": [
+        "packages/institution/src/readiness.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Cross-domain adoption is incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-007",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Audit log and evidence store",
+      "dataDependencies": [
+        "P0-003",
+        "P0-005"
+      ],
+      "permissions": "owner=platform-security",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "audit",
+      "implementationStatus": "in_progress",
+      "verificationEvidence": [
+        "packages/platform/src/identity/audit.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Production sample and reviewer sign-off remain open."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-008",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Outbox, job leases, retries, and dead letters",
+      "dataDependencies": [
+        "P0-001"
+      ],
+      "permissions": "owner=platform-reliability",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "workflow",
+      "implementationStatus": "in_progress",
+      "verificationEvidence": [
+        "packages/institution/src/workflow.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Durable hosted-worker operation is not proven."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-009",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Workflow engine and receipt model",
+      "dataDependencies": [
+        "P0-005",
+        "P0-007",
+        "P0-008"
+      ],
+      "permissions": "owner=platform-reliability",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "workflow, registration.readiness.evaluation",
+      "implementationStatus": "in_progress",
+      "verificationEvidence": [
+        "packages/institution/src/readiness-workflow.ts",
+        "packages/institution/src/readiness-workflow.test.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "End-to-end recovery operation is not proven."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-010",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Integration SDK and SIS sandbox adapter",
+      "dataDependencies": [
+        "P0-003",
+        "P0-006",
+        "P0-008"
+      ],
+      "permissions": "owner=integration-platform",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "integrations.sis",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "docs/UNIVERSITY_CONNECTIONS.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "No approved tenant credentials or accepted SIS sandbox connection."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-011",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Registration-readiness domain model",
+      "dataDependencies": [
+        "P0-005",
+        "P0-006",
+        "P0-009"
+      ],
+      "permissions": "owner=product-registration",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "registration.readiness",
+      "implementationStatus": "in_progress",
+      "verificationEvidence": [
+        "packages/institution/src/readiness.ts",
+        "packages/institution/src/readiness.test.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "API and target-environment evidence remain open."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-012",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Student readiness experience",
+      "dataDependencies": [
+        "P0-010",
+        "P0-011"
+      ],
+      "permissions": "owner=product-registration",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "registration.readiness, student.registration.readiness",
+      "implementationStatus": "specified",
+      "verificationEvidence": [],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "SIS sandbox adapter and authoritative API are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-013",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Advisor blocker-routing experience",
+      "dataDependencies": [
+        "P0-012"
+      ],
+      "permissions": "owner=product-registration",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "registration.readiness, staff.advising.readiness",
+      "implementationStatus": "specified",
+      "verificationEvidence": [],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Student readiness vertical slice is incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-014",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Registrar cohort and reconciliation console",
+      "dataDependencies": [
+        "P0-010",
+        "P0-013"
+      ],
+      "permissions": "owner=product-registration",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "registration.readiness, institution.registration.readiness",
+      "implementationStatus": "specified",
+      "verificationEvidence": [],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Advisor routing and SIS reconciliation are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-015",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Institution integration-health console",
+      "dataDependencies": [
+        "P0-010"
+      ],
+      "permissions": "owner=institution-product",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "integrations.sis, institution.registration.readiness",
+      "implementationStatus": "specified",
+      "verificationEvidence": [],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "No accepted live connection-health contract."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-016",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Operations inbox for pilot exceptions",
+      "dataDependencies": [
+        "P0-009",
+        "P0-014",
+        "P0-015"
+      ],
+      "permissions": "owner=operations",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "ops.workflows.registration, registration.readiness.evaluation",
+      "implementationStatus": "specified",
+      "verificationEvidence": [],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Upstream operator workflows are incomplete."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-017",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Staging E2E pilot suite",
+      "dataDependencies": [
+        "P0-012",
+        "P0-013",
+        "P0-014",
+        "P0-015",
+        "P0-016"
+      ],
+      "permissions": "owner=quality-engineering",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "registration.readiness",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "The complete synthetic cross-plane journey does not exist."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-018",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Tenant provisioning automation",
+      "dataDependencies": [
+        "P0-003",
+        "P0-004",
+        "P0-005",
+        "P0-007"
+      ],
+      "permissions": "owner=platform-security",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "tenant.synthetic, identity",
+      "implementationStatus": "in_progress",
+      "verificationEvidence": [
+        "packages/platform-control/scripts/create-tenant.ts"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Only unactivated synthetic registry creation is implemented."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-019",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Vercel production deployment and canary controls",
+      "dataDependencies": [
+        "P0-017",
+        "P0-018"
+      ],
+      "permissions": "owner=platform-reliability",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "registration.readiness",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        ".github/workflows/pages.yml"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "No approved release packet or pilot cohort activation."
+      ],
+      "tasks": []
+    },
+    {
+      "identifier": "P0-020",
+      "kind": "backlog",
+      "system": "semester",
+      "workspace": "",
+      "module": "",
+      "userRole": "",
+      "screenOrWorkflow": "",
+      "requiredBehavior": "Pilot launch evidence packet",
+      "dataDependencies": [
+        "P0-017",
+        "P0-018",
+        "P0-019"
+      ],
+      "permissions": "owner=operations",
+      "integrationDependencies": [],
+      "acceptanceCriteria": "registration.readiness",
+      "implementationStatus": "blocked",
+      "verificationEvidence": [
+        "docs/operating-model/RELEASE-CERTIFICATION.md"
+      ],
+      "deploymentStatus": "not_deployed",
+      "blockers": [
+        "Named-institution acceptance, activation, monitoring, and operated evidence remain open."
+      ],
+      "tasks": []
+    }
+  ],
+  "summary": {
+    "proposed": 0,
+    "specified": 15,
+    "in_progress": 11,
+    "blocked": 23,
+    "implemented": 9,
+    "verified": 2,
+    "deployed": 0
+  }
+}

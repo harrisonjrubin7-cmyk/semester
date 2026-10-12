@@ -33,6 +33,7 @@ import type {
 } from '../lib/types';
 import { DEFAULT_NOTIFS, type NotifKey } from '../data/misc';
 import type { Session } from '../lib/sessions';
+import type { WorkspaceView } from '../lib/route';
 import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
 import type { Alarm, Timer } from '../lib/clocks';
@@ -862,6 +863,8 @@ export interface Ephemeral {
   /** Whether the one-line capture box is open. See `lib/capture.ts`. */
   quickAdd: boolean;
   screen: Screen;
+  /** A typed deep-link target inside Account or University. */
+  workspaceView: WorkspaceView | null;
   /** Student-selected recovery context carried to the next screen only. */
   recoveryIntent: RecoveryIntent | null;
   /**
@@ -1633,6 +1636,7 @@ export function initialEphemeral(): Ephemeral {
     quickAdd: false,
     undone: null,
     screen: 'home',
+    workspaceView: null,
     recoveryIntent: null,
     afterSetup: null,
     history: [],
@@ -2242,6 +2246,9 @@ export type Action =
    * course *page*, is not a tool's idea of where it is.
    */
   | { type: 'go'; screen: Screen; courseId?: CourseId; recoveryIntent?: RecoveryIntent }
+  | { type: 'openWorkspace'; screen: 'account'; view: 'course-studio' }
+  | { type: 'openWorkspace'; screen: 'university'; view: 'overview' | 'drafts' }
+  | { type: 'setWorkspaceView'; view: WorkspaceView | null }
   | { type: 'back' }
   | { type: 'openItem'; id: string }
   | { type: 'openCourse'; id: CourseId }
@@ -2838,7 +2845,7 @@ export type Action =
    * would push an entry for the entry they just went back past, and Back
    * would stop working the second time. See `lib/route.ts`.
    */
-  | { type: 'landed'; screen: Screen; id?: string; mode?: StudyMode };
+  | { type: 'landed'; screen: Screen; id?: string; mode?: StudyMode; view?: WorkspaceView };
 
 // Support joined when it became a default tab (`lib/tabbar.ts`): tapping a tab
 // resets the back stack, and a default tab that did not would be the one tab
