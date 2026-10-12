@@ -102,6 +102,7 @@ export const UNDOABLE: Record<string, Undoable> = {
   dropCost: { label: 'Cost removed', fields: ['costs'] },
   dropBalance: { label: 'Reading removed', fields: ['balances'] },
   dropResidence: { label: 'Room removed', fields: ['residences'] },
+  dropMaintenance: { label: 'Repair request removed', fields: ['maintenance'] },
   deleteMyRule: { label: 'Reminder rule deleted', fields: ['myRules'] },
   deleteNote: { label: 'Note deleted', fields: ['notes'] },
   dropMailDraft: { label: 'Draft deleted', fields: ['mailDrafts'] },
