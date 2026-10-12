@@ -21,10 +21,11 @@ const REQUEST: ProcurementRequest = {
 };
 const GRANT: ProcurementGrant = {
   id: 'grant-1', requestId: 'request-1', packetCommit: 'a'.repeat(40), grantedBy: 'account-team-2',
-  grantedAt: '2026-10-04T10:00:00Z', expiresAt: '2026-10-20T10:00:00Z', revokedAt: null, revokedBy: null, revokeReason: null,
+  grantedAt: '2026-10-04T10:00:00Z', expiresAt: '2099-10-20T10:00:00Z', revokedAt: null, revokedBy: null, revokeReason: null,
 };
 const DETAIL: ProcurementDetail = {
   request: REQUEST,
+  hasMoreAccesses: false,
   grants: [{
     ...GRANT,
     items: [{
@@ -136,6 +137,18 @@ describe('Company procurement access', () => {
     expect(host.textContent).toContain('Access withdrawn');
     expect(host.textContent).toContain('Evidence superseded');
     expect(host.textContent).toContain('account-team-1');
+  });
+
+  it('uses the freshly loaded recipient in the irreversible preview', async () => {
+    const fresh = { ...REQUEST, requesterName: 'Current reviewer', requesterEmail: 'current@example.edu' };
+    vi.mocked(api.loadDetail).mockResolvedValueOnce({ ...DETAIL, request: fresh });
+    await mount();
+    await act(async () => button(/Withdraw access/).click());
+    await act(async () => typeInto(host.querySelector('textarea') as HTMLTextAreaElement, 'Evidence superseded'));
+    await act(async () => button(/Review withdrawal/).click());
+    const dialog = document.querySelector('[role="dialog"]')!;
+    expect(dialog.textContent).toContain('Current reviewer (current@example.edu)');
+    expect(dialog.textContent).not.toContain('reviewer@example.edu');
   });
 
   it('rechecks the exact capability immediately before withdrawal and dispatches no mutation after revocation', async () => {
@@ -266,6 +279,52 @@ describe('Company procurement access', () => {
     await settle();
     expect(api.loadDetail).toHaveBeenCalledTimes(2);
     expect(button(/Withdraw access/).disabled).toBe(false);
+  });
+
+  it('clears cached Company detail and starts a protected recheck when readback loses visibility', async () => {
+    let releaseRecheck!: (accounts: CompanyAccount[]) => void;
+    vi.mocked(api.loadAccounts)
+      .mockResolvedValueOnce([ACCOUNT])
+      .mockImplementationOnce(() => new Promise((resolve) => { releaseRecheck = resolve; }));
+    vi.mocked(api.withdraw).mockResolvedValueOnce({ kind: 'unknown', visibilityLost: true, live: null });
+    await mount();
+    await act(async () => button(/Withdraw access/).click());
+    await act(async () => typeInto(host.querySelector('textarea') as HTMLTextAreaElement, 'Evidence superseded'));
+    await act(async () => button(/Review withdrawal/).click());
+    await act(async () => button(/^Withdraw access$/).click());
+    await settle(2);
+    expect(api.loadAccounts).toHaveBeenCalledTimes(2);
+    expect(host.textContent).not.toContain('reviewer@example.edu');
+    expect(host.textContent).not.toContain('Access history');
+    await act(async () => releaseRecheck([]));
+  });
+
+  it('ignores a click on the already selected account or request', async () => {
+    await mount();
+    await act(async () => button(/North College/).click());
+    await act(async () => button(/<Procurement Reviewer>/).click());
+    await settle();
+    expect(host.textContent).toContain('reviewer@example.edu');
+    expect(host.textContent).not.toContain('Loading request and access grants');
+    expect(api.loadRequests).toHaveBeenCalledTimes(1);
+    expect(api.loadDetail).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not offer withdrawal for an already expired grant', async () => {
+    vi.mocked(api.loadDetail).mockResolvedValueOnce({
+      ...DETAIL,
+      grants: [{ ...DETAIL.grants[0], expiresAt: '2020-01-01T00:00:00Z' }],
+    });
+    await mount();
+    expect(host.textContent).toContain('Grant grant-1');
+    expect([...document.querySelectorAll('button')].some((item) => /Withdraw access/.test(item.textContent ?? ''))).toBe(false);
+  });
+
+  it('states when access history is capped in the UI', async () => {
+    vi.mocked(api.loadDetail).mockResolvedValueOnce({ ...DETAIL, hasMoreAccesses: true });
+    await mount();
+    expect(host.textContent).toContain('Showing the latest 100 access events');
+    expect(host.textContent).toContain('complete append-only history remains in the audit system');
   });
 
   it('clears sensitive detail when a protected refresh reports authorization loss', async () => {

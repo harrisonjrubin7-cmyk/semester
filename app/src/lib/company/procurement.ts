@@ -77,6 +77,7 @@ export interface ProcurementGrantDetail extends ProcurementGrant {
 export interface ProcurementDetail {
   request: ProcurementRequest;
   grants: ProcurementGrantDetail[];
+  hasMoreAccesses: boolean;
 }
 
 export type WithdrawalOutcome =
@@ -206,7 +207,7 @@ export async function loadProcurementDetail(accountId: string, requestId: string
       .range(from, to),
     'Could not load access grants.',
   )).map(grant);
-  if (grants.length === 0) return { request: request(requestRow), grants: [] };
+  if (grants.length === 0) return { request: request(requestRow), grants: [], hasMoreAccesses: false };
 
   const grantIds = grants.map((item) => item.id);
   const itemRows = await readEveryPage(
@@ -242,15 +243,16 @@ export async function loadProcurementDetail(accountId: string, requestId: string
     }
   }
 
-  const accessRows = await readEveryPage(
-    (from, to) => client.from('trust_room_access_log')
-      .select(ACCESS_COLUMNS)
-      .in('grant_id', grantIds)
-      .order('accessed_at', { ascending: false })
-      .order('id', { ascending: true })
-      .range(from, to),
-    'Could not load access history.',
-  );
+  const accessReply = await client.from('trust_room_access_log')
+    .select(ACCESS_COLUMNS)
+    .in('grant_id', grantIds)
+    .order('accessed_at', { ascending: false })
+    .order('id', { ascending: true })
+    .range(0, DETAIL_PAGE_SIZE);
+  fail(accessReply.error, 'Could not load access history.');
+  const allAccessRows = rows(accessReply.data);
+  const hasMoreAccesses = allAccessRows.length > DETAIL_PAGE_SIZE;
+  const accessRows = allAccessRows.slice(0, DETAIL_PAGE_SIZE);
   const versions = new Map(versionRows.map((item) => [text(item, 'id'), item]));
   const artifacts = new Map(artifactRows.map((item) => [text(item, 'key'), item]));
 
@@ -271,7 +273,7 @@ export async function loadProcurementDetail(accountId: string, requestId: string
       id: text(item, 'id'), versionId: nullable(item, 'version_id'), accessedAt: text(item, 'accessed_at'),
     })),
   }));
-  return { request: request(requestRow), grants: detailed };
+  return { request: request(requestRow), grants: detailed, hasMoreAccesses };
 }
 
 export async function readProcurementGrant(grantId: string, db?: SupabaseClient): Promise<ProcurementGrant> {
@@ -329,7 +331,7 @@ export async function withdrawWithReadback(
   }
   let persisted: ProcurementGrant;
   try {
-    persisted = await operations.read(grantId);
+    persisted = await within(operations.read(grantId), timeoutMs);
   } catch {
     return { kind: 'unknown', visibilityLost: true, live: null };
   }

@@ -50,6 +50,11 @@ function grantLabel(grant: ProcurementGrantDetail): string {
   return `${grant.id} · granted ${moment(grant.grantedAt)} · expires ${moment(grant.expiresAt)}`;
 }
 
+function withdrawable(grant: ProcurementGrantDetail): boolean {
+  const expires = new Date(grant.expiresAt).getTime();
+  return !grant.revokedAt && Number.isFinite(expires) && expires > Date.now();
+}
+
 export function ProcurementAccess({
   subject,
   online,
@@ -98,7 +103,6 @@ export function ProcurementAccess({
   const detailKey = `${subject}:${selectedAccount}:${selectedRequest}`;
   const currentDetail = detail?.key === detailKey ? detail.value : null;
   const currentAccount = accountRows?.find((item) => item.id === selectedAccount) ?? null;
-  const currentRequest = requestRows?.find((item) => item.id === selectedRequest) ?? null;
 
   const clearForAuthorizationLoss = useCallback((error: unknown): boolean => {
     if (!(error instanceof Error) || error.message !== 'Company access is no longer granted.') return false;
@@ -111,6 +115,7 @@ export function ProcurementAccess({
     setDetail(null);
     setSelectedAccount('');
     setSelectedRequest('');
+    setRequestPage(0);
     setPreview(null);
     setWithdrawOpen(false);
     setActionPending(false);
@@ -125,6 +130,7 @@ export function ProcurementAccess({
     const ticket = ++generation.current;
     actionGeneration.current += 1;
     pending.current = false;
+    setRequestPage(0);
     setAccountError('');
     setSelectedAccount('');
     setSelectedRequest('');
@@ -199,9 +205,9 @@ export function ProcurementAccess({
       (value) => {
         if (detailGeneration.current !== ticket) return;
         setDetail({ key, value });
-        setWithdrawGrant((was) => value.grants.some((grant) => grant.id === was && !grant.revokedAt)
+        setWithdrawGrant((was) => value.grants.some((grant) => grant.id === was && withdrawable(grant))
           ? was
-          : (value.grants.find((grant) => !grant.revokedAt)?.id ?? ''));
+          : (value.grants.find(withdrawable)?.id ?? ''));
         setRefreshing(false);
         setNeedsRefresh('');
         setCheckedAt(new Date());
@@ -217,6 +223,7 @@ export function ProcurementAccess({
   }, [api, clearForAuthorizationLoss, reloadDetail, requestKey, requests, selectedAccount, selectedRequest, subject]);
 
   const chooseAccount = (id: string) => {
+    if (id === selectedAccount) return;
     actionGeneration.current += 1;
     setSelectedAccount(id);
     setSelectedRequest('');
@@ -231,6 +238,7 @@ export function ProcurementAccess({
     setRequestPage(0);
   };
   const chooseRequest = (id: string) => {
+    if (id === selectedRequest) return;
     actionGeneration.current += 1;
     setSelectedRequest(id);
     setDetail(null);
@@ -250,7 +258,7 @@ export function ProcurementAccess({
     && preview.grantId === withdrawGrant;
 
   const runWithdrawal = async () => {
-    if (!previewIsCurrent || !chosenGrant || !currentAccount || !currentRequest || !online || pending.current) return;
+    if (!previewIsCurrent || !chosenGrant || !withdrawable(chosenGrant) || !currentAccount || !currentDetail || !online || pending.current) return;
     const ticket = actionGeneration.current;
     const trimmed = reason.trim();
     pending.current = true;
@@ -263,8 +271,8 @@ export function ProcurementAccess({
       if (actionGeneration.current !== ticket) return;
       const outcome = await api.withdraw(chosenGrant.id, trimmed, subject);
       if (actionGeneration.current !== ticket) return;
-      setActionNotice(outcome);
       if (outcome.kind === 'confirmed') {
+        setActionNotice(outcome);
         setDetail((was) => was?.key === detailKey ? {
           key: was.key,
           value: {
@@ -275,7 +283,20 @@ export function ProcurementAccess({
         setWithdrawGrant('');
         setWithdrawOpen(false);
         setReason('');
+      } else if (outcome.visibilityLost) {
+        setAccounts(null);
+        setRequests(null);
+        setDetail(null);
+        setSelectedAccount('');
+        setSelectedRequest('');
+        setPreview(null);
+        setWithdrawOpen(false);
+        setReason('');
+        setActionNotice(null);
+        setNeedsRefresh('');
+        setReloadAccounts((value) => value + 1);
       } else {
+        setActionNotice(outcome);
         setNeedsRefresh(chosenGrant.id);
       }
     } catch (error) {
@@ -290,7 +311,12 @@ export function ProcurementAccess({
 
   if (accountRows === null) return <LoadingState what="Company permissions and accounts" />;
   if (accountError) {
-    return <ErrorState title="Company requests could not be loaded" body={accountError} recover={{ label: 'Try again', run: () => setReloadAccounts((value) => value + 1) }} />;
+    return (
+      <div className="company-procurement">
+        <ErrorState title="Company requests could not be loaded" body={accountError} recover={{ label: 'Try again', run: () => setReloadAccounts((value) => value + 1) }} />
+        {accountPage > 0 && <button type="button" className="btn" onClick={() => setAccountPage((page) => Math.max(0, page - 1))}>Previous accounts</button>}
+      </div>
+    );
   }
   if (accountRows.length === 0 && accountPage === 0) {
     return <EmptyState title="No company accounts are visible" body="The authorized account read succeeded and returned no accounts." />;
@@ -395,8 +421,9 @@ export function ProcurementAccess({
               )}
             </section>
           ))}
+          {currentDetail.hasMoreAccesses && <Notice>Showing the latest 100 access events across these grants. The complete append-only history remains in the audit system.</Notice>}
 
-          {currentDetail.grants.some((grant) => !grant.revokedAt) && (
+          {currentDetail.grants.some(withdrawable) && (
             <section aria-labelledby="withdraw-access-heading">
               <h3 id="withdraw-access-heading">Withdraw access</h3>
               {!withdrawOpen ? (
@@ -407,7 +434,7 @@ export function ProcurementAccess({
                 <>
                   <label htmlFor="company-withdraw-grant">Grant</label>
                   <select id="company-withdraw-grant" className="input" value={withdrawGrant} onChange={(event) => { setWithdrawGrant(event.target.value); setActionNotice(null); setActionError(''); }}>
-                    {currentDetail.grants.filter((grant) => !grant.revokedAt).map((grant) => <option key={grant.id} value={grant.id}>{grantLabel(grant)}</option>)}
+                    {currentDetail.grants.filter(withdrawable).map((grant) => <option key={grant.id} value={grant.id}>{grantLabel(grant)}</option>)}
                   </select>
                   <label htmlFor="company-withdraw-reason">Reason</label>
                   <textarea
@@ -454,7 +481,7 @@ export function ProcurementAccess({
         </section>
       ))}
 
-      {previewIsCurrent && chosenGrant && currentAccount && currentRequest && (
+      {previewIsCurrent && chosenGrant && withdrawable(chosenGrant) && currentAccount && currentDetail && (
         <ConfirmDialog
           title="Withdraw procurement-room access?"
           confirmLabel="Withdraw access"
@@ -463,7 +490,7 @@ export function ProcurementAccess({
           preview={(
             <ActionPreview
               subject={`${currentAccount.name} · grant ${chosenGrant.id}`}
-              says={<>Prevents new room opens for {currentRequest.requesterName} ({currentRequest.requesterEmail}).</>}
+              says={<>Prevents new room opens for {currentDetail.request.requesterName} ({currentDetail.request.requesterEmail}).</>}
               exactly={(
                 <>
                   <p>Reason: {reason.trim()}</p>
