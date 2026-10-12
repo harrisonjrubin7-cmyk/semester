@@ -2035,6 +2035,28 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep housing and meal-plan backup/migration closed until legacy term-only records have an explicit account ownership and safe migration rule.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-11 reversible athletics eligibility-requirement removal — automation pass 8, integration slice 98
+
+- [x] Start from clean required-branch head `d1c502690`; fetch current `origin/main` `8107737a8`, confirm it is already included and inspect exact athletics eligibility history/code for overlap.
+- [x] Re-rank one student-entered eligibility requirement ahead of housing and meal-plan portability, whose legacy term-only records still lack a safe account-ownership migration rule.
+- [x] Give every repeated removal control an exact accessible name containing the requirement and its student-entered authority/source.
+- [x] Offer a polite receipt and bounded eight-second Undo only after the validated account/term-scoped device-library write succeeds.
+- [x] Restore the exact requirement at its former position against the latest library state, preserving later eligibility work.
+- [x] Keep a refused write represented and avoid false completion or a false Undo offer.
+- [x] Preserve the existing athletics reader, workspace backup and explicit non-official eligibility boundary; add no rule set or eligibility determination.
+- [x] Reconcile all four current `vi.mock` omissions in the repository's explicit isolated-worker register and pass the isolation guard.
+- [x] Pass 7/7 focused eligibility, adjacent athletics-hours and isolation-policy tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the existing build chunk-size warning.
+- [x] Pass aggregate design-system check (9 token tests and 69 contracts) and the test-backed report; retain zero violations, 86 existing warnings and the existing CSS ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace consequence slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` and app-host environment values unset and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
+- [ ] Keep housing and meal-plan backup/migration closed until legacy term-only records have an explicit account ownership and safe migration rule.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## 2026-10-11 governed graduation cost-line removal — automation pass 7, integration slice 97
 
 - [x] Start from clean required-branch head `9d627db64`; fetch current `origin/main` `8107737a8`, confirm it is already included and inspect exact cost-planner history and code for overlap.
