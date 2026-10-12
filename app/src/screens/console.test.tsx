@@ -116,6 +116,9 @@ vi.mock('../lib/console/client', async (orig) => ({
 }));
 
 import { Console } from './Console';
+// The production workspace is code-split; preload it so these state/navigation
+// tests do not depend on the test transformer's dynamic-import scheduling.
+import '../components/console/Approvals';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -544,6 +547,7 @@ describe('the gate', () => {
 });
 
 describe('command center', () => {
+  const SECOND_APPROVAL_ID = '223e4567-e89b-12d3-a456-426614174000';
   const exception = (patch: Partial<CommandItem> = {}): CommandItem => ({
     id: 'gate:production_restore', severity: 'critical', category: 'release gate',
     title: 'Production restore evidence', tenantId: null, tenantName: null,
@@ -595,6 +599,81 @@ describe('command center', () => {
     const target = host.querySelector(`[data-approval-request="${APPROVAL_ID}"]`);
     expect(target).toBeTruthy();
     expect(document.activeElement).toBe(target);
+  });
+
+  it('returns from an exact review to the complete tenant-scoped approvals list', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockResolvedValue([exception({
+      id: `approval:${APPROVAL_ID}`,
+      category: 'approval',
+      title: 'Approval awaiting decision: Break-glass access',
+      tenantId: 'vu',
+      tenantName: 'Vanderbilt University',
+    })]);
+    mock.approvals.mockResolvedValue([
+      request({ id: APPROVAL_ID, dutyId: 'break-glass', tenantId: 'vu', ticket: 'INC-7' }),
+      request({ id: SECOND_APPROVAL_ID, tenantId: 'vu', ticket: 'CHG-ALT' }),
+    ]);
+    await render();
+    await press('Review approval');
+
+    expect(host.querySelector(`[data-approval-request="${APPROVAL_ID}"]`)).toBeTruthy();
+    expect(host.textContent).not.toContain('CHG-ALT');
+    await press('Back to all approvals');
+
+    expect(dd(host.querySelector('[aria-label="Context bar"]')!, 'Scope')).toBe('vu');
+    expect(host.querySelector(`[data-approval-request="${APPROVAL_ID}"]`)).toBeTruthy();
+    expect(host.querySelector(`[data-approval-request="${SECOND_APPROVAL_ID}"]`)).toBeTruthy();
+    expect(host.textContent).not.toContain('Approval review');
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Approval requests');
+  });
+
+  it('clears stale exact intent on ordinary tab return and can focus a different exception', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockResolvedValue([
+      exception({
+        id: `approval:${APPROVAL_ID}`,
+        category: 'approval',
+        title: 'First approval awaiting decision',
+        tenantId: 'vu',
+      }),
+      exception({
+        id: `approval:${SECOND_APPROVAL_ID}`,
+        category: 'approval',
+        title: 'Second approval awaiting decision',
+        tenantId: 'vu',
+      }),
+    ]);
+    mock.approvals.mockResolvedValue([
+      request({ id: APPROVAL_ID, tenantId: 'vu', ticket: 'CHG-FIRST' }),
+      request({ id: SECOND_APPROVAL_ID, tenantId: 'vu', ticket: 'CHG-SECOND' }),
+    ]);
+    await render();
+
+    const review = async (title: string) => {
+      const card = [...host.querySelectorAll('article')]
+        .find((item) => item.getAttribute('aria-label')?.endsWith(title));
+      const control = card?.querySelector('button');
+      if (!control) throw new Error(`No review control for ${title}`);
+      await act(async () => control.click());
+      await flush();
+    };
+
+    await review('First approval awaiting decision');
+    expect(host.querySelector(`[data-approval-request="${APPROVAL_ID}"]`)).toBeTruthy();
+    expect(host.textContent).not.toContain('CHG-SECOND');
+
+    await press('Command center');
+    await press('Approvals');
+    expect(host.querySelector(`[data-approval-request="${APPROVAL_ID}"]`)).toBeTruthy();
+    expect(host.querySelector(`[data-approval-request="${SECOND_APPROVAL_ID}"]`)).toBeTruthy();
+
+    await press('Command center');
+    await review('Second approval awaiting decision');
+    const second = host.querySelector(`[data-approval-request="${SECOND_APPROVAL_ID}"]`);
+    expect(second).toBeTruthy();
+    expect(host.querySelector(`[data-approval-request="${APPROVAL_ID}"]`)).toBeNull();
+    expect(document.activeElement).toBe(second);
   });
 
   it('keeps malformed approval ids and server route strings inert', async () => {

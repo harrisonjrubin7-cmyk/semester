@@ -83,6 +83,7 @@ export function Approvals({
   onStatus,
   privileged,
   reviewRequestId = null,
+  onExitReview,
   onReviewFound,
   readDuties = loadDuties,
   readRequests = loadApprovals,
@@ -91,6 +92,7 @@ export function Approvals({
   onQueueRefresh,
 }: ViewProps & {
   reviewRequestId?: string | null;
+  onExitReview?: () => void;
   onReviewFound?: (request: ApprovalRequest) => void;
   readDuties?: () => Promise<DutyRow[]>;
   readRequests?: () => Promise<ApprovalRequest[]>;
@@ -111,6 +113,8 @@ export function Approvals({
   const [receiptError, setReceiptError] = useState<string | null>(null);
   const [returnedStatus, setReturnedStatus] = useState<ApprovalRequest['status'] | null>(null);
   const reviewTarget = useRef<HTMLElement>(null);
+  const requestListTarget = useRef<HTMLDivElement>(null);
+  const previousReviewId = useRef(reviewRequestId);
   const loadGeneration = useRef(0);
   const decisionGeneration = useRef(0);
   const decisionClaimed = useRef<string | null>(null);
@@ -166,6 +170,11 @@ export function Approvals({
     decisionClaimed.current = null;
     receiptReadFor.current = null;
     return () => { decisionGeneration.current += 1; };
+  }, [reviewRequestId]);
+
+  useEffect(() => {
+    if (previousReviewId.current && !reviewRequestId) requestListTarget.current?.focus();
+    previousReviewId.current = reviewRequestId;
   }, [reviewRequestId]);
 
   const duty = duties.find((d) => d.id === form.dutyId);
@@ -394,8 +403,15 @@ export function Approvals({
         <WriteNotice env={env} />
       </form>
 
-      {reviewRequestId ? <SectionLabel>Approval review</SectionLabel> : null}
-      <SectionLabel aside={`${shown.length}`}>Requests</SectionLabel>
+      {reviewRequestId ? (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', alignItems: 'center', justifyContent: 'space-between' }}>
+          <SectionLabel>Approval review</SectionLabel>
+          {onExitReview ? <button type="button" className="btn" onClick={onExitReview}>Back to all approvals</button> : null}
+        </div>
+      ) : null}
+      <div ref={requestListTarget} tabIndex={-1} aria-label="Approval requests">
+        <SectionLabel aside={`${shown.length}`}>Requests</SectionLabel>
+      </div>
       {requests === null && <p role="status" style={{ marginBlock: 0, color: 'var(--app-dim)' }}>Loading requests…</p>}
       {reviewRequestId && requests !== null && readError && (
         <div role="alert" className="portal-panel">

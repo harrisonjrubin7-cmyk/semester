@@ -20,7 +20,6 @@ import {
 } from '../lib/console/client';
 import { MfaStep } from '../components/MfaStep';
 import { ContextBar } from '../components/console/ContextBar';
-import { Approvals } from '../components/console/Approvals';
 import { BreakGlass } from '../components/console/BreakGlass';
 import { Audit } from '../components/console/Audit';
 import { Customers } from '../components/console/Customers';
@@ -68,6 +67,8 @@ const Releases = lazy(() => import('../components/console/Releases').then((m) =>
 const Launch = lazy(() => import('../components/console/Launch').then((m) => ({ default: m.Launch })));
 const Controls = lazy(() => import('../components/console/Controls').then((m) => ({ default: m.Controls })));
 const FinancialModel = lazy(() => import('../finance/FinancialModel').then((m) => ({ default: m.FinancialModel })));
+// Approval confirmation and receipt code is needed only after the operator opens this workspace.
+const Approvals = lazy(() => import('../components/console/Approvals').then((m) => ({ default: m.Approvals })));
 
 const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures, release flags and evidence — for operators holding console:operate.';
 
@@ -191,6 +192,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
   }, [mfaKnown, workspaces]);
 
   const choose = (next: ConsoleWorkspaceId) => {
+    if (next === 'approvals') setApprovalReviewId(null);
     setTab(next);
     savePreference(PREF_TAB, next).catch((e: unknown) => setStatus(said(e, 'The last-open tab was not saved.')));
   };
@@ -297,12 +299,15 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
         {tab === 'command' && <CommandCenter {...viewProps} onReviewApproval={reviewApproval} refreshToken={commandRefresh} />}
         {tab === 'support' && <SupportQueue {...viewProps} />}
         {tab === 'approvals' && (
-          <Approvals
-            {...viewProps}
-            reviewRequestId={approvalReviewId}
-            onReviewFound={alignApprovalReview}
-            onQueueRefresh={() => setCommandRefresh((value) => value + 1)}
-          />
+          <Suspense fallback={<p role="status">Loading approvals…</p>}>
+            <Approvals
+              {...viewProps}
+              reviewRequestId={approvalReviewId}
+              onExitReview={() => setApprovalReviewId(null)}
+              onReviewFound={alignApprovalReview}
+              onQueueRefresh={() => setCommandRefresh((value) => value + 1)}
+            />
+          </Suspense>
         )}
         {tab === 'breakglass' && <BreakGlass {...viewProps} />}
         {tab === 'audit' && <Audit {...viewProps} />}
