@@ -199,6 +199,49 @@ describe('Company procurement access', () => {
     expect(host.textContent).not.toContain('Access withdrawn');
   });
 
+  it('does not dispatch a verified withdrawal after request-page navigation', async () => {
+    const firstPage = Array.from({ length: 50 }, (_, index) => ({ ...REQUEST, id: `request-${index}`, requesterName: `Reviewer ${index}` }));
+    const nextRequest = { ...REQUEST, id: 'request-next', requesterName: 'Next-page reviewer' };
+    let releaseVerification!: (subject: string) => void;
+    vi.mocked(api.loadRequests).mockResolvedValueOnce(firstPage).mockResolvedValueOnce([nextRequest]);
+    vi.mocked(api.loadDetail).mockImplementation(async (_accountId, requestId) => ({ ...DETAIL, request: requestId === nextRequest.id ? nextRequest : firstPage[0] }));
+    vi.mocked(api.verifySubject).mockImplementationOnce(() => new Promise((resolve) => { releaseVerification = resolve; }));
+    await mount();
+    await act(async () => button(/Withdraw access/).click());
+    await act(async () => typeInto(host.querySelector('textarea') as HTMLTextAreaElement, 'Evidence superseded'));
+    await act(async () => button(/Review withdrawal/).click());
+    await act(async () => button(/^Withdraw access$/).click());
+    await act(async () => button(/Next requests/).click());
+    await act(async () => releaseVerification('account-team-1'));
+    await settle();
+    expect(api.withdraw).not.toHaveBeenCalled();
+    expect(host.textContent).toContain('Next-page reviewer');
+    expect(host.textContent).not.toContain('Access withdrawn');
+  });
+
+  it('does not render a late withdrawal result after request-page navigation', async () => {
+    const firstPage = Array.from({ length: 50 }, (_, index) => ({ ...REQUEST, id: `request-${index}`, requesterName: `Reviewer ${index}` }));
+    const nextRequest = { ...REQUEST, id: 'request-next', requesterName: 'Next-page reviewer' };
+    let releaseWithdrawal!: (outcome: WithdrawalOutcome) => void;
+    vi.mocked(api.loadRequests).mockResolvedValueOnce(firstPage).mockResolvedValueOnce([nextRequest]);
+    vi.mocked(api.loadDetail).mockImplementation(async (_accountId, requestId) => ({ ...DETAIL, request: requestId === nextRequest.id ? nextRequest : firstPage[0] }));
+    vi.mocked(api.withdraw).mockImplementationOnce(() => new Promise((resolve) => { releaseWithdrawal = resolve; }));
+    await mount();
+    await act(async () => button(/Withdraw access/).click());
+    await act(async () => typeInto(host.querySelector('textarea') as HTMLTextAreaElement, 'Evidence superseded'));
+    await act(async () => button(/Review withdrawal/).click());
+    await act(async () => button(/^Withdraw access$/).click());
+    await settle(2);
+    await act(async () => button(/Next requests/).click());
+    await act(async () => releaseWithdrawal({
+      kind: 'confirmed', concurrent: false,
+      grant: { ...GRANT, revokedAt: '2026-10-11T22:00:00Z', revokedBy: 'account-team-1', revokeReason: 'Evidence superseded' },
+    }));
+    await settle();
+    expect(host.textContent).toContain('Next-page reviewer');
+    expect(host.textContent).not.toContain('Access withdrawn');
+  });
+
   it('does not offer or queue a withdrawal while offline', async () => {
     await mount('account-team-1', false);
     expect(host.textContent).toContain('You are offline');

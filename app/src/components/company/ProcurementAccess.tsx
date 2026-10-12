@@ -155,12 +155,17 @@ export function ProcurementAccess({
     if (!selectedAccount || accounts?.subject !== subject) return;
     const key = `${subject}:${selectedAccount}`;
     const ticket = ++requestGeneration.current;
+    actionGeneration.current += 1;
     setRequestError('');
     setRequests(null);
     setSelectedRequest('');
     setDetail(null);
     setPreview(null);
     setWithdrawOpen(false);
+    setActionPending(false);
+    setActionNotice(null);
+    setActionError('');
+    setNeedsRefresh('');
     void api.loadRequests(selectedAccount, requestPage).then(
       (rows) => {
         if (requestGeneration.current !== ticket) return;
