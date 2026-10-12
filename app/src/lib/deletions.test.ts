@@ -148,6 +148,7 @@ describe('rows lost on the way in', () => {
   const agreed = baseOf(persisted([note('a'), note('b'), note('c')]));
 
   afterEach(() => {
+    vi.restoreAllMocks();
     clearIngressDrops();
     localStorage.clear();
   });
@@ -193,6 +194,19 @@ describe('rows lost on the way in', () => {
 
   // Found reviewing bffd8da: a blank id or one id on two rows still counted
   // as readable, so the agreed id they replaced read as deleted here.
+  // Found reviewing df5dd87: a removal storage refused left the stored note
+  // in force, so every later pull held this device's deletions back for good.
+  it('stays cleared when storage refuses to remove the note', () => {
+    noteIngressDrops(['courses']);
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError');
+    });
+    clearIngressDrops();
+    expect(ingressDrops(), 'the stored note outlived the clear').toEqual([]);
+    noteIngressDrops(['notes']);
+    expect(ingressDrops(), 'a new note still counts').toEqual(['notes']);
+  });
+
   it('counts a row whose id is blank, or another row\u2019s, as lost', () => {
     expect(droppedOnRead({ notes: [note('a'), { id: '' }] }, { notes: [note('a'), { id: '' }] })).toEqual(['notes']);
     expect(droppedOnRead({ notes: [note('a'), note('a')] }, { notes: [note('a'), note('a')] })).toEqual(['notes']);

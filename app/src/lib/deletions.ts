@@ -216,9 +216,16 @@ export function droppedOnRead(raw: Record<string, unknown>, read: Record<string,
  */
 let noted = new Set<string>();
 
+/**
+ * Set when a clear could not remove the stored note: what storage still holds
+ * is a note this session already healed, and must not count again. Lifted by
+ * the next write that lands, which replaces it.
+ */
+let storedIsStale = false;
+
 export function ingressDrops(): string[] {
   let stored: string[] = [];
-  try {
+  if (!storedIsStale) try {
     const parsed: unknown = JSON.parse(localStorage.getItem(INGRESS_KEY) ?? '[]');
     if (Array.isArray(parsed)) stored = parsed.filter((f): f is string => typeof f === 'string');
   } catch {
@@ -233,6 +240,7 @@ export function noteIngressDrops(fields: readonly string[]): void {
   noted = new Set([...noted, ...fields]);
   try {
     localStorage.setItem(INGRESS_KEY, JSON.stringify([...new Set([...ingressDrops(), ...fields])]));
+    storedIsStale = false;
   } catch {
     // Storage full or blocked: held in memory above for this session.
   }
@@ -242,7 +250,9 @@ export function clearIngressDrops(): void {
   noted = new Set();
   try {
     localStorage.removeItem(INGRESS_KEY);
+    storedIsStale = false;
   } catch {
-    // See above.
+    // Removal refused: ignore what is stored for the rest of this session.
+    storedIsStale = true;
   }
 }
