@@ -472,6 +472,22 @@ jobs:
           SMOKE_URL: http://localhost:4173/${{ github.event.repository.name }}/
         run: npm run smoke:golden
 
+      # A bounded registration-readiness proof against a separately built
+      # production bundle with Registration Day Mode enabled. The destination
+      # is intercepted inside Chromium: this verifies the reviewed handoff and
+      # durable student report, not an SIS write or a live institution link.
+      - name: Walk the seeded registration handoff
+        working-directory: app
+        env:
+          VITE_REGISTRATION_DAY_MODE: preview
+          SMOKE_PLAYWRIGHT: /tmp/smoke/node_modules/playwright
+          SMOKE_URL: http://localhost:4176/
+        run: |
+          npx vite build --outDir /tmp/registration-handoff-dist
+          npx vite preview --outDir /tmp/registration-handoff-dist --port 4176 > /tmp/registration-handoff-preview.log 2>&1 &
+          timeout 120 bash -c "until curl -sf http://localhost:4176/ >/dev/null; do sleep 1; done"
+          npm run smoke:registration-handoff
+
       # The same student with human help switched on. Step 7 of
       # docs/GOLDEN-PATH-TEST-SCRIPT.md — reach a person, and see exactly what
       # would be sent before anything is — sits behind `VITE_HUMAN_HELP`, which

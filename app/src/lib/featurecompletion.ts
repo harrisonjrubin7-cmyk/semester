@@ -84,7 +84,7 @@ export const FEATURE_COMPLETION_RECORDS: readonly FeatureCompletionRecord[] = [{
     result('FC-14', 'partial', [evidence('app/src/screens/registration.test.tsx', 'Registration route states and recovery behavior under test.')], 'The design archive still lacks one end-to-end proof covering every ready, loading, empty, error, forbidden, offline and stale state.'),
     result('FC-15', 'partial', [evidence('app/src/components/RegistrationReadiness.test.tsx', 'Component interaction and accessible text coverage.')], 'No representative student keyboard, mobile and assistive-technology UAT has been recorded.'),
     result('FC-16', 'met', [evidence('packages/institution/src/readiness-workflow.test.ts', 'Workflow state, retry, concurrency, receipt and event tests.'), evidence('app/server/institution/registration.test.ts', 'Server registration transaction tests.')]),
-    result('FC-17', 'missing', [], 'No seeded end-to-end run proves the complete student-to-authoritative-handoff flow.'),
+    result('FC-17', 'met', [evidence('app/scripts/registration-handoff-smoke.mjs', 'A production-bundle browser journey seeds a complete student plan, confirms the official-system destination, records only the student-reported outcome and proves it survives reload without making an external request.')]),
     result('FC-18', 'partial', [evidence('app/src/lib/institution-ops.ts', 'The registration_ready metric and registrar owner.'), evidence('app/src/lib/systempassports.ts', 'The operational owner, alerts, rollback boundary and disabled-by-default system flag contract.')], 'A feature-specific runbook, named pilot owner and verified tenant flag configuration are not present.'),
   ],
 }];
