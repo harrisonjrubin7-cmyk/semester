@@ -8,7 +8,7 @@ import {
   type CommandProvider,
 } from './command-delivery-runner.ts';
 
-const identity: UniversityIdentity = { userId: 'registrar-1', institutionId: 'tenant-1', roles: ['registrar'] };
+const identity: UniversityIdentity = { userId: 'registrar-1', institutionId: 'tenant-1', roles: ['staff'] };
 const providerReceipt = (id: string): Receipt => ({
   id,
   status: 'completed',
