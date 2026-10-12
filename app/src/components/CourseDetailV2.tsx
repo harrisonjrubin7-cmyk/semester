@@ -82,13 +82,12 @@ export function CourseDetailV2({
   };
   const career = useDeviceLibrary(`semester.career.v1:${account?.id || 'device'}:${state.term}`, readCareer, EMPTY_CAREER).value;
   const [confirm, setConfirm] = useState<'add' | 'remove' | 'leave' | null>(null);
-  const [reference, setReference] = useState<{ courseId: string; title: string; url: string } | null>(null);
   const [said, setSaid] = useState('');
   const now = useNow();
   const publicationTerm = course.term === state.term || course.term === readTerm(state.term).label ? state.term : '';
   const publications = useCoursePublicationsState([course.code], publicationTerm, account?.id ?? '', school.id);
   const published = publications.publications[courseCode(course.code)];
-  const currentReference = reference?.courseId === course.id ? reference : null;
+  const publicationScopeKey = JSON.stringify([account?.id ?? '', school.id, course.id, publicationTerm]);
 
   useEffect(() => {
     if (!wide) return undefined;
@@ -117,6 +116,11 @@ export function CourseDetailV2({
     if (onToggleCart(course.id)) {
       setSaid(adding ? `${course.code} section ${course.section} is in your cart. Nothing was submitted to your school.` : `${course.code} section ${course.section} was removed from your cart.`);
     }
+  };
+
+  const sheetKeys = (ev: KeyboardEvent) => {
+    if (ev.target instanceof Element && ev.target.closest('.dialog')) return;
+    modalKeys(ev);
   };
 
   const body = (
@@ -283,10 +287,10 @@ export function CourseDetailV2({
         </Section>
 
         <PublishedCourseContent
+          key={publicationScopeKey}
           code={course.code}
           read={publications}
           publication={published}
-          onOpenReference={(title, url) => setReference({ courseId: course.id, title, url })}
         />
 
         <details className="balance-more">
@@ -331,19 +335,6 @@ export function CourseDetailV2({
           onCancel={() => setConfirm(null)}
         />
       ) : null}
-      {currentReference ? (
-        <ConfirmDialog
-          title={`Open “${currentReference.title}”?`}
-          tone="external"
-          preview={<p className="dialog-url">{currentReference.url}</p>}
-          confirmLabel="Open reference"
-          onConfirm={() => {
-            window.open(currentReference.url, '_blank', 'noopener,noreferrer');
-            setReference(null);
-          }}
-          onCancel={() => setReference(null)}
-        />
-      ) : null}
     </>
   );
 
@@ -371,7 +362,7 @@ export function CourseDetailV2({
         role="dialog"
         aria-modal="true"
         aria-labelledby={headingId}
-        onKeyDown={confirm ? undefined : modalKeys}
+        onKeyDown={confirm ? undefined : sheetKeys}
         onClick={(ev) => ev.stopPropagation()}
       >
         <span className="explain-handle" aria-hidden="true" />
@@ -386,70 +377,84 @@ function PublishedCourseContent({
   code,
   read,
   publication,
-  onOpenReference,
 }: {
   code: string;
   read: CoursePublicationsState;
   publication: CoursePublicationsState['publications'][string] | undefined;
-  onOpenReference: (title: string, url: string) => void;
 }) {
+  const [reference, setReference] = useState<{ title: string; url: string } | null>(null);
   if (read.status === 'disabled') return null;
   const guidance = publication?.guidance;
   const packs = publication?.packs ?? [];
   const empty = read.status === 'empty' || (read.status === 'ready' && !guidance && packs.length === 0);
   return (
-    <Section title="Instructor publications" badge="connected">
-      {read.status === 'loading' ? <LoadingState what="published guidance and study packs" /> : null}
-      {read.status === 'error' ? (
-        <ErrorState
-          title="Published course content could not be loaded."
-          body={`Semester could not read the guidance and study packs published for ${code}. Nothing has been filled in for them.`}
-          recover={{ label: 'Try again', run: read.retry }}
+    <>
+      <Section title="Instructor publications" badge="connected">
+        {read.status === 'loading' ? <LoadingState what="published guidance and study packs" /> : null}
+        {read.status === 'error' ? (
+          <ErrorState
+            title="Published course content could not be loaded."
+            body={`Semester could not read the guidance and study packs published for ${code}. Nothing has been filled in for them.`}
+            recover={{ label: 'Try again', run: read.retry }}
+          />
+        ) : null}
+        {empty ? (
+          <EmptyState
+            inline
+            title="No published guidance or study packs for this course."
+            body="If your instructor publishes either one for this term, it will appear here with its publication date."
+          />
+        ) : null}
+        {read.status === 'ready' && guidance ? (
+          <div className="studio-guidance">
+            <strong>Guidance</strong>
+            <p className="sharing-meta">From your instructor · published {guidance.published}</p>
+            <p>{guidance.body}</p>
+          </div>
+        ) : null}
+        {read.status === 'ready' && packs.length > 0 ? (
+          <div>
+            <h4>Study packs</h4>
+            {packs.map((pack) => (
+              <article key={pack.id} className="study-pack">
+                <strong>{pack.title}</strong>
+                <p className="sharing-meta">From your instructor · published {pack.published}</p>
+                {pack.note ? <p>{pack.note}</p> : null}
+                <ul className="sharing-list">
+                  {pack.items.map((item, index) => (
+                    <li key={`${pack.id}:${index}`}>
+                      <div>
+                        {item.title}
+                        <span className="sharing-meta"> · {AUTHORITY_TEXT[item.authority]}{item.citation ? ` · ${item.citation}` : ''}</span>
+                      </div>
+                      {item.link ? (
+                        <button type="button" className="workspace-text-button" onClick={() => setReference({ title: item.title, url: item.link })}>
+                          Open {item.title}…
+                        </button>
+                      ) : null}
+                      {item.authority === 'prohibited' ? <p className="sharing-meta">Your instructor marked this reference “Do not use.”</p> : null}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        ) : null}
+      </Section>
+      {reference ? (
+        <ConfirmDialog
+          title={`Open “${reference.title}”?`}
+          tone="external"
+          preview={<p className="dialog-url">{reference.url}</p>}
+          confirmLabel="Open reference"
+          onConfirm={() => {
+            window.open(reference.url, '_blank', 'noopener,noreferrer');
+            setReference(null);
+          }}
+          onCancel={() => setReference(null)}
         />
       ) : null}
-      {empty ? (
-        <EmptyState
-          inline
-          title="No published guidance or study packs for this course."
-          body="If your instructor publishes either one for this term, it will appear here with its publication date."
-        />
-      ) : null}
-      {read.status === 'ready' && guidance ? (
-        <div className="studio-guidance">
-          <strong>Guidance</strong>
-          <p className="sharing-meta">From your instructor · published {guidance.published}</p>
-          <p>{guidance.body}</p>
-        </div>
-      ) : null}
-      {read.status === 'ready' && packs.length > 0 ? (
-        <div>
-          <h4>Study packs</h4>
-          {packs.map((pack) => (
-            <article key={pack.id} className="study-pack">
-              <strong>{pack.title}</strong>
-              <p className="sharing-meta">From your instructor · published {pack.published}</p>
-              {pack.note ? <p>{pack.note}</p> : null}
-              <ul className="sharing-list">
-                {pack.items.map((item, index) => (
-                  <li key={`${pack.id}:${index}`}>
-                    <div>
-                      {item.title}
-                      <span className="sharing-meta"> · {AUTHORITY_TEXT[item.authority]}{item.citation ? ` · ${item.citation}` : ''}</span>
-                    </div>
-                    {item.link ? (
-                      <button type="button" className="workspace-text-button" onClick={() => onOpenReference(item.title, item.link)}>
-                        Open {item.title}…
-                      </button>
-                    ) : null}
-                    {item.authority === 'prohibited' ? <p className="sharing-meta">Your instructor marked this reference “Do not use.”</p> : null}
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      ) : null}
-    </Section>
+    </>
   );
 }
 
