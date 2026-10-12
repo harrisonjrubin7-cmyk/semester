@@ -3,7 +3,7 @@ import { EmptyState, FilePick } from './ui';
 import { ErrorState } from './unity/States';
 import {useEffect,useState} from 'react';
 import {useDeviceLibrary} from '../lib/device-library';
-import {readStoredDirectory,readIds,EMPTY_IDS,EMPTY_HOUSING,EMPTY_MEALS,readHousingDraft,readMealDraft} from '../lib/portal-storage';
+import {readStoredDirectory,readIds,EMPTY_IDS,EMPTY_HOUSING,EMPTY_MEALS,housingPlanKey,readHousingDraft,readMealDraft} from '../lib/portal-storage';
 import {DIRECTORY_COPY,parseDirectory,directoryTemplate,upcomingEvents,whenLine,type CampusDirectoryData,type CampusListing,type DirectoryKind} from '../lib/campusdirectory';
 import {download} from '../lib/deliver';
 import { formatDate } from '../lib/locale';
@@ -24,8 +24,8 @@ export function CampusDirectory({kind,onPlan}:{kind:DirectoryKind;onPlan?:(item:
  {!!all.length&&<details className="portal-import-help"><summary>Update this directory</summary><button onClick={()=>{if(!setData(null))return;setUndo(data);setMessage('Imported directory removed. Saved choices remain available if matching entries are imported again.');}}>Remove imported directory</button><p>Import a new school file to replace the directory. Saved choices are kept for entries with the same IDs. Availability, fees and hours are supplied by the institution; this workspace does not confirm bookings or memberships.</p><button onClick={()=>download({name:`Semester ${kind} directory template.json`,body:JSON.stringify(directoryTemplate(kind),null,2),mime:'application/json'})}>Download school template</button></details>}
  </section>;
 }
-export function HousingPlanner({choice,term}:{choice:string;term:string}){
- const library=useDeviceLibrary(`semester.housing-plan.${term}`,readHousingDraft,EMPTY_HOUSING);const plan=library.value;const setPlan=library.update;const status=library.error||'Changes save on this device';
+export function HousingPlanner({choice,term,accountId}:{choice:string;term:string;accountId:string|null}){
+ const library=useDeviceLibrary(housingPlanKey(accountId,term),readHousingDraft,EMPTY_HOUSING);const plan=library.value;const setPlan=library.update;const status=library.error||'Changes save for this account on this device';
  useEffect(()=>{if(choice)setPlan(p=>({...p,residence:choice}));},[choice,setPlan]);
  return <section className="portal-panel"><h3>Housing application plan</h3><span className="portal-tag">{term}</span><p>Keep preferences and a checklist ready for the housing office. This is a private draft, not a submitted application.</p><div className="portal-form-grid">{[['residence','Preferred residence'],['roomType','Room type'],['roommate','Roommate preference']].map(([id,label])=><label key={id}>{label}<input className="input" value={String(plan[id as keyof typeof plan])} onChange={e=>setPlan(p=>({...p,[id]:e.target.value}))}/></label>)}<label>Questions for the housing office<textarea className="input" value={plan.notes} onChange={e=>setPlan(p=>({...p,notes:e.target.value}))}/></label></div><h4>Application checklist</h4>{['Review eligibility and deadlines','Compare room types and costs','Discuss roommate preferences','Submit through the official housing portal','Record the confirmed assignment','Review move-in and move-out instructions'].map(task=><label className="portal-check checklist-row" key={task}><input type="checkbox" checked={plan.checks.includes(task)} onChange={()=>setPlan(p=>({...p,checks:p.checks.includes(task)?p.checks.filter((t:string)=>t!==task):[...p.checks,task]}))}/>{task}</label>)}<div className="portal-actions"><button onClick={()=>download({name:'Semester housing application plan.json',body:JSON.stringify({status:'draft-not-submitted',term,...plan},null,2),mime:'application/json'})}>Export application plan</button><span role="status" className="portal-muted">{status}</span></div></section>;
 }

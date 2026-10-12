@@ -8,6 +8,7 @@ import { EMPTY_CAREER } from './career';
 import { EMPTY_CREATIONS } from './creations';
 import { EMPTY_FAMILY } from './family';
 import { EMPTY_PATHWAY } from './pathway';
+import { EMPTY_HOUSING, HOUSING_PLAN_PREFIX } from './portal-storage';
 import {
   readWorkspaceBackup,
   restoreWorkspaces,
@@ -82,10 +83,11 @@ const seed = (storage: FakeStorage, account = ACCOUNT) => {
   storage.setItem(`semester.actions.v1:${account}`, JSON.stringify(EMPTY_ACTION_CHOICES));
   storage.setItem(`semester.path-profile.v1:${account}`, JSON.stringify(EMPTY_PATH_PROFILE));
   storage.setItem(`semester.clarity.v1:${account}`, JSON.stringify(EMPTY_CLARITY));
+  storage.setItem(`${HOUSING_PLAN_PREFIX}:${account}:${TERM}`, JSON.stringify(EMPTY_HOUSING));
 };
 
 /** How many workspaces `seed` writes: one per definition. */
-const SEEDED = 9;
+const SEEDED = 10;
 
 let storage: FakeStorage;
 beforeEach(() => {
@@ -104,6 +106,7 @@ describe('what goes into a workspace backup', () => {
       'clarity',
       'creations',
       'family',
+      'housingPlan',
       'pathProfile',
       'pathway',
       'university',
@@ -126,6 +129,23 @@ describe('what goes into a workspace backup', () => {
     const backup = workspaceBackup(ACCOUNT, storage);
     expect(backup.records).toHaveLength(SEEDED);
     expect(JSON.stringify(backup)).not.toContain('someone-else');
+  });
+
+  it('takes only the account-owned housing plan and leaves the ambiguous legacy draft unclaimed', () => {
+    const mine = { ...EMPTY_HOUSING, residence: 'North Hall', notes: 'Ask about the quiet floor.' };
+    storage.setItem(`${HOUSING_PLAN_PREFIX}:${ACCOUNT}:${TERM}`, JSON.stringify(mine));
+    storage.setItem(`${HOUSING_PLAN_PREFIX}:someone-else:${TERM}`, JSON.stringify({ ...mine, residence: 'Other Hall' }));
+    storage.setItem(`semester.housing-plan.${TERM}`, JSON.stringify({ ...mine, residence: 'Legacy Hall' }));
+
+    const backup = workspaceBackup(ACCOUNT, storage);
+    expect(backup.records).toEqual([{ kind: 'housingPlan', term: TERM, value: mine }]);
+    expect(JSON.stringify(backup)).not.toContain('Other Hall');
+    expect(JSON.stringify(backup)).not.toContain('Legacy Hall');
+
+    const fresh = new FakeStorage();
+    restoreWorkspaces(backup, 'acct-2', fresh);
+    expect(JSON.parse(fresh.getItem(`${HOUSING_PLAN_PREFIX}:acct-2:${TERM}`)!)).toEqual(mine);
+    expect(fresh.getItem(`${HOUSING_PLAN_PREFIX}:${ACCOUNT}:${TERM}`)).toBeNull();
   });
 
   it('leaves everything that is not a named workspace alone', () => {

@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `ccf2d45ff` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `ba24569ab` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -681,3 +681,15 @@ Both regression assertions fail against the former first-press removal. Final fo
 Focused eligibility, adjacent Cara and isolation verification passes 7/7; TypeScript, lint, university typecheck and production build pass. The aggregate design-system check passes 9 token tests and 69 contracts, while the test-backed report passes with zero violations, 86 existing warnings and CSS within its ledger. Selection-time `origin/main` `8107737a8` was included and contained no equivalent work. No route, dependency, schema, grant, RLS policy, server operation, provider configuration, deployment or external system changed.
 
 Slice commit `88a86781a` merged final upstream `ba24569ab` cleanly as `1948e3daa`. The upstream access-saga, projection-dashboard and GitBook changes do not overlap this row-level recovery slice; the combined head passes the same 7/7 focused tests, TypeScript and university gateway typecheck.
+
+## Automation pass 9 update — account-scoped recoverable housing plans (slice 99)
+
+| Reference requirement | Current repository evidence | Disposition |
+| --- | --- | --- |
+| Keep a private housing draft inside one account and term | `app/src/lib/portal-storage.ts`, `app/src/components/CampusDirectory.tsx`, `app/src/screens/Housing.tsx` | **Existing but incomplete → existing and verified for housing planning.** The v2 key contains account and term; account switching cannot display another account's roommate preferences, notes or checklist. |
+| Handle the former term-only record without guessing its owner | `app/src/lib/workspace-backup.coverage.test.ts`, `app/src/components/CampusDirectory.housing.test.tsx` | **Intentionally preserved, not migrated.** The old record stays on the device but is neither displayed in an account workspace nor added to a portable backup. |
+| Provide validated portable recovery | `app/src/lib/workspace-backup.ts`, `app/src/lib/workspace-backup.test.ts` | **Existing and verified.** Backup selects one account's housing plans, validates them with `readHousingDraft` and remaps them only to the restoring account. |
+| Preserve institution authority | `app/src/components/CampusDirectory.tsx`, `app/src/screens/Housing.tsx` | **Existing and unchanged.** This remains a private application plan; it does not submit an application, confirm eligibility or change an official assignment. |
+| Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent, API key and app host are unset and no runnable target exists; no DAST scan or security pass is claimed. |
+
+The focused account-isolation, workspace-backup and coverage set passes 42/42. TypeScript, lint, university typecheck and production build pass. Token export passes 9/9, design contracts pass 69/69, report contracts pass 96/96, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Current `origin/main` `ba24569ab` is already included and contains no equivalent work. No route, dependency, schema, grant, RLS policy, server operation, provider configuration, deployment or external system changed.

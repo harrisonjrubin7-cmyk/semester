@@ -1589,6 +1589,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep whole-account deletion, provider state, official records and external operations separate from this account-scoped device backup.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-11 account-scoped recoverable housing plans — automation pass 9, integration slice 99
+
+- [x] Fetch `origin/main`, confirm required clean branch/base `341dee26e` / `ba24569ab` and search history/current code for equivalent housing isolation or recovery work.
+- [x] Replace the ambiguous term-only housing-plan key with a shared account-and-term key authority; keep the old key intact and refuse automatic adoption because its owner is unknown.
+- [x] Pass the current account into the existing Housing planner and state the account/device persistence boundary without changing the official housing authority.
+- [x] Add housing plans to the validated workspace backup, selecting only the requested account, validating each record and restoring only to the restoring account.
+- [x] Prove the UI never shows another account or legacy draft and prove backup excludes both another account and the unowned legacy record.
+- [x] Run the 42 focused account-isolation, backup and coverage tests; run TypeScript, lint, university typecheck, production build, token export, 69 design contracts, 96 report contracts, design audit and CSS ledger checks.
+- [ ] Aggregate design-system wrappers and ordered/shuffled full suites — not run for this bounded account/term storage slice; no aggregate or full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready gaps; keep meal-plan portability separate because its stored estimate has different privacy and financial-language requirements.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## 2026-10-10 truthful device-erase completion — automation pass 10, integration slice 75
 
 - [x] Merge current `origin/main` `0b1522dc` into the clean branch as slice base `481f6d7d`; confirm its guardian calendar reader/history contains no equivalent device-erase completion contract. Inspect final `b8d685e1`; its sole net institution-gateway test does not overlap.
