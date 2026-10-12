@@ -7,12 +7,13 @@ import { current } from '../lib/housing';
 import {
   CHANNELS,
   addDays,
+  checkBackAtFor,
+  checkBackProblem,
   CHANNEL_TEXT,
   EMERGENCY_GUIDANCE,
   LIMITS,
   NEXT,
   STATUS_TEXT,
-  suggestedCheckBack,
   URGENCIES,
   URGENCY_TEXT,
   checkDraft,
@@ -28,6 +29,7 @@ import {
   toLocalInput,
   whenLine,
   type Channel,
+  type CheckBackChoice as CheckBack,
   type DraftField,
   type MaintenanceDraft,
   type MaintenanceRequest,
@@ -48,7 +50,9 @@ import {
  * notice and every follow-up say so.
  */
 
-type CheckBack = 'suggested' | 'tomorrow' | 'week' | 'stated';
+/** The suggestion is counted from the report, and its label says so; the rest count from now. */
+const suggestedLabel = (u: Urgency, from: 'report' | 'now'): string =>
+  `${u === 'routine' ? '3 days' : u === 'urgent' ? '4 hours' : '1 hour'} after ${from === 'report' ? 'you reported it' : 'reporting it again'} (suggested)`;
 const LABELS: Record<DraftField, string> = {
   hall: 'Building',
   what: 'What is wrong',
@@ -135,6 +139,11 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
   const [reReporting, setReReporting] = useState(false);
   const [newRef, setNewRef] = useState('');
   const refId = useId();
+  const [reCheck, setReCheck] = useState<CheckBack>('suggested');
+  const [reStated, setReStated] = useState('');
+  const [reError, setReError] = useState('');
+  const reCheckId = useId();
+  const reStatedId = useId();
   const [visit, setVisit] = useState('');
   const [visitError, setVisitError] = useState('');
   const visitId = useId();
@@ -149,10 +158,34 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
     if (to === 'reported') {
       // The ticket on file, to keep, replace, or clear if housing gave none.
       setNewRef(r.reference);
+      setReCheck('suggested');
+      setReStated('');
+      setReError('');
       setReReporting(true);
       return;
     }
     dispatch({ type: 'moveMaintenance', id: r.id, change: { to, at: Date.now() } });
+  };
+
+  // A re-report starts the wait again: housing may give a new reply time, and
+  // "Tomorrow" means tomorrow from now. Left on the suggestion, `move` counts
+  // housing's usual response from the moment of re-reporting.
+  const saveReReport = () => {
+    const at = Date.now();
+    const checkBackAt = reCheck === 'suggested'
+      ? undefined
+      : checkBackAtFor(reCheck, { urgency: r.urgency, reportedAt: at, now: at, stated: fromLocalInput(reStated) });
+    const why = checkBackAt === undefined ? '' : checkBackProblem(at, checkBackAt);
+    if (why) {
+      setReError(reCheck === 'stated' && why.startsWith('The check-back cannot') ? 'The time housing gave has already passed. Check the date.' : why);
+      return;
+    }
+    dispatch({
+      type: 'moveMaintenance',
+      id: r.id,
+      change: { to: 'reported', at, reference: newRef, ...(checkBackAt === undefined ? {} : { checkBackAt, checkBackStated: reCheck === 'stated' }) },
+    });
+    setReReporting(false);
   };
 
   const saveVisit = () => {
@@ -201,15 +234,40 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
             maxLength={LIMITS.reference}
             onChange={(e) => setNewRef(e.target.value)}
           />
+          <label htmlFor={reCheckId}>When to check back</label>
+          <select
+            id={reCheckId}
+            className="input"
+            value={reCheck}
+            onChange={(e) => {
+              setReCheck(e.target.value as CheckBack);
+              setReError('');
+            }}
+          >
+            <option value="suggested">{suggestedLabel(r.urgency, 'now')}</option>
+            <option value="tomorrow">Tomorrow</option>
+            <option value="week">In a week</option>
+            <option value="stated">At a time housing gave me</option>
+          </select>
+          {reCheck === 'stated' ? (
+            <>
+              <label htmlFor={reStatedId}>The time housing gave</label>
+              <input
+                aria-label="The time housing gave"
+                {...fieldProps(reStatedId, reError || undefined)}
+                className="input"
+                type="datetime-local"
+                value={reStated}
+                onChange={(e) => {
+                  setReStated(e.target.value);
+                  setReError('');
+                }}
+              />
+            </>
+          ) : null}
+          <FieldMessage id={reStatedId} error={reError || undefined} />
           <div className="maintenance-actions">
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => {
-                dispatch({ type: 'moveMaintenance', id: r.id, change: { to: 'reported', at: Date.now(), reference: newRef } });
-                setReReporting(false);
-              }}
-            >
+            <button type="button" className="btn btn-primary" onClick={saveReReport}>
               Save
             </button>
             <button type="button" className="btn btn-ghost" onClick={() => setReReporting(false)}>Cancel</button>
@@ -283,14 +341,7 @@ function RequestForm({ onDone }: { onDone: () => void }) {
   const draft = (): MaintenanceDraft => {
     const reportedAt = fromLocalInput(reported);
     const base = Number.isFinite(reportedAt) ? reportedAt : now;
-    const checkBackAt =
-      checkBack === 'stated'
-        ? fromLocalInput(stated)
-        : checkBack === 'tomorrow'
-          ? addDays(base, 1)
-          : checkBack === 'week'
-            ? addDays(base, 7)
-            : suggestedCheckBack(urgency, base);
+    const checkBackAt = checkBackAtFor(checkBack, { urgency, reportedAt: base, now: Date.now(), stated: fromLocalInput(stated) });
     return { hall, room, what, where, urgency, channel, reference, reportedAt, checkBackAt, checkBackStated: checkBack === 'stated' };
   };
 
@@ -368,7 +419,7 @@ function RequestForm({ onDone }: { onDone: () => void }) {
 
       <label htmlFor="maintenance-checkback">{LABELS.checkBackAt}</label>
       <select id="maintenance-checkback" className="input" value={checkBack} onChange={(e) => { setCheckBack(e.target.value as CheckBack); fields.clear('checkBackAt'); }}>
-        <option value="suggested">{urgency === 'routine' ? 'In 3 days' : urgency === 'urgent' ? 'In 4 hours' : 'In 1 hour'} (suggested)</option>
+        <option value="suggested">{suggestedLabel(urgency, 'report')}</option>
         <option value="tomorrow">Tomorrow</option>
         <option value="week">In a week</option>
         <option value="stated">At a time housing gave me</option>

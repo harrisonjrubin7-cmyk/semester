@@ -11,6 +11,7 @@ import {
   EMERGENCY_GUIDANCE,
   LIMITS,
   addDays,
+  checkBackAtFor,
   visitProblem,
   NEXT,
   STATUSES,
@@ -514,5 +515,25 @@ describe('review findings on 5200c9c', () => {
     expect(checkDraft(draft({ hall: 'B'.repeat(LIMITS.hall + 1) }), NOW).hall).toMatch(/characters/);
     const r = newMaintenance('long', '2026FA', draft({ hall: 'B'.repeat(LIMITS.hall), room: 'R'.repeat(LIMITS.room + 9) }), NOW);
     expect(readMaintenance(JSON.parse(JSON.stringify(r)))).toEqual(r);
+  });
+});
+
+describe('review findings on 53c2470', () => {
+  it('counts "Tomorrow" and "In a week" from when they are chosen, and the suggestion from the report', () => {
+    const reportedAt = NOW - 2 * DAY;
+    const o = { urgency: 'routine' as const, reportedAt, now: NOW, stated: NaN };
+    expect(checkBackAtFor('tomorrow', o)).toBe(addDays(NOW, 1));
+    expect(checkBackAtFor('week', o)).toBe(addDays(NOW, 7));
+    expect(checkBackAtFor('suggested', o)).toBe(suggestedCheckBack('routine', reportedAt));
+  });
+
+  it('records a re-report\u2019s new check-back as housing stated it, and refuses one before the re-report', () => {
+    const r = request({ status: 'not_fixed' });
+    const ok = move(r, { to: 'reported', at: NOW, checkBackAt: NOW + 2 * DAY, checkBackStated: true });
+    expect(ok.ok && ok.request.checkBackAt).toBe(NOW + 2 * DAY);
+    expect(ok.ok && ok.request.checkBackStated).toBe(true);
+    const past = move(r, { to: 'reported', at: NOW, checkBackAt: NOW - DAY, checkBackStated: true });
+    expect(past.ok).toBe(false);
+    expect(move(r, { to: 'reported', at: NOW, checkBackAt: Number.NaN }).ok).toBe(false);
   });
 });

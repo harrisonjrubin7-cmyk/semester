@@ -96,6 +96,16 @@ const type = async (label: string, value: string) => {
   });
 };
 
+const choose = async (label: string, value: string) => {
+  const el = field(label) as unknown as HTMLSelectElement;
+  const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')!.set!;
+  await act(async () => {
+    setter.call(el, value);
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+};
+const stored = () => JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}').maintenance[0];
+
 describe('MaintenanceRequests', () => {
   it('starts empty, says Semester sends nothing, and offers to record a repair', async () => {
     seed();
@@ -247,5 +257,66 @@ describe('MaintenanceRequests, review findings on #1501', () => {
     const list = host.querySelector('ul[aria-label="Open repair requests"]');
     expect(list?.textContent).toContain('Reference WO-2002');
     expect(list?.textContent).not.toContain('WO-1001');
+  });
+
+  it('counts "Tomorrow" and "In a week" from today for a repair reported days ago', async () => {
+    seed();
+    await render();
+    await click('Record a repair');
+    await type('What is wrong', 'Radiator cold');
+    await type('When you reported it', '2026-10-10T09:00');
+    await choose('When to check back', 'tomorrow');
+    await click('Save repair');
+    expect(stored().checkBackAt).toBe(new Date(2026, 9, 13, 9, 0).getTime());
+    await click('Remove');
+    await click('Record a repair');
+    await type('What is wrong', 'Radiator cold');
+    await type('When you reported it', '2026-10-10T09:00');
+    await choose('When to check back', 'week');
+    await click('Save repair');
+    expect(stored().checkBackAt).toBe(new Date(2026, 9, 19, 9, 0).getTime());
+  });
+
+  it('says the suggestion counts from the report', async () => {
+    seed();
+    await render();
+    await click('Record a repair');
+    const option = host.querySelector('#maintenance-checkback option[value="suggested"]');
+    expect(option?.textContent).toBe('3 days after you reported it (suggested)');
+  });
+
+  it('records the reply time housing gave with a re-report, as housing\u2019s', async () => {
+    seed([existing({ status: 'not_fixed', updated: NOW.getTime() })]);
+    await render();
+    await click('Reported it again');
+    await choose('When to check back', 'stated');
+    await type('The time housing gave', '2026-10-14T17:00');
+    await click('Save');
+    expect(stored().status).toBe('reported');
+    expect(stored().checkBackAt).toBe(new Date(2026, 9, 14, 17, 0).getTime());
+    expect(stored().checkBackStated).toBe(true);
+    expect(host.textContent).toContain('Housing said they would reply by');
+  });
+
+  it('refuses a re-report reply time that has already passed, and keeps the form open', async () => {
+    seed([existing({ status: 'not_fixed', updated: NOW.getTime() })]);
+    await render();
+    await click('Reported it again');
+    await choose('When to check back', 'stated');
+    await type('The time housing gave', '2026-10-11T17:00');
+    await click('Save');
+    expect(stored().status).toBe('not_fixed');
+    expect(host.textContent).toContain('The time housing gave has already passed.');
+    expect(field('The time housing gave').getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('counts a re-report "Tomorrow" from the re-report', async () => {
+    seed([existing({ status: 'not_fixed', updated: NOW.getTime() })]);
+    await render();
+    await click('Reported it again');
+    await choose('When to check back', 'tomorrow');
+    await click('Save');
+    expect(stored().checkBackAt).toBe(new Date(2026, 9, 13, 9, 0).getTime());
+    expect(stored().checkBackStated).toBe(false);
   });
 });

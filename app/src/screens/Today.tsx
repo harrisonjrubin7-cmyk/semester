@@ -24,6 +24,7 @@ import { Check, ChevronRight } from '../components/Icons';
 import { homeShape } from '../lib/chrome';
 import type { Catalog } from '../data/catalog';
 import type { State } from '../state/shape';
+import { showsTodayDecisionSurface } from '../lib/today-decision';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import {
   appointmentsOn,
@@ -2112,15 +2113,18 @@ function FeedHome() {
 export function nothingOnToday(
   shape: ReturnType<typeof homeShape>,
   catalog: Catalog,
-  state: Pick<State, 'tasks' | 'appointments' | 'feedEvents'> & { maintenance?: State['maintenance'] },
+  state: Pick<State, 'tasks' | 'appointments' | 'feedEvents'> & { maintenance?: State['maintenance']; role?: State['role'] },
   now: number = Date.now(),
   /** Whether the Action Center, the only surface that draws repairs, is on. */
   actionCenter: boolean = moduleOn(MODULE_FLAGS.today_action_center),
 ): boolean {
   // A repair whose follow-up has come is something to do today, and both
   // homes draw it through the Action Center — the first-run screen would hide
-  // it. With the Action Center rolled back, nothing draws it, so it does not count.
-  if (actionCenter && (state.maintenance ?? []).some((r) => isOpen(r) && needsFollowUp(r, now))) return false;
+  // it. With the Action Center rolled back, nothing draws it, so it does not
+  // count — and the Action Center mounts only for a student
+  // (`TodayDecisionSurface`), so for any other role it does not count either.
+  const drawn = actionCenter && state.role !== undefined && showsTodayDecisionSurface(state.role);
+  if (drawn && (state.maintenance ?? []).some((r) => isOpen(r) && needsFollowUp(r, now))) return false;
   return shape === 'feed' ? catalog.empty : nothingYet(catalog, state);
 }
 

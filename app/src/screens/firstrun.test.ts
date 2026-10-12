@@ -129,13 +129,19 @@ describe('which Today is being gated', () => {
       reference: '', reportedAt: at - 5 * 86_400_000, checkBackAt: at - 60_000, checkBackStated: false, scheduledFor: null,
       status: 'reported' as const, history: [], created: at - 5 * 86_400_000, updated: at - 5 * 86_400_000,
     };
-    expect(nothingOnToday('today', EMPTY_CATALOG, { ...none, maintenance: [repair] }, at, true)).toBe(false);
-    expect(nothingOnToday('feed', EMPTY_CATALOG, { ...none, maintenance: [repair] }, at, true)).toBe(false);
+    const student = { ...none, role: 'student' as const };
+    expect(nothingOnToday('today', EMPTY_CATALOG, { ...student, maintenance: [repair] }, at, true)).toBe(false);
+    expect(nothingOnToday('feed', EMPTY_CATALOG, { ...student, maintenance: [repair] }, at, true)).toBe(false);
     // Not due yet, or closed: the first run still shows.
     expect(nothingOnToday('today', EMPTY_CATALOG, { ...none, maintenance: [{ ...repair, checkBackAt: at + 86_400_000 }] }, at)).toBe(true);
     expect(nothingOnToday('today', EMPTY_CATALOG, { ...none, maintenance: [{ ...repair, status: 'fixed' as const }] }, at)).toBe(true);
     // With the Action Center rolled back nothing draws a repair, so it does not count.
-    expect(nothingOnToday('today', EMPTY_CATALOG, { ...none, maintenance: [repair] }, at, false)).toBe(true);
+    expect(nothingOnToday('today', EMPTY_CATALOG, { ...student, maintenance: [repair] }, at, false)).toBe(true);
+    // The Action Center mounts only for a student, so for another role nothing
+    // draws the repair either, and the first run is what that Today has to say.
+    for (const role of ['faculty', 'advisor'] as const) {
+      expect(nothingOnToday('today', EMPTY_CATALOG, { ...none, role, maintenance: [repair] }, at, true)).toBe(true);
+    }
   });
 
   it('shows the first run to somebody who has nothing at all', () => {

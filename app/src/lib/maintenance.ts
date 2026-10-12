@@ -275,6 +275,30 @@ export function visitProblem(request: Pick<MaintenanceRequest, 'reportedAt'>, at
   return '';
 }
 
+/** Why a check-back time cannot be recorded, or an empty string. Before the report it reads as a typo. */
+export function checkBackProblem(after: number, at: unknown): string {
+  if (!(typeof at === 'number' && Number.isFinite(at))) return 'Give the date and time housing gave.';
+  if (at < after) return 'The check-back cannot be before you reported it. Check the date.';
+  if (!inRange(at)) return 'Choose a check-back date between 1970 and 9999.';
+  return '';
+}
+
+/** The ways a student picks when to check back. */
+export type CheckBackChoice = 'suggested' | 'tomorrow' | 'week' | 'stated';
+
+/**
+ * What a check-back choice means, as a time. "Tomorrow" and "In a week" count
+ * from when the student chooses them — a repair recorded today but reported
+ * two days ago is checked tomorrow, not yesterday. The suggestion counts from
+ * the report, because it is housing's usual response time, and it says so.
+ */
+export function checkBackAtFor(choice: CheckBackChoice, o: { urgency: Urgency; reportedAt: number; now: number; stated: number }): number {
+  if (choice === 'stated') return o.stated;
+  if (choice === 'tomorrow') return addDays(o.now, 1);
+  if (choice === 'week') return addDays(o.now, 7);
+  return suggestedCheckBack(o.urgency, o.reportedAt);
+}
+
 /**
  * The same wall-clock time `days` calendar days later, in this device's zone.
  * "Tomorrow" across a daylight-saving change is 23 or 25 hours, not 24.
@@ -297,9 +321,14 @@ export function move(
     const why = visitProblem(request, change.scheduledFor);
     if (why) return { ok: false, why };
   }
+  const reopened = change.to === 'reported' || change.to === 'not_fixed';
+  if (change.checkBackAt !== undefined) {
+    // A re-report starts the wait again, so its check-back counts from now.
+    const why = checkBackProblem(reopened ? change.at : request.reportedAt, change.checkBackAt);
+    if (why) return { ok: false, why };
+  }
   const note = change.note?.trim().slice(0, LIMITS.note);
   const event: MaintenanceEvent = { at: change.at, from: request.status, to: change.to, ...(note ? { note } : {}) };
-  const reopened = change.to === 'reported' || change.to === 'not_fixed';
   const checkBackAt =
     typeof change.checkBackAt === 'number' && Number.isFinite(change.checkBackAt)
       ? change.checkBackAt
