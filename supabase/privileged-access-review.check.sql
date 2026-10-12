@@ -83,6 +83,17 @@ begin
   perform pg_temp.must('signoff rechecks operator authority after taking serialization locks', position(
     'must remain current through signoff' in lower(pg_get_functiondef(
       'public.complete_privileged_access_review(text)'::regprocedure))) > 0);
+  perform pg_temp.must('investigation resolution rechecks authority after serialization', position(
+    'must remain current through investigation resolution' in lower(pg_get_functiondef(
+      'public.resolve_privileged_access_review_investigation(text,text)'::regprocedure))) > 0);
+  perform pg_temp.must('post-decision resolution rechecks authority after serialization', position(
+    'must remain current through post-decision resolution' in lower(pg_get_functiondef(
+      'public.resolve_privileged_access_review_post_decision_change(text)'::regprocedure))) > 0);
+  perform pg_temp.must('signoff evaluates grant expiry against wall-clock time after lock waits',
+    position('clock_timestamp()' in lower(pg_get_functiondef(
+      'public.complete_privileged_access_review(text)'::regprocedure))) > 0
+    and position('expires_at > now()' in lower(pg_get_functiondef(
+      'public.complete_privileged_access_review(text)'::regprocedure))) = 0);
   perform pg_temp.must('state-resolution readers use insertion sequences rather than transaction timestamps',
     position('resolution_sequence desc' in lower(pg_get_functiondef(
       'public.privileged_access_review_evidence(text)'::regprocedure))) > 0);

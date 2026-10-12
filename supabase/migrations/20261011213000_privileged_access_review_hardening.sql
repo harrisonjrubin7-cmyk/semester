@@ -193,10 +193,13 @@ begin
       'next_due', want_next_due), 'access-review:' || ref);
   lock table public.role_grants in share mode;
   lock table public.role_capabilities in share mode;
+  if not private.has_capability('access_review:manage', 'platform', '') then
+    raise exception 'access_review:manage at platform scope must remain current through review start.' using errcode = '42501';
+  end if;
   if (select count(distinct g.subject) from public.role_grants g
       join public.role_capabilities rc on rc.role = g.role and rc.capability = 'access_review:manage'
       where g.scope_kind = 'platform' and g.scope_id = '' and g.revoked_at is null
-        and (g.expires_at is null or g.expires_at > now())) < 3 then
+        and (g.expires_at is null or g.expires_at > clock_timestamp())) < 3 then
     raise exception 'Three independently staffed access-review operators are required.' using errcode = '55000';
   end if;
   snapshot_time := clock_timestamp();
@@ -267,6 +270,9 @@ begin
   select g.* into grant_row from public.role_grants g where g.id = item.grant_id for update;
   grant_found := found;
   lock table public.role_capabilities in share mode;
+  if not private.has_capability('access_review:manage', 'platform', '') then
+    raise exception 'access_review:manage at platform scope must remain current through the decision.' using errcode = '42501';
+  end if;
   select array(select distinct rc.capability from public.role_capabilities rc
     where rc.role = item.role order by rc.capability) into current_capabilities;
   grant_current := grant_found and grant_row.role = item.role
@@ -274,7 +280,7 @@ begin
     and grant_row.scope_kind = item.scope_kind and grant_row.scope_id = item.scope_id
     and grant_row.provenance = item.provenance and grant_row.granted_at = item.granted_at
     and grant_row.expires_at is not distinct from item.expires_at and grant_row.revoked_at is null
-    and (grant_row.expires_at is null or grant_row.expires_at > now())
+    and (grant_row.expires_at is null or grant_row.expires_at > clock_timestamp())
     and not item.capabilities_backfilled and current_capabilities = item.capabilities;
   if not grant_current and want_decision <> 'investigate' then
     raise exception 'A changed grant can only be closed as investigate.' using errcode = '40001';
@@ -328,6 +334,9 @@ begin
     raise exception 'A grant subject cannot resolve their own investigation.' using errcode = '42501';
   end if;
   lock table public.role_capabilities in share mode;
+  if not private.has_capability('access_review:manage', 'platform', '') then
+    raise exception 'access_review:manage at platform scope must remain current through investigation resolution.' using errcode = '42501';
+  end if;
   select array(select distinct rc.capability from public.role_capabilities rc
     where rc.role = case when grant_found then grant_row.role else item.role end
     order by rc.capability) into current_capabilities;
@@ -342,7 +351,7 @@ begin
     case when grant_found then grant_row.revoked_at else null end,
     current_capabilities,
     grant_found and grant_row.revoked_at is null
-      and (grant_row.expires_at is null or grant_row.expires_at > now()));
+      and (grant_row.expires_at is null or grant_row.expires_at > clock_timestamp()));
   select x.* into existing_resolution
     from private.privileged_access_review_investigation_state_resolution x
    where x.decision_id = decision.id and x.observed_state_sha256 = observed_state;
@@ -401,6 +410,9 @@ begin
     raise exception 'A grant subject cannot resolve their own post-decision change.' using errcode = '42501';
   end if;
   lock table public.role_capabilities in share mode;
+  if not private.has_capability('access_review:manage', 'platform', '') then
+    raise exception 'access_review:manage at platform scope must remain current through post-decision resolution.' using errcode = '42501';
+  end if;
   select array(select distinct rc.capability from public.role_capabilities rc
     where rc.role = case when grant_found then grant_row.role else item.role end
     order by rc.capability) into current_capabilities;
@@ -409,7 +421,7 @@ begin
     and grant_row.scope_kind = item.scope_kind and grant_row.scope_id = item.scope_id
     and grant_row.provenance = item.provenance and grant_row.granted_at = item.granted_at
     and grant_row.expires_at is not distinct from item.expires_at and grant_row.revoked_at is null
-    and (grant_row.expires_at is null or grant_row.expires_at > now())
+    and (grant_row.expires_at is null or grant_row.expires_at > clock_timestamp())
     and not item.capabilities_backfilled and current_capabilities = item.capabilities;
   if (decision.decision = 'retain' and grant_current)
      or (decision.decision = 'revoke' and exists (
@@ -434,7 +446,7 @@ begin
     case when grant_found then grant_row.revoked_at else null end,
     current_capabilities,
     grant_found and grant_row.revoked_at is null
-      and (grant_row.expires_at is null or grant_row.expires_at > now()));
+      and (grant_row.expires_at is null or grant_row.expires_at > clock_timestamp()));
   select x.* into existing_resolution
     from private.privileged_access_review_post_decision_resolution x
    where x.decision_id = decision.id and x.observed_state_sha256 = observed_state;
@@ -527,7 +539,7 @@ begin
                array(select distinct rc.capability from public.role_capabilities rc
                  where rc.role = g.role order by rc.capability),
                g.id is not null and g.revoked_at is null
-                 and (g.expires_at is null or g.expires_at > now())))) then
+                 and (g.expires_at is null or g.expires_at > clock_timestamp())))) then
     raise exception 'Every investigation needs an independent resolution of its current state before signoff.' using errcode = '23514';
   end if;
   if exists (select 1 from private.privileged_access_review_decision d
@@ -539,7 +551,7 @@ begin
           or g.scope_id <> i.scope_id or g.provenance <> i.provenance
           or g.granted_at <> i.granted_at or g.expires_at is distinct from i.expires_at
           or g.revoked_at is not null
-          or (g.expires_at is not null and g.expires_at <= now())
+          or (g.expires_at is not null and g.expires_at <= clock_timestamp())
           or i.capabilities_backfilled
           or array(select distinct rc.capability from public.role_capabilities rc
                where rc.role = i.role order by rc.capability) <> i.capabilities)
@@ -551,7 +563,7 @@ begin
             array(select distinct rc.capability from public.role_capabilities rc
               where rc.role = g.role order by rc.capability),
             g.id is not null and g.revoked_at is null
-              and (g.expires_at is null or g.expires_at > now())))) then
+              and (g.expires_at is null or g.expires_at > clock_timestamp())))) then
     raise exception 'Every changed retain decision needs an independent post-decision resolution before signoff.' using errcode = '23514';
   end if;
   if exists (select 1 from private.privileged_access_review_decision d
@@ -574,7 +586,7 @@ begin
                  array(select distinct rc.capability from public.role_capabilities rc
                    where rc.role = g.role order by rc.capability),
                  g.id is not null and g.revoked_at is null
-                   and (g.expires_at is null or g.expires_at > now()))))) then
+                   and (g.expires_at is null or g.expires_at > clock_timestamp()))))) then
     raise exception 'Every revoke decision must have an applied remediation and remain revoked at signoff.' using errcode = '23514';
   end if;
   insert into private.privileged_access_review_signoff
