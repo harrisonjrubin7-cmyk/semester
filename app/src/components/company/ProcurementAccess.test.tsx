@@ -38,6 +38,7 @@ const DETAIL: ProcurementDetail = {
 let host: HTMLDivElement;
 let root: Root;
 let api: ProcurementAccessApi;
+let authorizationLost: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   api = {
@@ -50,6 +51,7 @@ beforeEach(() => {
       grant: { ...GRANT, revokedAt: '2026-10-11T22:00:00Z', revokedBy: 'account-team-1', revokeReason: 'Evidence superseded' },
     })),
   };
+  authorizationLost = vi.fn();
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -65,7 +67,7 @@ async function settle(rounds = 8) {
 }
 
 async function mount(subject = 'account-team-1', online = true) {
-  await act(async () => root.render(<ProcurementAccess subject={subject} online={online} api={api} />));
+  await act(async () => root.render(<ProcurementAccess subject={subject} online={online} api={api} onAuthorizationLost={authorizationLost} />));
   await settle();
 }
 
@@ -145,8 +147,56 @@ describe('Company procurement access', () => {
     await act(async () => button(/Review withdrawal/).click());
     await act(async () => button(/^Withdraw access$/).click());
     await settle();
-    expect(host.textContent).toContain('Company access is no longer granted.');
+    expect(authorizationLost).toHaveBeenCalledTimes(1);
+    expect(host.textContent).not.toContain('reviewer@example.edu');
+    expect(host.textContent).not.toContain('Access history');
     expect(api.withdraw).not.toHaveBeenCalled();
+  });
+
+  it('does not dispatch a verified withdrawal after the selected account changes', async () => {
+    const accountB = { ...ACCOUNT, id: 'account-2', name: 'South College' };
+    const requestB = { ...REQUEST, id: 'request-2', accountId: accountB.id, requesterName: 'South reviewer' };
+    let releaseVerification!: (subject: string) => void;
+    vi.mocked(api.loadAccounts).mockResolvedValueOnce([ACCOUNT, accountB]);
+    vi.mocked(api.loadRequests).mockImplementation(async (accountId) => accountId === ACCOUNT.id ? [REQUEST] : [requestB]);
+    vi.mocked(api.loadDetail).mockImplementation(async (_accountId, requestId) => ({ ...DETAIL, request: requestId === REQUEST.id ? REQUEST : requestB }));
+    vi.mocked(api.verifySubject).mockImplementationOnce(() => new Promise((resolve) => { releaseVerification = resolve; }));
+    await mount();
+    await act(async () => button(/Withdraw access/).click());
+    await act(async () => typeInto(host.querySelector('textarea') as HTMLTextAreaElement, 'Evidence superseded'));
+    await act(async () => button(/Review withdrawal/).click());
+    await act(async () => button(/^Withdraw access$/).click());
+    await act(async () => button(/South College/).click());
+    await act(async () => releaseVerification('account-team-1'));
+    await settle();
+    expect(api.withdraw).not.toHaveBeenCalled();
+    expect(host.textContent).toContain('South reviewer');
+    expect(host.textContent).not.toContain('Access withdrawn');
+  });
+
+  it('does not render a late withdrawal result under a newly selected account', async () => {
+    const accountB = { ...ACCOUNT, id: 'account-2', name: 'South College' };
+    const requestB = { ...REQUEST, id: 'request-2', accountId: accountB.id, requesterName: 'South reviewer' };
+    let releaseWithdrawal!: (outcome: WithdrawalOutcome) => void;
+    vi.mocked(api.loadAccounts).mockResolvedValueOnce([ACCOUNT, accountB]);
+    vi.mocked(api.loadRequests).mockImplementation(async (accountId) => accountId === ACCOUNT.id ? [REQUEST] : [requestB]);
+    vi.mocked(api.loadDetail).mockImplementation(async (_accountId, requestId) => ({ ...DETAIL, request: requestId === REQUEST.id ? REQUEST : requestB }));
+    vi.mocked(api.withdraw).mockImplementationOnce(() => new Promise((resolve) => { releaseWithdrawal = resolve; }));
+    await mount();
+    await act(async () => button(/Withdraw access/).click());
+    await act(async () => typeInto(host.querySelector('textarea') as HTMLTextAreaElement, 'Evidence superseded'));
+    await act(async () => button(/Review withdrawal/).click());
+    await act(async () => button(/^Withdraw access$/).click());
+    await settle(2);
+    expect(api.withdraw).toHaveBeenCalledTimes(1);
+    await act(async () => button(/South College/).click());
+    await act(async () => releaseWithdrawal({
+      kind: 'confirmed', concurrent: false,
+      grant: { ...GRANT, revokedAt: '2026-10-11T22:00:00Z', revokedBy: 'account-team-1', revokeReason: 'Evidence superseded' },
+    }));
+    await settle();
+    expect(host.textContent).toContain('South reviewer');
+    expect(host.textContent).not.toContain('Access withdrawn');
   });
 
   it('does not offer or queue a withdrawal while offline', async () => {
@@ -175,11 +225,27 @@ describe('Company procurement access', () => {
     expect(button(/Withdraw access/).disabled).toBe(false);
   });
 
+  it('clears sensitive detail when a protected refresh reports authorization loss', async () => {
+    vi.mocked(api.withdraw).mockResolvedValueOnce({ kind: 'unknown', visibilityLost: false, live: true });
+    await mount();
+    await act(async () => button(/Withdraw access/).click());
+    await act(async () => typeInto(host.querySelector('textarea') as HTMLTextAreaElement, 'Evidence superseded'));
+    await act(async () => button(/Review withdrawal/).click());
+    await act(async () => button(/^Withdraw access$/).click());
+    await settle();
+    vi.mocked(api.loadDetail).mockRejectedValueOnce(new Error('Company access is no longer granted.'));
+    await act(async () => button(/Refresh grant/).click());
+    await settle();
+    expect(authorizationLost).toHaveBeenCalledTimes(1);
+    expect(host.textContent).not.toContain('reviewer@example.edu');
+    expect(host.textContent).not.toContain('Access history');
+  });
+
   it('discards an old subject response and cancels its open preview on account change', async () => {
     let release!: (accounts: CompanyAccount[]) => void;
     vi.mocked(api.loadAccounts).mockImplementationOnce(() => new Promise((resolve) => { release = resolve; }));
-    await act(async () => root.render(<ProcurementAccess subject="account-team-1" online api={api} />));
-    await act(async () => root.render(<ProcurementAccess subject="account-team-2" online api={api} />));
+    await act(async () => root.render(<ProcurementAccess subject="account-team-1" online api={api} onAuthorizationLost={authorizationLost} />));
+    await act(async () => root.render(<ProcurementAccess subject="account-team-2" online api={api} onAuthorizationLost={authorizationLost} />));
     release([{ ...ACCOUNT, name: 'Old account data' }]);
     await settle();
     expect(host.textContent).not.toContain('Old account data');

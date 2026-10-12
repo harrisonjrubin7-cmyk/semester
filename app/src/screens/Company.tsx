@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Page } from '../components/Page';
 import { ProcurementAccess, type ProcurementAccessApi } from '../components/company/ProcurementAccess';
 import { ErrorState, LoadingState, PermissionNotice } from '../components/unity/States';
@@ -36,6 +36,7 @@ export function Company() {
   const online = useOnline();
   const [revision, setRevision] = useState(0);
   const [gate, setGate] = useState<Gate>({ kind: 'checking' });
+  const authorizationLost = useCallback(() => setGate({ kind: 'denied' }), []);
   const procurementApi = useMemo<ProcurementAccessApi>(() => ({
     loadAccounts: async (page) => {
       await requireExactCompanyAccess(account?.id ?? '');
@@ -136,7 +137,13 @@ export function Company() {
       )}
       {gate.kind === 'allowed' && gate.subject !== account.id && <LoadingState what="your Company permissions" />}
       {gate.kind === 'allowed' && gate.subject === account.id && (
-        <ProcurementAccess key={`${gate.subject}:${revision}`} subject={gate.subject} online={online} api={procurementApi} />
+        <ProcurementAccess
+          key={`${gate.subject}:${revision}`}
+          subject={gate.subject}
+          online={online}
+          api={procurementApi}
+          onAuthorizationLost={authorizationLost}
+        />
       )}
     </Page>
   );

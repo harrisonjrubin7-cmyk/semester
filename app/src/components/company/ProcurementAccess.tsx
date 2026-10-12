@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { ActionPreview } from '../unity/ActionPreview';
 import { ErrorState, LoadingState, SuccessState } from '../unity/States';
@@ -53,14 +53,17 @@ export function ProcurementAccess({
   subject,
   online,
   api,
+  onAuthorizationLost,
 }: {
   subject: string;
   online: boolean;
   api: ProcurementAccessApi;
+  onAuthorizationLost: () => void;
 }) {
   const generation = useRef(0);
   const requestGeneration = useRef(0);
   const detailGeneration = useRef(0);
+  const actionGeneration = useRef(0);
   const pending = useRef(false);
   const [reloadAccounts, setReloadAccounts] = useState(0);
   const [reloadRequests, setReloadRequests] = useState(0);
@@ -96,8 +99,30 @@ export function ProcurementAccess({
   const currentAccount = accountRows?.find((item) => item.id === selectedAccount) ?? null;
   const currentRequest = requestRows?.find((item) => item.id === selectedRequest) ?? null;
 
+  const clearForAuthorizationLoss = useCallback((error: unknown): boolean => {
+    if (!(error instanceof Error) || error.message !== 'Company access is no longer granted.') return false;
+    generation.current += 1;
+    requestGeneration.current += 1;
+    detailGeneration.current += 1;
+    actionGeneration.current += 1;
+    setAccounts(null);
+    setRequests(null);
+    setDetail(null);
+    setSelectedAccount('');
+    setSelectedRequest('');
+    setPreview(null);
+    setWithdrawOpen(false);
+    setActionPending(false);
+    setActionNotice(null);
+    setActionError('');
+    setNeedsRefresh('');
+    onAuthorizationLost();
+    return true;
+  }, [onAuthorizationLost]);
+
   useEffect(() => {
     const ticket = ++generation.current;
+    actionGeneration.current += 1;
     pending.current = false;
     setAccountError('');
     setSelectedAccount('');
@@ -118,12 +143,13 @@ export function ProcurementAccess({
       },
       (error: unknown) => {
         if (generation.current !== ticket) return;
+        if (clearForAuthorizationLoss(error)) return;
         setAccounts({ subject, page: accountPage, rows: [] });
         setAccountError(said(error, 'Could not load company accounts.'));
       },
     );
     return () => { if (generation.current === ticket) generation.current += 1; };
-  }, [accountPage, api, reloadAccounts, subject]);
+  }, [accountPage, api, clearForAuthorizationLoss, reloadAccounts, subject]);
 
   useEffect(() => {
     if (!selectedAccount || accounts?.subject !== subject) return;
@@ -144,12 +170,13 @@ export function ProcurementAccess({
       },
       (error: unknown) => {
         if (requestGeneration.current !== ticket) return;
+        if (clearForAuthorizationLoss(error)) return;
         setRequests({ key, page: requestPage, rows: [] });
         setRequestError(said(error, 'Could not load procurement requests.'));
       },
     );
     return () => { if (requestGeneration.current === ticket) requestGeneration.current += 1; };
-  }, [accounts, api, reloadRequests, requestPage, selectedAccount, subject]);
+  }, [accounts, api, clearForAuthorizationLoss, reloadRequests, requestPage, selectedAccount, subject]);
 
   useEffect(() => {
     if (!selectedAccount || !selectedRequest || requests?.key !== requestKey) return;
@@ -175,27 +202,38 @@ export function ProcurementAccess({
       },
       (error: unknown) => {
         if (detailGeneration.current !== ticket) return;
+        if (clearForAuthorizationLoss(error)) return;
         setDetailError(said(error, 'Could not load request details.'));
         setRefreshing(false);
       },
     );
     return () => { if (detailGeneration.current === ticket) detailGeneration.current += 1; };
-  }, [api, reloadDetail, requestKey, requests, selectedAccount, selectedRequest, subject]);
+  }, [api, clearForAuthorizationLoss, reloadDetail, requestKey, requests, selectedAccount, selectedRequest, subject]);
 
   const chooseAccount = (id: string) => {
+    actionGeneration.current += 1;
     setSelectedAccount(id);
     setSelectedRequest('');
     setRequests(null);
     setDetail(null);
     setPreview(null);
     setReason('');
+    setActionPending(false);
+    setActionNotice(null);
+    setActionError('');
+    setNeedsRefresh('');
     setRequestPage(0);
   };
   const chooseRequest = (id: string) => {
+    actionGeneration.current += 1;
     setSelectedRequest(id);
     setDetail(null);
     setPreview(null);
     setReason('');
+    setActionPending(false);
+    setActionNotice(null);
+    setActionError('');
+    setNeedsRefresh('');
   };
 
   const chosenGrant = currentDetail?.grants.find((grant) => grant.id === withdrawGrant) ?? null;
@@ -207,7 +245,7 @@ export function ProcurementAccess({
 
   const runWithdrawal = async () => {
     if (!previewIsCurrent || !chosenGrant || !currentAccount || !currentRequest || !online || pending.current) return;
-    const ticket = generation.current;
+    const ticket = actionGeneration.current;
     const trimmed = reason.trim();
     pending.current = true;
     setPreview(null);
@@ -216,9 +254,9 @@ export function ProcurementAccess({
     setActionError('');
     try {
       await api.verifySubject(subject);
-      if (generation.current !== ticket) return;
+      if (actionGeneration.current !== ticket) return;
       const outcome = await api.withdraw(chosenGrant.id, trimmed, subject);
-      if (generation.current !== ticket) return;
+      if (actionGeneration.current !== ticket) return;
       setActionNotice(outcome);
       if (outcome.kind === 'confirmed') {
         setDetail((was) => was?.key === detailKey ? {
@@ -235,10 +273,12 @@ export function ProcurementAccess({
         setNeedsRefresh(chosenGrant.id);
       }
     } catch (error) {
-      if (generation.current === ticket) setActionError(said(error, 'Access withdrawal did not start.'));
+      if (actionGeneration.current === ticket && !clearForAuthorizationLoss(error)) {
+        setActionError(said(error, 'Access withdrawal did not start.'));
+      }
     } finally {
       pending.current = false;
-      if (generation.current === ticket) setActionPending(false);
+      if (actionGeneration.current === ticket) setActionPending(false);
     }
   };
 
