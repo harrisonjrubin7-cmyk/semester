@@ -307,13 +307,20 @@ Deno.serve(async (req) => {
   const tokens = (delta: number, cap: number | null) =>
     admin.rpc('add_tokens', { p_user: userId, p_day: day, p_delta: delta, p_cap: cap });
   let tokensHeld = false;
-  let tokensUsedToday = 0;
+  // The meter's latest answer for today: after the reservation, then after the
+  // release or the settlement that follows it. `X-Tokens-Remaining` is read
+  // from this, so a plain answer reports the day after its actual use and a
+  // refused upstream reports it with the reservation given back. A stream's
+  // headers leave before its usage block arrives, so a stream reports the
+  // reservation, which errs low rather than high.
+  let tokensTotal = 0;
   const release = async (micros: number, why: string) => {
     const { error } = await spend(-micros, null);
     if (error) console.error('claude: a spend reservation could not be released', { why, micros });
     if (tokensHeld) {
-      const { error: tokenError } = await tokens(-tokensReserved, null);
+      const { data: back, error: tokenError } = await tokens(-tokensReserved, null);
       if (tokenError) console.error('claude: a token reservation could not be released', { why, tokens: tokensReserved });
+      if (typeof back === 'number') tokensTotal = back;
     }
     await tenant?.release(why);
   };
@@ -337,7 +344,7 @@ Deno.serve(async (req) => {
       return json({ error: { message: tokenQuotaMessage(DAILY_TOKENS), code: TOKEN_QUOTA_EXHAUSTED } }, 429);
     }
     tokensHeld = true;
-    tokensUsedToday = have;
+    tokensTotal = have;
   }
   if (tenant) {
     const room = await tenant.reserve();
@@ -446,9 +453,12 @@ Deno.serve(async (req) => {
     ...cors,
     'Content-Type': upstream.headers.get('Content-Type') ?? 'application/json',
     'X-Calls-Remaining': String(Math.max(0, MONTHLY_CALLS - used)),
-    // Only when there is a quota: a header saying "unlimited remaining" is a number nobody can use.
-    ...(DAILY_TOKENS === null ? {} : { 'X-Tokens-Remaining': String(Math.max(0, DAILY_TOKENS - tokensUsedToday)) }),
   };
+  // Only when there is a quota: a header saying "unlimited remaining" is a
+  // number nobody can use. Read at the moment the response is built, so it
+  // carries the meter's latest answer (see `tokensTotal`).
+  const withTokens = (h: typeof headers) =>
+    DAILY_TOKENS === null ? h : { ...h, 'X-Tokens-Remaining': String(Math.max(0, DAILY_TOKENS - tokensTotal)) };
 
   // ── settle the reservation ──────────────────────────────────────────────
   //
@@ -460,7 +470,7 @@ Deno.serve(async (req) => {
   // (`flush` never runs): both err towards the owner.
   if (!upstream.ok) {
     await release(reserve, `upstream ${upstream.status}`);
-    return new Response(upstream.body, { status: upstream.status, headers });
+    return new Response(upstream.body, { status: upstream.status, headers: withTokens(headers) });
   }
   const settle = async (actual: number | null, usage?: Usage) => {
     await tenant?.settle(actual, usage);
@@ -468,8 +478,9 @@ Deno.serve(async (req) => {
     const { error } = await spend(actual - reserve, null);
     if (error) console.error('claude: a spend reservation could not be settled', { reserve, actual });
     if (tokensHeld && usage) {
-      const { error: tokenError } = await tokens(usageTokens(usage) - tokensReserved, null);
+      const { data: after, error: tokenError } = await tokens(usageTokens(usage) - tokensReserved, null);
       if (tokenError) console.error('claude: a token reservation could not be settled', { reserved: tokensReserved, used: usageTokens(usage) });
+      if (typeof after === 'number') tokensTotal = after;
     }
   };
 
@@ -485,11 +496,13 @@ Deno.serve(async (req) => {
         await settle(scanner.seen ? costMicros(scanner.usage, priced.model) : null, scanner.seen ? scanner.usage : undefined);
       },
     });
-    return new Response(upstream.body.pipeThrough(pass), { status: upstream.status, headers });
+    // Headers leave now; the usage block arrives later. The quota header is the reservation.
+    return new Response(upstream.body.pipeThrough(pass), { status: upstream.status, headers: withTokens(headers) });
   }
 
   const text = await upstream.text();
   const usage = usageFromJson(text);
   await settle(usage ? costMicros(usage, priced.model) : null, usage ?? undefined);
-  return new Response(text, { status: upstream.status, headers });
+  // Settled first, so the quota header is the day after this answer's actual use.
+  return new Response(text, { status: upstream.status, headers: withTokens(headers) });
 });

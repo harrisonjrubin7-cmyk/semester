@@ -141,4 +141,18 @@ describe('the Edge Function', () => {
     expect(fn).toContain('usageTokens(usage) - tokensReserved');
     expect(fn).toMatch(/if \(tokensHeld\)[\s\S]{0,200}-tokensReserved/);
   });
+
+  it('reports X-Tokens-Remaining from the meter\'s latest answer, not the reservation it started with', () => {
+    // The three places the meter answers each refresh the total the header reads.
+    expect(fn).toContain('tokensTotal = have;');
+    expect(fn).toMatch(/const \{ data: back, error: tokenError \} = await tokens\(-tokensReserved, null\);[\s\S]{0,250}tokensTotal = back;/);
+    expect(fn).toMatch(/const \{ data: after, error: tokenError \} = await tokens\(usageTokens\(usage\) - tokensReserved, null\);[\s\S]{0,250}tokensTotal = after;/);
+    // The header is attached when each response is built, after the release or the settlement that precedes it.
+    expect(fn).toMatch(/await release\(reserve, `upstream \$\{upstream\.status\}`\);\s+return new Response\(upstream\.body, \{ status: upstream\.status, headers: withTokens\(headers\) \}\)/);
+    expect(fn).toMatch(/await settle\(usage \? costMicros\(usage, priced\.model\) : null, usage \?\? undefined\);[\s\S]{0,200}headers: withTokens\(headers\)/);
+    // A stream's headers leave before its usage block, so it carries the reservation, and says so.
+    expect(fn).toMatch(/The quota header is the reservation\.\s+return new Response\(upstream\.body\.pipeThrough\(pass\)[^\n]*headers: withTokens\(headers\)/);
+    // Control: the old shape, a header fixed from the reservation at build time, is gone.
+    expect(fn).not.toContain('tokensUsedToday');
+  });
 });
