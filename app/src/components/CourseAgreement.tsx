@@ -7,7 +7,7 @@ const ORDER:Bucket[]=['may','disclose','required','not','unknown'];
 export function CourseAgreement(){
  const {state,account,dispatch,catalog}=useStore();const [chosenCourse,setCourseId]=useState('');const courseId=chosenCourse||catalog.courses[0]?.id||'';
  const course=catalog.courses.find(c=>c.id===courseId);
- const published=useCoursePublications(catalog.courses.map(c=>c.code),state.term,!!account);
+ const published=useCoursePublications(catalog.courses.map(c=>c.code),state.term,account?.id??'');
  const pub=published[courseCode(course?.code??'')];
  const lines=agreementLines(courseLayers(course?.code??'',course?.ai,published));
  const rules=pub?.rules?.link;

@@ -401,6 +401,9 @@ const PLATFORM_NON_EVENT_IMPORTERS = [
   'app/server/institution/adapter.ts',
   'app/server/institution/context.ts',
   'app/server/institution/gateway.ts',
+  // The journal imports only the idempotency-store types; it does not mount
+  // an event producer or publisher.
+  'app/server/institution/journal.ts',
   // Membership imports only the tenant ID validator before carrying the
   // authoritative row ID into active-context selection.
   'app/server/institution/membership.ts',
