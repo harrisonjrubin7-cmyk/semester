@@ -807,6 +807,8 @@ describe('examples/event-consumer', () => {
       'supabase/migrations/20261004191000_productivity_task_carries_the_apps_task.sql',
       // The helper a SQL producer will call (P1-02), not a producer: nothing calls it yet. Its check calls the helper, so it is not listed.
       'supabase/migrations/20261008183934_emit_domain_event.sql',
+      // Plants synthetic outbox rows inside its rolled-back dashboard check to count pending, dead-lettered and failed events; it is a check, not a producer.
+      'supabase/ops-projection-dashboard.check.sql',
       // Rolled-back checks for selective dispatch.
       'supabase/ops-projector-worker.check.sql',
       'supabase/outbox.check.sql',
