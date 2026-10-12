@@ -2,8 +2,10 @@ from datetime import date
 from uuid import uuid4
 
 import pytest
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import _citation_label
+from app.main import app
 from app.models.entities import SourceChunk, SourceDocument
 from app.schemas import GuideContent, ReviewPatch
 from app.services.citations import (
@@ -15,6 +17,12 @@ from app.services.citations import (
 )
 from app.services.conflicts import DateFact, find_date_conflicts, normalize_title
 from app.services.dates import parse_explicit_date
+
+
+def test_cross_origin_downloads_expose_the_server_filename():
+    cors = next(middleware for middleware in app.user_middleware if middleware.cls is CORSMiddleware)
+
+    assert "Content-Disposition" in cors.kwargs["expose_headers"]
 
 
 def test_conflicting_assignment_dates_create_open_review_conflict():

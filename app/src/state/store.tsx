@@ -399,6 +399,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ...persisted,
         ...ephemeral,
         screen: landed.screen,
+        workspaceView: landed.view ?? null,
         ...(field && landed.id ? { [field]: landed.id } : {}),
         ...(landed.mode ? { mode: landed.mode } : {}),
         // A link to a screen that has since merged says which part of its
@@ -763,6 +764,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     at: 0,
     error: '',
   });
+  /** A first account pull that can safely be repeated, scoped to its auth generation. */
+  const [pullRetry, setPullRetry] = useState<{
+    accountId: string;
+    generation: number;
+    failures: number;
+  } | null>(null);
 
   /**
    * Who is signed in — asked for after the first paint, not before it.
@@ -1241,6 +1248,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
       rememberSyncedAs(accountId);
       pushReady.current = flight;
+      setPullRetry(null);
       setSync({ status: 'synced', at: Date.now(), error: '' });
       return refreshSaid(
         { ...base, took: take, courses: take ? remote.courses.length : 0, at: take ? remote.updated : 0 },
@@ -1252,7 +1260,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       showFailedRemote = null;
       // The object, not its message: `explainSync` reads PostgREST's `code`
       // and Supabase's `status`, which this line used to drop one step early.
-      const { said: error } = explainSync(e);
+      const { said, code } = explainSync(e);
+      const ready = pushReady.current;
+      const retry = retriesOnItsOwn(code) && (
+        !ready || ready.accountId !== accountId || ready.generation !== generation
+      );
+      const error = retry
+        ? `${said}\n\nYour changes are safe on this device, and it will try the account again by itself.`
+        : said;
+      if (retry) {
+        setPullRetry((was) => ({
+          accountId,
+          generation,
+          failures: was?.accountId === accountId && was.generation === generation
+            ? was.failures + 1
+            : 1,
+        }));
+      } else {
+        setPullRetry(null);
+      }
       setSync({ status: 'error', at: 0, error });
       return refreshSaid({ ...base, error }, Date.now());
     } finally {
@@ -1337,6 +1363,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    */
   const [online, setOnline] = useState(() => !offline());
   useEffect(() => watchConnection(setOnline), []);
+
+  /*
+   * A transient first pull must not strand this generation behind its upload
+   * fence. Retry with the same bounded backoff as a failed push; clear the
+   * token before starting so renders during the request cannot schedule a
+   * second one beside it. Identity checks keep an old account's timer inert.
+   */
+  useEffect(() => {
+    if (!pullRetry || !account || !online || asking) return;
+    if (
+      pullRetry.accountId !== account.id ||
+      pullRetry.generation !== accountGeneration.current
+    ) return;
+    const ready = pushReady.current;
+    if (
+      ready?.accountId === account.id &&
+      ready.generation === accountGeneration.current
+    ) return;
+    const retrying = pullRetry;
+    const timer = setTimeout(() => {
+      setPullRetry((was) => was === retrying ? null : was);
+      void refresh();
+    }, pushWait(0, pullRetry.failures));
+    return () => clearTimeout(timer);
+  }, [pullRetry, account, online, asking, refresh]);
 
   // Back online: look at the account before anything else. Whatever another
   // device did while this one was away is merged in, and the push below then
@@ -1781,8 +1832,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       screen: state.screen,
       id: routeId,
       ...(state.screen === 'guide' ? { mode: state.mode } : {}),
+      ...(state.workspaceView ? { view: state.workspaceView } : {}),
     }),
-    [state.screen, routeId, state.mode],
+    [state.screen, routeId, state.mode, state.workspaceView],
   );
   const shown = useRef<Route | null>(null);
 
@@ -1839,7 +1891,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       if (same(asked, shown.current)) return;
       shown.current = asked;
-      dispatch({ type: 'landed', screen: asked.screen, id: asked.id, mode: asked.mode });
+      dispatch({ type: 'landed', screen: asked.screen, id: asked.id, mode: asked.mode, view: asked.view });
     };
     window.addEventListener('popstate', moved);
     window.addEventListener('hashchange', moved);
