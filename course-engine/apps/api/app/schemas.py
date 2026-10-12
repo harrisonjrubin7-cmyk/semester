@@ -149,6 +149,7 @@ class Flashcard(BaseModel):
 
 class CardReview(BaseModel):
     course_id: UUID
+    asset_id: UUID
     concept_id: UUID | None = None
     correct: bool
     confidence: int = Field(ge=1, le=5)
