@@ -227,6 +227,8 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['integration_approve_connection', 'integration', ['auth.uid()', 'private.has_capability']],
   ['integration_approve_scope', 'integration', ['auth.uid()', 'private.has_capability']],
   ['integration_request_replay', 'integration', ['auth.uid()', 'private.has_capability']],
+  ['integration_revoke_connection', 'integration', ['private.has_capability']],
+  ['integration_revoke_scope', 'integration', ['private.has_capability']],
   ['integration_set_paused', 'integration', ['private.has_capability']],
   ['join_beta', 'self-service', ['auth.uid()', 'private.beta_my_membership', 'private.beta_confirmed_email']],
   ['join_community', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
@@ -505,6 +507,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
     file: '20261012010000_gradebook_release_emits_event.sql',
     functions: ['gradebook_release'],
     redefines: true,
+  },
+  {
+    file: '20261012040000_provisioning_authority_hardening.sql',
+    functions: ['integration_revoke_connection', 'integration_revoke_scope'],
   },
   {
     file: '20261008223000_privileged_role_mfa.sql',

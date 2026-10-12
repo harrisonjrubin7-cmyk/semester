@@ -720,7 +720,6 @@ const MOCKS_MODULES = [
   'src/lib/courserules.account.test.tsx',
   'src/components/CourseStudio.test.tsx',
   'src/components/MembershipPanel.live.test.tsx',
-  'src/components/MyRules.test.tsx',
   'src/components/PlusPrompt.test.tsx',
   'src/components/institutional/ModulesPanel.test.tsx',
   'src/components/unity/rollout-b.test.tsx',

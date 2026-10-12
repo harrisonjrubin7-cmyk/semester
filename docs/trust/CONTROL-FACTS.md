@@ -12,13 +12,13 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 237 |
-| Tables created in `public` and not later dropped | 342 |
-| … of which enable row-level security in a migration | 342 |
+| Migration files | 239 |
+| Tables created in `public` and not later dropped | 343 |
+| … of which enable row-level security in a migration | 343 |
 | Tables created in `private` and not later dropped | 50 |
 | … of which enable row-level security in a migration | 50 |
 | Tables with no `enable row level security` statement found | 0 |
-| Tables named by at least one literal `create policy` statement | 276 |
+| Tables named by at least one literal `create policy` statement | 277 |
 | Tables with RLS found and no literal policy statement | 116 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
@@ -293,8 +293,8 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 241 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 241 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 243 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 243 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
@@ -302,7 +302,7 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 | Register rows in category `self-service` | 65 |
 | Register rows in category `sharing` | 23 |
 | Register rows in category `admin` | 97 |
-| Register rows in category `integration` | 6 |
+| Register rows in category `integration` | 8 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |
 | Register rows in category `read-helper` | 32 |

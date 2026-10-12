@@ -48,6 +48,8 @@ do $$
 declare
   north_user uuid;
   cedar_user uuid;
+  north_admin uuid;
+  cedar_admin uuid;
   north_provider uuid := gen_random_uuid();
   cedar_provider uuid := gen_random_uuid();
   north_credential uuid := gen_random_uuid();
@@ -151,6 +153,77 @@ begin
   insert into public.scim_group_mapping
     (tenant_id, external_group_id, display_name, roles, active)
   values ('northstar-identity', 'vanderbilt-advisors', 'Advisors', array['advisor'], true);
+
+  -- The group → role mapping is the least-audited privilege path: a row here
+  -- decides which identity-provider group becomes which Semester role,
+  -- `admin` included. So who approved it is stamped by the server, every
+  -- change is kept, and another school's administrator can neither see nor
+  -- touch it. Phase 4 (P4-I5, P4-I6).
+  north_admin := pg_temp.newuser('idp-admin@northstar-identity.example', 'northstar-identity');
+  cedar_admin := pg_temp.newuser('idp-admin@cedar-identity.example', 'cedar-identity');
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+    (north_admin, 'university_admin', 'school', 'northstar-identity', 'institution'),
+    (cedar_admin, 'university_admin', 'school', 'cedar-identity', 'institution');
+
+  perform pg_temp.become(north_admin);
+  insert into public.scim_group_mapping
+    (tenant_id, external_group_id, display_name, roles, active, approved_by, approved_at)
+  values ('northstar-identity', 'vanderbilt-registrars', 'Registrars', array['staff'], true,
+          cedar_admin, '2001-01-01');
+  reset role;
+  select approved_by::text into state from public.scim_group_mapping
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars';
+  perform pg_temp.answered('a group mapping''s approver is stamped from the session, not the row',
+    state, north_admin::text);
+  select (approved_at > '2020-01-01')::text into state from public.scim_group_mapping
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars';
+  perform pg_temp.answered('and so is the time of approval', state, 'true');
+
+  perform pg_temp.become(north_admin);
+  update public.scim_group_mapping set roles = array['staff', 'admin']
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars';
+  reset role;
+  select count(*) into n from public.scim_group_mapping_history
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars';
+  perform pg_temp.counted('every change to a group mapping is kept (insert, then the roles widened)', n, 2);
+  select count(*) into n from public.scim_group_mapping_history
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars'
+     and changed_by = north_admin and 'admin' = any (roles);
+  perform pg_temp.counted('the history names who widened the mapping to admin', n, 1);
+  if not pg_temp.refused(format(
+    'update public.scim_group_mapping_history set roles = %L where tenant_id = %L',
+    '{student}', 'northstar-identity'
+  )) then
+    raise exception 'FAILED: group mapping history was mutable';
+  end if;
+  raise notice 'ok  group mapping history is immutable';
+
+  perform pg_temp.become(cedar_admin);
+  select count(*) into n from public.scim_group_mapping where tenant_id = 'northstar-identity';
+  perform pg_temp.counted('CROSS-TENANT: cedar''s administrator reads none of north''s group mappings', n, 0);
+  select count(*) into n from public.institution_identity_provider where tenant_id = 'northstar-identity';
+  perform pg_temp.counted('CROSS-TENANT: nor north''s identity provider', n, 0);
+  select count(*) into n from public.provisioning_audit_event where tenant_id = 'northstar-identity';
+  perform pg_temp.counted('CROSS-TENANT: nor north''s provisioning events', n, 0);
+  select count(*) into n from public.scim_group_mapping_history where tenant_id = 'northstar-identity';
+  perform pg_temp.counted('CROSS-TENANT: nor north''s mapping history', n, 0);
+  update public.scim_group_mapping set roles = array['admin']
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-advisors';
+  get diagnostics n = row_count;
+  perform pg_temp.counted('CROSS-TENANT: cedar''s administrator changes none of north''s mappings', n, 0);
+  reset role;
+  if not pg_temp.refused(format(
+    'select pg_temp.become(%L); insert into public.scim_group_mapping '
+    '(tenant_id, external_group_id, display_name, roles) values (%L, %L, %L, %L)',
+    cedar_admin, 'northstar-identity', 'cedar-planted', 'Planted', '{admin}'
+  )) then
+    raise exception 'FAILED: another school''s administrator planted a group mapping at north';
+  end if;
+  reset role;
+  raise notice 'ok  CROSS-TENANT: cedar''s administrator cannot plant a mapping at north';
+  select roles[1] into state from public.scim_group_mapping
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-advisors';
+  perform pg_temp.answered('north''s advisor mapping is as north left it', state, 'advisor');
 
   set local role service_role;
   select private.replace_scim_group_members(
