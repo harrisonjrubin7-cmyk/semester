@@ -1,4 +1,7 @@
-import { obj, textValue } from '../device-library';
+import { TEMPLATE_IDS, type TemplateId } from './template-ids';
+import { readWorkspaces, type Workspace } from './workspace-storage';
+
+export { TEMPLATE_IDS, readWorkspaces, type TemplateId, type Workspace };
 
 /**
  * Assignment workflow templates, and the workspace a student fills in with
@@ -195,32 +198,12 @@ export const TEMPLATES = {
       s('questions', 'Your questions', 'Two or three specific questions to ask.'),
     ],
   },
-} satisfies Record<string, Omit<Template, 'id'>>;
-
-export type TemplateId = keyof typeof TEMPLATES;
-
-export const TEMPLATE_IDS = Object.keys(TEMPLATES) as TemplateId[];
+} satisfies Record<TemplateId, Omit<Template, 'id'>>;
 
 export const template = (id: TemplateId): Template => ({ id, ...TEMPLATES[id] });
 
 /** A student's own note must be at least this long before a stage can be marked done. */
 export const MIN_NOTE = 12;
-
-export interface Workspace {
-  id: string;
-  template: TemplateId;
-  title: string;
-  courseCode: string;
-  goal: string;
-  /** The instructions, pasted by the student. */
-  prompt: string;
-  notes: Record<string, string>;
-  done: string[];
-  reflection: string;
-  /** Private until the student chooses otherwise; there is no sharing path in this slice. */
-  visibility: 'private';
-  created: string;
-}
 
 export function newWorkspace(id: string, templateId: TemplateId, title: string, courseCode: string, now: Date): Workspace {
   return {
@@ -270,27 +253,4 @@ export function submissionChecklist(opts: { disclosureNeeded: boolean; hasRubric
     'Headings in order, figures described, links named.',
     'You submit it yourself, through the course’s own system.',
   ];
-}
-
-export function readWorkspaces(value: unknown): Workspace[] {
-  if (!Array.isArray(value)) throw new Error('Assignment workspaces are not a list.');
-  return value.map((w) => {
-    if (!obj(w) || !textValue(w.id, 80) || !textValue(w.title, 300) || typeof w.template !== 'string' || !(w.template in TEMPLATES))
-      throw new Error('An assignment workspace is malformed.');
-    const notes: Record<string, string> = {};
-    if (obj(w.notes)) for (const [k, v] of Object.entries(w.notes)) if (textValue(v, 20_000)) notes[k] = v;
-    return {
-      id: w.id,
-      template: w.template as TemplateId,
-      title: w.title,
-      courseCode: textValue(w.courseCode, 40) ? w.courseCode : '',
-      goal: textValue(w.goal, 2000) ? w.goal : '',
-      prompt: textValue(w.prompt, 20_000) ? w.prompt : '',
-      notes,
-      done: Array.isArray(w.done) ? w.done.filter((d): d is string => textValue(d, 80)) : [],
-      reflection: textValue(w.reflection, 20_000) ? w.reflection : '',
-      visibility: 'private',
-      created: textValue(w.created, 40) ? w.created : '',
-    };
-  });
 }
