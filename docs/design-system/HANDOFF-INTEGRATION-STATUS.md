@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 1 of 120 · **Integration slice** 91 · **Date** 2026-10-12 · **Branch** `codex/handoff-integration-slice-91` · **Slice base** `a8c8616d` · **Latest observed `origin/main`** `a8c8616d`
+**Automation pass** 1 of 120 · **Integration slice** 91 · **Date** 2026-10-12 · **Branch** `codex/handoff-integration-slice-91` · **Slice base** `d2d1db59` · **Latest observed `origin/main`** `d2d1db59`
 
 ## State
 
@@ -8,7 +8,7 @@ Phase 0 reconciliation is complete for the archive populations and includes the 
 
 ## Evidence locked in automation pass 1 / integration slice 91
 
-- The initial clean worktree fast-forwarded from `1eab79523` to `70f53e222` before implementation. A fresh promotion checkout then started at current `origin/main` `a8c8616d`, and the exact four-file slice applied cleanly. Current-code and reducer inspection found the dining cancellation, calendar-feed removal and other initially ranked paths already protected by confirmation or shared Undo; no equivalent volunteer removal-vote preview existed.
+- The initial clean worktree fast-forwarded from `1eab79523` to `70f53e222` before implementation. A fresh promotion checkout started at `a8c8616d`, the exact four-file slice applied cleanly, and final promotion reconciliation merged current `origin/main` `d2d1db59`, including the separately reviewed duplicate-migration repair. Current-code and reducer inspection found the dining cancellation, calendar-feed removal and other initially ranked paths already protected by confirmation or shared Undo; no equivalent volunteer removal-vote preview existed.
 - A volunteer’s **Remove it** decision now opens the shared `ConfirmDialog` and `ActionPreview` before the existing `volunteer_decide` RPC. It shows the reported post and chosen reason, says that a second independent removal vote can remove the post immediately, that a first vote waits and that disagreement routes to a professional reviewer.
 - Cancel receives initial focus through the shared dialog and performs no RPC. Only explicit **Submit removal vote** confirmation invokes the unchanged operation with the exact task id, `remove` action and selected reason. Keep and label decisions, server eligibility and recusal checks, two-volunteer agreement, professional routing, retained evidence and appeal authority remain unchanged.
 - The focused regression proves there is no call before confirmation or after cancel, then verifies the exact confirmed arguments and task removal. Volunteer, `ActionPreview`, modal and root-unmount coverage passes 30/30; the changed screen and test pass Oxlint and TypeScript.

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Notice, SectionLabel } from '../ui';
 import { loadCommandCenter, type CommandItem, type CommandSeverity } from '../../lib/console/client';
 import { inScope, matches, said, when, type ViewProps } from './Fields';
+import { ProjectionHealth } from './ProjectionHealth';
 
 const ORDER: Record<CommandSeverity, number> = { critical: 0, high: 1, medium: 2, info: 3 };
 
@@ -90,6 +91,7 @@ export function CommandCenter({ env, scope, filter, onStatus }: ViewProps) {
           <small>Observed {when(item.observedAt)}</small>
         </article>
       ))}
+      <ProjectionHealth />
     </div>
   );
 }

@@ -19,6 +19,7 @@ import { todayActions } from '../lib/today-actions';
 import {
   STATUS_SENTENCE,
   doneForToday,
+  stillDueToday,
   itemSource,
   planCommitments,
   type CommitmentRow,
@@ -93,19 +94,28 @@ export function TodayActionCenter({
   const officeList = office.state.kind === 'ready' ? office.state.actions : null;
   const actions = useMemo(
     () => [
-      ...todayActions({ path, upcoming, done: state.done, reviewDue, catalogEmpty: scope.empty }),
+      ...todayActions({
+        path, upcoming, done: state.done, reviewDue, catalogEmpty: scope.empty,
+        maintenance: { requests: state.maintenance, now: now.getTime() },
+      }),
       // Registration readiness (Phase C), only while the mode is showing.
       ...(registrationDay ? registrationActions(registration.data, registration.cart, registration.catalog, now) : []),
       ...(officeList ?? []).filter((a) => a.doneAt === null).map((a) => officeActionToAction(a, now.getTime())),
     ],
-    [path, upcoming, state.done, reviewDue, scope.empty, registrationDay, registration.data, registration.cart, registration.catalog, now, officeList],
+    [path, upcoming, state.done, reviewDue, scope.empty, state.maintenance, registrationDay, registration.data, registration.cart, registration.catalog, now, officeList],
   );
   const top = useMemo(() => rank(actions, choices, now.getTime()).mostImportant, [actions, choices, now]);
   const leadingRoute = top ? fromHash(top.action.primary.target) : null;
   const leadingId = leadingRoute?.screen === 'item' ? leadingRoute.id : null;
+  // A repair whose follow-up has come is due now, so the day is not "set"
+  // while one is open — it would otherwise sit under "When you have a moment".
+  const repairsDue = useMemo(
+    () => stillDueToday(actions.filter((a) => a.id.startsWith('maintenance:')), choices, now.getTime()),
+    [actions, choices, now],
+  );
   const closure = useMemo(
-    () => doneForToday({ upcoming, done: state.done, now: now.getTime() }, choices),
-    [upcoming, state.done, now, choices],
+    () => doneForToday({ upcoming, done: state.done, now: now.getTime(), alsoDue: repairsDue }, choices),
+    [upcoming, state.done, now, choices, repairsDue],
   );
 
   const rows = useMemo(() => {
