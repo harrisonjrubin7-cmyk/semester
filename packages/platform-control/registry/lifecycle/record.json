@@ -1,0 +1,35 @@
+{
+  "key": "lifecycle.record",
+  "name": "Shared record lifecycle",
+  "owner": "platform-governance",
+  "status": "designed",
+  "evidence": ["docs/architecture/universal-state-model.md", "docs/master/SEMESTER_DATA_AUTHORITY_MATRIX.md"],
+  "states": ["created", "validated", "pending_review", "approved", "active", "suspended", "expired", "revoked", "archived", "retained_or_deleted"],
+  "transitions": {
+    "created": ["validated"],
+    "validated": ["pending_review", "approved"],
+    "pending_review": ["approved", "revoked"],
+    "approved": ["active"],
+    "active": ["suspended", "expired", "revoked", "archived"],
+    "suspended": ["active", "revoked", "archived"],
+    "expired": ["archived"],
+    "revoked": ["archived"],
+    "archived": ["retained_or_deleted"],
+    "retained_or_deleted": []
+  },
+  "examples": [
+    {"record": "Student-created task", "authority": "Student", "lifecycle_owner": "Student"},
+    {"record": "Uploaded course file", "authority": "Student", "lifecycle_owner": "Student + file service"},
+    {"record": "Generated study guide", "authority": "Derived", "lifecycle_owner": "Student approves; system regenerates"},
+    {"record": "Official grade", "authority": "Institution SIS", "lifecycle_owner": "Institution"},
+    {"record": "Enrollment state", "authority": "Institution SIS", "lifecycle_owner": "Institution"},
+    {"record": "Readiness receipt", "authority": "Semester derived from evidence", "lifecycle_owner": "Registrar workflow"},
+    {"record": "Payment intent", "authority": "Semester/provider", "lifecycle_owner": "Finance reconciliation"},
+    {"record": "Guardian delegation", "authority": "Student", "lifecycle_owner": "Student, with automatic expiry"},
+    {"record": "Community post", "authority": "Community member", "lifecycle_owner": "Member/moderation system"},
+    {"record": "Marketplace listing", "authority": "Seller", "lifecycle_owner": "Seller/moderation system"},
+    {"record": "API key", "authority": "Developer organization", "lifecycle_owner": "Developer/security system"},
+    {"record": "Integration credential", "authority": "Institution/admin", "lifecycle_owner": "Institution/security system"},
+    {"record": "Company contract", "authority": "Company/legal", "lifecycle_owner": "Legal and commercial owners"}
+  ]
+}

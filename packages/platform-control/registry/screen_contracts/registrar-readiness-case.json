@@ -1,0 +1,21 @@
+{
+  "key": "registrar.readiness.case",
+  "name": "Registration readiness case",
+  "owner": "registration-owner",
+  "status": "designed",
+  "evidence": ["docs/reference/registration-readiness-workflow.md", "packages/institution/src/readiness-workflow.ts"],
+  "workspace": "registrar",
+  "route": "/registrar/readiness/:caseId",
+  "title": "Registration readiness",
+  "roles": ["registrar", "registrar_manager", "student"],
+  "capabilities": ["registration.readiness"],
+  "records": ["readiness_case", "source_evidence", "hold_reference", "policy_decision", "reconciliation_case"],
+  "commands": ["readiness.evaluate", "readiness.route_blocker", "readiness.request_override", "readiness.refresh_source", "readiness.close_case"],
+  "events": ["registration.readiness_evaluated", "registration.readiness_reconciliation_requested", "registration.override_requested"],
+  "audit_events": ["readiness_case.viewed", "readiness_case.evaluated", "readiness_case.override_requested"],
+  "states": ["ready", "loading", "empty", "error", "forbidden", "offline", "stale"],
+  "authority": { "primary": "institution_sis", "semester_role": "derived_readiness_result", "reconciliation_required": true },
+  "ai": { "enabled": false, "rule": "No automated decision or enrollment action." },
+  "operational_owner": "registrar_operations",
+  "runbook": "docs/INTEGRATION-OPERATOR-RUNBOOK.md"
+}
