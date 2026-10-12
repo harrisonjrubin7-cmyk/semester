@@ -2,14 +2,14 @@
 
 > **Type:** reference · **Audience:** implementers, operators · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/platform-reference.test.ts`
 
-This page lists the 17 Supabase edge functions in this repository, what each accepts, how each decides who is calling, and which environment variables and database functions each uses; stop reading if you want the secrets inventory ([`SECRETS.md`](../../SECRETS.md)) or the deploy steps ([`supabase/DEPLOY.md`](../../supabase/DEPLOY.md)).
+This page lists the 18 Supabase edge functions in this repository, what each accepts, how each decides who is calling, and which environment variables and database functions each uses; stop reading if you want the secrets inventory ([`SECRETS.md`](../../SECRETS.md)) or the deploy steps ([`supabase/DEPLOY.md`](../../supabase/DEPLOY.md)).
 
 **Status:** PARTIAL — each function carries its own word in the table below. Only the functions marked LIVE work for a real user without further owner, provider or university action. This page reads the repository, not the running project: it cannot say what is deployed or which secrets are set.
 
 ## How to read this page
 
 - **URL shape.** Every function is served at `https://<project-ref>.supabase.co/functions/v1/<function>`. `<project-ref>` is the Supabase project the deployment belongs to. `lti` also answers four sub-paths (see its section); `calendar` reads its credential from the last path segment.
-- **`verify_jwt`.** All 17 functions are `false` in [`supabase/config.toml`](../../supabase/config.toml). The platform check would reject a CORS preflight, which carries no `Authorization` header, so each function does its own check. The **Guard** column is the kind of credential each one answers to, taken from [`app/src/lib/edgeguards.ts`](../../app/src/lib/edgeguards.ts). A function with `verify_jwt = false` and no check of its own would be open; that register is what stops one being added without saying so.
+- **`verify_jwt`.** All 18 functions are `false` in [`supabase/config.toml`](../../supabase/config.toml). The platform check would reject a CORS preflight, which carries no `Authorization` header, so each function does its own check. The **Guard** column is the kind of credential each one answers to, taken from [`app/src/lib/edgeguards.ts`](../../app/src/lib/edgeguards.ts). A function with `verify_jwt = false` and no check of its own would be open; that register is what stops one being added without saying so.
 - **Status words** are the vocabulary of [`docs/FEATURE-TRUTH-TABLE.md`](../FEATURE-TRUTH-TABLE.md). Where that table has a row for the function, the section names it. Where it has none, the word is read from the function's own gating and the section says so.
 - **Environment variables** are names only. What each one controls, its default and where it is set is in [`CONFIGURATION.md`](CONFIGURATION.md).
 - **Deploy state.** [`supabase/DEPLOY.md`](../../supabase/DEPLOY.md) holds a dated snapshot of what the project reported. This page does not repeat it, and the snapshot is not evidence that a function is on today.

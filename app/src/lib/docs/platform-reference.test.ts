@@ -952,7 +952,7 @@ describe('EDGE-FUNCTIONS.md', () => {
     expect(diff(rows.map((r) => r.fn), dirs)).toEqual(NONE);
     const sections = [...md.matchAll(/^## `([a-z-]+)`$/gm)].map((m) => m[1]);
     expect(diff(sections, dirs)).toEqual(NONE);
-    expect(md).toContain('17 Supabase edge functions');
+    expect(md).toContain('18 Supabase edge functions');
   });
 
   it('gives every function a status word from the vocabulary', () => {
