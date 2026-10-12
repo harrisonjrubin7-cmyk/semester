@@ -774,6 +774,18 @@ describe('what a sync must not lose', () => {
     });
   }
 
+  // Found reviewing afe376f: a heal that changed nothing left the saved copy
+  // as it was, so no save ran to clear the note and it held deletions for good.
+  it('without a database, forgets the note when the heal has nothing to add', async () => {
+    db = false;
+    await seedDamaged(null);
+    pull.mockResolvedValue({ state: { notes: [] }, courses: [], updated: 1, seen: { state: 's1', courses: {} } });
+    await mount();
+    await wait(3_000);
+    expect(store.state.notes).toEqual([]);
+    expect(ingressDrops()).toEqual([]);
+  });
+
   it('pushes back a field a newer build wrote, untouched', async () => {
     // A name no build has, so the test still means this once the field is real.
     const later = [{ id: 'f1', said: 'written by a build from the future' }];

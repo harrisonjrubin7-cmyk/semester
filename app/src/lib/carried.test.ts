@@ -105,6 +105,14 @@ describe('fields this build cannot read', () => {
       expect(withCarried('u1', { notes: [] })).toEqual({ notes: [] });
     });
 
+    // Found reviewing afe376f: the database keeps microseconds, and two
+    // versions in the same millisecond tied, so the older memory stood.
+    it('tells apart two versions in the same millisecond', async () => {
+      rememberCarried('u1', { later: 'old' }, known, '2026-10-12T10:00:00.123100+00:00');
+      (await otherTab()).rememberCarried('u1', { later: 'new' }, known, '2026-10-12T10:00:00.123900+00:00');
+      expect(withCarried('u1', { notes: [] })).toEqual({ notes: [], later: 'new' });
+    });
+
     it('keeps the newer version when this tab\u2019s slower pull of an older one lands last', async () => {
       vi.useFakeTimers({ toFake: ['Date'] });
       (await otherTab()).rememberCarried('u1', { later: 'new' }, known, v2);

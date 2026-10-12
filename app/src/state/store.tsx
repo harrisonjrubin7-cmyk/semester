@@ -528,6 +528,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * localStorage the save is the render after, and it can be refused.
    */
   const healPending = useRef(false);
+  /** What localStorage last accepted, unlike `wrote`, which a refused save also sets. */
+  const savedText = useRef('');
   const healed = useCallback(() => {
     if (dbAvailable()) clearIngressDrops();
     else healPending.current = true;
@@ -678,13 +680,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
     // Unchanged text means nothing to write, which is what the string dep used
     // to give for free before the database path took the dep over.
-    if (persisted === wrote.current) return;
+    if (persisted === wrote.current) {
+      // A heal that added nothing: what is on disk is already the healed copy.
+      if (healPending.current && persisted === savedText.current) {
+        healPending.current = false;
+        clearIngressDrops();
+      }
+      return;
+    }
     const quiet = fromOtherTab.current;
     fromOtherTab.current = false;
     wrote.current = persisted;
     const result = save(persisted, (value) => localStorage.setItem(STORAGE_KEY, value));
     // The healed copy is on disk, so the note that the gap was damage can go.
     // Not before: refused for room, the next boot reads the gap as clean.
+    if (result.ok) savedText.current = persisted;
     if (result.ok && healPending.current) {
       healPending.current = false;
       clearIngressDrops();

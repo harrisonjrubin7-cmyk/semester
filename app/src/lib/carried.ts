@@ -36,7 +36,7 @@ export const CARRIED_KEY = 'semester.carried';
 interface Held {
   account: string;
   fields: Record<string, unknown>;
-  /** The account version (state row `updated_at`, epoch ms) it was read from. 0: no row. */
+  /** The account version (state row `updated_at`, epoch microseconds) it was read from. 0: no row. */
   at: number;
 }
 
@@ -66,9 +66,17 @@ function read(): Held | null {
   return disk && disk.at > memory.at ? disk : memory;
 }
 
+/**
+ * The stamp as microseconds since the epoch. Postgres keeps microseconds and
+ * `Date.parse` drops them, so two versions in one millisecond would tie.
+ * Under 2^53 until the year 2255.
+ */
 const versionOf = (stamp: string | undefined): number => {
   const ms = stamp ? Date.parse(stamp) : Number.NaN;
-  return Number.isFinite(ms) ? ms : 0;
+  if (!Number.isFinite(ms)) return 0;
+  const fraction = /\.(\d+)/.exec(stamp!)?.[1] ?? '';
+  const micro = Number(fraction.padEnd(6, '0').slice(3, 6));
+  return ms * 1000 + micro;
 };
 
 /** The pulled copy's fields this build does not know. */
