@@ -106,7 +106,8 @@ create table if not exists public.access_enforcements (
   installed_at  timestamptz not null default now(),
   removed_at    timestamptz
 );
-create index if not exists access_enforcements_saga on public.access_enforcements (saga_id) where removed_at is null;
+create index if not exists access_enforcements_saga_id on public.access_enforcements (saga_id);
+create index if not exists access_enforcements_saga_live on public.access_enforcements (saga_id) where removed_at is null;
 alter table public.access_enforcements enable row level security;
 revoke all on public.access_enforcements from public, anon, authenticated;
 
@@ -119,6 +120,7 @@ create table if not exists public.access_operation_receipts (
   result         jsonb not null,
   recorded_at    timestamptz not null default now()
 );
+create index if not exists access_operation_receipts_saga_id on public.access_operation_receipts (saga_id);
 alter table public.access_operation_receipts enable row level security;
 revoke all on public.access_operation_receipts from public, anon, authenticated;
 
