@@ -34,6 +34,7 @@ import {
   type MaintenanceRequest,
 } from './maintenance';
 import { maintenanceActions } from './maintenance-actions';
+import { stillDueToday } from './today-center';
 import { effectiveStatus, transition } from './actions';
 
 const HOUR = 3_600_000;
@@ -452,6 +453,30 @@ describe('review findings on 5200c9c', () => {
     expect(transition(done.choice, 'complete', next).ok).toBe(false);
     // And the same day it is still done.
     expect(transition(done.choice, 'complete', at + HOUR, { reopensNextDay: true }).ok).toBe(false);
+  });
+
+  it('withholds the day closure while a repair is snoozed to later today, not past midnight', () => {
+    const r = request();
+    const at = r.checkBackAt + 1;
+    const [action] = maintenanceActions([r], at);
+    const snooze = (until: number) => {
+      const moved = transition(undefined, 'snooze', at, { until });
+      if (!moved.ok) throw new Error(moved.why);
+      return { [action.id]: moved.choice };
+    };
+    const d = new Date(at);
+    const lateToday = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 0).getTime();
+    const tomorrowMorning = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 8, 0).getTime();
+    expect(stillDueToday([action], snooze(lateToday), at)).toEqual([action.id]);
+    expect(stillDueToday([action], snooze(tomorrowMorning), at)).toEqual([]);
+    expect(stillDueToday([action], {}, at)).toEqual([action.id]);
+  });
+
+  it('rebuilds a missing check-back from the urgency the row carries', () => {
+    const base = { ...request(), checkBackAt: 'gone' };
+    expect(readMaintenance({ ...base, urgency: 'emergency' })!.checkBackAt - base.reportedAt).toBe(HOUR);
+    expect(readMaintenance({ ...base, urgency: 'urgent' })!.checkBackAt - base.reportedAt).toBe(4 * HOUR);
+    expect(readMaintenance({ ...base, urgency: 'routine' })!.checkBackAt).toBe(addDays(base.reportedAt, 3));
   });
 
   it('bounds the building and room as the reader does, so a saved request survives a reload unchanged', () => {

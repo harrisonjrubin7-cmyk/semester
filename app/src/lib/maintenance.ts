@@ -411,7 +411,7 @@ export function readMaintenance(row: unknown): MaintenanceRequest | null {
     channel: oneOf(CHANNELS, r.channel, 'other'),
     reference: isStr(r.reference) ? r.reference.trim().slice(0, LIMITS.reference) : '',
     reportedAt,
-    checkBackAt: isNum(r.checkBackAt) ? r.checkBackAt : suggestedCheckBack('routine', reportedAt),
+    checkBackAt: isNum(r.checkBackAt) ? r.checkBackAt : suggestedCheckBack(oneOf(URGENCIES, r.urgency, 'routine'), reportedAt),
     checkBackStated: r.checkBackStated === true,
     scheduledFor: isNum(r.scheduledFor) ? r.scheduledFor : null,
     status: status === 'scheduled' && !isNum(r.scheduledFor) ? 'reported' : status,

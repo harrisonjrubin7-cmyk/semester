@@ -1,6 +1,6 @@
 import { lazy, Suspense, useMemo } from 'react';
 import { blocksFor } from '../data/catalog';
-import { ACTIONS_PREFIX, EMPTY_ACTION_CHOICES, effectiveStatus, rank, readActionChoices } from '../lib/actions';
+import { ACTIONS_PREFIX, EMPTY_ACTION_CHOICES, rank, readActionChoices } from '../lib/actions';
 import { clock, dateToIso } from '../lib/date';
 import { useDeviceLibrary } from '../lib/device-library';
 import { readDue } from '../lib/duetime';
@@ -19,6 +19,7 @@ import { todayActions } from '../lib/today-actions';
 import {
   STATUS_SENTENCE,
   doneForToday,
+  stillDueToday,
   itemSource,
   planCommitments,
   type CommitmentRow,
@@ -109,10 +110,7 @@ export function TodayActionCenter({
   // A repair whose follow-up has come is due now, so the day is not "set"
   // while one is open — it would otherwise sit under "When you have a moment".
   const repairsDue = useMemo(
-    () => actions
-      .filter((a) => a.id.startsWith('maintenance:'))
-      .filter((a) => ['open', 'in_progress', 'blocked'].includes(effectiveStatus(a, choices[a.id], now.getTime())))
-      .map((a) => a.id),
+    () => stillDueToday(actions.filter((a) => a.id.startsWith('maintenance:')), choices, now.getTime()),
     [actions, choices, now],
   );
   const closure = useMemo(

@@ -1,4 +1,4 @@
-import type { Choice } from './actions';
+import { effectiveStatus, type Action, type Choice } from './actions';
 import type { SourceLabel } from './source';
 import type { PathState } from './today-decision';
 import type { DatedItem } from './types';
@@ -41,6 +41,24 @@ export function timeFirstLabel(at: number, now: number): string {
 
 /** A course date is imported when the student confirmed it against its source, and otherwise needs review. */
 export const itemSource = (item: DatedItem): SourceLabel => (item.checked?.confirmed ? 'imported' : 'needs_review');
+
+/**
+ * The ids among `actions` that still belong to today: open, started or
+ * blocked, or snoozed to a time before tonight's midnight — a snooze to later
+ * today comes back before the day ends, so it is not closure.
+ */
+export function stillDueToday(actions: readonly Action[], choices: Record<string, Choice>, now: number): string[] {
+  const d = new Date(now);
+  const midnight = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime();
+  return actions
+    .filter((a) => {
+      const status = effectiveStatus(a, choices[a.id], now);
+      if (status === 'open' || status === 'in_progress' || status === 'blocked') return true;
+      const until = choices[a.id]?.snoozedUntil;
+      return status === 'snoozed' && typeof until === 'number' && until < midnight;
+    })
+    .map((a) => a.id);
+}
 
 /**
  * "You are set for today", and what comes next.
