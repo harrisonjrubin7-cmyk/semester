@@ -1,7 +1,7 @@
 -- Releasing a platform kill switch needs two approvers (F-1).
 --
 -- Engaging stays immediate; letting a PLATFORM-wide stop go does not. Before
--- 20261011190000 a `killswitch:engage` holder released it with a direct UPDATE.
+-- 20261012010000 a `killswitch:engage` holder released it with a direct UPDATE.
 --
 --   * the direct UPDATE that would release a platform switch reaches no row;
 --   * engaging, and re-reasoning an engaged platform switch, still work;
