@@ -145,6 +145,9 @@ declare
   ana uuid; ben uuid; cal uuid; dual uuid;
   next_prof uuid; untermed uuid; dan uuid; eve uuid;
   ps1 uuid; mid uuid; req uuid; req2 uuid; sp1 uuid; n bigint;
+  -- The longest key the ledger's contract accepts (8 to 200); the outbox's
+  -- correlation id stops at 128, and a release must not fall between them.
+  longkey text := rpad('release-ps1-key-', 200, 'k');
   scheme constant text := $q$select public.gradebook_set_scheme('econ 1020', '2026FA',
       '[{"key":"problem-sets","name":"Problem sets","weight":40,"drop_lowest":1},
         {"key":"exams","name":"Exams","weight":60}]'::jsonb,
@@ -279,19 +282,22 @@ begin
   perform pg_temp.refused('the chair releasing', chair, format($q$select public.gradebook_release(%L, 'chair-release-key')$q$, ps1));
   perform pg_temp.counted('a refused release writes no outbox event',
     (select count(*) from private.domain_outbox_events e where e.aggregate_id = ps1::text and e.event_type = 'gradebook.grades_released'), 0);
-  perform pg_temp.said('the instructor releases: Ana''s moderated grade goes, Ben''s draft is held',
-    pg_temp.ask(prof, format($q$select public.gradebook_release(%L, 'release-ps1-key')::text$q$, ps1)), '{"held": 1, "released": 1}');
+  perform pg_temp.said('the instructor releases with a 200-character key: Ana''s moderated grade goes, Ben''s draft is held',
+    pg_temp.ask(prof, format($q$select public.gradebook_release(%L, %L)::text$q$, ps1, longkey)), '{"held": 1, "released": 1}');
   perform pg_temp.said('and again with the key is the same answer, writing nothing',
-    pg_temp.ask(prof, format($q$select public.gradebook_release(%L, 'release-ps1-key')::text$q$, ps1)), '{"held": 1, "released": 1}');
+    pg_temp.ask(prof, format($q$select public.gradebook_release(%L, %L)::text$q$, ps1, longkey)), '{"held": 1, "released": 1}');
   -- Publication and its outbox event are one transaction (20261012010000):
   -- the release that went through wrote exactly one event, keyed like the
-  -- release, and the replay above added none.
+  -- release, and the replay above added none. The key is the contract's
+  -- longest, so the event's correlation id (8 to 128) had to be derived from
+  -- it rather than copied; the whole key rides as the idempotency key.
   perform pg_temp.counted('the release wrote one outbox event, and the replay none',
     (select count(*) from private.domain_outbox_events e where e.aggregate_id = ps1::text and e.event_type = 'gradebook.grades_released'), 1);
-  perform pg_temp.counted('the event carries the counts and the item, and names no student',
+  perform pg_temp.counted('the event carries the counts, the item and the whole key under a short correlation id, and names no student',
     (select count(*) from private.domain_outbox_events e
       where e.aggregate_id = ps1::text and e.event_type = 'gradebook.grades_released'
-        and e.tenant_id = 'gb-u' and e.idempotency_key = 'release-ps1-key'
+        and e.tenant_id = 'gb-u' and e.idempotency_key = longkey
+        and e.correlation_id ~ '^[A-Za-z0-9._:-]{8,128}$'
         and e.payload->>'released' = '1' and e.payload->>'held' = '1'
         and e.payload::text not like '%' || ana::text || '%'), 1);
   perform pg_temp.counted('Ana now sees exactly one row, released',

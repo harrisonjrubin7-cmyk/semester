@@ -83,6 +83,7 @@ Recorded from `docs/execute/31-phase-1-foundation-report.md`; the full-suite fig
 | `npx vitest run src/state/storage.test.ts` | 33 passed (3 new; red before `onb` was persisted: 3 failed) |
 | `npx vitest run src/state` | 42 files, 556 passed |
 | CI run 38185868815 on `0d1c2c11` | Typecheck, Lint, Design-system gates, Test, Test in other timezones, Test in a different order, Build, Install PostgreSQL 17, Check the database policies (152 suites) all passed; Performance budgets failed (main's overrun, D-1475 §8) |
+| Local, merged head after `1799c0cf` (12 Oct) | `tsc -b`, `lint`, `check:university`, `design-system:check` (69), `budgets` (Export 69.4 KB, Recovery 67.3 KB, ok), `test` 1522 files / 24232 tests passed (2 files, 76 tests skipped), `build`, `check.sh` every policy suite (gradebook 148, releasing with a 200-character key) all passed |
 | `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm test` | all exit 0; design-system 69 tests; suite: Test Files 1522 passed, 1 skipped (1523); Tests 24227 passed, 69 skipped (24296). A first run failed `export.test.ts`, `merge.test.ts`, `privacy.test.ts` on the new persisted field until the three tables named it. |
 
 ## Phase 3 cross-role workflows, first pass (12 October 2026, #1475, fourth push)

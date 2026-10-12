@@ -11,7 +11,11 @@
 --
 -- The event is keyed by the release's own idempotency key, so a replayed
 -- release (which answers from the ledger and never reaches this line) and a
--- retried emit both leave one event. The payload carries counts and the item's
+-- retried emit both leave one event. The ledger takes a key of 8 to 200
+-- characters and the outbox a correlation id of 8 to 128, so a key longer
+-- than 128 is carried whole as the idempotency key (300 allowed there) and
+-- correlated by its digest; copying it would make a contract-valid key abort
+-- the release it was meant to label. The payload carries counts and the item's
 -- identity, never a student id or a score: the projection that wants those
 -- reads the released rows under its own policy.
 --
@@ -35,6 +39,7 @@ declare
   released integer := 0;
   held     integer := 0;
   answer   jsonb;
+  corr     text;
 begin
   select * into it from public.gradebook_items i where i.id = want_item and i.tenant_id = school;
   if not found then raise exception 'semester: no such item here' using errcode = 'check_violation'; end if;
@@ -64,10 +69,13 @@ begin
   end if;
   answer := jsonb_build_object('released', released, 'held', held);
 
-  -- The outbox, in this transaction. Counts and the item, not people.
+  -- The outbox, in this transaction. Counts and the item, not people. The
+  -- correlation id is the key itself when it fits the outbox's 128, else its
+  -- digest; the idempotency key is always the whole key.
+  corr := case when length(want_key) <= 128 then want_key else 'gb:' || md5(want_key) end;
   perform private.emit_domain_event(
     'gradebook_item', it.id::text, 'gradebook.grades_released', 1,
-    school, 'gradebook', want_key, want_key,
+    school, 'gradebook', corr, want_key,
     jsonb_build_object('item', it.id, 'course_code', it.course_code, 'term', it.term,
                        'released', released, 'held', held),
     'education_record', 'student_record'
