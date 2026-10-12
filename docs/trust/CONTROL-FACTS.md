@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 239 |
+| Migration files | 240 |
 | Tables created in `public` and not later dropped | 342 |
 | … of which enable row-level security in a migration | 342 |
 | Tables created in `private` and not later dropped | 53 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-154 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+155 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -116,6 +116,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/intelligence-policy.check.sql` | Semester Intelligence tenant policy: real school-scoped grants are the boundary. |
 | `supabase/invites.check.sql` | The gate that decides whether an account can exist at all. |
 | `supabase/k12-guardians.check.sql` | K–12 guardian links (K12-002): who may record a guardian, who may read the link, and when the link stops counting. |
+| `supabase/killswitch-release.check.sql` | Releasing a platform kill switch needs two approvers (F-1). |
 | `supabase/ledger-chains.check.sql` | The hash chain over the academic-record and student-account ledgers: that a normal flow builds a chain the verifier accepts; that each kind of tampering it claims to catch is caught, and reported as… |
 | `supabase/ledger-seals.check.sql` | Signing the ledger chains: that a day is sealed once, per ledger and school, under a key no API role can read; that the seal check catches the attacker the link check cannot (one who rewrites an entr… |
 | `supabase/legal-holds.check.sql` | Legal holds (RM-02, RM-05): who may place one and over what, that it is released only by someone else with a reason, that it is never deleted or edited, that a held account cannot be deleted, and tha… |

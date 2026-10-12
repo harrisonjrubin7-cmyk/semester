@@ -337,7 +337,8 @@ export function ActionCenter({
 
   const act = (id: string, event: ActionEvent, note?: string, until?: number, says?: string) => {
     const prev = choices[id];
-    const moved = transition(prev, event, now, { until: until ?? tomorrowMorning(now), note });
+    const reopensNextDay = actions.find((a) => a.id === id)?.reopensNextDay === true;
+    const moved = transition(prev, event, now, { until: until ?? tomorrowMorning(now), note, reopensNextDay });
     if (!moved.ok) {
       setSaid({ text: moved.why });
       return;
