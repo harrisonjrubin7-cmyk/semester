@@ -70,6 +70,12 @@ begin
       from information_schema.columns
      where table_schema = 'private' and table_name = 'privileged_access_review_decision'
        and column_name = 'remediation_applied'), false));
+  perform pg_temp.must('historical backfilled items may preserve an empty capability set', exists (
+    select 1
+      from pg_constraint c
+     where c.conrelid = 'private.privileged_access_review_item'::regclass
+       and c.conname = 'privileged_access_review_item_capabilities_check'
+       and lower(pg_get_constraintdef(c.oid)) like '%capabilities_backfilled%'));
   perform pg_temp.must('grant-state fingerprints distinguish live from expired state',
     private.privileged_access_review_grant_state_sha256(
       starter, 'trust_officer', 'platform', '', 'platform', now(), null, null,

@@ -25,9 +25,9 @@ do $$
 begin
   if exists (
     select 1 from private.privileged_access_review_item
-     where capabilities is null or cardinality(capabilities) = 0
+     where capabilities is null
   ) then
-    raise exception 'Every existing access-review item must map to at least one capability.';
+    raise exception 'Every existing access-review item must have a capability snapshot, even when the historical role now maps to an empty set.';
   end if;
 end $$;
 
@@ -39,7 +39,7 @@ alter table private.privileged_access_review_item
   drop constraint if exists privileged_access_review_item_capabilities_check;
 alter table private.privileged_access_review_item
   add constraint privileged_access_review_item_capabilities_check
-  check (cardinality(capabilities) > 0);
+  check (capabilities_backfilled or cardinality(capabilities) > 0);
 
 alter table private.privileged_access_review_decision
   add column if not exists remediation_applied boolean not null default false;
