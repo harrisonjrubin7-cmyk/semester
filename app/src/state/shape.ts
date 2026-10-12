@@ -77,7 +77,7 @@ import type { Quiet } from '../lib/notify';
 import type { RecoveryIntent } from '../lib/academic-recovery';
 import { DEFAULTS as DEFAULT_CONTROLS, type Controls } from '../lib/controls';
 import { DEFAULT_ROLE, roleOf, type Role } from '../lib/role';
-import { droppedOnRead, noteIngressDrops } from '../lib/deletions';
+import { clearIngressDrops, droppedOnRead, noteIngressDrops } from '../lib/deletions';
 import { forgetCarried } from '../lib/carried';
 import type { Balance } from '../lib/meals';
 import type { Residence } from '../lib/housing';
@@ -2060,7 +2060,9 @@ export function rememberSyncedAs(id: string): void {
  */
 export function forgetSyncMemory(): void {
   forgetCarried();
-  for (const key of [SEEN_KEY, SYNCED_KEY, 'semester.base', 'semester.review', 'semester.ingress-drops']) {
+  // In memory too: the next account must not hold back its own deletions for this one's damage.
+  clearIngressDrops();
+  for (const key of [SEEN_KEY, SYNCED_KEY, 'semester.base', 'semester.review']) {
     try {
       localStorage.removeItem(key);
     } catch {
