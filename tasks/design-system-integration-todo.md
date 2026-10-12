@@ -2115,3 +2115,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep housing and meal-plan backup/migration closed until legacy term-only records have an explicit account ownership and safe migration rule.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed degree-requirement removal — automation pass 11, integration slice 101
+
+- [x] Start from clean required-branch head `228334812`; fetch current `origin/main` `6e382ff13`, confirm it is already included and inspect exact degree-removal history/code for overlap.
+- [x] Re-rank one student-entered degree requirement as the earliest bounded Phase 3 consequence gap; keep recorded-course deletion and official registrar operations outside the mutation.
+- [x] Reuse `ConfirmDialog` and `ActionPreview` to identify the programme, rule, count, accepted courses, recalculated planning result, preserved records and manual recovery boundary before any write.
+- [x] Keep Cancel side-effect free and initially focused through the shared modal contract.
+- [x] Preserve the existing exact-id reducer operation and remove only the confirmed rule; do not imply that Semester changes or restores the registrar's official audit.
+- [x] Prove both regression tests red against the former first-press deletion, then pass 28/28 focused and adjacent degree, preview/modal, dead-end and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the build chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design contracts and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [ ] Aggregate design-system check — its hardcoded `npm` launcher is unavailable; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded Phase 3 consequence slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep recorded-course removal and official degree-audit operations separate from this one student-entered rule.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
