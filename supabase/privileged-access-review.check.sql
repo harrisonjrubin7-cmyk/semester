@@ -80,6 +80,12 @@ begin
   perform pg_temp.must('signoff rejects incompatible legacy decision semantics', position(
     'legacy decision has an incompatible reason' in lower(pg_get_functiondef(
       'public.complete_privileged_access_review(text)'::regprocedure))) > 0);
+  perform pg_temp.must('signoff rechecks operator authority after taking serialization locks', position(
+    'must remain current through signoff' in lower(pg_get_functiondef(
+      'public.complete_privileged_access_review(text)'::regprocedure))) > 0);
+  perform pg_temp.must('state-resolution readers use insertion sequences rather than transaction timestamps',
+    position('resolution_sequence desc' in lower(pg_get_functiondef(
+      'public.privileged_access_review_evidence(text)'::regprocedure))) > 0);
 
   perform pg_temp.become(starter);
   review_ref := public.begin_privileged_access_review('access-review-2026q4', current_date - 90, current_date, current_date + 90);
@@ -152,9 +158,19 @@ begin
       where decision = 'revoke'));
   update public.role_grants set revoked_at = null
    where subject = target and role = 'university_admin';
+  update public.role_grants set subject = starter
+   where subject = target and role = 'university_admin';
+  perform pg_temp.must('the current grant subject cannot resolve their post-decision change',
+    pg_temp.refused(starter, format(
+      'select public.resolve_privileged_access_review_post_decision_change(%L)', target_item)));
+  update public.role_grants set subject = target
+   where subject = starter and role = 'university_admin';
   perform pg_temp.become(starter);
   perform public.resolve_privileged_access_review_post_decision_change(target_item);
   reset role;
+  perform pg_temp.must('another operator cannot claim an idempotent post-decision resolution',
+    pg_temp.refused(signer, format(
+      'select public.resolve_privileged_access_review_post_decision_change(%L)', target_item)));
   update public.role_grants set granted_at = clock_timestamp(), revoked_at = clock_timestamp()
    where subject = target and role = 'university_admin';
   perform pg_temp.become(starter);
@@ -165,10 +181,22 @@ begin
     not exists (select 1 from public.role_grants where subject = deleted_target and role = 'moderator'));
   update public.role_grants set role = 'data_steward'
    where subject = outsider and role = 'integration_admin';
+  update public.role_grants set subject = starter
+   where subject = outsider and role = 'data_steward';
+  perform pg_temp.must('the current grant subject cannot resolve under stale subject evidence',
+    pg_temp.refused(starter, format(
+      'select public.resolve_privileged_access_review_investigation(%L,%L)',
+      investigate_item, 'remediated')));
+  update public.role_grants set subject = outsider
+   where subject = starter and role = 'data_steward';
   perform pg_temp.become(starter);
   perform public.resolve_privileged_access_review_investigation(investigate_item, 'remediated');
   perform public.resolve_privileged_access_review_investigation(steward_item, 'remediated');
   reset role;
+  perform pg_temp.must('another operator cannot claim an idempotent investigation resolution',
+    pg_temp.refused(signer, format(
+      'select public.resolve_privileged_access_review_investigation(%L,%L)',
+      investigate_item, 'remediated')));
   perform pg_temp.must('the same observed state refuses a conflicting investigation resolution',
     pg_temp.refused(starter, format(
       'select public.resolve_privileged_access_review_investigation(%L,%L)',
