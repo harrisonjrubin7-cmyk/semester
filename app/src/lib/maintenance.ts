@@ -148,6 +148,10 @@ export interface MaintenanceDraft {
 
 export type DraftField = 'hall' | 'what' | 'where' | 'reference' | 'reportedAt' | 'checkBackAt';
 
+/** The span a stored repair time may hold; `readMaintenance` uses the same bound, so the form accepts only what reads back unchanged. */
+const TIME_MAX = Date.UTC(9999, 11, 31);
+const inRange = (v: number): boolean => Number.isFinite(v) && v >= 0 && v <= TIME_MAX;
+
 /** Five minutes of grace on "not in the future": a phone clock and a laptop clock disagree. */
 const CLOCK_GRACE = 5 * 60_000;
 
@@ -172,11 +176,15 @@ export function checkDraft(draft: MaintenanceDraft, now: number): Record<DraftFi
         : '',
     reportedAt: !Number.isFinite(draft.reportedAt)
       ? 'Give the date you reported it.'
+      : !inRange(draft.reportedAt)
+        ? 'Give a date after 1970.'
       : draft.reportedAt > now + CLOCK_GRACE
         ? 'The date you reported it cannot be in the future.'
         : '',
     checkBackAt: !Number.isFinite(draft.checkBackAt)
       ? 'Choose when to check back.'
+      : !inRange(draft.checkBackAt)
+        ? 'Choose a check-back date between 1970 and 9999.'
       : draft.checkBackAt < draft.reportedAt
         ? 'Checking back has to come after you reported it.'
         : '',
@@ -263,6 +271,7 @@ export interface MaintenanceChange {
 export function visitProblem(request: Pick<MaintenanceRequest, 'reportedAt'>, at: unknown): string {
   if (!(typeof at === 'number' && Number.isFinite(at))) return 'Give the date and time housing scheduled the visit for.';
   if (at < request.reportedAt) return 'The visit cannot be before you reported the repair. Check the date.';
+  if (!inRange(at)) return 'Give a visit date before the year 10000.';
   return '';
 }
 
@@ -347,8 +356,7 @@ export function placeLine(r: Pick<MaintenanceRequest, 'hall' | 'room' | 'where'>
  * adds three days for a fallback check-back or a day after a visit, and then
  * `Intl` throws on Housing and Today. This bound leaves millennia of room.
  */
-const MAX_TIME = Date.UTC(9999, 11, 31);
-const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= MAX_TIME;
+const isNum = (v: unknown): v is number => typeof v === 'number' && inRange(v);
 const isStr = (v: unknown): v is string => typeof v === 'string';
 const oneOf = <T extends string>(all: readonly T[], v: unknown, fallback: T): T =>
   (all as readonly unknown[]).includes(v) ? (v as T) : fallback;

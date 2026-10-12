@@ -425,6 +425,35 @@ describe('review findings on 5200c9c', () => {
     expect(action.source.correctionRoute).not.toMatch(/update the request/);
   });
 
+  it('refuses dates the reader would rewrite, so what the form accepts reads back unchanged', () => {
+    const before1970 = new Date(1969, 5, 1, 9, 0).getTime();
+    expect(checkDraft(draft({ reportedAt: before1970, checkBackAt: before1970 + HOUR }), NOW).reportedAt).toMatch(/after 1970/);
+    expect(checkDraft(draft({ checkBackAt: -HOUR, reportedAt: -2 * HOUR }), NOW).checkBackAt).toMatch(/between 1970/);
+    expect(visitProblem(request(), Date.UTC(10000, 0, 2))).toMatch(/before the year 10000/);
+    const ok = draft();
+    expect(draftOk(checkDraft(ok, NOW))).toBe(true);
+    const saved = newMaintenance('round', '2026FA', ok, NOW);
+    expect(readMaintenance(JSON.parse(JSON.stringify(saved)))).toEqual(saved);
+  });
+
+  it('lets a follow-up that reopened the next day be acted on, not refused as already done', () => {
+    const r = request();
+    const at = r.checkBackAt + 1;
+    const [action] = maintenanceActions([r], at);
+    const done = transition(undefined, 'complete', at);
+    if (!done.ok) throw new Error(done.why);
+    const next = addDays(at, 1);
+    expect(effectiveStatus(action, done.choice, next)).toBe('open');
+    for (const event of ['complete', 'start', 'dismiss'] as const) {
+      expect(transition(done.choice, event, next, { reopensNextDay: true }).ok).toBe(true);
+    }
+    expect(transition(done.choice, 'snooze', next, { reopensNextDay: true, until: next + HOUR }).ok).toBe(true);
+    // Without the flag a completion stays a completion, as before.
+    expect(transition(done.choice, 'complete', next).ok).toBe(false);
+    // And the same day it is still done.
+    expect(transition(done.choice, 'complete', at + HOUR, { reopensNextDay: true }).ok).toBe(false);
+  });
+
   it('bounds the building and room as the reader does, so a saved request survives a reload unchanged', () => {
     expect(checkDraft(draft({ hall: 'B'.repeat(LIMITS.hall + 1) }), NOW).hall).toMatch(/characters/);
     const r = newMaintenance('long', '2026FA', draft({ hall: 'B'.repeat(LIMITS.hall), room: 'R'.repeat(LIMITS.room + 9) }), NOW);
