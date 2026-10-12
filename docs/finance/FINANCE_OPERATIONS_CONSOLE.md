@@ -1,3 +1,72 @@
+---
+stale-refs:
+  - source: docs/finance/FINANCIAL_CONTROLS.md
+    changed_at: "2026-10-12T13:42:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/INSTITUTIONAL_BILLING.md
+    changed_at: "2026-10-12T13:42:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/NATIVE_CHECKOUT_SPEC.md
+    changed_at: "2026-10-12T13:42:00"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Finance operations console
 
 | Control | Value |

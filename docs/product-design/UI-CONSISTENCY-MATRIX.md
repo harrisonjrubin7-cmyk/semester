@@ -1,3 +1,52 @@
+---
+stale-refs:
+  - source: docs/design/SEMESTER-UI-CONSTITUTION.md
+    changed_at: "2026-10-12T13:42:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/design/INTERACTION-STANDARDS.md
+    changed_at: "2026-10-12T13:41:59"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # UI Consistency Matrix
 
 | Control | Value |

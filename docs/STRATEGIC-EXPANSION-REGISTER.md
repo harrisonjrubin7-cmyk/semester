@@ -1,3 +1,74 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
+    changed_at: "2026-10-12T13:40:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/PORTFOLIO-GOVERNANCE.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Strategic Expansion Register
 
 <!-- Rendered from app/src/lib/expansionregister.ts and expansiongovernance.ts by expansionregister.test.ts. Edit the data, then run `npm run registers` from app/. -->

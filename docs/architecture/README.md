@@ -1,3 +1,198 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/README.md
+    changed_at: "2026-10-12T13:41:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/modularization/README.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0001-local-first-with-supabase.md
+    changed_at: "2026-10-12T13:41:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0011-modular-monolith-before-services.md
+    changed_at: "2026-10-12T13:41:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0003-no-application-server.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
+    changed_at: "2026-10-12T13:41:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0004-ai-through-a-metered-gateway.md
+    changed_at: "2026-10-12T13:41:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0007-policy-decision-point.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Architecture decision records
 
 > Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).

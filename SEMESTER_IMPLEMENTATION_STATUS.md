@@ -1,3 +1,50 @@
+---
+stale-refs:
+  - source: SEMESTER_IMPLEMENTATION_PLAN.md
+    changed_at: "2026-10-12T13:40:22"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-MASTER-COMMAND.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester — implementation status
 
 Every requirement in [`SEMESTER-MASTER-COMMAND.md`](SEMESTER-MASTER-COMMAND.md),

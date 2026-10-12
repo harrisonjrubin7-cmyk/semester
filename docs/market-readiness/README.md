@@ -1,3 +1,274 @@
+---
+stale-refs:
+  - source: docs/market-readiness/ANALYTICS-PLAN.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/TECHNICAL-READINESS-AUDIT.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/DATA-LIFECYCLE-AND-DELETION.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/LAUNCH-READINESS-CHECKLIST.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/MARKET-READINESS-BASELINE.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/PRICING-AND-PACKAGING.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/PRIVACY-OVERVIEW.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/RELIABILITY-AND-OPERATIONS-RUNBOOK.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/SUBPROCESSOR-TEMPLATE.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/EXECUTIVE-GO-NO-GO.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/ACCESSIBILITY-CONFORMANCE-PLAN.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/PILOT-OFFER.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/ACCESSIBILITY-OVERVIEW.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Market-readiness operating package
 
 This directory contains the 2026-10-02 market-readiness assessment and the earlier implementation/trust materials it cites. The canonical deliverables requested by the market-readiness mandate use hyphenated filenames; deeper evidence files remain linked rather than duplicated.

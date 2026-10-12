@@ -1,3 +1,50 @@
+---
+stale-refs:
+  - source: docs/institutional-readiness/AUDIT-LOGGING-EVIDENCE.md
+    changed_at: "2026-10-12T13:42:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-readiness/ROLE-AND-PERMISSION-MATRIX.md
+    changed_at: "2026-10-12T13:40:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Access Review Procedure
 
 | Control | Value |

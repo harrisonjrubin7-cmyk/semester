@@ -1,3 +1,94 @@
+---
+stale-refs:
+  - source: LEGAL-REVIEW-QUEUE.md
+    changed_at: "2026-10-12T13:40:21"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-12T13:40:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal-drafts/LEGAL-ISSUE-MAP.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/07-COUNSEL-REVIEW-QUEUE.md
+    changed_at: "2026-10-12T13:42:02"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Legal review queue: Phase 0 reconciliation view
 
 > **Not legal advice. Every row requires qualified counsel (and, where marked, an accountant or tax adviser). This file lists questions; it concludes nothing.**

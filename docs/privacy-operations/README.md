@@ -1,3 +1,316 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-INVENTORY-AND-LINEAGE.md
+    changed_at: "2026-10-12T13:40:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/01-PROCESSING-REGISTER-AND-CONTROLS.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/03-VENDOR-REVIEW-PROCESS.md
+    changed_at: "2026-10-12T13:42:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/04-PRIVACY-BY-DESIGN-REVIEW.md
+    changed_at: "2026-10-12T13:42:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/08-FINDINGS-AND-RECONCILIATION.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/VENDOR-RISK-REGISTER.md
+    changed_at: "2026-10-12T13:42:03"
+    sections_changed: []
+    summary: externally modified
+  - source: LEGAL-REVIEW-QUEUE.md
+    changed_at: "2026-10-12T13:40:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/05-PRIVACY-INCIDENT-COORDINATION.md
+    changed_at: "2026-10-12T13:42:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/02-SUBJECT-RIGHTS-WORKFLOW.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/07-COUNSEL-REVIEW-QUEUE.md
+    changed_at: "2026-10-12T13:42:02"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Privacy operations pack
 
 **Status `DESIGNED`. Produced 4 October 2026 against `origin/main` at `8e9b746`. Owner: the privacy seat, which is vacant (maturity RM-06); Harrison Rubin holds it on an interim basis with no backup named.**

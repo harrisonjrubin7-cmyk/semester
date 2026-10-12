@@ -1,3 +1,276 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-RETENTION-EXPORT-DELETION.md
+    changed_at: "2026-10-12T13:40:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/ACCESSIBILITY-STATEMENT-DRAFT.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/SUPPORT-POLICY-DRAFT.md
+    changed_at: "2026-10-12T13:40:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/internal/severity-and-routing.md
+    changed_at: "2026-10-12T13:42:03"
+    sections_changed: []
+    summary: externally modified
+  - source: RESTORE.md
+    changed_at: "2026-10-12T13:40:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/accessibility-help.md
+    changed_at: "2026-10-12T13:42:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/billing.md
+    changed_at: "2026-10-12T13:40:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/safety-concern.md
+    changed_at: "2026-10-12T13:40:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/internal/triage-guide.md
+    changed_at: "2026-10-12T13:40:26"
+    sections_changed: []
+    summary: externally modified
+  - source: ROLLBACK.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Escalation map
 
 > **Type:** runbook · **Audience:** support, operators · **Owner:** `operations` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/support.test.ts`

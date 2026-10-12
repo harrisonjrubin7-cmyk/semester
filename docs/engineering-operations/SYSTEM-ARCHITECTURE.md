@@ -1,3 +1,52 @@
+---
+stale-refs:
+  - source: docs/ARCHITECTURE.md
+    changed_at: "2026-10-12T13:40:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/README.md
+    changed_at: "2026-10-12T13:41:59"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # System Architecture
 
 | Control | Value |

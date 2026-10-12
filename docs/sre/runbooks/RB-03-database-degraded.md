@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # RB-03 · Database degraded, writes failing, or a policy gap
 
 Class C0 · role data · alerts `burn:plan_save`, `burn:advisor_agenda_save`, `burn:assignment_draft_save`, `security:rls-gap`, `capacity:db-connections` · component `supabase-db`.

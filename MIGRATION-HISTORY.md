@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: ROLLBACK.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Repairing the migration history
 
 ## 24 September 2026 — first-login SSO membership binding

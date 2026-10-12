@@ -1,3 +1,100 @@
+---
+stale-refs:
+  - source: docs/company/leadership-system/01-board.md
+    changed_at: "2026-10-12T13:41:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/04-organization-and-hiring.md
+    changed_at: "2026-10-12T13:41:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/07-communications-and-tracking.md
+    changed_at: "2026-10-12T13:40:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/README.md
+    changed_at: "2026-10-12T13:41:59"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Templates
 
 > **PROPOSED — NOT ADOPTED.** Short on purpose. The longer existing templates are linked; use them when the short one is not enough. Never put privileged, personnel, security-sensitive, customer-confidential or personal information in a public repository: link to the controlled system instead.

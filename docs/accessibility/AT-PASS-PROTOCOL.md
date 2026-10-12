@@ -1,3 +1,96 @@
+---
+stale-refs:
+  - source: docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md
+    changed_at: "2026-10-12T13:41:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/HECVAT-VPAT-PLAN.md
+    changed_at: "2026-10-12T13:42:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ACCESSIBILITY-POLISH-CHECKLIST.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/ACCESSIBILITY_READINESS.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Assistive-technology pass: protocol, results template and WCAG 2.2 AA checklist
 
 > **Status: the manual assistive-technology pass has NOT been done.**

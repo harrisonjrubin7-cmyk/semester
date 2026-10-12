@@ -1,3 +1,168 @@
+---
+stale-refs:
+  - source: docs/company/leadership-system/01-board.md
+    changed_at: "2026-10-12T13:41:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/03-okrs-planning-metrics.md
+    changed_at: "2026-10-12T13:40:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/09-calendar.md
+    changed_at: "2026-10-12T13:41:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/README.md
+    changed_at: "2026-10-12T13:41:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/templates.md
+    changed_at: "2026-10-12T13:40:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/README.md
+    changed_at: "2026-10-12T13:41:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/OPERATING-RHYTHM.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 8 · Executive communications, meeting cadence, decision log and initiative tracking
 
 > **PROPOSED — NOT ADOPTED.** Consolidates and trims the cadence in [`OPERATING-RHYTHM.md`](../../operating-model/OPERATING-RHYTHM.md) and [`COMPANY-OPERATING-MODEL.md`](../COMPANY-OPERATING-MODEL.md#operating-system) rather than adding to it. The rule inherited from the operating rhythm applies to everything here: **a meeting with no written output gets cancelled.**

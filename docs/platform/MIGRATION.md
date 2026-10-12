@@ -1,3 +1,92 @@
+---
+stale-refs:
+  - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
+    changed_at: "2026-10-12T13:40:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/09-CONVERSION-PLAN.md
+    changed_at: "2026-10-12T13:40:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0001-local-first-with-supabase.md
+    changed_at: "2026-10-12T13:41:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
+    changed_at: "2026-10-12T13:41:58"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Migration path from the existing platform implementation
 
 **Principle: strangler, not rewrite; additive, not replacing.** The running app

@@ -1,3 +1,50 @@
+---
+stale-refs:
+  - source: docs/WCAG-UI-AUDIT-SCORECARD.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/SOC2-READINESS.md
+    changed_at: "2026-10-12T13:42:03"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Compliance evidence index
 
 **Published:** 1 October 2026

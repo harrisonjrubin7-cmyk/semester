@@ -1,3 +1,50 @@
+---
+stale-refs:
+  - source: docs/legal-drafts/AI-USE-TERMS-EXHIBIT-DRAFT.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-DATA-USE-STANDARD.md
+    changed_at: "2026-10-12T13:42:03"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # AI Transparency and User Notice Standard
 
 | Control | Value |

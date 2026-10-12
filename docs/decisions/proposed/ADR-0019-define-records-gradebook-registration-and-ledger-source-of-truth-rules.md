@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/architecture/data-architecture/02-source-of-truth-matrix.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # ADR-0019 · Official records, grades, registration and money each have one system of record, with append-only history and an audit reference on every sensitive write
 
 | Field | Value |

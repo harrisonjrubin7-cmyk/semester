@@ -1,3 +1,72 @@
+---
+stale-refs:
+  - source: docs/migration/06-ACCEPTANCE-SIGNOFF-AND-EVIDENCE.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/migration/03-MAPPING-CLEANSING-TRANSFORMATION.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/migration/workbooks/README.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 02 Source inventory and extraction
 
 Stages: **inventory** and **classification** (Center), plus extraction, which

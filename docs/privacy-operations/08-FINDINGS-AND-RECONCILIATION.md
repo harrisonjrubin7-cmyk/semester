@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 08 · Findings and reconciliation
 
 **Status `OPEN`. 4 October 2026, `origin/main` at `8e9b746`. Owner: privacy seat, with engineering for section C.**

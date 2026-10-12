@@ -1,3 +1,26 @@
+---
+stale-refs:
+  - source: docs/architecture/0003-no-application-server.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 0004 · AI through a server-side metered gateway, tool-based
 
 **Status:** Accepted. Written, tested, and **not deployed**.

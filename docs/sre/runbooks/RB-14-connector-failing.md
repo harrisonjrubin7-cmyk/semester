@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # RB-14 · Connector or integration stale or failing
 
 Class C2 · role integrations · alerts `connector:stale` · components `fn:integration-tick`, `fn:lti`, `fn:canvas`, `institution-gateway`, `queue:integration_dead_letter_events`.

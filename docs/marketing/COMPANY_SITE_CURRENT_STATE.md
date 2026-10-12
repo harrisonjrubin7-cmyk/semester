@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/marketing/MARKETING_COMPLIANCE_AUDIT.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Company site — current state
 
 Date: 2026-10-05. Baseline: `origin/main` at `790ebbf`.

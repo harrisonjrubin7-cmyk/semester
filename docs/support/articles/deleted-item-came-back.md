@@ -1,3 +1,52 @@
+---
+stale-refs:
+  - source: docs/support/articles/delete-account-export-data.md
+    changed_at: "2026-10-12T13:42:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/README.md
+    changed_at: "2026-10-12T13:40:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # I deleted something and it came back, or it didn't go
 
 > **Type:** help · **Audience:** students, support · **Owner:** `success` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/support.test.ts`

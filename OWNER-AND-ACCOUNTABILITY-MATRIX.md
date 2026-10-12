@@ -1,3 +1,54 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-12T13:41:56"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/gtm/GROWTH-OPERATING-PLAN.md
+    changed_at: "2026-10-12T13:42:00"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester owner and accountability matrix
 
 **Version:** 0.2

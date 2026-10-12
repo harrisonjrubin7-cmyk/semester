@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/market-readiness/SUBPROCESSOR-REGISTER.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Subprocessor template
 
 **Template only; complete and approve before customer use.**

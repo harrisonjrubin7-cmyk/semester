@@ -1,3 +1,26 @@
+---
+stale-refs:
+  - source: docs/market-readiness/EXECUTIVE-GO-NO-GO.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Pilot offer
 
 The primary offer is the **Semester Student Success and Registration Readiness Pilot** described in [PRIMARY-PILOT-OFFER.md](PRIMARY-PILOT-OFFER.md).

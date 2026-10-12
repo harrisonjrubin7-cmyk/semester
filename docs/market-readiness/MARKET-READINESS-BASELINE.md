@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/market-readiness/GO-NO-GO-CHECKLIST.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Market-readiness baseline
 
 **Assessment date:** 2026-10-02

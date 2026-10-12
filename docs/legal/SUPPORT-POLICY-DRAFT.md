@@ -1,3 +1,52 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/ACCESSIBILITY-STATEMENT-DRAFT.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester Support Policy — DRAFT
 
 > **Not in force. Not reviewed by a lawyer.** A working draft, written from

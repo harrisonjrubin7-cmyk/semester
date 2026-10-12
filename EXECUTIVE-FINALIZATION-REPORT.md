@@ -1,3 +1,74 @@
+---
+stale-refs:
+  - source: FINALIZATION-BASELINE.md
+    changed_at: "2026-10-12T13:41:56"
+    sections_changed: []
+    summary: externally modified
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-12T13:41:56"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finalization/P07-VALIDATION-EVIDENCE-2026-10-03.md
+    changed_at: "2026-10-12T13:40:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester executive finalization report
 
 | Control | Value |

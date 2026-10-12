@@ -1,3 +1,66 @@
+---
+stale-refs:
+  - source: docs/institutional-readiness/INSTITUTIONAL-KNOWN-LIMITATIONS.md
+    changed_at: "2026-10-12T13:40:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/CHANGE-MANAGEMENT-POLICY.md
+    changed_at: "2026-10-12T13:40:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Institutional Roadmap Communication Standard
 
 | Control | Value |

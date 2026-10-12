@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/design/GOVERNANCE.md
+    changed_at: "2026-10-12T13:41:59"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Design debt register
 
 Inconsistencies in how Semester looks, reads or behaves, tracked like

@@ -1,3 +1,94 @@
+---
+stale-refs:
+  - source: LEGAL-REVIEW-QUEUE.md
+    changed_at: "2026-10-12T13:40:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/accessibility/AT-PASS-PROTOCOL.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/03-AI-TUTORING-AND-BOUNDARIES.md
+    changed_at: "2026-10-12T13:40:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/04-ACADEMIC-INTEGRITY-CONTROLS.md
+    changed_at: "2026-10-12T13:40:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 05 · Accommodations
 
 Deliverable covered: **accommodation considerations** and the accommodation

@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/COLOR-AND-DARK-MODE-SPEC.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Workspace modes
 
 Four presentation modes that change how much of each workspace is drawn —

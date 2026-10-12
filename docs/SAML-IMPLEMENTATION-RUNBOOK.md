@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/SCIM-LIFECYCLE-MANAGEMENT.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # SAML implementation runbook
 
 Status: **BUILT.** The tenant-specific acceptance gate is

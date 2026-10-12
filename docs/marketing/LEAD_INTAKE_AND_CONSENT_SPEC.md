@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/marketing/COMPANY_SITE_CURRENT_STATE.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Lead intake and consent specification
 
 Status: proposed. Extends the existing `lead-intake` Edge Function and `submit_site_lead`

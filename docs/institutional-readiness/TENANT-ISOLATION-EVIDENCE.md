@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/trust/SECURITY-WHITEPAPER.md
+    changed_at: "2026-10-12T13:40:27"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Tenant Isolation Evidence
 
 | Control | Value |

@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
+    changed_at: "2026-10-12T13:40:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Withdrawal: "Every fact says where it came from"
 
 This entry came from the dry run of the withdrawal runbook (§9 of

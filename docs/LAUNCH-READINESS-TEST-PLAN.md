@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: REGRESSION-CHECKLIST.md
+    changed_at: "2026-10-12T13:40:21"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Launch Readiness Test Plan
 
 The launch command's **Mandatory testing** section, row by row. Each row names

@@ -1,3 +1,50 @@
+---
+stale-refs:
+  - source: docs/migration/06-ACCEPTANCE-SIGNOFF-AND-EVIDENCE.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/migration/README.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 03 Mapping, cleansing and transformation
 
 Stages: **mapping**, **cleaning**, **preview**. Code: `mapping.ts` beside the

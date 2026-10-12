@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/target-architecture/07-ENGINEERING-STANDARDS.md
+    changed_at: "2026-10-12T13:40:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # API gateway / BFF standards
 
 Applies to every surface that accepts a request: the institution gateway

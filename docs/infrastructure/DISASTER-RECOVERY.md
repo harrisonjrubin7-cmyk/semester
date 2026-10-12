@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: RESTORE.md
+    changed_at: "2026-10-12T13:40:21"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Disaster recovery
 
 **Status: targets stated, nothing proven.** [`RESTORE.md`](../../RESTORE.md)

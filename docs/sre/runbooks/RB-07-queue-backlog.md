@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # RB-07 · Queue backlog or dead letters
 
 Class C1 to C2 · role per queue · alerts `queue:push-backlog`, `queue:dead-letter` · components `queue:*`, `fn:push`, `fn:support-reply-notify`, `web-push`, `resend`.

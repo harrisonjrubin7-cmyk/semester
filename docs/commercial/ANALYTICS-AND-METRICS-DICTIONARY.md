@@ -1,3 +1,26 @@
+---
+stale-refs:
+  - source: docs/commercial/GROWTH-FUNNEL-SPEC.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Analytics and Metrics Dictionary
 
 | Control | Value |

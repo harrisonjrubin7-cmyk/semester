@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/platform/EVENTS-AND-OUTBOX.md
+    changed_at: "2026-10-12T13:42:02"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Primitive contracts
 
 One section per primitive: what it is, the rules it will not bend, the file, and

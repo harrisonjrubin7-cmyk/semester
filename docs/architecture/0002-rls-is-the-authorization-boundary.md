@@ -1,3 +1,26 @@
+---
+stale-refs:
+  - source: docs/architecture/0003-no-application-server.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 0002 · Row-level security is the authorization boundary
 
 **Status:** Accepted. The strongest part of the codebase; do not weaken it.

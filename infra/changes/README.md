@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/decisions/README.md
+    changed_at: "2026-10-12T13:41:59"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Change records
 
 One file per infrastructure pull request: `CC-<pull request number>.md`,

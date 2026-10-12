@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/SSO-SECURITY-AND-SESSION-MANAGEMENT.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester password, session and MFA standard — controlled draft
 
 - **Status:** `PARTIAL`

@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/privacy-operations/05-PRIVACY-INCIDENT-COORDINATION.md
+    changed_at: "2026-10-12T13:42:02"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 02 · Subject-rights workflow
 
 **Status `DESIGNED`. 4 October 2026. Owner: privacy seat (vacant).**

@@ -1,3 +1,98 @@
+---
+stale-refs:
+  - source: docs/ai-governance/05-feature-requirements.md
+    changed_at: "2026-10-12T13:41:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/10-red-team-and-launch-gates.md
+    changed_at: "2026-10-12T13:41:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/07-incident-response-and-shutdown.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/MODEL-AND-PROMPT-CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-12T13:40:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 06 · Evaluation framework
 
 **Builds on:** `app/src/lib/governance/model-quality.ts` (the synthetic set and its scoring),

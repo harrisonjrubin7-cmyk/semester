@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/design/DESIGN_SYSTEM_ADOPTION_AUDIT.md
+    changed_at: "2026-10-12T13:40:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Design ADRs 0030-0040
 
 Proposed 2026-10-04 by phase D0 of the design-system adoption

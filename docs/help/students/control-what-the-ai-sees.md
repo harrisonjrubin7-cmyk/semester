@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/help/students/export-or-delete-your-data.md
+    changed_at: "2026-10-12T13:40:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Control what the AI sees
 
 > **Type:** help · **Audience:** students · **Owner:** `privacy` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/help.test.ts`

@@ -1,3 +1,52 @@
+---
+stale-refs:
+  - source: SECRETS.md
+    changed_at: "2026-10-12T13:40:21"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # RB-13 · Secret exposed or provider key compromised
 
 Class C0 · role security · alerts `security:secret-exposed` · the long form is [SECURITY.md](../../../SECURITY.md); the inventory is [SECRETS.md](../../../SECRETS.md).

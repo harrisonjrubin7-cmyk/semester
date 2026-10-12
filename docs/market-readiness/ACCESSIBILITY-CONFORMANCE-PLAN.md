@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/ACCESSIBILITY-POLISH-CHECKLIST.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Accessibility conformance plan
 
 **Current status: YELLOW self-assessment / RED formal conformance claim.** Automated and structural testing is meaningful evidence but does not establish WCAG 2.2 AA conformance or a completed VPAT/ACR.

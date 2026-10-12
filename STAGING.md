@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: ROLLBACK.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Staging, and what a preview branch is actually telling you
 
 The build-out plan asks for "staging preview branches that match production,

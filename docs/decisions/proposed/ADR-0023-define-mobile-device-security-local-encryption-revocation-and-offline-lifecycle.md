@@ -1,3 +1,50 @@
+---
+stale-refs:
+  - source: docs/architecture/mobile-offline-reference.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/offline-sync-contract.md
+    changed_at: "2026-10-12T13:41:59"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # ADR-0023 · Offline and device data follow a classed, encrypted, revocable lifecycle; the shipped PWA is claimed only as what it is
 
 | Field | Value |

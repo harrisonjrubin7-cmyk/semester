@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/market-readiness/PILOT-OFFER.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Pilot Offer
 
 | Control | Value |

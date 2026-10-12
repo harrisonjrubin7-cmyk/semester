@@ -1,3 +1,26 @@
+---
+stale-refs:
+  - source: docs/operating-model/DATA-STEWARDSHIP.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Change management and adoption
 
 Adoption is a product and a service, not an email. Guidance on digital transformation follows the same arc: assess

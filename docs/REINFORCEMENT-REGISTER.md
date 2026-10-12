@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Reinforcement Register
 
 <!-- Rendered from app/src/lib/reinforceregister.ts and app/src/lib/ops/operatingmodel.ts by reinforceregister.test.ts. Edit the data, then run `npm run registers` from app/. -->

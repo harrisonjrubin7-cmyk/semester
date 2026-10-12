@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/market-readiness/ACCESSIBILITY_READINESS.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Institutional Accessibility Package
 
 | Control | Value |

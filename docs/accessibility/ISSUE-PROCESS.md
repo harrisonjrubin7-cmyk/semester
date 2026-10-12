@@ -1,3 +1,52 @@
+---
+stale-refs:
+  - source: docs/accessibility/PROGRAM.md
+    changed_at: "2026-10-12T13:41:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/ACCESSIBILITY-GOVERNANCE.md
+    changed_at: "2026-10-12T13:40:25"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Accessibility issues, incidents and remediation
 
 Companion to [PROGRAM.md](PROGRAM.md). **Proposal, 2026-10-04.** None of this has been exercised: there is no

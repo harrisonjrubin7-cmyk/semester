@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Go-to-market positioning
 
 > **Status of the offer described here:** a target, not a current one. Paid institutional pilots are **NO-GO / RED** ([`GO-NO-GO-DECISION.md`](../../GO-NO-GO-DECISION.md)); "paid pilot" must not appear in public copy until that changes. Public wording today is *design-partner discovery and scoping, non-activation*.

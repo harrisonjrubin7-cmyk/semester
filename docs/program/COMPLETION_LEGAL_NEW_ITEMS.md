@@ -1,3 +1,74 @@
+---
+stale-refs:
+  - source: docs/program/COMPLETION_RISK_REGISTER.md
+    changed_at: "2026-10-12T13:42:02"
+    sections_changed: []
+    summary: externally modified
+  - source: LEGAL-REVIEW-QUEUE.md
+    changed_at: "2026-10-12T13:40:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/COMPLETION_PUBLIC_CLAIMS_SCAN.md
+    changed_at: "2026-10-12T13:42:02"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 > **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is a business and operational working list, not legal advice, not an executed agreement, and not a substitute for review by licensed counsel in the applicable jurisdiction. It states no legal conclusion.**
 
 # Semester — new legal items found by the completion baseline

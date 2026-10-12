@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: REGRESSION-CHECKLIST.md
+    changed_at: "2026-10-12T13:40:21"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Strategic defensibility
 
 The moat is not a feature list. Competitors can copy features. What they can't copy quickly is accumulated trust,

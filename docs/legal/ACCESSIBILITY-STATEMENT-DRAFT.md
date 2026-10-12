@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/WCAG-UI-AUDIT-SCORECARD.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester Accessibility Statement — DRAFT
 
 > **Not in force. Not reviewed by a lawyer.** A working draft for the

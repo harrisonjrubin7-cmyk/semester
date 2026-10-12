@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/institutional-implementation/MIGRATION-WORKBOOK.md
+    changed_at: "2026-10-12T13:40:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Migration Playbook
 
 **Status: `IN_PROGRESS`** — Part A is in force. Part B has an evidence path and a staging foundation; **no production load path exists for any domain.**

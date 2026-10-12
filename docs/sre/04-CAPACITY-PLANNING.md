@@ -1,3 +1,74 @@
+---
+stale-refs:
+  - source: docs/sre/README.md
+    changed_at: "2026-10-12T13:42:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/03-OBSERVABILITY.md
+    changed_at: "2026-10-12T13:40:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/05-DELIVERY-AND-CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-12T13:40:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 04 · Capacity planning
 
 > Part of the [SRE pack](README.md). Status: **proposed**; production capacity is **unproven**. Code: `app/src/lib/sre/capacity.ts`. Demand tables: [generated/CAPACITY.md](generated/CAPACITY.md). Existing prose: [CAPACITY-AND-SCALING-PLAN.md](../engineering-operations/CAPACITY-AND-SCALING-PLAN.md), [COURSE-DEMAND-FORECASTING.md](../COURSE-DEMAND-FORECASTING.md).

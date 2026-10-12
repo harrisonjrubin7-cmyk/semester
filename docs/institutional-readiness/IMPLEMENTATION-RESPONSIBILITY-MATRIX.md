@@ -1,3 +1,50 @@
+---
+stale-refs:
+  - source: docs/commercial/INSTITUTIONAL-IMPLEMENTATION-PLAYBOOK.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-readiness/INSTITUTIONAL-IMPLEMENTATION-GUIDE.md
+    changed_at: "2026-10-12T13:42:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Implementation Responsibility Matrix
 
 | Control | Value |

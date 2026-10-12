@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/architecture/mobile-offline-reference.md
+    changed_at: "2026-10-12T13:40:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Offline and synchronization contract
 
 Status: target contract. Current implementation is a PWA/local-first foundation, not a native SQLCipher or CRDT system. Since 4 October 2026 `app/src/lib/vault/` implements the web half of the device-database contract (classification gate, hybrid logical clock, AES-GCM at rest, the queue state machine); see [`rebuild-slice-audit.md`](rebuild-slice-audit.md). The one store that uses it is the task engine's local snapshot (`sealedSnapshotPort` in `app/src/lib/sync/engine/persistent.ts`), and only on a device where the engine owns tasks; no other store does yet.

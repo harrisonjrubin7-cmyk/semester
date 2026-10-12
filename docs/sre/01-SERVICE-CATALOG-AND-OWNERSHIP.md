@@ -1,3 +1,96 @@
+---
+stale-refs:
+  - source: docs/sre/README.md
+    changed_at: "2026-10-12T13:42:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/runbooks/RB-14-connector-failing.md
+    changed_at: "2026-10-12T13:40:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/07-RESILIENCE-BACKUP-DR-AND-CHAOS.md
+    changed_at: "2026-10-12T13:40:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/08-COST-AND-RESOURCE-GOVERNANCE.md
+    changed_at: "2026-10-12T13:40:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 01 · Service catalog and ownership
 
 > Part of the [SRE pack](README.md). Status: **proposed**. Data: `app/src/lib/sre/catalog.ts`. Full table: [generated/SERVICE-CATALOG.md](generated/SERVICE-CATALOG.md).

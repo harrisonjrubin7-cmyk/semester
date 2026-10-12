@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # RB-11 · Campus emergency notification path
 
 Class C0 target · role platform · alert `queue:emergency-lag` · components `fn:push`, `queue:push_queue`, `web-push`.

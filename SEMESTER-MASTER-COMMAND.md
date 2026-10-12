@@ -1,3 +1,50 @@
+---
+stale-refs:
+  - source: SEMESTER_IMPLEMENTATION_PLAN.md
+    changed_at: "2026-10-12T13:40:22"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER_IMPLEMENTATION_STATUS.md
+    changed_at: "2026-10-12T13:41:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester — Master Product Transformation & Implementation Command
 
 The product specification, as supplied. Everything below this header is the
