@@ -9,9 +9,12 @@ gates and rules below are written as data in
 [`launchreadiness.test.ts`](../app/src/lib/launchreadiness.test.ts) fails if
 this document and that data disagree.
 
-**Current verdict: `NO-GO`.** Four seats are held and none has signed; six
-are vacant; one gate is met. [`GO-NO-GO-CHECKLIST.md`](GO-NO-GO-CHECKLIST.md)
-lists each open reason.
+**Current verdict: `NO-GO`.** Harrison Rubin is the interim accountable owner
+for all twelve seats. The accepted-holder record remains seven held and five
+vacant; none has signed and one gate is met. Interim accountability does not
+establish professional qualification, institutional representation,
+independent review, approval or permission.
+[`GO-NO-GO-CHECKLIST.md`](GO-NO-GO-CHECKLIST.md) lists each open reason.
 
 ## Why the council is written as data
 
@@ -35,43 +38,43 @@ launch proceeds under (D-117).
 
 ## The seats
 
-| Seat | Decides | Holder |
-| --- | --- | --- |
-| `founder` — Founder / CEO | Risk acceptance, customer commitment, commercial launch | Founder |
-| `product` — Product lead | Golden path and its acceptance criteria | Founder, acting |
-| `engineering` — Engineering lead | Reliability, release, rollback | Founder, acting |
-| `security` — Security / vCISO | Threat model, pen-test findings, access controls | Vacant |
-| `privacy` — Privacy / legal | Terms, privacy, DPA/FERPA/COPPA posture, consent | Outside counsel |
-| `accessibility` — Accessibility lead | WCAG/VPAT status, blockers, remediation | Founder, acting |
-| `success` — Customer success | Onboarding, training, support, communication | Founder, acting |
-| `trust` — Trust & Safety | Reporting, escalation, moderation scope | Vacant |
-| `data` — Data / integration owner | Source quality, freshness, connector health | Vacant |
-| `finance` — Finance / commercial | Price floors, discount and pilot-credit approvals at the deal desk, margin, contract terms | Vacant |
-| `operations` — Operations / SRE | Monitoring, on-call, incident readiness, support operations, release readiness | Founder, acting |
-| `champion` — Pilot institution champion | Institutional workflow and communications | Vacant; must be someone at the institution |
+| Seat | Decides | Interim accountable owner | Accepted / appointed holder |
+| --- | --- | --- | --- |
+| `founder` — Founder / CEO | Risk acceptance, customer commitment, commercial launch | Harrison Rubin | Founder |
+| `product` — Product lead | Golden path and its acceptance criteria | Harrison Rubin | Founder, acting |
+| `engineering` — Engineering lead | Reliability, release, rollback | Harrison Rubin | Founder, acting |
+| `security` — Security / vCISO | Threat model, pen-test findings, access controls | Harrison Rubin | Vacant |
+| `privacy` — Privacy / legal | Terms, privacy, DPA/FERPA/COPPA posture, consent | Harrison Rubin | Outside counsel |
+| `accessibility` — Accessibility lead | WCAG/VPAT status, blockers, remediation | Harrison Rubin | Founder, acting |
+| `success` — Customer success | Onboarding, training, support, communication | Harrison Rubin | Founder, acting |
+| `trust` — Trust & Safety | Reporting, escalation, moderation scope | Harrison Rubin | Vacant |
+| `data` — Data / integration owner | Source quality, freshness, connector health | Harrison Rubin | Vacant |
+| `finance` — Finance / commercial | Price floors, discount and pilot-credit approvals at the deal desk, margin, contract terms | Harrison Rubin | Vacant |
+| `operations` — Operations / SRE | Monitoring, on-call, incident readiness, support operations, release readiness | Harrison Rubin | Founder, acting |
+| `champion` — Pilot institution champion | Institutional workflow and communications | Harrison Rubin | Vacant; must be someone at the institution |
 
-**Why six seats read "Vacant", when `ROLLBACK.md` and `RESTORE.md` both name
-an owner.** Those documents name the person who can *run the workflows*. They
-also call that single person the project's standing problem. A council seat
-is an accountability that someone has accepted in writing. Filling all twelve
-seats with one repository username would make the council look complete when
-it is not — which is why the four that are held say "Founder" and "Founder,
-acting", not a username, and why security, privacy, accessibility, trust,
-data and champion stay vacant until someone qualified accepts each. [`docs/vanderbilt/incident-routing.md`](vanderbilt/incident-routing.md)
-applies the same rule to incident owners: "A repository username is not an
-operational on-call assignment."
+**Why all twelve seats name one interim owner without filling five vacant
+seats.** `interimOwner` records who coordinates the work and owns follow-up.
+The separate `holder` field is the readiness input used by existing staffing
+checks. It remains unchanged. Naming Harrison Rubin as interim owner therefore
+does not assert that he is qualified counsel, a vCISO, an accessibility
+assessor or an institutional representative, and supplies no independent
+review, approval, operational role or account permission.
 
-A person may hold more than one seat. The `champion` seat may not be held by
-anyone at Semester. A champion from the vendor side is a sales contact.
+A person may own follow-up for more than one seat. The `champion` seat still
+requires someone at the institution before it can supply institutional
+representation or sign-off. Harrison Rubin's interim ownership does not meet
+that requirement; a vendor-side contact is not the institutional champion.
 
 ## How a seat is filled
 
 1. The person accepts the seat in writing. The acceptance lives in the private
    operations system. It does not go in this public repository, for the same
    reason alert destinations do not (see `incident-routing.md`).
-2. Set the seat's `holder` in `launchreadiness.ts` to a role label, such as
-   "Founder" or "Vanderbilt Registrar's Office". Do not use a personal email
-   address. Change this document's table in the same commit, or the test fails.
+2. Set the seat's `holder` in `launchreadiness.ts` only when an accepted or
+   institution-appointed holder exists. `interimOwner` records follow-up
+   accountability separately. Do not use a personal email address. Change this
+   document's table in the same commit, or the test fails.
 3. A holder signs off by adding the seat to `signoffs` for the specific
    decision. A signature is valid only for the decision it was given for. A
    later decision needs a new signature.
@@ -93,6 +96,14 @@ founder, acting. Role labels, as above. Nothing was added to `signoffs`, so
 `decide()` reads "has not signed" for seven seats and "is vacant" for five,
 and the verdict is unchanged. The accessibility seat decides WCAG and VPAT
 status, but it does not replace an independent audit; that stays owed.
+
+**2026-10-12 — one interim accountable owner for all twelve seats.** At the
+owner's direction, `interimOwner` now names Harrison Rubin on every seat. The
+accepted `holder` values are unchanged: seven held, five vacant. This replaces
+neither specialist qualifications nor the institution's champion, and grants
+no independent approval or permission. Nothing was added to `signoffs`; the
+same eleven gates remain partial or unmet, and `decide()` still returns
+`NO-GO` with 31 reasons.
 
 ## The rules `decide()` enforces
 
