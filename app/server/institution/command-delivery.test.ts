@@ -4,6 +4,7 @@ import {
   CommandDelivery,
   MemoryCommandDeliveryStore,
   type CommandDeliveryAdapter,
+  type CommandDeliveryStore,
 } from './command-delivery.ts';
 
 const identity: UniversityIdentity = {
@@ -149,4 +150,74 @@ describe('dormant command delivery', () => {
     await expect(firstRun).resolves.toEqual({ outcome: 'lost_lease' });
     expect(store.read('delivery-1')).toMatchObject({ state: 'delivered', receipt: receipt('successor') });
   });
+  function hostileStore(delivery: ReturnType<typeof command>): CommandDeliveryStore {
+    return {
+      claim: () => ({
+        id: delivery.id,
+        fence: 1,
+        revision: 1,
+        record: {
+          ...delivery,
+          state: 'delivering',
+          revision: 1,
+          fence: 1,
+          leaseUntil: 31_000,
+        },
+      }),
+      settle: () => { throw new Error('an invalid claimed row must not settle'); },
+    };
+  }
+
+  it('refuses a claimed command whose event belongs to another tenant before audit or delivery', async () => {
+    const delivery = command();
+    delivery.outbox = {
+      ...delivery.outbox,
+      event: { ...delivery.outbox.event, tenantId: 'tenant-2' },
+    };
+    const audit = journal();
+    let adapterCalls = 0;
+    const adapter: CommandDeliveryAdapter = {
+      async submit() { adapterCalls += 1; return receipt('wrong'); },
+      async query() { adapterCalls += 1; return receipt('wrong'); },
+    };
+    const worker = new CommandDelivery(hostileStore(delivery), audit, adapter, { now: () => 1_000 });
+
+    await expect(worker.run(delivery.id)).rejects.toThrow('tenant');
+    expect(adapterCalls).toBe(0);
+    expect(audit.events).toEqual([]);
+  });
+
+  it.each([undefined, '', '   '])(
+    'refuses a claimed command with a missing or blank idempotency key (%s) before audit or delivery',
+    async (idempotencyKey) => {
+      const delivery = command();
+      delivery.outbox = {
+        ...delivery.outbox,
+        event: { ...delivery.outbox.event, idempotencyKey },
+      };
+      const audit = journal();
+      let adapterCalls = 0;
+      const adapter: CommandDeliveryAdapter = {
+        async submit() { adapterCalls += 1; return receipt('wrong'); },
+        async query() { adapterCalls += 1; return receipt('wrong'); },
+      };
+      const worker = new CommandDelivery(hostileStore(delivery), audit, adapter, { now: () => 1_000 });
+
+      await expect(worker.run(delivery.id)).rejects.toThrow('idempotency key');
+      expect(adapterCalls).toBe(0);
+      expect(audit.events).toEqual([]);
+    },
+  );
+
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
+    'requires a positive finite lease duration (%s)',
+    (leaseMs) => {
+      const store = new MemoryCommandDeliveryStore([command()]);
+      expect(() => new CommandDelivery(store, journal(), {
+        async submit() { return receipt('unused'); },
+        async query() { return null; },
+      }, { now: () => 1_000, leaseMs })).toThrow('leaseMs');
+    },
+  );
+
 });
