@@ -1,0 +1,39 @@
+// reduceAction · pure projection reducer + transition guard. REFERENCE, not wired.
+// Assumes the adapter already validated authenticity, authorization, schema and domain authority.
+export type ActionState = "open" | "blocked" | "awaiting_approval" | "submitted" | "outcome_unknown" | "fulfilled" | "cancelled";
+export type ActionItem = { id: string; tenantId: string | null; workspaceId: string; subjectPersonId: string; sourceSystem: string; sourceObjectId: string; actionKey: string; sourceRevision: number; projectionRevision: number; state: ActionState; dueAt: string | null; receiptId: string | null; fulfilledAt: string | null };
+export type DomainEvent = { eventId: string; tenantId: string | null; workspaceId: string; subjectPersonId: string; sourceSystem: string; sourceObjectId: string; actionKey: string; sourceRevision: number; occurredAt: string;
+  type: "deadline.changed" | "action.blocked" | "action.unblocked" | "action.submitted" | "action.outcome_unknown" | "action.fulfilled" | "action.reopened" | "action.corrected_reopen"; dueAt?: string; receiptId?: string };
+
+// Added beyond the PDF draft: terminal states only leave through an explicit, authorized correction.
+const ALLOWED: Record<ActionState, DomainEvent["type"][]> = {
+  open: ["deadline.changed", "action.blocked", "action.submitted", "action.fulfilled"],
+  blocked: ["deadline.changed", "action.unblocked", "action.fulfilled"],
+  awaiting_approval: ["deadline.changed", "action.submitted", "action.blocked"],
+  submitted: ["action.outcome_unknown", "action.fulfilled", "action.reopened"],
+  outcome_unknown: ["action.fulfilled", "action.reopened"],           // reconciliation decides; never blind resubmit
+  fulfilled: ["action.corrected_reopen"],
+  cancelled: ["action.corrected_reopen"],
+};
+
+export function reduceAction(item: ActionItem, e: DomainEvent): ActionItem {
+  const same = item.tenantId === e.tenantId && item.workspaceId === e.workspaceId && item.subjectPersonId === e.subjectPersonId && item.sourceSystem === e.sourceSystem && item.sourceObjectId === e.sourceObjectId && item.actionKey === e.actionKey;
+  if (!same) throw new Error("EVENT_SCOPE_MISMATCH");
+  if (!Number.isSafeInteger(e.sourceRevision)) throw new Error("INVALID_SOURCE_REVISION");
+  if (e.sourceRevision <= item.sourceRevision) return item;              // older or duplicate revision: no-op
+  if (e.sourceRevision > item.sourceRevision + 1) throw new Error("REVISION_GAP"); // caller fetches a snapshot or quarantines
+  if (!ALLOWED[item.state].includes(e.type)) throw new Error("ILLEGAL_TRANSITION:" + item.state + "->" + e.type);
+  const next: ActionItem = { ...item, sourceRevision: e.sourceRevision, projectionRevision: item.projectionRevision + 1 };
+  switch (e.type) {
+    case "deadline.changed": if (!e.dueAt || !Number.isFinite(Date.parse(e.dueAt))) throw new Error("INVALID_DEADLINE"); return { ...next, dueAt: e.dueAt };
+    case "action.blocked": return { ...next, state: "blocked" };
+    case "action.unblocked": return { ...next, state: "open" };
+    case "action.submitted": return { ...next, state: "submitted" };       // submission is not fulfilment
+    case "action.outcome_unknown": return { ...next, state: "outcome_unknown" };
+    case "action.fulfilled": if (!e.receiptId) throw new Error("RECEIPT_REQUIRED"); return { ...next, state: "fulfilled", receiptId: e.receiptId, fulfilledAt: e.occurredAt };
+    case "action.reopened": case "action.corrected_reopen": return { ...next, state: "open", receiptId: null, fulfilledAt: null };
+  }
+}
+// Consumer (per event, one transaction): insert processed_events marker (conflict = already done, return) → lock row →
+// stream + revision check (gap → snapshot/quarantine) → guard + reduce → persist → append notification intent to ctl.outbox → commit.
+// Any failure rolls back the marker too. Clients refetch the projection; they never apply events to stale UI state.

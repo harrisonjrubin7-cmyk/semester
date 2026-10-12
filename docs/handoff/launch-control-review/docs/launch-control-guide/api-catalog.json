@@ -1,0 +1,142 @@
+[
+  {
+    "method": "GET",
+    "path": "/health/live",
+    "auth": "Public; origin rules",
+    "purpose": "Process liveness",
+    "activation_gate": "Not business readiness",
+    "evidence": "Source-defined; not live-probed",
+    "source": "app/server/institution/gateway.ts",
+    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
+  },
+  {
+    "method": "GET",
+    "path": "/health/ready",
+    "auth": "Public; origin rules",
+    "purpose": "Journal/custom readiness; adapter count; AI/read-only state",
+    "activation_gate": "200 does not establish active adapters",
+    "evidence": "Source-defined; not live-probed",
+    "source": "app/server/institution/gateway.ts",
+    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
+  },
+  {
+    "method": "GET",
+    "path": "/health",
+    "auth": "Public; origin rules",
+    "purpose": "Readiness alias",
+    "activation_gate": "Same limitation as /health/ready",
+    "evidence": "Source-defined; not live-probed",
+    "source": "app/server/institution/gateway.ts",
+    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/auth/config",
+    "auth": "Public; origin rules",
+    "purpose": "SSO presentation configuration",
+    "activation_gate": "Returns disabled when unavailable",
+    "evidence": "Source-defined; not live-probed",
+    "source": "app/server/institution/gateway.ts",
+    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
+  },
+  {
+    "method": "GET",
+    "path": "/status",
+    "auth": "Bearer + institutional membership",
+    "purpose": "Connection status, roles and institution",
+    "activation_gate": "Installed tenant/area adapters",
+    "evidence": "Source-defined; not live-probed",
+    "source": "app/server/institution/gateway.ts",
+    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
+  },
+  {
+    "method": "GET",
+    "path": "/records",
+    "auth": "Bearer + institutional membership",
+    "purpose": "Area-scoped records; area/search/cursor query",
+    "activation_gate": "Approved adapter and canRead",
+    "evidence": "Source-defined; not live-probed",
+    "source": "app/server/institution/gateway.ts",
+    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
+  },
+  {
+    "method": "POST",
+    "path": "/actions/prepare",
+    "auth": "Bearer + institutional membership",
+    "purpose": "Validate record/version; prepare expiring review",
+    "activation_gate": "Approved adapter and canWrite",
+    "evidence": "Source-defined; not live-probed",
+    "source": "app/server/institution/gateway.ts",
+    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
+  },
+  {
+    "method": "POST",
+    "path": "/actions/commit",
+    "auth": "Bearer + institutional membership",
+    "purpose": "Confirm review; recheck current access/record",
+    "activation_gate": "Explicit true, valid review, compatible adapter",
+    "evidence": "Source-defined; not live-probed",
+    "source": "app/server/institution/gateway.ts",
+    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
+  },
+  {
+    "method": "POST",
+    "path": "/actions/reconcile",
+    "auth": "Bearer + institutional membership",
+    "purpose": "Resolve uncertain outcome; not repeat execution",
+    "activation_gate": "Adapter reconciliation; allowed in read-only mode",
+    "evidence": "Source-defined; not live-probed",
+    "source": "app/server/institution/gateway.ts",
+    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/intelligence/policy",
+    "auth": "Bearer + institutional membership",
+    "purpose": "Read institutional AI policy",
+    "activation_gate": "Configured intelligence service",
+    "evidence": "Source-defined; not live-probed",
+    "source": "app/server/institution/gateway.ts",
+    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/intelligence/respond",
+    "auth": "Bearer + institutional membership",
+    "purpose": "Policy-controlled intelligence request",
+    "activation_gate": "Server provider, policy, sources and budget",
+    "evidence": "Source-defined; not live-probed",
+    "source": "app/server/institution/gateway.ts",
+    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/intelligence/actions/:id/confirm",
+    "auth": "Bearer + institutional membership",
+    "purpose": "Confirm bounded intelligence action",
+    "activation_gate": "Service confirmation rules/current access",
+    "evidence": "Source-defined; not live-probed",
+    "source": "app/server/institution/gateway.ts",
+    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/registration-readiness/evaluations",
+    "auth": "Bearer + refreshed membership",
+    "purpose": "Start readiness evaluation; 202 receipt",
+    "activation_gate": "registrationReadiness handler; omitted in inspected start.ts",
+    "evidence": "Source-defined; not live-probed",
+    "source": "app/server/institution/gateway.ts",
+    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/registration-readiness/evaluations/:id/evaluate",
+    "auth": "Bearer + refreshed membership",
+    "purpose": "Evaluate existing request; empty object body",
+    "activation_gate": "Handler required; result 200 or 202",
+    "evidence": "Source-defined; not live-probed",
+    "source": "app/server/institution/gateway.ts",
+    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
+  }
+]

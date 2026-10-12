@@ -1,0 +1,18 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+const EXT='https://canvas.instructure.com/lti/submission';
+function preservationPayload(userId,submittedAt){return {userId,timestamp:new Date().toISOString(),activityProgress:'Completed',gradingProgress:'FullyGraded',submission:{submittedAt},[EXT]:{new_submission:false,preserve_score:true,prioritize_non_tool_grade:true}};}
+test('Canvas preservation request uses nested extension; no score clearing intention',()=>{
+ const p=preservationPayload('synthetic-user','2026-10-06T22:10:00.000Z');
+ assert.equal(p[EXT].preserve_score,true);
+ assert.equal(p[EXT].prioritize_non_tool_grade,true);
+ assert.equal(p[EXT].new_submission,false);
+ assert.equal(p.submission.submittedAt,'2026-10-06T22:10:00.000Z');
+ assert.equal(Object.hasOwn(p,'scoreGiven'),false);
+ assert.equal(Object.hasOwn(p,'https://canvas.instructure.com/lti/preserve_score'),false);
+});
+// Payload-contract unit test only; does NOT prove LMS grade preservation.
+// Sandbox acceptance: seed existing grade, POST this request with authorized
+// score token to isolated fixture, read results/submission, assert unchanged
+// grade and attempt. Separate fixture tests prioritize_non_tool_grade with a
+// replacement numeric score and a preexisting instructor-entered grade.
