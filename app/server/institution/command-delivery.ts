@@ -59,13 +59,24 @@ export type CommandDeliveryResult =
 const terminal = (state: CommandDeliveryState): boolean => state === 'delivered' || state === 'refused';
 const copy = (record: CommandDeliveryRecord): CommandDeliveryRecord => ({ ...record });
 
+function commandKey(command: QueuedCommandDelivery): string {
+  if (command.outbox.event.tenantId !== command.identity.institutionId) {
+    throw new Error('A command delivery event tenant must match its institutional identity.');
+  }
+  const key = command.outbox.event.idempotencyKey;
+  if (typeof key !== 'string' || key.trim().length === 0) {
+    throw new Error('A command delivery requires a nonblank outbox event idempotency key.');
+  }
+  return key;
+}
+
 /** In-memory reference for the pure model and synthetic adapters. */
 export class MemoryCommandDeliveryStore implements CommandDeliveryStore {
   private readonly rows = new Map<string, CommandDeliveryRecord>();
 
   constructor(commands: QueuedCommandDelivery[] = []) {
     for (const command of commands) {
-      if (!command.outbox.event.idempotencyKey) throw new Error('A command delivery requires the outbox event idempotency key.');
+      commandKey(command);
       if (this.rows.has(command.id)) throw new Error(`duplicate command delivery ${command.id}`);
       this.rows.set(command.id, { ...command, state: 'queued', revision: 0, fence: 0, leaseUntil: null });
     }
@@ -129,13 +140,14 @@ export class CommandDelivery {
     this.adapter = adapter;
     this.options = options;
     this.leaseMs = options.leaseMs ?? 30_000;
+    if (!Number.isFinite(this.leaseMs) || this.leaseMs <= 0) throw new Error('leaseMs must be a positive finite number.');
   }
 
   async run(id: string): Promise<CommandDeliveryResult> {
     const lease = await this.store.claim(id, this.options.now(), this.leaseMs);
     if (!lease) return { outcome: 'idle' };
     const { record } = lease;
-    const key = record.outbox.event.idempotencyKey as string;
+    const key = commandKey(record);
     await this.journal.audit(record.identity, record.area, record.state === 'delivering' ? 'command.delivery.claimed' : 'command.delivery.reconciling', record.id, record.outbox.event.correlationId);
     return record.state === 'reconciling' ? this.reconcile(lease, key) : this.submit(lease, key);
   }
