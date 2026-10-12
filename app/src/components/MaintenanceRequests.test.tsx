@@ -187,7 +187,8 @@ describe('MaintenanceRequests', () => {
 
 describe('MaintenanceRequests, review findings on #1501', () => {
   it('offers "Remind me tomorrow" only while waiting to hear back, not on a scheduled visit', async () => {
-    seed([existing({ status: 'scheduled', scheduledFor: NOW.getTime() - 3 * 86_400_000 })]);
+    // Reported a week ago, visit three days ago: a timeline the reader keeps.
+    seed([existing({ status: 'scheduled', reportedAt: NOW.getTime() - 7 * 86_400_000, scheduledFor: NOW.getTime() - 3 * 86_400_000 })]);
     await render();
     expect(button('Remind me tomorrow')).toBeUndefined();
     expect(host.textContent).toContain('The visit has passed');

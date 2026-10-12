@@ -122,6 +122,20 @@ describe('which Today is being gated', () => {
     expect(nothingOnToday('today', CAT, none)).toBe(false);
   });
 
+  it('does not hide a repair follow-up that is due behind the first run, on either home', () => {
+    const at = Date.UTC(2026, 9, 12, 15);
+    const repair = {
+      id: 'mr1', term: '', hall: 'Branscomb', room: '', what: 'Sink', where: '', urgency: 'routine' as const, channel: 'portal' as const,
+      reference: '', reportedAt: at - 5 * 86_400_000, checkBackAt: at - 60_000, checkBackStated: false, scheduledFor: null,
+      status: 'reported' as const, history: [], created: at - 5 * 86_400_000, updated: at - 5 * 86_400_000,
+    };
+    expect(nothingOnToday('today', EMPTY_CATALOG, { ...none, maintenance: [repair] }, at)).toBe(false);
+    expect(nothingOnToday('feed', EMPTY_CATALOG, { ...none, maintenance: [repair] }, at)).toBe(false);
+    // Not due yet, or closed: the first run still shows.
+    expect(nothingOnToday('today', EMPTY_CATALOG, { ...none, maintenance: [{ ...repair, checkBackAt: at + 86_400_000 }] }, at)).toBe(true);
+    expect(nothingOnToday('today', EMPTY_CATALOG, { ...none, maintenance: [{ ...repair, status: 'fixed' as const }] }, at)).toBe(true);
+  });
+
   it('shows the first run to somebody who has nothing at all', () => {
     expect(nothingOnToday('today', EMPTY_CATALOG, none)).toBe(true);
     expect(nothingOnToday('feed', EMPTY_CATALOG, none)).toBe(true);

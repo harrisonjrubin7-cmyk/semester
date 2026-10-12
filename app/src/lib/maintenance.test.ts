@@ -33,9 +33,9 @@ import {
   type MaintenanceDraft,
   type MaintenanceRequest,
 } from './maintenance';
-import { maintenanceActions } from './maintenance-actions';
+import { keyOf, maintenanceActions } from './maintenance-actions';
 import { stillDueToday } from './today-center';
-import { effectiveStatus, transition } from './actions';
+import { effectiveStatus, readActionChoices, transition } from './actions';
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -477,6 +477,29 @@ describe('review findings on 5200c9c', () => {
     expect(readMaintenance({ ...base, urgency: 'emergency' })!.checkBackAt - base.reportedAt).toBe(HOUR);
     expect(readMaintenance({ ...base, urgency: 'urgent' })!.checkBackAt - base.reportedAt).toBe(4 * HOUR);
     expect(readMaintenance({ ...base, urgency: 'routine' })!.checkBackAt).toBe(addDays(base.reportedAt, 3));
+  });
+
+  it('drops a synced visit dated before the report, as the screen refuses it', () => {
+    const r = request();
+    const read = readMaintenance({ ...r, status: 'scheduled', scheduledFor: r.reportedAt - HOUR })!;
+    expect(read.status).toBe('reported');
+    expect(read.scheduledFor).toBeNull();
+    expect(readMaintenance({ ...r, status: 'scheduled', scheduledFor: r.reportedAt + HOUR })!.status).toBe('scheduled');
+  });
+
+  it('keeps the action key short enough for the choice store, however long the id', () => {
+    const long = 'x'.repeat(500);
+    const r = { ...request(), id: long };
+    const [action] = maintenanceActions([r], r.checkBackAt + 1);
+    expect(action.id.length).toBeLessThan(300);
+    expect(maintenanceActions([r], r.checkBackAt + 2)[0].id).toBe(action.id);
+    expect(keyOf('y'.repeat(500))).not.toBe(keyOf(long));
+    const done = transition(undefined, 'complete', r.checkBackAt + 1);
+    if (!done.ok) throw new Error(done.why);
+    const stored = readActionChoices({ version: 1, choices: { [action.id]: done.choice } });
+    expect(stored.choices[action.id]?.status).toBe('completed');
+    // A short id is used as it is.
+    expect(keyOf('mr1')).toBe('mr1');
   });
 
   it('bounds the building and room as the reader does, so a saved request survives a reload unchanged', () => {

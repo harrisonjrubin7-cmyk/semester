@@ -78,6 +78,7 @@ import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { useTaskActions } from '../composition/taskactions';
 import { CommandCenter, FirstGoal } from '../components/unity/CommandCenter';
 import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
+import { isOpen, needsFollowUp } from '../lib/maintenance';
 import { DeadlineHorizon } from '../components/DeadlineHorizon';
 import { AssignmentStates } from '../components/AssignmentStates';
 import { OperatingRhythm } from '../components/OperatingRhythm';
@@ -2111,8 +2112,12 @@ function FeedHome() {
 export function nothingOnToday(
   shape: ReturnType<typeof homeShape>,
   catalog: Catalog,
-  state: Pick<State, 'tasks' | 'appointments' | 'feedEvents'>,
+  state: Pick<State, 'tasks' | 'appointments' | 'feedEvents'> & { maintenance?: State['maintenance'] },
+  now: number = Date.now(),
 ): boolean {
+  // A repair whose follow-up has come is something to do today, and both
+  // homes draw it through the Action Center — the first-run screen would hide it.
+  if ((state.maintenance ?? []).some((r) => isOpen(r) && needsFollowUp(r, now))) return false;
   return shape === 'feed' ? catalog.empty : nothingYet(catalog, state);
 }
 
@@ -2124,7 +2129,7 @@ export function Today() {
   // and the one in `App.tsx` used to be separate, so a navigation added to
   // one and not the other got the feed's home screen inside the bar's chrome.
   const shape = homeShape(state.nav);
-  const empty = nothingOnToday(shape, catalog, state);
+  const empty = nothingOnToday(shape, catalog, state, now.getTime());
   const sources = useMemo(() => {
     const near = datedItems(catalog, now).filter((i) => !i.isPast && !state.done[i.id] && i.daysAway <= DEADLINE_HORIZON_DAYS);
     return countSources([...itemSources(near), ...state.tasks.map((): SourceLabel => 'student_entered')]);

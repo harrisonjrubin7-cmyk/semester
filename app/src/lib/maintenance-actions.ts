@@ -20,6 +20,24 @@ import {
  * back through the store (architecture guard `legacy-cycles-do-not-grow`).
  */
 
+/**
+ * The repair's id as it appears in an action key. Ids this app writes are
+ * short; one that arrived by sync or restore can be any length, and the
+ * Action Center's choice store refuses keys over 300 characters — silently,
+ * so Done would say it saved and change nothing. A long id is replaced by a
+ * stable hash of itself.
+ */
+const KEY_ID_MAX = 64;
+export function keyOf(id: string): string {
+  if (id.length <= KEY_ID_MAX) return id;
+  let h = 0x811c9dc5;
+  for (let i = 0; i < id.length; i += 1) {
+    h ^= id.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return `h${h.toString(36)}-${id.length}`;
+}
+
 const short = (text: string) => (text.length > 60 ? `${text.slice(0, 57).trimEnd()}…` : text);
 
 function priorityOf(r: MaintenanceRequest): Priority {
@@ -49,7 +67,7 @@ export function maintenanceActions(list: MaintenanceRequest[], now: number): Act
     const visit = r.status === 'scheduled';
     const again = r.status === 'not_fixed';
     out.push({
-      id: `maintenance:${r.id}:${r.status}:${at}`,
+      id: `maintenance:${keyOf(r.id)}:${r.status}:${at}`,
       reopensNextDay: true,
       type: 'housing',
       group: 'Housing',
