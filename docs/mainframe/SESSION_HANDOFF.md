@@ -36,7 +36,7 @@ Edit `docs/ecosystem/crosswalk.json` (a route's `status`, `screens`, `modules`, 
 - Do not mark a row `deployed` without a probe of the running app; `deployed.json` is where that fact goes.
 - Do not add a seat to the cart from a catalog match; the row is visibility only.
 - Do not apply migrations, change secrets, or deploy. Nothing of the kind was done this session; `20261012010000_gradebook_release_emits_event.sql` is in the repository and awaits the normal approved apply.
-- Do not raise `app/perf-budgets.json` without the founder's word; a raise was rejected on #1473 (D-1475 §8).
+- Do not raise `app/perf-budgets.json` to absorb an overrun that is main's; a raise was rejected on #1473 (D-1475 §8). A route this branch's own feature code pushes over is re-recorded with the reason, as the script asks and as `33f7b9e4` did (Degree, D-1475 §8 closing note).
 - Do not add a `*.check.sql` suite without adding its name to `supabase/check-suites.txt`; `check.sh` and the Vitest guard both refuse the disagreement.
 
 ## Checks recorded
