@@ -509,7 +509,7 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
     redefines: true,
   },
   {
-    file: '20261012040000_provisioning_authority_hardening.sql',
+    file: '20261012050000_provisioning_authority_hardening.sql',
     functions: ['integration_revoke_connection', 'integration_revoke_scope'],
   },
   {

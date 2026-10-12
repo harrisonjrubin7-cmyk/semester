@@ -309,7 +309,7 @@ end $$;
 
 -- An immutable history must still let its foreign keys do their work: a
 -- departed administrator's account is erasable (`changed_by` clears). Found by
--- review on the first cut of 20261012040000, whose refusal trigger aborted the
+-- review on the first cut of 20261012050000, whose refusal trigger aborted the
 -- erasure. The same shape sat in tenant_sso_policy_history since
 -- 20260928011845, so it is proved here for both.
 do $$

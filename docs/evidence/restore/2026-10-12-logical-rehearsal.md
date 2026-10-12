@@ -1,6 +1,6 @@
 # Logical dump-and-restore rehearsal — 12 October 2026
 
-**What this is:** `supabase/restore.sh` run on the branch `claude/epic-galileo-aq26dg` at the merge of `origin/main` `91cf0ddc` (238 migration files, before this pass added `20261012040000`), on a throwaway PostgreSQL **16** in a temporary directory with `SEMESTER_CHECK_PG_ANY=1`, because the container has no 17 and the live project runs 17.6. **What it is not:** a restore of the live project's own backups, a run on staging (none exists: `docs/infrastructure/ENVIRONMENTS-AND-RELEASE.md`), or a run on production's major. Release gate G5 stays UNMET; Phase 4's "backup restore rehearsal in staging" stays open (`docs/execute/34-phase-4-institutional-operation-report.md`, P4-O2).
+**What this is:** `supabase/restore.sh` run on the branch `claude/epic-galileo-aq26dg` at the merge of `origin/main` `91cf0ddc` (238 migration files, before this pass added `20261012050000`), on a throwaway PostgreSQL **16** in a temporary directory with `SEMESTER_CHECK_PG_ANY=1`, because the container has no 17 and the live project runs 17.6. **What it is not:** a restore of the live project's own backups, a run on staging (none exists: `docs/infrastructure/ENVIRONMENTS-AND-RELEASE.md`), or a run on production's major. Release gate G5 stays UNMET; Phase 4's "backup restore rehearsal in staging" stays open (`docs/execute/34-phase-4-institutional-operation-report.md`, P4-O2).
 
 Run in the build container, one account seeded:
 
