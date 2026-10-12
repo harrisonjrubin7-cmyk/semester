@@ -22,34 +22,49 @@
  * Kept per account, in localStorage beside the base, because a push after a
  * reload can come before the next pull lands. Forgotten with the rest of the
  * sync memory (`forgetSyncMemory`), on sign-out and account switch.
+ *
+ * Also in memory, and whichever copy was pulled later wins (`at`): this
+ * session's memory over a stored copy a refused write left behind, and a
+ * copy another open tab stored after a newer pull over this tab's memory.
+ * A pull that finds nothing unknown is stored too, as empty, so that other
+ * tabs learn the field is gone rather than pushing it back.
  */
 export const CARRIED_KEY = 'semester.carried';
 
 interface Held {
   account: string;
   fields: Record<string, unknown>;
+  /** When the pull it came from landed, so the later of two copies wins. */
+  at: number;
 }
 
-/** This session's copy, which wins: storage is only for after a reload. */
+/** This session's copy. Storage wins only when something pulled later wrote it. */
 let memory: Held | null = null;
 
-function read(): Held | null {
-  // This session's pull is the newest word: a stored copy a failed write
-  // could not replace is older, and pushing it would put back stale fields.
-  if (memory) return memory;
+function stored(): Held | null {
   try {
     const raw = localStorage.getItem(CARRIED_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<Held> | null;
-      if (parsed && typeof parsed.account === 'string' && parsed.fields && typeof parsed.fields === 'object' && !Array.isArray(parsed.fields)) {
-        return { account: parsed.account, fields: parsed.fields as Record<string, unknown> };
-      }
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<Held> | null;
+    if (parsed && typeof parsed.account === 'string' && parsed.fields && typeof parsed.fields === 'object' && !Array.isArray(parsed.fields)) {
+      return { account: parsed.account, fields: parsed.fields as Record<string, unknown>, at: typeof parsed.at === 'number' ? parsed.at : 0 };
     }
   } catch {
-    // Unreadable: fall through to memory.
+    // Unreadable: memory, if any, is all there is.
   }
-  return memory;
+  return null;
 }
+
+function read(): Held | null {
+  const disk = stored();
+  if (!memory) return disk;
+  // A stored copy a refused write could not replace is older than memory; one
+  // another tab wrote after a newer pull is newer. The later pull is right.
+  return disk && disk.at > memory.at ? disk : memory;
+}
+
+/** Strictly after anything this session already holds, so a same-millisecond pull still wins. */
+const stamp = () => Math.max(Date.now(), (memory?.at ?? 0) + 1);
 
 /** The pulled copy's fields this build does not know. */
 export function unknownFields(remote: Record<string, unknown>, known: ReadonlySet<string>): Record<string, unknown> {
@@ -59,11 +74,11 @@ export function unknownFields(remote: Record<string, unknown>, known: ReadonlySe
 /** Remember, for this account, what the copy just pulled holds that this build cannot read. */
 export function rememberCarried(account: string, remote: Record<string, unknown> | null, known: ReadonlySet<string>): void {
   const fields = remote ? unknownFields(remote, known) : {};
-  const held: Held = { account, fields };
+  const held: Held = { account, fields, at: stamp() };
   memory = held;
   try {
-    if (Object.keys(fields).length === 0) localStorage.removeItem(CARRIED_KEY);
-    else localStorage.setItem(CARRIED_KEY, JSON.stringify(held));
+    // Even when empty: another tab holding the field must learn it is gone.
+    localStorage.setItem(CARRIED_KEY, JSON.stringify(held));
   } catch {
     // Kept in memory above, for this session's pushes.
   }
@@ -79,7 +94,7 @@ export function withCarried<T extends Record<string, unknown>>(account: string, 
 
 export function forgetCarried(): void {
   // Not null: a stored copy a blocked removal left behind must not come back.
-  memory = { account: '', fields: {} };
+  memory = { account: '', fields: {}, at: stamp() };
   try {
     localStorage.removeItem(CARRIED_KEY);
   } catch {

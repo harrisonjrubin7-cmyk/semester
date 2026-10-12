@@ -51,7 +51,7 @@ describe('fields this build cannot read', () => {
     rememberCarried('u1', { maintenance: [{ id: 'm' }] }, known);
     rememberCarried('u1', { notes: [] }, known);
     expect(withCarried('u1', { notes: [] })).toEqual({ notes: [] });
-    expect(localStorage.getItem(CARRIED_KEY)).toBeNull();
+    expect(JSON.parse(localStorage.getItem(CARRIED_KEY)!).fields, 'stored as empty, so another tab reads it too').toEqual({});
     rememberCarried('u1', null, known);
     expect(withCarried('u1', { notes: [] })).toEqual({ notes: [] });
   });
@@ -80,6 +80,32 @@ describe('fields this build cannot read', () => {
     expect(withCarried('u1', { notes: [] }), 'a field the account dropped stays dropped').toEqual({ notes: [] });
     forgetCarried();
     expect(withCarried('u1', { notes: [] }), 'and a forget a blocked removal could not finish holds').toEqual({ notes: [] });
+  });
+
+  // Found reviewing c714dc3: another open tab pulled a newer copy and stored
+  // it, and this tab's older memory still won, putting stale values back up.
+  describe('with another tab open on the same account', () => {
+    async function otherTab() {
+      vi.advanceTimersByTime(1_000);
+      vi.resetModules();
+      return import('./carried');
+    }
+
+    it('takes the newer copy the other tab stored over this tab\u2019s older one', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      rememberCarried('u1', { later: 'old' }, known);
+      (await otherTab()).rememberCarried('u1', { later: 'new' }, known);
+      expect(withCarried('u1', { notes: [] })).toEqual({ notes: [], later: 'new' });
+      vi.useRealTimers();
+    });
+
+    it('drops a field the other tab\u2019s newer pull found gone', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      rememberCarried('u1', { later: 'old' }, known);
+      (await otherTab()).rememberCarried('u1', { notes: [] }, known);
+      expect(withCarried('u1', { notes: [] })).toEqual({ notes: [] });
+      vi.useRealTimers();
+    });
   });
 
   it('reads the stored copy after a reload', async () => {
