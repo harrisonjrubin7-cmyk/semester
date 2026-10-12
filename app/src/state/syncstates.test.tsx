@@ -687,3 +687,62 @@ describe('what the review found', () => {
     expect(localStorage.getItem('semester.syncedAs')).toBe('u1');
   });
 });
+
+/*
+ * Rows this device could not read back, and fields it cannot read at all.
+ * Both were found reviewing #1501, and both lost account data from a device
+ * that did nothing but sync.
+ */
+describe('what a sync must not lose', () => {
+  const good = { id: 'n-good', title: 'Lab notes', body: 'kept on the account', created: 1, updated: 1 };
+  const damaged = { title: 'Lab notes', body: 'kept on the account', created: 1, updated: 1 };
+
+  // Its own stored copy lost the id (kept, unaddressable), or the row became
+  // a hole the reader drops, leaving nothing behind at all.
+  async function seedDamaged(row: unknown = damaged) {
+    const { baseOf } = await import('../lib/conflicts');
+    // This device last agreed with the account on the good note.
+    localStorage.setItem('semester.v1', JSON.stringify({ schemaVersion: 6, seenOnboarding: true, registered: true, notes: [row] }));
+    localStorage.setItem('semester.base', JSON.stringify(baseOf({ notes: [good] })));
+  }
+
+  const sentNotes = () => ((push.mock.calls[0]![1] as { notes?: { id?: string }[] }).notes ?? []).map((n) => n.id);
+
+  it('takes the account copy back before pushing, when the account has not moved', async () => {
+    await seedDamaged();
+    pull.mockResolvedValue({ state: { notes: [good] }, courses: [], updated: 1, seen: { state: 's1', courses: {} } });
+    await mount();
+    await wait(3_000);
+    await addTask('anything, so there is a push');
+    await wait(3_000);
+    expect(push).toHaveBeenCalled();
+    expect(sentNotes(), 'the good note goes back up').toContain(good.id);
+    expect(localStorage.getItem('semester.ingress-drops')).toBeNull();
+  });
+
+  for (const [said, row] of [['kept without its id', damaged], ['dropped as a hole', null]] as const) {
+    it(`does not delete the good copy from an account that moved on (${said})`, async () => {
+      await seedDamaged(row);
+      pull.mockResolvedValue({ state: { notes: [good] }, courses: [], updated: 2, seen: { state: 's2', courses: {} } });
+      await mount();
+      await wait(3_000);
+      await addTask('anything, so there is a push');
+      await wait(3_000);
+      expect(push).toHaveBeenCalled();
+      expect(sentNotes()).toContain(good.id);
+    });
+  }
+
+  it('pushes back a field a newer build wrote, untouched', async () => {
+    // A name no build has, so the test still means this once the field is real.
+    const later = [{ id: 'f1', said: 'written by a build from the future' }];
+    pull.mockResolvedValue({ state: { fromANewerBuild: later }, courses: [], updated: 1, seen: { state: 's1', courses: {} } });
+    await mount();
+    await wait(3_000);
+    await addTask('an edit on the older build');
+    await wait(3_000);
+    expect(push).toHaveBeenCalled();
+    expect((push.mock.calls.at(-1)![1] as { fromANewerBuild?: unknown }).fromANewerBuild).toEqual(later);
+  });
+});
+

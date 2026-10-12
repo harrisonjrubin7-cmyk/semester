@@ -1,8 +1,20 @@
+// @vitest-environment jsdom
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { baseOf } from './conflicts';
-import { BULK_COUNT, DELETABLE, bulk, coursesDeletedHere, settleDeletions } from './deletions';
+import {
+  BULK_COUNT,
+  DELETABLE,
+  INGRESS_KEY,
+  bulk,
+  clearIngressDrops,
+  coursesDeletedHere,
+  droppedOnRead,
+  ingressDrops,
+  noteIngressDrops,
+  settleDeletions,
+} from './deletions';
 import { mergePersisted } from './merge';
 
 const note = (id: string, body = id, updated = 1) => ({ id, title: id, body, created: 1, updated });
@@ -121,5 +133,71 @@ describe('what is allowed to be deleted by the sync', () => {
       expect(removals.length, `${field} is filtered ${removals.length} times in the reducers`).toBe(1);
       expect(source, field).toMatch(new RegExp(`case '(delete|remove)[A-Za-z]*': *\\n?[^]*?${field}: state\\.${field}\\.filter`));
     }
+  });
+});
+
+/*
+ * A row this device could not read back is not a row anybody deleted.
+ *
+ * Found reviewing #1501: a note whose stored copy lost its id was dropped (or
+ * kept, unaddressable) on load, its agreed id was then missing here, and the
+ * next settle took the good copy out of the account. One row is under the
+ * bulk guard, so nothing stood in the way.
+ */
+describe('rows lost on the way in', () => {
+  const agreed = baseOf(persisted([note('a'), note('b'), note('c')]));
+
+  afterEach(() => localStorage.clear());
+
+  it('does not take a row out of the account when this device lost it reading its own storage', () => {
+    const here = persisted([note('a'), note('b')]);
+    const there = persisted([note('a'), note('b'), note('c')]);
+    const s = settleDeletions(here, there, agreed, 1, ['notes']);
+    expect((s.remote.notes as { id: string }[]).map((n) => n.id)).toEqual(['a', 'b', 'c']);
+    const merged = mergePersisted(here as never, s.remote as never) as unknown as { notes: { id: string }[] };
+    expect(merged.notes.map((n) => n.id).sort(), 'the account copy comes back').toEqual(['a', 'b', 'c']);
+    // A list it did not lose rows from still settles as before.
+    const other = settleDeletions(here, there, agreed, 1, ['tasks']);
+    expect((other.remote.notes as { id: string }[]).map((n) => n.id)).toEqual(['a', 'b']);
+  });
+
+  it('does not read a gap as a deletion while this device holds a row it cannot address', () => {
+    const damaged = { title: 'c', body: 'c', created: 1, updated: 1 };
+    const s = settleDeletions(persisted([note('a'), note('b'), damaged]), persisted([note('a'), note('b'), note('c')]), agreed);
+    expect((s.remote.notes as { id?: string }[]).map((n) => n.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('does not drop a good row here because the account holds one it cannot address', () => {
+    const s = settleDeletions(persisted([note('a'), note('b'), note('c')]), persisted([note('a'), note('b'), { body: 'c' }]), agreed);
+    expect(s.dropHere).toEqual({});
+  });
+
+  it('does not delete a course from the account that this device lost on load', () => {
+    const base = baseOf(persisted([], [course('x'), course('y')]));
+    expect(coursesDeletedHere(base, [course('x')]), 'an ordinary deletion still counts').toEqual(['y']);
+    expect(coursesDeletedHere(base, [course('x')], ['courses'])).toEqual([]);
+    expect(coursesDeletedHere(base, [course('x'), { course: {} }])).toEqual([]);
+  });
+
+  it('notices the lists a reader shortened or could not address, and only those', () => {
+    const raw = { notes: [note('a'), null], tasks: [{ title: 't' }], documents: [{ id: 'd' }], places: [null] };
+    const read = { notes: [note('a')], tasks: [{ title: 't' }], documents: [{ id: 'd' }], places: [] };
+    expect(droppedOnRead(raw, read)).toEqual(['notes', 'tasks']);
+    expect(droppedOnRead({ notes: [note('a')] }, { notes: [note('a')] })).toEqual([]);
+    // A list this copy did not carry says nothing.
+    expect(droppedOnRead({}, { notes: [] })).toEqual([]);
+  });
+
+  it('remembers the lists until a pull clears them, across more than one boot', () => {
+    expect(ingressDrops()).toEqual([]);
+    noteIngressDrops(['notes']);
+    noteIngressDrops(['courses', 'notes']);
+    expect(ingressDrops().sort()).toEqual(['courses', 'notes']);
+    noteIngressDrops([]);
+    expect(ingressDrops().sort()).toEqual(['courses', 'notes']);
+    clearIngressDrops();
+    expect(localStorage.getItem(INGRESS_KEY)).toBeNull();
+    localStorage.setItem(INGRESS_KEY, '{"not":"a list"}');
+    expect(ingressDrops()).toEqual([]);
   });
 });
