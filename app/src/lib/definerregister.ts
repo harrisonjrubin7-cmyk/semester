@@ -271,6 +271,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['office_desk_actions', 'admin', ['auth.uid()', 'private.may_publish']],
   ['open_help_request', 'self-service', ['auth.uid()', 'private.answers_for']],
   ['open_support_ticket', 'self-service', ['auth.uid()']],
+  ['ops_projection_dashboard', 'admin', ['auth.uid()', 'private.has_capability']],
   ['privileged_access_review', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['privileged_mfa_required', 'read-helper', ['auth.uid()']],
   ['productivity_readiness_aggregate', 'admin', ['auth.uid()', "'admin'=any(m.roles)", 'if owners<10']],
@@ -490,6 +491,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261008233000_tenant_projection_read.sql',
     functions: ['read_tenant_projection'],
+  },
+  {
+    file: '20261012000000_ops_projection_dashboard.sql',
+    functions: ['ops_projection_dashboard'],
   },
   {
     file: '20261008223000_privileged_role_mfa.sql',
