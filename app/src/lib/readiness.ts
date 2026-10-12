@@ -366,6 +366,154 @@ export function connectionsFrom(
   return out;
 }
 
+/**
+ * What may be switched on, and on whose authority.
+ *
+ * Items 157 and 158 are a pair and only make sense read together: what
+ * Semester may offer a university it has no agreement with, and what changes
+ * when it has one. The interesting part is not the two lists — it is that
+ * **a contracted feature needs two separate things and neither is enough.**
+ *
+ *   · **Paperwork without plumbing.** A signed agreement does not make an SSO
+ *     integration exist. Offering single sign-on because a contract mentions
+ *     it is a button that fails for every student who presses it.
+ *   · **Plumbing without paperwork.** A working integration against an
+ *     institution that agreed to nothing is the thing item 156 is about, and
+ *     it is the worse of the two: it succeeds, quietly, against systems
+ *     nobody authorised it to touch.
+ *
+ * So `permits` asks for both, and says which one is missing. That second half
+ * matters more than it looks: "not available" is a dead end, and "the
+ * university has agreed to this and nothing is connected yet" is an
+ * implementation step somebody can act on.
+ *
+ * ## What is public, and the judgement this cannot make
+ *
+ * The public list is deliberately short and is all information a university
+ * already publishes. Item 157 qualifies it — "only where legally and
+ * technically appropriate" — and that is a judgement about a particular
+ * institution's terms, robots file and jurisdiction, which no function here
+ * can make. This module says a feature is *not contract-gated*; it does not
+ * say anybody has cleared it for a given university. `docs/SCHOOL_DATA_PACK.md`
+ * is the other half of that and starts from a university handing the data
+ * over, which is the version that needs no such judgement.
+ */
+
+/** Everything a deployment can be asked to switch on, public or contracted. */
+export const INSTITUTIONAL_FEATURES = [
+  // 157. Public, because the university already publishes it.
+  'profile',
+  'courseCatalog',
+  'organizations',
+  'events',
+  'campusResources',
+  'academicCalendar',
+  // 158. Contracted.
+  'sso',
+  'lms',
+  'email',
+  'calendarSync',
+  'sis',
+  'degreeAudit',
+  'adminDashboard',
+  'communications',
+  'analytics',
+] as const;
+
+export type InstitutionalFeature = (typeof INSTITUTIONAL_FEATURES)[number];
+
+/**
+ * What each feature needs.
+ *
+ * `needs` is the weakest relationship that may have it; `connection` is the
+ * integration that has to actually be live, where one exists.
+ *
+ * Three of the contracted features have no `connection` and that is not an
+ * oversight. An admin dashboard, university communications and institutional
+ * analytics are things Semester itself provides *to* an institution — there
+ * is no system of theirs to connect to, so the agreement is the whole of the
+ * gate. Marking them as needing a connection would make them permanently
+ * unavailable, which is a different lie from the one this module prevents.
+ */
+const GATES: Record<InstitutionalFeature, { needs: Relationship; connection?: keyof Connections }> = {
+  profile: { needs: 'public-data' },
+  courseCatalog: { needs: 'public-data' },
+  organizations: { needs: 'public-data' },
+  events: { needs: 'public-data' },
+  campusResources: { needs: 'public-data' },
+  academicCalendar: { needs: 'public-data' },
+
+  sso: { needs: 'connected', connection: 'sso' },
+  lms: { needs: 'connected', connection: 'lms' },
+  email: { needs: 'connected', connection: 'email' },
+  calendarSync: { needs: 'connected', connection: 'calendar' },
+  sis: { needs: 'institutional-customer', connection: 'sis' },
+  degreeAudit: { needs: 'institutional-customer', connection: 'degreeAudit' },
+  adminDashboard: { needs: 'institutional-customer' },
+  communications: { needs: 'institutional-customer' },
+  analytics: { needs: 'institutional-customer' },
+};
+
+/** Whether a feature is available at all without an agreement. */
+export function isPublic(feature: InstitutionalFeature): boolean {
+  return GATES[feature].needs === NO_RELATIONSHIP;
+}
+
+/** Every feature a university with no agreement may still be offered. */
+export const PUBLIC_FEATURES: InstitutionalFeature[] = INSTITUTIONAL_FEATURES.filter(isPublic);
+
+export interface Permission {
+  ok: boolean;
+  /**
+   * Why not, in a sentence, when it is not.
+   *
+   * Never null when `ok` is false. A gate that refuses without saying which
+   * half is missing turns an implementation step into a dead end — and the
+   * two halves want opposite responses: one is a conversation with the
+   * university, the other is a configuration task.
+   */
+  why?: string;
+}
+
+/**
+ * May this deployment offer this feature?
+ *
+ * Both halves, always, in that order — the agreement first, because a missing
+ * agreement is the answer whether or not anything is connected, and saying
+ * "nothing is connected" to somebody who has not signed would send them to
+ * fix the wrong thing.
+ */
+export function permits(
+  feature: InstitutionalFeature,
+  relationship: Relationship = NO_RELATIONSHIP,
+  connections: Connections = NO_CONNECTIONS,
+): Permission {
+  const gate = GATES[feature];
+  if (!atLeast(relationship, gate.needs)) {
+    return {
+      ok: false,
+      why:
+        `This needs ${RELATIONSHIP_MEANS[gate.needs].short.toLowerCase()} and the ` +
+        `relationship is "${RELATIONSHIP_MEANS[relationship].short}".`,
+    };
+  }
+  if (gate.connection && !connections[gate.connection]) {
+    return {
+      ok: false,
+      why: 'The university has agreed to this and nothing is connected yet.',
+    };
+  }
+  return { ok: true };
+}
+
+/** Everything this deployment may actually offer, agreement and plumbing both. */
+export function availableFeatures(
+  relationship: Relationship = NO_RELATIONSHIP,
+  connections: Connections = NO_CONNECTIONS,
+): InstitutionalFeature[] {
+  return INSTITUTIONAL_FEATURES.filter((f) => permits(f, relationship, connections).ok);
+}
+
 /** A `Relationship` from whatever a stored profile had, defaulting weakest. */
 export function readRelationship(raw: unknown): Relationship {
   return (RELATIONSHIPS as readonly string[]).includes(raw as string)

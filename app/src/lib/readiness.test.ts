@@ -3,6 +3,12 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   CEILING,
+  INSTITUTIONAL_FEATURES,
+  PUBLIC_FEATURES,
+  availableFeatures,
+  isPublic,
+  permits,
+  type InstitutionalFeature,
   connectionsFrom,
   relationshipOf,
   LEVELS,
@@ -308,5 +314,111 @@ describe('the relationship registry', () => {
     expect(relationshipOf('vanderbilt')).toBe('public-data');
     expect(relationshipOf('harvard')).toBe('public-data');
     expect(relationshipOf('')).toBe('public-data');
+  });
+});
+
+describe('what may be switched on, and on whose authority', () => {
+  it('a university that agreed to nothing still gets what it already publishes', () => {
+    /*
+     * Item 157. The whole point of a public mode: refusing to show a student
+     * their own university's published course catalogue because Semester has
+     * no contract would be punishing the student for a commercial fact.
+     */
+    const got = availableFeatures('public-data', NO_CONNECTIONS);
+    expect(got).toEqual(PUBLIC_FEATURES);
+    expect(got).toContain('courseCatalog');
+    expect(got).toContain('academicCalendar');
+    expect(got.length).toBeGreaterThan(4);
+  });
+
+  it('and none of the contracted ones', () => {
+    const got = availableFeatures('public-data', NO_CONNECTIONS);
+    for (const f of ['sso', 'lms', 'sis', 'adminDashboard', 'analytics'] as InstitutionalFeature[]) {
+      expect(got, `${f} offered with no agreement`).not.toContain(f);
+    }
+  });
+
+  it('paperwork without plumbing is refused, and says which half is missing', () => {
+    /*
+     * A signed agreement does not make an SSO integration exist. Offering it
+     * because a contract mentions it is a button that fails for every student
+     * who presses it.
+     */
+    const r = permits('sso', 'institutional-customer', NO_CONNECTIONS);
+    expect(r.ok).toBe(false);
+    expect(r.why).toMatch(/agreed to this and nothing is connected/i);
+  });
+
+  it('plumbing without paperwork is refused, and is the worse of the two', () => {
+    /*
+     * The item-156 case. This one succeeds if nothing stops it — quietly,
+     * against systems nobody authorised it to touch — which is why the
+     * relationship is checked first and on its own.
+     */
+    const r = permits('sso', 'public-data', { sso: true });
+    expect(r.ok).toBe(false);
+    expect(r.why).toMatch(/relationship is/i);
+    expect(r.why).not.toMatch(/nothing is connected/i);
+  });
+
+  it('and when both halves are missing it names the agreement, not the wiring', () => {
+    /*
+     * The case that actually pins the order, and the first draft of these
+     * tests did not have it. Reordering the two checks passed every other
+     * assertion here: where the connection exists the reordered code falls
+     * through to the same answer, and where the relationship is strong enough
+     * it never reaches the second check. Only "neither" tells them apart.
+     *
+     * The order is a decision with a reason — a university that has not
+     * signed is a conversation, and a missing integration is a configuration
+     * task, so telling somebody who has not signed that "nothing is
+     * connected" sends them to fix the wrong thing. A justified decision with
+     * no test is the thing this repository keeps finding to have quietly
+     * stopped being true.
+     */
+    const r = permits('sso', 'public-data', NO_CONNECTIONS);
+    expect(r.ok).toBe(false);
+    expect(r.why, 'answered about the wiring when the agreement is missing too').toMatch(
+      /relationship is/i,
+    );
+    expect(r.why).not.toMatch(/nothing is connected/i);
+  });
+
+  it('and both together are allowed', () => {
+    // The control. Two refusals pass for free on a function that always says no.
+    expect(permits('sso', 'connected', { sso: true }).ok).toBe(true);
+    expect(permits('sis', 'institutional-customer', { sis: true }).ok).toBe(true);
+  });
+
+  it('the three features with nothing to connect to need only the agreement', () => {
+    /*
+     * An admin dashboard, communications and analytics are things Semester
+     * provides *to* an institution — there is no system of theirs to connect
+     * to. Gating them on a connection would make them permanently
+     * unavailable, which is a different lie from the one this prevents.
+     */
+    for (const f of ['adminDashboard', 'communications', 'analytics'] as InstitutionalFeature[]) {
+      expect(permits(f, 'institutional-customer', NO_CONNECTIONS).ok, f).toBe(true);
+      expect(permits(f, 'pilot', NO_CONNECTIONS).ok, `${f} at pilot`).toBe(false);
+    }
+  });
+
+  it('every feature is gated, and the two lists do not overlap', () => {
+    // The control against a feature added to the union and forgotten in
+    // GATES — which would throw rather than refuse, and only when somebody
+    // asked for it.
+    for (const f of INSTITUTIONAL_FEATURES) {
+      expect(() => permits(f, 'public-data'), f).not.toThrow();
+    }
+    const contracted = INSTITUTIONAL_FEATURES.filter((f) => !isPublic(f));
+    expect(PUBLIC_FEATURES.length + contracted.length).toBe(INSTITUTIONAL_FEATURES.length);
+    expect(PUBLIC_FEATURES.some((f) => contracted.includes(f))).toBe(false);
+  });
+
+  it('and a customer with everything connected gets everything', () => {
+    const all = availableFeatures('institutional-customer', {
+      sso: true, lms: true, email: true, calendar: true, sis: true, degreeAudit: true,
+    });
+    expect(all).toEqual([...INSTITUTIONAL_FEATURES]);
   });
 });
