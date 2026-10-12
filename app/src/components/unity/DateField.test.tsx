@@ -74,7 +74,7 @@ describe('DateField', () => {
   });
 
   it('ties the hint to the box', () => {
-    act(() => root.render(<Harness hint="The day the work is due." />));
+    act(() => { root.render(<Harness hint="The day the work is due." />); });
     expect(input().getAttribute('aria-describedby')).toContain(host.querySelector('.combo-hint')!.id);
   });
 });

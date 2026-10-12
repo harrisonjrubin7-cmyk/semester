@@ -186,7 +186,7 @@ describe('supposing a score', () => {
       (b) => (b.textContent ?? '').trim() === 'Clear',
     );
     expect(clear).toBeTruthy();
-    await act(async () => clear!.click());
+    await act(async () => { clear!.click(); });
     expect(text()).not.toContain('That would');
   });
 });

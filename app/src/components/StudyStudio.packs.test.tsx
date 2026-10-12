@@ -133,7 +133,7 @@ it('holds a do-not-use source back from teach-back too, which sends the same sel
   check('Opportunity cost');
   check('Old answer key');
   check('Send the selected text');
-  const field = (name: string) => [...host.querySelectorAll('[aria-labelledby=teachback-title] label')].find((l) => l.textContent?.startsWith(name))!.querySelector('input,textarea') as HTMLInputElement;
+  const field = (name: string) => [...host.querySelectorAll('[aria-labelledby=teachback-title] label')].find((l) => l.textContent?.startsWith(name))?.querySelector('input,textarea') as HTMLInputElement;
   const type = (el: HTMLInputElement | HTMLTextAreaElement, value: string) => {
     const set = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), 'value')!.set!;
     act(() => {

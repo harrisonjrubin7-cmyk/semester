@@ -178,7 +178,7 @@ function Governance() {
       <SectionLabel>Suppressed export</SectionLabel>
       <label className="jx-field">
         <span>Metric</span>
-        <select className="input" value={metric} onChange={(e) => setMetric(e.target.value)} aria-label="Metric to export">
+        <select className="input" value={metric} onChange={(e) => { setMetric(e.target.value); }} aria-label="Metric to export">
           {DICTIONARY.map((m) => (
             <option key={m.id} value={m.id}>
               {m.name}

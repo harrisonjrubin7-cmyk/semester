@@ -79,7 +79,7 @@ describe('communityPage', () => {
 });
 
 describe('preferences', () => {
-  afterEach(() => globalThis.localStorage?.clear());
+  afterEach(() => globalThis.localStorage.clear());
 
   it('round-trips the device-local parts only', () => {
     savePreferences({ ...EMPTY_PREFERENCES, hiddenItems: ['x'], mode: 'chronological', blockedRefs: ['b'], mutedRefs: ['m'] });

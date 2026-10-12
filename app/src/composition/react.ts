@@ -86,7 +86,7 @@ export function hostOver(read: () => StoreSnapshot, dispatch: (action: Action) =
     },
     taskCommands: {
       add: (task) => dispatch({ type: 'addTask', task }),
-      move: (id, date, time) => dispatch({ type: 'moveTask', id, date, ...(time === undefined ? {} : { time }) }),
+      move: (id, date, time) => { dispatch({ type: 'moveTask', id, date, ...(time === undefined ? {} : { time }) }); },
       remove: (id) => dispatch({ type: 'deleteTask', id }),
     },
     appointments: () => read().state.appointments,

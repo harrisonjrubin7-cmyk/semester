@@ -133,7 +133,7 @@ export function Threads({
             className="input"
             type="search"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => { setQuery(e.target.value); }}
             placeholder="Search conversations"
             aria-label="Search conversations"
             style={{ marginTop: 'var(--sp-3)', height: 34, fontSize: 'var(--type-sm)' }}

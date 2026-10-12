@@ -80,7 +80,7 @@ async function mount(api: WorkflowApi, viewerId: string, holds: readonly string[
 const button = (re: RegExp) => [...host.querySelectorAll('button')].find((b) => re.test(b.textContent ?? '') || re.test(b.getAttribute('aria-label') ?? '')) as HTMLButtonElement | undefined;
 async function click(el: HTMLElement | undefined) {
   expect(el, 'control not found').toBeTruthy();
-  await act(async () => el!.click());
+  await act(async () => { el!.click(); });
 }
 function type(input: HTMLInputElement, value: string) {
   Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, value);

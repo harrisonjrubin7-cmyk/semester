@@ -56,7 +56,7 @@ describe('TextDoc', () => {
       }
       for (const d of docs) shuffle([...all, ...all.slice(0, 10)], r).forEach((o) => d.apply(o))
       expect(docs[1]!.text(), `seed ${seed}`).toBe(docs[0]!.text())
-      expect(docs[2]!.text(), `seed ${seed}`).toBe(docs[0]!.text())
+      expect(docs[2]?.text(), `seed ${seed}`).toBe(docs[0]!.text())
       for (const d of docs) expect(d.waitingCount()).toBe(0)
     }
   })

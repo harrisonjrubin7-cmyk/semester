@@ -17,7 +17,7 @@ const h = harness(RULES, ({ registry, dirs }) => {
   registry.defineRole({ role: 'instructor', capabilities: ['grades.release', 'grades.amend', 'export.run'] });
   dirs.get(TENANT_A)!.add({ id: 'dept', tenantId: TENANT_A, kind: 'department', parentId: null, name: 'Econ' });
   dirs.get(TENANT_A)!.add({ id: 'sec', tenantId: TENANT_A, kind: 'section', parentId: 'dept', name: '101' });
-  dirs.get(TENANT_A)!.add({ id: 'other-dept', tenantId: TENANT_A, kind: 'department', parentId: null, name: 'History' });
+  dirs.get(TENANT_A)?.add({ id: 'other-dept', tenantId: TENANT_A, kind: 'department', parentId: null, name: 'History' });
 });
 
 const instructor = (tenant = TENANT_A, mfa: 'standard' | 'fresh' = 'standard') =>

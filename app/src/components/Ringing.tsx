@@ -58,7 +58,7 @@ export function Ringing() {
   useEffect(() => {
     if (!watching) return;
     const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
+    return () => { clearInterval(id); };
   }, [watching]);
 
   const going = whatIsRinging(state.timers, state.alarms, now);

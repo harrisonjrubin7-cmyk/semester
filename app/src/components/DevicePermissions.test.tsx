@@ -61,7 +61,7 @@ function browser(states: Partial<Record<'camera' | 'microphone' | 'geolocation' 
       const entry = entries.get(name)!;
       entry.state = state;
       await act(async () => {
-        entry.listeners.forEach((fn) => fn());
+        entry.listeners.forEach((fn) => { fn(); });
         await Promise.resolve();
       });
     },

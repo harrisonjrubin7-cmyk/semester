@@ -35,7 +35,7 @@ const here: SessionRow = { id: 'here', startedAt: '2026-10-04T12:00:00Z', lastAc
 const phone: SessionRow = { id: 'phone', startedAt: '2026-10-01T12:00:00Z', lastActiveAt: '2026-10-03T12:00:00Z', userAgent: PHONE, isCurrent: false };
 
 const mount = async (list: () => Promise<SessionRow[]>, end: (id: string) => Promise<boolean> = async () => true) => {
-  act(() => root.render(<SignedInDevices list={list} end={end} />));
+  act(() => { root.render(<SignedInDevices list={list} end={end} />); });
   await flush();
 };
 const button = (label: string | RegExp) =>

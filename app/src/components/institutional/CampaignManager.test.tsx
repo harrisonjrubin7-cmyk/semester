@@ -64,7 +64,7 @@ const buttons = () => [...host.querySelectorAll('button')];
 const button = (re: RegExp) => buttons().find((b) => re.test(b.textContent ?? '')) as HTMLButtonElement | undefined;
 async function click(el: HTMLElement | undefined) {
   expect(el, 'control not found').toBeTruthy();
-  await act(async () => el!.click());
+  await act(async () => el?.click());
 }
 function type(input: HTMLInputElement | HTMLSelectElement, value: string) {
   const proto = input instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;

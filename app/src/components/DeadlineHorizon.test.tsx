@@ -51,7 +51,7 @@ describe('DeadlineHorizon (interaction)', () => {
     root = createRoot(host);
   });
   afterEach(async () => {
-    await act(async () => root.unmount());
+    await act(async () => { root.unmount(); });
     host.remove();
   });
 

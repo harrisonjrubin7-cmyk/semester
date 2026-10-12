@@ -27,7 +27,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  act(() => root.unmount());
+  act(() => { root.unmount(); });
   vi.useRealTimers();
   host.remove();
 });

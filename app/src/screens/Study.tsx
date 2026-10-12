@@ -763,7 +763,7 @@ export function Study({
                   <button
                     type="button"
                     className="btn"
-                    onClick={() => dispatch({ type: 'openGuide', id: c.id, mode: 'quiz' })}
+                    onClick={() => { dispatch({ type: 'openGuide', id: c.id, mode: 'quiz' }); }}
                   >
                     Start a short diagnostic
                   </button>

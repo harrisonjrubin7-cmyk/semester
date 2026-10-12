@@ -20,7 +20,7 @@ beforeEach(() => {
   host = document.createElement('div'); document.body.append(host); root = createRoot(host);
   act(() => root.render(<StudentOperating />));
 });
-afterEach(() => { act(() => root.unmount()); host.remove(); });
+afterEach(() => { act(() => { root.unmount(); }); host.remove(); });
 const button = (name: string) => [...host.querySelectorAll('button')].find(b => b.textContent === name)!;
 describe('student-owned operating workflow', () => {
   it('changes density without persisting the energy choice', () => {
@@ -82,7 +82,7 @@ describe('student-owned operating workflow', () => {
     act(() => button('Cancel').click());
     expect(readOperating(stored.operatingWorkspace).manual?.planningTime).toBe('18:00');
     act(() => button('Delete preferences').click());
-    act(() => button('Delete saved preferences').click());
+    act(() => { button('Delete saved preferences').click(); });
     expect(readOperating(stored.operatingWorkspace).manual).toBeNull();
     expect(readOperating(stored.operatingWorkspace).entries).toHaveLength(4);
   });

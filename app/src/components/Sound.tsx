@@ -68,7 +68,7 @@ export function Sound() {
       {
         play: () => ask('play'),
         pause: () => ask('pause'),
-        seekbackward: () => seekTo((el.current?.currentTime ?? 0) - 15),
+        seekbackward: () => { seekTo((el.current?.currentTime ?? 0) - 15); },
         seekforward: () => seekTo((el.current?.currentTime ?? 0) + 15),
       },
     );
@@ -123,7 +123,7 @@ export function Sound() {
       onTimeUpdate={(e) => heard({ time: e.currentTarget.currentTime })}
       onPlay={() => heard({ going: true })}
       onPause={() => heard({ going: false })}
-      onEnded={() => heard({ going: false })}
+      onEnded={() => { heard({ going: false }); }}
       style={{ display: 'none' }}
     >
       {captions && <track kind="captions" src={asset(captions)} srcLang="en" label="English" default />}

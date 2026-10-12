@@ -322,7 +322,7 @@ describe('ShareCourse: after sending', () => {
     Object.assign(URL, { createObjectURL: created, revokeObjectURL: () => {} });
     const module_ = blankCourse('TEST 101');
     await mount(<ShareCourse courseId={module_.course.id} />);
-    await act(async () => send({ type: 'addCourse', module: module_ } as Action));
+    await act(async () => { send({ type: 'addCourse', module: module_ } as Action); });
     expect(text()).toContain('A file with this course in it');
     await press('Share this course');
     const notice = host.querySelector('.state-permission')!;

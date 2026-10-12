@@ -415,7 +415,7 @@ describe('the block the caret is in', () => {
   const pickStyle = (value: string) => {
     const el = host.querySelector('[aria-label="Paragraph style"]') as HTMLSelectElement;
     act(() => {
-      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')!.set!.call(el, value);
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')!.set?.call(el, value);
       el.dispatchEvent(new Event('change', { bubbles: true }));
     });
   };

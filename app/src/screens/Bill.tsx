@@ -258,7 +258,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
                     type="button"
                     className="bare"
                     aria-label={`Remove ${a.what}`}
-                    onClick={() => dispatch({ type: 'dropAid', id: a.id })}
+                    onClick={() => { dispatch({ type: 'dropAid', id: a.id }); }}
                     style={{ width: 24, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
                   >
                     ×

@@ -172,7 +172,7 @@ export function CaraLog({
                 max={ATHLETICS_LIMITS.caraHours}
                 step="0.25"
                 value={hours}
-                onChange={(e) => setHours(e.target.value)}
+                onChange={(e) => { setHours(e.target.value); }}
                 style={{ width: '100%', marginTop: 'var(--sp-2)' }}
               />
             </label>

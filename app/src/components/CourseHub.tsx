@@ -43,7 +43,7 @@ export function CourseHub({course,information,readiness=moduleOn(MODULE_FLAGS.st
  <li><button type="button" onClick={()=>setTab('information')}>Syllabus and course information</button></li>
  <li>Deadlines<ul>{all.map(item=><li key={item.id}><button type="button" onClick={()=>dispatch({type:'openItem',id:item.id})}>{item.title}</button></li>)}{!all.length&&<li>No deadlines recorded</li>}</ul></li>
  <li>Added material<ul>{updates.map(update=><li key={update.id}><button type="button" onClick={()=>setTab('readings')}>{update.title}</button></li>)}{!updates.length&&<li>No added material</li>}</ul></li>
- <li>Recorded requirement connections<ul>{state.requirements.filter(requirement=>accepts(requirement,course)).map(requirement=><li key={requirement.id}><button type="button" onClick={()=>dispatch({type:'go',screen:'degree'})}>{requirement.programme} · {requirement.name}</button> · Student recorded</li>)}</ul></li>
+ <li>Recorded requirement connections<ul>{state.requirements.filter(requirement=>accepts(requirement,course)).map(requirement=><li key={requirement.id}><button type="button" onClick={()=>{ dispatch({type:'go',screen:'degree'}); }}>{requirement.programme} · {requirement.name}</button> · Student recorded</li>)}</ul></li>
  <li><button type="button" onClick={()=>dispatch({type:'go',screen:'meet'})}>Prepare advisor questions about this course</button></li>
  </ul></li></ul><p>Only recorded connections are shown. Your advisor confirms whether a course satisfies a requirement.</p></details>}
  {tab==='overview'&&careerEvidence&&<CourseSkills course={course}/>}

@@ -172,7 +172,7 @@ export function OfficeActionDesk({ signedIn }: { signedIn: boolean }) {
         {field('Why it matters', <textarea aria-label="Why it matters" value={draft.why} maxLength={1000} onChange={(ev) => setDraft({ ...draft, why: ev.target.value })} />)}
         {field('Due date (optional)', <input aria-label="Due date (optional)" type="date" value={draft.due} onChange={(ev) => setDraft({ ...draft, due: ev.target.value })} />)}
         {field('Official page', <input aria-label="Official page" type="url" value={draft.url} placeholder="https://" onChange={(ev) => setDraft({ ...draft, url: ev.target.value })} />)}
-        {field('Source', <input aria-label="Source" value={draft.source} maxLength={300} placeholder="e.g. Financial Aid verification policy" onChange={(ev) => setDraft({ ...draft, source: ev.target.value })} />)}
+        {field('Source', <input aria-label="Source" value={draft.source} maxLength={300} placeholder="e.g. Financial Aid verification policy" onChange={(ev) => { setDraft({ ...draft, source: ev.target.value }); }} />)}
         {problems.length ? (
           <ul className="office-problems" aria-label="Before this can be saved">
             {problems.map((p) => (

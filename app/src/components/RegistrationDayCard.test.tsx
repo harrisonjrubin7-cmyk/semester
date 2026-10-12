@@ -148,7 +148,7 @@ describe('Registration Day Mode on Today', () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
     await mount({ registrationDay: true });
-    await act(async () => button(/^Copy course references$/).click());
+    await act(async () => { button(/^Copy course references$/).click(); });
     expect(writeText).toHaveBeenCalledWith(
       'PSY 220 01 · CRN 40123\nSTAT 101 01 · reference number not in your catalog\nENG 201 01 · reference number not in your catalog',
     );

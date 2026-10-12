@@ -77,7 +77,7 @@ export function StudentGrades({ course, term, me }: { course: string; term: stri
     return (
       <>
         <Notice alert>{book} Nothing has changed. Try again in a moment.</Notice>
-        <button type="button" className="btn" onClick={() => setReads((n) => n + 1)}>
+        <button type="button" className="btn" onClick={() => { setReads((n) => n + 1); }}>
           Load again
         </button>
       </>

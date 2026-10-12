@@ -69,7 +69,7 @@ export function AdvisorSharedView({ signedIn }: { signedIn: boolean }) {
         <ul className="advisor-share-list">
           {list.map((row) => (
             <li key={row.id}>
-              <button type="button" className="workspace-text-button" onClick={() => read(row)}>
+              <button type="button" className="workspace-text-button" onClick={() => { read(row); }}>
                 {row.title}
               </button>{' '}
               — {row.shared_as || 'a student'}, shared {day(row.created_at)}, open until {day(row.expires_at)}

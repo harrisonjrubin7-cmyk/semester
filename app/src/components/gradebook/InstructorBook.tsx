@@ -338,7 +338,7 @@ export function InstructorBook({ course, term, caps, me }: { course: string; ter
             </Row>
             <Field label="Learning-system column (optional)" hint="Where passback sends this item's released scores. Leave empty to keep it out of passback.">
               {(ids) => (
-                <input id={ids.id} aria-describedby={ids.hint} className="input" value={itemForm.lineItem} onChange={(e) => setItemForm((f) => ({ ...f, lineItem: e.target.value }))} />
+                <input id={ids.id} aria-describedby={ids.hint} className="input" value={itemForm.lineItem} onChange={(e) => { setItemForm((f) => ({ ...f, lineItem: e.target.value })); }} />
               )}
             </Field>
             <Row>

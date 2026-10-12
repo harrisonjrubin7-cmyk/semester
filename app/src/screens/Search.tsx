@@ -192,7 +192,7 @@ export function SearchHome() {
           <button
             type="button"
             className="bare deskhome-shortcut"
-            onClick={() => dispatch({ type: 'apps', open: true })}
+            onClick={() => { dispatch({ type: 'apps', open: true }); }}
           >
             <span className="deskhome-shortcut-tile">
               <Plus size={24} />

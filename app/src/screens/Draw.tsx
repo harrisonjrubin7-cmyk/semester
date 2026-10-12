@@ -194,7 +194,7 @@ export function Draw() {
               key={option.id}
               type="button"
               className="bare tappable"
-              onClick={() => setKindId(option.id)}
+              onClick={() => { setKindId(option.id); }}
               aria-pressed={on}
               style={{
                 textAlign: 'left',

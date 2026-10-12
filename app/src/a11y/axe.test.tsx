@@ -310,7 +310,7 @@ describe('release layout regressions', () => {
     const todayMore = host!.querySelector<HTMLDetailsElement>('details.today-more')!;
     todayMore.open = true;
     const week = [...host!.querySelectorAll('button')].find(button => button.textContent === 'This week')!;
-    await act(async () => week.click());
+    await act(async () => { week.click(); });
     expect(week.getAttribute('aria-pressed')).toBe('true');
     const more = host!.querySelector<HTMLDetailsElement>('details.today-more');
     expect(more).not.toBeNull();

@@ -251,7 +251,7 @@ export function AthleteShare({ library, today = dateToIso(new Date()) }: { libra
             >
               Share it
             </button>
-            <button type="button" className="btn btn-ghost" onClick={() => setStep('choose')}>
+            <button type="button" className="btn btn-ghost" onClick={() => { setStep('choose'); }}>
               Back
             </button>
           </div>

@@ -325,7 +325,7 @@ export function AdvisorTool() {
       </div>
       <label className="tool-field">
         <span>Where I am: credits, major, anything that changed</span>
-        <textarea className="tool-input" rows={3} value={where} onChange={(e) => setWhere(e.target.value)} />
+        <textarea className="tool-input" rows={3} value={where} onChange={(e) => { setWhere(e.target.value); }} />
       </label>
       <label className="tool-field">
         <span>My questions, one per line</span>

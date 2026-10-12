@@ -52,8 +52,8 @@ const button = (text: string) => [...host.querySelectorAll('button')].find((b) =
 async function sendOne() {
   mock.load.mockResolvedValue({ destinations: [TUTORING], requests: [], name: 'harrison_r' });
   mock.send.mockResolvedValue('req-1');
-  await act(async () => root.render(<GetHelp account={ME} />));
-  act(() => radio('Stuck on course material').click());
+  await act(async () => { root.render(<GetHelp account={ME} />); });
+  act(() => { radio('Stuck on course material').click(); });
   act(() => radio('Tutoring Center').click());
   act(() => {
     const area = host.querySelector('textarea')!;

@@ -122,7 +122,7 @@ function must(text: string): HTMLButtonElement {
   return b;
 }
 async function press(text: string) {
-  await act(async () => must(text).click());
+  await act(async () => { must(text).click(); });
   await flush();
 }
 async function toggle(label: string) {

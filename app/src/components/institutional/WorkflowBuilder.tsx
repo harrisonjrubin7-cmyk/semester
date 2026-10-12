@@ -539,7 +539,7 @@ function History({
               {v.definition.steps.length} steps · {(v.definition.requires ?? []).length} checks
               {v.definition.handoff ? ` · hands off to ${v.definition.handoff}` : ''}
             </p>
-            {canDraft && <ActionButton disabled={busy} onClick={() => onRestore(v)}>Start from version {v.version}</ActionButton>}
+            {canDraft && <ActionButton disabled={busy} onClick={() => { onRestore(v); }}>Start from version {v.version}</ActionButton>}
           </li>
         ))}
       </ul>

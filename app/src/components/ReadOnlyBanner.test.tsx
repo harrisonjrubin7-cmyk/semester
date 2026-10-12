@@ -34,7 +34,7 @@ async function render(readOnly: boolean) {
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
-  await act(async () => root!.render(<ReadOnlyBanner />));
+  await act(async () => root?.render(<ReadOnlyBanner />));
   return host;
 }
 

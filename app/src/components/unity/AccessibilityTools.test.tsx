@@ -10,7 +10,7 @@ afterEach(async () => { await act(async () => { roots.splice(0).forEach(root => 
 
 async function openTools(host: HTMLElement) {
   await act(async () => {
-    host.querySelector<HTMLButtonElement>('.system-tool-trigger')!.click();
+    host.querySelector<HTMLButtonElement>('.system-tool-trigger')?.click();
     await import('./AccessibilityPanel');
   });
 }

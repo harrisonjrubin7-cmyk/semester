@@ -86,7 +86,7 @@ export function Sessions({ communityId }: { communityId: string }) {
               ) : (
                 <ActionButton
                   disabled={busy || s.taken >= s.capacity}
-                  onClick={() => act(() => joinSession(s.id), 'You’re in. It’s on your list here.')}
+                  onClick={() => { act(() => joinSession(s.id), 'You’re in. It’s on your list here.'); }}
                 >
                   {s.taken >= s.capacity ? 'Full' : 'Join session'}
                 </ActionButton>

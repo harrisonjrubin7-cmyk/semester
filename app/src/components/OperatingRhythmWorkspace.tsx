@@ -608,7 +608,7 @@ export function RhythmWorkspace({
                     Context{' '}
                     <select
                       value={t.context}
-                      onChange={(e) => setTasks(tasks.map((x, j) => (i === j ? { ...x, context: e.target.value } : x)))}
+                      onChange={(e) => { setTasks(tasks.map((x, j) => (i === j ? { ...x, context: e.target.value } : x))); }}
                     >
                       {['Writing', 'Reading', 'Problem solving', 'Admin', 'Meeting', 'Work', 'Personal'].map((s) => (
                         <option key={s}>{s}</option>
@@ -636,7 +636,7 @@ export function RhythmWorkspace({
                       }
                     />
                   </label>
-                  <button className="btn" type="button" onClick={() => setTasks(tasks.filter((_, j) => i !== j))}>
+                  <button className="btn" type="button" onClick={() => { setTasks(tasks.filter((_, j) => i !== j)); }}>
                     Remove commitment {i + 1}
                   </button>
                 </fieldset>

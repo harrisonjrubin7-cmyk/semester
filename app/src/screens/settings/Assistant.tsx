@@ -260,7 +260,7 @@ export function SettingsAssistant() {
                   className="input"
                   placeholder="https://your-proxy.example.com  (better)"
                   value={config.proxy}
-                  onChange={(e) => setConfig({ ...config, proxy: e.target.value })}
+                  onChange={(e) => { setConfig({ ...config, proxy: e.target.value }); }}
                   style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-4)' }}
                   aria-label="Proxy URL"
                   {...fieldProps('assistant-proxy', proxyProblem(config.proxy) || undefined)}

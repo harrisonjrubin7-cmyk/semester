@@ -297,7 +297,7 @@ function Versions({ ev, career, confirmed, apply, onWrite }: { ev: Evidence; car
           {ev.versions.map((x) => (
             <li key={x.id}>
               <strong>{x.name}</strong> — {TEMPLATES.find((t) => t.id === x.template)?.label} · {x.experienceIds.length} entries, {x.bulletIds.length} bullets{' '}
-              <button type="button" className="balance-button" onClick={() => setV({ id: x.id, name: x.name, template: x.template, experienceIds: x.experienceIds, bulletIds: x.bulletIds, artifactIds: x.artifactIds })}>Edit</button>
+              <button type="button" className="balance-button" onClick={() => { setV({ id: x.id, name: x.name, template: x.template, experienceIds: x.experienceIds, bulletIds: x.bulletIds, artifactIds: x.artifactIds }); }}>Edit</button>
             </li>
           ))}
         </ul>
@@ -365,7 +365,7 @@ function Fairs({ events, ev, career, confirmed, apply }: { events: Opportunity[]
       <label className="portal-check">Your pitch
         <textarea className="input" rows={3} maxLength={2000} value={plan.pitch} onChange={(e) => apply((x) => ({ ...x, fairs: { ...x.fairs, [fair.id]: { ...plan, pitch: e.target.value } } }), 'Pitch saved.')} />
       </label>
-      <button type="button" className="balance-button" onClick={() => apply((x) => ({ ...x, fairs: { ...x.fairs, [fair.id]: { ...plan, pitch: pitchDraft(career, confirmed) } } }), 'A starting pitch from your own details. Fill the [bracketed] parts.')}>Start from my details</button>
+      <button type="button" className="balance-button" onClick={() => { apply((x) => ({ ...x, fairs: { ...x.fairs, [fair.id]: { ...plan, pitch: pitchDraft(career, confirmed) } } }), 'A starting pitch from your own details. Fill the [bracketed] parts.'); }}>Start from my details</button>
       <h4 className="balance-heading">Employers to visit</h4>
       <ul className="evidence-list">
         {plan.employers.map((e) => (

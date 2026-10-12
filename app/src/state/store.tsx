@@ -2171,7 +2171,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     accountId: account?.id ?? null,
     online,
     tasks: state.tasks,
-    apply: (tasks, known, adopted) => dispatch({ type: 'tasksFromEngine', tasks, known, adopted }),
+    apply: (tasks, known, adopted) => { dispatch({ type: 'tasksFromEngine', tasks, known, adopted }); },
   });
   const shownSync = useMemo(
     () => withEngine(review.length > 0 && sync.status === 'synced' ? { ...sync, status: 'review' as SyncStatus } : sync, taskEngine.summary),

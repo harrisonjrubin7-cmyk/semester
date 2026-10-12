@@ -296,7 +296,7 @@ describe('dictating your working', () => {
     press(named);
     if (!heard) throw new Error(`${named} started no dictation`);
     act(() => {
-      heard!(words);
+      heard?.(words);
     });
   }
 

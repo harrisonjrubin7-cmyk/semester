@@ -96,7 +96,7 @@ export function GetHelp({ account }: { account: Account | null }) {
   };
 
   const setField = (key: ContextKey, value: string) =>
-    setDraft((d) => ({ ...d, fields: { ...d.fields, [key]: value } }));
+    { setDraft((d) => ({ ...d, fields: { ...d.fields, [key]: value } })); };
   const tick = (key: ContextKey, on: boolean) =>
     setDraft((d) => {
       const ticked = new Set(d.ticked);

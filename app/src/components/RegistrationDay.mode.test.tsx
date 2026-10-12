@@ -135,9 +135,9 @@ describe('with Registration Day Mode on', () => {
     const box = (name: RegExp) =>
       [...host.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')].find((i) => name.test(i.closest('label')?.textContent ?? ''))!;
     expect(box(/Remind me/).checked).toBe(true);
-    act(() => box(/Remind me/).click());
+    act(() => { box(/Remind me/).click(); });
     expect(stored().remind).toBe(false);
-    act(() => box(/Show Registration Day Mode on Today now/).click());
+    act(() => { box(/Show Registration Day Mode on Today now/).click(); });
     expect(stored().manual).toBe(true);
   });
 

@@ -123,7 +123,7 @@ export function CampaignManager({ tenantId, viewerId, api }: CampaignManagerProp
         <NewCampaignForm
           tenantId={tenantId}
           api={client}
-          onCancel={() => setCreating(false)}
+          onCancel={() => { setCreating(false); }}
           onCreated={async (id) => {
             setCreating(false);
             await refresh();
@@ -615,7 +615,7 @@ function LinkBuilder({
           <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
             <label style={{ ...label, flex: 1 }}>
               Source
-              <input className="input" value={source} onChange={(e) => setSource(e.target.value)} />
+              <input className="input" value={source} onChange={(e) => { setSource(e.target.value); }} />
             </label>
             <label style={{ ...label, flex: 1 }}>
               Medium

@@ -112,7 +112,7 @@ describe('one thing, which is what this box is for', () => {
 
   it('still adds it, and writes exactly one task', async () => {
     await typeIn('econ ps4 friday 5pm');
-    await act(async () => buttons('Add it')[0].click());
+    await act(async () => { buttons('Add it')[0].click(); });
     expect(tasks()).toHaveLength(1);
   });
 });

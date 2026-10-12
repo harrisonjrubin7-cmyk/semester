@@ -86,7 +86,7 @@ export function CourseDetailV2({
     const came = document.activeElement as HTMLElement | null;
     first.current?.focus();
     return () => {
-      if (came && came.isConnected) came.focus();
+      if (came?.isConnected) came.focus();
     };
   }, [wide]);
 
@@ -344,7 +344,7 @@ export function CourseDetailV2({
         aria-modal="true"
         aria-labelledby={headingId}
         onKeyDown={confirm ? undefined : modalKeys}
-        onClick={(ev) => ev.stopPropagation()}
+        onClick={(ev) => { ev.stopPropagation(); }}
       >
         <span className="explain-handle" aria-hidden="true" />
         {body}

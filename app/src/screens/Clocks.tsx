@@ -277,7 +277,7 @@ function TimerRow({ t, at }: { t: Timer; at: number }) {
           {running(t) ? 'Pause' : 'Resume'}
         </Small>
         <Small onClick={() => swap((now) => stretch(t, 60, now))}>+1 min</Small>
-        <Small onClick={() => swap(() => reset(t))}>Reset</Small>
+        <Small onClick={() => { swap(() => reset(t)); }}>Reset</Small>
         <Small
           onClick={() => {
             dispatch({ type: 'removeTimer', id: t.id });

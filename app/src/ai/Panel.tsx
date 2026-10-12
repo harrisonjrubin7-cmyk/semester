@@ -236,7 +236,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
               type="button"
               className="bare"
               aria-label="Close the assistant"
-              onClick={() => ai.hide()}
+              onClick={() => { ai.hide(); }}
               style={{
                 position: 'fixed',
                 inset: 0,

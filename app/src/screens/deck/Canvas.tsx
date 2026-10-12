@@ -473,7 +473,7 @@ export function Still({
           ))}
         </div>
       )}
-      {slide.quote && slide.quote.text.trim() && (
+      {slide.quote?.text.trim() && (
         <blockquote style={{ margin: 'auto 0', fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-normal)' }}>
           {slide.quote.text}
           {slide.quote.source.trim() && (

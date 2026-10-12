@@ -88,7 +88,7 @@ export function InstitutionalPreviewBar() {
         </p>
         <label style={fieldStyle}>
           Change institution{' '}
-          <select value={institution.id} onChange={(event) => selectInstitution(event.target.value)}>
+          <select value={institution.id} onChange={(event) => { selectInstitution(event.target.value); }}>
             {fixtures.map((fixture) => (
               <option key={fixture.id} value={fixture.id}>{fixture.name}</option>
             ))}

@@ -42,7 +42,7 @@ describe('Vercel productivity transport', () => {
       seen.push(input);
       return Response.json({ ok: true }, { status: 201, headers: { 'X-Test': 'yes' } });
     });
-    expect(new URL(seen[0]!.url).pathname + new URL(seen[0]!.url).search).toBe('/v1/tasks?limit=5');
+    expect(new URL(seen[0]?.url).pathname + new URL(seen[0]!.url).search).toBe('/v1/tasks?limit=5');
     expect(seen[0]!.headers.get('authorization')).toBe('Bearer test');
     expect(state.status).toBe(201);
     expect(state.headers['x-test']).toBe('yes');

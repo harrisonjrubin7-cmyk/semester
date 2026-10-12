@@ -24,7 +24,7 @@ async function click(text: string) {
     (x) => x.textContent?.trim() === text,
   );
   expect(button).toBeTruthy();
-  await act(async () => button!.click());
+  await act(async () => button?.click());
 }
 it('creates a private decision, caps options, and saves an independent snapshot', async () => {
   await act(async () => root.render(<ProductivityWorkspace />));

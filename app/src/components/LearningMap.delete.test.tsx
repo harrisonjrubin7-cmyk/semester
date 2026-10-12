@@ -64,7 +64,7 @@ describe('Learning Map deletion previews', () => {
     const form = host.querySelector('.learning-map form') as HTMLFormElement;
     await type(form.querySelector('input.input') as HTMLInputElement, 'Confounders');
     await type(form.querySelector('textarea') as HTMLTextAreaElement, 'Ask about this in office hours.');
-    await act(async () => void form.requestSubmit());
+    await act(async () => form.requestSubmit());
 
     await click('Delete');
     const dialog = host.querySelector('[role="dialog"]')!;

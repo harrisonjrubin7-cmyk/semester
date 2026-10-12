@@ -194,7 +194,7 @@ export function ForThis({ item }: { item: DatedItem }) {
         <New onClick={() => dispatch({ type: 'newDeck', courseId: item.c, itemId: item.id })}>
           Deck
         </New>
-        <New onClick={() => dispatch({ type: 'newNote', courseId: item.c, itemId: item.id })}>
+        <New onClick={() => { dispatch({ type: 'newNote', courseId: item.c, itemId: item.id }); }}>
           Note
         </New>
         {/* The one that is not a dispatch: a file comes from the operating

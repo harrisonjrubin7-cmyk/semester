@@ -164,7 +164,7 @@ export function Snapshots() {
                 type="button"
                 className="btn btn-secondary"
                 disabled={busy}
-                onClick={() => setPicked(null)}
+                onClick={() => { setPicked(null); }}
                 style={{ flex: 1, height: 42 }}
               >
                 Cancel

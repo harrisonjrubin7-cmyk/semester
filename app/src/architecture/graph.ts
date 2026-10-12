@@ -207,7 +207,7 @@ export function productionOnly(graph: Graph): Graph {
   const edges = graph.edges.filter((e) => files.has(e.from) && (e.to === undefined || files.has(e.to)));
   const byFile = new Map<string, Edge[]>();
   for (const f of files) byFile.set(f, []);
-  for (const e of edges) byFile.get(e.from)!.push(e);
+  for (const e of edges) byFile.get(e.from)?.push(e);
   return { files, edges, byFile };
 }
 

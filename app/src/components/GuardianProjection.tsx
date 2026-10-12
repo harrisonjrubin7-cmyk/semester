@@ -71,7 +71,7 @@ export function GuardianCalendarProjection({
   useEffect(() => {
     if (state.context !== context || state.view !== 'ready') return;
     const id = window.setInterval(() => void read(), Math.max(60_000, revalidateMs));
-    return () => window.clearInterval(id);
+    return () => { window.clearInterval(id); };
   }, [context, read, revalidateMs, state.context, state.view]);
 
   useEffect(() => {

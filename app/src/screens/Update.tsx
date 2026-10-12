@@ -798,7 +798,7 @@ export function AddMaterial({
         className="input"
         placeholder="Trounstine ch. 4"
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={(e) => { setTitle(e.target.value); }}
         style={{ fontSize: 'var(--type-md)' }}
       />
       <input

@@ -149,7 +149,7 @@ export function RecoveryDialog({
   const [open, setOpen] = useState(false);
   useEffect(() => watch(() => setOpen(true)), [watch]);
   if (!open) return null;
-  return <RecoveryBody onClose={() => setOpen(false)} setPassword={setPassword} />;
+  return <RecoveryBody onClose={() => { setOpen(false); }} setPassword={setPassword} />;
 }
 
 function RecoveryBody({

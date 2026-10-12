@@ -28,7 +28,7 @@ const SaySomething = lazy(() => import('./SaySomething').then((m) => ({ default:
 export function ClarityQuestion() {
   const { account } = useStore();
   const now = useNow().getTime();
-  const library = useDeviceLibrary(`${CLARITY_PREFIX}:${account?.id || 'device'}`, readClarity, EMPTY_CLARITY);
+  const library = useDeviceLibrary(`${CLARITY_PREFIX}:${account?.id ?? 'device'}`, readClarity, EMPTY_CLARITY);
   const [just, setJust] = useState<'yes' | 'somewhat' | 'no' | null>(null);
 
   if (just) {

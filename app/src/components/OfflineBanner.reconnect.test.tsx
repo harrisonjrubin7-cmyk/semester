@@ -47,7 +47,7 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
-  await act(async () => root.unmount());
+  await act(async () => { root.unmount(); });
   host.remove();
   localStorage.clear();
 });

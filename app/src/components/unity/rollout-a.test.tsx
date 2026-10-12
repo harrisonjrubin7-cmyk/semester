@@ -183,7 +183,7 @@ describe('the course hub', () => {
     const b = bar();
     expect(b).not.toBeNull();
     expect(b!.querySelector('h2')?.textContent?.length).toBeGreaterThan(0);
-    expect(b!.querySelector('.kicker')?.textContent).toContain(seen.term);
+    expect(b?.querySelector('.kicker')?.textContent).toContain(seen.term);
     expect(b!.textContent).toContain('Sample');
     expect(b!.textContent).not.toContain('Made here');
     expect(text()).not.toContain('Sample course');
