@@ -93,12 +93,15 @@ export function TodayActionCenter({
   const officeList = office.state.kind === 'ready' ? office.state.actions : null;
   const actions = useMemo(
     () => [
-      ...todayActions({ path, upcoming, done: state.done, reviewDue, catalogEmpty: scope.empty }),
+      ...todayActions({
+        path, upcoming, done: state.done, reviewDue, catalogEmpty: scope.empty,
+        maintenance: { requests: state.maintenance, now: now.getTime() },
+      }),
       // Registration readiness (Phase C), only while the mode is showing.
       ...(registrationDay ? registrationActions(registration.data, registration.cart, registration.catalog, now) : []),
       ...(officeList ?? []).filter((a) => a.doneAt === null).map((a) => officeActionToAction(a, now.getTime())),
     ],
-    [path, upcoming, state.done, reviewDue, scope.empty, registrationDay, registration.data, registration.cart, registration.catalog, now, officeList],
+    [path, upcoming, state.done, reviewDue, scope.empty, state.maintenance, registrationDay, registration.data, registration.cart, registration.catalog, now, officeList],
   );
   const top = useMemo(() => rank(actions, choices, now.getTime()).mostImportant, [actions, choices, now]);
   const leadingRoute = top ? fromHash(top.action.primary.target) : null;
