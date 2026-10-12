@@ -24,6 +24,7 @@
 import { readAll, isEmpty, held, open, write, MAPS_STORE, SETTINGS_STORE, type Write } from './db';
 import { COLLECTIONS, MAPS, SETTINGS, idOf } from './shape';
 import { readIncoming } from '../../lib/stored';
+import { droppedOnRead, noteIngressDrops } from '../../lib/deletions';
 import { migrate, versionOf } from '../../lib/migrate';
 import {
   DEFAULT_PERSISTED,
@@ -298,7 +299,11 @@ export async function load(): Promise<Persisted | null> {
   // way. The third door, through the same reader as the other two. See
   // `lib/stored.ts`.
   const moved = await forward(found);
-  return { ...DEFAULT_PERSISTED, ...readIncoming(moved as Record<string, unknown>) } as Persisted;
+  const read = readIncoming(moved as Record<string, unknown>);
+  // Rows the reader could not keep, noted the same way as on the
+  // localStorage path. See `ingressDrops` in `lib/deletions.ts`.
+  noteIngressDrops(droppedOnRead(moved as Record<string, unknown>, read));
+  return { ...DEFAULT_PERSISTED, ...read } as Persisted;
 }
 
 /**

@@ -95,7 +95,8 @@ import {
   writeReview,
   type Conflict,
 } from '../lib/conflicts';
-import { coursesDeletedHere, settleDeletions } from '../lib/deletions';
+import { clearIngressDrops, coursesDeletedHere, ingressDrops, settleDeletions } from '../lib/deletions';
+import { rememberCarried, withCarried } from '../lib/carried';
 import { baseForLegacy, forLegacy } from '../lib/sync/engine/ownership';
 import { withEngine } from '../lib/sync/engine/tasks';
 import { useTaskEngine } from './useTaskEngine';
@@ -147,6 +148,9 @@ function screenFromUrl(): Screen | null {
  * nothing, short enough that "I just changed it on my phone" is caught.
  */
 export const FOCUS_PULL_MS = 60_000;
+
+/** Every top-level field this build reads and writes. Anything else in the account is a newer build's. */
+const KNOWN_FIELDS: ReadonlySet<string> = new Set([...Object.keys(DEFAULT_PERSISTED), 'courses']);
 
 /** Where the account copy stands, for the Account screen to show honestly. */
 export type SyncStatus =
@@ -1018,6 +1022,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     try {
       const remote = await pull(accountId);
       if (!stillCurrent()) return ignored();
+      // Fields a newer build wrote, kept to go back up with the next push.
+      // See `lib/carried.ts`.
+      rememberCarried(accountId, remote.state as Record<string, unknown> | null, KNOWN_FIELDS);
       const seen = seenRows();
       const hasRemote = remote.state !== null || remote.courses.length > 0;
       const previousAccount = syncedAs();
@@ -1071,7 +1078,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
        * a device clock on one side of it, and a row that commits after the
        * pull that should have seen it. Neither survives asking this instead.
        */
-      const take = hasRemote && unseen(remote.seen, seen);
+      /*
+       * Or rows this device could not read back from its own storage
+       * (`ingressDrops`): the account holds the good copies, and only a take
+       * merges them back. Without it, an unchanged account is not pulled
+       * into, and the next push writes the gap over it.
+       */
+      const unreadHere = ingressDrops();
+      const take = hasRemote && (unseen(remote.seen, seen) || unreadHere.length > 0);
 
       /*
        * An account with nothing in it has no rows this device can have read.
@@ -1109,7 +1123,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          * is offered like two edits are, with the edit in use. See
          * `lib/deletions.ts`.
          */
-        const deletions = settleDeletions(here, theirsAll as Record<string, unknown>, agreedOn);
+        const deletions = settleDeletions(here, theirsAll as Record<string, unknown>, agreedOn, Date.now(), unreadHere);
         const theirs = deletions.remote as typeof theirsAll;
         const found = [
           ...conflictsIn(here, theirsAll as Record<string, unknown>, agreedOn),
@@ -1247,6 +1261,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
       }
       rememberSyncedAs(accountId);
+      // The account's copies are merged back in, or there were none to lose.
+      if (unreadHere.length > 0) clearIngressDrops();
       pushReady.current = flight;
       setPullRetry(null);
       setSync({ status: 'synced', at: Date.now(), error: '' });
@@ -1506,10 +1522,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const { courses, ...rest } = pickPersisted(state);
       // Read from the base as well as from memory, so a course deleted while
       // offline is still a deletion after the app was closed and opened.
-      const removed = [...new Set([...state.removedCourses, ...coursesDeletedHere(readBase(), courses)])];
+      const removed = [...new Set([...state.removedCourses, ...coursesDeletedHere(readBase(), courses, ingressDrops())])];
       void pushCloud(
         account.id,
-        rest as Record<string, unknown>,
+        withCarried(account.id, rest as Record<string, unknown>),
         courses.map((c) => ({ id: c.course.id, data: c })),
         removed,
         seenRows(),

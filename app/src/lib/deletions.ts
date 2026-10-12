@@ -38,6 +38,10 @@ import { idOf } from './merge';
  *   what happened before this existed and is visible, instead.
  * - **Nothing without a base.** A device that has never agreed with the
  *   account has no way to tell a deletion from a record it never had.
+ * - **Nothing a reader lost.** A row this device could not read back from
+ *   its own storage, or one with no id on either side, says nothing about
+ *   which agreed id is gone. Those lists keep everything until a pull has
+ *   merged the account's copy back (`ingressDrops`, below).
  */
 
 /** Lists with exactly one removal, an explicit delete. Courses included. */
@@ -70,6 +74,10 @@ function byId(rows: unknown): Map<string, unknown> {
   return out;
 }
 
+/** A list holding something that is not an addressable row. */
+const unaddressable = (rows: unknown): boolean =>
+  Array.isArray(rows) && rows.some((row) => idOf(row) === null);
+
 export interface Settled {
   /** The account's copy with what this device deleted taken out, so the merge cannot bring it back. */
   remote: Record<string, unknown>;
@@ -86,6 +94,12 @@ export function settleDeletions(
   remote: Record<string, unknown>,
   base: Base | null,
   now = Date.now(),
+  /**
+   * Lists this device lost rows from when it read its own storage
+   * (`ingressDrops`). An agreed id missing here is not a deletion anybody
+   * chose, so nothing is taken out of the account's copy for these.
+   */
+  unreadHere: readonly string[] = [],
 ): Settled {
   const out: Settled = { remote, dropHere: {}, conflicts: [], heldBack: [] };
   if (!base) return out;
@@ -98,8 +112,18 @@ export function settleDeletions(
     const theirs = byId(remote[field]);
     const agreedIds = idsInBase(base, field);
 
-    const hereGone = agreedIds.filter((id) => !mine.has(id) && theirs.has(id));
-    const thereGone = agreedIds.filter((id) => mine.has(id) && !theirs.has(id));
+    /*
+     * A row with no id cannot say which agreed id it was, so a list holding
+     * one, or one this device dropped on load, cannot tell a deletion from
+     * damage. Not deleting is the side that loses nothing: the account's copy
+     * comes back through the merge, which is what happened before this file.
+     */
+    const hereGone = unreadHere.includes(field) || unaddressable(local[field])
+      ? []
+      : agreedIds.filter((id) => !mine.has(id) && theirs.has(id));
+    const thereGone = unaddressable(remote[field])
+      ? []
+      : agreedIds.filter((id) => mine.has(id) && !theirs.has(id));
     if (bulk(hereGone.length, agreedIds.length) || bulk(thereGone.length, agreedIds.length)) {
       out.heldBack.push(field);
       continue;
@@ -137,10 +161,73 @@ export function settleDeletions(
  * memory, so a deletion made offline is still one after the app is closed.
  * The account deletes exactly these and nothing else.
  */
-export function coursesDeletedHere(base: Base | null, courses: readonly unknown[]): string[] {
-  if (!base) return [];
+export function coursesDeletedHere(
+  base: Base | null,
+  courses: readonly unknown[],
+  unreadHere: readonly string[] = [],
+): string[] {
+  if (!base || unreadHere.includes('courses') || unaddressable(courses)) return [];
   const held = new Set(courses.map((c) => idOf(c)).filter((id): id is string => id !== null));
   const agreed = idsInBase(base, 'courses');
   const gone = agreed.filter((id) => !held.has(id));
   return bulk(gone.length, agreed.length) ? [] : gone;
+}
+
+// ── Rows lost on the way in ─────────────────────────────────────────────────
+
+/**
+ * The lists this device could not read whole from its own storage, kept until
+ * a pull has put the account's copies back.
+ *
+ * The readers in `lib/stored.ts` drop a row they cannot use — a hole, or a
+ * course with no id — and `list` keeps a row with no id that nothing can
+ * address. Either way an id the device last agreed with the account is
+ * missing here, and to `settleDeletions` and `coursesDeletedHere` that is
+ * exactly what a deletion looks like. One row is under the `bulk` guard, so a
+ * single damaged note deleted the good copy from the account.
+ *
+ * In localStorage beside the base, because the drop happens once: the next
+ * save writes the list without the row, and the boot after that sees nothing
+ * missing. Cleared by the store when a pull has merged the account's copy.
+ */
+export const INGRESS_KEY = 'semester.ingress-drops';
+
+/** Which deletable lists lost rows between `raw` (as stored) and `read` (as the app holds them). */
+export function droppedOnRead(raw: Record<string, unknown>, read: Record<string, unknown>): string[] {
+  const out: string[] = [];
+  for (const field of DELETABLE) {
+    const before = raw[field];
+    if (!Array.isArray(before)) continue;
+    const after = read[field];
+    const kept = Array.isArray(after) ? after.filter((row) => idOf(row) !== null).length : 0;
+    if (before.length > kept) out.push(field);
+  }
+  return out;
+}
+
+export function ingressDrops(): string[] {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(INGRESS_KEY) ?? '[]');
+    return Array.isArray(parsed) ? parsed.filter((f): f is string => typeof f === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Adds to what is already noted: a second boot before any pull must not forget the first. */
+export function noteIngressDrops(fields: readonly string[]): void {
+  if (fields.length === 0) return;
+  try {
+    localStorage.setItem(INGRESS_KEY, JSON.stringify([...new Set([...ingressDrops(), ...fields])]));
+  } catch {
+    // Storage full or blocked: the deletion guard is lost, not the data.
+  }
+}
+
+export function clearIngressDrops(): void {
+  try {
+    localStorage.removeItem(INGRESS_KEY);
+  } catch {
+    // See above.
+  }
 }
