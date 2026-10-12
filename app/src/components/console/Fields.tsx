@@ -82,7 +82,7 @@ export interface ViewProps {
   filter: string;
   onStatus: (said: string) => void;
   /** Runs a privileged write, behind the second-factor step when the session is not fresh. */
-  privileged: (run: () => Promise<void>) => void;
+  privileged: (run: () => Promise<void>, onCancel?: () => void) => void;
 }
 
 /** Whether a record's tenant is inside the page's scope. */

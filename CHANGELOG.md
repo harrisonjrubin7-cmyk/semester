@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Operations approval exceptions open an exact review before a decision
+
+Operators can now open a canonical `approval:<request UUID>` exception from **Command center** into the exact stored request in **Approvals**. The review shows the duty, target, tenant, stored detail, evidence, expiry and current decision counts before an explicit approve or reject confirmation. A decision still goes through the existing second-factor and database authorization checks. Afterward, Semester reads the signed-in operator's own immutable decision receipt and distinguishes a recorded first approval waiting for another person from an approved or rejected request. Losing a network response does not retry the decision: the review offers a read-only status check instead. This review records only the approval decision; it does not execute the requested change.
+
 ### Housing keeps track of repairs you reported
 
 **Housing** now has a **Repairs you reported** section on the **My housing** tab. After you report something to housing (their portal, front desk or phone line), choose **Record a repair** and note what is wrong, where, how urgent it is, how you reported it and the reference number housing gave you. Pick when to check back: Semester suggests a time, or use the one housing gave you. When that time passes, the repair appears on **Today** as something to follow up. Update it with **Visit scheduled**, **It is fixed**, **Still not fixed** or **No longer needed**; **Remove** can be undone. Choosing **Emergency** first tells you to call housing or campus safety. Semester does not send anything to housing, and nothing you need to do changes.

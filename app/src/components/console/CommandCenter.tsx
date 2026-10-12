@@ -3,6 +3,7 @@ import { Notice, SectionLabel } from '../ui';
 import { loadCommandCenter, type CommandItem, type CommandSeverity } from '../../lib/console/client';
 import { inScope, matches, said, when, type ViewProps } from './Fields';
 import { ProjectionHealth } from './ProjectionHealth';
+import { parseApprovalExceptionId } from '../../lib/console/approval-review';
 
 const ORDER: Record<CommandSeverity, number> = { critical: 0, high: 1, medium: 2, info: 3 };
 
@@ -11,7 +12,17 @@ const ORDER: Record<CommandSeverity, number> = { critical: 0, high: 1, medium: 2
  * cards: an empty queue is the only green state, and every non-green item
  * names the database source, limitation and safe next step that produced it.
  */
-export function CommandCenter({ env, scope, filter, onStatus }: ViewProps) {
+export function CommandCenter({
+  env,
+  scope,
+  filter,
+  onStatus,
+  onReviewApproval,
+  refreshToken = 0,
+}: ViewProps & {
+  onReviewApproval?: (requestId: string, tenantId: string | null) => void;
+  refreshToken?: number;
+}) {
   const [items, setItems] = useState<CommandItem[] | null>(null);
   const [readError, setReadError] = useState<string | null>(null);
 
@@ -32,7 +43,7 @@ export function CommandCenter({ env, scope, filter, onStatus }: ViewProps) {
       },
     );
     return () => { live = false; };
-  }, [onStatus]);
+  }, [onStatus, refreshToken]);
 
   const scoped = useMemo(
     () => (items ?? []).filter((item) => inScope(scope, item.tenantId)),
@@ -76,7 +87,9 @@ export function CommandCenter({ env, scope, filter, onStatus }: ViewProps) {
           No matching exceptions. Clear the filter to see the open exceptions in this scope.
         </p>
       )}
-      {shown.map((item) => (
+      {shown.map((item) => {
+        const approvalId = parseApprovalExceptionId(item.id);
+        return (
         <article key={item.id} className="portal-panel" aria-label={`${item.severity} ${item.title}`} style={{ display: 'grid', gap: 'var(--sp-3)' }}>
           <strong>{item.severity.toUpperCase()} · {item.title}</strong>
           <div style={{ color: 'var(--app-dim)' }}>
@@ -85,12 +98,20 @@ export function CommandCenter({ env, scope, filter, onStatus }: ViewProps) {
           {item.tenantId && <div>Tenant {item.tenantId}{item.tenantName ? ` — ${item.tenantName}` : ''}</div>}
           <div><strong>Next safe step:</strong> {item.nextStep}</div>
           <div><strong>Route:</strong> {item.route || 'No route recorded'}</div>
+          {approvalId && onReviewApproval ? (
+            <div>
+              <button type="button" className="btn" onClick={() => onReviewApproval(approvalId, item.tenantId)}>
+                Review approval
+              </button>
+            </div>
+          ) : null}
           <div><strong>Source:</strong> {item.source}</div>
           <div><strong>Evidence:</strong> {item.evidence || 'No evidence recorded'}</div>
           <div><strong>Known limitation:</strong> {item.limitation}</div>
           <small>Observed {when(item.observedAt)}</small>
         </article>
-      ))}
+        );
+      })}
       <ProjectionHealth />
     </div>
   );

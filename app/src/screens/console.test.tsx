@@ -28,6 +28,7 @@ const mock = vi.hoisted(() => ({
   approvals: vi.fn(),
   request: vi.fn(),
   decide: vi.fn(),
+  ownDecision: vi.fn(),
   act: vi.fn(),
   breakGlass: vi.fn(),
   close: vi.fn(),
@@ -84,6 +85,7 @@ vi.mock('../lib/console/client', async (orig) => ({
   loadApprovals: mock.approvals,
   requestApproval: mock.request,
   decideApproval: mock.decide,
+  loadOwnApprovalDecision: mock.ownDecision,
   act: mock.act,
   loadBreakGlass: mock.breakGlass,
   closeBreakGlass: mock.close,
@@ -129,6 +131,7 @@ const INCIDENT_PLATFORM = [...PLATFORM, { capability: 'incident:communicate', sc
 const FRESH = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 2 * 60_000) };
 const STALE = { currentLevel: 'aal1', nextLevel: 'aal2', verifiedAt: null };
 const STALE_AAL2 = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 20 * 60_000) };
+const APPROVAL_ID = '123e4567-e89b-12d3-a456-426614174000';
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -179,6 +182,10 @@ beforeEach(() => {
   mock.approvals.mockResolvedValue([request(), request({ id: 'req-2', tenantId: 'other', ticket: 'CHG-200', status: 'approved', decidedByMe: true })]);
   mock.request.mockResolvedValue('req-3');
   mock.decide.mockResolvedValue('approved');
+  mock.ownDecision.mockResolvedValue({
+    requestId: 'req-1', approver: 'op-1', decision: 'approve',
+    asParty: 'role:security', decidedAt: '2026-09-28T10:15:00Z',
+  });
   mock.act.mockResolvedValue({ request: 'req-2', duty: 'role-grant', status: 'executed', auditSeq: 41, effect: {} });
   mock.breakGlass.mockResolvedValue([
     { id: 'bg-1', requestId: 'req-0', subject: 'op-3', tenantId: 'vu', tenantName: 'Vanderbilt University', isDemo: false, ticket: 'INC-7', scope: 'connector canvas', openedAt: '2026-09-28T09:00:00Z', expiresAt: '2099-01-01T00:00:00Z', closedAt: null, reviewDue: '2099-01-02T00:00:00Z', reviewedBy: null, reviewedAt: null, reviewNote: null, active: true, reviewOverdue: false },
@@ -565,6 +572,63 @@ describe('command center', () => {
     expect(mock.command).toHaveBeenCalledWith(false);
   });
 
+  it('navigates a canonical approval exception to its exact tenant-scoped review and clears only an obstructing filter', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockResolvedValue([exception({
+      id: `approval:${APPROVAL_ID}`,
+      category: 'approval',
+      title: 'Approval awaiting decision: Break-glass access',
+      tenantId: 'vu',
+      tenantName: 'Vanderbilt University',
+      route: 'https://not-an-executable-route.example/approvals',
+    })]);
+    mock.approvals.mockResolvedValue([request({ id: APPROVAL_ID, dutyId: 'break-glass', tenantId: 'vu', ticket: 'INC-7' })]);
+    await render();
+    expect(host.textContent).toContain('https://not-an-executable-route.example/approvals');
+    expect(host.querySelector('a[href="https://not-an-executable-route.example/approvals"]')).toBeNull();
+    type(field('Filter this view'), 'awaiting decision');
+    await press('Review approval');
+
+    expect(button('Approvals')?.getAttribute('aria-selected')).toBe('true');
+    expect(field('Filter this view').value).toBe('');
+    expect(dd(host.querySelector('[aria-label="Context bar"]')!, 'Scope')).toBe('vu');
+    const target = host.querySelector(`[data-approval-request="${APPROVAL_ID}"]`);
+    expect(target).toBeTruthy();
+    expect(document.activeElement).toBe(target);
+  });
+
+  it('keeps malformed approval ids and server route strings inert', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockResolvedValue([exception({
+      id: 'approval:not-a-uuid',
+      category: 'approval',
+      route: 'javascript:alert(1)',
+    })]);
+    await render();
+
+    expect(button('Review approval')).toBeUndefined();
+    expect(host.textContent).toContain('javascript:alert(1)');
+    expect(host.querySelector('a')).toBeNull();
+  });
+
+  it('drops the exact review intent when the verified account changes', async () => {
+    const grantsB = deferred<typeof PLATFORM>();
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockResolvedValue([exception({ id: `approval:${APPROVAL_ID}`, category: 'approval', tenantId: 'vu' })]);
+    mock.approvals.mockResolvedValue([request({ id: APPROVAL_ID })]);
+    await render();
+    await press('Review approval');
+    expect(host.textContent).toContain('Approval review');
+
+    mock.account = { id: 'op-2', email: 'other@semester.example', via: 'an email address and password' };
+    mock.caps.mockReturnValueOnce(grantsB.promise);
+    await act(async () => root.render(<Console />));
+    expect(host.textContent).toContain('Reading your grants');
+    grantsB.resolve(PLATFORM);
+    await flush();
+    expect(host.textContent).not.toContain('Approval review');
+  });
+
   it('shows projection health in words, and never as healthy when it cannot be read or is unmapped', async () => {
     mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
     mock.projection.mockResolvedValue({
@@ -805,6 +869,8 @@ describe('approvals', () => {
   it('decides straight through when the second factor is fresh', async () => {
     await render();
     await press('Approve');
+    expect(mock.decide).not.toHaveBeenCalled();
+    await press('Record approval');
     expect(host.querySelector('[aria-label="Second factor"]')).toBeNull();
     expect(mock.decide).toHaveBeenCalledExactlyOnceWith('req-1', 'approve');
     expect(host.textContent).toContain('the request is now approved');
@@ -815,9 +881,11 @@ describe('approvals', () => {
     await render();
     await press('Approve');
     expect(mock.decide).not.toHaveBeenCalled();
+    await press('Record approval');
     const step = host.querySelector('[aria-label="Second factor"]') as Element;
     expect(step).toBeTruthy();
-    expect(button('Approve')).toBeDefined();
+    expect(host.textContent).toContain('CHG-100');
+    expect(button('Approve')).toBeUndefined();
     expect(host.querySelector('[aria-label="Console views"]')).not.toBeNull();
     expect(host.querySelector('[data-console-content]')?.hasAttribute('inert')).toBe(true);
     type(step.querySelector('input'), '123456');
@@ -846,10 +914,43 @@ describe('approvals', () => {
     await render();
     type(field('Evidence attached'), 'Draft evidence survives MFA.');
     await press('Approve');
+    await press('Record approval');
     await press('Cancel');
     expect(mock.decide).not.toHaveBeenCalled();
     expect(host.querySelector('[aria-label="Second factor"]')).toBeNull();
     expect(field('Evidence attached').value).toBe('Draft evidence survives MFA.');
+    expect(button('Approve')).toBeDefined();
+  });
+
+  it('fences a queued MFA decision when the verified account changes', async () => {
+    const verification = deferred<void>();
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockResolvedValue([{
+      id: `approval:${APPROVAL_ID}`, severity: 'high', category: 'approval',
+      title: 'Approval awaiting decision', tenantId: 'vu', tenantName: 'Vanderbilt University',
+      isDemo: false, owner: 'security', dueAt: null, status: 'pending',
+      nextStep: 'Review the stored request.', route: 'Approvals', source: 'public.approval_request',
+      evidence: 'CHG-100', limitation: 'The requested change is not executed by a decision.',
+      observedAt: '2026-10-12T10:00:00Z',
+    }]);
+    mock.approvals.mockResolvedValue([request({ id: APPROVAL_ID })]);
+    mock.mfa.mockResolvedValueOnce(STALE_AAL2).mockResolvedValue(FRESH);
+    mock.verify.mockReturnValueOnce(verification.promise);
+    await render();
+    await press('Review approval');
+    await press('Approve');
+    await press('Record approval');
+    const step = host.querySelector('[aria-label="Second factor"]') as Element;
+    type(step.querySelector('input'), '123456');
+    await submit(step.querySelector('form'));
+
+    mock.account = { id: 'op-2', email: 'other@semester.example', via: 'an email address and password' };
+    await act(async () => root.render(<Console />));
+    await flush();
+    verification.resolve();
+    await flush();
+
+    expect(mock.decide).not.toHaveBeenCalled();
   });
 
   it('offers the action only to the requester or an approver who decided it', async () => {
