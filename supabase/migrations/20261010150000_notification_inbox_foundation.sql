@@ -1,9 +1,9 @@
 -- Milestone 9: a durable, fail-closed notification inbox foundation.
 -- No provider is activated here. Producers and senders remain separate gates.
 
-create table public.notification_preferences (
-  school_id text not null references public.schools(id) on delete cascade,
-  person_id uuid not null references auth.users(id) on delete cascade,
+create table if not exists public.notification_preferences (
+  school_id text not null,
+  person_id uuid not null,
   category text not null check (category in ('safety','account_security','transactional','academic','marketing')),
   channel text not null check (channel in ('in_app','push','email','sms')),
   enabled boolean not null,
@@ -19,14 +19,15 @@ create table public.notification_preferences (
 alter table public.notification_preferences enable row level security;
 revoke all on public.notification_preferences from public, anon;
 grant select on public.notification_preferences to authenticated;
+drop policy if exists notification_preferences_owner_read on public.notification_preferences;
 create policy notification_preferences_owner_read on public.notification_preferences
   for select to authenticated using ((select auth.uid()) = person_id);
 
-create table public.notification_inbox (
+create table if not exists public.notification_inbox (
   id uuid primary key default gen_random_uuid(),
-  school_id text not null references public.schools(id) on delete cascade,
-  recipient_id uuid not null references auth.users(id) on delete cascade,
-  subject_id uuid references auth.users(id) on delete set null,
+  school_id text not null,
+  recipient_id uuid not null,
+  subject_id uuid,
   category text not null check (category in ('safety','account_security','transactional','academic','marketing')),
   template_id text not null check (template_id ~ '^[a-z0-9][a-z0-9._-]{0,95}$'),
   dedupe_key text not null check (length(dedupe_key) between 1 and 160),
@@ -47,21 +48,23 @@ create table public.notification_inbox (
     or (status = 'read' and read_at is not null and archived_at is null)
     or (status = 'archived' and archived_at is not null)
   ),
+  constraint notification_inbox_identity unique (id, school_id, recipient_id),
   unique (school_id, recipient_id, dedupe_key)
 );
 
-create index notification_inbox_recipient_created on public.notification_inbox (recipient_id, created_at desc);
+create index if not exists notification_inbox_recipient_created on public.notification_inbox (recipient_id, created_at desc);
 alter table public.notification_inbox enable row level security;
 revoke all on public.notification_inbox from public, anon;
 grant select on public.notification_inbox to authenticated;
+drop policy if exists notification_inbox_owner_read on public.notification_inbox;
 create policy notification_inbox_owner_read on public.notification_inbox
   for select to authenticated using ((select auth.uid()) = recipient_id);
 
-create table public.notification_deliveries (
+create table if not exists public.notification_deliveries (
   id uuid primary key default gen_random_uuid(),
-  inbox_id uuid not null references public.notification_inbox(id) on delete cascade,
-  school_id text not null references public.schools(id) on delete cascade,
-  recipient_id uuid not null references auth.users(id) on delete cascade,
+  inbox_id uuid not null,
+  school_id text not null,
+  recipient_id uuid not null,
   channel text not null check (channel in ('push','email','sms')),
   state text not null default 'queued' check (state in ('queued','claimed','delivered','retry','dead_letter','suppressed')),
   deliver_after timestamptz not null default now(),
@@ -78,30 +81,108 @@ create table public.notification_deliveries (
     (state = 'delivered' and delivered_at is not null and claim_id is null)
     or (state <> 'delivered' and delivered_at is null)
   ),
+  constraint notification_deliveries_identity unique (id, school_id, recipient_id),
   unique (inbox_id, channel)
 );
 
-create index notification_deliveries_due on public.notification_deliveries (deliver_after, created_at)
+create index if not exists notification_deliveries_due on public.notification_deliveries (deliver_after, created_at)
   where state in ('queued','retry');
 alter table public.notification_deliveries enable row level security;
 revoke all on public.notification_deliveries from public, anon, authenticated, service_role;
 grant select, insert, update on public.notification_deliveries to service_role;
 
-create table public.notification_delivery_events (
+create table if not exists public.notification_delivery_events (
   id bigint generated always as identity primary key,
-  delivery_id uuid not null references public.notification_deliveries(id) on delete cascade,
-  school_id text not null references public.schools(id) on delete cascade,
-  recipient_id uuid not null references auth.users(id) on delete cascade,
+  delivery_id uuid not null,
+  school_id text not null,
+  recipient_id uuid not null,
   state text not null check (state in ('queued','claimed','delivered','retry','dead_letter','suppressed')),
   attempt integer not null check (attempt between 0 and 8),
   reason_code text check (reason_code is null or reason_code ~ '^[a-z0-9_]{1,64}$'),
   occurred_at timestamptz not null default now()
 );
 
-create index notification_delivery_events_delivery on public.notification_delivery_events (delivery_id, occurred_at);
+create index if not exists notification_delivery_events_delivery on public.notification_delivery_events (delivery_id, occurred_at);
 alter table public.notification_delivery_events enable row level security;
 revoke all on public.notification_delivery_events from public, anon, authenticated, service_role;
 grant select, insert on public.notification_delivery_events to service_role;
+
+-- Supabase's schema listeners inspect each public-table DDL command. Add and
+-- validate relationships separately so a table first exists in a complete,
+-- relationship-free shape, and guard each constraint so a failed deploy can
+-- safely reapply this migration.
+do $migration$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'notification_preferences_school_fkey' and conrelid = 'public.notification_preferences'::regclass) then
+    alter table public.notification_preferences add constraint notification_preferences_school_fkey
+      foreign key (school_id) references public.schools(id) on delete cascade not valid;
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'notification_preferences_person_fkey' and conrelid = 'public.notification_preferences'::regclass) then
+    alter table public.notification_preferences add constraint notification_preferences_person_fkey
+      foreign key (person_id) references auth.users(id) on delete cascade not valid;
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'notification_inbox_school_fkey' and conrelid = 'public.notification_inbox'::regclass) then
+    alter table public.notification_inbox add constraint notification_inbox_school_fkey
+      foreign key (school_id) references public.schools(id) on delete cascade not valid;
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'notification_inbox_recipient_fkey' and conrelid = 'public.notification_inbox'::regclass) then
+    alter table public.notification_inbox add constraint notification_inbox_recipient_fkey
+      foreign key (recipient_id) references auth.users(id) on delete cascade not valid;
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'notification_inbox_subject_fkey' and conrelid = 'public.notification_inbox'::regclass) then
+    alter table public.notification_inbox add constraint notification_inbox_subject_fkey
+      foreign key (subject_id) references auth.users(id) on delete set null not valid;
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'notification_deliveries_inbox_fkey' and conrelid = 'public.notification_deliveries'::regclass) then
+    alter table public.notification_deliveries add constraint notification_deliveries_inbox_fkey
+      foreign key (inbox_id) references public.notification_inbox(id) on delete cascade not valid;
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'notification_deliveries_inbox_scope_fkey' and conrelid = 'public.notification_deliveries'::regclass) then
+    alter table public.notification_deliveries add constraint notification_deliveries_inbox_scope_fkey
+      foreign key (inbox_id, school_id, recipient_id)
+      references public.notification_inbox(id, school_id, recipient_id) on delete cascade not valid;
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'notification_deliveries_school_fkey' and conrelid = 'public.notification_deliveries'::regclass) then
+    alter table public.notification_deliveries add constraint notification_deliveries_school_fkey
+      foreign key (school_id) references public.schools(id) on delete cascade not valid;
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'notification_deliveries_recipient_fkey' and conrelid = 'public.notification_deliveries'::regclass) then
+    alter table public.notification_deliveries add constraint notification_deliveries_recipient_fkey
+      foreign key (recipient_id) references auth.users(id) on delete cascade not valid;
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'notification_delivery_events_delivery_fkey' and conrelid = 'public.notification_delivery_events'::regclass) then
+    alter table public.notification_delivery_events add constraint notification_delivery_events_delivery_fkey
+      foreign key (delivery_id) references public.notification_deliveries(id) on delete cascade not valid;
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'notification_delivery_events_scope_fkey' and conrelid = 'public.notification_delivery_events'::regclass) then
+    alter table public.notification_delivery_events add constraint notification_delivery_events_scope_fkey
+      foreign key (delivery_id, school_id, recipient_id)
+      references public.notification_deliveries(id, school_id, recipient_id) on delete cascade not valid;
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'notification_delivery_events_school_fkey' and conrelid = 'public.notification_delivery_events'::regclass) then
+    alter table public.notification_delivery_events add constraint notification_delivery_events_school_fkey
+      foreign key (school_id) references public.schools(id) on delete cascade not valid;
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'notification_delivery_events_recipient_fkey' and conrelid = 'public.notification_delivery_events'::regclass) then
+    alter table public.notification_delivery_events add constraint notification_delivery_events_recipient_fkey
+      foreign key (recipient_id) references auth.users(id) on delete cascade not valid;
+  end if;
+end
+$migration$;
+
+alter table public.notification_preferences validate constraint notification_preferences_school_fkey;
+alter table public.notification_preferences validate constraint notification_preferences_person_fkey;
+alter table public.notification_inbox validate constraint notification_inbox_school_fkey;
+alter table public.notification_inbox validate constraint notification_inbox_recipient_fkey;
+alter table public.notification_inbox validate constraint notification_inbox_subject_fkey;
+alter table public.notification_deliveries validate constraint notification_deliveries_inbox_fkey;
+alter table public.notification_deliveries validate constraint notification_deliveries_inbox_scope_fkey;
+alter table public.notification_deliveries validate constraint notification_deliveries_school_fkey;
+alter table public.notification_deliveries validate constraint notification_deliveries_recipient_fkey;
+alter table public.notification_delivery_events validate constraint notification_delivery_events_delivery_fkey;
+alter table public.notification_delivery_events validate constraint notification_delivery_events_scope_fkey;
+alter table public.notification_delivery_events validate constraint notification_delivery_events_school_fkey;
+alter table public.notification_delivery_events validate constraint notification_delivery_events_recipient_fkey;
 
 create or replace function public.set_notification_preference(
   want_school text, want_category text, want_channel text, want_enabled boolean,
@@ -166,6 +247,7 @@ grant execute on function public.mark_notification_inbox(uuid,text) to authentic
 create or replace function private.notification_event_immutable()
 returns trigger language plpgsql set search_path = '' as $$
 begin raise exception 'notification delivery events are append-only'; end $$;
+drop trigger if exists notification_delivery_events_immutable on public.notification_delivery_events;
 create trigger notification_delivery_events_immutable
 before update on public.notification_delivery_events
 for each row execute function private.notification_event_immutable();
@@ -179,6 +261,18 @@ create or replace function public.publish_notification(
 language plpgsql security definer set search_path = '' as $$
 declare notice_id uuid; delivery_id uuid; wanted text;
 begin
+  if not exists (
+    select 1 from public.profiles p
+     where p.user_id = want_recipient and p.school_id = want_school
+  ) then
+    raise exception 'notification recipient school mismatch';
+  end if;
+  if want_subject is not null and not exists (
+    select 1 from public.profiles p
+     where p.user_id = want_subject and p.school_id = want_school
+  ) then
+    raise exception 'notification subject school mismatch';
+  end if;
   insert into public.notification_inbox
     (school_id, recipient_id, subject_id, category, template_id, dedupe_key, sensitive, preview_title, preview_body, destination)
   values

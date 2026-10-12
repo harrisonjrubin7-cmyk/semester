@@ -127,6 +127,14 @@ begin
   perform pg_temp.counted('authenticated cannot call delivery settlement',
     has_function_privilege('authenticated', 'public.settle_notification_delivery(uuid,uuid,text,text,timestamptz)', 'execute')::int, 0);
 
+  if not pg_temp.service_refused(format(
+    'select public.publish_notification(%L,%L,%L,%L,%L,%L,false,%L,%L,%L,array[]::text[],now())',
+    'notification-check', stranger, stranger, 'academic', 'assignment.changed', 'cross-school-recipient',
+    'Assignment updated', 'Review the latest assignment details.', '#/courses/course-42')) then
+    raise exception 'FAILED: a service publisher crossed the recipient school boundary';
+  end if;
+  raise notice 'ok  service publishing is recipient-school-bound';
+
   -- A service publisher persists the minimized in-app record, one delivery
   -- row per requested external channel, and an append-only queued event.
   execute 'set local role service_role';
@@ -147,6 +155,13 @@ begin
   perform pg_temp.counted('the queued delivery has one initial audit event',
     (select count(*) from public.notification_delivery_events e join public.notification_deliveries d on d.id=e.delivery_id
       where d.inbox_id = notice_id and e.state = 'queued' and e.attempt = 0), 1);
+
+  if not pg_temp.service_refused(format(
+    'insert into public.notification_deliveries (inbox_id,school_id,recipient_id,channel) values (%L,%L,%L,%L)',
+    notice_id, 'other-notification-check', stranger, 'email')) then
+    raise exception 'FAILED: delivery scope drifted from its inbox';
+  end if;
+  raise notice 'ok  delivery rows inherit inbox tenant and recipient scope';
 
   if not pg_temp.service_refused(format(
     'select public.publish_notification(%L,%L,%L,%L,%L,%L,true,%L,%L,%L,array[]::text[],now())',
