@@ -64,6 +64,9 @@ const BY_RULE: Record<string, Screen> = {
   // The student's own registration window opening (`windowReminders`): the
   // registration workspace, where the plan and the section list are.
   regday: 'yes' as Screen,
+  // A registration hold the SIS cleared (`hold:<hold id>`, queued by the
+  // database, not the app): the same workspace, where the notice is.
+  hold: 'yes' as Screen,
   // A tuition instalment. The money screen, which is where the plan, the
   // balance and the payment page all are.
   bill: 'costs' as Screen,

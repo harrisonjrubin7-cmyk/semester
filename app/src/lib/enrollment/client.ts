@@ -187,6 +187,42 @@ export async function loadMyHold(): Promise<HoldNotice> {
   return { held: r.held === true, office: text(r.office), link: /^https:\/\//.test(text(r.link)) ? text(r.link) : '' };
 }
 
+/**
+ * A hold the SIS cleared that the student has not marked read
+ * (`20261012100000_hold_release_notices.sql`): which office, its link, when.
+ * The table has no reason column, so there is none to leave out.
+ */
+export interface HoldRelease {
+  id: string;
+  office: string;
+  link: string;
+  releasedAt: string;
+}
+
+/** Unread cleared-hold notices, newest first. RLS shows only the caller's own. */
+export async function loadHoldReleases(): Promise<HoldRelease[]> {
+  const db = await cloud();
+  const { data, error } = await db
+    .from('hold_release_notices')
+    .select('id, office, link, released_at')
+    .is('read_at', null)
+    .order('released_at', { ascending: false });
+  if (error) throw serviceError(error, 'Could not check for cleared holds.');
+  return rows(data).map((r) => ({
+    id: text(r.id),
+    office: text(r.office),
+    link: /^https:\/\//.test(text(r.link)) ? text(r.link) : '',
+    releasedAt: text(r.released_at),
+  }));
+}
+
+/** Marking one read twice is harmless: the second write sets the same column again. */
+export async function markHoldReleaseRead(id: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.from('hold_release_notices').update({ read_at: new Date().toISOString() }).eq('id', id);
+  if (error) throw serviceError(error, 'Could not mark that notice read.');
+}
+
 // ── What a write answers ───────────────────────────────────────────────────
 
 export type Outcome =

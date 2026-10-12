@@ -935,7 +935,10 @@ export async function saveQueue(
   const userId = data.user?.id;
   if (!userId) throw new Error('Sign in first — a reminder has to belong to an account.');
 
-  await db.from('push_queue').delete().eq('user_id', userId);
+  // `hold:` rows are queued by the database when a hold is cleared
+  // (20261012100000_hold_release_notices.sql); the app's plan never makes
+  // one, so replacing the plan must not take them with it.
+  await db.from('push_queue').delete().eq('user_id', userId).not('id', 'like', 'hold:%');
   if (queue.length === 0) return;
 
   const { error } = await db.from('push_queue').insert(
@@ -1153,6 +1156,10 @@ export const OWNED_TABLES: OwnedTable[] = [
   // a decision is a record other people made — so the filtered DELETE takes
   // nothing and the cascade from auth.users does. It holds no address.
   { table: 'school_membership_requests', column: 'user_id' },
+  // A notice that the SIS cleared one of this student's registration holds
+  // (D-1448). The student may only mark it read, so the filtered DELETE takes
+  // nothing; the cascade from auth.users does. The hold itself is the school's.
+  { table: 'hold_release_notices', column: 'student' },
   // A formal export, correction, restriction or assisted-erasure request.
   // It is keyed by `subject` and cascades with auth.users; the completed fact
   // may remain without an identity in the older `data_requests` ledger.

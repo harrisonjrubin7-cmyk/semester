@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Semester tells you when a registration hold is cleared
+
+When your school's system clears a hold that was stopping you adding courses, **Registration** now says which office cleared it and when, and whether another hold is still on. Press **Got it** to dismiss it. If you have reminders switched on, you also get a notification that opens Registration. Semester never shows why a hold was placed, and it cannot clear a hold itself. Nothing to do: your data is unchanged.
+
 ### Your advisor can record a check-in on a plan you shared
 
 When you share a plan with your advisor, they can now write back on it: what you talked about and up to five next steps. You see each check-in under **Sharing** with an **Add to my actions** button beside every step; a step you already added says **In your actions**. You can delete any check-in, and revoking or letting the share expire stops new ones. Your advisor sees nothing new about you: check-ins exist only on plans you chose to share. Nothing to do: your data is unchanged.

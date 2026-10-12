@@ -176,3 +176,9 @@ describe('whether it is worth navigating at all', () => {
     expect(worthGoing({ screen: 'item', item: 'x' } as never)).toBe(true);
   });
 });
+
+describe('a cleared-hold push', () => {
+  it('opens the registration workspace, where the notice is', () => {
+    expect(landingFor('hold:7b1f0e8c-0000-4000-8000-000000000001')).toEqual({ screen: 'yes' });
+  });
+});

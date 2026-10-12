@@ -55,6 +55,7 @@
    "group_tasks",
    "groups",
    "help_requests",
+   "hold_release_notices",
    "institution_action_audiences",
    "institution_action_progress",
    "message_reactions",

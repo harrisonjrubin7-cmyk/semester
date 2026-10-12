@@ -48,7 +48,7 @@ Every slice ships together:
 1. **Agenda view (§94).** Done in #1448. Class meetings were added after review.
 2. **Unmatched named courses.** Done 11 October 2026: after a catalog import, the codes a student named stay listed, matched or unmatched (`matchNamed`, `RegistrationPortal.namedplan.test.tsx`). Seats are never invented.
 3. **Advising, the student-consented part** (Advising #5 and #6; P0). Check-ins done 11 October 2026 in #1448 (D-1448): an advisor writes a note and up to five next steps on a live share, and the student adds each step to their own actions. A standalone success plan (the rest of #6) is still open. No staff caseload store until decision Q1.
-4. **Hold-release notice** (Student finance #12; P0). Through `push` and `support-reply-notify`.
+4. **Hold-release notice** (Student finance #12; P0). Registration holds done 12 October 2026 in #1448 (D-1448): when the SIS sync clears a hold, its student gets a notice on Registration (office, link and when, never the reason), an audit event and a push if they have reminders on. Through `push` only: `support-reply-notify` sends email through a vendor that is not approved for student data. The financial hold computed on Bill still lifts on payment without a notice.
 5. **Faculty P0 steps** (Faculty course lifecycle #1, #9, #10, #13, #19): rubric, assessment builder (wiring `lib/itembank.ts`), review of student work, and office hours. Each is gated on `course_studio`.
 
 **Phase B: institution and operations, which the pilot needs to run:**
@@ -102,4 +102,5 @@ Update this section at the end of every session.
   - Gates for these changes: listed in the pull request.
   - Named courses stay visible after a catalog import (Phase A item 2).
   - Advisor check-ins on a share (Phase A item 3, D-1448). The migration is in the tree and has not been applied to any hosted database.
-  - **Next executable task:** Phase A item 4, the hold-release notice.
+  - Hold-release notice for registration holds (Phase A item 4, D-1448). The migration is in the tree and has not been applied to any hosted database.
+  - **Next executable task:** Phase A item 5, the Faculty P0 steps.

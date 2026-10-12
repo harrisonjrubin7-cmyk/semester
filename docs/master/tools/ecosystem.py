@@ -51,6 +51,14 @@ STATUS_OVERRIDES = {
         ["app/src/components/AdvisorCheckIns.tsx", "app/src/components/AdvisorMeeting.tsx"],
         "Next steps on a check-in become the student's own actions; no standalone success plan yet (D-1448)",
     ),
+    "Student finance & payment#12": (
+        "in progress",
+        ["supabase/migrations/20261012100000_hold_release_notices.sql", "supabase/hold-release-notices.check.sql",
+         "app/src/lib/enrollment/client.ts", "app/src/components/enrollment/StudentRegistration.tsx",
+         "app/src/screens/registration.test.tsx"],
+        "A registration hold the SIS clears gives its student a notice, an audit event and a push (D-1448); "
+        "the computed financial hold on Bill still lifts without a notice",
+    ),
 }
 
 VERDICT = {"exists": "implemented", "partial": "in progress", "missing": "specified"}

@@ -24,7 +24,7 @@ function chain(kind: 'rpc' | 'from', name: string, args?: unknown) {
   const self: Record<string, unknown> = {
     then: (ok: (r: Reply) => unknown, bad?: (e: unknown) => unknown) => Promise.resolve(reply()).then(ok, bad),
   };
-  for (const m of ['select', 'order', 'eq']) {
+  for (const m of ['select', 'order', 'eq', 'is', 'update']) {
     self[m] = (...a: unknown[]) => {
       call.chain.push(`${m}(${a.map((x) => JSON.stringify(x)).join(',')})`);
       return self;
@@ -51,11 +51,13 @@ import {
   holdsRegistrar,
   inPlan,
   landing,
+  loadHoldReleases,
   loadMyHold,
   loadMyRegistration,
   loadPending,
   loadSections,
   loadTerms,
+  markHoldReleaseRead,
   meetsSaid,
   phase,
   putSection,
@@ -114,6 +116,34 @@ describe('reading', () => {
     const hold = await loadMyHold();
     expect(hold).toEqual({ held: true, office: 'Bursar', link: 'https://bursar.example.edu' });
     expect(JSON.stringify(hold)).not.toContain('unpaid');
+  });
+
+  it('reads unread cleared-hold notices, newest first, with no reason column asked for', async () => {
+    replies.set('from:hold_release_notices', {
+      data: [{ id: 'n-1', office: 'Bursar', link: 'https://bursar.example.edu', released_at: '2026-10-12T15:00:00Z' }],
+    });
+    expect(await loadHoldReleases()).toEqual([
+      { id: 'n-1', office: 'Bursar', link: 'https://bursar.example.edu', releasedAt: '2026-10-12T15:00:00Z' },
+    ]);
+    expect(calls[0].chain).toEqual([
+      'select("id, office, link, released_at")',
+      'is("read_at",null)',
+      'order("released_at",{"ascending":false})',
+    ]);
+  });
+
+  it('drops a cleared-hold link that is not https, and says so when the read fails', async () => {
+    replies.set('from:hold_release_notices', { data: [{ id: 'n-2', office: 'Bursar', link: 'http://bursar.example.edu', released_at: 'x' }] });
+    expect((await loadHoldReleases())[0].link).toBe('');
+    replies.set('from:hold_release_notices', { error: { message: 'boom' } });
+    await expect(loadHoldReleases()).rejects.toBeInstanceOf(ServiceError);
+  });
+
+  it('marks one notice read by id and nothing else', async () => {
+    await markHoldReleaseRead('n-1');
+    expect(calls[0].name).toBe('hold_release_notices');
+    expect(calls[0].chain[0]).toMatch(/^update\(\{"read_at":"\d{4}-/);
+    expect(calls[0].chain[1]).toBe('eq("id","n-1")');
   });
 
   it('drops a hold link that is not https', async () => {
