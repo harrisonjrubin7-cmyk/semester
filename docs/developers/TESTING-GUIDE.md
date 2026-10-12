@@ -16,7 +16,7 @@ The test that holds this page checks that every script, test file and CI step na
 | Same tests, other timezones | `npm run test:zones` | Node only. Runs the suite under `TZ=America/Chicago` and `TZ=Pacific/Kiritimati`. |
 | Same tests, a different order | `npm run test:shuffle` | Node only. Prints its seed. |
 | Production build and budgets | `npm run build`, `npm run budgets` | Node only. `budgets` reads the build. |
-| Browser smoke tests | `npm run smoke:cold`, `smoke:a11y`, `smoke:golden`, `smoke:pilot`, `smoke:sync` | A built app being served, and Playwright with a Chromium. `SMOKE_URL` and `SMOKE_PLAYWRIGHT` say where. `smoke:sync` also needs a local Supabase and a service key. |
+| Browser smoke tests | `npm run smoke:cold`, `smoke:a11y`, `smoke:golden`, `smoke:pilot`, `smoke:registration-handoff`, `smoke:sync` | A built app being served, and Playwright with a Chromium. `SMOKE_URL` and `SMOKE_PLAYWRIGHT` say where. `smoke:registration-handoff` needs a build made with `VITE_REGISTRATION_DAY_MODE=preview`; it intercepts the seeded official-system destination locally, records only the student's reported outcome, reloads, and verifies that report is durable without claiming an SIS write. `smoke:sync` also needs a local Supabase and a service key. |
 | Gateway boot | `npm run smoke:gateway` | Node only. Binds a port. |
 | Database policies | `supabase/policy-evidence.sh`, from the repository root. Use `supabase/check.sh` directly only for local suite iteration. | A PostgreSQL server of the major version in `supabase/config.toml`. The wrapper preserves the harness exit status and writes `artifacts/database/pg17-policy-evidence.json`. |
 | Course data | `node pipeline/validate.mjs`, from the repository root | Node only. |
