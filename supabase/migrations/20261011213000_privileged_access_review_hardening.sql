@@ -416,7 +416,7 @@ begin
             g.subject, g.role, g.scope_kind, g.scope_id, g.provenance,
             g.granted_at, g.expires_at, g.revoked_at,
             array(select distinct rc.capability from public.role_capabilities rc
-              where rc.role = i.role order by rc.capability))) then
+              where rc.role = i.role order by rc.capability)))) then
     raise exception 'Every changed retain decision needs an independent post-decision resolution before signoff.' using errcode = '23514';
   end if;
   if exists (select 1 from private.privileged_access_review_decision d
@@ -437,7 +437,7 @@ begin
             or g.scope_kind <> i.scope_kind or g.scope_id <> i.scope_id
             or g.provenance <> i.provenance or g.granted_at <> i.granted_at
             or g.expires_at is distinct from i.expires_at or g.revoked_at is null))
-          or (x.decision_id is null and g.id is not null and g.revoked_at is null)) then
+          or (x.decision_id is null and g.id is not null and g.revoked_at is null))) then
     raise exception 'Every revoke decision must have an applied remediation and remain revoked at signoff.' using errcode = '23514';
   end if;
   insert into private.privileged_access_review_signoff
