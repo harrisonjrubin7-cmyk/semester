@@ -276,6 +276,7 @@ describe('SupportAccess: permission changes and a failed load', () => {
     await mount(<SupportAccess account={ACCOUNT} />, false);
     await press('Revoke');
     await press('Revoke now');
+    await flush();
     const notice = host.querySelector('.state-permission')!;
     expect(notice.querySelector('.state-title')!.textContent).toBe('Support access revoked');
     expect(notice.textContent).toContain('The supporter can no longer open this summary.');
