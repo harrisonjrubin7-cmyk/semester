@@ -1,10 +1,18 @@
 # Handoff integration status
 
-**Automation pass** 12 of 120 · **Integration slice** 90 · **Date** 2026-10-11 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `bb70b1c7` · **Latest observed `origin/main`** `bbf94ea2`
+**Automation pass** 1 of 120 · **Integration slice** 91 · **Date** 2026-10-12 · **Branch** `codex/handoff-integration-slice-91` · **Slice base** `d2d1db59` · **Latest observed `origin/main`** `d2d1db59`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Current Phase 2/3/4 consequence work now also provides truthful, student-confirmed Research Studio removals and validated account-scoped device-workspace recovery for both Toolkit stores alongside claimed-family, unused-code, advisor and athletic-share revocation controls and governed private-workspace removals. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 1 / integration slice 91
+
+- The initial clean worktree fast-forwarded from `1eab79523` to `70f53e222` before implementation. A fresh promotion checkout started at `a8c8616d`, the exact four-file slice applied cleanly, and final promotion reconciliation merged current `origin/main` `d2d1db59`, including the separately reviewed duplicate-migration repair. Current-code and reducer inspection found the dining cancellation, calendar-feed removal and other initially ranked paths already protected by confirmation or shared Undo; no equivalent volunteer removal-vote preview existed.
+- A volunteer’s **Remove it** decision now opens the shared `ConfirmDialog` and `ActionPreview` before the existing `volunteer_decide` RPC. It shows the reported post and chosen reason, says that a second independent removal vote can remove the post immediately, that a first vote waits and that disagreement routes to a professional reviewer.
+- Cancel receives initial focus through the shared dialog and performs no RPC. Only explicit **Submit removal vote** confirmation invokes the unchanged operation with the exact task id, `remove` action and selected reason. Keep and label decisions, server eligibility and recusal checks, two-volunteer agreement, professional routing, retained evidence and appeal authority remain unchanged.
+- The focused regression proves there is no call before confirmation or after cancel, then verifies the exact confirmed arguments and task removal. Volunteer, `ActionPreview`, modal and root-unmount coverage passes 30/30; the changed screen and test pass Oxlint and TypeScript.
+- HawkScan cannot start locally because `hawk runtime=false` and `HAWK_API_KEY=false`; no local DAST result is claimed. A hosted exact-head HawkScan remains required before merge. Ordered and shuffled full suites have not been rerun for this bounded UI slice. No route, dependency, schema, policy, server operation, provider configuration, deployment, production data or external system changed.
 
 ## Evidence locked in current automation pass 2 / integration slice 52
 

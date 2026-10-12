@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Volunteer post-removal votes show their consequence before submission
+
+Student volunteer moderators now see the reported post, their selected reason and the possible outcome before submitting **Remove it**. The preview says that a second independent removal vote can remove the post immediately, a first vote waits and a disagreement goes to a professional reviewer. Cancel submits nothing. It also says the vote cannot be withdrawn or edited, while the author’s account, other posts and retained review evidence stay unchanged by that vote. Keeping a post or adding a label still follows the existing review flow.
+
 ### Housing keeps track of repairs you reported
 
 **Housing** now has a **Repairs you reported** section on the **My housing** tab. After you report something to housing (their portal, front desk or phone line), choose **Record a repair** and note what is wrong, where, how urgent it is, how you reported it and the reference number housing gave you. Pick when to check back: Semester suggests a time, or use the one housing gave you. When that time passes, the repair appears on **Today** as something to follow up. Update it with **Visit scheduled**, **It is fixed**, **Still not fixed** or **No longer needed**; **Remove** can be undone. Choosing **Emergency** first tells you to call housing or campus safety. Semester does not send anything to housing, and nothing you need to do changes.
