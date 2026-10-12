@@ -30,10 +30,13 @@ interface Held {
   fields: Record<string, unknown>;
 }
 
-/** Memory too, for a write the browser refused: a storage quota is not a reason to erase. */
+/** This session's copy, which wins: storage is only for after a reload. */
 let memory: Held | null = null;
 
 function read(): Held | null {
+  // This session's pull is the newest word: a stored copy a failed write
+  // could not replace is older, and pushing it would put back stale fields.
+  if (memory) return memory;
   try {
     const raw = localStorage.getItem(CARRIED_KEY);
     if (raw) {
@@ -75,7 +78,8 @@ export function withCarried<T extends Record<string, unknown>>(account: string, 
 }
 
 export function forgetCarried(): void {
-  memory = null;
+  // Not null: a stored copy a blocked removal left behind must not come back.
+  memory = { account: '', fields: {} };
   try {
     localStorage.removeItem(CARRIED_KEY);
   } catch {

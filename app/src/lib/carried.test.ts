@@ -63,4 +63,29 @@ describe('fields this build cannot read', () => {
     rememberCarried('u1', { maintenance: [{ id: 'm' }] }, known);
     expect(withCarried('u1', { notes: [] })).toEqual({ notes: [], maintenance: [{ id: 'm' }] });
   });
+
+  // Found reviewing 60dd44c: after a refused write, the stale stored copy was
+  // read first, and the push put old values back over newer ones.
+  it('carries this session\u2019s pull over an older stored one a failed write left behind', () => {
+    rememberCarried('u1', { later: 'old' }, known);
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('full', 'QuotaExceededError');
+    });
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError');
+    });
+    rememberCarried('u1', { later: 'new' }, known);
+    expect(withCarried('u1', { notes: [] })).toEqual({ notes: [], later: 'new' });
+    rememberCarried('u1', { notes: [] }, known);
+    expect(withCarried('u1', { notes: [] }), 'a field the account dropped stays dropped').toEqual({ notes: [] });
+    forgetCarried();
+    expect(withCarried('u1', { notes: [] }), 'and a forget a blocked removal could not finish holds').toEqual({ notes: [] });
+  });
+
+  it('reads the stored copy after a reload', async () => {
+    rememberCarried('u1', { later: 1 }, known);
+    vi.resetModules();
+    const fresh = await import('./carried');
+    expect(fresh.withCarried('u1', { notes: [] })).toEqual({ notes: [], later: 1 });
+  });
 });

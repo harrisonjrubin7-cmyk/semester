@@ -20,9 +20,12 @@ vi.mock('./db', () => ({
 }));
 
 const { load } = await import('./index');
-const { ingressDrops } = await import('../../lib/deletions');
+const { clearIngressDrops, ingressDrops } = await import('../../lib/deletions');
 
-afterEach(() => localStorage.clear());
+afterEach(() => {
+  clearIngressDrops();
+  localStorage.clear();
+});
 
 describe('the database boot read', () => {
   it('notes a list whose stored rows it could not address', async () => {
