@@ -628,6 +628,12 @@ declare
     -- watermarks without exposing either projection table.
     'read_tenant_projection(want_tenant text, after_capability text, want_limit integer)',
 
+    -- Per read model: computed freshness, lag, events behind, dead letters,
+    -- last sanitized error and last rebuild with parity. It requires platform
+    -- console:operate (aal2), reads counts and ages from the outbox and never a
+    -- payload, aggregate or tenant id, and writes nothing.
+    'ops_projection_dashboard()',
+
     -- Credential-free connector health. It requires the platform console
     -- shell, derives tenants from exact-school integration:view grants,
     -- excludes demos by default, and returns no credential, cursor, payload,
