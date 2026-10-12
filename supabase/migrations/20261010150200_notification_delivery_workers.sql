@@ -3,10 +3,21 @@
 create or replace function private.notification_event_immutable()
 returns trigger language plpgsql set search_path = '' as $$
 begin raise exception 'notification delivery events are append-only'; end $$;
-drop trigger if exists notification_delivery_events_immutable on public.notification_delivery_events;
-create trigger notification_delivery_events_immutable
-before update on public.notification_delivery_events
-for each row execute function private.notification_event_immutable();
+do $migration$
+begin
+  if not exists (
+    select 1
+      from pg_catalog.pg_trigger
+     where tgname = 'notification_delivery_events_immutable'
+       and tgrelid = 'public.notification_delivery_events'::regclass
+       and not tgisinternal
+  ) then
+    execute 'create trigger notification_delivery_events_immutable
+      before update on public.notification_delivery_events
+      for each row execute function private.notification_event_immutable()';
+  end if;
+end
+$migration$;
 
 create or replace function public.publish_notification(
   want_school text, want_recipient uuid, want_subject uuid, want_category text,
