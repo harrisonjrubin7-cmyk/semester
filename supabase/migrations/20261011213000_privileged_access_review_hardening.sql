@@ -111,14 +111,13 @@ create or replace function private.privileged_access_review_grant_state_sha256(
   want_provenance text, want_granted_at timestamptz, want_expires_at timestamptz,
   want_revoked_at timestamptz, want_capabilities text[]
 ) returns text language sql immutable set search_path = '' as $$
-  select encode(digest(
+  select private.role_audit_sha256(
     case when want_subject is null then 'missing'
       else concat_ws('|', want_subject::text, want_role, want_scope_kind, want_scope_id,
         want_provenance, extract(epoch from want_granted_at)::text,
         coalesce(extract(epoch from want_expires_at)::text, ''),
         coalesce(extract(epoch from want_revoked_at)::text, ''),
-        array_to_string(want_capabilities, ',')) end,
-    'sha256'), 'hex');
+        array_to_string(want_capabilities, ',')) end);
 $$;
 revoke all on function private.privileged_access_review_grant_state_sha256(
   uuid, text, text, text, text, timestamptz, timestamptz, timestamptz, text[]
