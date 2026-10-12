@@ -131,6 +131,9 @@ const MOVE_LABEL: Partial<Record<MaintenanceStatus, string>> = {
 function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: number }) {
   const { dispatch } = useStore();
   const [scheduling, setScheduling] = useState(false);
+  const [reReporting, setReReporting] = useState(false);
+  const [newRef, setNewRef] = useState('');
+  const refId = useId();
   const [visit, setVisit] = useState('');
   const [visitError, setVisitError] = useState('');
   const visitId = useId();
@@ -140,6 +143,11 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
   const go = (to: MaintenanceStatus) => {
     if (to === 'scheduled') {
       setScheduling(true);
+      return;
+    }
+    if (to === 'reported') {
+      setNewRef('');
+      setReReporting(true);
       return;
     }
     dispatch({ type: 'moveMaintenance', id: r.id, change: { to, at: Date.now() } });
@@ -179,7 +187,32 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
         </Notice>
       ) : null}
 
-      {scheduling ? (
+      {reReporting ? (
+        <div className="maintenance-visit">
+          <label htmlFor={refId}>New reference number, if housing gave one</label>
+          <input
+            id={refId}
+            aria-label="New reference number, if housing gave one"
+            className="input"
+            value={newRef}
+            maxLength={LIMITS.reference}
+            onChange={(e) => setNewRef(e.target.value)}
+          />
+          <div className="maintenance-actions">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                dispatch({ type: 'moveMaintenance', id: r.id, change: { to: 'reported', at: Date.now(), ...(newRef.trim() ? { reference: newRef } : {}) } });
+                setReReporting(false);
+              }}
+            >
+              Save
+            </button>
+            <button type="button" className="btn btn-ghost" onClick={() => setReReporting(false)}>Cancel</button>
+          </div>
+        </div>
+      ) : scheduling ? (
         <div className="maintenance-visit">
           <label htmlFor={visitId}>When housing will come</label>
           <input
@@ -206,7 +239,7 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
               {MOVE_LABEL[to]}
             </button>
           ))}
-          {isOpen(r) && r.status !== 'not_fixed' ? (
+          {r.status === 'reported' ? (
             <button
               type="button"
               className="btn btn-ghost"

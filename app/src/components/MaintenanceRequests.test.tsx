@@ -184,3 +184,23 @@ describe('MaintenanceRequests', () => {
     expect(host.textContent).toContain('Visit scheduled for');
   });
 });
+
+describe('MaintenanceRequests, review findings on #1501', () => {
+  it('offers "Remind me tomorrow" only while waiting to hear back, not on a scheduled visit', async () => {
+    seed([existing({ status: 'scheduled', scheduledFor: NOW.getTime() - 3 * 86_400_000 })]);
+    await render();
+    expect(button('Remind me tomorrow')).toBeUndefined();
+    expect(host.textContent).toContain('The visit has passed');
+  });
+
+  it('takes the new ticket number when a repair is reported again', async () => {
+    seed([existing({ status: 'not_fixed', updated: NOW.getTime() })]);
+    await render();
+    await click('Reported it again');
+    await type('New reference number', 'WO-2002');
+    await click('Save');
+    const list = host.querySelector('ul[aria-label="Open repair requests"]');
+    expect(list?.textContent).toContain('Reference WO-2002');
+    expect(list?.textContent).not.toContain('WO-1001');
+  });
+});

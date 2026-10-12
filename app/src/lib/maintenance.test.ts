@@ -289,3 +289,22 @@ describe('in the store', () => {
     expect((union([older], [newer]) as MaintenanceRequest[])[0].status).toBe('fixed');
   });
 });
+
+describe('review findings on #1501', () => {
+  it('drops a damaged row at the sync, boot and restore door, not only at localStorage load', async () => {
+    const { readIncoming } = await import('./stored');
+    const got = readIncoming({ maintenance: [{ id: 'x', checkBackAt: 0 }, request()] }) as { maintenance: MaintenanceRequest[] };
+    expect(got.maintenance.map((r) => r.id)).toEqual(['mr1']);
+  });
+
+  it('propagates a removal across devices instead of letting union bring it back', async () => {
+    const { DELETABLE, settleDeletions } = await import('./deletions');
+    expect(DELETABLE).toContain('maintenance');
+    const r = request();
+    // Both devices agreed on the row; this one removed it; the account still has it unchanged.
+    const { baseOf } = await import('./conflicts');
+    const base = baseOf({ maintenance: [r] });
+    const settled = settleDeletions({ maintenance: [] }, { maintenance: [r] }, base);
+    expect((settled.remote.maintenance as MaintenanceRequest[]).length).toBe(0);
+  });
+});
