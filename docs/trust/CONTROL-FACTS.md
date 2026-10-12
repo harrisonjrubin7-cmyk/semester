@@ -12,14 +12,14 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 238 |
-| Tables created in `public` and not later dropped | 342 |
-| … of which enable row-level security in a migration | 342 |
+| Migration files | 239 |
+| Tables created in `public` and not later dropped | 346 |
+| … of which enable row-level security in a migration | 346 |
 | Tables created in `private` and not later dropped | 50 |
 | … of which enable row-level security in a migration | 50 |
 | Tables with no `enable row level security` statement found | 0 |
 | Tables named by at least one literal `create policy` statement | 276 |
-| Tables with RLS found and no literal policy statement | 116 |
+| Tables with RLS found and no literal policy statement | 120 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -28,11 +28,12 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-154 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+155 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
 | `supabase/academic-record.check.sql` | The academic-record ledger (D-145): who may propose, decide and read; that nobody writes the ledger but the approval of someone other than the proposer; that each entry names the entry and value it r… |
+| `supabase/access-participants.check.sql` | The access saga's policy administrator and enforcement point (20261012050000_access_participants). |
 | `supabase/access-saga-store.check.sql` | The access saga's durable store (20261006180000_access_saga_store, 20261011200000 review fixes, 20261012030000 'access_saga_due'). |
 | `supabase/access-saga-tick-auth.check.sql` | The scheduler's token check for the access-saga-tick Edge Function, run as the roles that will and must not call it. |
 | `supabase/access.check.sql` | The log of who read your rows, which is only worth anything if it is yours. |

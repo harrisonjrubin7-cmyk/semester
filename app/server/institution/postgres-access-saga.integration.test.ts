@@ -4,6 +4,7 @@ import { promisify } from 'node:util';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   AccessSagaRunner,
+  Fault,
   PersistenceConflict,
   type AccessSaga,
   type AccessSagaState,
@@ -11,7 +12,8 @@ import {
   type Services,
 } from '../../../packages/institution/src/index.ts';
 import { psql, psqlJson, type PsqlTarget } from '../productivity/psql-rpc.ts';
-import { PostgresAccessSagaStore } from './postgres-access-saga.ts';
+import { PostgresAccessSagaStore, sagaFromRow } from './postgres-access-saga.ts';
+import { PostgresAccessParticipants } from './postgres-access-participants.ts';
 import { runAccessSagaTick, runScheduledAccessSagaTick } from './access-saga-tick.ts';
 import { SERVICES } from './access-saga-registry.ts';
 
@@ -65,11 +67,15 @@ async function asService(sql: string): Promise<{ data: unknown; error: { code?: 
  * `access_saga_due` return sets, so they come back as the array PostgREST would
  * send; the void functions come back as null.
  */
+const SCALAR = new Set(['access_pa_prepare', 'access_pep_inspect', 'access_pa_revoke', 'access_pep_remove', 'access_cleanup_verify']);
+
 function serviceClient(): SupabaseClient {
   return {
     rpc: async (fn: string, args: Record<string, unknown> = {}) => {
       const named = Object.entries(args).map(([k, v]) => `${k} => ${literal(v)}`).join(', ');
       if (fn === 'access_saga_claim' || fn === 'access_saga_due') return asService(`select coalesce(jsonb_agg(t), '[]')::text from public.${fn}(${named}) t;`);
+      // A scalar answer, quoted as PostgREST sends it: psql prints a text 'confirmed' bare, which is not JSON.
+      if (SCALAR.has(fn)) return asService(`select to_jsonb(public.${fn}(${named}))::text;`);
       return asService(`select public.${fn}(${named});`);
     },
     from: (table: string) => ({
@@ -155,7 +161,7 @@ class DyingStore extends PostgresAccessSagaStore {
 
 describe.skipIf(!host)('the access saga runner through PostgresAccessSagaStore, against a migrated database', () => {
   beforeEach(async () => {
-    await psql(target, 'truncate public.access_saga_signals, public.access_saga_events, public.access_sagas;');
+    await psql(target, 'truncate public.access_operation_receipts, public.access_enforcements, public.access_revocations, public.access_grants, public.access_saga_signals, public.access_saga_events, public.access_sagas;');
   });
 
   it('provisions to ACTIVE one move per tick, one event per revision, and leaves no lease behind', async () => {
@@ -279,7 +285,7 @@ describe.skipIf(!host)('the access saga runner through PostgresAccessSagaStore, 
  */
 describe.skipIf(!host)('the access saga worker tick, against a migrated database', () => {
   beforeEach(async () => {
-    await psql(target, 'truncate public.access_saga_signals, public.access_saga_events, public.access_sagas;');
+    await psql(target, 'truncate public.access_operation_receipts, public.access_enforcements, public.access_revocations, public.access_grants, public.access_saga_signals, public.access_saga_events, public.access_sagas;');
   });
 
   const all = () => psqlJson<{ id: string; state: AccessSagaState; revision: number; lease_token: string | null }[]>(target,
@@ -388,5 +394,106 @@ describe.skipIf(!host)('the access saga worker tick, against a migrated database
     expect(after.every((r) => r.revision >= 1 && r.revision <= 2 && r.lease_token === null)).toBe(true);
     const count = await psqlJson<{ n: number }[]>(target, 'select count(*)::int as n from public.access_saga_events');
     expect(count[0]!.n).toBe(after.reduce((sum, r) => sum + r.revision, 0));
+  });
+});
+
+describe.skipIf(!host)('the participants in Postgres: PostgresAccessParticipants through the runner, against a migrated database', () => {
+  beforeEach(async () => {
+    await psql(target, 'truncate public.access_operation_receipts, public.access_enforcements, public.access_revocations, public.access_grants, public.access_saga_signals, public.access_saga_events, public.access_sagas;');
+  });
+
+  interface GrantRow { id: string; generation: number; decision_id: string; status: string }
+  interface EnforcementRow { grant_id: string; removed_at: string | null }
+  const grants = (id: string) => psqlJson<GrantRow[]>(target, `select id, generation, decision_id, status from public.access_grants where saga_id = '${id}' order by generation`);
+  const enforcements = (id: string) => psqlJson<EnforcementRow[]>(target, `select grant_id, removed_at from public.access_enforcements where saga_id = '${id}' order by installed_at`);
+  const barrier = async (id: string) => (await psqlJson<{ through_generation: number }[]>(target, `select through_generation from public.access_revocations where saga_id = '${id}'`))[0]?.through_generation;
+  const receipts = (id: string) => psqlJson<{ operation: string }[]>(target, `select operation from public.access_operation_receipts where saga_id = '${id}' order by recorded_at`);
+
+  /**
+   * A worker whose administrator and enforcement point are the database's, and
+   * whose decision point is scripted to allow: the one participant this change
+   * does not provide. `installLost` makes the install's answer go missing after
+   * the point has done the work, the way a timeout does.
+   */
+  function realWorker(script: { installLost?: boolean } = {}): Worker & { participants: PostgresAccessParticipants } {
+    const store = new PostgresAccessSagaStore({ client: serviceClient() });
+    const participants = new PostgresAccessParticipants({ client: serviceClient(), grantTtlMs: HOUR });
+    const calls: string[] = [];
+    const keys = new Map<string, string[]>();
+    const note = (name: string, key?: string) => {
+      calls.push(name);
+      if (key !== undefined) keys.set(name, [...(keys.get(name) ?? []), key]);
+    };
+    const services: Services = {
+      async validate(_s, key) { note('validate', key); },
+      async evaluate(_s, key) { note('evaluate', key); return { id: 'dec-1', outcome: 'allow' }; },
+      async prepare(s, key, signal) { note('prepare', key); return participants.prepare(s, key, signal); },
+      async install(s, key, signal) {
+        note('install', key);
+        await participants.install(s, key, signal);
+        if (script.installLost) { script.installLost = false; throw new Fault('OPERATION_TIMEOUT', true, true); }
+      },
+      async inspect(s, signal) { note('inspect'); return participants.inspect(s, signal); },
+      async revokePa(s, key, signal) { note('revoke_pa', key); return participants.revokePa(s, key, signal); },
+      async removePep(s, key, signal) { note('remove_pep', key); return participants.removePep(s, key, signal); },
+      async verifyCleanup(s, signal) { note('verify_cleanup'); return participants.verifyCleanup(s, signal); },
+    };
+    const runner = new AccessSagaRunner(store, services, { random: () => 0, newId: () => `evt-${++n}` });
+    return { runner, store, calls, keys, participants };
+  }
+
+  it('provisions a grant the administrator prepared and the point holds, then revokes it on a signal with both sides proved by the database', async () => {
+    const w = realWorker();
+    await w.store.create(newSaga('p-active'));
+    expect(await drive(w, 'p-active')).toEqual(['RECEIVED', 'VALIDATING', 'EVALUATING', 'PREPARING', 'INSTALLING', 'VERIFYING', 'ACTIVE']);
+    expect(await row('p-active')).toMatchObject({ state: 'ACTIVE', grant_id: 'grant:p-active:0', lease_token: null });
+    expect(await grants('p-active')).toEqual([{ id: 'grant:p-active:0', generation: 0, decision_id: 'dec-1', status: 'prepared' }]);
+    expect(await enforcements('p-active')).toEqual([{ grant_id: 'grant:p-active:0', removed_at: null }]);
+    expect(await barrier('p-active')).toBeUndefined();
+
+    await w.store.wake('p-active', 'sig-revoke', 'revoke');
+    expect((await drive(w, 'p-active')).at(-1)).toBe('REVOKED');
+    expect(await row('p-active')).toMatchObject({ state: 'REVOKED', pa_revoked: true, pep_removed: true, lease_token: null });
+    expect(await barrier('p-active')).toBe(0);
+    expect((await grants('p-active'))[0]).toMatchObject({ status: 'revoked' });
+    expect((await enforcements('p-active'))[0]!.removed_at).not.toBeNull();
+    expect((await receipts('p-active')).map((r) => r.operation)).toEqual(['prepare', 'install', 'revoke_pa', 'remove_pep']);
+    expect(w.calls.filter((c) => c === 'verify_cleanup')).toHaveLength(1);
+  });
+
+  it('the barrier: an install whose message arrives after the revocation is refused, and the saga never becomes ACTIVE', async () => {
+    const w = realWorker();
+    await w.store.create(newSaga('p-late'));
+    // Up to INSTALLING: the grant is prepared, the install has not run.
+    for (let i = 0; i < 4; i += 1) await w.runner.tick('p-late');
+    const installing = sagaFromRow((await psqlJson<Record<string, unknown>[]>(target, "select * from public.access_sagas where id = 'p-late'"))[0]);
+    expect(installing).toMatchObject({ state: 'INSTALLING', grantId: 'grant:p-late:0', generation: 0 });
+    expect(await enforcements('p-late')).toEqual([]);
+
+    // The revocation lands first and runs to the end.
+    await w.store.wake('p-late', 'sig-revoke', 'revoke');
+    expect((await drive(w, 'p-late')).at(-1)).toBe('REVOKED');
+    expect(await barrier('p-late')).toBe(0);
+
+    // Now the install's late message, under its original key and generation.
+    const key = JSON.stringify(['p-late', '1', 0, 'install']);
+    const late = w.participants.install(installing, key, new AbortController().signal);
+    await expect(late).rejects.toMatchObject({ code: 'GRANT_REVOKED', retryable: false });
+    expect(await enforcements('p-late')).toEqual([]);
+    expect(await w.participants.inspect(installing, new AbortController().signal)).toEqual({ status: 'absent' });
+    expect(await row('p-late')).toMatchObject({ state: 'REVOKED' });
+    // And nothing can prepare generation 0 again either.
+    await expect(w.participants.prepare(installing, JSON.stringify(['p-late', '1', 0, 'prepare']), new AbortController().signal)).resolves.toEqual({ id: 'grant:p-late:0', expiresAt: expect.any(Number) });
+    await expect(w.participants.prepare(installing, 'a-new-key-for-generation-0', new AbortController().signal)).rejects.toMatchObject({ code: 'GRANT_REVOKED' });
+  });
+
+  it('an install whose answer was lost is reconciled against what the point holds, and becomes ACTIVE with one enforcement', async () => {
+    const w = realWorker({ installLost: true });
+    await w.store.create(newSaga('p-lost'));
+    expect(await drive(w, 'p-lost')).toEqual(['RECEIVED', 'VALIDATING', 'EVALUATING', 'PREPARING', 'INSTALLING', 'RECONCILING', 'VERIFYING', 'ACTIVE']);
+    expect(await enforcements('p-lost')).toEqual([{ grant_id: 'grant:p-lost:0', removed_at: null }]);
+    expect((await receipts('p-lost')).map((r) => r.operation)).toEqual(['prepare', 'install']);
+    expect(w.calls.filter((c) => c === 'install')).toHaveLength(1);
+    expect(w.calls.filter((c) => c === 'inspect')).toHaveLength(2);
   });
 });
