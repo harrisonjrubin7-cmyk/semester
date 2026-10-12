@@ -1376,6 +1376,34 @@ export const OWNED_TABLES: OwnedTable[] = [
  */
 export const KEPT_TABLES: KeptTable[] = [
   {
+    table: 'gtm_accounts',
+    why: 'An institution’s commercial account is the shared record of its procurement relationship, not the operator’s account. Deleting your account removes you as its owner; the institution and its history stay.',
+  },
+  {
+    table: 'trust_room_requests',
+    why: 'A request for procurement access is part of the institution’s compliance record and may have been made by an external stakeholder. It stays with the institution, no longer attributed to a deleted operator.',
+  },
+  {
+    table: 'trust_room_grants',
+    why: 'A procurement access grant, its expiry and any withdrawal are the evidence of what access was allowed. The grant stays with the request, while a deleted operator is no longer named as grantor or revoker.',
+  },
+  {
+    table: 'trust_room_grant_items',
+    why: 'The exact document versions included in a procurement grant belong to that compliance record. They stay with the grant and name no operator account.',
+  },
+  {
+    table: 'trust_artifact_versions',
+    why: 'A published trust-document version is shared reference material for procurement reviews, not a deleted operator’s personal data. It stays so existing grants still identify the version they disclosed.',
+  },
+  {
+    table: 'trust_artifacts',
+    why: 'A trust-document catalogue entry is shared procurement reference data, not a record owned by an operator account. It stays so published versions and grants remain understandable.',
+  },
+  {
+    table: 'trust_room_access_log',
+    why: 'A procurement-room access event is an audit record showing that a granted document was accessed. It stays with the grant for compliance and names no operator account.',
+  },
+  {
     table: 'module_mode_request',
     why: 'A request to switch one of a school’s modules between Connect and Core is a governance record of the school, kept with its approvals. Deleting your account removes you as the person who asked; the request and what it changed stay.',
   },

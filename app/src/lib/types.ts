@@ -747,6 +747,9 @@ export type Screen =
   // The operations console: a staff tool behind a platform-scope capability,
   // nested like the review queue rather than registered. See `lib/nav.ts`.
   | 'console'
+  // Semester's account-team workspace. It is separately gated by the exact
+  // platform account:manage capability and never inherits Console access.
+  | 'company'
   // The school's dining, behind its module flag and nested rather than
   // registered while no school has it on. See `lib/nav.ts`.
   | 'dining'

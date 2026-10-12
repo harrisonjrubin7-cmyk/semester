@@ -6,6 +6,7 @@ describe('writing an address', () => {
   it('names a plain screen and nothing else', () => {
     expect(toHash({ screen: 'study', id: '' })).toBe('#/study');
     expect(toHash({ screen: 'home', id: '' })).toBe('#/home');
+    expect(toHash({ screen: 'company', id: '' })).toBe('#/company');
   });
 
   it('names the thing a screen is about', () => {
@@ -53,6 +54,7 @@ describe('reading one back', () => {
   it('takes a hash with or without its hash', () => {
     expect(fromHash('#/study')?.screen).toBe('study');
     expect(fromHash('/study')?.screen).toBe('study');
+    expect(fromHash('#/company')).toEqual({ screen: 'company', id: '' });
   });
 
   it('says nothing rather than guessing at an empty one', () => {

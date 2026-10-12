@@ -56,6 +56,7 @@ describe('connected workspace visibility', () => {
     mock.rpc.mockResolvedValue({
       data: [
         { capability: 'console:operate', scope_kind: 'platform', scope_id: '' },
+        { capability: 'account:manage', scope_kind: 'platform', scope_id: '' },
         { capability: 'opportunity:publish', scope_kind: 'school', scope_id: 'school-a' },
       ],
       error: null,
@@ -63,6 +64,7 @@ describe('connected workspace visibility', () => {
     await act(async () => root.render(<WorkspaceEntry />));
     expect(buttons()).toContain('Semester Operations');
     expect(buttons()).toContain('External listings');
+    expect(buttons()).toContain('Company procurement');
 
     const operations = [...host.querySelectorAll('button')].find((button) => button.textContent?.includes('Semester Operations'))!;
     const listings = [...host.querySelectorAll('button')].find((button) => button.textContent?.includes('External listings'))!;
@@ -70,6 +72,9 @@ describe('connected workspace visibility', () => {
     expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'console' });
     act(() => listings.click());
     expect(mock.dispatch).toHaveBeenCalledWith({ type: 'openWorkspace', screen: 'university', view: 'drafts' });
+    const company = [...host.querySelectorAll('button')].find((button) => button.textContent?.includes('Company procurement'))!;
+    act(() => company.click());
+    expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'company' });
   });
 
   it('does not broaden a school-scoped console grant or another school’s listing grant', async () => {
@@ -78,12 +83,14 @@ describe('connected workspace visibility', () => {
       data: [
         { capability: 'console:operate', scope_kind: 'school', scope_id: 'school-a' },
         { capability: 'opportunity:moderate', scope_kind: 'school', scope_id: 'school-b' },
+        { capability: 'account:manage', scope_kind: 'school', scope_id: 'school-a' },
       ],
       error: null,
     });
     await act(async () => root.render(<WorkspaceEntry />));
     expect(buttons()).not.toContain('Semester Operations');
     expect(buttons()).not.toContain('External listings');
+    expect(buttons()).not.toContain('Company procurement');
     expect(host.textContent).toContain('No additional connected workspace was found');
   });
 
