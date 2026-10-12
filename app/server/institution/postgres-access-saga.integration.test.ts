@@ -12,7 +12,8 @@ import {
 } from '../../../packages/institution/src/index.ts';
 import { psql, psqlJson, type PsqlTarget } from '../productivity/psql-rpc.ts';
 import { PostgresAccessSagaStore } from './postgres-access-saga.ts';
-import { runAccessSagaTick } from './access-saga-tick.ts';
+import { runAccessSagaTick, runScheduledAccessSagaTick } from './access-saga-tick.ts';
+import { SERVICES } from './access-saga-registry.ts';
 
 /**
  * The saga runner, through the adapter, against a real migrated Postgres.
@@ -302,6 +303,28 @@ describe.skipIf(!host)('the access saga worker tick, against a migrated database
     removePep: async () => 'confirmed',
     verifyCleanup: async () => ({ paRevoked: true, pepAbsent: true }),
   }, runner: { random: () => 0, newId: () => `evt-${++n}` } });
+
+  it('the scheduled entry with the registry as it is: counts the due sagas and moves none, and with participants it is the tick', async () => {
+    const w = worker();
+    await seed('t-sched-due', 'VALIDATING', 1);
+    await seed('t-sched-done', 'DENIED', 3);
+    // What the Edge Function runs today: the registry holds null.
+    expect(await runScheduledAccessSagaTick(serviceClient(), SERVICES)).toEqual({ outcome: 'unregistered', due: 1, ticked: 0, failed: [], deferred: false });
+    expect(await all()).toEqual([
+      { id: 't-sched-done', state: 'DENIED', revision: 3, lease_token: null },
+      { id: 't-sched-due', state: 'VALIDATING', revision: 1, lease_token: null },
+    ]);
+    expect(await events('t-sched-due')).toEqual([]);
+    // With participants handed in, the same call is the tick.
+    const ran = await runScheduledAccessSagaTick(serviceClient(), {
+      validate: async () => { w.calls.push('validate'); }, evaluate: async () => ({ id: 'dec-1', outcome: 'allow' }),
+      prepare: async () => ({ id: 'g', expiresAt: Date.now() + HOUR }), install: async () => {}, inspect: async () => ({ status: 'installed' }),
+      revokePa: async () => 'confirmed', removePep: async () => 'confirmed', verifyCleanup: async () => ({ paRevoked: true, pepAbsent: true }),
+    }, { runner: { random: () => 0, newId: () => `evt-${++n}` } });
+    expect(ran).toEqual({ outcome: 'ran', due: 1, ticked: 1, failed: [], deferred: false });
+    expect((await all()).find((r) => r.id === 't-sched-due')).toEqual({ id: 't-sched-due', state: 'EVALUATING', revision: 2, lease_token: null });
+    expect(w.calls).toEqual(['validate']);
+  });
 
   it('moves only the sagas the database says are due, one step each, and leaves no lease', async () => {
     const w = worker();

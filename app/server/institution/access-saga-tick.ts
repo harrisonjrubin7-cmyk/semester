@@ -69,6 +69,31 @@ export async function dueSagas(client: SupabaseClient, limit: number): Promise<s
   return result.data;
 }
 
+/** What the scheduler's call answers with: a tick that ran, or the count of what waits for participants. */
+export type ScheduledAccessSagaTickSummary =
+  | ({ outcome: 'ran' } & AccessSagaTickSummary)
+  | { outcome: 'unregistered'; due: number; ticked: 0; failed: []; deferred: false };
+
+/**
+ * The scheduled entry: the Edge Function calls this with whatever
+ * `access-saga-registry.ts` holds. With participants it is `runAccessSagaTick`.
+ * Without, it asks the database what is due and touches no saga — no claim,
+ * no move — so the job can run before any participant exists and its answer
+ * says how much work waits.
+ */
+export async function runScheduledAccessSagaTick(
+  client: SupabaseClient,
+  services: Services | null,
+  options: Omit<AccessSagaTickOptions, 'client' | 'services'> = {},
+): Promise<ScheduledAccessSagaTickSummary> {
+  if (!client) throw new Error('The access saga worker needs a service client.');
+  if (!services) {
+    const due = (await dueSagas(client, (options.maxSagas ?? DEFAULT_MAX_SAGAS) + 1)).length;
+    return { outcome: 'unregistered', due, ticked: 0, failed: [], deferred: false };
+  }
+  return { outcome: 'ran', ...(await runAccessSagaTick({ ...options, client, services })) };
+}
+
 export async function runAccessSagaTick(options: AccessSagaTickOptions): Promise<AccessSagaTickSummary> {
   const now = options.now ?? Date.now;
   const maxSagas = options.maxSagas ?? DEFAULT_MAX_SAGAS;
