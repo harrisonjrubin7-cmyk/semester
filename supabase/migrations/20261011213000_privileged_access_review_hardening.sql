@@ -286,14 +286,14 @@ begin
     raise exception 'A changed grant can only be closed as investigate.' using errcode = '40001';
   end if;
   insert into private.privileged_access_review_decision
-    (item_id, decision, reason_code, decided_by_sha256, remediation_applied)
-  values (item.id, want_decision, want_reason_code, actor_hash, want_decision = 'revoke')
+    (item_id, decision, reason_code, decided_by_sha256, remediation_applied, decided_at)
+  values (item.id, want_decision, want_reason_code, actor_hash, want_decision = 'revoke', clock_timestamp())
   returning id into decision_id;
   if want_decision = 'revoke' then
     update public.role_grants set revoked_at = clock_timestamp() where id = item.grant_id;
     insert into private.privileged_access_review_remediation
-      (decision_id, grant_id, outcome, applied_by_sha256)
-    values (decision_id, item.grant_id, 'revoked-by-review', actor_hash);
+      (decision_id, grant_id, outcome, applied_by_sha256, applied_at)
+    values (decision_id, item.grant_id, 'revoked-by-review', actor_hash, clock_timestamp());
   end if;
 end $$;
 
@@ -365,12 +365,12 @@ begin
     return;
   end if;
   insert into private.privileged_access_review_investigation_resolution
-    (decision_id, resolution_code, resolved_by_sha256)
-  values (decision.id, want_resolution_code, actor_hash)
+    (decision_id, resolution_code, resolved_by_sha256, resolved_at)
+  values (decision.id, want_resolution_code, actor_hash, clock_timestamp())
   on conflict (decision_id) do nothing;
   insert into private.privileged_access_review_investigation_state_resolution
-    (decision_id, resolution_code, observed_state_sha256, resolved_by_sha256)
-  values (decision.id, want_resolution_code, observed_state, actor_hash)
+    (decision_id, resolution_code, observed_state_sha256, resolved_by_sha256, resolved_at)
+  values (decision.id, want_resolution_code, observed_state, actor_hash, clock_timestamp())
   on conflict (decision_id, observed_state_sha256) do nothing;
 end $$;
 
@@ -457,8 +457,8 @@ begin
     return;
   end if;
   insert into private.privileged_access_review_post_decision_resolution
-    (decision_id, resolution_code, observed_state_sha256, resolved_by_sha256)
-  values (decision.id, 'superseded-by-approved-change', observed_state, actor_hash)
+    (decision_id, resolution_code, observed_state_sha256, resolved_by_sha256, resolved_at)
+  values (decision.id, 'superseded-by-approved-change', observed_state, actor_hash, clock_timestamp())
   on conflict (decision_id, observed_state_sha256) do nothing;
 end $$;
 
@@ -590,8 +590,8 @@ begin
     raise exception 'Every revoke decision must have an applied remediation and remain revoked at signoff.' using errcode = '23514';
   end if;
   insert into private.privileged_access_review_signoff
-    (review_id, signed_by_sha256, retained, revoked, investigating)
-  values (review.id, actor_hash, keep_n, revoke_n, investigate_n);
+    (review_id, signed_by_sha256, signed_at, retained, revoked, investigating)
+  values (review.id, actor_hash, clock_timestamp(), keep_n, revoke_n, investigate_n);
 end $$;
 
 -- Keep the original RPC's return shape for existing clients, but align its

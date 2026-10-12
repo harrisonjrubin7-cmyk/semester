@@ -164,6 +164,18 @@ begin
 
   perform pg_temp.must('the reviewed revoke atomically closed the live role grant',
     (select revoked_at is not null from public.role_grants where subject = target and role = 'university_admin'));
+  perform pg_temp.must('immutable remediation time follows the snapshot, decision, and actual revoke',
+    exists (
+      select 1
+        from private.privileged_access_review_item i
+        join private.privileged_access_review r on r.id = i.review_id
+        join private.privileged_access_review_decision d on d.item_id = i.id
+        join private.privileged_access_review_remediation m on m.decision_id = d.id
+        join public.role_grants g on g.id = i.grant_id
+       where i.public_id = target_item
+         and d.decided_at >= r.snapshot_at
+         and m.applied_at >= d.decided_at
+         and m.applied_at >= g.revoked_at));
   perform pg_temp.must('the legacy reader reports atomic revoke remediation',
     (select bool_and(remediation_applied) from public.privileged_access_review(review_ref)
       where decision = 'revoke'));
