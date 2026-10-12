@@ -224,7 +224,7 @@ describe('the runner', () => {
 
   it('records one sample per scenario per window, checks the invariants and the connections after each, and hands the samples to drift.sh', () => {
     expect(run).toContain(`printf '%s %s %s %s %s\\n' "$name" "$window" "$p95" "$budget" "$bg" >> "$windows"`);
-    expect(run).toMatch(/run_pass\n\s+run_invariants\n\s+now=\$\(clients\)/);
+    expect(run).toMatch(/run_pass\n\s+run_invariants\n\s+load_diagnostics_capture "\$window"\n\s+now=\$\(clients\)/);
     expect(run).toContain('"$here_load/drift.sh" < "$windows"');
   });
 
