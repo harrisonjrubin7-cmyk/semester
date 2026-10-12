@@ -86,6 +86,15 @@ export const SUGGESTED_CHECK_BACK: Record<Urgency, number> = {
   routine: 3 * DAY,
 };
 
+/**
+ * When to check back by default. Hours are elapsed time ("in an hour"); the
+ * routine three days are calendar days, so 10:00 stays 10:00 across a
+ * daylight-saving change.
+ */
+export function suggestedCheckBack(urgency: Urgency, from: number): number {
+  return urgency === 'routine' ? addDays(from, 3) : from + SUGGESTED_CHECK_BACK[urgency];
+}
+
 /** How long after a scheduled visit Semester asks whether it happened. */
 export const AFTER_VISIT = 1 * DAY;
 
@@ -286,7 +295,7 @@ export function move(
     typeof change.checkBackAt === 'number' && Number.isFinite(change.checkBackAt)
       ? change.checkBackAt
       : reopened
-        ? change.at + SUGGESTED_CHECK_BACK[request.urgency]
+        ? suggestedCheckBack(request.urgency, change.at)
         : request.checkBackAt;
   return {
     ok: true,
@@ -332,7 +341,9 @@ export function placeLine(r: Pick<MaintenanceRequest, 'hall' | 'room' | 'where'>
   return r.where.trim() ? `${home} · ${r.where.trim()}` : home;
 }
 
-const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+/** A finite number that is also a valid `Date`: ±8.64e15 ms. `1e300` is finite and throws in `Intl`. */
+const MAX_TIME = 8.64e15;
+const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && Math.abs(v) <= MAX_TIME;
 const isStr = (v: unknown): v is string => typeof v === 'string';
 const oneOf = <T extends string>(all: readonly T[], v: unknown, fallback: T): T =>
   (all as readonly unknown[]).includes(v) ? (v as T) : fallback;
@@ -387,7 +398,7 @@ export function readMaintenance(row: unknown): MaintenanceRequest | null {
     channel: oneOf(CHANNELS, r.channel, 'other'),
     reference: isStr(r.reference) ? r.reference.trim().slice(0, LIMITS.reference) : '',
     reportedAt,
-    checkBackAt: isNum(r.checkBackAt) ? r.checkBackAt : reportedAt + SUGGESTED_CHECK_BACK.routine,
+    checkBackAt: isNum(r.checkBackAt) ? r.checkBackAt : suggestedCheckBack('routine', reportedAt),
     checkBackStated: r.checkBackStated === true,
     scheduledFor: isNum(r.scheduledFor) ? r.scheduledFor : null,
     status: status === 'scheduled' && !isNum(r.scheduledFor) ? 'reported' : status,

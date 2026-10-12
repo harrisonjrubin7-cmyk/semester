@@ -15,6 +15,8 @@ import {
   NEXT,
   STATUSES,
   SUGGESTED_CHECK_BACK,
+  suggestedCheckBack,
+  whenLine,
   checkDraft,
   draftOk,
   followUpAt,
@@ -361,6 +363,24 @@ describe('review findings on 5200c9c', () => {
     expect(visitProblem(r, r.reportedAt - 60_000)).toMatch(/before you reported/);
     expect(move(r, { to: 'scheduled', at: NOW, scheduledFor: r.reportedAt - 60_000 }).ok).toBe(false);
     expect(move(r, { to: 'scheduled', at: NOW, scheduledFor: r.reportedAt + 60_000 }).ok).toBe(true);
+  });
+
+  it('keeps the routine three days on the calendar across a daylight-saving change', () => {
+    inZone('America/New_York', () => {
+      const reported = new Date(2026, 9, 30, 10, 0).getTime();
+      expect(toLocalInput(suggestedCheckBack('routine', reported))).toBe('2026-11-02T10:00');
+      expect(suggestedCheckBack('urgent', reported) - reported).toBe(4 * HOUR);
+      const r = request({ reportedAt: reported, status: 'fixed' });
+      const again = move(r, { to: 'not_fixed', at: reported });
+      expect(again.ok && toLocalInput(again.request.checkBackAt)).toBe('2026-11-02T10:00');
+    });
+  });
+
+  it('treats a timestamp outside the Date range as missing, so Housing and Today can format it', () => {
+    const read = readMaintenance({ ...request(), reportedAt: 1e300, checkBackAt: -1e300, scheduledFor: 9e15, status: 'scheduled', created: 1, updated: 1e300 })!;
+    for (const at of [read.reportedAt, read.checkBackAt, read.updated]) expect(() => whenLine(at)).not.toThrow();
+    expect(read.status).toBe('reported');
+    expect(read.scheduledFor).toBeNull();
   });
 
   it('bounds the building and room as the reader does, so a saved request survives a reload unchanged', () => {

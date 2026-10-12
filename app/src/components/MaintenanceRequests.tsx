@@ -12,7 +12,7 @@ import {
   LIMITS,
   NEXT,
   STATUS_TEXT,
-  SUGGESTED_CHECK_BACK,
+  suggestedCheckBack,
   URGENCIES,
   URGENCY_TEXT,
   checkDraft,
@@ -288,7 +288,7 @@ function RequestForm({ onDone }: { onDone: () => void }) {
           ? addDays(base, 1)
           : checkBack === 'week'
             ? addDays(base, 7)
-            : base + SUGGESTED_CHECK_BACK[urgency];
+            : suggestedCheckBack(urgency, base);
     return { hall, room, what, where, urgency, channel, reference, reportedAt, checkBackAt, checkBackStated: checkBack === 'stated' };
   };
 
