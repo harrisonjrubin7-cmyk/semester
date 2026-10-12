@@ -1,7 +1,7 @@
 import { obj, textValue } from '../device-library';
-import { blankDeclaration, type Declaration } from './disclosure';
-import { USES, type Use } from './policy';
-import { readProjects, type Project } from './research';
+import { blankDeclaration, type Declaration } from './declaration-storage';
+import { USES, type Use } from './policy-uses';
+import { readProjects, type Project } from './research-storage';
 import { readWorkspaces, type Workspace } from './workspace-storage';
 
 /*
