@@ -139,6 +139,15 @@ describe('the headers as a whole', () => {
     }
     expect(corsHeaders(undefined, PAGES)['Access-Control-Allow-Methods']).toContain('OPTIONS');
   });
+
+  it('exposes the quota headers, or a browser cannot read them', () => {
+    // Neither is CORS-safelisted: without this list the header is on the wire
+    // and `response.headers.get` answers null in every browser.
+    const h = corsHeaders(undefined, PAGES)['Access-Control-Expose-Headers'];
+    for (const name of ['X-Calls-Remaining', 'X-Tokens-Remaining']) {
+      expect(h).toContain(name);
+    }
+  });
 });
 
 describe('every function that answers a browser uses the shared rule', () => {

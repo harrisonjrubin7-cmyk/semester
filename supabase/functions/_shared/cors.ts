@@ -140,6 +140,13 @@ export function allowOrigin(
  * browser refuses the whole request when a preflight omits one, and
  * `anthropic-version` is on every call to `claude`, so leaving it out fails
  * before the function ever runs.
+ *
+ * `Access-Control-Expose-Headers` lists the headers the app may read back.
+ * Only a handful (`Content-Type` among them) are safelisted; any other
+ * response header is on the wire but `response.headers.get` answers null for
+ * it in every browser. `X-Calls-Remaining` and `X-Tokens-Remaining` are what
+ * `claude` has to say about the account's remaining allowance, and were
+ * unreadable from the page until 12 October 2026 for want of this line.
  */
 export function corsHeaders(
   raw: string | undefined | null,
@@ -153,6 +160,7 @@ export function corsHeaders(
     'Access-Control-Allow-Headers':
       'authorization, content-type, anthropic-version, apikey, x-client-info',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Expose-Headers': 'X-Calls-Remaining, X-Tokens-Remaining',
     'Access-Control-Max-Age': '86400',
   };
 }
