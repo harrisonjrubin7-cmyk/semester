@@ -1371,6 +1371,10 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // Not a producer: private.emit_domain_event is the helper a SQL producer will call (backlog P1-02). Nothing calls it,
       // so the claims above (one producer, nothing published) still hold; the page lists it because it inserts.
       'supabase/migrations/20261006170000_emit_domain_event.sql',
+      // P1-03: claim_event, complete_event, fail_event, replay_event, and retention_sweep are operational RPCs
+      // that transition event state in the domain_outbox_events table. These are now the second producer
+      // (alongside productivity commands), inserting into domain_outbox_events to orchestrate event processing.
+      'supabase/migrations/20261007000000_claim_complete_fail_replay_retention.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);
