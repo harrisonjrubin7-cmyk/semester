@@ -1,102 +1,704 @@
 ---
 stale-refs:
   - source: RETENTION.md
-    changed_at: "2026-10-12T13:41:57"
+    changed_at: "2026-10-12T14:40:17"
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-12T13:41:57"
+    changed_at: "2026-10-12T14:40:18"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-12T13:41:57"
+    changed_at: "2026-10-12T14:40:18"
     sections_changed: []
     summary: externally modified
   - source: docs/CREDENTIAL-WALLET.md
-    changed_at: "2026-10-12T13:41:57"
+    changed_at: "2026-10-12T14:40:19"
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
-    changed_at: "2026-10-12T13:40:22"
+    changed_at: "2026-10-12T14:41:21"
     sections_changed: []
     summary: externally modified
   - source: docs/LMS-LEARNING-ROADMAP.md
-    changed_at: "2026-10-12T13:40:22"
+    changed_at: "2026-10-12T14:41:21"
     sections_changed: []
     summary: externally modified
   - source: docs/PROOF-CALENDAR.md
-    changed_at: "2026-10-12T13:40:23"
+    changed_at: "2026-10-12T14:41:21"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-12T13:40:23"
+    changed_at: "2026-10-12T14:41:22"
     sections_changed: []
     summary: externally modified
   - source: docs/WCAG-UI-AUDIT-SCORECARD.md
-    changed_at: "2026-10-12T13:40:23"
+    changed_at: "2026-10-12T14:41:22"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/ACCEPTABLE-USE-POLICY-DRAFT.md
-    changed_at: "2026-10-12T13:42:01"
+    changed_at: "2026-10-12T14:40:24"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/ACCESSIBILITY-STATEMENT-DRAFT.md
-    changed_at: "2026-10-12T13:42:01"
+    changed_at: "2026-10-12T14:40:24"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/AI-USE-POLICY-DRAFT.md
-    changed_at: "2026-10-12T13:42:01"
+    changed_at: "2026-10-12T14:40:24"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md
-    changed_at: "2026-10-12T13:40:24"
+    changed_at: "2026-10-12T14:41:24"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/INCIDENT-RESPONSE-SUMMARY-DRAFT.md
-    changed_at: "2026-10-12T13:40:24"
+    changed_at: "2026-10-12T14:41:24"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md
-    changed_at: "2026-10-12T13:42:01"
+    changed_at: "2026-10-12T14:40:24"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/SUPPORT-POLICY-DRAFT.md
-    changed_at: "2026-10-12T13:40:24"
+    changed_at: "2026-10-12T14:41:24"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/MIGRATION_PLAYBOOK.md
-    changed_at: "2026-10-12T13:42:01"
+    changed_at: "2026-10-12T14:40:24"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DPA-CHECKLIST.md
-    changed_at: "2026-10-12T13:40:26"
+    changed_at: "2026-10-12T14:41:26"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/HECVAT-VPAT-PLAN.md
-    changed_at: "2026-10-12T13:42:03"
+    changed_at: "2026-10-12T14:40:26"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PENETRATION-TEST-PLAN.md
-    changed_at: "2026-10-12T13:40:27"
+    changed_at: "2026-10-12T14:41:26"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SOC2-READINESS.md
-    changed_at: "2026-10-12T13:42:03"
+    changed_at: "2026-10-12T14:40:26"
     sections_changed: []
     summary: externally modified
   - source: RESTORE.md
-    changed_at: "2026-10-12T13:40:21"
+    changed_at: "2026-10-12T14:41:20"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/TERMS-OF-SERVICE-DRAFT.md
-    changed_at: "2026-10-12T13:40:24"
+    changed_at: "2026-10-12T14:41:24"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/COMMUNITY-GUIDELINES-DRAFT.md
-    changed_at: "2026-10-12T13:40:24"
+    changed_at: "2026-10-12T14:41:24"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

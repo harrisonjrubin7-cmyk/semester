@@ -1,26 +1,148 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-12T13:41:57"
+    changed_at: "2026-10-12T14:40:15"
     sections_changed: []
     summary: externally modified
   - source: docs/program/README.md
-    changed_at: "2026-10-12T13:42:02"
+    changed_at: "2026-10-12T14:40:25"
     sections_changed: []
     summary: externally modified
   - source: docs/program/STATUS-2026-10-04.md
-    changed_at: "2026-10-12T13:42:02"
+    changed_at: "2026-10-12T14:40:25"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-12T13:42:03"
+    changed_at: "2026-10-12T14:40:26"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/LAUNCH-READINESS-CHECKLIST.md
-    changed_at: "2026-10-12T13:40:25"
+    changed_at: "2026-10-12T14:41:24"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

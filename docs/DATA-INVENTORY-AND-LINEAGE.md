@@ -1,26 +1,154 @@
 ---
 stale-refs:
   - source: RETENTION.md
-    changed_at: "2026-10-12T13:41:57"
+    changed_at: "2026-10-12T14:40:16"
     sections_changed: []
     summary: externally modified
   - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
-    changed_at: "2026-10-12T13:40:22"
+    changed_at: "2026-10-12T14:41:20"
     sections_changed: []
     summary: externally modified
   - source: docs/DEFINER-RLS-REGISTER.md
-    changed_at: "2026-10-12T13:40:22"
+    changed_at: "2026-10-12T14:41:20"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-12T13:40:23"
+    changed_at: "2026-10-12T14:41:22"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/DATA-STEWARDSHIP.md
-    changed_at: "2026-10-12T13:40:25"
+    changed_at: "2026-10-12T14:41:24"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,26 +1,154 @@
 ---
 stale-refs:
   - source: docs/legal-drafts/IP-ASSET-INVENTORY-TEMPLATE.md
-    changed_at: "2026-10-12T13:42:01"
+    changed_at: "2026-10-12T14:40:24"
     sections_changed: []
     summary: externally modified
   - source: LEGAL-REVIEW-QUEUE.md
-    changed_at: "2026-10-12T13:40:21"
+    changed_at: "2026-10-12T14:41:20"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-12T13:40:21"
+    changed_at: "2026-10-12T14:41:20"
     sections_changed: []
     summary: externally modified
   - source: docs/BRAND-PLATFORM.md
-    changed_at: "2026-10-12T13:40:22"
+    changed_at: "2026-10-12T14:41:20"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/TRADEMARK-BRAND-USAGE-GUIDELINES-DRAFT.md
-    changed_at: "2026-10-12T13:40:25"
+    changed_at: "2026-10-12T14:41:24"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

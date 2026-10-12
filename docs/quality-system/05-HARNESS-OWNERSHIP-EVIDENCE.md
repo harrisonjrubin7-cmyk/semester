@@ -1,22 +1,124 @@
 ---
 stale-refs:
   - source: docs/quality-system/03-SUITES.md
-    changed_at: "2026-10-12T13:42:02"
+    changed_at: "2026-10-12T14:40:25"
     sections_changed: []
     summary: externally modified
   - source: docs/engineering-operations/TEST-COVERAGE-MATRIX.md
-    changed_at: "2026-10-12T13:40:24"
+    changed_at: "2026-10-12T14:41:23"
     sections_changed: []
     summary: externally modified
   - source: docs/quality-system/04-GATES-AND-CI.md
-    changed_at: "2026-10-12T13:40:25"
+    changed_at: "2026-10-12T14:41:25"
     sections_changed: []
     summary: externally modified
   - source: docs/quality-system/README.md
-    changed_at: "2026-10-12T13:40:25"
+    changed_at: "2026-10-12T14:41:25"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,14 +1,62 @@
 ---
 stale-refs:
   - source: docs/legal-drafts/DOMAIN-AND-DIGITAL-ASSET-REGISTER-TEMPLATE.md
-    changed_at: "2026-10-12T13:42:01"
+    changed_at: "2026-10-12T14:40:24"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/IP-ASSET-INVENTORY-TEMPLATE.md
-    changed_at: "2026-10-12T13:42:01"
+    changed_at: "2026-10-12T14:40:24"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

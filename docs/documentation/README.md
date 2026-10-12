@@ -1,54 +1,354 @@
 ---
 stale-refs:
   - source: CLAUDE.md
-    changed_at: "2026-10-12T13:40:21"
+    changed_at: "2026-10-12T14:41:20"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-12T13:41:57"
+    changed_at: "2026-10-12T14:40:18"
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
-    changed_at: "2026-10-12T13:40:22"
+    changed_at: "2026-10-12T14:41:21"
     sections_changed: []
     summary: externally modified
   - source: docs/PUBLIC-SITE.md
-    changed_at: "2026-10-12T13:40:23"
+    changed_at: "2026-10-12T14:41:21"
     sections_changed: []
     summary: externally modified
   - source: docs/README.md
-    changed_at: "2026-10-12T13:41:58"
+    changed_at: "2026-10-12T14:40:20"
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/INDEX.md
-    changed_at: "2026-10-12T13:42:00"
+    changed_at: "2026-10-12T14:40:23"
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/OWNERSHIP-AND-REVIEW.md
-    changed_at: "2026-10-12T13:42:00"
+    changed_at: "2026-10-12T14:40:23"
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/QUALITY-GATES.md
-    changed_at: "2026-10-12T13:40:24"
+    changed_at: "2026-10-12T14:41:23"
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/STYLE-GUIDE.md
-    changed_at: "2026-10-12T13:42:00"
+    changed_at: "2026-10-12T14:40:23"
     sections_changed: []
     summary: externally modified
   - source: docs/releases/README.md
-    changed_at: "2026-10-12T13:42:02"
+    changed_at: "2026-10-12T14:40:25"
     sections_changed: []
     summary: externally modified
   - source: LEGAL-REVIEW-QUEUE.md
-    changed_at: "2026-10-12T13:40:21"
+    changed_at: "2026-10-12T14:41:20"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-12T13:40:21"
+    changed_at: "2026-10-12T14:41:20"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

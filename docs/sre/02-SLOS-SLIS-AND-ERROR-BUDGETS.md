@@ -1,34 +1,210 @@
 ---
 stale-refs:
   - source: docs/sre/06-INCIDENTS-AND-ON-CALL.md
-    changed_at: "2026-10-12T13:42:02"
+    changed_at: "2026-10-12T14:40:25"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/README.md
-    changed_at: "2026-10-12T13:42:02"
+    changed_at: "2026-10-12T14:40:25"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/runbooks/RB-11-emergency-notification.md
-    changed_at: "2026-10-12T13:40:26"
+    changed_at: "2026-10-12T14:41:25"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/05-DELIVERY-AND-CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-12T13:40:26"
+    changed_at: "2026-10-12T14:41:25"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/07-RESILIENCE-BACKUP-DR-AND-CHAOS.md
-    changed_at: "2026-10-12T13:40:26"
+    changed_at: "2026-10-12T14:41:25"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
-    changed_at: "2026-10-12T13:42:01"
+    changed_at: "2026-10-12T14:40:24"
     sections_changed: []
     summary: externally modified
   - source: docs/engineering-operations/SLO-SLI-DRAFT.md
-    changed_at: "2026-10-12T13:40:24"
+    changed_at: "2026-10-12T14:41:23"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

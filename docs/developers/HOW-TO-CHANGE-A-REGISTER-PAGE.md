@@ -1,14 +1,64 @@
 ---
 stale-refs:
   - source: docs/SUPPLY-CHAIN.md
-    changed_at: "2026-10-12T13:40:23"
+    changed_at: "2026-10-12T14:41:22"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-A-DEPENDENCY.md
-    changed_at: "2026-10-12T13:42:00"
+    changed_at: "2026-10-12T14:40:23"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

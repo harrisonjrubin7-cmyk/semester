@@ -1,18 +1,94 @@
 ---
 stale-refs:
   - source: docs/program/COMPLETION_RISK_REGISTER.md
-    changed_at: "2026-10-12T13:42:02"
+    changed_at: "2026-10-12T14:40:25"
     sections_changed: []
     summary: externally modified
   - source: docs/program/READINESS_GAP_MATRIX.md
-    changed_at: "2026-10-12T13:40:25"
+    changed_at: "2026-10-12T14:41:25"
     sections_changed: []
     summary: externally modified
   - source: operations/GO_NO_GO_SCORECARD.md
-    changed_at: "2026-10-12T13:40:27"
+    changed_at: "2026-10-12T14:41:26"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

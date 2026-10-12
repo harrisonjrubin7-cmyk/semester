@@ -1,26 +1,148 @@
 ---
 stale-refs:
   - source: docs/DESIGN-SYSTEM-MIGRATION-PLAN.md
-    changed_at: "2026-10-12T13:41:58"
+    changed_at: "2026-10-12T14:40:19"
     sections_changed: []
     summary: externally modified
   - source: docs/design/SEMESTER-UI-CONSTITUTION.md
-    changed_at: "2026-10-12T13:42:00"
+    changed_at: "2026-10-12T14:40:23"
     sections_changed: []
     summary: externally modified
   - source: docs/DESIGN-SYSTEM-IMPROVEMENTS.md
-    changed_at: "2026-10-12T13:40:22"
+    changed_at: "2026-10-12T14:41:20"
     sections_changed: []
     summary: externally modified
   - source: docs/design/INTERACTION-STANDARDS.md
-    changed_at: "2026-10-12T13:41:59"
+    changed_at: "2026-10-12T14:40:23"
     sections_changed: []
     summary: externally modified
   - source: docs/design/SCREEN-QUALITY-CHECKLIST.md
-    changed_at: "2026-10-12T13:42:00"
+    changed_at: "2026-10-12T14:40:23"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

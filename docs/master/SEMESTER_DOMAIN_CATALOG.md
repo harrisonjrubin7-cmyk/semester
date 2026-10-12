@@ -1,30 +1,182 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-12T13:41:57"
+    changed_at: "2026-10-12T14:40:15"
     sections_changed: []
     summary: externally modified
   - source: docs/PRODUCT-STATUS-MAP.md
-    changed_at: "2026-10-12T13:40:23"
+    changed_at: "2026-10-12T14:41:21"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_COMPLETE_OPERATING_SYSTEM.md
-    changed_at: "2026-10-12T13:40:25"
+    changed_at: "2026-10-12T14:41:24"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_DOMAIN_REPLACEMENT_GATES.md
-    changed_at: "2026-10-12T13:40:25"
+    changed_at: "2026-10-12T14:41:24"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_MIGRATION_FACTORY.md
-    changed_at: "2026-10-12T13:42:01"
+    changed_at: "2026-10-12T14:40:24"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_TRUST_AND_GOVERNANCE_MODEL.md
-    changed_at: "2026-10-12T13:40:25"
+    changed_at: "2026-10-12T14:41:24"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

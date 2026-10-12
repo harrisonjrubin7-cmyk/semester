@@ -1,14 +1,64 @@
 ---
 stale-refs:
   - source: docs/ELEVATION-AND-GLASS-POLICY.md
-    changed_at: "2026-10-12T13:40:22"
+    changed_at: "2026-10-12T14:41:21"
     sections_changed: []
     summary: externally modified
   - source: docs/TRUST-CUES-AND-SOURCE-PRESENTATION.md
-    changed_at: "2026-10-12T13:41:58"
+    changed_at: "2026-10-12T14:40:21"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

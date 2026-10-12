@@ -1,10 +1,36 @@
 ---
 stale-refs:
   - source: docs/SSO-SECURITY-AND-SESSION-MANAGEMENT.md
-    changed_at: "2026-10-12T13:40:23"
+    changed_at: "2026-10-12T14:41:22"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

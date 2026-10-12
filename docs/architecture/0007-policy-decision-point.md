@@ -1,10 +1,34 @@
 ---
 stale-refs:
   - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
-    changed_at: "2026-10-12T13:41:58"
+    changed_at: "2026-10-12T14:40:21"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

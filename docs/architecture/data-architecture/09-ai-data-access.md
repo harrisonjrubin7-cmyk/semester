@@ -1,10 +1,36 @@
 ---
 stale-refs:
   - source: docs/architecture/data-architecture/01-canonical-entity-model.md
-    changed_at: "2026-10-12T13:40:23"
+    changed_at: "2026-10-12T14:41:22"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

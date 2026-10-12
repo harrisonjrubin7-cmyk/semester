@@ -1,10 +1,34 @@
 ---
 stale-refs:
   - source: docs/architecture/0004-ai-through-a-metered-gateway.md
-    changed_at: "2026-10-12T13:41:58"
+    changed_at: "2026-10-12T14:40:21"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

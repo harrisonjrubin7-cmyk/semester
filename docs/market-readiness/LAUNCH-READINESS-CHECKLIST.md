@@ -1,10 +1,34 @@
 ---
 stale-refs:
   - source: docs/market-readiness/GO-NO-GO-CHECKLIST.md
-    changed_at: "2026-10-12T13:42:01"
+    changed_at: "2026-10-12T14:40:24"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

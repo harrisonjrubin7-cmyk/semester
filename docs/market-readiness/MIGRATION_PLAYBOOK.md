@@ -1,10 +1,36 @@
 ---
 stale-refs:
   - source: docs/institutional-implementation/MIGRATION-WORKBOOK.md
-    changed_at: "2026-10-12T13:40:24"
+    changed_at: "2026-10-12T14:41:24"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

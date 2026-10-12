@@ -1,0 +1,24 @@
+[
+  {
+    "index": 0,
+    "timestamp": "2026-10-12T13:51:10.380322+00:00",
+    "action": "genesis",
+    "data": {
+      "issue": 1483,
+      "title": "Canonical Action entity and lifecycle (P1-04)",
+      "requirements": [
+        "REQ-1: Create Action interface with state, lifecycle history, and source attribution",
+        "REQ-2: Implement ActionState type and ActionHistory immutable tracking",
+        "REQ-3: Create rankActions() algorithm for Most Important + up to 3 Next ordering",
+        "REQ-4: Create SourceLabel validation against five DB enum values",
+        "REQ-5: Create SourceBadge component with source label and freshness display",
+        "REQ-6: Integrate ranked action list into TodayDecisionSurface with lifecycle controls",
+        "REQ-7: Add semester.actions.v1 device store with versioning",
+        "REQ-8: Add semester.actions.v1 to OWNED_TABLES for Supabase sync"
+      ]
+    },
+    "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "hash": "67c7f7129fea638d5c24e24f6a7916ec16d1f20f0690b8de3a1860c80645db63",
+    "signature": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAg8L21PK2C0WCF4cHCo6MQhHfpq4\nzNiF09tN8eKgcC4LsAAAAKZm9yZ2Vwcm9vZgAAAAAAAAAGc2hhNTEyAAAAUwAAAAtzc2gt\nZWQyNTUxOQAAAED1xYdvAFiwzAF/y/FS5zNhLwgdv786mX7oT7K0jIi2DMylkTtePWtI5O\nxGYOevVIvFbJppsQD1lh/wIl/nZkkN\n-----END SSH SIGNATURE-----"
+  }
+]
