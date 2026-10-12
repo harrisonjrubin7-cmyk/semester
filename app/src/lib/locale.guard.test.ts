@@ -59,10 +59,6 @@ const DELIBERATE: Record<string, { count: number; why: string }> = {
   },
   'lib/graduation.ts': { count: 1, why: 'US dollars, grouped the way the bill it is checked against groups them' },
   'components/GraduationSimulator.tsx': { count: 1, why: 'the same dollars, on screen' },
-  'components/company/ProcurementAccess.tsx': {
-    count: 2,
-    why: 'procurement grants and access events are audit records written in UTC so every operator reads the same instant',
-  },
   'lib/help-routes.ts': {
     count: 1,
     why: "#791 pre-fills a deadline into a help request a member of staff reads; text for somebody else must not follow the student's format choice",

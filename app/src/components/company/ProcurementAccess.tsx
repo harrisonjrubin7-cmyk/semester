@@ -11,6 +11,7 @@ import type {
   WithdrawalOutcome,
 } from '../../lib/company/procurement';
 import { COMPANY_PAGE_SIZE } from '../../lib/company/procurement';
+import { formatDate, formatDateTime } from '../../lib/locale';
 
 export interface ProcurementAccessApi {
   loadAccounts: (page?: number) => Promise<CompanyAccount[]>;
@@ -35,14 +36,14 @@ function date(value: string | null): string {
   if (!value) return 'unknown';
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return 'unknown';
-  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'UTC' }).format(parsed);
+  return formatDate(parsed, { dateStyle: 'medium', timeZone: 'UTC' });
 }
 
 function moment(value: string | null): string {
   if (!value) return 'unknown';
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return 'unknown';
-  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }).format(parsed) + ' UTC';
+  return formatDateTime(parsed, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }) + ' UTC';
 }
 
 function grantLabel(grant: ProcurementGrantDetail): string {
