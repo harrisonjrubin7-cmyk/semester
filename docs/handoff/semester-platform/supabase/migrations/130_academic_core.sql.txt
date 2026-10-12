@@ -1,0 +1,168 @@
+-- 130 · Academic core: terms, courses, sections, enrollment mirror, holds, requirements, readiness, advising.
+-- The institution's SIS remains the system of record. Every mirrored row carries source + synced_at;
+-- Semester never writes these back. Writes from users go through api.* functions only.
+-- Depends on 010 (core, audit), 050 (hardening), 100 (ctl.can, ctl.outbox). RECONCILE with the repo's existing tables first.
+create schema if not exists acad;
+
+-- Provenance every mirrored row carries. 'unknown' is a real state, not a null.
+do $$ begin create type acad.freshness as enum ('fresh','stale','unknown'); exception when duplicate_object then null; end $$;
+
+create table if not exists acad.terms(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions,
+  code text not null, name text not null, starts_on date not null, ends_on date not null,
+  registration_opens_at timestamptz, add_drop_ends_at timestamptz,
+  source text not null default 'sis', source_ref text, synced_at timestamptz not null default now(),
+  unique (institution_id, code), check (ends_on > starts_on));
+
+create table if not exists acad.courses(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions,
+  subject text not null, number text not null, title text not null, credits numeric(4,1) not null check (credits >= 0),
+  description text, source text not null default 'sis', source_ref text, synced_at timestamptz not null default now(),
+  unique (institution_id, subject, number));
+
+create table if not exists acad.sections(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions,
+  course_id uuid not null references acad.courses on delete cascade, term_id uuid not null references acad.terms on delete cascade,
+  code text not null, instructor_id uuid references core.profiles, meeting jsonb not null default '[]'::jsonb check (jsonb_typeof(meeting) = 'array'),
+  capacity int check (capacity >= 0), lms_ref text, source text not null default 'sis', synced_at timestamptz not null default now(),
+  unique (term_id, course_id, code));
+
+-- Mirror of official enrollment. Read-only to everyone; written only by the sync worker (service role).
+create table if not exists acad.enrollments(
+  section_id uuid not null references acad.sections on delete cascade, person_id uuid not null references core.profiles on delete cascade,
+  institution_id uuid not null references core.institutions, role text not null check (role in ('student','ta','instructor')),
+  status text not null check (status in ('enrolled','waitlisted','dropped','completed')),
+  source text not null default 'sis', synced_at timestamptz not null default now(), primary key (section_id, person_id));
+create index if not exists enr_person on acad.enrollments(person_id);
+
+create table if not exists acad.holds(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions,
+  person_id uuid not null references core.profiles on delete cascade, office text not null,
+  kind text not null check (kind in ('financial','advising','conduct','immunization','records','other')),
+  blocks text[] not null default '{registration}', reason_public text not null, amount_cents int check (amount_cents >= 0),
+  placed_at timestamptz not null, cleared_at timestamptz, source text not null default 'sis', source_ref text, synced_at timestamptz not null default now());
+create index if not exists holds_person_open on acad.holds(person_id) where cleared_at is null;
+
+create table if not exists acad.requirements(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions,
+  course_id uuid not null references acad.courses on delete cascade, kind text not null check (kind in ('prerequisite','corequisite','standing','permission')),
+  expression jsonb not null, source text not null default 'catalog', synced_at timestamptz not null default now());
+
+-- Readiness: one row per student/term/item. State mirrors the ReadinessState component (seven states).
+create table if not exists acad.readiness_items(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions,
+  person_id uuid not null references core.profiles on delete cascade, term_id uuid not null references acad.terms on delete cascade,
+  item text not null check (item in ('window','hold','prerequisite','plan','advising','documents','other')),
+  state text not null check (state in ('ready_as_of','blocked','review_required','handoff_pending','stale','unknown','not_applicable')),
+  freshness acad.freshness not null default 'unknown', source text not null, source_ref text, as_of timestamptz,
+  owner_office text, next_action text, evidence jsonb not null default '{}'::jsonb check (pg_column_size(evidence) < 4096),
+  updated_at timestamptz not null default now(), unique (person_id, term_id, item, source_ref));
+-- Hard rule: 'ready_as_of' must carry a time and a fresh source. Never a ready without evidence.
+alter table acad.readiness_items drop constraint if exists ready_needs_evidence;
+alter table acad.readiness_items add constraint ready_needs_evidence check (state <> 'ready_as_of' or (as_of is not null and freshness = 'fresh'));
+
+create table if not exists acad.advising_assignments(
+  advisor_id uuid not null references core.profiles on delete cascade, student_id uuid not null references core.profiles on delete cascade,
+  institution_id uuid not null references core.institutions, kind text not null default 'primary' check (kind in ('primary','secondary','program')),
+  starts_on date not null default current_date, ends_on date, source text not null default 'sis', primary key (advisor_id, student_id, kind));
+
+create table if not exists acad.advising_slots(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions,
+  advisor_id uuid not null references core.profiles on delete cascade, starts_at timestamptz not null, ends_at timestamptz not null,
+  mode text not null check (mode in ('in_person','video','phone')), booked_by uuid references core.profiles, booked_at timestamptz,
+  receipt_code text unique, check (ends_at > starts_at));
+
+create table if not exists acad.advising_notes(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions,
+  student_id uuid not null references core.profiles on delete cascade, author_id uuid not null references core.profiles default auth.uid(),
+  visibility text not null default 'advisors' check (visibility in ('advisors','student_shared')),
+  body text not null check (length(body) <= 8000), created_at timestamptz not null default now());
+
+-- Handoffs: a blocker routed to the office that owns it, with the minimum context.
+create table if not exists acad.office_handoffs(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions,
+  student_id uuid not null references core.profiles on delete cascade, readiness_item_id uuid references acad.readiness_items on delete set null,
+  office text not null, shared_fields text[] not null check (array_length(shared_fields,1) between 1 and 6),
+  state text not null default 'open' check (state in ('open','in_review','resolved','declined','expired')),
+  assignee_id uuid references core.profiles, sla_due timestamptz, resolution text check (length(resolution) <= 2000),
+  created_at timestamptz not null default now(), resolved_at timestamptz);
+
+-- RLS
+alter table acad.terms enable row level security; alter table acad.courses enable row level security; alter table acad.sections enable row level security;
+alter table acad.enrollments enable row level security; alter table acad.holds enable row level security; alter table acad.requirements enable row level security;
+alter table acad.readiness_items enable row level security; alter table acad.advising_assignments enable row level security; alter table acad.advising_slots enable row level security;
+alter table acad.advising_notes enable row level security; alter table acad.office_handoffs enable row level security;
+
+create or replace function acad.advises(p_student uuid) returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from acad.advising_assignments a where a.advisor_id = auth.uid() and a.student_id = p_student and (a.ends_on is null or a.ends_on >= current_date)) $$;
+create or replace function acad.teaches(p_section uuid) returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from acad.enrollments e where e.section_id = p_section and e.person_id = auth.uid() and e.role in ('instructor','ta') and e.status = 'enrolled') $$;
+
+create policy terms_read on acad.terms for select using (institution_id = core.my_institution());
+create policy courses_read on acad.courses for select using (institution_id = core.my_institution());
+create policy sections_read on acad.sections for select using (institution_id = core.my_institution());
+create policy reqs_read on acad.requirements for select using (institution_id = core.my_institution());
+create policy enr_self on acad.enrollments for select using (person_id = auth.uid());
+create policy enr_teach on acad.enrollments for select using (acad.teaches(section_id));
+create policy enr_advise on acad.enrollments for select using (acad.advises(person_id));
+create policy enr_registrar on acad.enrollments for select using (ctl.can('records:read', institution_id));
+create policy holds_self on acad.holds for select using (person_id = auth.uid());
+create policy holds_advise on acad.holds for select using (acad.advises(person_id));
+create policy holds_office on acad.holds for select using (ctl.can('holds:read', institution_id, null, 'office', office));
+create policy ri_self on acad.readiness_items for select using (person_id = auth.uid());
+create policy ri_advise on acad.readiness_items for select using (acad.advises(person_id));
+create policy aa_parties on acad.advising_assignments for select using (advisor_id = auth.uid() or student_id = auth.uid());
+create policy slots_read on acad.advising_slots for select using (institution_id = core.my_institution() and (booked_by is null or booked_by = auth.uid() or advisor_id = auth.uid()));
+create policy notes_advisors on acad.advising_notes for select using (acad.advises(student_id) or author_id = auth.uid());
+create policy notes_student on acad.advising_notes for select using (student_id = auth.uid() and visibility = 'student_shared');
+create policy oh_student on acad.office_handoffs for select using (student_id = auth.uid());
+create policy oh_office on acad.office_handoffs for select using (ctl.can('handoffs:work', institution_id, null, 'office', office));
+revoke insert, update, delete on all tables in schema acad from anon, authenticated;
+grant usage on schema acad to authenticated; grant select on all tables in schema acad to authenticated;
+
+-- Commands
+create or replace function api.book_advising(p_slot uuid, p_idem text) returns text language plpgsql security definer set search_path = '' as $$
+declare s acad.advising_slots; code text; begin
+  select * into s from acad.advising_slots where id = p_slot for update;
+  if s.id is null or s.institution_id <> core.my_institution() then raise exception 'NOT_FOUND'; end if;
+  if s.booked_by = auth.uid() then return s.receipt_code; end if;                                  -- idempotent retry
+  if s.booked_by is not null then raise exception 'SLOT_TAKEN'; end if;
+  if not acad.advises_student(s.advisor_id, auth.uid()) then raise exception 'FORBIDDEN'; end if;
+  if s.starts_at < now() + interval '2 hours' then raise exception 'TOO_LATE'; end if;
+  code := 'RCPT-' || upper(substr(encode(extensions.gen_random_bytes(4),'hex'),1,6));
+  update acad.advising_slots set booked_by = auth.uid(), booked_at = now(), receipt_code = code where id = p_slot;
+  update acad.readiness_items set state = 'handoff_pending', next_action = 'Attend check-in', updated_at = now()
+    where person_id = auth.uid() and item = 'advising' and state in ('review_required','unknown');
+  perform audit.log('advising.book', p_slot::text, null, jsonb_build_object('receipt', code, 'idem', p_idem));
+  insert into ctl.outbox(topic, tenant_id, payload) values ('advising.booked', s.institution_id, jsonb_build_object('slot', p_slot, 'student', auth.uid()));
+  return code; end $$;
+create or replace function acad.advises_student(p_advisor uuid, p_student uuid) returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from acad.advising_assignments a where a.advisor_id = p_advisor and a.student_id = p_student and (a.ends_on is null or a.ends_on >= current_date)) $$;
+
+create or replace function api.route_blocker(p_item uuid, p_office text, p_fields text[]) returns uuid language plpgsql security definer set search_path = '' as $$
+declare r acad.readiness_items; h uuid; begin
+  select * into r from acad.readiness_items where id = p_item;
+  if r.id is null or r.person_id <> auth.uid() then raise exception 'NOT_FOUND'; end if;
+  if not (p_fields <@ array['name','student_id','hold_reference','term','course','document_reference']) then raise exception 'FIELDS_NOT_ALLOWED'; end if;
+  select id into h from acad.office_handoffs where readiness_item_id = p_item and state in ('open','in_review');
+  if h is not null then return h; end if;                                                         -- one open handoff per item
+  insert into acad.office_handoffs(institution_id, student_id, readiness_item_id, office, shared_fields, sla_due)
+    values (r.institution_id, auth.uid(), p_item, p_office, p_fields, now() + interval '2 days') returning id into h;
+  update acad.readiness_items set state = 'handoff_pending', owner_office = p_office, updated_at = now() where id = p_item;
+  perform audit.log('readiness.route', p_item::text, null, jsonb_build_object('office', p_office, 'fields', p_fields));
+  return h; end $$;
+
+create or replace function api.resolve_handoff(p_handoff uuid, p_state text, p_resolution text) returns void language plpgsql security definer set search_path = '' as $$
+declare h acad.office_handoffs; begin
+  select * into h from acad.office_handoffs where id = p_handoff for update;
+  if h.id is null or not ctl.can('handoffs:work', h.institution_id, null, 'office', h.office) then raise exception 'FORBIDDEN'; end if;
+  if p_state not in ('in_review','resolved','declined') then raise exception 'INVALID_STATE'; end if;
+  update acad.office_handoffs set state = p_state, resolution = p_resolution, assignee_id = coalesce(assignee_id, auth.uid()),
+    resolved_at = case when p_state in ('resolved','declined') then now() end where id = p_handoff;
+  -- Resolving a handoff does NOT mark the item ready: the next SIS sync must confirm the hold cleared.
+  update acad.readiness_items set state = 'stale', freshness = 'stale', next_action = 'Waiting for next record sync', updated_at = now()
+    where id = h.readiness_item_id and p_state = 'resolved';
+  perform audit.log('handoff.' || p_state, p_handoff::text, to_jsonb(h.state), to_jsonb(p_state));
+  insert into ctl.outbox(topic, tenant_id, payload) values ('handoff.' || p_state, h.institution_id, jsonb_build_object('handoff', p_handoff));
+  end $$;
+grant execute on function api.book_advising(uuid,text), api.route_blocker(uuid,text,text[]), api.resolve_handoff(uuid,text,text) to authenticated;
