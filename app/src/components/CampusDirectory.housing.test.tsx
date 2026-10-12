@@ -2,8 +2,8 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { EMPTY_HOUSING, housingPlanKey } from '../lib/portal-storage';
-import { HousingPlanner } from './CampusDirectory';
+import { EMPTY_HOUSING, EMPTY_MEALS, housingPlanKey, mealPlanKey } from '../lib/portal-storage';
+import { HousingPlanner, MealPlanner } from './CampusDirectory';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -56,5 +56,33 @@ describe('housing application-plan account isolation', () => {
 
     await render('account-a');
     expect(residence().value).toBe('Account A Hall');
+  });
+});
+
+describe('meal estimate account isolation', () => {
+  const planName = () =>
+    [...host.querySelectorAll('label')]
+      .find((label) => label.textContent?.startsWith('Plan name'))!
+      .querySelector('input') as HTMLInputElement;
+  const renderMeal = (accountId: string | null) =>
+    act(async () => root.render(<MealPlanner choice="" term={TERM} accountId={accountId} />));
+
+  it('never adopts the ambiguous legacy term-only estimate or another account estimate', async () => {
+    const legacy = { ...EMPTY_MEALS, name: 'Legacy plan', cost: '3000' };
+    const mine = { ...EMPTY_MEALS, name: 'Account A plan', weekly: '14', weeks: '15', cost: '3200' };
+    localStorage.setItem(`semester.meal-plan.${TERM}`, JSON.stringify(legacy));
+    localStorage.setItem(mealPlanKey('account-a', TERM), JSON.stringify(mine));
+
+    await renderMeal('account-b');
+    expect(planName().value).toBe('');
+    expect(host.textContent).toContain('Changes save for this account on this device');
+
+    await type(planName(), 'Account B plan');
+    expect(JSON.parse(localStorage.getItem(mealPlanKey('account-b', TERM))!).name).toBe('Account B plan');
+    expect(JSON.parse(localStorage.getItem(mealPlanKey('account-a', TERM))!).name).toBe('Account A plan');
+    expect(JSON.parse(localStorage.getItem(`semester.meal-plan.${TERM}`)!).name).toBe('Legacy plan');
+
+    await renderMeal('account-a');
+    expect(planName().value).toBe('Account A plan');
   });
 });

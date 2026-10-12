@@ -1566,6 +1566,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-11 account-scoped recoverable meal estimates — automation pass 10, integration slice 100
+
+- [x] Fetch `origin/main`, confirm required clean branch/base `1b86e0fcd` / `ba24569ab` and search history/current code for equivalent meal-estimate isolation or recovery work.
+- [x] Replace the ambiguous term-only meal-estimate key with a shared account-and-term key authority; preserve the old key without adopting it because its owner is unknown.
+- [x] Pass the current account into the existing Meal planner and state the account/device persistence boundary.
+- [x] Add meal estimates to the validated workspace backup, selecting only the requested account, validating with `readMealDraft` and restoring only to the restoring account.
+- [x] Prove the UI never shows another account or legacy estimate and prove backup excludes both another account and the unowned legacy record.
+- [x] Preserve the existing financial-language boundary: the calculator remains a student-entered estimate and does not change an enrolled plan, official balance, charge or payment.
+- [x] Prove the former implementation red, then pass 68/68 focused and adjacent meal, form, account-isolation, backup and coverage tests (including the 44 core isolation/backup tests); pass TypeScript, lint, university typecheck, production build, 78 design-check constituent tests, 96 report-contract tests, design audit and CSS ledger checks.
+- [ ] Aggregate design-system wrappers — unavailable because they hardcode missing `npm`/`npx`; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account/term recovery slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory skill preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
+- [ ] Keep official dining/card-office data, charges, payments, provider operations and legacy-record adoption separate from this private estimate.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## 2026-10-11 recoverable Toolkit workspaces — automation pass 12, integration slice 90
 
 - [x] Start from clean required-branch head `bb70b1c7`; confirm selection-time `origin/main` `ec618dea` is already included, then inspect final `bbf94ea2` and confirm its production read-only wiring/reference files do not overlap the Toolkit, backup or integration-control slice.

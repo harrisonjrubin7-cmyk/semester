@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `ba24569ab` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `6e382ff13` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -1011,3 +1011,13 @@ Housing planning now writes to `semester.housing-plan.v2:<account>:<term>`, shar
 The account-isolation UI guard and backup/coverage tests pass 42/42. TypeScript, lint, university typecheck and production build pass with eight existing warnings and the existing chunk-size warning. Token export passes 9/9, design contracts pass 69/69, report contracts pass 96/96, design audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Aggregate wrappers and ordered/shuffled full suites were not run.
 
 HawkScan stops at mandatory preflight because Hawk and Docker are absent, API key and app-host environment values are unset, and no runnable target exists. The detected local properties file was not read. No scan or security pass is claimed. Meal-plan ownership/portability remains the next adjacent candidate and must preserve its separate financial-estimate boundary; authenticated scanner-backed Import remains externally gated.
+
+## Account-scoped recoverable meal estimates — automation pass 10, integration slice 100
+
+Selection-time `origin/main` `ba24569ab` is already included in clean branch head `1b86e0fcd` and contains no account-scoped meal-estimate key or portable recovery definition. The final dirty-tree fetch observed `6e382ff13`; its only change removes one line from `gitbook-docs.yaml` and does not overlap this slice. Re-ranking selected the meal planner adjacent to housing because its former `semester.meal-plan.<term>` key exposed a student-entered plan name, usage assumptions and cost estimate to every account using the same browser. The old term-only record cannot be attributed safely, so it remains intact and is neither displayed nor auto-migrated.
+
+Meal planning now writes to `semester.meal-plan.v2:<account>:<term>`, with the same key authority used by the validated workspace backup. Backup selects only the requested account's estimates, validates each record through `readMealDraft` and restores it only under the restoring account. The existing calculator language remains explicit that cost-per-meal figures are estimates, omit several benefits and purchases, and do not change the enrolled plan or an official account balance.
+
+The final focused and adjacent meal, form, account-isolation, workspace-backup and coverage set passes 68/68, including the 44 core isolation/backup tests that failed against the former key and missing backup definition. TypeScript, lint, university gateway typecheck and production build pass with eight existing lint warnings and the existing chunk-size warning. The exact design-check constituents pass 78/78; report contracts pass 96/96; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. The aggregate design wrappers remain unavailable because they hardcode missing `npm`/`npx`; ordered and shuffled full suites were not run.
+
+The active HawkScan skill stops at mandatory preflight because Hawk and Docker are absent, `HAWK_API_KEY` / `HAWK_APP_HOST` are unset and no runnable target exists. A local properties file was detected but not read. No target, scan, finding result, fix/rescan loop or security pass is claimed. The integration control documents are the documentation impact for this bounded, unshipped recovery correction; no release, deployment or official dining integration claim was added. Another fresh dependency/recovery ranking is required next, while authenticated scanner-backed Import remains externally gated.

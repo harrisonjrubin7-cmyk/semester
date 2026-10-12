@@ -8,7 +8,7 @@ import { EMPTY_CAREER } from './career';
 import { EMPTY_CREATIONS } from './creations';
 import { EMPTY_FAMILY } from './family';
 import { EMPTY_PATHWAY } from './pathway';
-import { EMPTY_HOUSING, HOUSING_PLAN_PREFIX } from './portal-storage';
+import { EMPTY_HOUSING, EMPTY_MEALS, HOUSING_PLAN_PREFIX, MEAL_PLAN_PREFIX } from './portal-storage';
 import {
   readWorkspaceBackup,
   restoreWorkspaces,
@@ -84,10 +84,11 @@ const seed = (storage: FakeStorage, account = ACCOUNT) => {
   storage.setItem(`semester.path-profile.v1:${account}`, JSON.stringify(EMPTY_PATH_PROFILE));
   storage.setItem(`semester.clarity.v1:${account}`, JSON.stringify(EMPTY_CLARITY));
   storage.setItem(`${HOUSING_PLAN_PREFIX}:${account}:${TERM}`, JSON.stringify(EMPTY_HOUSING));
+  storage.setItem(`${MEAL_PLAN_PREFIX}:${account}:${TERM}`, JSON.stringify(EMPTY_MEALS));
 };
 
 /** How many workspaces `seed` writes: one per definition. */
-const SEEDED = 10;
+const SEEDED = 11;
 
 let storage: FakeStorage;
 beforeEach(() => {
@@ -107,6 +108,7 @@ describe('what goes into a workspace backup', () => {
       'creations',
       'family',
       'housingPlan',
+      'mealPlan',
       'pathProfile',
       'pathway',
       'university',
@@ -146,6 +148,23 @@ describe('what goes into a workspace backup', () => {
     restoreWorkspaces(backup, 'acct-2', fresh);
     expect(JSON.parse(fresh.getItem(`${HOUSING_PLAN_PREFIX}:acct-2:${TERM}`)!)).toEqual(mine);
     expect(fresh.getItem(`${HOUSING_PLAN_PREFIX}:${ACCOUNT}:${TERM}`)).toBeNull();
+  });
+
+  it('takes only the account-owned meal estimate and leaves the ambiguous legacy estimate unclaimed', () => {
+    const mine = { ...EMPTY_MEALS, name: 'Flex 14', weekly: '14', weeks: '15', cost: '3200' };
+    storage.setItem(`${MEAL_PLAN_PREFIX}:${ACCOUNT}:${TERM}`, JSON.stringify(mine));
+    storage.setItem(`${MEAL_PLAN_PREFIX}:someone-else:${TERM}`, JSON.stringify({ ...mine, name: 'Other plan' }));
+    storage.setItem(`semester.meal-plan.${TERM}`, JSON.stringify({ ...mine, name: 'Legacy plan' }));
+
+    const backup = workspaceBackup(ACCOUNT, storage);
+    expect(backup.records).toEqual([{ kind: 'mealPlan', term: TERM, value: mine }]);
+    expect(JSON.stringify(backup)).not.toContain('Other plan');
+    expect(JSON.stringify(backup)).not.toContain('Legacy plan');
+
+    const fresh = new FakeStorage();
+    restoreWorkspaces(backup, 'acct-2', fresh);
+    expect(JSON.parse(fresh.getItem(`${MEAL_PLAN_PREFIX}:acct-2:${TERM}`)!)).toEqual(mine);
+    expect(fresh.getItem(`${MEAL_PLAN_PREFIX}:${ACCOUNT}:${TERM}`)).toBeNull();
   });
 
   it('leaves everything that is not a named workspace alone', () => {

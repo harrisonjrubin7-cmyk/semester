@@ -7,7 +7,7 @@ import { EVIDENCE_PREFIX, readEvidence } from './career-evidence';
 import { SHORTLIST_KEY, readShortlist } from './course-detail';
 import { GRADUATION_KEY, readGraduation } from './graduation';
 import { LIFE_BALANCE_KEY, readSettings as readLifeBalance } from './life-balance';
-import { HOUSING_PLAN_PREFIX, readHousingDraft, readRegistration } from './portal-storage';
+import { HOUSING_PLAN_PREFIX, MEAL_PLAN_PREFIX, readHousingDraft, readMealDraft, readRegistration } from './portal-storage';
 import { REGISTRATION_DAY_KEY, readRegistrationDay } from './registration-day';
 import { REGISTRATION_KEY } from './registration-plan';
 import { LOCKER_KEY, readLocker } from './source-locker';
@@ -254,6 +254,7 @@ const DEFINITIONS: Record<string, Definition> = {
     restore: (incoming, existing) => keepPrivateSupport(incoming, existing),
   },
   housingPlan: { label: 'Housing application plans', prefix: HOUSING_PLAN_PREFIX, scope: 'term', read: readHousingDraft },
+  mealPlan: { label: 'Meal-plan estimates', prefix: MEAL_PLAN_PREFIX, scope: 'term', read: readMealDraft },
   toolkit: { label: 'Toolkit assignments, research and declarations', prefix: TOOLKIT_PREFIX, scope: 'account', read: readToolkit },
   toolkitData: { label: 'Toolkit data projects', prefix: TOOLKIT_DATA_PREFIX, scope: 'account', read: readDataProjects },
 };

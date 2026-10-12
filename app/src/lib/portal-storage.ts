@@ -35,8 +35,12 @@ export interface MealDraft {name:string;weekly:string;weeks:string;cost:string}
 export const EMPTY_HOUSING:HousingDraft={residence:'',roomType:'',roommate:'',notes:'',checks:[]};
 export const EMPTY_MEALS:MealDraft={name:'',weekly:'',weeks:'',cost:''};
 export const HOUSING_PLAN_PREFIX='semester.housing-plan.v2';
+export const MEAL_PLAN_PREFIX='semester.meal-plan.v2';
 export function housingPlanKey(accountId:string|null|undefined,term:string):string {
  return `${HOUSING_PLAN_PREFIX}:${accountId||'device'}:${term}`;
+}
+export function mealPlanKey(accountId:string|null|undefined,term:string):string {
+ return `${MEAL_PLAN_PREFIX}:${accountId||'device'}:${term}`;
 }
 export function readHousingDraft(value:unknown):HousingDraft {
  if(!obj(value)||['residence','roomType','roommate','notes'].some(k=>!textValue(value[k])))throw new Error('Saved housing preferences are not valid.');

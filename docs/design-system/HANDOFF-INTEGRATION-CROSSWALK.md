@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `ba24569ab` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `6e382ff13` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -693,3 +693,15 @@ Slice commit `88a86781a` merged final upstream `ba24569ab` cleanly as `1948e3daa
 | Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent, API key and app host are unset and no runnable target exists; no DAST scan or security pass is claimed. |
 
 The focused account-isolation, workspace-backup and coverage set passes 42/42. TypeScript, lint, university typecheck and production build pass. Token export passes 9/9, design contracts pass 69/69, report contracts pass 96/96, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Current `origin/main` `ba24569ab` is already included and contains no equivalent work. No route, dependency, schema, grant, RLS policy, server operation, provider configuration, deployment or external system changed.
+
+## Automation pass 10 update — account-scoped recoverable meal estimates (slice 100)
+
+| Reference requirement | Current repository evidence | Disposition |
+| --- | --- | --- |
+| Keep a private meal estimate inside one account and term | `app/src/lib/portal-storage.ts`, `app/src/components/CampusDirectory.tsx`, `app/src/screens/Meals.tsx` | **Existing but incomplete → existing and verified for meal planning.** The v2 key contains account and term; account switching cannot display another account's plan name, usage assumptions or cost estimate. |
+| Handle the former term-only record without guessing its owner | `app/src/lib/workspace-backup.coverage.test.ts`, `app/src/components/CampusDirectory.housing.test.tsx` | **Intentionally preserved, not migrated.** The old record stays on the device but is neither displayed in an account workspace nor added to a portable backup. |
+| Provide validated portable recovery | `app/src/lib/workspace-backup.ts`, `app/src/lib/workspace-backup.test.ts` | **Existing and verified.** Backup selects one account's meal estimates, validates them with `readMealDraft` and remaps them only to the restoring account. |
+| Preserve financial and institution authority | `app/src/components/CampusDirectory.tsx`, `app/src/screens/Meals.tsx` | **Existing and unchanged.** The calculator remains a student-entered estimate, excludes named benefits and purchases, and does not change the enrolled plan, official balance, charge or payment. |
+| Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent, API key and app host are unset and no runnable target exists; no DAST scan or security pass is claimed. |
+
+The final focused and adjacent meal, form, account-isolation, workspace-backup and coverage set passes 68/68, including the 44 core red-before-green isolation/backup tests. TypeScript, lint, university typecheck and production build pass. Exact design-check constituents pass 78/78, report contracts pass 96/96, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Aggregate wrappers and ordered/shuffled full suites are not claimed. Selection-time `origin/main` `ba24569ab` is included and contains no equivalent work; final observed `6e382ff13` changes only `gitbook-docs.yaml`. No route, dependency, schema, grant, RLS policy, server operation, provider configuration, deployment or external system changed.
