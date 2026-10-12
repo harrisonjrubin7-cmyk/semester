@@ -123,6 +123,21 @@ describe('fields this build cannot read', () => {
     });
   });
 
+  // Found reviewing df5dd87: after an account switch whose storage writes were
+  // refused, the old account's later-stamped copy outranked the new account's
+  // memory, failed the account check, and the push went up without its fields.
+  it('never lets another account\u2019s stored copy outrank this account\u2019s memory', () => {
+    rememberCarried('u1', { theirs: 1 }, known, '2026-10-12T10:05:00Z');
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('full', 'QuotaExceededError');
+    });
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError');
+    });
+    rememberCarried('u2', { mine: 2 }, known, '2026-10-12T10:00:00Z');
+    expect(withCarried('u2', { notes: [] })).toEqual({ notes: [], mine: 2 });
+  });
+
   it('reads the stored copy after a reload', async () => {
     rememberCarried('u1', { later: 1 }, known);
     vi.resetModules();

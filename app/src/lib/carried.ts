@@ -63,7 +63,9 @@ function read(): Held | null {
   // A stored copy a refused write could not replace is from an older version
   // than memory; one another tab wrote from a newer version is newer. On a
   // tie this session's own copy stands.
-  return disk && disk.at > memory.at ? disk : memory;
+  // Only within one account: another account's copy, left by a refused
+  // removal, says nothing about this one's fields however late it was read.
+  return disk && disk.account === memory.account && disk.at > memory.at ? disk : memory;
 }
 
 /**
