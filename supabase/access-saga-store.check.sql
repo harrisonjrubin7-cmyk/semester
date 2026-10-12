@@ -1,9 +1,14 @@
--- The access saga's durable store (20261006180000_access_saga_store).
+-- The access saga's durable store (20261006180000_access_saga_store,
+-- 20261011200000 review fixes, 20261012030000 `access_saga_due`).
 -- LOCAL/DISPOSABLE DATABASES ONLY; the transaction is always rolled back.
 --
 -- What must hold:
---   * all three tables are service-only, and the five functions run for
+--   * all three tables are service-only, and the six functions run for
 --     service_role alone;
+--   * `due` lists only sagas the runner would move: a working state past its
+--     next attempt, a waiting state past its deadline, ACTIVE past its grant's
+--     expiry, never a finished one, never one under a live lease; oldest first,
+--     within the limit it was given;
 --   * `claim` is exclusive until the lease expires, then another owner may take it;
 --   * `save` is one transaction: with a stale lease token, an expired lease or a
 --     moved revision it raises SC409 and writes neither the saga nor its event, and
@@ -53,6 +58,15 @@ begin
 end $$;
 
 -- A saga at `st`, for tests that need one in a given state.
+-- A saga with its clocks set on the way in: a row changes only by a saved revision, so a check cannot update them afterwards.
+create or replace function pg_temp.saga_at(sid text, st text, next_at bigint, deadline bigint default 9999999999999, grant_exp bigint default null)
+returns void language sql as $$
+  insert into public.access_sagas (id, tenant_id, subject_id, intent_resource_id, intent_action, request_digest, definition_version,
+                                   state, deadline_at, next_attempt_at, grant_id, grant_expires_at)
+  values (sid, 't1', 'u1', 'r1', 'registration.readiness.view', repeat('a', 64), '1', st, deadline, next_at,
+          case when grant_exp is null then null else 'g' end, grant_exp);
+$$;
+
 create or replace function pg_temp.saga(sid text, st text default 'RECEIVED', paid boolean default false, pepd boolean default false)
 returns void language sql as $$
   insert into public.access_sagas (id, tenant_id, subject_id, intent_resource_id, intent_action, request_digest, definition_version,
@@ -96,7 +110,8 @@ begin
   end loop;
 
   foreach f in array array['access_saga_claim(text,integer)', 'access_saga_save(text,text,integer,jsonb,jsonb)',
-                           'access_saga_flag_recovery(text,text,text)', 'access_saga_release(text,text)', 'access_saga_wake(text,text,text)'] loop
+                           'access_saga_flag_recovery(text,text,text)', 'access_saga_release(text,text)', 'access_saga_wake(text,text,text)',
+                           'access_saga_due(integer)'] loop
     perform pg_temp.counted(f || ': anon cannot run it', (select has_function_privilege('anon', 'public.' || f, 'execute')::int), 0);
     perform pg_temp.counted(f || ': authenticated cannot run it', (select has_function_privilege('authenticated', 'public.' || f, 'execute')::int), 0);
     perform pg_temp.counted(f || ': service_role can run it', (select has_function_privilege('service_role', 'public.' || f, 'execute')::int), 1);
@@ -237,6 +252,39 @@ begin
   perform pg_temp.allows('a wake while a runner holds the lease', $s$select public.access_saga_wake('w5', 'sig-w', 'requirements_changed')$s$);
   perform pg_temp.refuses('the runner''s save at the revision it read',
     format($s$select public.access_saga_save('w5', %L, 0, %L::jsonb, %L::jsonb)$s$, tok, nx, jsonb_build_object('eventId', 'e-w5', 'type', 'access.state.changed', 'occurredAt', '2026-10-06T12:00:00Z')), 'SC409');
+
+  -- ── due ───────────────────────────────────────────────────────────────
+  perform pg_temp.saga('d-now', 'VALIDATING');
+  perform pg_temp.saga_at('d-later', 'VALIDATING', 9999999999999);
+  perform pg_temp.saga('d-denied', 'DENIED');
+  perform pg_temp.saga('d-expired', 'EXPIRED');
+  perform pg_temp.saga('d-revoked', 'REVOKED', true, true);
+  perform pg_temp.saga('d-held', 'PREPARING');
+  perform public.access_saga_claim('d-held', 60000);
+  perform pg_temp.saga('d-stale-lease', 'PREPARING');
+  update public.access_sagas set lease_token = 'dead', lease_expires_at = clock_timestamp() - interval '1 second' where id = 'd-stale-lease';
+  perform pg_temp.saga('d-waiting', 'WAITING_APPROVAL');
+  perform pg_temp.saga_at('d-waiting-overdue', 'WAITING_STEP_UP', 0, 1);
+  perform pg_temp.saga_at('d-active', 'ACTIVE', 0, 9999999999999, 9999999999999);
+  perform pg_temp.saga_at('d-active-expired', 'ACTIVE', 0, 9999999999999, 1);
+  perform pg_temp.saga('d-recovery', 'RECOVERY_REQUIRED');
+  perform pg_temp.counted('due lists the five the runner would move', (select count(*) from public.access_saga_due(50) d where d like 'd-%'), 5);
+  perform pg_temp.counted('due lists a working state past its next attempt', (select count(*) from public.access_saga_due(50) d where d = 'd-now'), 1);
+  perform pg_temp.counted('due lists a saga whose lease expired', (select count(*) from public.access_saga_due(50) d where d = 'd-stale-lease'), 1);
+  perform pg_temp.counted('due lists a wait past its deadline', (select count(*) from public.access_saga_due(50) d where d = 'd-waiting-overdue'), 1);
+  perform pg_temp.counted('due lists ACTIVE once its grant expired', (select count(*) from public.access_saga_due(50) d where d = 'd-active-expired'), 1);
+  perform pg_temp.counted('due lists a recovery for its next revocation', (select count(*) from public.access_saga_due(50) d where d = 'd-recovery'), 1);
+  perform pg_temp.counted('due omits a working state due later', (select count(*) from public.access_saga_due(50) d where d = 'd-later'), 0);
+  perform pg_temp.counted('due omits a saga under a live lease', (select count(*) from public.access_saga_due(50) d where d = 'd-held'), 0);
+  perform pg_temp.counted('due omits a wait within its deadline', (select count(*) from public.access_saga_due(50) d where d = 'd-waiting'), 0);
+  perform pg_temp.counted('due omits ACTIVE with a live grant', (select count(*) from public.access_saga_due(50) d where d = 'd-active'), 0);
+  perform pg_temp.counted('due omits the finished states', (select count(*) from public.access_saga_due(50) d where d in ('d-denied', 'd-expired', 'd-revoked')), 0);
+  perform pg_temp.counted('due honours its limit', (select count(*) from public.access_saga_due(2)), 2);
+  perform pg_temp.counted('a limit of zero still lists one', (select count(*) from public.access_saga_due(0)), 1);
+  perform pg_temp.counted('a wake makes a waiting saga due', (select count(*) from public.access_saga_due(50) d where d = 'd-waiting'), 0);
+  perform public.access_saga_wake('d-waiting', 'sig-due', 'requirements_changed');
+  perform pg_temp.counted('a wake makes a waiting saga due (after)', (select count(*) from public.access_saga_due(50) d where d = 'd-waiting'), 1);
+  perform pg_temp.counted('due is service-only (anon cannot run it)', (select has_function_privilege('anon', 'public.access_saga_due(integer)', 'execute')::int), 0);
 
   -- ── Events are append-only ────────────────────────────────────────────
   perform pg_temp.refuses('rewriting an event', $s$update public.access_saga_events set reason_code = 'other' where event_id = 'e-s1-1'$s$, 'append-only');

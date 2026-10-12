@@ -55,6 +55,104 @@ import { JourneyCards } from '../components/JourneyCards';
 import { journeysFor } from '../lib/journeys';
 import type { Screen } from '../lib/types';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { forSchool, useCapabilityDiscovery } from '../lib/capabilities';
+import { holdsConsole } from '../lib/console/capability';
+import { journeyFor } from '../lib/rolejourney';
+
+export function WorkspaceEntry() {
+  const { state, dispatch, school, account } = useStore();
+  const access = useCapabilityDiscovery(account?.id ?? '');
+  const schoolCapabilities = forSchool(access.grants, school.id);
+  const operator = access.status === 'ready' && holdsConsole(access.grants);
+  const listings = access.status === 'ready'
+    && schoolCapabilities.some((capability) => capability === 'opportunity:publish' || capability === 'opportunity:moderate');
+  const local = journeyFor(state.role);
+
+  return (
+    <section className="jx-card" aria-labelledby="workspace-entry-heading" style={{ marginBlock: 'var(--sp-5)' }}>
+      <h2 id="workspace-entry-heading" style={{ marginTop: 0 }}>Your workspaces</h2>
+      <p style={secondLine()}>
+        Keep this account and university while you move between work already implemented in Semester.
+        A presentation choice never grants connected access.
+      </p>
+
+      <div className="deskdir-fav">
+        <button
+          type="button"
+          className="bare deskdir-favcard"
+          onClick={() => dispatch({ type: 'openWorkspace', screen: 'account', view: 'course-studio' })}
+        >
+          <span className="deskdir-favsays">
+            <strong>Teaching</strong>
+            <span className="deskdir-favgroup" style={secondLine()}>Open the existing Course Studio check for this account.</span>
+          </span>
+          <span aria-hidden="true" className="deskdir-favgo">↗</span>
+        </button>
+        <button
+          type="button"
+          className="bare deskdir-favcard"
+          onClick={() => dispatch({ type: 'openWorkspace', screen: 'university', view: 'overview' })}
+        >
+          <span className="deskdir-favsays">
+            <strong>University services</strong>
+            <span className="deskdir-favgroup" style={secondLine()}>Plans, drafts and server-gated institution tools for this university.</span>
+          </span>
+          <span aria-hidden="true" className="deskdir-favgo">↗</span>
+        </button>
+        {listings ? (
+          <button
+            type="button"
+            className="bare deskdir-favcard"
+            onClick={() => dispatch({ type: 'openWorkspace', screen: 'university', view: 'drafts' })}
+          >
+            <span className="deskdir-favsays">
+              <strong>External listings</strong>
+              <span className="deskdir-favgroup" style={secondLine()}>Open the existing publisher and moderation desk.</span>
+            </span>
+            <span aria-hidden="true" className="deskdir-favgo">↗</span>
+          </button>
+        ) : null}
+        {operator ? (
+          <button
+            type="button"
+            className="bare deskdir-favcard"
+            onClick={() => dispatch({ type: 'go', screen: 'console' })}
+          >
+            <span className="deskdir-favsays">
+              <strong>Semester Operations</strong>
+              <span className="deskdir-favgroup" style={secondLine()}>Open the canonical capability-gated Console.</span>
+            </span>
+            <span aria-hidden="true" className="deskdir-favgo">↗</span>
+          </button>
+        ) : null}
+      </div>
+
+      <div role={access.status === 'error' ? 'alert' : access.status === 'loading' ? 'status' : undefined} style={{ ...secondLine(), marginTop: 'var(--sp-3)' }}>
+        {access.status === 'signed-out' ? 'Sign in to check connected access for this account.' : null}
+        {access.status === 'loading' ? 'Checking connected access for this account…' : null}
+        {access.status === 'ready' && !operator && !listings ? 'No additional connected workspace was found for this account and university.' : null}
+        {access.status === 'ready' && (operator || listings) ? 'Connected access shown above was reported by the server and is checked again at each destination.' : null}
+        {access.status === 'error' ? access.error : null}
+      </div>
+      {access.status === 'error' ? <button type="button" className="bare tappable" onClick={access.retry}>Try again</button> : null}
+
+      <div style={{ ...secondLine(), marginTop: 'var(--sp-3)' }}>
+        <strong>Local preparation:</strong> {local.firstAction}{' '}
+        {local.screen ? (
+          <button type="button" className="bare inline-link" onClick={() => dispatch({ type: 'go', screen: local.screen! })}>
+            Continue
+          </button>
+        ) : null}{' '}
+        <button type="button" className="bare inline-link" onClick={() => dispatch({ type: 'go', screen: 'setCourses' })}>
+          Change presentation
+        </button>
+      </div>
+      <p style={{ ...secondLine(), marginBottom: 0 }}>
+        Company, investor and developer workflows are not implemented here yet.
+      </p>
+    </section>
+  );
+}
 
 /**
  * Already reachable without this list, so repeating them here is noise.
@@ -216,6 +314,8 @@ export function Directory({
           {apps.length} apps, one semester
         </div>
       </div>
+
+      <WorkspaceEntry />
 
       {/*
         Three lists above the index, and only when you are not filtering.
