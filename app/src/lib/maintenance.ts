@@ -315,18 +315,29 @@ const isStr = (v: unknown): v is string => typeof v === 'string';
 const oneOf = <T extends string>(all: readonly T[], v: unknown, fallback: T): T =>
   (all as readonly unknown[]).includes(v) ? (v as T) : fallback;
 
+/** The line a request is known by, even when its description was lost. */
+export const titleOf = (r: Pick<MaintenanceRequest, 'what'>): string =>
+  r.what.trim() || 'Repair with no description recorded';
+
 /**
  * A stored or synced row made safe, or null.
  *
  * A restored backup and another device's copy have been through no reducer, so
  * every field is read rather than trusted: unknown enums fall back to the
- * calmest value, text is clipped to its limit, and a row with no id, no
- * building or no description is dropped rather than shown half-empty.
+ * calmest value and text is clipped to its limit.
+ *
+ * Only a row with no id is dropped. `maintenance` is in `DELETABLE`, so a row
+ * this device once agreed on and then dropped here would read to
+ * `settleDeletions` as the student deleting it, and the account's good copy
+ * would go too. A damaged row is kept, shown with what it still has, and can
+ * be edited or removed on purpose — `readModule` treats a course the same way.
+ * Fields this build does not know are carried through, so an older build
+ * reading a newer one's row does not strip them on its next save.
  */
 export function readMaintenance(row: unknown): MaintenanceRequest | null {
   if (!row || typeof row !== 'object') return null;
   const r = row as Record<string, unknown>;
-  if (!isStr(r.id) || !r.id || !isStr(r.hall) || !r.hall.trim() || !isStr(r.what) || !r.what.trim()) return null;
+  if (!isStr(r.id) || !r.id) return null;
   const created = isNum(r.created) ? r.created : 0;
   const reportedAt = isNum(r.reportedAt) ? r.reportedAt : created;
   const status = oneOf(STATUSES, r.status, 'reported');
@@ -343,11 +354,12 @@ export function readMaintenance(row: unknown): MaintenanceRequest | null {
         .slice(-LIMITS.history)
     : [];
   return {
+    ...r,
     id: r.id,
     term: isStr(r.term) ? r.term : '',
-    hall: r.hall.trim().slice(0, 120),
+    hall: isStr(r.hall) ? r.hall.trim().slice(0, 120) : '',
     room: isStr(r.room) ? r.room.trim().slice(0, 40) : '',
-    what: r.what.trim().slice(0, LIMITS.what),
+    what: isStr(r.what) ? r.what.trim().slice(0, LIMITS.what) : '',
     where: isStr(r.where) ? r.where.trim().slice(0, LIMITS.where) : '',
     urgency: oneOf(URGENCIES, r.urgency, 'routine'),
     channel: oneOf(CHANNELS, r.channel, 'other'),

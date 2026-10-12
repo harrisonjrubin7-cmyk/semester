@@ -7,6 +7,7 @@ import {
   followUpAt,
   needsFollowUp,
   placeLine,
+  titleOf,
   whenLine,
   type MaintenanceRequest,
 } from './maintenance';
@@ -39,7 +40,7 @@ export function maintenanceActions(list: MaintenanceRequest[], now: number): Act
   for (const r of list) {
     if (!needsFollowUp(r, now)) continue;
     const at = followUpAt(r);
-    const what = short(r.what);
+    const what = short(titleOf(r));
     const ref = r.reference ? `Reference ${r.reference}` : 'No reference number recorded';
     const reported = `Reported by ${CHANNEL_TEXT[r.channel].toLowerCase()}, ${whenLine(r.reportedAt)}`;
     const visit = r.status === 'scheduled';

@@ -50,7 +50,16 @@ export const itemSource = (item: DatedItem): SourceLabel => (item.checked?.confi
  * a verdict on an empty calendar. Never counts, never praises.
  */
 export function doneForToday(
-  input: { upcoming: DatedItem[]; done: Record<string, boolean>; now: number },
+  input: {
+    upcoming: DatedItem[];
+    done: Record<string, boolean>;
+    now: number;
+    /**
+     * Action ids due now that are not course deadlines (a repair to chase,
+     * say). While one is open the day is not done, whatever the coursework.
+     */
+    alsoDue?: readonly string[];
+  },
   choices: Record<string, Choice>,
 ): { line: string } | null {
   const start = new Date(input.now);
@@ -58,7 +67,7 @@ export function doneForToday(
   const pressing = input.upcoming.some(
     (item) => !item.isPast && item.daysAway <= 1 && !input.done[item.id]
       && choices[`deadline:${item.id}`]?.status !== 'completed',
-  );
+  ) || (input.alsoDue ?? []).some((id) => choices[id]?.status !== 'completed');
   if (pressing) return null;
   const closedToday = Object.values(choices).some((c) => c.history.some((h) => h.event === 'complete' && h.at >= midnight))
     || input.upcoming.some((item) => item.isToday && input.done[item.id]);

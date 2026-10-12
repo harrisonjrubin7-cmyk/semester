@@ -23,6 +23,7 @@ import {
   newMaintenance,
   ordered,
   readMaintenance,
+  titleOf,
   snoozeCheckBack,
   toLocalInput,
   type MaintenanceDraft,
@@ -224,11 +225,16 @@ describe('readMaintenance', () => {
     expect(readMaintenance(JSON.parse(JSON.stringify(r)))).toEqual(r);
   });
 
-  it('drops rows without an id, a building or a description', () => {
+  it('drops only rows without an id, and keeps a damaged one addressable', () => {
     expect(readMaintenance(null)).toBeNull();
     expect(readMaintenance({ ...request(), id: '' })).toBeNull();
-    expect(readMaintenance({ ...request(), hall: '  ' })).toBeNull();
-    expect(readMaintenance({ ...request(), what: 7 })).toBeNull();
+    const damaged = readMaintenance({ ...request(), hall: 7, what: null });
+    expect(damaged).toMatchObject({ id: 'mr1', hall: '', what: '' });
+    expect(titleOf(damaged!)).toBe('Repair with no description recorded');
+  });
+
+  it('carries fields a newer build added, so an older build does not strip them on save', () => {
+    expect(readMaintenance({ ...request(), photoIds: ['p1'] })).toMatchObject({ photoIds: ['p1'] });
   });
 
   it('falls back on unknown enums and clips text', () => {
@@ -291,10 +297,23 @@ describe('in the store', () => {
 });
 
 describe('review findings on #1501', () => {
-  it('drops a damaged row at the sync, boot and restore door, not only at localStorage load', async () => {
+  it('reads every row at the sync, boot and restore door, not only at localStorage load', async () => {
     const { readIncoming } = await import('./stored');
-    const got = readIncoming({ maintenance: [{ id: 'x', checkBackAt: 0 }, request()] }) as { maintenance: MaintenanceRequest[] };
-    expect(got.maintenance.map((r) => r.id)).toEqual(['mr1']);
+    const got = readIncoming({ maintenance: [{ checkBackAt: 0 }, { id: 'x', status: 'teleported' }, request()] }) as { maintenance: MaintenanceRequest[] };
+    expect(got.maintenance.map((r) => r.id)).toEqual(['x', 'mr1']);
+    expect(got.maintenance[0]).toMatchObject({ status: 'reported', what: '' });
+  });
+
+  it('does not turn a damaged local copy into a deletion of the account copy', async () => {
+    const { readIncoming } = await import('./stored');
+    const { settleDeletions } = await import('./deletions');
+    const { baseOf } = await import('./conflicts');
+    const r = request();
+    const base = baseOf({ maintenance: [r] });
+    // This device's stored copy lost its description; the account's is intact.
+    const local = readIncoming({ maintenance: [{ ...r, what: undefined }] });
+    const settled = settleDeletions(local, { maintenance: [r] }, base);
+    expect((settled.remote.maintenance as MaintenanceRequest[]).map((x) => x.id)).toEqual(['mr1']);
   });
 
   it('propagates a removal across devices instead of letting union bring it back', async () => {

@@ -23,6 +23,7 @@ import {
   newMaintenance,
   ordered,
   placeLine,
+  titleOf,
   toLocalInput,
   whenLine,
   type Channel,
@@ -167,7 +168,7 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
   return (
     <li className="maintenance-row" aria-labelledby={title}>
       <div className="maintenance-head">
-        <strong id={title}>{r.what}</strong>
+        <strong id={title}>{titleOf(r)}</strong>
         <span className="maintenance-status">{STATUS_TEXT[r.status]}</span>
       </div>
       <div className="maintenance-meta">
@@ -233,7 +234,7 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
           </div>
         </div>
       ) : (
-        <div className="maintenance-actions" role="group" aria-label={`Update: ${r.what}`}>
+        <div className="maintenance-actions" role="group" aria-label={`Update: ${titleOf(r)}`}>
           {NEXT[r.status].map((to) => (
             <button key={to} type="button" className="btn btn-ghost" onClick={() => go(to)}>
               {MOVE_LABEL[to]}
