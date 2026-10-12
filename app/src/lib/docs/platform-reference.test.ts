@@ -401,6 +401,9 @@ const PLATFORM_NON_EVENT_IMPORTERS = [
   'app/server/institution/adapter.ts',
   'app/server/institution/context.ts',
   'app/server/institution/gateway.ts',
+  // The journal imports only the idempotency-store types; it does not mount
+  // an event producer or publisher.
+  'app/server/institution/journal.ts',
   // Membership imports only the tenant ID validator before carrying the
   // authoritative row ID into active-context selection.
   'app/server/institution/membership.ts',
@@ -936,9 +939,9 @@ describe('EDGE-FUNCTIONS.md', () => {
   const rows = edgeRows(md);
   const dirs = functionDirs();
 
-  it('has 17 functions to be right or wrong about, and the parser reads every row (control)', () => {
-    expect(dirs).toHaveLength(17);
-    expect(rows).toHaveLength(17);
+  it('has 18 functions to be right or wrong about, and the parser reads every row (control)', () => {
+    expect(dirs).toHaveLength(18);
+    expect(rows).toHaveLength(18);
     for (const r of rows) {
       expect(r.env.length, r.fn).toBeGreaterThan(0);
       expect(r.methods.length, r.fn).toBeGreaterThan(0);
@@ -949,7 +952,7 @@ describe('EDGE-FUNCTIONS.md', () => {
     expect(diff(rows.map((r) => r.fn), dirs)).toEqual(NONE);
     const sections = [...md.matchAll(/^## `([a-z-]+)`$/gm)].map((m) => m[1]);
     expect(diff(sections, dirs)).toEqual(NONE);
-    expect(md).toContain('17 Supabase edge functions');
+    expect(md).toContain('18 Supabase edge functions');
   });
 
   it('gives every function a status word from the vocabulary', () => {

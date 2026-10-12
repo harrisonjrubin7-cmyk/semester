@@ -28,14 +28,15 @@ the directory on exit.
 
 The public [developer-tools topic](https://github.com/topics/developer-tools)
 is volatile, so coverage is recorded against a dated snapshot rather than
-implied to be permanent. On 2026-10-11, a refreshed review of the first nine
-topic pages displayed 180 repository cards covering 180 unique repositories.
+implied to be permanent. On 2026-10-12, a refreshed review of the first ten
+topic pages displayed 200 repository cards covering 200 unique repositories.
 The ranking changed during the review: 21 repositories not present in the
 earlier three-page snapshot were reviewed in the page-four increment, followed
 by 20 repositories on page five, 20 on page six, 20 on page seven, 20 on page
-eight and 20 on page nine. Every repository in the refreshed nine-page snapshot
-is accounted for. ShellCheck closed the standalone-script lint gap; the other
-repositories did not supply a new Semester product or CI requirement.
+eight, 20 on page nine and 20 on page ten. Every repository in the refreshed
+ten-page snapshot is accounted for. ShellCheck closed the standalone-script
+lint gap; the other repositories did not supply a new Semester product or CI
+requirement.
 
 ## Evaluated but not installed
 
@@ -147,6 +148,20 @@ repositories did not supply a new Semester product or CI requirement.
 | [Draft](https://github.com/Azure/draft-classic), [Gitkube](https://github.com/hasura/gitkube) and [AWS Copilot CLI](https://github.com/aws/copilot-cli) | Kubernetes and AWS application-deployment tooling does not serve Semester's Vercel and Supabase deployment architecture. Draft and AWS Copilot CLI were archived when evaluated. |
 | [LeanCTX](https://github.com/yvgude/lean-ctx) | A separate AI context gateway would add policy, repository-data and model-processing boundaries beside Semester's owned purpose, consent and provenance controls. Adoption requires a named integration and an independent tenancy, retention and evidence review. |
 | [Go Modern Guidelines](https://github.com/JetBrains/go-modern-guidelines) | Guidance for Go coding agents does not apply to Semester's TypeScript and Python application stacks and is reference material rather than a repository dependency. |
+| [Twinny](https://github.com/twinnydotdev/twinny), [Vibe Skills](https://github.com/foryourhealth111-pixel/Vibe-Skills), [Devon](https://github.com/entropy-research/Devon), [FuXi](https://github.com/fuxicodex/Fuxi) and [Squad](https://github.com/bradygaster/squad) | Coding-assistant, skill-routing and multi-agent platforms overlap Semester's reviewed development environment. They would expand model, repository-data, credential or execution boundaries without a measured product or CI requirement. FuXi's repository licence was not clearly identified by the GitHub metadata when evaluated. |
+| [HTTP Toolkit](https://github.com/httptoolkit/httptoolkit) | HTTP interception is a workstation debugging capability, not a deterministic release gate, and the repository already uses governed browser, API and DAST paths. Intercepting authenticated traffic also requires a scoped credential and data-handling procedure; no repository licence was detected when evaluated. |
+| [Rio](https://github.com/rio-labs/rio) | A second Python web-application framework would create a parallel frontend and deployment architecture instead of strengthening Semester's React/Vite product. |
+| [Garden](https://github.com/garden-io/garden) and [Okteto](https://github.com/okteto/okteto) | Kubernetes development and test-environment tooling does not serve Semester's Vercel and Supabase deployment path. |
+| [NVIDIA Skills](https://github.com/NVIDIA/skills) | Physical-AI, robotics, CUDA, simulation and NVIDIA RAG workflows do not match Semester's current application, CI or deployment inputs. A skill collection is also discovery material until each invoked workflow and dependency is reviewed. |
+| [Refact](https://github.com/smallcloudai/refact) | Another end-to-end coding agent would duplicate the reviewed development environment and expand its execution and repository-data boundary. The repository was archived when evaluated. |
+| [React Proto](https://github.com/React-Proto/react-proto) | A separate desktop React prototyping application would duplicate the governed design-system and browser prototype workflow without providing repository or release evidence. |
+| [sem](https://github.com/Ataraxy-Labs/sem) | Semantic diffs and impact analysis may merit a bounded future benchmark, but adopting another version-control/indexing layer now would create derived repository state and a new correctness baseline without a measured gap in the existing Git and review workflow. |
+| [Laminar](https://github.com/lmnr-ai/lmnr) | Agent observability would collect prompts, traces or execution telemetry outside the product's current evidence model. Adoption requires a named operational need plus tenancy, redaction, access, retention and deletion review. |
+| [Pebrel](https://github.com/Kuddev/pebrel) and [FlyEnv](https://github.com/xpf0000/FlyEnv) | A Windows-only AI terminal and a parallel local runtime/database manager are workstation choices, not reproducible Semester application or CI dependencies. |
+| [Sentrux](https://github.com/sentrux/sentrux) | An architectural sensor could become a quality gate only with an owned output contract, baseline, exclusions and failure threshold. No measured criterion currently justifies adding another code-analysis binary. |
+| [claude-tap](https://github.com/liaohch3/claude-tap) | Intercepting coding-agent API traffic can expose prompts, source, credentials and provider metadata. Semester has no debugging requirement that justifies this additional local proxy and trace-retention boundary. |
+| [DBLab](https://github.com/danvergara/dblab) | An interactive database client is a personal workstation utility. It must not replace reviewed migrations, policy checks or least-privilege operational paths, and it adds no deterministic CI evidence. |
+| [Phone Harness](https://github.com/ShawnPana/phone-harness) | Semester has no native mobile application or device-control test path. Agent control of a personal phone would create a broad device, account and data boundary without a product or CI requirement. |
 
 Revisit a deferred tool only when a concrete product or engineering requirement
 exists, and repeat the ownership, licence, provenance, permissions, maintenance,

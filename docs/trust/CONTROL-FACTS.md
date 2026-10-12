@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 236 |
+| Migration files | 239 |
 | Tables created in `public` and not later dropped | 342 |
 | … of which enable row-level security in a migration | 342 |
 | Tables created in `private` and not later dropped | 54 |
@@ -28,12 +28,13 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-153 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+155 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
 | `supabase/academic-record.check.sql` | The academic-record ledger (D-145): who may propose, decide and read; that nobody writes the ledger but the approval of someone other than the proposer; that each entry names the entry and value it r… |
-| `supabase/access-saga-store.check.sql` | The access saga's durable store (20261006180000_access_saga_store). |
+| `supabase/access-saga-store.check.sql` | The access saga's durable store (20261006180000_access_saga_store, 20261011200000 review fixes, 20261012030000 'access_saga_due'). |
+| `supabase/access-saga-tick-auth.check.sql` | The scheduler's token check for the access-saga-tick Edge Function, run as the roles that will and must not call it. |
 | `supabase/access.check.sql` | The log of who read your rows, which is only worth anything if it is yours. |
 | `supabase/activity.check.sql` | The pilot's three figures: what the ping may write, and what it may not. |
 | `supabase/admins.check.sql` | The admin list, and the account_role column that is deliberately not it. |
@@ -135,6 +136,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/offboarding-grants.check.sql` | A person deprovisioned by their school stops holding that school's authority. |
 | `supabase/officeactions.check.sql` | The campus office action feed (Phase J, D-048): who may publish as which office, the draft → review → published workflow, who a published action reaches, and that an office learns a completion count… |
 | `supabase/onboarding-journeys.check.sql` | Onboarding journeys and the one-use hand-off (20261006000000_onboarding_journeys_and_handoff). |
+| `supabase/ops-projection-dashboard.check.sql` | ops_projection_dashboard (20261012000000). |
 | `supabase/ops-projector-worker.check.sql` | Bounded, manually invoked ops-projector worker boundary (P1-04). |
 | `supabase/organizations.check.sql` | Who may say what about whom, in an organization. |
 | `supabase/outbox.check.sql` | The transactional outbox and the consumer receipts: service-role only, and the constraints that make a mislabelled or a duplicated event fail in the transaction that tried to write it. |
@@ -265,6 +267,7 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Function | `verify_jwt` in `supabase/config.toml` | `getUser` in its entry file | Comment above its config block |
 | --- | --- | --- | --- |
+| `access-saga-tick` | false | no | (none) |
 | `billing-cancel` | false | yes | Stripe has no Supabase token; the Stripe-Signature over the raw body is the credential, and the function answers 503 until STRIPE_WEBHOOK_SECRET is s… |
 | `billing-checkout` | false | yes | (none) |
 | `billing-portal` | false | yes | (none) |
@@ -283,7 +286,7 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 | `support-reply-notify` | false | yes | A support agent's browser records the in-app reply first, then this function sends a generic email hint. It checks the caller's token and support gra… |
 | `trust-room` | false | no | The caller is a reviewer at a university with no Semester account; the link token in the POST body is the credential. See DEPLOY.md → trust-room. |
 
-17 function directories; 17 set `verify_jwt = false`; 0 set it to true.
+18 function directories; 18 set `verify_jwt = false`; 0 set it to true.
 
 **How counted.** Directories of `supabase/functions/` other than `_shared`, joined to the `[functions.<name>]` blocks of `supabase/config.toml`. The comment is the lines directly above the block.
 
@@ -293,15 +296,15 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 240 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 240 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 241 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 241 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 65 |
 | Register rows in category `sharing` | 23 |
-| Register rows in category `admin` | 96 |
+| Register rows in category `admin` | 97 |
 | Register rows in category `integration` | 6 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |

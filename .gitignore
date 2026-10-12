@@ -81,3 +81,6 @@ app/reports/
 
 # Generated markdown-link index (tool cache, not project content)
 .md-linker/
+
+# Session-state checkpoint written by a local tool; not repository content.
+.anchor/

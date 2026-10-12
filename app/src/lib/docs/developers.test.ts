@@ -562,17 +562,23 @@ describe('the onboarding page', () => {
     expect(onboarding).toContain('`node-version: 22`');
     expect(JSON.parse(read('app/package.json')).engines, 'the page says no engines field').toBeUndefined();
     expect(existsSync(at('.nvmrc')), 'the page says there is no .nvmrc').toBe(false);
-    // The root manifest is the workspace root for app and packages/* (PRs 1180 and the C0 PR 1b that followed): it holds the one lockfile and only platform-control scripts, so plain `npm test` there still fails with "Missing script".
+    // The root manifest is the workspace root for app and packages/* (PRs 1180 and the C0 PR 1b that followed): it holds the one lockfile and only the platform-control and operator scripts; operator/ is a Node runtime, its own workspace rather than a browser-safe package (D-1453), so plain `npm test` there still fails with "Missing script".
     const root = JSON.parse(read('package.json')) as { private?: boolean; workspaces?: string[]; scripts?: Record<string, string>; engines?: { node?: string } };
     expect(root.private).toBe(true);
-    expect(root.workspaces).toEqual(['app', 'packages/*']);
+    expect(root.workspaces).toEqual(['app', 'packages/*', 'operator']);
     expect(Object.keys(root.scripts ?? {}).sort()).toEqual([
+      'operator',
+      'operator:build',
+      'operator:demo',
+      'operator:test',
+      'operator:typecheck',
       'platform-control:test',
       'registry:build',
       'registry:validate',
       'release:check',
       'release:report',
     ]);
+    for (const script of ['operator:typecheck', 'operator:test', 'operator:build', 'operator:demo']) expect(onboarding).toContain(`\`${script}\``);
     expect(onboarding).toContain(`engines: { node: "${root.engines?.node}" }`);
     expect(onboarding).toContain('root exposes only the platform-control registry commands');
     expect(onboarding).toContain('plain `npm test` still fails with "Missing script"');

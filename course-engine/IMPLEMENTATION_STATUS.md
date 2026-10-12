@@ -10,10 +10,10 @@
 - Owner-scoped source inspection with paginated extracted chunks, document-native location labels, focus-managed source sheet, and authenticated original download.
 - Review resolution UI for confirming, rejecting, or correcting structured extraction payloads without rewriting preserved source files.
 - Calendar editing with a mandatory consequence preview, explicit unspecified-time preservation, authenticated persistence, and one-step session undo.
-- Owner-scoped upload job recovery with reload-safe polling, visible extraction progress, explicit cancellation, idempotent retry dispatch, and bounded redelivery of abandoned queued work.
-- Stored study interactions for Cards, Read, Quiz, and Doc: cited card reveal and progress recording, readable guide sections, authenticated confirmed-version exports, and owned persisted quiz sessions with complete-prompt validation.
+- Owner-scoped upload job recovery with reload-safe polling, visible extraction progress, explicit cancellation, idempotent retry dispatch, bounded redelivery of abandoned queued work, and per-job broker failure isolation.
+- Stored study interactions for Cards, Read, Quiz, and Doc: cited asset-bound card review and progress recording, client/server-aligned readable guide validation, authenticated confirmed-version exports, rejected-asset enforcement, and owned quiz sessions with durable answer evidence, bounded progress history, and complete-prompt validation.
 - Atomic worker leases with monotonic fencing, scoped progress/terminal writes, expired-lease redelivery, owner-scoped cancellation, and study-asset deletion barriers. These controls prevent stale database commits; they do not promise exactly-once external provider effects.
-- Tests for shell navigation, command focus, source labels and locations, review correction validation, calendar preview/undo, upload job cancellation/retry/redelivery, stored study interactions, operational states, semantic tokens, automated axe accessibility, ownership isolation, conflicts, missing date/time behavior, invalid citations, deduplication, safe archives, migrations, concurrent upload completion, ICS, and exports.
+- Tests for shell navigation, command focus, source labels and locations, review correction validation, calendar preview/undo, upload job cancellation/retry/redelivery, broker failure isolation, stored study interactions and export download lifecycle, operational states, semantic tokens, automated axe accessibility, ownership isolation, conflicts, missing date/time behavior, invalid citations, deduplication, safe archives, migrations, concurrent upload completion, ICS, and exports.
 
 ## Mocked or credential-dependent
 
