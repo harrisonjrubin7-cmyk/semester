@@ -521,6 +521,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       : '';
   /** What was last written to localStorage, so an unchanged store is not rewritten. */
   const wrote = useRef('');
+  /**
+   * A pull or an adoption put back rows this device lost reading its own
+   * storage (`ingressDrops`), and the note goes once that copy is durable.
+   * On the database path the caller already waited for it to land; on
+   * localStorage the save is the render after, and it can be refused.
+   */
+  const healPending = useRef(false);
+  const healed = useCallback(() => {
+    if (dbAvailable()) clearIngressDrops();
+    else healPending.current = true;
+  }, []);
   /** When the browser was last asked how much room is left. */
   const checkedRoom = useRef(0);
 
@@ -672,6 +683,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     fromOtherTab.current = false;
     wrote.current = persisted;
     const result = save(persisted, (value) => localStorage.setItem(STORAGE_KEY, value));
+    // The healed copy is on disk, so the note that the gap was damage can go.
+    // Not before: refused for room, the next boot reads the gap as clean.
+    if (result.ok && healPending.current) {
+      healPending.current = false;
+      clearIngressDrops();
+    }
     const said = trouble(result);
     // Only when it changes: setting the same string every dispatch would
     // re-render the whole app on every keystroke.
@@ -1270,7 +1287,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
       rememberSyncedAs(accountId);
       // The account's copies are merged back in, or there were none to lose.
-      if (unreadHere.length > 0) clearIngressDrops();
+      if (unreadHere.length > 0) healed();
       pushReady.current = flight;
       setPullRetry(null);
       setSync({ status: 'synced', at: Date.now(), error: '' });
@@ -2113,6 +2130,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           markSeen(remote.seen);
           // The first version this device and the account agree on.
           writeBase(baseOf(forLegacy(theirs as Record<string, unknown>)));
+          // Merged or taken whole, the account's copies are back: rows lost
+          // reading this device's storage are no longer missing.
+          healed();
           safeToRelease = true;
         } catch (error) {
           // A queued identity invalidates this chooser. Its abort is expected:

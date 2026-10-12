@@ -67,7 +67,7 @@ vi.mock('./persist', () => ({
 const { StoreProvider, useStore, FOCUS_PULL_MS } = await import('./store');
 const { SEEN_KEY, UNPUSHED_KEY } = await import('./shape');
 const { loadSeed } = await import('../data/seed');
-const { clearIngressDrops } = await import('../lib/deletions');
+const { clearIngressDrops, ingressDrops } = await import('../lib/deletions');
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -732,6 +732,45 @@ describe('what a sync must not lose', () => {
       await wait(3_000);
       expect(push).toHaveBeenCalled();
       expect(sentNotes()).toContain(good.id);
+    });
+  }
+
+  // Found reviewing c714dc3: a first sign-in asks before taking anything, so
+  // the pull that would clear the note returned early, and the student's
+  // merge restored the rows without clearing it.
+  it('forgets the note once the student merges the account copy in', async () => {
+    await seedDamaged();
+    localStorage.removeItem(SEEN_KEY);
+    pull.mockResolvedValue({ state: { notes: [good] }, courses: [], updated: 1, seen: { state: 's1', courses: {} } });
+    await mount();
+    await wait(3_000);
+    expect(store.asking).not.toBeNull();
+    expect(ingressDrops(), 'held while the question is open').toEqual(['notes']);
+    await act(async () => {
+      await store.settle('merge', null);
+    });
+    expect(store.state.notes.map((n) => n.id)).toContain(good.id);
+    expect(ingressDrops()).toEqual([]);
+  });
+
+  // Found reviewing c714dc3: without a database the healed copy is saved after
+  // the pull, and the note went first. A save refused for room lost the only
+  // record that the gap was damage, and the boot after it read the gap clean.
+  for (const refused of [false, true]) {
+    it(`without a database, keeps the note until the healed copy is saved (${refused ? 'refused' : 'control'})`, async () => {
+      db = false;
+      await seedDamaged();
+      pull.mockResolvedValue({ state: { notes: [good] }, courses: [], updated: 1, seen: { state: 's1', courses: {} } });
+      const real = Storage.prototype.setItem;
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+        if (refused && key === 'semester.v1' && value.includes(good.id)) throw new DOMException('full', 'QuotaExceededError');
+        return real.call(this, key, value);
+      });
+      await mount();
+      await wait(3_000);
+      expect(store.state.notes.map((n) => n.id)).toContain(good.id);
+      expect(ingressDrops()).toEqual(refused ? ['notes'] : []);
+      vi.mocked(Storage.prototype.setItem).mockRestore();
     });
   }
 
