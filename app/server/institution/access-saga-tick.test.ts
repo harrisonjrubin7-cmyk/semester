@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Services } from '../../../packages/institution/src/index.ts';
 import { PostgresAccessSagaStore } from './postgres-access-saga.ts';
-import { DEFAULT_MAX_SAGAS, dueSagas, runAccessSagaTick } from './access-saga-tick.ts';
+import { DEFAULT_MAX_SAGAS, dueSagas, runAccessSagaTick, runScheduledAccessSagaTick } from './access-saga-tick.ts';
+import { SERVICES } from './access-saga-registry.ts';
 
 const T0 = 1_780_000_000_000;
 
@@ -158,5 +159,40 @@ describe('runAccessSagaTick', () => {
     }
     await runAccessSagaTick({ client: f.client, services: quiet, now: () => T0, store: new Watching({ client: f.client }), runner: { newId: () => 'evt' } });
     expect(seen).toEqual(['a']);
+  });
+});
+
+describe('runScheduledAccessSagaTick, the entry the Edge Function calls', () => {
+  it('with no participants registered, counts what is due and touches no saga', async () => {
+    const f = fakeClient({ due: ['s1', 's2'], rows: { s1: sagaRow('s1'), s2: sagaRow('s2') } });
+    await expect(runScheduledAccessSagaTick(f.client, null, { now: () => T0 })).resolves.toEqual({
+      outcome: 'unregistered', due: 2, ticked: 0, failed: [], deferred: false,
+    });
+    // One read of the due list, at the cap plus one, and no claim: the lease stays free for whoever is real.
+    expect(names(f.calls)).toEqual([`access_saga_due:${DEFAULT_MAX_SAGAS + 1}`]);
+  });
+
+  it('with participants, is the tick, and says so', async () => {
+    const f = fakeClient({ due: ['s1'], rows: { s1: sagaRow('s1') } });
+    await expect(runScheduledAccessSagaTick(f.client, quiet, { now: () => T0, runner: { newId: () => 'evt' } })).resolves.toEqual({
+      outcome: 'ran', due: 1, ticked: 1, failed: [], deferred: false,
+    });
+    expect(names(f.calls)).toContain('access_saga_claim:s1');
+  });
+
+  it('a refused due list is a storage failure in either mode', async () => {
+    const f = fakeClient({ dueError: { code: '42501', message: 'scripted' } });
+    await expect(runScheduledAccessSagaTick(f.client, null)).rejects.toThrow(/could not list/);
+    await expect(runScheduledAccessSagaTick(f.client, quiet)).rejects.toThrow(/could not list/);
+  });
+
+  it('refuses to run without a service client, before asking anything', async () => {
+    await expect(runScheduledAccessSagaTick(undefined as unknown as SupabaseClient, null)).rejects.toThrow(/service client/);
+  });
+
+  it('the registry holds no participants yet, so the scheduled job moves nothing', () => {
+    // When this fails, participants were registered: the delta document's C-6 row and the
+    // runbook's "unregistered" reading both change with it.
+    expect(SERVICES).toBeNull();
   });
 });
