@@ -1,4 +1,5 @@
-import type { RegistrySnapshot, ValidationIssue, WorkspaceRecord } from '../types.ts';
+import { createHash } from 'node:crypto';
+import type { RegistrySnapshot, ValidationIssue, WorkspaceEvidenceEnvelope, WorkspaceEvidenceRefs, WorkspaceRecord } from '../types.ts';
 
 export const WORKSPACE_FAMILIES = [
   'public-web', 'student-os', 'faculty-os', 'advisor-os', 'registrar-os', 'finance-os',
@@ -24,6 +25,19 @@ export const SCOPE_FAMILY: Readonly<Record<(typeof PILOT_RELEASE_SCOPES)[number]
 
 const REF_GROUPS = ['routes', 'capabilities', 'workflows', 'code', 'tests', 'deployments', 'activations'] as const;
 const LOOP_FIELDS = ['actor', 'record', 'action', 'consequence_preview', 'command', 'event', 'receipt', 'support', 'revoke_or_rollback'] as const;
+const EVIDENCE_BINDING_FIELDS = ['schema', 'config', 'policy', 'environment', 'tenant'] as const;
+const ACCEPTANCE_CASE_IDS = ['XA-01', 'XA-02', 'XA-03', 'XA-04', 'XA-05', 'XA-06', 'XA-07', 'XA-08'] as const;
+const COMPLETION_GATE_IDS = Array.from({ length: 18 }, (_, index) => `FC-${String(index + 1).padStart(2, '0')}`);
+const ACCEPTANCE_CASE_SCOPES: Record<string, readonly string[]> = {
+  'XA-01': ['public-web', 'applicant-portal', 'institution-console'],
+  'XA-02': ['student-os', 'advisor-os'],
+  'XA-03': ['faculty-os', 'student-os'],
+  'XA-04': ['student-os', 'registrar-os', 'finance-os'],
+  'XA-05': ['student-affairs-os', 'guardian-portal'],
+  'XA-06': ['institution-console', 'company-os', 'operations-os'],
+  'XA-07': ['developer-portal', 'partner-portal', 'employer-portal'],
+  'XA-08': ['alumni-portal', 'community-marketplace', 'public-web'],
+};
 
 function compareOrdinal(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
@@ -47,6 +61,56 @@ function object(value: unknown): value is Record<string, unknown> {
 
 function strings(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
+function validDate(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0 && Number.isFinite(Date.parse(value));
+}
+
+function validateAcceptanceCases(snapshot: RegistrySnapshot): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const capabilityKeys = new Set(snapshot.capabilities.map(({ key }) => key));
+  const systemKeys = new Set(snapshot.systems.map(({ key }) => key));
+  const routes = new Map(snapshot.screens.map((screen) => [screen.key, screen]));
+  const manifest = snapshot.manifests?.[0];
+  if (!manifest || !object(manifest)) return issues;
+  if (!strings(manifest.acceptance_gate_ids) || !sameMembers(manifest.acceptance_gate_ids, COMPLETION_GATE_IDS)) {
+    issues.push({ code: 'completion_gate_drift', path: 'manifests.semester.acceptance_gate_ids', message: 'Acceptance uses FC-01 through FC-18 exactly once.' });
+  }
+  if (!Array.isArray(manifest.acceptance_cases)) {
+    issues.push({ code: 'invalid_acceptance_registry', path: 'manifests.semester.acceptance_cases', message: 'Acceptance cases must be an array.' });
+    return issues;
+  }
+  const ids = manifest.acceptance_cases.map((entry) => object(entry) && typeof entry.id === 'string' ? entry.id : '<invalid>');
+  if (!sameMembers(ids, ACCEPTANCE_CASE_IDS)) issues.push({ code: 'acceptance_case_roster_drift', path: 'manifests.semester.acceptance_cases', message: 'Exactly XA-01 through XA-08 must be registered.' });
+  for (const entry of manifest.acceptance_cases) {
+    if (!object(entry)) continue;
+    const id = typeof entry.id === 'string' ? entry.id : '<invalid>';
+    const path = `manifests.semester.acceptance_cases.${id}`;
+    if (!strings(entry.scopes) || entry.scopes.length < 2 || entry.scopes.some((scope) => !PILOT_RELEASE_SCOPES.includes(scope as typeof PILOT_RELEASE_SCOPES[number]))) {
+      issues.push({ code: 'invalid_acceptance_scope', path: `${path}.scopes`, message: 'A cross-workspace case must name at least two canonical release scopes.' });
+    }
+    const expectedScopes = ACCEPTANCE_CASE_SCOPES[id];
+    if (expectedScopes && (!strings(entry.scopes) || !sameMembers(entry.scopes, expectedScopes))) issues.push({ code: 'acceptance_case_scope_drift', path: `${path}.scopes`, message: `${id} must retain its canonical cross-workspace scope.` });
+    if (!Array.isArray(entry.controls) || !entry.controls.some((control) => object(control) && control.polarity === 'positive') || !entry.controls.some((control) => object(control) && control.polarity === 'negative')) {
+      issues.push({ code: 'missing_acceptance_control', path: `${path}.controls`, message: 'Every case requires positive and negative controls.' });
+    }
+    if (strings(entry.capability_keys)) for (const key of entry.capability_keys) if (!capabilityKeys.has(key)) issues.push({ code: 'unknown_acceptance_capability', path: `${path}.capability_keys`, message: `${key} is not a registered capability authority.` });
+    if (strings(entry.system_keys)) for (const key of entry.system_keys) if (!systemKeys.has(key)) issues.push({ code: 'unknown_acceptance_system', path: `${path}.system_keys`, message: `${key} is not a registered system authority.` });
+    if (strings(entry.route_ids)) for (const key of entry.route_ids) {
+      const route = routes.get(key);
+      if (!route) issues.push({ code: 'unknown_acceptance_route', path: `${path}.route_ids`, message: `${key} is not a registered route authority.` });
+      else if (typeof route.route !== 'string' || !route.route.startsWith('semesterintel.tech/')) issues.push({ code: 'noncanonical_acceptance_route', path: `${path}.route_ids`, message: `${key} does not map to the canonical live host.` });
+    }
+    if (entry.status === 'passed') {
+      const controls = Array.isArray(entry.controls) ? entry.controls : [];
+      if (controls.length === 0 || controls.some((control) => !object(control) || control.status !== 'passed' || !strings(control.evidence_refs) || control.evidence_refs.length === 0)) {
+        issues.push({ code: 'unproven_acceptance_pass', path: `${path}.status`, message: 'A passed case requires passed positive and negative controls with evidence.' });
+      }
+      if (!strings(entry.gaps) || entry.gaps.length > 0) issues.push({ code: 'acceptance_pass_with_gap', path: `${path}.gaps`, message: 'A passed case cannot retain gaps.' });
+    }
+  }
+  return issues;
 }
 
 function validateWorkspace(record: WorkspaceRecord): ValidationIssue[] {
@@ -79,6 +143,7 @@ function validateWorkspace(record: WorkspaceRecord): ValidationIssue[] {
   if (!object(record.refs) || REF_GROUPS.some((group) => !strings(record.refs[group]))) {
     issues.push({ code: 'invalid_workspace_shape', path: `${path}.refs`, message: 'Every evidence reference group must be a string array.' });
   }
+  if (record.evidence_envelopes !== undefined && !Array.isArray(record.evidence_envelopes)) issues.push({ code: 'invalid_workspace_shape', path: `${path}.evidence_envelopes`, message: 'evidence_envelopes must be an array when present.' });
   if (!strings(record.gaps)) issues.push({ code: 'invalid_workspace_shape', path: `${path}.gaps`, message: 'gaps must be a string array.' });
   if (record.operational_ready) {
     // Schema version one records scope and honest gaps only. It deliberately cannot certify readiness
@@ -121,5 +186,116 @@ export function validateWorkspaceRegistry(snapshot: RegistrySnapshot): Validatio
   const coveredFamilies = new Set(workspaces.map((record) => object(record) && typeof record.family === 'string' ? record.family : '<invalid>'));
   for (const family of WORKSPACE_FAMILIES) if (!coveredFamilies.has(family)) issues.push({ code: 'uncovered_workspace_family', path: `workspaces.${family}`, message: `No release scope covers ${family}.` });
   for (const record of [...workspaces].sort((left, right) => compareOrdinal(object(left) && typeof left.key === 'string' ? left.key : '', object(right) && typeof right.key === 'string' ? right.key : ''))) issues.push(...validateWorkspace(record));
+  issues.push(...validateAcceptanceCases(snapshot));
+  return issues;
+}
+
+export interface WorkspaceEvidenceValidationContext {
+  targetRevision: string;
+  targetTenant?: string;
+  targetEnvironment?: 'staging' | 'production';
+  targetSchema?: string;
+  targetConfig?: string;
+  targetPolicy?: string;
+  now: string;
+  readArtifact: (revision: string, path: string, evidenceId: string) => Promise<string | Uint8Array | null>;
+}
+
+const evidenceGroupKind = { code: 'source', tests: 'test', deployments: 'operating', activations: 'operating' } as const;
+
+export async function validateWorkspaceEvidence(snapshot: RegistrySnapshot, context: WorkspaceEvidenceValidationContext): Promise<ValidationIssue[]> {
+  const issues: ValidationIssue[] = [];
+  const screens = new Map(snapshot.screens.map((screen) => [screen.key, screen]));
+  const capabilityKeys = new Set(snapshot.capabilities.map(({ key }) => key));
+  const workflowKeys = new Set(snapshot.workflows.map(({ key }) => key));
+  const allEvidenceIds = new Set<string>();
+  const validEvidenceIds = new Set<string>();
+  const validEvidenceById = new Map<string, WorkspaceEvidenceEnvelope>();
+  const now = Date.parse(context.now);
+  for (const rawRecord of snapshot.workspaces ?? []) {
+    if (!object(rawRecord)) { issues.push({ code: 'invalid_workspace_record', path: 'workspaces', message: 'Workspace record must be an object.' }); continue; }
+    const record = rawRecord as unknown as WorkspaceRecord;
+    const root = `workspaces.${record.key}`;
+    const envelopes = Array.isArray(record.evidence_envelopes) ? record.evidence_envelopes : [];
+    const refs = object(record.refs) && REF_GROUPS.every((group) => strings(record.refs[group])) ? record.refs as unknown as WorkspaceEvidenceRefs : null;
+    if (!refs) issues.push({ code: 'invalid_workspace_evidence_refs', path: `${root}.refs`, message: 'Workspace evidence refs must contain string arrays.' });
+    const byId = new Map<string, WorkspaceEvidenceEnvelope>();
+    const validIds = new Set<string>();
+    for (let index = 0; index < envelopes.length; index += 1) {
+      const rawEvidence: unknown = envelopes[index];
+      if (!object(rawEvidence)) { issues.push({ code: 'invalid_evidence_envelope', path: `${root}.evidence_envelopes.${index}`, message: 'Evidence envelope must be an object.' }); continue; }
+      const evidence = rawEvidence as unknown as WorkspaceEvidenceEnvelope;
+      const path = `${root}.evidence_envelopes.${evidence.id || index}`;
+      let valid = true;
+      if (!evidence.id || byId.has(evidence.id) || allEvidenceIds.has(evidence.id)) { issues.push({ code: 'duplicate_evidence_id', path: `${path}.id`, message: 'Evidence ids must be non-empty and globally unique.' }); valid = false; }
+      else { byId.set(evidence.id, evidence); allEvidenceIds.add(evidence.id); }
+      if (evidence.scope !== record.key) { issues.push({ code: 'evidence_scope_mismatch', path: `${path}.scope`, message: `Evidence is bound to ${evidence.scope}, not ${record.key}.` }); valid = false; }
+      if (!/^[0-9a-f]{40}$/i.test(evidence.revision) || evidence.revision !== context.targetRevision) { issues.push({ code: 'evidence_revision_mismatch', path: `${path}.revision`, message: 'Evidence revision does not match the release target.' }); valid = false; }
+      if (!object(evidence.artifact) || typeof evidence.artifact.path !== 'string' || !evidence.artifact.path.trim() || !/^[0-9a-f]{64}$/i.test(evidence.artifact.sha256)) {
+        issues.push({ code: 'invalid_evidence_artifact', path: `${path}.artifact`, message: 'Evidence requires a repository-relative path and SHA-256.' }); valid = false;
+      }
+      if (!object(evidence.bindings) || EVIDENCE_BINDING_FIELDS.some((field) => typeof evidence.bindings[field] !== 'string' || !evidence.bindings[field].trim())) {
+        issues.push({ code: 'missing_evidence_binding', path: `${path}.bindings`, message: 'Evidence must bind schema, config, policy, environment, and tenant.' }); valid = false;
+      } else {
+        const environments: Record<string, string[]> = { source: ['repository'], test: ['ci', 'staging'], operating: ['staging', 'production'] };
+        if (!environments[evidence.kind]?.includes(evidence.bindings.environment)) { issues.push({ code: 'evidence_environment_mismatch', path: `${path}.bindings.environment`, message: `${evidence.kind} evidence cannot use ${evidence.bindings.environment}.` }); valid = false; }
+        if (!context.targetTenant) { issues.push({ code: 'missing_release_evidence_context', path: `${path}.bindings.tenant`, message: 'Evidence validation requires an explicit target tenant.' }); valid = false; }
+        else if (evidence.bindings.tenant !== context.targetTenant) { issues.push({ code: 'evidence_tenant_mismatch', path: `${path}.bindings.tenant`, message: 'Evidence tenant does not match the release target.' }); valid = false; }
+        if (evidence.bindings.schema !== (context.targetSchema ?? 'workspace-evidence/v1') || evidence.bindings.config !== (context.targetConfig ?? 'source-tree') || evidence.bindings.policy !== (context.targetPolicy ?? 'platform-control')) { issues.push({ code: 'evidence_binding_mismatch', path: `${path}.bindings`, message: 'Evidence schema, config, or policy does not match the release target.' }); valid = false; }
+        if (evidence.kind === 'operating' && (!context.targetTenant || !context.targetEnvironment)) { issues.push({ code: 'missing_release_evidence_context', path: `${path}.bindings`, message: 'Operating evidence requires an explicit target tenant and release environment.' }); valid = false; }
+        if (evidence.kind === 'operating' && context.targetEnvironment && evidence.bindings.environment !== context.targetEnvironment) { issues.push({ code: 'evidence_environment_mismatch', path: `${path}.bindings.environment`, message: 'Operating evidence environment does not match the release target.' }); valid = false; }
+      }
+      if (!object(evidence.producer) || typeof evidence.producer.name !== 'string' || !evidence.producer.name.trim() || typeof evidence.producer.run_id !== 'string' || !evidence.producer.run_id.trim() || !validDate(evidence.producer.started_at) || !validDate(evidence.producer.completed_at)) {
+        issues.push({ code: 'missing_evidence_producer', path: `${path}.producer`, message: 'Evidence requires a named producer, run id, and run timestamps.' }); valid = false;
+      } else if (Date.parse(evidence.producer.started_at) > Date.parse(evidence.producer.completed_at) || Date.parse(evidence.producer.completed_at) > now) {
+        issues.push({ code: 'future_evidence', path: `${path}.producer.completed_at`, message: 'Evidence run timestamps must be ordered and cannot be in the future.' }); valid = false;
+      }
+      if (evidence.observed_outcome !== 'passed') { issues.push({ code: 'evidence_outcome_not_passed', path: `${path}.observed_outcome`, message: 'Failed or blocked observations cannot satisfy a gate.' }); valid = false; }
+      if (!object(evidence.reviewer) || typeof evidence.reviewer.name !== 'string' || !evidence.reviewer.name.trim() || !validDate(evidence.reviewer.reviewed_at)) {
+        issues.push({ code: 'missing_evidence_reviewer', path: `${path}.reviewer`, message: 'Gate evidence requires a named reviewer and review time.' }); valid = false;
+      } else if (Date.parse(evidence.reviewer.reviewed_at) > now) {
+        issues.push({ code: 'future_evidence', path: `${path}.reviewer.reviewed_at`, message: 'Evidence review cannot be in the future.' }); valid = false;
+      }
+      if (evidence.expires_at !== undefined && (!validDate(evidence.expires_at) || Date.parse(evidence.expires_at) <= now)) { issues.push({ code: 'expired_evidence', path: `${path}.expires_at`, message: 'Evidence is expired or has an invalid expiry.' }); valid = false; }
+      if (evidence.kind === 'operating' && evidence.expires_at === undefined) { issues.push({ code: 'missing_evidence_expiry', path: `${path}.expires_at`, message: 'Operating evidence requires an expiry.' }); valid = false; }
+      if (object(evidence.artifact) && typeof evidence.artifact.path === 'string' && typeof evidence.artifact.sha256 === 'string') {
+        const artifact = await context.readArtifact(evidence.revision, evidence.artifact.path, evidence.id);
+        if (artifact === null || artifact.length === 0) { issues.push({ code: 'empty_evidence_artifact', path: `${path}.artifact.path`, message: 'Evidence artifact is absent or empty at the named revision.' }); valid = false; }
+        else {
+          const digest = createHash('sha256').update(artifact).digest('hex');
+          if (digest !== evidence.artifact.sha256.toLowerCase()) { issues.push({ code: 'evidence_hash_mismatch', path: `${path}.artifact.sha256`, message: 'Artifact bytes do not match the bound SHA-256.' }); valid = false; }
+        }
+      }
+      if (valid) { validIds.add(evidence.id); validEvidenceIds.add(evidence.id); validEvidenceById.set(evidence.id, evidence); }
+    }
+    for (const group of Object.keys(evidenceGroupKind) as Array<keyof typeof evidenceGroupKind>) for (let index = 0; index < (refs?.[group].length ?? 0); index += 1) {
+      const id = refs![group][index]!;
+      const evidence = byId.get(id);
+      if (!evidence) issues.push({ code: 'missing_evidence_envelope', path: `${root}.refs.${group}.${index}`, message: `${id} is not a registered evidence envelope.` });
+      else if (evidence.kind !== evidenceGroupKind[group]) issues.push({ code: 'evidence_kind_mismatch', path: `${root}.refs.${group}.${index}`, message: `${group} requires ${evidenceGroupKind[group]} evidence.` });
+      else if (!validIds.has(id)) issues.push({ code: 'invalid_gate_evidence', path: `${root}.refs.${group}.${index}`, message: `${id} failed evidence validation.` });
+    }
+    for (let index = 0; index < (refs?.routes.length ?? 0); index += 1) {
+      const id = refs!.routes[index]!;
+      const screen = screens.get(id);
+      if (!screen) issues.push({ code: 'unknown_route_authority', path: `${root}.refs.routes.${index}`, message: `${id} is not a registered route id.` });
+      else if (typeof screen.route !== 'string' || !screen.route.startsWith('semesterintel.tech/')) issues.push({ code: 'noncanonical_live_route', path: `${root}.refs.routes.${index}`, message: `${id} does not map to the canonical live host.` });
+    }
+    for (let index = 0; index < (refs?.capabilities.length ?? 0); index += 1) if (!capabilityKeys.has(refs!.capabilities[index]!)) issues.push({ code: 'unknown_capability_authority', path: `${root}.refs.capabilities.${index}`, message: 'Capability authority is not registered.' });
+    for (let index = 0; index < (refs?.workflows.length ?? 0); index += 1) if (!workflowKeys.has(refs!.workflows[index]!)) issues.push({ code: 'unknown_workflow_authority', path: `${root}.refs.workflows.${index}`, message: 'Workflow authority is not registered.' });
+  }
+  for (const rawEntry of snapshot.manifests?.[0]?.acceptance_cases ?? []) {
+    if (!object(rawEntry) || rawEntry.status !== 'passed' || !Array.isArray(rawEntry.controls) || !strings(rawEntry.scopes)) continue;
+    for (const [index, rawControl] of rawEntry.controls.entries()) {
+      if (!object(rawControl)) { issues.push({ code: 'invalid_acceptance_evidence', path: `manifests.semester.acceptance_cases.${rawEntry.id}.controls.${index}`, message: 'Acceptance control must be an object.' }); continue; }
+      const evidenceRefs = strings(rawControl.evidence_refs) ? rawControl.evidence_refs : [];
+      const evidence = evidenceRefs.map((id) => validEvidenceById.get(id));
+      const coveredScopes = new Set(evidence.filter((value): value is WorkspaceEvidenceEnvelope => value !== undefined).map(({ scope }) => scope));
+      const semanticMismatch = evidence.some((value) => !value || value.kind === 'source' || value.acceptance_case_id !== rawEntry.id || value.acceptance_control !== rawControl.polarity || !rawEntry.scopes.includes(value.scope));
+      if (rawControl.status !== 'passed' || evidenceRefs.length === 0 || evidenceRefs.some((id) => !validEvidenceIds.has(id)) || semanticMismatch || rawEntry.scopes.some((scope) => !coveredScopes.has(scope))) {
+        issues.push({ code: 'invalid_acceptance_evidence', path: `manifests.semester.acceptance_cases.${rawEntry.id}.controls.${index}`, message: 'Passed controls require validated test or operating evidence bound to this case, polarity, tenant, and every scenario scope.' });
+      }
+    }
+  }
   return issues;
 }
