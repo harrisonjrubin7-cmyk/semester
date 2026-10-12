@@ -483,7 +483,7 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
     functions: ['begin_privileged_access_review', 'complete_privileged_access_review', 'decide_privileged_access_review_item', 'privileged_access_review', 'resolve_privileged_access_review_investigation'],
   },
   {
-    file: '20261010150000_notification_inbox_foundation.sql',
+    file: '20261010150100_notification_inbox_client.sql',
     functions: ['mark_notification_inbox', 'read_notification_inbox', 'set_notification_preference'],
   },
   {
