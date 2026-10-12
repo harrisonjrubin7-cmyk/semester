@@ -1,6 +1,6 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-12 14:40:42_  ·  branch: `claude/busy-babbage-w7um9b`
+_Updated: 2026-10-12 14:41:00_  ·  branch: `claude/busy-babbage-w7um9b`
 
 ## Uncommitted changes
 ```
@@ -15,6 +15,7 @@ Diff stat:
 
 ## Recent commits
 ```
+de3468fb chore: update the auto-saved session state snapshot
 0f922458 chore: update the auto-saved session state snapshot
 9f64a25b chore: update the auto-saved session state snapshot
 9cac9f7a chore: update the auto-saved session state snapshot
@@ -22,7 +23,6 @@ Diff stat:
 d6eaf052 chore: update the auto-saved session state snapshot
 bd1baa6e chore: track the auto-saved session state snapshot
 9421db40 docs: record D-1502 for the semester-core placement and draft equity reviews
-973ec231 feat(core): port semester-core workflows and record the ecosystem inventory
 ```
 
 ## Resume
