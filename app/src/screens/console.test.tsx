@@ -36,6 +36,7 @@ const mock = vi.hoisted(() => ({
   auditStatus: vi.fn(),
   figures: vi.fn(),
   command: vi.fn(),
+  projection: vi.fn(),
   customers: vi.fn(),
   tenantOperations: vi.fn(),
   integrationHealth: vi.fn(),
@@ -91,6 +92,7 @@ vi.mock('../lib/console/client', async (orig) => ({
   auditStatus: mock.auditStatus,
   loadFigures: mock.figures,
   loadCommandCenter: mock.command,
+  loadProjectionDashboard: mock.projection,
   loadCustomers: mock.customers,
   loadTenantOperations: mock.tenantOperations,
   loadIntegrationHealth: mock.integrationHealth,
@@ -192,6 +194,7 @@ beforeEach(() => {
     { figure: 'approvals-open', value: '1', source: 'public.approval_request', timeWindow: 'now', ownerSeat: 'security', refreshedAt: '2026-09-28T10:00:00Z', evidence: 'supabase/console-approvals.check.sql', limitation: 'Counts pending requests only' },
   ]);
   mock.command.mockResolvedValue([]);
+  mock.projection.mockResolvedValue({ freshness: 'fresh', generatedAt: '2026-10-12T00:00:00Z', activeModels: 0, eventSourcesMapped: 0, projections: [], warnings: [] });
   mock.customers.mockResolvedValue([
     {
       id: 'c-1',
@@ -560,6 +563,40 @@ describe('command center', () => {
     expect(host.textContent).toContain('No evidence recorded');
     expect(host.textContent).not.toContain('GREEN —');
     expect(mock.command).toHaveBeenCalledWith(false);
+  });
+
+  it('shows projection health in words, and never as healthy when it cannot be read or is unmapped', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.projection.mockResolvedValue({
+      freshness: 'unknown', generatedAt: '2026-10-12T00:00:00Z', activeModels: 2, eventSourcesMapped: 1,
+      warnings: ['zz_model has no event source mapped, so eventsBehind, deadLetters and lastError are not reported.'],
+      projections: [
+        { projection: 'ops_tenant_rollout', version: 1, freshness: 'stale', freshnessSloSeconds: 300, workerStatus: 'idle', lastEventAt: '2026-10-11T00:00:00Z', lagSeconds: 3600, eventsBehind: 0, oldestPendingSeconds: null, deadLetters: 0, lastError: null, lastRebuild: null, eventSourceMapped: true },
+        { projection: 'zz_model', version: 1, freshness: 'unknown', freshnessSloSeconds: 300, workerStatus: 'unknown', lastEventAt: null, lagSeconds: null, eventsBehind: null, oldestPendingSeconds: null, deadLetters: null, lastError: null, lastRebuild: null, eventSourceMapped: false },
+      ],
+    });
+    await render();
+    const text = host.querySelector('[aria-label="Projection health"]')!.textContent!;
+    expect(text).toContain('STALE · ops_tenant_rollout v1');
+    expect(text).toContain('idle, nothing is waiting');
+    expect(text).toContain('never rebuilt');
+    expect(text).toContain('UNKNOWN · zz_model v1');
+    expect(text).toContain('No event source is mapped to this model');
+    const unmapped = host.querySelector('[aria-label="unknown zz_model"]')!.textContent!;
+    expect(unmapped).not.toContain('Behind');
+    expect(unmapped).not.toContain('dead letters 0');
+    expect(text).not.toContain('FRESH');
+  });
+
+  it('says projection health is unavailable, not healthy, when the read is refused', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.projection.mockRejectedValue(new Error('console:operate at platform scope is required.'));
+    await render();
+    const panel = host.querySelector('[aria-label="Projection health"]')!;
+    expect(panel.textContent).toContain('UNKNOWN');
+    expect(panel.textContent).toContain('console:operate at platform scope is required.');
+    expect(panel.textContent).toContain('not shown as healthy');
+    expect(panel.textContent).not.toContain('FRESH');
   });
 
   it('says green only when the live exception reader returns no rows', async () => {

@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Housing keeps track of repairs you reported
+
+**Housing** now has a **Repairs you reported** section on the **My housing** tab. After you report something to housing (their portal, front desk or phone line), choose **Record a repair** and note what is wrong, where, how urgent it is, how you reported it and the reference number housing gave you. Pick when to check back: Semester suggests a time, or use the one housing gave you. When that time passes, the repair appears on **Today** as something to follow up. Update it with **Visit scheduled**, **It is fixed**, **Still not fixed** or **No longer needed**; **Remove** can be undone. Choosing **Emergency** first tells you to call housing or campus safety. Semester does not send anything to housing, and nothing you need to do changes.
+
 ### Revoking volunteer access shows the consequences first
 
 Senior Trust & Safety reviewers now see a preview before revoking a student volunteer. It names the volunteer, says their moderation access ends immediately, identifies the unanswered review actions that will leave their queue, shows the reason that will be kept in programme history, and says the action cannot be undone by sending them back to calibration. The reviewer must type the volunteer handle before **Revoke access** is available. Cancel changes nothing; other volunteers, moderation cases, completed reviews and school settings are unchanged.

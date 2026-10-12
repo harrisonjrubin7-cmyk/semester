@@ -5,6 +5,7 @@ import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Group, ItemRow } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
+import { MaintenanceRequests } from '../components/MaintenanceRequests';
 import { SectionLabel, TabList } from '../components/ui';
 import { TermSwitch } from '../components/TermSwitch';
 import { ErrorSummary, FieldMessage, useFieldErrors } from '../components/FieldMessage';
@@ -284,6 +285,7 @@ function HousingDetails() {
         the app keeps only the portal root, because a link with your token in it is a link that
         signs somebody else in as you.
       </div>
+      <MaintenanceRequests />
     </Page>
   );
 }
