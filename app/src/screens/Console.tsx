@@ -3,8 +3,9 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, TabList } from '../components/ui';
 import { cloudConfigured } from '../lib/cloud';
-import { loadMyCapabilities, type Grant } from '../lib/capabilities';
+import { useCapabilityDiscovery, type Grant } from '../lib/capabilities';
 import { environment } from '../lib/environment';
+import { ErrorState } from '../components/unity/States';
 import {
   holdsConsole,
   loadPreferences,
@@ -73,27 +74,9 @@ const BLURB = 'Live operational exceptions, approvals, break-glass, the audit ch
 const PREF_TAB = 'console.tab';
 const PREF_VIEWS = 'console.views';
 
-/**
- * The caller's grants: `null` until read, so "no grant" is never shown while
- * reading, and not read at all when there is nothing to read them from.
- */
-function useGrants(enabled: boolean): Grant[] | null {
-  const [grants, setGrants] = useState<Grant[] | null>(null);
-  useEffect(() => {
-    if (!enabled) return;
-    let live = true;
-    loadMyCapabilities().then(
-      (g) => { if (live) setGrants(g); },
-      () => { if (live) setGrants([]); },
-    );
-    return () => { live = false; };
-  }, [enabled]);
-  return grants;
-}
-
 export function Console() {
   const { account } = useStore();
-  const grants = useGrants(cloudConfigured && account !== null);
+  const access = useCapabilityDiscovery(cloudConfigured ? account?.id ?? '' : '');
   if (!cloudConfigured || !account) {
     return (
       <Page blurb={BLURB}>
@@ -101,13 +84,25 @@ export function Console() {
       </Page>
     );
   }
-  if (grants === null) {
+  if (access.status === 'loading') {
     return (
       <Page blurb={BLURB}>
         <p role="status">Reading your grants…</p>
       </Page>
     );
   }
+  if (access.status === 'error') {
+    return (
+      <Page blurb={BLURB}>
+        <ErrorState
+          title="Could not read your grants"
+          body={access.error}
+          recover={{ label: 'Try again', run: access.retry }}
+        />
+      </Page>
+    );
+  }
+  const grants = access.grants;
   if (!holdsConsole(grants)) {
     return (
       <Page blurb={BLURB}>
