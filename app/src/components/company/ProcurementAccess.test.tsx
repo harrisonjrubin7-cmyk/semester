@@ -136,6 +136,19 @@ describe('Company procurement access', () => {
     expect(host.textContent).toContain('account-team-1');
   });
 
+  it('rechecks the exact capability immediately before withdrawal and dispatches no mutation after revocation', async () => {
+    vi.mocked(api.verifySubject).mockRejectedValueOnce(new Error('Company access is no longer granted.'));
+    await mount();
+    await act(async () => button(/Withdraw access/).click());
+    const reason = host.querySelector('textarea') as HTMLTextAreaElement;
+    await act(async () => typeInto(reason, 'Evidence superseded'));
+    await act(async () => button(/Review withdrawal/).click());
+    await act(async () => button(/^Withdraw access$/).click());
+    await settle();
+    expect(host.textContent).toContain('Company access is no longer granted.');
+    expect(api.withdraw).not.toHaveBeenCalled();
+  });
+
   it('does not offer or queue a withdrawal while offline', async () => {
     await mount('account-team-1', false);
     expect(host.textContent).toContain('You are offline');
@@ -171,5 +184,50 @@ describe('Company procurement access', () => {
     await settle();
     expect(host.textContent).not.toContain('Old account data');
     expect(api.loadAccounts).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps a way back when an exact full account page is followed by an empty page', async () => {
+    const full = Array.from({ length: 50 }, (_, index) => ({ ...ACCOUNT, id: `account-${index}`, name: `Account ${index}` }));
+    vi.mocked(api.loadAccounts).mockResolvedValueOnce(full).mockResolvedValueOnce([]).mockResolvedValueOnce(full);
+    await mount();
+    await act(async () => button(/Next accounts/).click());
+    await settle();
+    expect(host.textContent).toContain('No company accounts are visible');
+    expect(button(/Previous accounts/).disabled).toBe(false);
+    await act(async () => button(/Previous accounts/).click());
+    await settle();
+    expect(host.textContent).toContain('Account 0');
+  });
+
+  it('keeps a way back when an exact full request page is followed by an empty page', async () => {
+    const full = Array.from({ length: 50 }, (_, index) => ({ ...REQUEST, id: `request-${index}`, requesterName: `Reviewer ${index}` }));
+    vi.mocked(api.loadRequests).mockResolvedValueOnce(full).mockResolvedValueOnce([]).mockResolvedValueOnce(full);
+    await mount();
+    await act(async () => button(/Next requests/).click());
+    await settle();
+    expect(host.textContent).toContain('No procurement requests');
+    expect(button(/Previous requests/).disabled).toBe(false);
+    await act(async () => button(/Previous requests/).click());
+    await settle();
+    expect(host.textContent).toContain('Reviewer 0');
+  });
+
+  it('does not let a late request page from account A replace account B', async () => {
+    const accountB = { ...ACCOUNT, id: 'account-2', name: 'South College' };
+    const requestB = { ...REQUEST, id: 'request-2', accountId: accountB.id, requesterName: 'South reviewer' };
+    let resolveA!: (rows: ProcurementRequest[]) => void;
+    vi.mocked(api.loadAccounts).mockResolvedValueOnce([ACCOUNT, accountB]);
+    vi.mocked(api.loadRequests)
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveA = resolve; }))
+      .mockResolvedValueOnce([requestB]);
+    vi.mocked(api.loadDetail).mockResolvedValue({ ...DETAIL, request: requestB });
+    await mount();
+    await act(async () => button(/South College/).click());
+    await settle();
+    expect(host.textContent).toContain('South reviewer');
+    await act(async () => resolveA([REQUEST]));
+    await settle();
+    expect(host.textContent).toContain('South reviewer');
+    expect(host.textContent).not.toContain('<Procurement Reviewer>');
   });
 });

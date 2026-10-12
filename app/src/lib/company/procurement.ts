@@ -10,6 +10,7 @@ const VERSION_COLUMNS = 'id, artifact_key, version, source_commit, published_on,
 const ARTIFACT_COLUMNS = 'key, title, tier';
 const ACCESS_COLUMNS = 'id, grant_id, version_id, accessed_at';
 export const COMPANY_PAGE_SIZE = 50;
+const DETAIL_PAGE_SIZE = 100;
 
 type Row = Record<string, unknown>;
 
@@ -127,6 +128,26 @@ function fail(error: unknown, message: string): void {
   if (error) throw new Error(message);
 }
 
+async function readEveryPage(
+  page: (from: number, to: number) => PromiseLike<{ data: unknown; error: unknown }>,
+  message: string,
+): Promise<Row[]> {
+  const found: Row[] = [];
+  for (let from = 0; ; from += DETAIL_PAGE_SIZE) {
+    const reply = await page(from, from + DETAIL_PAGE_SIZE - 1);
+    fail(reply.error, message);
+    const batch = rows(reply.data);
+    found.push(...batch);
+    if (batch.length < DETAIL_PAGE_SIZE) return found;
+  }
+}
+
+function chunks<T>(values: readonly T[], size = DETAIL_PAGE_SIZE): T[][] {
+  const result: T[][] = [];
+  for (let index = 0; index < values.length; index += size) result.push(values.slice(index, index + size));
+  return result;
+}
+
 export function holdsCompanyAccess(grants: readonly CapabilityGrant[]): boolean {
   return grants.some((item) => item.capability === 'account:manage' && item.scopeKind === 'platform' && item.scopeId === '');
 }
@@ -176,57 +197,60 @@ export async function loadProcurementDetail(accountId: string, requestId: string
   const requestRow = object(requestReply.data);
   if (!requestRow) throw new Error('The procurement request is no longer visible.');
 
-  const grantReply = await client.from('trust_room_grants')
-    .select(GRANT_COLUMNS)
-    .eq('request_id', requestId)
-    .order('granted_at', { ascending: false })
-    .order('id', { ascending: true })
-    .limit(50);
-  fail(grantReply.error, 'Could not load access grants.');
-  const grants = rows(grantReply.data).map(grant);
+  const grants = (await readEveryPage(
+    (from, to) => client.from('trust_room_grants')
+      .select(GRANT_COLUMNS)
+      .eq('request_id', requestId)
+      .order('granted_at', { ascending: false })
+      .order('id', { ascending: true })
+      .range(from, to),
+    'Could not load access grants.',
+  )).map(grant);
   if (grants.length === 0) return { request: request(requestRow), grants: [] };
 
   const grantIds = grants.map((item) => item.id);
-  const itemReply = await client.from('trust_room_grant_items')
-    .select(ITEM_COLUMNS)
-    .in('grant_id', grantIds)
-    .order('grant_id', { ascending: true })
-    .order('version_id', { ascending: true })
-    .limit(100);
-  fail(itemReply.error, 'Could not load pinned document versions.');
-  const itemRows = rows(itemReply.data);
+  const itemRows = await readEveryPage(
+    (from, to) => client.from('trust_room_grant_items')
+      .select(ITEM_COLUMNS)
+      .in('grant_id', grantIds)
+      .order('grant_id', { ascending: true })
+      .order('version_id', { ascending: true })
+      .range(from, to),
+    'Could not load pinned document versions.',
+  );
   const versionIds = [...new Set(itemRows.map((item) => text(item, 'version_id')).filter(Boolean))];
 
   let versionRows: Row[] = [];
   let artifactRows: Row[] = [];
   if (versionIds.length > 0) {
-    const versionReply = await client.from('trust_artifact_versions')
-      .select(VERSION_COLUMNS)
-      .in('id', versionIds)
-      .order('id', { ascending: true })
-      .limit(100);
-    fail(versionReply.error, 'Could not load pinned document versions.');
-    versionRows = rows(versionReply.data);
+    for (const ids of chunks(versionIds)) {
+      const versionReply = await client.from('trust_artifact_versions')
+        .select(VERSION_COLUMNS)
+        .in('id', ids)
+        .order('id', { ascending: true });
+      fail(versionReply.error, 'Could not load pinned document versions.');
+      versionRows.push(...rows(versionReply.data));
+    }
     const keys = [...new Set(versionRows.map((item) => text(item, 'artifact_key')).filter(Boolean))];
-    if (keys.length > 0) {
+    for (const keyChunk of chunks(keys)) {
       const artifactReply = await client.from('trust_artifacts')
         .select(ARTIFACT_COLUMNS)
-        .in('key', keys)
-        .order('key', { ascending: true })
-        .limit(100);
+        .in('key', keyChunk)
+        .order('key', { ascending: true });
       fail(artifactReply.error, 'Could not load document metadata.');
-      artifactRows = rows(artifactReply.data);
+      artifactRows.push(...rows(artifactReply.data));
     }
   }
 
-  const accessReply = await client.from('trust_room_access_log')
-    .select(ACCESS_COLUMNS)
-    .in('grant_id', grantIds)
-    .order('accessed_at', { ascending: false })
-    .order('id', { ascending: true })
-    .limit(100);
-  fail(accessReply.error, 'Could not load access history.');
-  const accessRows = rows(accessReply.data);
+  const accessRows = await readEveryPage(
+    (from, to) => client.from('trust_room_access_log')
+      .select(ACCESS_COLUMNS)
+      .in('grant_id', grantIds)
+      .order('accessed_at', { ascending: false })
+      .order('id', { ascending: true })
+      .range(from, to),
+    'Could not load access history.',
+  );
   const versions = new Map(versionRows.map((item) => [text(item, 'id'), item]));
   const artifacts = new Map(artifactRows.map((item) => [text(item, 'key'), item]));
 

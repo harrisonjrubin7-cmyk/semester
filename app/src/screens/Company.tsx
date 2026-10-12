@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Page } from '../components/Page';
 import { ProcurementAccess, type ProcurementAccessApi } from '../components/company/ProcurementAccess';
 import { ErrorState, LoadingState, PermissionNotice } from '../components/unity/States';
@@ -16,14 +16,6 @@ import {
 import { useOnline } from '../lib/offline-mode';
 import { useStore } from '../state/store';
 
-const PROCUREMENT_API: ProcurementAccessApi = {
-  loadAccounts: (page) => loadCompanyAccounts(page),
-  loadRequests: (accountId, page) => loadProcurementRequests(accountId, page),
-  loadDetail: loadProcurementDetail,
-  verifySubject: requireCompanySubject,
-  withdraw: (grantId, reason, subject) => withdrawWithReadback(grantId, reason, subject),
-};
-
 type Gate =
   | { kind: 'checking' }
   | { kind: 'allowed'; subject: string }
@@ -32,11 +24,51 @@ type Gate =
 
 export const COMPANY_BLURB = 'Review institutional procurement requests, their pinned trust-room evidence, and existing access grants.';
 
+async function requireExactCompanyAccess(subject: string): Promise<string> {
+  await requireCompanySubject(subject);
+  const grants = await loadMyCapabilitiesOrThrow(subject);
+  if (!holdsCompanyAccess(grants)) throw new Error('Company access is no longer granted.');
+  return subject;
+}
+
 export function Company() {
   const { account } = useStore();
   const online = useOnline();
   const [revision, setRevision] = useState(0);
   const [gate, setGate] = useState<Gate>({ kind: 'checking' });
+  const procurementApi = useMemo<ProcurementAccessApi>(() => ({
+    loadAccounts: async (page) => {
+      await requireExactCompanyAccess(account?.id ?? '');
+      return loadCompanyAccounts(page);
+    },
+    loadRequests: async (accountId, page) => {
+      await requireExactCompanyAccess(account?.id ?? '');
+      return loadProcurementRequests(accountId, page);
+    },
+    loadDetail: async (accountId, requestId) => {
+      await requireExactCompanyAccess(account?.id ?? '');
+      return loadProcurementDetail(accountId, requestId);
+    },
+    verifySubject: requireExactCompanyAccess,
+    withdraw: (grantId, reason, subject) => withdrawWithReadback(grantId, reason, subject),
+  }), [account?.id]);
+
+  useEffect(() => {
+    if (!account || !cloudConfigured) return;
+    const recheck = () => {
+      setGate({ kind: 'checking' });
+      setRevision((value) => value + 1);
+    };
+    const visible = () => { if (document.visibilityState === 'visible') recheck(); };
+    window.addEventListener('focus', recheck);
+    window.addEventListener('online', recheck);
+    document.addEventListener('visibilitychange', visible);
+    return () => {
+      window.removeEventListener('focus', recheck);
+      window.removeEventListener('online', recheck);
+      document.removeEventListener('visibilitychange', visible);
+    };
+  }, [account]);
 
   useEffect(() => {
     if (!account || !cloudConfigured) return;
@@ -59,15 +91,13 @@ export function Company() {
     let live = true;
     setGate({ kind: 'checking' });
     void (async () => {
-      const db = await cloud();
-      const { data, error } = await db.auth.getUser();
-      if (error || !data.user?.id) throw new Error('Your signed-in account could not be verified. Check the connection and try again.');
-      if (data.user.id !== account.id) throw new Error('The signed-in account changed. Company data was cleared; check access again.');
-      const grants = await loadMyCapabilitiesOrThrow(account.id);
+      const subject = await requireExactCompanyAccess(account.id);
       if (!live) return;
-      setGate(holdsCompanyAccess(grants) ? { kind: 'allowed', subject: data.user.id } : { kind: 'denied' });
+      setGate({ kind: 'allowed', subject });
     })().catch((error: unknown) => {
-      if (live) setGate({ kind: 'error', message: error instanceof Error ? error.message : 'Company permissions could not be checked.' });
+      if (!live) return;
+      if (error instanceof Error && error.message === 'Company access is no longer granted.') setGate({ kind: 'denied' });
+      else setGate({ kind: 'error', message: error instanceof Error ? error.message : 'Company permissions could not be checked.' });
     });
     return () => { live = false; };
   }, [account, revision]);
@@ -106,7 +136,7 @@ export function Company() {
       )}
       {gate.kind === 'allowed' && gate.subject !== account.id && <LoadingState what="your Company permissions" />}
       {gate.kind === 'allowed' && gate.subject === account.id && (
-        <ProcurementAccess key={`${gate.subject}:${revision}`} subject={gate.subject} online={online} api={PROCUREMENT_API} />
+        <ProcurementAccess key={`${gate.subject}:${revision}`} subject={gate.subject} online={online} api={procurementApi} />
       )}
     </Page>
   );

@@ -59,6 +59,8 @@ export function ProcurementAccess({
   api: ProcurementAccessApi;
 }) {
   const generation = useRef(0);
+  const requestGeneration = useRef(0);
+  const detailGeneration = useRef(0);
   const pending = useRef(false);
   const [reloadAccounts, setReloadAccounts] = useState(0);
   const [reloadRequests, setReloadRequests] = useState(0);
@@ -126,7 +128,7 @@ export function ProcurementAccess({
   useEffect(() => {
     if (!selectedAccount || accounts?.subject !== subject) return;
     const key = `${subject}:${selectedAccount}`;
-    const ticket = generation.current;
+    const ticket = ++requestGeneration.current;
     setRequestError('');
     setRequests(null);
     setSelectedRequest('');
@@ -135,23 +137,24 @@ export function ProcurementAccess({
     setWithdrawOpen(false);
     void api.loadRequests(selectedAccount, requestPage).then(
       (rows) => {
-        if (generation.current !== ticket || key !== `${subject}:${selectedAccount}`) return;
+        if (requestGeneration.current !== ticket) return;
         setRequests({ key, page: requestPage, rows });
         setSelectedRequest(rows[0]?.id ?? '');
         setCheckedAt(new Date());
       },
       (error: unknown) => {
-        if (generation.current !== ticket) return;
+        if (requestGeneration.current !== ticket) return;
         setRequests({ key, page: requestPage, rows: [] });
         setRequestError(said(error, 'Could not load procurement requests.'));
       },
     );
+    return () => { if (requestGeneration.current === ticket) requestGeneration.current += 1; };
   }, [accounts, api, reloadRequests, requestPage, selectedAccount, subject]);
 
   useEffect(() => {
     if (!selectedAccount || !selectedRequest || requests?.key !== requestKey) return;
     const key = `${subject}:${selectedAccount}:${selectedRequest}`;
-    const ticket = generation.current;
+    const ticket = ++detailGeneration.current;
     setDetailError('');
     if (reloadDetail > 0) setRefreshing(true);
     else setDetail(null);
@@ -161,7 +164,7 @@ export function ProcurementAccess({
     setActionError('');
     void api.loadDetail(selectedAccount, selectedRequest).then(
       (value) => {
-        if (generation.current !== ticket || key !== `${subject}:${selectedAccount}:${selectedRequest}`) return;
+        if (detailGeneration.current !== ticket) return;
         setDetail({ key, value });
         setWithdrawGrant((was) => value.grants.some((grant) => grant.id === was && !grant.revokedAt)
           ? was
@@ -171,11 +174,12 @@ export function ProcurementAccess({
         setCheckedAt(new Date());
       },
       (error: unknown) => {
-        if (generation.current !== ticket) return;
+        if (detailGeneration.current !== ticket) return;
         setDetailError(said(error, 'Could not load request details.'));
         setRefreshing(false);
       },
     );
+    return () => { if (detailGeneration.current === ticket) detailGeneration.current += 1; };
   }, [api, reloadDetail, requestKey, requests, selectedAccount, selectedRequest, subject]);
 
   const chooseAccount = (id: string) => {
@@ -242,8 +246,18 @@ export function ProcurementAccess({
   if (accountError) {
     return <ErrorState title="Company requests could not be loaded" body={accountError} recover={{ label: 'Try again', run: () => setReloadAccounts((value) => value + 1) }} />;
   }
-  if (accountRows.length === 0) {
+  if (accountRows.length === 0 && accountPage === 0) {
     return <EmptyState title="No company accounts are visible" body="The authorized account read succeeded and returned no accounts." />;
+  }
+  if (accountRows.length === 0) {
+    return (
+      <div className="company-procurement">
+        <EmptyState title="No company accounts are visible on this page" body="The authorized account read succeeded and returned no rows. Return to the previous page." />
+        <nav aria-label="Company account pages">
+          <button type="button" className="btn" onClick={() => setAccountPage((page) => Math.max(0, page - 1))}>Previous accounts</button>
+        </nav>
+      </div>
+    );
   }
 
   return (
@@ -291,7 +305,7 @@ export function ProcurementAccess({
           ))}
         </div>
       )}
-      {requestRows && requestRows.length > 0 && (
+      {requestRows && (requestRows.length > 0 || requestPage > 0) && (
         <nav aria-label="Procurement request pages">
           <button type="button" className="btn" disabled={requestPage === 0} onClick={() => setRequestPage((page) => Math.max(0, page - 1))}>Previous requests</button>
           <button type="button" className="btn" disabled={requestRows.length < COMPANY_PAGE_SIZE} onClick={() => setRequestPage((page) => page + 1)}>Next requests</button>

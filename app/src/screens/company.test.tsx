@@ -106,4 +106,14 @@ describe('Company entry gate', () => {
     expect(host.textContent).toContain('Procurement access');
     expect(host.textContent).toContain('No company accounts are visible');
   });
+
+  it('clears Company data and rechecks a stale capability when the app regains focus', async () => {
+    await render();
+    expect(host.textContent).toContain('No company accounts are visible');
+    mock.caps.mockResolvedValue([]);
+    await act(async () => window.dispatchEvent(new Event('focus')));
+    for (let index = 0; index < 8; index += 1) await act(async () => Promise.resolve());
+    expect(host.textContent).toContain('Company access is not granted');
+    expect(host.textContent).not.toContain('No company accounts are visible');
+  });
 });

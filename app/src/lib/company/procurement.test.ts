@@ -151,6 +151,23 @@ describe('bounded procurement reads', () => {
     expect(versionCall.chain).toContain('in("id",["version-1"])');
     expect(versionCall.chain).not.toContain('order("created_at",{"ascending":false})');
   });
+
+  it('reads every access-history page instead of silently truncating at one hundred rows', async () => {
+    replies.set('from:trust_room_requests', [{ data: requestRow, error: null }]);
+    replies.set('from:trust_room_grants', [{ data: [grantRow], error: null }]);
+    replies.set('from:trust_room_grant_items', [{ data: [], error: null }]);
+    const first = Array.from({ length: 100 }, (_, index) => ({
+      id: `access-${index}`, grant_id: 'grant-1', version_id: null, accessed_at: `2026-10-05T10:${String(index % 60).padStart(2, '0')}:00Z`,
+    }));
+    replies.set('from:trust_room_access_log', [
+      { data: first, error: null },
+      { data: [{ id: 'access-100', grant_id: 'grant-1', version_id: null, accessed_at: '2026-10-04T10:00:00Z' }], error: null },
+    ]);
+    const detail = await loadProcurementDetail('account-1', 'request-1');
+    expect(detail.grants[0].accesses).toHaveLength(101);
+    const accessCalls = calls.filter((call) => call.name === 'trust_room_access_log');
+    expect(accessCalls.map((call) => call.chain.at(-1))).toEqual(['range(0,99)', 'range(100,199)']);
+  });
 });
 
 describe('withdrawal reconciliation', () => {
