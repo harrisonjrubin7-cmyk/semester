@@ -36,6 +36,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `infra/` | Infrastructure as code: Terraform modules and environments (`platform`, `staging`, `production`), the Rego policy that checks plans and workflows, and one change record per governed pull request. Nothing in it has been applied yet. See [`infra/README.md`](../../infra/README.md). |
 | `workflow-lab/` | Standalone Next.js (App Router) + Supabase app: the AI workflow router and the 12-workflow benchmark lab. Its own `package.json` and lockfile (not an npm workspace); CI is `.github/workflows/workflow-lab.yml`. See [`workflow-lab/README.md`](../../workflow-lab/README.md). |
 | `video/` | Remotion project that renders lessons to video. Has its own `package.json`; CI typechecks it with `npm run check:video`. See [`video/README.md`](../../video/README.md). |
+| `.anchor/` | The session-state snapshot (`session-state.md`), rewritten and committed by the stop hook at the end of each agent session. It records the branch, the working tree and recent commits; it is not source. Whether it stays tracked is an open owner decision. |
 | `.claude/` | Agent configuration checked into the repository: `commands/` and `skills/` (`run`, `add-course`, and the design-system skills `build-semester-ui`, `audit-semester-design-sync`, `create-semester-component`). The Figma MCP server is named in `.mcp.json` at the root. |
 | `.github/` | `CODEOWNERS`, `dependabot.yml`, `pull_request_template.md`, `rulesets/main.json` and the workflows. |
 
