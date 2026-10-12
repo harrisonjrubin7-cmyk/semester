@@ -271,7 +271,9 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['office_desk_actions', 'admin', ['auth.uid()', 'private.may_publish']],
   ['open_help_request', 'self-service', ['auth.uid()', 'private.answers_for']],
   ['open_support_ticket', 'self-service', ['auth.uid()']],
+  ['ops_operations_inbox', 'admin', ['auth.uid()', 'private.has_capability', 'private.work_item_allowed']],
   ['ops_projection_dashboard', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['ops_transition_work_item', 'admin', ['auth.uid()', 'private.work_item_allowed']],
   ['privileged_access_review', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['privileged_mfa_required', 'read-helper', ['auth.uid()']],
   ['productivity_readiness_aggregate', 'admin', ['auth.uid()', "'admin'=any(m.roles)", 'if owners<10']],
@@ -471,6 +473,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * historical snapshot.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261012010000_operations_work_items.sql',
+    functions: ['ops_operations_inbox', 'ops_transition_work_item'],
+  },
   {
     file: '20261011000000_incident_evidence_custody.sql',
     functions: ['incident_evidence_custody', 'record_incident_evidence', 'record_incident_evidence_custody'],

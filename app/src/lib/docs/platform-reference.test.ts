@@ -1411,6 +1411,9 @@ describe('EVENTS.md and its schemas (generated)', () => {
       'supabase/migrations/20261009160000_registration_readiness_store.sql',
       // The expansion RPC preserves the same atomic minimized outbox emission while accepting rolling clients.
       'supabase/migrations/20261010140000_registration_readiness_timeout_contract.sql',
+      // The service-only shared operations producer emits minimized open/transition events.
+      // No production migration application or operator UI availability is implied here.
+      'supabase/migrations/20261012010000_operations_work_items.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);
