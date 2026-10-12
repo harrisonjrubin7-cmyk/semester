@@ -293,15 +293,15 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 242 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 242 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 243 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 243 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 65 |
 | Register rows in category `sharing` | 23 |
-| Register rows in category `admin` | 98 |
+| Register rows in category `admin` | 99 |
 | Register rows in category `integration` | 6 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |

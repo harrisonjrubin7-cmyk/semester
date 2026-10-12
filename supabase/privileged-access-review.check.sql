@@ -55,6 +55,17 @@ begin
     $q$select public.begin_privileged_access_review('access-review-too-late',current_date-90,current_date,current_date+400)$q$));
   perform pg_temp.must('client roles cannot read private review rows', pg_temp.refused(starter,
     'select count(*) from private.privileged_access_review'));
+  perform pg_temp.must('decision writes serialize with signoff', position(
+    'pg_advisory_xact_lock' in pg_get_functiondef(
+      'public.decide_privileged_access_review_item(text,text,text)'::regprocedure)) > 0);
+  perform pg_temp.must('investigation resolutions serialize with signoff', position(
+    'pg_advisory_xact_lock' in pg_get_functiondef(
+      'public.resolve_privileged_access_review_investigation(text,text)'::regprocedure)) > 0);
+  perform pg_temp.must('upgraded decision rows have the remediation default', coalesce((
+    select column_default ilike '%false%'
+      from information_schema.columns
+     where table_schema = 'private' and table_name = 'privileged_access_review_decision'
+       and column_name = 'remediation_applied'), false));
 
   perform pg_temp.become(starter);
   review_ref := public.begin_privileged_access_review('access-review-2026q4', current_date - 90, current_date, current_date + 90);
@@ -65,12 +76,12 @@ begin
          max(item_ref) filter (where role = 'integration_admin'),
          count(*) filter (where subject_sha256 !~ '^[0-9a-f]{64}$')
     into started_hash, trust_items, reviewer_item, target_item, investigate_item, bad_hash_n
-    from public.privileged_access_review(review_ref);
+    from public.privileged_access_review_evidence(review_ref);
   select item_ref, capabilities into steward_item, steward_capabilities
-    from public.privileged_access_review(review_ref) where role = 'data_steward';
-  select item_ref into starter_item from public.privileged_access_review(review_ref)
+    from public.privileged_access_review_evidence(review_ref) where role = 'data_steward';
+  select item_ref into starter_item from public.privileged_access_review_evidence(review_ref)
    where role = 'trust_officer' and subject_sha256 = started_hash;
-  select item_ref, granted_at into signer_item, signer_granted_at from public.privileged_access_review(review_ref)
+  select item_ref, granted_at into signer_item, signer_granted_at from public.privileged_access_review_evidence(review_ref)
    where role = 'trust_officer' and subject_sha256 <> started_hash;
   reset role;
   perform pg_temp.must('an idempotent retry returns the same review', retry_ref = review_ref);
@@ -154,7 +165,7 @@ begin
          count(*) filter (where remediation_applied),
          count(*) filter (where signed_at is null)
     into n, retained_n, revoked_n, investigating_n, remediated_n, unsigned_n
-    from public.privileged_access_review(review_ref);
+    from public.privileged_access_review_evidence(review_ref);
   reset role;
   perform pg_temp.must('the signed ledger returns every snapshot item', n = 6);
   perform pg_temp.must('the signed ledger preserves every decision and the signoff timestamp',

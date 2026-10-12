@@ -44,6 +44,8 @@ alter table private.privileged_access_review_item
 alter table private.privileged_access_review_decision
   add column if not exists remediation_applied boolean not null default false;
 alter table private.privileged_access_review_decision
+  alter column remediation_applied set default false;
+alter table private.privileged_access_review_decision
   drop constraint if exists privileged_access_review_decision_reason;
 alter table private.privileged_access_review_decision
   add constraint privileged_access_review_decision_reason check (
@@ -123,9 +125,9 @@ revoke all on function private.privileged_access_review_grant_state_sha256(
   uuid, text, text, text, text, timestamptz, timestamptz, timestamptz, text[]
 ) from public, anon, authenticated, service_role;
 
--- The evidence reader gains capability/remediation/resolution columns, so its
--- table return type must be replaced rather than CREATE OR REPLACE'd in place.
-drop function if exists public.privileged_access_review(text);
+-- Preserve the original privileged_access_review(text) return contract. The
+-- enriched evidence shape is published under a new name so a full migration
+-- replay can safely CREATE OR REPLACE the original function on every pass.
 
 create or replace function public.begin_privileged_access_review(
   want_request_key text, want_period_start date, want_period_end date, want_next_due date
@@ -203,6 +205,7 @@ begin
     raise exception 'access_review:manage at platform scope is required.' using errcode = '42501';
   end if;
   perform private.assert_fresh_mfa(); actor_hash := private.role_audit_sha256(me::text);
+  perform pg_advisory_xact_lock(hashtext('private.privileged_access_review'));
   if want_decision not in ('retain', 'revoke', 'investigate') then raise exception 'Invalid review decision.' using errcode = '22023'; end if;
   if not (
     (want_decision = 'retain' and want_reason_code in ('still-required', 'least-privilege-confirmed'))
@@ -264,6 +267,7 @@ begin
     raise exception 'access_review:manage at platform scope is required.' using errcode = '42501';
   end if;
   perform private.assert_fresh_mfa(); actor_hash := private.role_audit_sha256(me::text);
+  perform pg_advisory_xact_lock(hashtext('private.privileged_access_review'));
   if want_resolution_code not in ('remediated', 'risk-accepted', 'false-positive') then
     raise exception 'Invalid investigation resolution.' using errcode = '22023';
   end if;
@@ -445,7 +449,7 @@ begin
   values (review.id, actor_hash, keep_n, revoke_n, investigate_n);
 end $$;
 
-create or replace function public.privileged_access_review(want_review text)
+create or replace function public.privileged_access_review_evidence(want_review text)
 returns table (review_ref text, period_start date, period_end date, next_due date,
   snapshot_at timestamptz, started_by_sha256 text, item_ref text, subject_sha256 text, role text,
   capabilities text[], capabilities_backfilled boolean, scope_kind text,
@@ -491,10 +495,12 @@ revoke all on function public.begin_privileged_access_review(text, date, date, d
 revoke all on function public.decide_privileged_access_review_item(text, text, text) from public, anon;
 revoke all on function public.complete_privileged_access_review(text) from public, anon;
 revoke all on function public.privileged_access_review(text) from public, anon;
+revoke all on function public.privileged_access_review_evidence(text) from public, anon;
 grant execute on function public.begin_privileged_access_review(text, date, date, date) to authenticated;
 grant execute on function public.decide_privileged_access_review_item(text, text, text) to authenticated;
 grant execute on function public.complete_privileged_access_review(text) to authenticated;
 grant execute on function public.privileged_access_review(text) to authenticated;
+grant execute on function public.privileged_access_review_evidence(text) to authenticated;
 revoke all on function public.resolve_privileged_access_review_investigation(text, text) from public, anon;
 grant execute on function public.resolve_privileged_access_review_investigation(text, text) to authenticated;
 revoke all on function public.resolve_privileged_access_review_post_decision_change(text) from public, anon;
