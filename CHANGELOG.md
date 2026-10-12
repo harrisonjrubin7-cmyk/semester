@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Workspace links now open the connected tools that already exist
+
+The app directory now has **Your workspaces** with direct links to Teaching and University services while preserving the current account and university. Server-reported grants add **Semester Operations** only for platform operators and **External listings** only for the current university. Permission checks show loading, empty, failed and retry states separately; changing accounts discards old capability and course-policy results. Company, investor and developer workflows remain explicitly unavailable rather than appearing as placeholder workspaces.
+
 ### Toolkit work can travel in a device workspace backup
 
 Device workspace backups now include the signed-in account's Toolkit work: assignment workspaces, Research Studio projects, AI-use declarations and the separate Data Studio projects with their original imported data. Restoring checks the entire backup before writing anything and restores those records into the account doing the restore, not the account name from the old device. Research Studio's source, claim and project removal previews now say to create a device workspace backup first if you may need to restore the removed work; without one, it must still be re-entered from the originals.
