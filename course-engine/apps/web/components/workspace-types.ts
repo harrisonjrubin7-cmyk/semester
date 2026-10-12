@@ -112,6 +112,6 @@ export type WorkspaceData = {
 };
 
 export type Progress = {
-  items: Array<{ id: string; mastery_score: number; attempts: number; correct_attempts: number; next_review_at?: string }>;
+  items: Array<{ id: string; kind?: "concept" | "quiz"; mastery_score: number; attempts: number; correct_attempts: number; next_review_at?: string }>;
   average_mastery: number;
 };

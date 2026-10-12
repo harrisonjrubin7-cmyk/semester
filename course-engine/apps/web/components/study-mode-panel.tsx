@@ -21,7 +21,13 @@ function guideSections(content: Record<string, unknown>): GuideSection[] {
   return content.sections.filter((section): section is GuideSection => Boolean(
     section && typeof section === "object" &&
     typeof section.heading === "string" && typeof section.explanation === "string" &&
-    Array.isArray(section.citation_ids),
+    Array.isArray(section.citation_ids) && section.citation_ids.every((id: unknown) => typeof id === "string") &&
+    (section.key_points === undefined || (
+      Array.isArray(section.key_points) && section.key_points.every((point: unknown) => typeof point === "string")
+    )) &&
+    (section.examples === undefined || (
+      Array.isArray(section.examples) && section.examples.every((example: unknown) => typeof example === "string")
+    )),
   ));
 }
 
@@ -62,7 +68,7 @@ function CardsView({ asset, courseId }: { asset: Asset; courseId: string }) {
   const review = useMutation({
     mutationFn: (correct: boolean) => api<Progress["items"][number]>(`/flashcards/${cards[index].id}/review`, {
       method: "POST",
-      body: JSON.stringify({ course_id: courseId, concept_id: null, correct, confidence }),
+      body: JSON.stringify({ course_id: courseId, asset_id: asset.id, concept_id: null, correct, confidence }),
     }),
     onSuccess: (_result, correct) => {
       setAnnouncement(correct ? "Recall recorded." : "Marked for another review.");
@@ -162,7 +168,7 @@ function AssetBody({ asset, courseId, mode }: { asset: Asset; courseId: string; 
 }
 
 export function StudyModePanel({ assets, courseId, mode }: { assets: Asset[]; courseId: string; mode: string }) {
-  const selected = assets.filter((asset) => (studyAssetTypes[mode] ?? []).includes(asset.asset_type));
+  const selected = assets.filter((asset) => asset.status !== "rejected" && (studyAssetTypes[mode] ?? []).includes(asset.asset_type));
   if (!selected.length) return <EmptyState action={<Link className="button button-primary no-underline" href={`/courses/${courseId}/uploads`}>Choose sources</Link>} detail="Select a unit with enough confirmed material or add the source documents needed to generate an honest draft." title={`No ${mode.replaceAll("-", " ")} asset yet`} />;
   return <section className="grid gap-4">{selected.map((asset) => <article className="panel panel-interactive p-5" key={asset.id}><AssetHeader asset={asset} /><AssetBody asset={asset} courseId={courseId} mode={mode} /></article>)}</section>;
 }
