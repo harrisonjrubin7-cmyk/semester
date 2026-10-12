@@ -1,0 +1,57 @@
+// tests/handoff.test.ts — handoff transactions are single-use, expiring, privilege-free; previews are capped; devices revocable (migration 120).
+import { describe, it, expect } from 'vitest';
+import { createClient } from '@supabase/supabase-js';
+import { asUser, anon } from './helpers';
+const svc = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+
+describe('handoff transactions', () => {
+  it('anonymous can create for an allowlisted route only', async () => {
+    const ok = await anon().schema('api').rpc('create_handoff', { p_route: 'student_registration', p_ctx: { source: 'email', campaignId: 'fall' } });
+    expect(ok.error).toBeNull(); expect(ok.data).toHaveProperty('nonce');
+    const bad = await anon().schema('api').rpc('create_handoff', { p_route: 'ops_finance' }); expect(bad.error).not.toBeNull();
+  });
+  it('refuses privileged fields in entry context', async () => {
+    const r = await anon().schema('api').rpc('create_handoff', { p_route: 'student_today', p_ctx: { role: 'institution_admin' } });
+    expect(r.error?.message).toMatch(/privileged/);
+  });
+  it('requires sign-in, is single-use, and checks the nonce', async () => {
+    const { data: t } = await anon().schema('api').rpc('create_handoff', { p_route: 'student_today' });
+    const a = await anon().schema('api').rpc('consume_handoff', { p_id: t.id, p_nonce: t.nonce }); expect(a.error?.message).toMatch(/sign in/);
+    const s = await asUser('student@campus-a.test');
+    const wrong = await s.schema('api').rpc('consume_handoff', { p_id: t.id, p_nonce: 'nope' }); expect(wrong.error?.message).toMatch(/invalid/);
+    const first = await s.schema('api').rpc('consume_handoff', { p_id: t.id, p_nonce: t.nonce }); expect(first.error).toBeNull();
+    const again = await s.schema('api').rpc('consume_handoff', { p_id: t.id, p_nonce: t.nonce }); expect(again.error?.message).toMatch(/already consumed/);
+  });
+  it('expired transactions are refused', async () => {
+    const { data: t } = await anon().schema('api').rpc('create_handoff', { p_route: 'student_today' });
+    await svc.schema('onboard').from('handoff_transactions').update({ expires_at: new Date(Date.now() - 1000).toISOString() }).eq('id', t.id);
+    const s = await asUser('student@campus-a.test');
+    const r = await s.schema('api').rpc('consume_handoff', { p_id: t.id, p_nonce: t.nonce }); expect(r.error?.message).toMatch(/expired/);
+  });
+  it('the server, not the link, decides the route: a student following a caseload link lands on /app', async () => {
+    const { data: t } = await anon().schema('api').rpc('create_handoff', { p_route: 'advisor_caseload' });
+    const s = await asUser('student@campus-a.test');
+    const r = await s.schema('api').rpc('consume_handoff', { p_id: t.id, p_nonce: t.nonce });
+    expect(r.data).toMatchObject({ route: '/app', reason: 'not_authorized' });
+  });
+  it('clients cannot read transactions directly', async () => {
+    const s = await asUser('student@campus-a.test');
+    const r = await s.schema('onboard').from('handoff_transactions').select('*'); expect(r.data ?? []).toHaveLength(0);
+  });
+});
+
+describe('preview drafts and devices', () => {
+  it('preview claim is size-capped', async () => {
+    const s = await asUser('student@campus-a.test');
+    const ok = await s.schema('api').rpc('claim_preview', { p_goal: 'Prepare for registration', p_term: 'Spring 2027', p_items: ['Review holds', 'Check prerequisites'] }); expect(ok.error).toBeNull();
+    const big = await s.schema('api').rpc('claim_preview', { p_goal: 'x', p_term: 'y', p_items: Array.from({ length: 20 }, (_, i) => 'item ' + i) }); expect(big.error).not.toBeNull();
+  });
+  it('a user can revoke only their own device', async () => {
+    const s = await asUser('student@campus-a.test'), o = await asUser('student2@campus-a.test');
+    const { data: d } = await s.schema('onboard').from('devices').insert({ kind: 'browser', label: 'Laptop' }).select().single();
+    await o.schema('api').rpc('revoke_device', { p_device: d!.id });
+    const { data: still } = await svc.schema('onboard').from('devices').select('revoked_at').eq('id', d!.id).single(); expect(still!.revoked_at).toBeNull();
+    await s.schema('api').rpc('revoke_device', { p_device: d!.id });
+    const { data: gone } = await svc.schema('onboard').from('devices').select('revoked_at').eq('id', d!.id).single(); expect(gone!.revoked_at).not.toBeNull();
+  });
+});

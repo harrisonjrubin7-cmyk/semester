@@ -1,0 +1,6 @@
+illustrative_node_alias,parent_alias,ordinal,operator,course_code,timing,policy_reference
+root,,0,all,,,
+choice,root,0,any,,,
+intro,choice,0,course_completed,CS 101,before_start,approved_minimum_grade_policy
+placement,choice,1,placement_met,,,approved_CS_placement_threshold
+math,root,1,course_completed,MATH 120,concurrent_allowed,approved_corequisite_policy

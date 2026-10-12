@@ -1,0 +1,17 @@
+-- Disposable local DB; requires pgtap + fixture SQL and test_manifest temp table first.
+-- test_manifest(table_schema text,table_name text,actor_name text,actor_uuid uuid,
+--   select_sql text,expected_count integer) with one row per table/admin/member/viewer/anon.
+-- Each select_sql returns exactly one bigint COUNT of relevant known seeded fixture rows.
+-- Private deny tables may use expected_count=-1: query must throw 42501, not merely return zero.
+-- IMPORTANT: positive/row-filter cases need known rows for own/other-tenant/peer scope.
+CREATE TEMP TABLE IF NOT EXISTS test_manifest(table_schema text,table_name text,actor_name text,actor_uuid uuid,select_sql text,expected_count integer,PRIMARY KEY(table_schema,table_name,actor_name));
+SELECT no_plan();
+SELECT ok(EXISTS(SELECT 1 FROM test_manifest m WHERE m.table_schema=n.nspname AND m.table_name=c.relname AND m.actor_name=a.actor),format('%I.%I: fixture coverage for %s',n.nspname,c.relname,a.actor))
+FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace CROSS JOIN (VALUES('admin'),('member'),('viewer'),('anon')) a(actor)
+WHERE n.nspname IN ('sx','sx_private','sx_personal') AND c.relkind='r';
+-- Execute under the real DB roles using a trusted test harness, never owner-level SELECT.
+-- This SQL emits executable test statements to psql's \gexec (not supported by every runner).
+SELECT format('RESET ROLE; SELECT set_config(''request.jwt.claim.sub'',%L,true); SELECT set_config(''request.jwt.claims'',%L,true); SET LOCAL ROLE %I; %s RESET ROLE;',coalesce(actor_uuid::text,''),jsonb_build_object('sub',actor_uuid,'role',CASE WHEN actor_name='anon' THEN 'anon' ELSE 'authenticated' END)::text,CASE WHEN actor_name='anon' THEN 'anon' ELSE 'authenticated' END,CASE WHEN expected_count=-1 THEN format('SELECT throws_ok(%L,''42501'',NULL,%L);',select_sql,table_schema||'.'||table_name||' '||actor_name||' denied') ELSE format('SELECT is((%s)::bigint,%s::bigint,%L);',select_sql,expected_count,table_schema||'.'||table_name||' '||actor_name||' row boundary') END)
+FROM test_manifest ORDER BY table_schema,table_name,actor_name
+\gexec
+SELECT * FROM finish();

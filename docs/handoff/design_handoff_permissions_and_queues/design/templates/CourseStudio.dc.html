@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Course Studio screen" description="Faculty course authoring: week plan with student preview, assignment with rubric + AI rule + accessibility gate, gradebook with controlled release; states, responsive, dark" -->
+<helmet><script src="./ds-base.js"></script><style>html,body{margin:0}a{color:var(--text-link)}a:hover{color:var(--text-primary)}</style></helmet>
+<div data-theme="{{ theme }}" style="display:flex;min-height:100vh;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)">
+<sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}"><div style="width:248px;flex:none;position:sticky;top:0;height:100vh"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SideRail" current="chem101" groups="{{ railGroups }}" foot="Course Studio · Faculty" hint-size="248px,100%"></x-import></div></sc-if>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:8px 20px;background:#0f1117;color:rgba(236,238,242,.64);font-size:11px;border-bottom:1px solid rgba(236,238,242,.1)"><span>Course <b style="color:#eceef2;font-weight:500">CHEM 101 · Fall 2026</b></span><span>Official gradebook <b style="color:#eceef2;font-weight:500">Brightspace until cutover</b></span><span style="margin-left:auto">◌ Sample data</span></div>
+<main style="flex:1;width:100%;max-width:1180px;margin:0 auto;padding:22px 20px 64px;box-sizing:border-box;display:grid;gap:16px;align-content:start">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><div style="font-size:10.5px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Course Studio</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:4px 0 2px">General Chemistry I</h1><p style="margin:0;font-size:14px;color:var(--text-secondary)">Dr. Amara Nwosu · 212 students · 3 TAs</p></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="secondary" icon="person" hint-size="150px,44px">Student preview</x-import><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" icon="plus" hint-size="150px,44px">Add item</x-import></div></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Tabs" items="{{ tabs }}" current="{{ tab }}" on-change="{{ setTab }}" label="Course views" hint-size="100%,42px"></x-import>
+<sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.LoadingState" what="CHEM 101" hint-size="100%,180px"></x-import></sc-if>
+<sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ErrorState" title="Couldn't load the course from Brightspace" body="Your drafts in Course Studio are safe. Published items students see are unchanged." recover-label="Try again" reference="CS-2207" hint-size="100%,160px"></x-import></sc-if>
+<sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.EmptyState" title="This course has no weeks yet" body="Import last term's course or start from the syllabus. Nothing is visible to students until you publish." hint-size="100%,160px"></x-import></sc-if>
+<sc-if value="{{ showWeek }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;align-items:start">
+<div style="display:grid;gap:12px">
+<sc-for list="{{ weeks }}" as="w" hint-placeholder-count="3">
+<section style="border:1px solid var(--border-default);border-radius:6px;background:var(--surface-base);padding:14px 16px;display:grid;gap:8px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline"><h3 style="margin:0;font-family:var(--font-heading);font-weight:600;font-size:17px">{{ w.title }}</h3><span style="font-size:12px;color:var(--text-secondary)">{{ w.dates }}</span></div>
+<sc-for list="{{ w.items }}" as="i" hint-placeholder-count="2"><div style="display:flex;gap:10px;align-items:baseline;font-size:14px;padding:6px 0;border-top:1px solid var(--border-subtle)"><span style="width:16px;color:var(--text-secondary)">{{ i.glyph }}</span><span style="flex:1;min-width:0">{{ i.name }}</span><span style="font-size:12px;color:var(--text-secondary);white-space:nowrap">{{ i.state }}</span></div></sc-for>
+</section>
+</sc-for>
+</div>
+<aside style="border:1px solid var(--border-strong);border-radius:10px;padding:16px;display:grid;gap:10px;background:var(--surface-raised)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Student preview · Week 6</div>
+<div style="font-family:var(--font-heading);font-weight:600;font-size:18px">Due this week</div>
+<div style="display:grid;gap:8px;font-size:14px"><div style="display:flex;justify-content:space-between;gap:10px"><span>Problem set 5</span><span style="color:var(--text-secondary)">Thu 9 Oct · 23:59</span></div><div style="display:flex;justify-content:space-between;gap:10px"><span>Lab 4 report</span><span style="color:var(--text-secondary)">Fri 10 Oct · 17:00</span></div></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SourceBadge" source="official" updated="published 2 Oct" hint-size="160px,24px"></x-import>
+<p style="margin:0;font-size:12.5px;color:var(--text-secondary)">Students with approved extended time see their own due dates. You never see the reason.</p></aside>
+</div>
+</sc-if>
+<sc-if value="{{ showAssign }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;align-items:start">
+<section style="border:1px solid var(--border-default);border-radius:6px;background:var(--surface-base);padding:16px 18px;display:grid;gap:12px"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Assignment · draft v3</div><h2 style="margin:0;font-family:var(--font-heading);font-weight:600;font-size:21px">Lab 4 report: titration</h2>
+<div style="overflow-x:auto"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Rubric" columns="{{ rubricCols }}" rows="{{ rubric }}" hint-size="100%,180px"></x-import></div></section>
+<div style="display:grid;gap:12px">
+<div style="border:1px solid var(--source-ai-line);background:var(--source-ai-wash);border-radius:6px;padding:12px 14px;font-size:14px;display:grid;gap:4px"><b style="font-family:var(--font-heading);font-weight:600;font-size:15px">✦ Ask Semester for this assignment</b><div>{{ aiRule }}</div><div style="font-size:12px;color:var(--text-secondary)">Course rules can only be stricter than the institution's.</div></div>
+<div style="border:1px solid var(--status-pending-line);background:var(--status-pending-wash);border-radius:6px;padding:12px 14px;font-size:14px;display:grid;gap:4px"><b style="font-family:var(--font-heading);font-weight:600;font-size:15px;color:var(--status-pending)">! Accessibility check: 1 issue</b><div>The titration curve image has no description. Add one before publishing.</div></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" disabled="{{ true }}" hint-size="100%,44px">Publish to students</x-import>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ showGrades }}" hint-placeholder-val="{{ false }}">
+<div style="overflow-x:auto"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Problem set 4 · graded by TAs" columns="{{ gradeCols }}" rows="{{ grades }}" hint-size="100%,220px"></x-import></div>
+<div style="border:1px solid var(--border-strong);border-radius:10px;padding:16px 18px;display:grid;gap:8px;background:var(--surface-base)"><b style="font-family:var(--font-heading);font-weight:600;font-size:17px">{{ releaseTitle }}</b><div style="font-size:14px">{{ releaseBody }}</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" on-click="{{ release }}" disabled="{{ released }}" hint-size="160px,44px">Release grades</x-import></div></div>
+</sc-if>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;viewState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Ready&quot;,&quot;Loading&quot;,&quot;Empty&quot;,&quot;Error&quot;],&quot;default&quot;:&quot;Ready&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;aiRule&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Off&quot;,&quot;Explain only&quot;,&quot;Feedback on drafts&quot;],&quot;default&quot;:&quot;Explain only&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { tab: 'week', released: false, wide: true };
+  componentDidMount() { this.onR = () => this.setState({ wide: window.innerWidth >= 900 }); this.onR(); window.addEventListener('resize', this.onR); }
+  componentWillUnmount() { window.removeEventListener('resize', this.onR); }
+  renderVals() {
+    const vs = this.props.viewState ?? 'Ready', ready = vs === 'Ready', t = this.state.tab;
+    const ai = this.props.aiRule ?? 'Explain only';
+    const rel = this.state.released;
+    return {
+      theme: this.props.dark ? 'dark' : 'light', wide: this.state.wide, tab: t, setTab: (id) => this.setState({ tab: id }),
+      isLoading: vs === 'Loading', isError: vs === 'Error', isEmpty: vs === 'Empty',
+      showWeek: ready && t === 'week', showAssign: ready && t === 'assign', showGrades: ready && t === 'grades',
+      tabs: [{ id: 'week', label: 'Weeks' }, { id: 'assign', label: 'Assignments', count: 1 }, { id: 'grades', label: 'Gradebook' }],
+      railGroups: [{ label: 'My courses', items: [{ id: 'chem101', label: 'CHEM 101', icon: 'courses' }, { id: 'chem220', label: 'CHEM 220', icon: 'courses' }] }, { label: 'Teaching', items: [{ id: 'qa', label: 'Q&A', icon: 'chat', count: 6 }, { id: 'hours', label: 'Office hours', icon: 'clock' }, { id: 'team', label: 'Teaching team', icon: 'people' }] }],
+      weeks: [
+        { title: 'Week 6 · Acids and bases', dates: '6–10 Oct', items: [{ glyph: '◆', name: 'Lecture 11 slides', state: 'Published' }, { glyph: '◆', name: 'Problem set 5', state: 'Published · due Thu' }, { glyph: '○', name: 'Lab 4 report', state: 'Draft v3' }] },
+        { title: 'Week 7 · Equilibrium', dates: '13–17 Oct', items: [{ glyph: '○', name: 'Lecture 13 slides', state: 'Draft' }, { glyph: '?', name: 'Quiz 3', state: 'Needs question bank' }] },
+        { title: 'Week 8 · Midterm', dates: '20–24 Oct', items: [{ glyph: '○', name: 'Midterm 1', state: 'Scheduled · accommodations applied' }] },
+      ],
+      rubricCols: [{ key: 'c', label: 'Criterion' }, { key: 'pts', label: 'Points', numeric: true }, { key: 'obj', label: 'Objective' }],
+      rubric: [{ c: 'Procedure and data table', pts: 10, obj: 'LO 2.1' }, { c: 'Equivalence point calculation', pts: 15, obj: 'LO 2.3' }, { c: 'Error analysis', pts: 10, obj: 'LO 3.1' }, { c: 'Clarity', pts: 5, obj: '—' }],
+      aiRule: { Off: 'Off for this assignment. Students see “Your instructor has turned off Ask Semester for this.”', 'Explain only': 'Explain concepts only. It won’t write, solve or check graded answers.', 'Feedback on drafts': 'Can give feedback on a student’s own draft. It won’t write new text.' }[ai] || ai,
+      gradeCols: [{ key: 'name', label: 'Student' }, { key: 'score', label: 'Score', numeric: true }, { key: 'by', label: 'Graded by' }, { key: 'flag', label: 'Note' }],
+      grades: [{ name: 'Student 0412', score: '38 / 40', by: 'TA J. Park', flag: '' }, { name: 'Student 0418', score: '29 / 40', by: 'TA J. Park', flag: 'Regrade requested' }, { name: 'Student 0433', score: '—', by: '—', flag: 'Extension to Fri' }, { name: 'Student 0450', score: '35 / 40', by: 'TA L. Moss', flag: '' }],
+      released: rel,
+      release: () => this.setState({ released: true }),
+      releaseTitle: rel ? '✓ Released to 209 students · just now' : 'Release grades to students',
+      releaseBody: rel ? 'Receipt REL-5521 is in the audit log. Brightspace stays the official gradebook; sync it before Friday.' : '209 students see their score and rubric. 3 without a grade are held back. Students are notified once; you can correct a grade after release, and the change is logged.',
+    };
+  }
+}
+</script>
+</body>
+</html>
