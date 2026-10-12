@@ -43,7 +43,7 @@ describe("stored study asset interactions", () => {
     fireEvent.click(screen.getByRole("button", { name: "I recalled it" }));
     await waitFor(() => expect(mockedApi).toHaveBeenCalledWith(
       "/flashcards/00000000-0000-0000-0000-000000000030/review",
-      expect.objectContaining({ method: "POST", body: JSON.stringify({ course_id: "course-1", concept_id: null, correct: true, confidence: 3 }) }),
+      expect.objectContaining({ method: "POST", body: JSON.stringify({ course_id: "course-1", asset_id: baseAsset.id, concept_id: null, correct: true, confidence: 3 }) }),
     ));
   });
 
@@ -53,6 +53,21 @@ describe("stored study asset interactions", () => {
     expect(screen.getByText("Roles shape the decision path.")).toBeInTheDocument();
     expect(screen.getByText("Name an owner.")).toBeInTheDocument();
     expect(screen.queryByText(/citation_ids/)).not.toBeInTheDocument();
+  });
+
+  it("rejects malformed optional guide lists instead of crashing the panel", () => {
+    renderPanel("read", { ...baseAsset, content: {
+      ...baseAsset.content,
+      sections: [{
+        heading: "Malformed",
+        explanation: "This should not render.",
+        key_points: { unexpected: true },
+        citation_ids: [citationId],
+      }],
+    } });
+
+    expect(screen.getByRole("status")).toHaveTextContent("no valid cited sections");
+    expect(screen.queryByRole("heading", { name: "Malformed" })).not.toBeInTheDocument();
   });
 
   it("downloads a confirmed document through the authenticated export helper", async () => {
@@ -76,5 +91,11 @@ describe("stored study asset interactions", () => {
       body: JSON.stringify({ course_id: "course-1", answers: [{ question_index: 0, correct: true }] }),
     })));
     expect(await screen.findByText("Your self-graded attempt was recorded.")).toBeInTheDocument();
+  });
+
+  it("does not offer rejected assets for interactive study", () => {
+    renderPanel("quiz", { ...baseAsset, asset_type: "practice_quiz", status: "rejected" });
+    expect(screen.getByRole("heading", { name: "No quiz asset yet" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reveal cited answer" })).not.toBeInTheDocument();
   });
 });

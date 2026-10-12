@@ -21,6 +21,7 @@ if runtime_readiness.ready:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["Content-Disposition"],
     )
 
 
