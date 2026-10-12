@@ -78,3 +78,6 @@ override.tf.json
 .gallery/
 # Generated design-system reports (uploaded as CI artifacts, not committed)
 app/reports/
+
+# Generated markdown-link index (tool cache, not project content)
+.md-linker/
