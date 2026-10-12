@@ -194,11 +194,11 @@ describe('the evaluator', () => {
     expect(evaluate(only(sound, soft, accept({ until: TODAY })), TODAY, exists, everySeatHeld).lines.find((l) => l.question.id === soft)?.standing).toBe('expired');
   });
 
-  it('seeds an unanswered question from the control register: absent is a known gap, anything else is owed', () => {
+  it('seeds an unanswered question from the control register: partial is owed, while absent is a known gap', () => {
     const r = evaluate({ ...sound, answers: {} }, TODAY, exists, everySeatHeld);
     const standing = (id: string) => r.lines.find((l) => l.question.id === id)?.standing;
-    expect(control('TC-SEC-06')?.state).toBe('absent');
-    expect(standing('RR-SEC-6')).toBe('known-gap');
+    expect(control('TC-SEC-06')?.state).toBe('partial');
+    expect(standing('RR-SEC-6')).toBe('owed');
     expect(control('TC-SEC-01')?.state).toBe('enforced');
     expect(standing('RR-SEC-2')).toBe('owed');
     expect(standing('RR-SEC-1')).toBe('unanswered');

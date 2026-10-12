@@ -164,11 +164,11 @@ Read at 2026-10-04. Each is opened with no answers: the seats that must give the
 
 | Capability | Touches | Questions | Blocking unresolved | Known gaps | Owed | Not yet reviewed | Verdict |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| CAP-041 Family | Holds personal data; Reachable by a minor or a guardian; Shares data with another person or party; Reads or writes an official record; Lets staff see or act on a student's data | 27 | 21 | 4 | 19 | 4 | **no-go** |
-| CAP-046 Money | Holds personal data; Moves or displays money; Reads or writes an official record; Depends on an external system | 27 | 21 | 4 | 18 | 5 | **no-go** |
-| CAP-047 Meal Plan | Holds personal data; Moves or displays money; Depends on an external system | 25 | 19 | 4 | 17 | 4 | **no-go** |
-| CAP-048 Housing | Holds personal data; Reads or writes an official record; Depends on an external system | 26 | 20 | 4 | 17 | 5 | **no-go** |
-| CAP-050 Registration | Holds personal data; Reads or writes an official record; Depends on an external system | 26 | 20 | 4 | 17 | 5 | **no-go** |
+| CAP-041 Family | Holds personal data; Reachable by a minor or a guardian; Shares data with another person or party; Reads or writes an official record; Lets staff see or act on a student's data | 27 | 21 | 3 | 20 | 4 | **no-go** |
+| CAP-046 Money | Holds personal data; Moves or displays money; Reads or writes an official record; Depends on an external system | 27 | 21 | 3 | 19 | 5 | **no-go** |
+| CAP-047 Meal Plan | Holds personal data; Moves or displays money; Depends on an external system | 25 | 19 | 3 | 18 | 4 | **no-go** |
+| CAP-048 Housing | Holds personal data; Reads or writes an official record; Depends on an external system | 26 | 20 | 3 | 18 | 5 | **no-go** |
+| CAP-050 Registration | Holds personal data; Reads or writes an official record; Depends on an external system | 26 | 20 | 3 | 18 | 5 | **no-go** |
 
 ### CAP-041 Family
 
@@ -180,19 +180,19 @@ Blocking questions unresolved:
 - **RR-SEC-2** (security, owed): TC-SEC-01 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-SEC-3** (security, owed): TC-SEC-09 is partial: private.break_glass_active is defined and consumed by nothing, so a grant is an authorization record and review gate that widens no access; the security seat that must co-approve is vacant.
 - **RR-SEC-4** (security, owed): TC-SEC-08 is enforced in the repository; the owning seat has not reviewed it.
-- **RR-PRV-1** (privacy, owed): TC-PRV-07 is partial: Seven surfaces are assessed and six are owed; the check does not require an assessment before a surface ships.
+- **RR-PRV-1** (privacy, owed): TC-PRV-07 is partial: Seven surfaces are assessed and seven are owed; the check does not require an assessment before a surface ships.
 - **RR-PRV-2** (privacy, owed): TC-PRV-01 is enforced in the repository; the owning seat has not reviewed it.
-- **RR-PRV-4** (privacy, owed): TC-PRV-06 is partial: Community join and post are not gated by minor status in SQL, the guardian portal is not built, and parental consent has not started counsel review.
+- **RR-PRV-4** (privacy, owed): TC-PRV-06 is partial: Community join and post are not gated by minor status in SQL; production parental-consent operation and qualified counsel review still need confirmation.
 - **RR-PRV-5** (privacy, owed): TC-PRV-05 is partial: No purpose, legal basis or signature method is recorded, a revoked share can be deleted by the student, and reads log reader and time only.
 - **RR-PRV-6** (privacy, owed): TC-PRV-08 is partial: The list is real; approval is not: no provider terms are signed, regions and transfers are not verified, and deletion propagation to providers has no evidence.
 - **RR-A11-1** (accessibility, owed): TC-A11-02 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-A11-2** (accessibility, known-gap): TC-A11-06 is absent: No dated manual or assistive-technology result exists; nineteen of the fifty-five WCAG 2.2 A and AA criteria in the protocol have no automated evidence at all.
-- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; its last reported finding (a hovered journey card) is fixed and guarded (TR-02), and the first green nightly run is the proof still owed.
+- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Scheduled runs on 9, 10 and 11 October 2026 were green. Coverage still opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients.
 - **RR-REL-1** (operations, owed): TC-REL-02 is partial: Nothing feeds it real events, so no objective has a measured value and no release has ever been frozen by it.
 - **RR-REL-2** (operations, owed): TC-REL-05 is partial: Drilled once on the deployed AI function; the other seven switches and read-only mode have never been engaged against production.
 - **RR-REL-3** (operations, known-gap): TC-REL-06 is absent: The only alert is AI spend, provider-side; there is no error reporting in the client and no routing to a person other than the founder.
 - **RR-REL-4** (operations, owed): TC-REL-04 is partial: Proves the dump format restores, not that the provider can: point-in-time recovery has never been restored, no recovery time or point objective is measured, and the gateway journal has no backup.
-- **RR-SUP-1** (success, owed): TC-SUP-02 is partial: Behind a flag that is off, with no named owner or hours, no first-response probe and no closed-ticket retention period.
+- **RR-SUP-1** (success, owed): TC-SUP-02 is partial: A staffed in-app path passed UAT on October 3, 2026, but that historical record is not proof of today's operation. The email vendor approval and inbox receipt remain open; current activation is gated, no owner or published coverage hours is recorded, and institutional-contract and unclassified legacy ticket retention remains unresolved.
 - **RR-INC-1** (operations, owed): TC-INC-04 is documented: One document walkthrough has been held; sixteen game days are planned and none held.
 - **RR-INC-2** (operations, known-gap): TC-INC-03 is absent: One person holds every role and there is no rota; the backup, the second reviewer of the AI switch, customer contacts and counsel are all unassigned.
 - **RR-DAT-1** (data, unanswered): Not yet reviewed.
@@ -208,18 +208,18 @@ Blocking questions unresolved:
 - **RR-SEC-2** (security, owed): TC-SEC-01 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-SEC-4** (security, owed): TC-SEC-08 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-SEC-5** (security, owed): TC-SEC-03 is partial: The gateway is not deployed and the hourly production probe for it is unconfigured, so nothing shows it operating.
-- **RR-PRV-1** (privacy, owed): TC-PRV-07 is partial: Seven surfaces are assessed and six are owed; the check does not require an assessment before a surface ships.
+- **RR-PRV-1** (privacy, owed): TC-PRV-07 is partial: Seven surfaces are assessed and seven are owed; the check does not require an assessment before a surface ships.
 - **RR-PRV-2** (privacy, owed): TC-PRV-01 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-PRV-6** (privacy, owed): TC-PRV-08 is partial: The list is real; approval is not: no provider terms are signed, regions and transfers are not verified, and deletion propagation to providers has no evidence.
 - **RR-A11-1** (accessibility, owed): TC-A11-02 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-A11-2** (accessibility, known-gap): TC-A11-06 is absent: No dated manual or assistive-technology result exists; nineteen of the fifty-five WCAG 2.2 A and AA criteria in the protocol have no automated evidence at all.
-- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; its last reported finding (a hovered journey card) is fixed and guarded (TR-02), and the first green nightly run is the proof still owed.
+- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Scheduled runs on 9, 10 and 11 October 2026 were green. Coverage still opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients.
 - **RR-REL-1** (operations, owed): TC-REL-02 is partial: Nothing feeds it real events, so no objective has a measured value and no release has ever been frozen by it.
 - **RR-REL-2** (operations, owed): TC-REL-05 is partial: Drilled once on the deployed AI function; the other seven switches and read-only mode have never been engaged against production.
 - **RR-REL-3** (operations, known-gap): TC-REL-06 is absent: The only alert is AI spend, provider-side; there is no error reporting in the client and no routing to a person other than the founder.
 - **RR-REL-4** (operations, owed): TC-REL-04 is partial: Proves the dump format restores, not that the provider can: point-in-time recovery has never been restored, no recovery time or point objective is measured, and the gateway journal has no backup.
 - **RR-REL-6** (operations, unanswered): Not yet reviewed.
-- **RR-SUP-1** (success, owed): TC-SUP-02 is partial: Behind a flag that is off, with no named owner or hours, no first-response probe and no closed-ticket retention period.
+- **RR-SUP-1** (success, owed): TC-SUP-02 is partial: A staffed in-app path passed UAT on October 3, 2026, but that historical record is not proof of today's operation. The email vendor approval and inbox receipt remain open; current activation is gated, no owner or published coverage hours is recorded, and institutional-contract and unclassified legacy ticket retention remains unresolved.
 - **RR-INC-1** (operations, owed): TC-INC-04 is documented: One document walkthrough has been held; sixteen game days are planned and none held.
 - **RR-INC-2** (operations, known-gap): TC-INC-03 is absent: One person holds every role and there is no rota; the backup, the second reviewer of the AI switch, customer contacts and counsel are all unassigned.
 - **RR-DAT-1** (data, unanswered): Not yet reviewed.
@@ -235,18 +235,18 @@ Blocking questions unresolved:
 - **RR-SEC-1** (security, unanswered): Not yet reviewed.
 - **RR-SEC-2** (security, owed): TC-SEC-01 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-SEC-5** (security, owed): TC-SEC-03 is partial: The gateway is not deployed and the hourly production probe for it is unconfigured, so nothing shows it operating.
-- **RR-PRV-1** (privacy, owed): TC-PRV-07 is partial: Seven surfaces are assessed and six are owed; the check does not require an assessment before a surface ships.
+- **RR-PRV-1** (privacy, owed): TC-PRV-07 is partial: Seven surfaces are assessed and seven are owed; the check does not require an assessment before a surface ships.
 - **RR-PRV-2** (privacy, owed): TC-PRV-01 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-PRV-6** (privacy, owed): TC-PRV-08 is partial: The list is real; approval is not: no provider terms are signed, regions and transfers are not verified, and deletion propagation to providers has no evidence.
 - **RR-A11-1** (accessibility, owed): TC-A11-02 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-A11-2** (accessibility, known-gap): TC-A11-06 is absent: No dated manual or assistive-technology result exists; nineteen of the fifty-five WCAG 2.2 A and AA criteria in the protocol have no automated evidence at all.
-- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; its last reported finding (a hovered journey card) is fixed and guarded (TR-02), and the first green nightly run is the proof still owed.
+- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Scheduled runs on 9, 10 and 11 October 2026 were green. Coverage still opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients.
 - **RR-REL-1** (operations, owed): TC-REL-02 is partial: Nothing feeds it real events, so no objective has a measured value and no release has ever been frozen by it.
 - **RR-REL-2** (operations, owed): TC-REL-05 is partial: Drilled once on the deployed AI function; the other seven switches and read-only mode have never been engaged against production.
 - **RR-REL-3** (operations, known-gap): TC-REL-06 is absent: The only alert is AI spend, provider-side; there is no error reporting in the client and no routing to a person other than the founder.
 - **RR-REL-4** (operations, owed): TC-REL-04 is partial: Proves the dump format restores, not that the provider can: point-in-time recovery has never been restored, no recovery time or point objective is measured, and the gateway journal has no backup.
 - **RR-REL-6** (operations, unanswered): Not yet reviewed.
-- **RR-SUP-1** (success, owed): TC-SUP-02 is partial: Behind a flag that is off, with no named owner or hours, no first-response probe and no closed-ticket retention period.
+- **RR-SUP-1** (success, owed): TC-SUP-02 is partial: A staffed in-app path passed UAT on October 3, 2026, but that historical record is not proof of today's operation. The email vendor approval and inbox receipt remain open; current activation is gated, no owner or published coverage hours is recorded, and institutional-contract and unclassified legacy ticket retention remains unresolved.
 - **RR-INC-1** (operations, owed): TC-INC-04 is documented: One document walkthrough has been held; sixteen game days are planned and none held.
 - **RR-INC-2** (operations, known-gap): TC-INC-03 is absent: One person holds every role and there is no rota; the backup, the second reviewer of the AI switch, customer contacts and counsel are all unassigned.
 - **RR-DAT-2** (data, owed): TC-SEC-12 is enforced in the repository; the owning seat has not reviewed it.
@@ -262,18 +262,18 @@ Blocking questions unresolved:
 - **RR-SEC-2** (security, owed): TC-SEC-01 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-SEC-4** (security, owed): TC-SEC-08 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-SEC-5** (security, owed): TC-SEC-03 is partial: The gateway is not deployed and the hourly production probe for it is unconfigured, so nothing shows it operating.
-- **RR-PRV-1** (privacy, owed): TC-PRV-07 is partial: Seven surfaces are assessed and six are owed; the check does not require an assessment before a surface ships.
+- **RR-PRV-1** (privacy, owed): TC-PRV-07 is partial: Seven surfaces are assessed and seven are owed; the check does not require an assessment before a surface ships.
 - **RR-PRV-2** (privacy, owed): TC-PRV-01 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-PRV-6** (privacy, owed): TC-PRV-08 is partial: The list is real; approval is not: no provider terms are signed, regions and transfers are not verified, and deletion propagation to providers has no evidence.
 - **RR-A11-1** (accessibility, owed): TC-A11-02 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-A11-2** (accessibility, known-gap): TC-A11-06 is absent: No dated manual or assistive-technology result exists; nineteen of the fifty-five WCAG 2.2 A and AA criteria in the protocol have no automated evidence at all.
-- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; its last reported finding (a hovered journey card) is fixed and guarded (TR-02), and the first green nightly run is the proof still owed.
+- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Scheduled runs on 9, 10 and 11 October 2026 were green. Coverage still opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients.
 - **RR-REL-1** (operations, owed): TC-REL-02 is partial: Nothing feeds it real events, so no objective has a measured value and no release has ever been frozen by it.
 - **RR-REL-2** (operations, owed): TC-REL-05 is partial: Drilled once on the deployed AI function; the other seven switches and read-only mode have never been engaged against production.
 - **RR-REL-3** (operations, known-gap): TC-REL-06 is absent: The only alert is AI spend, provider-side; there is no error reporting in the client and no routing to a person other than the founder.
 - **RR-REL-4** (operations, owed): TC-REL-04 is partial: Proves the dump format restores, not that the provider can: point-in-time recovery has never been restored, no recovery time or point objective is measured, and the gateway journal has no backup.
 - **RR-REL-6** (operations, unanswered): Not yet reviewed.
-- **RR-SUP-1** (success, owed): TC-SUP-02 is partial: Behind a flag that is off, with no named owner or hours, no first-response probe and no closed-ticket retention period.
+- **RR-SUP-1** (success, owed): TC-SUP-02 is partial: A staffed in-app path passed UAT on October 3, 2026, but that historical record is not proof of today's operation. The email vendor approval and inbox receipt remain open; current activation is gated, no owner or published coverage hours is recorded, and institutional-contract and unclassified legacy ticket retention remains unresolved.
 - **RR-INC-1** (operations, owed): TC-INC-04 is documented: One document walkthrough has been held; sixteen game days are planned and none held.
 - **RR-INC-2** (operations, known-gap): TC-INC-03 is absent: One person holds every role and there is no rota; the backup, the second reviewer of the AI switch, customer contacts and counsel are all unassigned.
 - **RR-DAT-1** (data, unanswered): Not yet reviewed.
@@ -289,18 +289,18 @@ Blocking questions unresolved:
 - **RR-SEC-2** (security, owed): TC-SEC-01 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-SEC-4** (security, owed): TC-SEC-08 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-SEC-5** (security, owed): TC-SEC-03 is partial: The gateway is not deployed and the hourly production probe for it is unconfigured, so nothing shows it operating.
-- **RR-PRV-1** (privacy, owed): TC-PRV-07 is partial: Seven surfaces are assessed and six are owed; the check does not require an assessment before a surface ships.
+- **RR-PRV-1** (privacy, owed): TC-PRV-07 is partial: Seven surfaces are assessed and seven are owed; the check does not require an assessment before a surface ships.
 - **RR-PRV-2** (privacy, owed): TC-PRV-01 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-PRV-6** (privacy, owed): TC-PRV-08 is partial: The list is real; approval is not: no provider terms are signed, regions and transfers are not verified, and deletion propagation to providers has no evidence.
 - **RR-A11-1** (accessibility, owed): TC-A11-02 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-A11-2** (accessibility, known-gap): TC-A11-06 is absent: No dated manual or assistive-technology result exists; nineteen of the fifty-five WCAG 2.2 A and AA criteria in the protocol have no automated evidence at all.
-- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; its last reported finding (a hovered journey card) is fixed and guarded (TR-02), and the first green nightly run is the proof still owed.
+- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Scheduled runs on 9, 10 and 11 October 2026 were green. Coverage still opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients.
 - **RR-REL-1** (operations, owed): TC-REL-02 is partial: Nothing feeds it real events, so no objective has a measured value and no release has ever been frozen by it.
 - **RR-REL-2** (operations, owed): TC-REL-05 is partial: Drilled once on the deployed AI function; the other seven switches and read-only mode have never been engaged against production.
 - **RR-REL-3** (operations, known-gap): TC-REL-06 is absent: The only alert is AI spend, provider-side; there is no error reporting in the client and no routing to a person other than the founder.
 - **RR-REL-4** (operations, owed): TC-REL-04 is partial: Proves the dump format restores, not that the provider can: point-in-time recovery has never been restored, no recovery time or point objective is measured, and the gateway journal has no backup.
 - **RR-REL-6** (operations, unanswered): Not yet reviewed.
-- **RR-SUP-1** (success, owed): TC-SUP-02 is partial: Behind a flag that is off, with no named owner or hours, no first-response probe and no closed-ticket retention period.
+- **RR-SUP-1** (success, owed): TC-SUP-02 is partial: A staffed in-app path passed UAT on October 3, 2026, but that historical record is not proof of today's operation. The email vendor approval and inbox receipt remain open; current activation is gated, no owner or published coverage hours is recorded, and institutional-contract and unclassified legacy ticket retention remains unresolved.
 - **RR-INC-1** (operations, owed): TC-INC-04 is documented: One document walkthrough has been held; sixteen game days are planned and none held.
 - **RR-INC-2** (operations, known-gap): TC-INC-03 is absent: One person holds every role and there is no rota; the backup, the second reviewer of the AI switch, customer contacts and counsel are all unassigned.
 - **RR-DAT-1** (data, unanswered): Not yet reviewed.
