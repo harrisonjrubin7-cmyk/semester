@@ -18,6 +18,8 @@ This pass did what a repository can do. Three read-only audits placed the phase'
 
 `20261012090000_migration_stage_changed_event.sql` emits `migration.stage_changed` through `private.emit_domain_event` whenever a Migration Center project changes stage, in the same transaction, with the project, both stages, the direction and the instant the stage was entered, and never the migration's name, plan, dates or actor. A refused move writes neither stage nor event. `migration-center.check.sql` 86 → 90 checks; red first: `expected 13, got 0`. The clause stays `partial`: module-mode flips have no event, and nothing drains the outbox for this type. Two defects on main were repaired on the way: two migrations shared the version `20261012040000` (the kill-switch release is now `20261012080000`), and the `killswitch-release` suite was missing from `supabase/check-suites.txt`. Not applied to production.
 
+Also in the second pass: a Migration Center back-move now needs a reason (`20261012100000_migration_back_move_needs_reason.sql`, D-1475 §20). `stage_back_reason` is 10 to 500 characters, new for each move back, cleared by a forward move and not writable without one; the screen asks for it and the audit row keeps it. `migration-center` 99 checks, red first. Not applied to production.
+
 ## The surfaces, placed
 
 | Surface | tested | partial | untested | absent | What only an owner or a vendor can close |
@@ -69,6 +71,6 @@ The whole-head gates for this push are recorded in [`../mainframe/TEST_AND_RELEA
 
 1. A definition of the ladder: the eight stages and eight cutover items the plan names, mapped to the twelve, ten and two that exist, or the founder's word that the Migration Center's twelve are the acceptance list.
 2. The Core-requires-cutover decision (R3): which module belongs to which migration domain, and whether a school with no migration may enable native writes at all.
-3. Engineering that is unblocked now: a reason field on a Migration Center back-move (R5); an event for module-mode flips and a first consumer for the Migration Center's stage event (R6); a usernames primitive with a reserved list (S33); a consent column on site leads (N26); an attempt limit and revoker for the handoff (N28); a server-side check that a rail's settlement ingest, once a provider exists, carries its own counts.
+3. Engineering that is unblocked now: an event for module-mode flips and a first consumer for the Migration Center's stage event (R6); a usernames primitive with a reserved list (S33); a consent column on site leads (N26); an attempt limit and revoker for the handoff (N28); a server-side check that a rail's settlement ingest, once a provider exists, carries its own counts.
 4. A payment provider account and webhook secret before any of stream 15's provider clauses (N13) can move off `absent`.
 5. The two migrations this pull request adds in this pass (`20261012060000`, `20261012070000`) are applied by CI to the throwaway database; applying them to production is a separate, approved step and is not done. The second stops with a count if a school's ledger already holds a repeated reference, so read that count first.

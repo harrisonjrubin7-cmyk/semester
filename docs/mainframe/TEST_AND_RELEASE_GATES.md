@@ -128,3 +128,12 @@ Recorded from `docs/execute/31-phase-1-foundation-report.md`; the full-suite fig
 | `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh` (every suite on the manifest) | 155 suites ✓, `every policy check passed`, exit 0 (PostgreSQL 16, local); `killswitch-release` 17 checks |
 | `REGISTERS=write` docs, definer-register, role-launch and master-register guards | 880 passed; `CONTROL-FACTS.md` and `EVENTS.md` regenerated |
 | `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm run build`, `budgets` (first load 471.1 KB of 479.0 KB, largest file 435.7 KB of 480.0 KB, 93 routes), `npm test`, `npm run test:shuffle` (seed 1791835478685) | all exit 0; Test Files 1534 passed, 2 skipped (1536); Tests 24390 passed, 81 skipped (24471), in file order and shuffled |
+
+## Phase 5 enable and replace by domain, back-move reason (12 October 2026, #1475, eighth push)
+
+| Gate | Result |
+| --- | --- |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh migration-center` | red before `20261012100000` existed (`expected "needs a reason", got "<NULL>"`); then ✓ 99 checks (was 90) |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh` (every suite on the manifest) | 155 suites ✓, `every policy check passed`, exit 0 (PostgreSQL 16, local) |
+| Control for the two new screen tests | with the reason validation in `GoBack` disabled: 2 failed of 17; restored: 17 passed |
+| `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm run design-system:report`, `npm run build`, `budgets` (first load 471.1 KB of 479.0 KB, largest file 435.7 KB of 480.0 KB, 93 routes), `npm test`, `npm run test:shuffle` (seed 1791837030642) | all exit 0; Test Files 1534 passed, 2 skipped (1536); Tests 24395 passed, 81 skipped (24476), in file order and shuffled |

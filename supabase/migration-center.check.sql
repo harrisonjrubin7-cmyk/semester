@@ -107,6 +107,13 @@ begin
   raise notice 'ok  %', what;
 end $$;
 
+-- Send a migration back to an earlier stage with the reason a person gave.
+create or replace function pg_temp.move_back(who uuid, id uuid, stage text, why text)
+returns text language plpgsql as $$
+begin
+  return pg_temp.error_as(who, format('update public.migration_projects set stage = %L, stage_back_reason = %L where id = %L', stage, why, id));
+end $$;
+
 -- Move a migration to a stage, as someone. Returns the error, or null.
 create or replace function pg_temp.move(who uuid, id uuid, stage text)
 returns text language plpgsql as $$
@@ -247,10 +254,26 @@ begin
   perform pg_temp.says('missing records block reconciliation', pg_temp.move(lead, m, 'parallel_run'), 'reconciliation_passed');
 
   -- ── going back restarts the evidence ───────────────────────────────────
-  perform pg_temp.runs_clean('it may go back to validation', pg_temp.move(lead, m, 'validation'));
+  perform pg_temp.says('going back needs a reason', pg_temp.move(lead, m, 'validation'), 'needs a reason');
+  perform pg_temp.says('a reason of a few letters is not one', pg_temp.move_back(lead, m, 'validation', 'oops'), 'at least 10 characters');
+  perform pg_temp.says('nor is a page of one', pg_temp.move_back(lead, m, 'validation', repeat('x', 501)), 'at most 500 characters');
+  perform pg_temp.counted('a refused move leaves the migration where it was',
+    (select count(*) from public.migration_projects where id = m and stage = 'reconciliation' and stage_back_reason is null), 1);
+  perform pg_temp.runs_clean('with a reason it may go back to validation',
+    pg_temp.move_back(lead, m, 'validation', 'The validation sample was drawn from the wrong export.'));
+  perform pg_temp.counted('and the reason is kept with the migration',
+    (select count(*) from public.migration_projects where id = m and stage_back_reason = 'The validation sample was drawn from the wrong export.'), 1);
+  perform pg_temp.says('the same words do not explain a second move',
+    pg_temp.move_back(lead, m, 'sample_import', 'The validation sample was drawn from the wrong export.'), 'new reason');
   perform pg_temp.says('the clean validation from before no longer counts', pg_temp.move(lead, m, 'reconciliation'), 'validation_passed');
   perform pg_temp.runs_clean('validated again', pg_temp.run(lead, m, 'validation', 4814));
   perform pg_temp.runs_clean('and forward to reconciliation', pg_temp.move(lead, m, 'reconciliation'));
+  perform pg_temp.counted('going forward clears the reason',
+    (select count(*) from public.migration_projects where id = m and stage_back_reason is null), 1);
+  perform pg_temp.runs_clean('a plain edit that tries to write a reason',
+    pg_temp.error_as(lead, format($q$update public.migration_projects set stage_back_reason = 'Written without moving anywhere.' where id = %L$q$, m)));
+  perform pg_temp.counted('does not leave one behind',
+    (select count(*) from public.migration_projects where id = m and stage_back_reason is null), 1);
   perform pg_temp.runs_clean('a reconciliation where every record matches', pg_temp.run(lead, m, 'reconciliation', 4814));
   perform pg_temp.runs_clean('reconciled, it moves to the parallel run', pg_temp.move(lead, m, 'parallel_run'));
 
