@@ -1049,7 +1049,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (!stillCurrent()) return ignored();
       // Fields a newer build wrote, kept to go back up with the next push.
       // See `lib/carried.ts`.
-      rememberCarried(accountId, remote.state as Record<string, unknown> | null, KNOWN_FIELDS);
+      rememberCarried(accountId, remote.state as Record<string, unknown> | null, KNOWN_FIELDS, remote.seen?.state);
       const seen = seenRows();
       const hasRemote = remote.state !== null || remote.courses.length > 0;
       const previousAccount = syncedAs();

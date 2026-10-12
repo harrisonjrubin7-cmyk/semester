@@ -201,7 +201,9 @@ export function droppedOnRead(raw: Record<string, unknown>, read: Record<string,
       continue;
     }
     const after = read[field];
-    const kept = Array.isArray(after) ? after.filter((row) => idOf(row) !== null).length : 0;
+    // Rows that still name one agreed id each: a blank id names none, and an
+    // id on two rows can only be one of them.
+    const kept = Array.isArray(after) ? new Set(after.map(idOf).filter((id): id is string => !!id)).size : 0;
     if (before.length > kept) out.push(field);
   }
   return out;

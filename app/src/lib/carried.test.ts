@@ -67,43 +67,50 @@ describe('fields this build cannot read', () => {
   // Found reviewing 60dd44c: after a refused write, the stale stored copy was
   // read first, and the push put old values back over newer ones.
   it('carries this session\u2019s pull over an older stored one a failed write left behind', () => {
-    rememberCarried('u1', { later: 'old' }, known);
+    rememberCarried('u1', { later: 'old' }, known, '2026-10-12T10:00:00Z');
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('full', 'QuotaExceededError');
     });
     vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
       throw new DOMException('blocked', 'SecurityError');
     });
-    rememberCarried('u1', { later: 'new' }, known);
+    rememberCarried('u1', { later: 'new' }, known, '2026-10-12T10:01:00Z');
     expect(withCarried('u1', { notes: [] })).toEqual({ notes: [], later: 'new' });
-    rememberCarried('u1', { notes: [] }, known);
+    rememberCarried('u1', { notes: [] }, known, '2026-10-12T10:02:00Z');
     expect(withCarried('u1', { notes: [] }), 'a field the account dropped stays dropped').toEqual({ notes: [] });
     forgetCarried();
     expect(withCarried('u1', { notes: [] }), 'and a forget a blocked removal could not finish holds').toEqual({ notes: [] });
   });
 
-  // Found reviewing c714dc3: another open tab pulled a newer copy and stored
-  // it, and this tab's older memory still won, putting stale values back up.
+  // Found reviewing c714dc3 and bffd8da: another open tab stored a copy from
+  // a newer account version, and this tab's older one won — first because
+  // memory always won, then because its slower pull finished later.
   describe('with another tab open on the same account', () => {
+    const v1 = '2026-10-12T10:00:00.000+00:00';
+    const v2 = '2026-10-12T10:05:00.000+00:00';
     async function otherTab() {
-      vi.advanceTimersByTime(1_000);
       vi.resetModules();
       return import('./carried');
     }
 
-    it('takes the newer copy the other tab stored over this tab\u2019s older one', async () => {
-      vi.useFakeTimers({ toFake: ['Date'] });
-      rememberCarried('u1', { later: 'old' }, known);
-      (await otherTab()).rememberCarried('u1', { later: 'new' }, known);
+    it('takes the copy the other tab stored from a newer account version', async () => {
+      rememberCarried('u1', { later: 'old' }, known, v1);
+      (await otherTab()).rememberCarried('u1', { later: 'new' }, known, v2);
       expect(withCarried('u1', { notes: [] })).toEqual({ notes: [], later: 'new' });
-      vi.useRealTimers();
     });
 
-    it('drops a field the other tab\u2019s newer pull found gone', async () => {
-      vi.useFakeTimers({ toFake: ['Date'] });
-      rememberCarried('u1', { later: 'old' }, known);
-      (await otherTab()).rememberCarried('u1', { notes: [] }, known);
+    it('drops a field the other tab\u2019s newer version no longer has', async () => {
+      rememberCarried('u1', { later: 'old' }, known, v1);
+      (await otherTab()).rememberCarried('u1', { notes: [] }, known, v2);
       expect(withCarried('u1', { notes: [] })).toEqual({ notes: [] });
+    });
+
+    it('keeps the newer version when this tab\u2019s slower pull of an older one lands last', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      (await otherTab()).rememberCarried('u1', { later: 'new' }, known, v2);
+      vi.advanceTimersByTime(5_000);
+      rememberCarried('u1', { later: 'old' }, known, v1);
+      expect(withCarried('u1', { notes: [] })).toEqual({ notes: [], later: 'new' });
       vi.useRealTimers();
     });
   });
