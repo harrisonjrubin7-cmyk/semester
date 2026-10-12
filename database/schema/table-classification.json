@@ -225,6 +225,7 @@
    "private.privileged_access_review",
    "private.privileged_access_review_decision",
    "private.privileged_access_review_investigation_resolution",
+   "private.privileged_access_review_investigation_state_resolution",
    "private.privileged_access_review_item",
    "private.privileged_access_review_post_decision_resolution",
    "private.privileged_access_review_remediation",
