@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Volunteer post-removal votes show their consequence before submission
+
+Student volunteer moderators now see the reported post, their selected reason and the possible outcome before submitting **Remove it**. The preview says that a second independent removal vote can remove the post immediately, a first vote waits and a disagreement goes to a professional reviewer. Cancel submits nothing. It also says the vote cannot be withdrawn or edited, while the author’s account, other posts and retained review evidence stay unchanged by that vote. Keeping a post or adding a label still follows the existing review flow.
+
 ### Revoking volunteer access shows the consequences first
 
 Senior Trust & Safety reviewers now see a preview before revoking a student volunteer. It names the volunteer, says their moderation access ends immediately, identifies the unanswered review actions that will leave their queue, shows the reason that will be kept in programme history, and says the action cannot be undone by sending them back to calibration. The reviewer must type the volunteer handle before **Revoke access** is available. Cancel changes nothing; other volunteers, moderation cases, completed reviews and school settings are unchanged.
