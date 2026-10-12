@@ -19,6 +19,20 @@ const AUTHORITY_LABEL: Record<EvidenceReference['authority'], string> = {
   inferred: 'Inferred',
 };
 
+const ISO_TIMESTAMP = /^(\d{4})-(\d{2})-(\d{2})T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/;
+
+function isIsoTimestamp(value: string): boolean {
+  const match = ISO_TIMESTAMP.exec(value);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (year < 1 || month < 1 || month > 12 || day < 1) return false;
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+  return day <= daysInMonth;
+}
+
 function sourceFreshness(verifiedAt: string | null | undefined): {
   lastChecked: string;
   freshness: 'Unknown' | 'Not classified';
@@ -28,7 +42,7 @@ function sourceFreshness(verifiedAt: string | null | undefined): {
     return { lastChecked: 'Not recorded', freshness: 'Unknown' };
   }
   const dateTime = verifiedAt.trim();
-  if (!Number.isFinite(Date.parse(dateTime))) {
+  if (!isIsoTimestamp(dateTime)) {
     return { lastChecked: 'Invalid timestamp', freshness: 'Unknown' };
   }
   // A timestamp records an observation, not how long this kind of source may
