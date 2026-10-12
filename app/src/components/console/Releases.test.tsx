@@ -67,13 +67,12 @@ it('says what the registries themselves say: unbuilt toolkit flags cannot be on,
   expect(cells('Community: feed')?.textContent).toContain('Communities, memberships, finite explained feeds, study sessions.');
 });
 
-it('finds a row by the words the table shows for it, including the fallback for a flag the registry does not describe', async () => {
-  await mount('not described in the flag registry');
+it('finds a row by its description, including metadata derived from a feature consumer', async () => {
+  await mount('learning evidence');
   const rows = [...host.querySelectorAll('tbody tr')];
-  expect(rows.length).toBeGreaterThan(0);
-  for (const tr of rows) expect(tr.textContent).toContain('Not described in the flag registry.');
-  expect(rows.map((tr) => tr.querySelector('th')?.textContent)).toContain('Adaptive learning');
-  expect(rows.map((tr) => tr.querySelector('th')?.textContent)).not.toContain('Workflow builder');
+  expect(rows).toHaveLength(1);
+  expect(rows[0].querySelector('th')?.textContent).toBe('Adaptive learning');
+  expect(rows[0].textContent).toContain('learning evidence');
 });
 
 it('does not claim to list every flag, since it lists the registries it reads', async () => {
@@ -101,9 +100,15 @@ it('is read-only: no control that would pretend to change a build-time flag', as
   expect(host.textContent).toContain('make a new build');
 });
 
-it('says so when the registry does not describe a flag, instead of inventing a sentence', async () => {
+it('describes every flag, so metadata cannot silently fall back to an empty description', async () => {
   await mount();
-  expect(cells('Adaptive learning')?.textContent).toContain('Not described in the flag registry.');
+  const rows = flagRows(experience, modules, toolkit, community, standalone);
+  expect(rows).toHaveLength(
+    Object.keys(EXPERIENCE_FLAGS).length + MODULE_FLAG_NAMES.length + Object.keys(TOOLKIT_FLAGS).length + Object.keys(COMMUNITY_FLAGS).length + Object.keys(STANDALONE_FLAGS).length,
+  );
+  for (const row of rows) expect(row.about.trim(), row.id).not.toBe('');
+  expect(host.textContent).not.toContain('Not described in the flag registry.');
+  expect(cells('Adaptive learning')?.textContent).toContain('learning evidence');
   expect(cells('Workflow builder')?.textContent).toContain('second-person publish rule');
 });
 
