@@ -155,6 +155,13 @@ class CardReview(BaseModel):
     confidence: int = Field(ge=1, le=5)
 
 
+class QuizAnswer(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    question_index: int = Field(ge=0)
+    correct: bool
+
+
 class QuizAttempt(BaseModel):
     course_id: UUID
-    answers: list[dict[str, Any]]
+    answers: list[QuizAnswer]

@@ -130,6 +130,15 @@ def valid_guide_sections(content: dict) -> list[dict]:
     return valid
 
 
+def merge_job_snapshots(
+    active_jobs: list[BackgroundJob],
+    recent_terminal_jobs: list[BackgroundJob],
+) -> list[BackgroundJob]:
+    jobs_by_id = {job.id: job for job in recent_terminal_jobs}
+    jobs_by_id.update({job.id: job for job in active_jobs})
+    return sorted(jobs_by_id.values(), key=lambda job: job.created_at, reverse=True)
+
+
 def _citation_label(document: SourceDocument, chunk: SourceChunk) -> str:
     archive_member = (chunk.metadata_json or {}).get("archive_member")
     source_name = (
@@ -483,11 +492,7 @@ def list_jobs(
         .order_by(BackgroundJob.created_at.desc())
         .limit(limit)
     ).all()
-    jobs = sorted(
-        [*active_jobs, *recent_terminal_jobs],
-        key=lambda job: job.created_at,
-        reverse=True,
-    )
+    jobs = merge_job_snapshots(active_jobs, recent_terminal_jobs)
     return [serialize(job) for job in jobs]
 
 
@@ -992,26 +997,22 @@ def quiz_attempt(quiz_id: UUID, payload: QuizAttempt, user: User = Depends(get_c
         raise HTTPException(404, "Quiz not found")
     questions = valid_guide_sections(quiz.content)
     expected_indexes = set(range(len(questions)))
-    rated_indexes = {
-        answer.get("question_index")
-        for answer in payload.answers
-        if isinstance(answer.get("question_index"), int)
-        and isinstance(answer.get("correct"), bool)
-    }
+    rated_indexes = {answer.question_index for answer in payload.answers}
     if (
         not expected_indexes
         or len(payload.answers) != len(expected_indexes)
         or rated_indexes != expected_indexes
     ):
         raise HTTPException(400, "Rate every stored quiz prompt exactly once")
-    correct_answers = sum(int(answer["correct"]) for answer in payload.answers)
+    normalized_answers = [answer.model_dump() for answer in payload.answers]
+    correct_answers = sum(int(answer.correct) for answer in payload.answers)
     session = StudySession(
         user_id=user.id,
         course_id=payload.course_id,
         study_asset_id=quiz.id,
         mode="quiz",
         result={
-            "answers": payload.answers,
+            "answers": normalized_answers,
             "correct_answers": correct_answers,
             "question_count": len(payload.answers),
         },

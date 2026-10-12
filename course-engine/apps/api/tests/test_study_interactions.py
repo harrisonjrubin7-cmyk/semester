@@ -92,6 +92,15 @@ def test_card_review_and_quiz_attempt_require_real_owned_assets():
         assert client.post(f"/api/v1/quizzes/{quiz_id}/attempts", json=incomplete, headers=owner_headers).status_code == 400
         malformed = {"course_id": str(course_id), "answers": [{"question_index": 1, "correct": True}]}
         assert client.post(f"/api/v1/quizzes/{quiz_id}/attempts", json=malformed, headers=owner_headers).status_code == 400
+        unbounded = {
+            "course_id": str(course_id),
+            "answers": [{"question_index": 0, "correct": True, "notes": "do not persist"}],
+        }
+        assert client.post(
+            f"/api/v1/quizzes/{quiz_id}/attempts",
+            json=unbounded,
+            headers=owner_headers,
+        ).status_code == 422
         response = client.post(f"/api/v1/quizzes/{quiz_id}/attempts", json=quiz_payload, headers=owner_headers)
         assert response.status_code == 200
         assert response.json()["answer_count"] == 1
