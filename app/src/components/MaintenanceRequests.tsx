@@ -6,6 +6,7 @@ import { newId } from '../lib/idb';
 import { current } from '../lib/housing';
 import {
   CHANNELS,
+  addDays,
   CHANNEL_TEXT,
   EMERGENCY_GUIDANCE,
   LIMITS,
@@ -24,6 +25,7 @@ import {
   ordered,
   placeLine,
   titleOf,
+  visitProblem,
   toLocalInput,
   whenLine,
   type Channel,
@@ -47,7 +49,6 @@ import {
  * notice and every follow-up say so.
  */
 
-const DAY = 86_400_000;
 type CheckBack = 'suggested' | 'tomorrow' | 'week' | 'stated';
 const LABELS: Record<DraftField, string> = {
   hall: 'Building',
@@ -156,8 +157,9 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
 
   const saveVisit = () => {
     const at = fromLocalInput(visit);
-    if (!Number.isFinite(at)) {
-      setVisitError('Give the date and time housing scheduled.');
+    const why = Number.isFinite(at) ? visitProblem(r, at) : 'Give the date and time housing scheduled.';
+    if (why) {
+      setVisitError(why);
       return;
     }
     dispatch({ type: 'moveMaintenance', id: r.id, change: { to: 'scheduled', at: Date.now(), scheduledFor: at } });
@@ -244,7 +246,7 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
             <button
               type="button"
               className="btn btn-ghost"
-              onClick={() => dispatch({ type: 'snoozeMaintenance', id: r.id, until: Math.max(Date.now(), followUpAt(r)) + DAY, at: Date.now() })}
+              onClick={() => dispatch({ type: 'snoozeMaintenance', id: r.id, until: addDays(Math.max(Date.now(), followUpAt(r)), 1), at: Date.now() })}
             >
               Remind me tomorrow
             </button>
@@ -283,9 +285,9 @@ function RequestForm({ onDone }: { onDone: () => void }) {
       checkBack === 'stated'
         ? fromLocalInput(stated)
         : checkBack === 'tomorrow'
-          ? base + DAY
+          ? addDays(base, 1)
           : checkBack === 'week'
-            ? base + 7 * DAY
+            ? addDays(base, 7)
             : base + SUGGESTED_CHECK_BACK[urgency];
     return { hall, room, what, where, urgency, channel, reference, reportedAt, checkBackAt, checkBackStated: checkBack === 'stated' };
   };
@@ -343,11 +345,11 @@ function RequestForm({ onDone }: { onDone: () => void }) {
       <FieldMessage {...fields.message('where')} />
 
       <label htmlFor={fields.message('hall').id}>{LABELS.hall}</label>
-      <input aria-label={LABELS.hall} className="input" value={hall} {...control('hall', setHall)} />
+      <input aria-label={LABELS.hall} className="input" value={hall} maxLength={LIMITS.hall} {...control('hall', setHall)} />
       <FieldMessage {...fields.message('hall')} />
 
       <label htmlFor="maintenance-room">Room (optional)</label>
-      <input id="maintenance-room" className="input" value={room} onChange={(e) => setRoom(e.target.value)} />
+      <input id="maintenance-room" className="input" value={room} maxLength={LIMITS.room} onChange={(e) => setRoom(e.target.value)} />
 
       <label htmlFor="maintenance-channel">Where you reported it</label>
       <select id="maintenance-channel" className="input" value={channel} onChange={(e) => setChannel(e.target.value as Channel)}>

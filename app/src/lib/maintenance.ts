@@ -74,7 +74,7 @@ export const CHANNEL_TEXT: Record<Channel, string> = {
 export const EMERGENCY_GUIDANCE =
   'If anything is unsafe — water leaking, gas, smoke, no heat in freezing weather, or a door that will not lock — call your housing emergency line or campus safety now. Recording it here does not tell anyone.';
 
-export const LIMITS = { what: 280, where: 80, reference: 64, note: 500, history: 20 } as const;
+export const LIMITS = { hall: 120, room: 40, what: 280, where: 80, reference: 64, note: 500, history: 20 } as const;
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -146,7 +146,11 @@ const CLOCK_GRACE = 5 * 60_000;
 export function checkDraft(draft: MaintenanceDraft, now: number): Record<DraftField, string> {
   const what = draft.what.trim();
   return {
-    hall: draft.hall.trim() ? '' : 'Name the building, as housing does.',
+    hall: !draft.hall.trim()
+      ? 'Name the building, as housing does.'
+      : draft.hall.trim().length > LIMITS.hall
+        ? `Keep the building to ${LIMITS.hall} characters.`
+        : '',
     what: !what
       ? 'Say what is wrong, in a few words.'
       : what.length > LIMITS.what
@@ -176,8 +180,8 @@ export function newMaintenance(id: string, term: string, draft: MaintenanceDraft
   return {
     id,
     term,
-    hall: draft.hall.trim(),
-    room: draft.room.trim(),
+    hall: draft.hall.trim().slice(0, LIMITS.hall),
+    room: draft.room.trim().slice(0, LIMITS.room),
     what: draft.what.trim().slice(0, LIMITS.what),
     where: draft.where.trim().slice(0, LIMITS.where),
     urgency: draft.urgency,
@@ -246,6 +250,23 @@ export interface MaintenanceChange {
   reference?: string;
 }
 
+/** Why a visit time cannot be recorded, or an empty string. A visit before the report is a typo. */
+export function visitProblem(request: Pick<MaintenanceRequest, 'reportedAt'>, at: unknown): string {
+  if (!(typeof at === 'number' && Number.isFinite(at))) return 'Give the date and time housing scheduled the visit for.';
+  if (at < request.reportedAt) return 'The visit cannot be before you reported the repair. Check the date.';
+  return '';
+}
+
+/**
+ * The same wall-clock time `days` calendar days later, in this device's zone.
+ * "Tomorrow" across a daylight-saving change is 23 or 25 hours, not 24.
+ */
+export function addDays(ms: number, days: number): number {
+  const d = new Date(ms);
+  d.setDate(d.getDate() + days);
+  return d.getTime();
+}
+
 /** A status move, or a sentence saying why it cannot happen. Pure; the reducer stores the result. */
 export function move(
   request: MaintenanceRequest,
@@ -254,8 +275,9 @@ export function move(
   if (!NEXT[request.status].includes(change.to)) {
     return { ok: false, why: `A request that is “${STATUS_TEXT[request.status].toLowerCase()}” cannot become “${STATUS_TEXT[change.to].toLowerCase()}”.` };
   }
-  if (change.to === 'scheduled' && !(typeof change.scheduledFor === 'number' && Number.isFinite(change.scheduledFor))) {
-    return { ok: false, why: 'Give the date and time housing scheduled the visit for.' };
+  if (change.to === 'scheduled') {
+    const why = visitProblem(request, change.scheduledFor);
+    if (why) return { ok: false, why };
   }
   const note = change.note?.trim().slice(0, LIMITS.note);
   const event: MaintenanceEvent = { at: change.at, from: request.status, to: change.to, ...(note ? { note } : {}) };
@@ -357,8 +379,8 @@ export function readMaintenance(row: unknown): MaintenanceRequest | null {
     ...r,
     id: r.id,
     term: isStr(r.term) ? r.term : '',
-    hall: isStr(r.hall) ? r.hall.trim().slice(0, 120) : '',
-    room: isStr(r.room) ? r.room.trim().slice(0, 40) : '',
+    hall: isStr(r.hall) ? r.hall.trim().slice(0, LIMITS.hall) : '',
+    room: isStr(r.room) ? r.room.trim().slice(0, LIMITS.room) : '',
     what: isStr(r.what) ? r.what.trim().slice(0, LIMITS.what) : '',
     where: isStr(r.where) ? r.where.trim().slice(0, LIMITS.where) : '',
     urgency: oneOf(URGENCIES, r.urgency, 'routine'),
@@ -390,8 +412,11 @@ export function fromLocalInput(value: string): number {
   if (!m) return Number.NaN;
   const [y, mo, d, h, mi] = m.slice(1).map(Number);
   const at = new Date(y, mo - 1, d, h, mi);
-  // `new Date` rolls 2026-02-31 into March; a date that did not survive is not a date.
-  return at.getMonth() === mo - 1 && at.getDate() === d ? at.getTime() : Number.NaN;
+  // `new Date` rolls 2026-02-31 into March, and 02:30 in a spring-forward gap
+  // into 03:30. A wall time that did not survive is not one the student chose.
+  const same = at.getFullYear() === y && at.getMonth() === mo - 1 && at.getDate() === d
+    && at.getHours() === h && at.getMinutes() === mi;
+  return same ? at.getTime() : Number.NaN;
 }
 
 /** "Mon Oct 12, 9:30 AM", in this device's zone. */

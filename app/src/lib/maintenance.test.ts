@@ -10,6 +10,8 @@ import {
   AFTER_VISIT,
   EMERGENCY_GUIDANCE,
   LIMITS,
+  addDays,
+  visitProblem,
   NEXT,
   STATUSES,
   SUGGESTED_CHECK_BACK,
@@ -325,5 +327,45 @@ describe('review findings on #1501', () => {
     const base = baseOf({ maintenance: [r] });
     const settled = settleDeletions({ maintenance: [] }, { maintenance: [r] }, base);
     expect((settled.remote.maintenance as MaintenanceRequest[]).length).toBe(0);
+  });
+});
+
+describe('review findings on 5200c9c', () => {
+  const inZone = <T,>(tz: string, fn: () => T): T => {
+    const was = process.env.TZ;
+    process.env.TZ = tz;
+    try {
+      return fn();
+    } finally {
+      if (was === undefined) delete process.env.TZ;
+      else process.env.TZ = was;
+    }
+  };
+
+  it('keeps the wall-clock time when "tomorrow" crosses a daylight-saving change', () => {
+    inZone('America/New_York', () => {
+      const at = addDays(new Date(2026, 9, 31, 10, 0).getTime(), 1);
+      expect(toLocalInput(at)).toBe('2026-11-01T10:00');
+    });
+  });
+
+  it('refuses a wall time that falls in a spring-forward gap', () => {
+    inZone('America/New_York', () => {
+      expect(Number.isNaN(fromLocalInput('2027-03-14T02:30'))).toBe(true);
+      expect(Number.isNaN(fromLocalInput('2027-03-14T03:30'))).toBe(false);
+    });
+  });
+
+  it('refuses a visit scheduled before the repair was reported', () => {
+    const r = request();
+    expect(visitProblem(r, r.reportedAt - 60_000)).toMatch(/before you reported/);
+    expect(move(r, { to: 'scheduled', at: NOW, scheduledFor: r.reportedAt - 60_000 }).ok).toBe(false);
+    expect(move(r, { to: 'scheduled', at: NOW, scheduledFor: r.reportedAt + 60_000 }).ok).toBe(true);
+  });
+
+  it('bounds the building and room as the reader does, so a saved request survives a reload unchanged', () => {
+    expect(checkDraft(draft({ hall: 'B'.repeat(LIMITS.hall + 1) }), NOW).hall).toMatch(/characters/);
+    const r = newMaintenance('long', '2026FA', draft({ hall: 'B'.repeat(LIMITS.hall), room: 'R'.repeat(LIMITS.room + 9) }), NOW);
+    expect(readMaintenance(JSON.parse(JSON.stringify(r)))).toEqual(r);
   });
 });
