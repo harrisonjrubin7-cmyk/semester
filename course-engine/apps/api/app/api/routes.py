@@ -90,6 +90,46 @@ def serialize(row) -> dict:
     return {column.name: getattr(row, column.name) for column in row.__table__.columns}
 
 
+def serialize_completion_receipt(receipt: UploadCompletion) -> dict:
+    """Return the durable idempotency receipt without transient outbox state."""
+    transient_fields = {
+        "dispatch_status",
+        "dispatch_claimed_at",
+        "dispatched_at",
+        "updated_at",
+    }
+    return {
+        column.name: getattr(receipt, column.name)
+        for column in receipt.__table__.columns
+        if column.name not in transient_fields
+    }
+
+
+def valid_guide_sections(content: dict) -> list[dict]:
+    sections = content.get("sections")
+    if not isinstance(sections, list):
+        return []
+    valid = []
+    for section in sections:
+        if not isinstance(section, dict):
+            continue
+        if not isinstance(section.get("heading"), str) or not isinstance(section.get("explanation"), str):
+            continue
+        citation_ids = section.get("citation_ids")
+        if not isinstance(citation_ids, list) or not all(isinstance(value, str) for value in citation_ids):
+            continue
+        if any(
+            key in section and (
+                not isinstance(section[key], list)
+                or not all(isinstance(value, str) for value in section[key])
+            )
+            for key in ("key_points", "examples")
+        ):
+            continue
+        valid.append(section)
+    return valid
+
+
 def _citation_label(document: SourceDocument, chunk: SourceChunk) -> str:
     archive_member = (chunk.metadata_json or {}).get("archive_member")
     source_name = (
@@ -323,7 +363,7 @@ def complete_upload(course_id: UUID, payload: UploadComplete, user: User = Depen
         db.refresh(existing)
         return {
             "document": serialize(document),
-            "receipt": serialize(existing),
+            "receipt": serialize_completion_receipt(existing),
             "job": serialize(job),
         }
     try:
@@ -360,28 +400,28 @@ def complete_upload(course_id: UUID, payload: UploadComplete, user: User = Depen
     document.status = "quarantined"
     job = BackgroundJob(course_id=course_id, document_id=document.id, job_type="extract")
     db.add(job)
-    db.flush()
-    receipt = UploadCompletion(
-        course_id=course_id,
-        document_id=document_id,
-        job_id=job.id,
-        payload_fingerprint=fingerprint,
-        verified_metadata={
-            field: getattr(metadata, field)
-            for field in (
-                "backend",
-                "bucket",
-                "key",
-                "size_bytes",
-                "content_type",
-                "checksum_sha256",
-                "encryption",
-                "owner_verified",
-            )
-        },
-    )
-    db.add(receipt)
     try:
+        db.flush()
+        receipt = UploadCompletion(
+            course_id=course_id,
+            document_id=document_id,
+            job_id=job.id,
+            payload_fingerprint=fingerprint,
+            verified_metadata={
+                field: getattr(metadata, field)
+                for field in (
+                    "backend",
+                    "bucket",
+                    "key",
+                    "size_bytes",
+                    "content_type",
+                    "checksum_sha256",
+                    "encryption",
+                    "owner_verified",
+                )
+            },
+        )
+        db.add(receipt)
         db.commit()
     except IntegrityError:
         db.rollback()
@@ -396,7 +436,7 @@ def complete_upload(course_id: UUID, payload: UploadComplete, user: User = Depen
         db.refresh(existing)
         return {
             "document": serialize(document),
-            "receipt": serialize(existing),
+            "receipt": serialize_completion_receipt(existing),
             "job": serialize(job),
         }
     db.refresh(job)
@@ -405,7 +445,7 @@ def complete_upload(course_id: UUID, payload: UploadComplete, user: User = Depen
     db.refresh(receipt)
     return {
         "document": serialize(document),
-        "receipt": serialize(receipt),
+        "receipt": serialize_completion_receipt(receipt),
         "job": serialize(job),
     }
 
@@ -424,26 +464,27 @@ def list_jobs(
     db: Session = Depends(get_db),
 ):
     owned_course(db, user, course_id)
-    recent_jobs = db.scalars(
-        select(BackgroundJob)
-        .where(BackgroundJob.course_id == course_id)
-        .order_by(BackgroundJob.created_at.desc())
-        .limit(limit)
-    ).all()
-    active_extractions = db.scalars(
+    active_statuses = (JobStatus.queued, JobStatus.running)
+    active_jobs = db.scalars(
         select(BackgroundJob)
         .where(
             BackgroundJob.course_id == course_id,
-            BackgroundJob.job_type == "extract",
-            BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
+            BackgroundJob.status.in_(active_statuses),
             BackgroundJob.revoked_at.is_(None),
         )
         .order_by(BackgroundJob.created_at.desc())
     ).all()
-    jobs_by_id = {job.id: job for job in recent_jobs}
-    jobs_by_id.update({job.id: job for job in active_extractions})
+    recent_terminal_jobs = db.scalars(
+        select(BackgroundJob)
+        .where(
+            BackgroundJob.course_id == course_id,
+            BackgroundJob.status.not_in(active_statuses),
+        )
+        .order_by(BackgroundJob.created_at.desc())
+        .limit(limit)
+    ).all()
     jobs = sorted(
-        jobs_by_id.values(),
+        [*active_jobs, *recent_terminal_jobs],
         key=lambda job: job.created_at,
         reverse=True,
     )
@@ -522,12 +563,14 @@ def delete_file(file_id: UUID, user: User = Depends(get_current_user), db: Sessi
 def retry_file(file_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     doc = db.scalar(
         select(SourceDocument)
-        .where(SourceDocument.id == file_id)
+        .where(SourceDocument.id == file_id, SourceDocument.deleted_at.is_(None))
         .with_for_update()
     )
     if not doc: raise HTTPException(404)
     owned_course(db, user, doc.course_id)
-    active = db.scalar(
+    if not db.scalar(select(UploadCompletion.id).where(UploadCompletion.document_id == doc.id)):
+        raise HTTPException(409, "Upload must be completed before retrying extraction")
+    active_job = db.scalar(
         select(BackgroundJob)
         .where(
             BackgroundJob.document_id == doc.id,
@@ -536,17 +579,37 @@ def retry_file(file_id: UUID, user: User = Depends(get_current_user), db: Sessio
             BackgroundJob.revoked_at.is_(None),
         )
         .order_by(BackgroundJob.created_at.desc())
+        .limit(1)
     )
-    if active:
-        if active.status == JobStatus.queued:
+    if active_job:
+        if active_job.status == JobStatus.queued:
             celery_client.send_task(
                 "extract_document",
-                args=[str(active.id)],
-                task_id=str(active.id),
+                args=[str(active_job.id)],
+                task_id=str(active_job.id),
             )
-        return serialize(active)
+        return serialize(active_job)
     job = BackgroundJob(course_id=doc.course_id, document_id=doc.id, job_type="extract")
-    doc.status = "queued"; db.add(job); db.commit(); db.refresh(job)
+    doc.status = "queued"
+    db.add(job)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        job = db.scalar(
+            select(BackgroundJob)
+            .where(
+                BackgroundJob.document_id == file_id,
+                BackgroundJob.job_type == "extract",
+                BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
+                BackgroundJob.revoked_at.is_(None),
+            )
+            .order_by(BackgroundJob.created_at.desc())
+            .limit(1)
+        )
+        if not job:
+            raise
+    db.refresh(job)
     celery_client.send_task(
         "extract_document",
         args=[str(job.id)],
@@ -582,13 +645,34 @@ def cancel_job(job_id: UUID, user: User = Depends(get_current_user), db: Session
         "Cancelled by user",
         commit=False,
     )
-    if changed and job.job_type == "extract" and job.document_id:
-        document = db.get(SourceDocument, job.document_id)
-        if document and not document.deleted_at:
-            document.status = "failed"
-    db.commit()
+    if not changed:
+        db.rollback()
+        db.refresh(job)
+        if job.revoked_at is None:
+            raise HTTPException(409, "Terminal jobs cannot be cancelled")
+        return serialize(job)
+    _restore_cancelled_extraction_document(db, job)
     db.refresh(job)
     return serialize(job)
+
+
+def _restore_cancelled_extraction_document(db: Session, job: BackgroundJob) -> None:
+    if job.job_type != "extract" or not job.document_id:
+        db.commit()
+        return
+    another_active_job = db.scalar(
+        select(BackgroundJob.id).where(
+            BackgroundJob.document_id == job.document_id,
+            BackgroundJob.id != job.id,
+            BackgroundJob.job_type == "extract",
+            BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
+            BackgroundJob.revoked_at.is_(None),
+        )
+    )
+    document = db.get(SourceDocument, job.document_id)
+    if document and not document.deleted_at and not another_active_job:
+        document.status = "uploaded"
+    db.commit()
 
 
 @router.get("/courses/{course_id}/review-items")
@@ -862,13 +946,15 @@ def review_card(card_id: UUID, payload: CardReview, user: User = Depends(get_cur
         Concept.course_id == payload.course_id,
     )):
         raise HTTPException(404, "Concept not found")
-    card_exists = any(
+    asset = db.scalar(select(StudyAsset).where(
+        StudyAsset.id == payload.asset_id,
+        StudyAsset.course_id == payload.course_id,
+        StudyAsset.asset_type == "flashcards",
+        StudyAsset.status != ReviewStatus.rejected,
+        StudyAsset.deleted_at.is_(None),
+    ))
+    card_exists = asset is not None and any(
         str(card.get("id")) == str(card_id)
-        for asset in db.scalars(select(StudyAsset).where(
-            StudyAsset.course_id == payload.course_id,
-            StudyAsset.asset_type == "flashcards",
-            StudyAsset.deleted_at.is_(None),
-        )).all()
         for card in asset.content.get("cards", [])
         if isinstance(card, dict)
     )
@@ -899,12 +985,13 @@ def quiz_attempt(quiz_id: UUID, payload: QuizAttempt, user: User = Depends(get_c
         StudyAsset.id == quiz_id,
         StudyAsset.course_id == payload.course_id,
         StudyAsset.asset_type.in_(("practice_quiz", "practice_exam")),
+        StudyAsset.status != ReviewStatus.rejected,
         StudyAsset.deleted_at.is_(None),
     ))
     if not quiz:
         raise HTTPException(404, "Quiz not found")
-    questions = quiz.content.get("sections", [])
-    expected_indexes = set(range(len(questions))) if isinstance(questions, list) else set()
+    questions = valid_guide_sections(quiz.content)
+    expected_indexes = set(range(len(questions)))
     rated_indexes = {
         answer.get("question_index")
         for answer in payload.answers
@@ -917,7 +1004,19 @@ def quiz_attempt(quiz_id: UUID, payload: QuizAttempt, user: User = Depends(get_c
         or rated_indexes != expected_indexes
     ):
         raise HTTPException(400, "Rate every stored quiz prompt exactly once")
-    session = StudySession(user_id=user.id, course_id=payload.course_id, study_asset_id=quiz.id, mode="quiz", ended_at=datetime.now(UTC))
+    correct_answers = sum(int(answer["correct"]) for answer in payload.answers)
+    session = StudySession(
+        user_id=user.id,
+        course_id=payload.course_id,
+        study_asset_id=quiz.id,
+        mode="quiz",
+        result={
+            "answers": payload.answers,
+            "correct_answers": correct_answers,
+            "question_count": len(payload.answers),
+        },
+        ended_at=datetime.now(UTC),
+    )
     db.add(session)
     db.commit()
     db.refresh(session)
@@ -928,7 +1027,29 @@ def quiz_attempt(quiz_id: UUID, payload: QuizAttempt, user: User = Depends(get_c
 def progress(course_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     owned_course(db, user, course_id)
     rows = db.scalars(select(LearnerProgress).where(LearnerProgress.course_id == course_id, LearnerProgress.user_id == user.id)).all()
-    return {"items": [serialize(x) for x in rows], "average_mastery": sum(x.mastery_score for x in rows) / len(rows) if rows else 0}
+    items = [{**serialize(row), "kind": "concept"} for row in rows]
+    quiz_sessions = db.scalars(select(StudySession).where(
+        StudySession.course_id == course_id,
+        StudySession.user_id == user.id,
+        StudySession.mode == "quiz",
+        StudySession.ended_at.is_not(None),
+    ).order_by(StudySession.ended_at.desc()).limit(50)).all()
+    for session in quiz_sessions:
+        question_count = session.result.get("question_count", 0)
+        correct_answers = session.result.get("correct_answers", 0)
+        if not isinstance(question_count, int) or question_count <= 0:
+            continue
+        if not isinstance(correct_answers, int) or not 0 <= correct_answers <= question_count:
+            continue
+        items.append({
+            "id": session.id,
+            "kind": "quiz",
+            "mastery_score": correct_answers / question_count,
+            "attempts": question_count,
+            "correct_attempts": correct_answers,
+            "next_review_at": None,
+        })
+    return {"items": items, "average_mastery": sum(item["mastery_score"] for item in items) / len(items) if items else 0}
 
 
 @router.get("/benchmarks/latest")

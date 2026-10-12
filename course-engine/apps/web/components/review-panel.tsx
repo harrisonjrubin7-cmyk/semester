@@ -21,6 +21,7 @@ function ReviewCard({ courseId, review }: { courseId: string; review: Review }) 
       await Promise.all([
         client.invalidateQueries({ queryKey: ["reviews", courseId] }),
         client.invalidateQueries({ queryKey: ["course", courseId] }),
+        client.invalidateQueries({ queryKey: ["assets", courseId] }),
       ]);
     },
   });
