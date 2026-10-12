@@ -67,6 +67,7 @@ vi.mock('./persist', () => ({
 const { StoreProvider, useStore, FOCUS_PULL_MS } = await import('./store');
 const { SEEN_KEY, UNPUSHED_KEY } = await import('./shape');
 const { loadSeed } = await import('../data/seed');
+const { clearIngressDrops } = await import('../lib/deletions');
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -151,6 +152,7 @@ afterEach(async () => {
   await act(async () => root.unmount());
   host.remove();
   vi.useRealTimers();
+  clearIngressDrops();
   localStorage.clear();
 });
 

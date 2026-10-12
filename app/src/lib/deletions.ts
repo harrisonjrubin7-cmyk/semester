@@ -39,9 +39,9 @@ import { idOf } from './merge';
  * - **Nothing without a base.** A device that has never agreed with the
  *   account has no way to tell a deletion from a record it never had.
  * - **Nothing a reader lost.** A row this device could not read back from
- *   its own storage, or one with no id on either side, says nothing about
- *   which agreed id is gone. Those lists keep everything until a pull has
- *   merged the account's copy back (`ingressDrops`, below).
+ *   its own storage says nothing about which agreed id is gone. Those lists
+ *   keep everything until a pull has merged the account's copy back
+ *   (`ingressDrops`, below).
  */
 
 /** Lists with exactly one removal, an explicit delete. Courses included. */
@@ -73,10 +73,6 @@ function byId(rows: unknown): Map<string, unknown> {
   }
   return out;
 }
-
-/** A list holding something that is not an addressable row. */
-const unaddressable = (rows: unknown): boolean =>
-  Array.isArray(rows) && rows.some((row) => idOf(row) === null);
 
 export interface Settled {
   /** The account's copy with what this device deleted taken out, so the merge cannot bring it back. */
@@ -113,17 +109,17 @@ export function settleDeletions(
     const agreedIds = idsInBase(base, field);
 
     /*
-     * A row with no id cannot say which agreed id it was, so a list holding
-     * one, or one this device dropped on load, cannot tell a deletion from
-     * damage. Not deleting is the side that loses nothing: the account's copy
-     * comes back through the merge, which is what happened before this file.
+     * A list this device lost rows from on load cannot tell a deletion from
+     * damage: a row with no id cannot say which agreed id it was. Not deleting
+     * is the side that loses nothing, and the account's copy comes back
+     * through the merge. Only for the pull that heals it (`unreadHere`, which
+     * the store clears once that pull lands): keyed to the loose row itself,
+     * one stray row would stop every later deletion in the list for good.
      */
-    const hereGone = unreadHere.includes(field) || unaddressable(local[field])
+    const hereGone = unreadHere.includes(field)
       ? []
       : agreedIds.filter((id) => !mine.has(id) && theirs.has(id));
-    const thereGone = unaddressable(remote[field])
-      ? []
-      : agreedIds.filter((id) => mine.has(id) && !theirs.has(id));
+    const thereGone = agreedIds.filter((id) => mine.has(id) && !theirs.has(id));
     if (bulk(hereGone.length, agreedIds.length) || bulk(thereGone.length, agreedIds.length)) {
       out.heldBack.push(field);
       continue;
@@ -166,7 +162,7 @@ export function coursesDeletedHere(
   courses: readonly unknown[],
   unreadHere: readonly string[] = [],
 ): string[] {
-  if (!base || unreadHere.includes('courses') || unaddressable(courses)) return [];
+  if (!base || unreadHere.includes('courses')) return [];
   const held = new Set(courses.map((c) => idOf(c)).filter((id): id is string => id !== null));
   const agreed = idsInBase(base, 'courses');
   const gone = agreed.filter((id) => !held.has(id));
@@ -205,26 +201,37 @@ export function droppedOnRead(raw: Record<string, unknown>, read: Record<string,
   return out;
 }
 
+/**
+ * And in memory, for this session: storage at its quota can refuse the note
+ * while the reader still drops the row, and the pull this session makes must
+ * know regardless.
+ */
+let noted = new Set<string>();
+
 export function ingressDrops(): string[] {
+  let stored: string[] = [];
   try {
     const parsed: unknown = JSON.parse(localStorage.getItem(INGRESS_KEY) ?? '[]');
-    return Array.isArray(parsed) ? parsed.filter((f): f is string => typeof f === 'string') : [];
+    if (Array.isArray(parsed)) stored = parsed.filter((f): f is string => typeof f === 'string');
   } catch {
-    return [];
+    // Unreadable: what this session noted still holds.
   }
+  return [...new Set([...stored, ...noted])];
 }
 
 /** Adds to what is already noted: a second boot before any pull must not forget the first. */
 export function noteIngressDrops(fields: readonly string[]): void {
   if (fields.length === 0) return;
+  noted = new Set([...noted, ...fields]);
   try {
     localStorage.setItem(INGRESS_KEY, JSON.stringify([...new Set([...ingressDrops(), ...fields])]));
   } catch {
-    // Storage full or blocked: the deletion guard is lost, not the data.
+    // Storage full or blocked: held in memory above for this session.
   }
 }
 
 export function clearIngressDrops(): void {
+  noted = new Set();
   try {
     localStorage.removeItem(INGRESS_KEY);
   } catch {

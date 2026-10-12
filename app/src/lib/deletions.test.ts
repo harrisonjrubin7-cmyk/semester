@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { baseOf } from './conflicts';
 import {
   BULK_COUNT,
@@ -147,7 +147,10 @@ describe('what is allowed to be deleted by the sync', () => {
 describe('rows lost on the way in', () => {
   const agreed = baseOf(persisted([note('a'), note('b'), note('c')]));
 
-  afterEach(() => localStorage.clear());
+  afterEach(() => {
+    clearIngressDrops();
+    localStorage.clear();
+  });
 
   it('does not take a row out of the account when this device lost it reading its own storage', () => {
     const here = persisted([note('a'), note('b')]);
@@ -161,22 +164,22 @@ describe('rows lost on the way in', () => {
     expect((other.remote.notes as { id: string }[]).map((n) => n.id)).toEqual(['a', 'b']);
   });
 
-  it('does not read a gap as a deletion while this device holds a row it cannot address', () => {
-    const damaged = { title: 'c', body: 'c', created: 1, updated: 1 };
-    const s = settleDeletions(persisted([note('a'), note('b'), damaged]), persisted([note('a'), note('b'), note('c')]), agreed);
-    expect((s.remote.notes as { id?: string }[]).map((n) => n.id)).toEqual(['a', 'b', 'c']);
-  });
-
-  it('does not drop a good row here because the account holds one it cannot address', () => {
-    const s = settleDeletions(persisted([note('a'), note('b'), note('c')]), persisted([note('a'), note('b'), { body: 'c' }]), agreed);
-    expect(s.dropHere).toEqual({});
+  // Found reviewing 60dd44c: keyed to the loose row rather than to the pull
+  // that heals it, one stray id-less row stopped every later deletion in the
+  // list, on this device and from every other, for good.
+  it('still settles a deliberate deletion while a stray id-less row sits in the list', () => {
+    const stray = { title: 'loose', body: 'no id', created: 1, updated: 1 };
+    const here = settleDeletions(persisted([note('a'), note('b'), stray]), persisted([note('a'), note('b'), note('c')]), agreed);
+    expect((here.remote.notes as { id?: string }[]).map((n) => n.id), 'deleted here').toEqual(['a', 'b']);
+    const there = settleDeletions(persisted([note('a'), note('b'), note('c')]), persisted([note('a'), note('b'), stray]), agreed);
+    expect(there.dropHere, 'deleted on another device').toEqual({ notes: ['c'] });
   });
 
   it('does not delete a course from the account that this device lost on load', () => {
     const base = baseOf(persisted([], [course('x'), course('y')]));
     expect(coursesDeletedHere(base, [course('x')]), 'an ordinary deletion still counts').toEqual(['y']);
     expect(coursesDeletedHere(base, [course('x')], ['courses'])).toEqual([]);
-    expect(coursesDeletedHere(base, [course('x'), { course: {} }])).toEqual([]);
+    expect(coursesDeletedHere(base, [course('x'), { course: {} }]), 'a stray row does not stop it').toEqual(['y']);
   });
 
   it('notices the lists a reader shortened or could not address, and only those', () => {
@@ -198,6 +201,20 @@ describe('rows lost on the way in', () => {
     clearIngressDrops();
     expect(localStorage.getItem(INGRESS_KEY)).toBeNull();
     localStorage.setItem(INGRESS_KEY, '{"not":"a list"}');
+    expect(ingressDrops()).toEqual([]);
+  });
+
+  // Found reviewing 60dd44c: storage at its quota refused the note while the
+  // reader still dropped the row, and the pull read the gap as a deletion.
+  it('holds the note for this session when storage refuses it', () => {
+    const set = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('full', 'QuotaExceededError');
+    });
+    noteIngressDrops(['notes']);
+    expect(localStorage.getItem(INGRESS_KEY)).toBeNull();
+    expect(ingressDrops()).toEqual(['notes']);
+    set.mockRestore();
+    clearIngressDrops();
     expect(ingressDrops()).toEqual([]);
   });
 });
