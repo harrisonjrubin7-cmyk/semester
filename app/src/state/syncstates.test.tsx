@@ -173,6 +173,33 @@ describe('an edit goes up on the database path', () => {
     expect(push).toHaveBeenCalledOnce();
   });
 
+  it('retries a transient first pull while keeping account uploads fenced', async () => {
+    const unavailable = Object.assign(new Error('Account copy unavailable'), {
+      code: 'INTEGRATION_UNAVAILABLE',
+    });
+    pull
+      .mockRejectedValueOnce(unavailable)
+      .mockResolvedValue(snapshot('s1'));
+
+    await mount();
+    await addTask('Kept on this device');
+    await wait(4_000);
+
+    expect(pull).toHaveBeenCalledOnce();
+    expect(push, 'a failed first pull must keep the account upload fence closed').not.toHaveBeenCalled();
+    expect(store.sync.error).toMatch(/try the account again by itself/);
+
+    await wait(2_000);
+
+    expect(pull).toHaveBeenCalledTimes(2);
+    expect(push, 'the upload still waits for its ordinary debounce after the pull').not.toHaveBeenCalled();
+
+    await wait(3_000);
+
+    expect(push).toHaveBeenCalledOnce();
+    expect(store.sync.status).toBe('synced');
+  });
+
   it('keeps auth and focus refreshes in one pull at a time', async () => {
     let release: (value: ReturnType<typeof snapshot>) => void = () => {};
     pull.mockImplementationOnce(() => new Promise<ReturnType<typeof snapshot>>((resolve) => { release = resolve; }));
