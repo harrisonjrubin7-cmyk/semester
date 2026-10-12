@@ -147,7 +147,11 @@
    "trust_room_requests"
   ],
   "service-only": [
+   "access_enforcements",
    "access_gate",
+   "access_grants",
+   "access_operation_receipts",
+   "access_revocations",
    "access_saga_events",
    "access_saga_signals",
    "access_sagas",
