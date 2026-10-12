@@ -1,5 +1,8 @@
-import { tierName, type Tier } from './classification';
-import { usageLabel, type Use } from './policy';
+import { tierName } from './classification';
+import type { Declaration } from './declaration-storage';
+import { usageLabel } from './policy';
+
+export { blankDeclaration, type Declaration } from './declaration-storage';
 
 /**
  * The AI-use declaration a student attaches to their own work.
@@ -14,42 +17,6 @@ import { usageLabel, type Use } from './policy';
  * by content. A declaration that quoted what was pasted would carry the very
  * material the classification gate exists to keep in place.
  */
-
-export interface Declaration {
-  assignment: string;
-  course: string;
-  tool: string;
-  version: string;
-  dates: string;
-  uses: Use[];
-  purpose: string;
-  inputTier: Tier;
-  interaction: string;
-  outputUsed: string;
-  sourcesChecked: string;
-  verified: string;
-  edits: string;
-  limitations: string;
-  attested: boolean;
-}
-
-export const blankDeclaration = (assignment = '', course = ''): Declaration => ({
-  assignment,
-  course,
-  tool: '',
-  version: '',
-  dates: '',
-  uses: [],
-  purpose: '',
-  inputTier: 'T2',
-  interaction: '',
-  outputUsed: '',
-  sourcesChecked: '',
-  verified: '',
-  edits: '',
-  limitations: '',
-  attested: false,
-});
 
 export function declarationGaps(d: Declaration): string[] {
   const out: string[] = [];
