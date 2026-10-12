@@ -425,6 +425,11 @@ describe('"delete my account" really means every row', () => {
       'gradebook_schemes',
       'group_tasks',
       'groups',
+      // The Company procurement workspace (lib/company/procurement.ts): the
+      // institution's commercial record, the trust-room request and grant,
+      // the exact packet it disclosed, and the audit trail. Operator ids are
+      // detached on deletion; none of these shared records belongs to them.
+      'gtm_accounts',
       'gtm_campaign_reviews',
       'gtm_campaigns',
       'help_destinations',
@@ -472,6 +477,12 @@ describe('"delete my account" really means every row', () => {
       'study_packs',
       'subscriptions',
       'support_access_event',
+      'trust_artifact_versions',
+      'trust_artifacts',
+      'trust_room_access_log',
+      'trust_room_grant_items',
+      'trust_room_grants',
+      'trust_room_requests',
       // The Workflow Builder's table (lib/workflow/api.ts, D-1018): a school's
       // versioned workflow definitions. No person, credential or student record.
       'workflow_versions',
