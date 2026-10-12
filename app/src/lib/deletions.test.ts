@@ -191,6 +191,14 @@ describe('rows lost on the way in', () => {
     expect(droppedOnRead({}, { notes: [] })).toEqual([]);
   });
 
+  // Found reviewing bffd8da: a blank id or one id on two rows still counted
+  // as readable, so the agreed id they replaced read as deleted here.
+  it('counts a row whose id is blank, or another row\u2019s, as lost', () => {
+    expect(droppedOnRead({ notes: [note('a'), { id: '' }] }, { notes: [note('a'), { id: '' }] })).toEqual(['notes']);
+    expect(droppedOnRead({ notes: [note('a'), note('a')] }, { notes: [note('a'), note('a')] })).toEqual(['notes']);
+    expect(droppedOnRead({ notes: [note('a'), note('b')] }, { notes: [note('a'), note('b')] }), 'control').toEqual([]);
+  });
+
   it('counts a list stored as something other than a list as lost', () => {
     // The reader makes `{}` into `[]`; pushed as it is, that empties the account's list.
     expect(droppedOnRead({ notes: {}, tasks: 'x', courses: null }, { notes: [], tasks: [], courses: [] })).toEqual([

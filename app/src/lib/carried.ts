@@ -23,18 +23,20 @@
  * reload can come before the next pull lands. Forgotten with the rest of the
  * sync memory (`forgetSyncMemory`), on sign-out and account switch.
  *
- * Also in memory, and whichever copy was pulled later wins (`at`): this
+ * Also in memory, and the copy read from the newer account version wins
+ * (`at`, the state row's `updated_at`, which only the database sets): this
  * session's memory over a stored copy a refused write left behind, and a
- * copy another open tab stored after a newer pull over this tab's memory.
- * A pull that finds nothing unknown is stored too, as empty, so that other
- * tabs learn the field is gone rather than pushing it back.
+ * copy another open tab stored from a newer version over this tab's memory.
+ * Not the time a pull finished — a slow pull of an older version can land
+ * last. A pull that finds nothing unknown is stored too, as empty, so that
+ * other tabs learn the field is gone rather than pushing it back.
  */
 export const CARRIED_KEY = 'semester.carried';
 
 interface Held {
   account: string;
   fields: Record<string, unknown>;
-  /** When the pull it came from landed, so the later of two copies wins. */
+  /** The account version (state row `updated_at`, epoch ms) it was read from. 0: no row. */
   at: number;
 }
 
@@ -58,25 +60,39 @@ function stored(): Held | null {
 function read(): Held | null {
   const disk = stored();
   if (!memory) return disk;
-  // A stored copy a refused write could not replace is older than memory; one
-  // another tab wrote after a newer pull is newer. The later pull is right.
+  // A stored copy a refused write could not replace is from an older version
+  // than memory; one another tab wrote from a newer version is newer. On a
+  // tie this session's own copy stands.
   return disk && disk.at > memory.at ? disk : memory;
 }
 
-/** Strictly after anything this session already holds, so a same-millisecond pull still wins. */
-const stamp = () => Math.max(Date.now(), (memory?.at ?? 0) + 1);
+const versionOf = (stamp: string | undefined): number => {
+  const ms = stamp ? Date.parse(stamp) : Number.NaN;
+  return Number.isFinite(ms) ? ms : 0;
+};
 
 /** The pulled copy's fields this build does not know. */
 export function unknownFields(remote: Record<string, unknown>, known: ReadonlySet<string>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(remote).filter(([key]) => !known.has(key)));
 }
 
-/** Remember, for this account, what the copy just pulled holds that this build cannot read. */
-export function rememberCarried(account: string, remote: Record<string, unknown> | null, known: ReadonlySet<string>): void {
+/**
+ * Remember, for this account, what the copy just pulled holds that this build
+ * cannot read. `version` is the pulled state row's `updated_at`.
+ */
+export function rememberCarried(
+  account: string,
+  remote: Record<string, unknown> | null,
+  known: ReadonlySet<string>,
+  version?: string,
+): void {
   const fields = remote ? unknownFields(remote, known) : {};
-  const held: Held = { account, fields, at: stamp() };
+  const held: Held = { account, fields, at: versionOf(version) };
   memory = held;
   try {
+    // Never over a copy another tab stored from a newer version.
+    const disk = stored();
+    if (disk && disk.account === account && disk.at > held.at) return;
     // Even when empty: another tab holding the field must learn it is gone.
     localStorage.setItem(CARRIED_KEY, JSON.stringify(held));
   } catch {
@@ -94,7 +110,8 @@ export function withCarried<T extends Record<string, unknown>>(account: string, 
 
 export function forgetCarried(): void {
   // Not null: a stored copy a blocked removal left behind must not come back.
-  memory = { account: '', fields: {}, at: stamp() };
+  // Outranks any stored copy, which belongs to the account being left.
+  memory = { account: '', fields: {}, at: Number.POSITIVE_INFINITY };
   try {
     localStorage.removeItem(CARRIED_KEY);
   } catch {
