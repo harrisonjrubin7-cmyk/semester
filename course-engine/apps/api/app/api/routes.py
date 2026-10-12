@@ -105,6 +105,31 @@ def serialize_completion_receipt(receipt: UploadCompletion) -> dict:
     }
 
 
+def valid_guide_sections(content: dict) -> list[dict]:
+    sections = content.get("sections")
+    if not isinstance(sections, list):
+        return []
+    valid = []
+    for section in sections:
+        if not isinstance(section, dict):
+            continue
+        if not isinstance(section.get("heading"), str) or not isinstance(section.get("explanation"), str):
+            continue
+        citation_ids = section.get("citation_ids")
+        if not isinstance(citation_ids, list) or not all(isinstance(value, str) for value in citation_ids):
+            continue
+        if any(
+            key in section and (
+                not isinstance(section[key], list)
+                or not all(isinstance(value, str) for value in section[key])
+            )
+            for key in ("key_points", "examples")
+        ):
+            continue
+        valid.append(section)
+    return valid
+
+
 def _citation_label(document: SourceDocument, chunk: SourceChunk) -> str:
     archive_member = (chunk.metadata_json or {}).get("archive_member")
     source_name = (
@@ -543,6 +568,8 @@ def retry_file(file_id: UUID, user: User = Depends(get_current_user), db: Sessio
     )
     if not doc: raise HTTPException(404)
     owned_course(db, user, doc.course_id)
+    if not db.scalar(select(UploadCompletion.id).where(UploadCompletion.document_id == doc.id)):
+        raise HTTPException(409, "Upload must be completed before retrying extraction")
     active_job = db.scalar(
         select(BackgroundJob)
         .where(
@@ -919,14 +946,15 @@ def review_card(card_id: UUID, payload: CardReview, user: User = Depends(get_cur
         Concept.course_id == payload.course_id,
     )):
         raise HTTPException(404, "Concept not found")
-    card_exists = any(
+    asset = db.scalar(select(StudyAsset).where(
+        StudyAsset.id == payload.asset_id,
+        StudyAsset.course_id == payload.course_id,
+        StudyAsset.asset_type == "flashcards",
+        StudyAsset.status != ReviewStatus.rejected,
+        StudyAsset.deleted_at.is_(None),
+    ))
+    card_exists = asset is not None and any(
         str(card.get("id")) == str(card_id)
-        for asset in db.scalars(select(StudyAsset).where(
-            StudyAsset.course_id == payload.course_id,
-            StudyAsset.asset_type == "flashcards",
-            StudyAsset.status != ReviewStatus.rejected,
-            StudyAsset.deleted_at.is_(None),
-        )).all()
         for card in asset.content.get("cards", [])
         if isinstance(card, dict)
     )
@@ -962,8 +990,8 @@ def quiz_attempt(quiz_id: UUID, payload: QuizAttempt, user: User = Depends(get_c
     ))
     if not quiz:
         raise HTTPException(404, "Quiz not found")
-    questions = quiz.content.get("sections", [])
-    expected_indexes = set(range(len(questions))) if isinstance(questions, list) else set()
+    questions = valid_guide_sections(quiz.content)
+    expected_indexes = set(range(len(questions)))
     rated_indexes = {
         answer.get("question_index")
         for answer in payload.answers
@@ -1005,7 +1033,7 @@ def progress(course_id: UUID, user: User = Depends(get_current_user), db: Sessio
         StudySession.user_id == user.id,
         StudySession.mode == "quiz",
         StudySession.ended_at.is_not(None),
-    ).order_by(StudySession.ended_at.desc())).all()
+    ).order_by(StudySession.ended_at.desc()).limit(50)).all()
     for session in quiz_sessions:
         question_count = session.result.get("question_count", 0)
         correct_answers = session.result.get("correct_answers", 0)

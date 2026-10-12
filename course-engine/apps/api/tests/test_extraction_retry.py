@@ -11,7 +11,14 @@ from app.api import routes
 from app.core.database import Base, get_db
 from app.core.security import create_access_token
 from app.main import app
-from app.models.entities import BackgroundJob, Course, JobStatus, SourceDocument, User
+from app.models.entities import (
+    BackgroundJob,
+    Course,
+    JobStatus,
+    SourceDocument,
+    UploadCompletion,
+    User,
+)
 from app.services.job_leases import recovery_candidates
 
 
@@ -25,7 +32,7 @@ def _database():
     return sessionmaker(bind=engine, expire_on_commit=False)
 
 
-def _source(testing_session):
+def _source(testing_session, *, completed=True):
     with testing_session() as session:
         owner = User(email="retry-owner@example.com", password_hash="unused")
         session.add(owner)
@@ -43,6 +50,25 @@ def _source(testing_session):
             status="failed",
         )
         session.add(document)
+        session.flush()
+        if completed:
+            prior_job = BackgroundJob(
+                course_id=course.id,
+                document_id=document.id,
+                job_type="extract",
+                status=JobStatus.failed,
+                error="Initial extraction failed",
+            )
+            session.add(prior_job)
+            session.flush()
+            session.add(UploadCompletion(
+                document_id=document.id,
+                course_id=course.id,
+                job_id=prior_job.id,
+                payload_fingerprint="a" * 64,
+                verified_metadata={},
+                dispatch_status="dispatched",
+            ))
         session.commit()
         return owner.id, course.id, document.id
 
@@ -79,7 +105,7 @@ def test_retry_reuses_the_single_active_job_with_stable_delivery_identity(monkey
             ("extract_document", [first.json()["id"]], {"task_id": first.json()["id"]}),
         ]
         with testing_session() as session:
-            assert session.scalar(select(func.count()).select_from(BackgroundJob)) == 1
+            assert session.scalar(select(func.count()).select_from(BackgroundJob)) == 2
             assert session.get(SourceDocument, document_id).status == "queued"
     finally:
         app.dependency_overrides.clear()
@@ -101,13 +127,30 @@ def test_retry_dispatch_failure_leaves_a_recoverable_queued_job(monkeypatch):
         )
         assert response.status_code == 500
         with testing_session() as session:
-            job = session.scalar(select(BackgroundJob))
+            job = session.scalar(select(BackgroundJob).where(BackgroundJob.status == JobStatus.queued))
             assert job.status == JobStatus.queued
             candidates = recovery_candidates(
                 session,
                 datetime.now(UTC) + timedelta(minutes=6),
             )
             assert candidates == [(job.id, "extract")]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_retry_rejects_an_upload_that_has_not_completed():
+    testing_session = _database()
+    owner_id, _course_id, document_id = _source(testing_session, completed=False)
+    client = _client(testing_session)
+    try:
+        response = client.post(
+            f"/api/v1/files/{document_id}/retry-extraction",
+            headers={"Authorization": f"Bearer {create_access_token(owner_id)}"},
+        )
+        assert response.status_code == 409
+        assert response.json()["detail"] == "Upload must be completed before retrying extraction"
+        with testing_session() as session:
+            assert session.scalar(select(func.count()).select_from(BackgroundJob)) == 0
     finally:
         app.dependency_overrides.clear()
 

@@ -18,6 +18,7 @@ from app.models.entities import (
     ReviewStatus,
     SourceDocument,
     StudyAsset,
+    UploadCompletion,
     User,
 )
 
@@ -190,6 +191,24 @@ def test_retry_extraction_reuses_active_job_after_dispatch_failure(monkeypatch):
             status="failed",
         )
         session.add(document)
+        session.flush()
+        prior_job = BackgroundJob(
+            course_id=course.id,
+            document_id=document.id,
+            job_type="extract",
+            status=JobStatus.failed,
+            error="Initial extraction failed",
+        )
+        session.add(prior_job)
+        session.flush()
+        session.add(UploadCompletion(
+            document_id=document.id,
+            course_id=course.id,
+            job_id=prior_job.id,
+            payload_fingerprint="b" * 64,
+            verified_metadata={},
+            dispatch_status="dispatched",
+        ))
         session.commit()
         owner_id, document_id = owner.id, document.id
 
@@ -222,8 +241,9 @@ def test_retry_extraction_reuses_active_job_after_dispatch_failure(monkeypatch):
             jobs = session.scalars(
                 select(BackgroundJob).where(BackgroundJob.document_id == document_id)
             ).all()
-            assert len(jobs) == 1
-            assert str(jobs[0].id) == retried.json()["id"]
+            assert len(jobs) == 2
+            active_job = next(job for job in jobs if job.status == JobStatus.queued)
+            assert str(active_job.id) == retried.json()["id"]
     finally:
         app.dependency_overrides.clear()
 

@@ -68,7 +68,7 @@ function CardsView({ asset, courseId }: { asset: Asset; courseId: string }) {
   const review = useMutation({
     mutationFn: (correct: boolean) => api<Progress["items"][number]>(`/flashcards/${cards[index].id}/review`, {
       method: "POST",
-      body: JSON.stringify({ course_id: courseId, concept_id: null, correct, confidence }),
+      body: JSON.stringify({ course_id: courseId, asset_id: asset.id, concept_id: null, correct, confidence }),
     }),
     onSuccess: (_result, correct) => {
       setAnnouncement(correct ? "Recall recorded." : "Marked for another review.");

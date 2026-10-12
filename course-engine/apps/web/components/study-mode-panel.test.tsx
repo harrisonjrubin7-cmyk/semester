@@ -43,7 +43,7 @@ describe("stored study asset interactions", () => {
     fireEvent.click(screen.getByRole("button", { name: "I recalled it" }));
     await waitFor(() => expect(mockedApi).toHaveBeenCalledWith(
       "/flashcards/00000000-0000-0000-0000-000000000030/review",
-      expect.objectContaining({ method: "POST", body: JSON.stringify({ course_id: "course-1", concept_id: null, correct: true, confidence: 3 }) }),
+      expect.objectContaining({ method: "POST", body: JSON.stringify({ course_id: "course-1", asset_id: baseAsset.id, concept_id: null, correct: true, confidence: 3 }) }),
     ));
   });
 
