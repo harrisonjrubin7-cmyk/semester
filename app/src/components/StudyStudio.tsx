@@ -41,7 +41,7 @@ export function StudyStudio({courseId,onClose,adaptiveLearning=EXPERIENCE_FLAGS.
  useEffect(()=>{let alive=true;const refresh=()=>{void listFiles().then(fs=>{if(alive)setSavedFiles(fs.filter(f=>f.courseId===courseId));});};refresh();const unsubscribe=onFilesChanged(refresh);return()=>{alive=false;unsubscribe();};},[courseId]);
  const policy=course?.ai;
  // The instructor's published rules, when there are any, then the student's own note (`lib/courserules.ts`). A guide explains and asks practice questions, so both uses must be permitted.
- const published=useCoursePublications([course?.code??''],state.term,!!account);const gate=studyGate(courseLayers(course?.code??'',policy,published));const banned=gate.kind==='prohibited';const needsTick=gate.kind!=='allowed';const guidance=published[courseCode(course?.code??'')]?.guidance;const packs=published[courseCode(course?.code??'')]?.packs??[];
+ const published=useCoursePublications([course?.code??''],state.term,account?.id??'');const gate=studyGate(courseLayers(course?.code??'',policy,published));const banned=gate.kind==='prohibited';const needsTick=gate.kind!=='allowed';const guidance=published[courseCode(course?.code??'')]?.guidance;const packs=published[courseCode(course?.code??'')]?.packs??[];
  const learningInput=courseLearningInput(courseId,guide,state.reviews,{due:comeRound(guide.units.flatMap(unit=>unit.cards.map(card=>cardIdentity(courseId,card))),state.reviews,now.getTime()),now:now.getTime()});
  const conceptStates=learningState(learningInput);const readiness=readinessForecast(learningInput,now);
  useEffect(()=>()=>{abort.current?.abort();if('speechSynthesis' in window)window.speechSynthesis.cancel();},[]);

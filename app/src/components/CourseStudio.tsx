@@ -536,29 +536,61 @@ export function CourseStudio({ courses, term }: { courses: string[]; term: strin
 }
 
 /**
- * The way in, on Account. Nothing at all unless the module is on, somebody
- * is signed in, and the server says they may publish for at least one course.
+ * The way in, on Account. The ordinary Account page stays quiet unless the
+ * module is on and the server reports an assigned course. An explicit
+ * Workspace destination instead explains signed-out, loading, empty, and
+ * error states so the link never lands on an apparently blank surface.
  */
-export function CourseStudioEntry({ on = moduleOn(MODULE_FLAGS.course_studio) }: { on?: boolean }) {
+export function CourseStudioEntry({
+  on = moduleOn(MODULE_FLAGS.course_studio),
+  requested = false,
+}: {
+  on?: boolean;
+  requested?: boolean;
+}) {
   const { account, state } = useStore();
-  const [courses, setCourses] = useState<{ who: string; list: string[] } | null>(null);
+  const [courses, setCourses] = useState<{
+    who: string;
+    status: 'loading' | 'ready' | 'error';
+    list: string[];
+  } | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const [open, setOpen] = useState(false);
   const who = on && cloudConfigured && account ? account.id : '';
 
   useEffect(() => {
     if (!who) return;
     let alive = true;
+    // oxlint-disable-next-line react/set-state-in-effect -- a new account must hide the previous account's course list immediately
+    setCourses({ who, status: 'loading', list: [] });
     void myCourses().then(
-      (list) => alive && setCourses({ who, list }),
-      () => alive && setCourses({ who, list: [] }),
+      (list) => alive && setCourses({ who, status: 'ready', list }),
+      () => alive && setCourses({ who, status: 'error', list: [] }),
     );
     return () => {
       alive = false;
     };
-  }, [who]);
+  }, [attempt, who]);
 
-  const list = who && courses?.who === who ? courses.list : [];
-  if (!list.length) return null;
+  const current = who && courses?.who === who ? courses : null;
+  const list = current?.status === 'ready' ? current.list : [];
+  if (!list.length && !requested) return null;
+  if (!who) {
+    if (!requested) return null;
+    if (!on) return <p className="sharing-lead">Teaching workspace is not enabled in this release.</p>;
+    if (!cloudConfigured) return <p className="sharing-lead">Teaching workspace is not connected in this environment.</p>;
+    return <p className="sharing-lead">Sign in to check connected teaching access for this account.</p>;
+  }
+  if (!current || current.status === 'loading') return <p role="status" className="sharing-lead">Checking connected teaching access…</p>;
+  if (current.status === 'error') {
+    return (
+      <div>
+        <p role="alert" className="sharing-lead">Could not check connected teaching access.</p>
+        <button type="button" className="btn btn-secondary" onClick={() => setAttempt((value) => value + 1)}>Try again</button>
+      </div>
+    );
+  }
+  if (!list.length) return <p className="sharing-lead">No connected teaching course was found for this account.</p>;
   return open ? (
     <CourseStudio courses={list} term={state.term} />
   ) : (
