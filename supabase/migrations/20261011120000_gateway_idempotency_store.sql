@@ -42,8 +42,8 @@ declare
   current_row private.gateway_idempotency%rowtype;
   made_lease uuid;
   -- Caller time is accepted for API compatibility, but shared lease authority
-  -- must come from the database transaction clock so hosts cannot race on skew.
-  at_time timestamptz := statement_timestamp();
+  -- must come from a fresh database clock reading after lock waits complete.
+  at_time timestamptz;
 begin
   if want_now is null
      or want_request_hash !~ '^[0-9a-f]{64}$'
@@ -68,6 +68,8 @@ begin
      and i.command = want_command
      and i.idempotency_key = want_key
    for update;
+
+  at_time := clock_timestamp();
 
   if found and current_row.expires_at > at_time then
     if current_row.request_sha256 <> want_request_hash then
