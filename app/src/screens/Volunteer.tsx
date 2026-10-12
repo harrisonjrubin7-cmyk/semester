@@ -147,7 +147,7 @@ function VolunteerSignedIn() {
       preview: (
         <ActionPreview
           subject="This reported post"
-          says="Records your removal vote. If another independent volunteer already voted to remove it, the post is removed immediately; otherwise the case waits. A disagreement sends the case to a professional reviewer."
+          says="Records your answer. If this is a real report, it records a removal vote: another independent removal vote removes the post immediately, a first vote waits, and a disagreement sends the case to a professional reviewer. Practice answers only update your calibration."
           exactly={(
             <>
               <span style={{ whiteSpace: 'pre-wrap' }}>{task.body}</span>
@@ -156,7 +156,7 @@ function VolunteerSignedIn() {
             </>
           )}
           doesNotChange="The author’s account, their other posts and the retained review evidence stay unchanged by this vote. You still are not shown who wrote the post."
-          recovery={{ kind: 'none', how: 'You cannot withdraw or edit this vote after it is recorded. An author can appeal a removal, and Trust & Safety reviews disagreements.' }}
+          recovery={{ kind: 'none', how: 'You cannot withdraw or edit this answer after it is recorded. If a real post is removed, its author can appeal, and Trust & Safety reviews disagreements.' }}
           whoCanHelp="Trust & Safety can review the case and its retained evidence."
         />
       ),
