@@ -274,6 +274,7 @@ describe('SupportAccess: permission changes and a failed load', () => {
     vi.spyOn(supportAccess, 'loadSupportAccess').mockResolvedValue({ supporters: [], tickets: [], windows: [WINDOW] } as never);
     vi.spyOn(supportAccess, 'revokeSupportAccess').mockResolvedValue(undefined as never);
     await mount(<SupportAccess account={ACCOUNT} />, false);
+    await press('Revoke');
     await press('Revoke now');
     const notice = host.querySelector('.state-permission')!;
     expect(notice.querySelector('.state-title')!.textContent).toBe('Support access revoked');
