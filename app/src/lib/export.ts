@@ -931,6 +931,7 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   registered: 'whether this device registered for reminders',
   schemaVersion: 'the shape the file is in, written by the backup itself',
   seenOnboarding: 'whether onboarding has run here',
+  onb: 'which onboarding step had been reached, if it was interrupted',
   visited: 'which screens have been opened here',
 
   // Held back for a reason of its own, one each.

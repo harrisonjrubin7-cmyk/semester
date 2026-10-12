@@ -4,6 +4,9 @@
 
 ## Objective that was completed
 
+**Third pass (Phase 2 start, same branch).** `docs/execute/32-phase-2-daily-loop-report.md` and D-1475 §11–12. Fixed: a revoked or expired share still allowed AI retrieval (`packages/institution/src/policy.ts`); interrupted onboarding restarted at step 0 (`state.onb` now persisted). Added: feed refresh/failure reducer tests. Register rows `P2-H1`–`P2-H8`, `P2-C1`–`P2-C11` (provisional IDs). CI on `0d1c2c11` ran the PostgreSQL 17 policy suites for the first time on this PR and passed all 152; only the budgets step is red.
+
+
 **Second pass (Phase 1 start, same branch).** `docs/execute/31-phase-1-foundation-report.md` and D-1475 §8–10. T01/F01/F02 audited by surface into the provisional `docs/execute/capability-register.csv` (23 IDs from the plan; 20 have no title because the prototype register was not supplied). Added: the second-tenant sweep over every gateway route (`app/server/institution/gateway.test.ts`), revoked/expired grants refused at `gradebook_export` (`supabase/gradebook.check.sql`), and the policy-suite manifest (`supabase/check-suites.txt`, enforced by `check.sh` and `app/src/lib/docs/check-suites.test.ts`). Ported #1473 for main's budget overrun; `build` stays red on budgets until the founder decides (report, "CI on the pull request").
 
 **First pass.**
@@ -14,7 +17,7 @@
 
 ## What the next session should read first
 
-1. This file, then [`D-1475`](../decisions/D-1475.md), then `docs/execute/31-phase-1-foundation-report.md` ("What the next stream needs").
+1. This file, then [`D-1475`](../decisions/D-1475.md), then `docs/execute/32-phase-2-daily-loop-report.md` and `31-phase-1-foundation-report.md` ("What the next stream needs" in each).
 2. `docs/ecosystem/INVENTORY.md` §10 and `docs/ecosystem/deployed.json`: the schema is verified against production by digest; the app is not. Establishing the production app URL (repository variable `SEMESTER_PRODUCTION_APP_URL`) and probing it is what moves rows to `deployed`.
 3. `EXECUTION_BACKLOG.md` next items: the second half of cart freshness, then matrix rows chosen by the phased plan's Phase 1 and 2 exit gates.
 4. The pull request's CI. Three tests were red on main itself at `a4742f6b` (`src/isolation.test.ts`, `src/lib/docs/trust-docs.test.ts`, `src/components/unity/rollout-c.test.tsx`) and main's CI had failed on them for five runs; this branch's third commit fixes them (isolation list, regenerated `CONTROL-FACTS.md`, two-step revoke in the test). After it merges, main's `build` job should be green again; if it is not, the failure is new.

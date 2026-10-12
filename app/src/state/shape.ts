@@ -718,6 +718,12 @@ export interface Persisted {
   mutedCourses: CourseId[];
   seenOnboarding: boolean;
   /**
+   * Which onboarding step is open, saved so that closing the app on step
+   * three opens it again on step three. It used to live in the ephemeral
+   * half, which made every interrupted onboarding start over.
+   */
+  onb: number;
+  /**
    * Whether an account has ever been made or signed into on this device.
    *
    * Not a session and not a claim about being signed in — `store.account` is
@@ -1045,7 +1051,6 @@ export interface Ephemeral {
   lessonUnit: number;
   /** Unit the Add-material screen is filing against; null for a new one. */
   updateUnit: number | null;
-  onb: number;
   openUnit: number;
   drillUnit: number | null;
   /**
@@ -1428,6 +1433,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   notifs: { ...DEFAULT_NOTIFS },
   mutedCourses: [],
   seenOnboarding: false,
+  onb: 0,
   registered: false,
   // Vanderbilt by default, because that is who this was built for and a fresh
   // install should be the app they already have. Changed in Settings.
@@ -1675,7 +1681,6 @@ export function initialEphemeral(): Ephemeral {
     blockAt: null,
     lessonUnit: 0,
     updateUnit: null,
-    onb: 0,
     openUnit: 0,
     drillUnit: null,
     drillMix: false,
@@ -1794,6 +1799,7 @@ export function loadPersisted(): Persisted {
       ...saved,
       notifs: { ...DEFAULT_PERSISTED.notifs, ...record(saved.notifs) },
       mutedCourses: list(saved.mutedCourses),
+      onb: typeof saved.onb === 'number' && Number.isInteger(saved.onb) && saved.onb >= 0 ? saved.onb : 0,
       done: record(saved.done),
       saved: record(saved.saved ?? DEFAULT_PERSISTED.saved),
       tasks: list(saved.tasks),
@@ -2076,6 +2082,7 @@ export function pickPersisted(state: State): Persisted {
     notifs: state.notifs,
     mutedCourses: state.mutedCourses,
     seenOnboarding: state.seenOnboarding,
+    onb: state.onb,
     registered: state.registered,
     cleared: state.cleared,
     tasks: state.tasks,

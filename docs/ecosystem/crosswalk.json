@@ -3065,10 +3065,11 @@
         "supabase/migrations/20261006000000_onboarding_journeys_and_handoff.sql"
       ],
       "tests": [
+        "app/src/state/storage.test.ts",
         "supabase/onboarding-journeys.check.sql"
       ],
       "flags": [],
-      "note": "onboarding_journeys, assignments, step progress and events exist with a SQL check; app/src/screens/Onboarding.tsx and FirstRun.tsx are the local student first run and read none of them.",
+      "note": "onboarding_journeys, assignments, step progress and events exist with a SQL check; app/src/screens/Onboarding.tsx and FirstRun.tsx are the local student first run and read none of them. Phase 2: the onboarding step is persisted, so an interrupted onboarding resumes at its step (storage.test.ts).",
       "gap": "No role onboarding screen reading onboarding_journeys."
     },
     "#/os/signin": {
@@ -6560,17 +6561,18 @@
         "supabase/migrations/20260929110000_console_approvals_and_break_glass.sql"
       ],
       "tests": [
-        "app/src/lib/console/client.test.ts",
-        "supabase/capabilities.check.sql",
-        "supabase/rolegrants.check.sql",
-        "supabase/my-capabilities.check.sql",
         "app/server/institution/gateway.test.ts",
-        "supabase/gradebook.check.sql"
+        "app/src/lib/console/client.test.ts",
+        "packages/institution/src/policy.test.ts",
+        "supabase/capabilities.check.sql",
+        "supabase/gradebook.check.sql",
+        "supabase/my-capabilities.check.sql",
+        "supabase/rolegrants.check.sql"
       ],
       "flags": [
         "capability console:operate"
       ],
-      "note": "The duties matrix (console_duty) is read into the Approvals tab and role_capabilities is the live authority; docs/operations/ROLE_CAPABILITY_MATRIX.md is the written matrix. Phase 1: gateway.test.ts drives a second tenant through every authenticated gateway route (T01, API surface); gradebook.check.sql refuses a revoked or expired grant at the export (F02, export surface).",
+      "note": "The duties matrix (console_duty) is read into the Approvals tab and role_capabilities is the live authority; docs/operations/ROLE_CAPABILITY_MATRIX.md is the written matrix. Phase 1: gateway.test.ts drives a second tenant through every authenticated gateway route (T01, API surface); gradebook.check.sql refuses a revoked or expired grant at the export (F02, export surface). Phase 2: ai.retrieve_source requires a live share; a revoked or expired share is refused (policy.test.ts).",
       "gap": "No role-by-capability or FERPA data-class matrix screen."
     },
     "#/trust/monitor": {

@@ -73,3 +73,14 @@ Recorded from `docs/execute/31-phase-1-foundation-report.md`; the full-suite fig
 | `npm run ecosystem:build` / `ecosystem:check` | 12 passed, twice |
 | `REGISTERS=write` trust docs | 38 passed; CONTROL-FACTS.md regenerated |
 | `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm test` | all exit 0; design-system 69 tests; suite: Test Files 1521 passed, 1 skipped (1522); Tests 24204 passed, 69 skipped (24273) |
+
+## Phase 2 daily loop, first pass (12 October 2026, #1475, third push)
+
+| Gate | Result |
+| --- | --- |
+| `npx vitest run ../packages/institution/src/policy.test.ts` | 56 passed (1 new; red first: the revoked share was allowed) |
+| `npx vitest run src/state/reducer.test.ts` | 117 passed (4 new; red when refresh appended: 2 failed) |
+| `npx vitest run src/state/storage.test.ts` | 33 passed (3 new; red before `onb` was persisted: 3 failed) |
+| `npx vitest run src/state` | 42 files, 556 passed |
+| CI run 38185868815 on `0d1c2c11` | Typecheck, Lint, Design-system gates, Test, Test in other timezones, Test in a different order, Build, Install PostgreSQL 17, Check the database policies (152 suites) all passed; Performance budgets failed (main's overrun, D-1475 §8) |
+| `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm test` | all exit 0; design-system 69 tests; suite: Test Files 1522 passed, 1 skipped (1523); Tests 24227 passed, 69 skipped (24296). A first run failed `export.test.ts`, `merge.test.ts`, `privacy.test.ts` on the new persisted field until the three tables named it. |
