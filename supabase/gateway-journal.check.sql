@@ -178,6 +178,13 @@ begin
      and actor_id = 'student-a'
      and command = 'institution.action.commit'
      and idempotency_key = 'commit-key-00000001';
+  if public.gateway_complete_idempotency(
+    'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
+    begun.lease_id, 200, repeat('s', 40), at_time + interval '61 seconds'
+  ) then raise exception 'FAILED: an expired worker completed before takeover'; end if;
+  if public.gateway_release_idempotency(
+    'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001', begun.lease_id
+  ) then raise exception 'FAILED: an expired worker released before takeover'; end if;
   select * into takeover from public.gateway_begin_idempotency(
     'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
     repeat('a', 64), at_time + interval '61 seconds', 60000, 86400000
