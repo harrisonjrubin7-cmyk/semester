@@ -147,8 +147,10 @@ describe('IntelligenceDisclosure', () => {
 
     act(() => root.render(<IntelligenceDisclosure response={response} />));
 
-    expect(host.querySelector('[data-evidence-id="fractional"] time')?.getAttribute('datetime'))
-      .toBe('2026-09-23T12:00:00.123456Z');
+    const fractional = host.querySelector('[data-evidence-id="fractional"]');
+    expect(fractional?.textContent).toContain('Last checked: 2026-09-23T12:00:00.123456Z');
+    expect(fractional?.querySelector('time')?.getAttribute('datetime'))
+      .toBe('2026-09-23T12:00:00.123Z');
     expect(host.querySelector('[data-evidence-id="offset"] time')?.getAttribute('datetime'))
       .toBe('2026-09-23T12:00:00+05:30');
   });

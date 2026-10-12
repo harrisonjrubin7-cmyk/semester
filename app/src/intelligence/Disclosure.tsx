@@ -33,6 +33,13 @@ function isIsoTimestamp(value: string): boolean {
   return day <= daysInMonth;
 }
 
+function htmlDateTime(value: string): string {
+  // HTML's global date-time syntax carries at most milliseconds. Keep the
+  // source's exact value on screen, but truncate finer precision only in the
+  // machine-readable attribute rather than emitting invalid markup.
+  return value.replace(/(\.\d{3})\d+(?=Z|[+-]\d{2}:\d{2}$)/, '$1');
+}
+
 function sourceFreshness(verifiedAt: string | null | undefined): {
   lastChecked: string;
   freshness: 'Unknown' | 'Not classified';
@@ -48,7 +55,7 @@ function sourceFreshness(verifiedAt: string | null | undefined): {
   // A timestamp records an observation, not how long this kind of source may
   // be trusted. EvidenceReference carries no source-specific freshness rule,
   // so the disclosure must not invent one here.
-  return { lastChecked: dateTime, freshness: 'Not classified', dateTime };
+  return { lastChecked: dateTime, freshness: 'Not classified', dateTime: htmlDateTime(dateTime) };
 }
 
 /** The provenance receipt shown under an answer, owned by Semester's UI. */
