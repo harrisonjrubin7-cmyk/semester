@@ -924,6 +924,7 @@ def review_card(card_id: UUID, payload: CardReview, user: User = Depends(get_cur
         for asset in db.scalars(select(StudyAsset).where(
             StudyAsset.course_id == payload.course_id,
             StudyAsset.asset_type == "flashcards",
+            StudyAsset.status != ReviewStatus.rejected,
             StudyAsset.deleted_at.is_(None),
         )).all()
         for card in asset.content.get("cards", [])
@@ -956,6 +957,7 @@ def quiz_attempt(quiz_id: UUID, payload: QuizAttempt, user: User = Depends(get_c
         StudyAsset.id == quiz_id,
         StudyAsset.course_id == payload.course_id,
         StudyAsset.asset_type.in_(("practice_quiz", "practice_exam")),
+        StudyAsset.status != ReviewStatus.rejected,
         StudyAsset.deleted_at.is_(None),
     ))
     if not quiz:
@@ -974,7 +976,19 @@ def quiz_attempt(quiz_id: UUID, payload: QuizAttempt, user: User = Depends(get_c
         or rated_indexes != expected_indexes
     ):
         raise HTTPException(400, "Rate every stored quiz prompt exactly once")
-    session = StudySession(user_id=user.id, course_id=payload.course_id, study_asset_id=quiz.id, mode="quiz", ended_at=datetime.now(UTC))
+    correct_answers = sum(int(answer["correct"]) for answer in payload.answers)
+    session = StudySession(
+        user_id=user.id,
+        course_id=payload.course_id,
+        study_asset_id=quiz.id,
+        mode="quiz",
+        result={
+            "answers": payload.answers,
+            "correct_answers": correct_answers,
+            "question_count": len(payload.answers),
+        },
+        ended_at=datetime.now(UTC),
+    )
     db.add(session)
     db.commit()
     db.refresh(session)
@@ -985,7 +999,29 @@ def quiz_attempt(quiz_id: UUID, payload: QuizAttempt, user: User = Depends(get_c
 def progress(course_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     owned_course(db, user, course_id)
     rows = db.scalars(select(LearnerProgress).where(LearnerProgress.course_id == course_id, LearnerProgress.user_id == user.id)).all()
-    return {"items": [serialize(x) for x in rows], "average_mastery": sum(x.mastery_score for x in rows) / len(rows) if rows else 0}
+    items = [{**serialize(row), "kind": "concept"} for row in rows]
+    quiz_sessions = db.scalars(select(StudySession).where(
+        StudySession.course_id == course_id,
+        StudySession.user_id == user.id,
+        StudySession.mode == "quiz",
+        StudySession.ended_at.is_not(None),
+    ).order_by(StudySession.ended_at.desc())).all()
+    for session in quiz_sessions:
+        question_count = session.result.get("question_count", 0)
+        correct_answers = session.result.get("correct_answers", 0)
+        if not isinstance(question_count, int) or question_count <= 0:
+            continue
+        if not isinstance(correct_answers, int) or not 0 <= correct_answers <= question_count:
+            continue
+        items.append({
+            "id": session.id,
+            "kind": "quiz",
+            "mastery_score": correct_answers / question_count,
+            "attempts": question_count,
+            "correct_attempts": correct_answers,
+            "next_review_at": None,
+        })
+    return {"items": items, "average_mastery": sum(item["mastery_score"] for item in items) / len(items) if items else 0}
 
 
 @router.get("/benchmarks/latest")

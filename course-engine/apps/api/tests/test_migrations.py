@@ -140,6 +140,9 @@ def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed(
         ]
         assert tuple(active_extraction_index["column_names"]) == ("document_id",)
         assert active_extraction_index["unique"]
+        assert "result" in {
+            column["name"] for column in inspect(connection).get_columns("study_sessions")
+        }
 
         _migrate(connection, command.downgrade, "0001_initial")
         assert not _confidence_nullable(connection)

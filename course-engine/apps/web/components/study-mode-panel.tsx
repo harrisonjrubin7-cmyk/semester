@@ -168,7 +168,7 @@ function AssetBody({ asset, courseId, mode }: { asset: Asset; courseId: string; 
 }
 
 export function StudyModePanel({ assets, courseId, mode }: { assets: Asset[]; courseId: string; mode: string }) {
-  const selected = assets.filter((asset) => (studyAssetTypes[mode] ?? []).includes(asset.asset_type));
+  const selected = assets.filter((asset) => asset.status !== "rejected" && (studyAssetTypes[mode] ?? []).includes(asset.asset_type));
   if (!selected.length) return <EmptyState action={<Link className="button button-primary no-underline" href={`/courses/${courseId}/uploads`}>Choose sources</Link>} detail="Select a unit with enough confirmed material or add the source documents needed to generate an honest draft." title={`No ${mode.replaceAll("-", " ")} asset yet`} />;
   return <section className="grid gap-4">{selected.map((asset) => <article className="panel panel-interactive p-5" key={asset.id}><AssetHeader asset={asset} /><AssetBody asset={asset} courseId={courseId} mode={mode} /></article>)}</section>;
 }

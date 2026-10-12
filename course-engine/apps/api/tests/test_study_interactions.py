@@ -8,7 +8,7 @@ from sqlalchemy.pool import StaticPool
 from app.core.database import Base, get_db
 from app.core.security import create_access_token
 from app.main import app
-from app.models.entities import Concept, Course, StudyAsset, StudySession, User
+from app.models.entities import Concept, Course, ReviewStatus, StudyAsset, StudySession, User
 
 
 def _database():
@@ -83,6 +83,30 @@ def test_card_review_and_quiz_attempt_require_real_owned_assets():
         with testing_session() as session:
             saved = session.scalar(select(StudySession).where(StudySession.id == UUID(response.json()["id"])))
             assert saved and saved.course_id == course_id and saved.study_asset_id == quiz_id
+            assert saved.result == {
+                "answers": [{"question_index": 0, "correct": True}],
+                "correct_answers": 1,
+                "question_count": 1,
+            }
             assert session.scalar(select(func.count()).select_from(StudySession)) == 1
+        progress = client.get(f"/api/v1/courses/{course_id}/progress", headers=owner_headers)
+        assert progress.status_code == 200
+        quiz_evidence = next(item for item in progress.json()["items"] if item["kind"] == "quiz")
+        assert quiz_evidence == {
+            "id": response.json()["id"],
+            "kind": "quiz",
+            "mastery_score": 1.0,
+            "attempts": 1,
+            "correct_attempts": 1,
+            "next_review_at": None,
+        }
+        assert progress.json()["average_mastery"] == 1.0
+
+        with testing_session() as session:
+            session.get(StudyAsset, quiz_id).status = ReviewStatus.rejected
+            session.scalar(select(StudyAsset).where(StudyAsset.asset_type == "flashcards")).status = ReviewStatus.rejected
+            session.commit()
+        assert client.post(f"/api/v1/quizzes/{quiz_id}/attempts", json=quiz_payload, headers=owner_headers).status_code == 404
+        assert client.post(f"/api/v1/flashcards/{card_id}/review", json=card_payload, headers=owner_headers).status_code == 404
     finally:
         app.dependency_overrides.clear()

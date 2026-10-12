@@ -92,4 +92,10 @@ describe("stored study asset interactions", () => {
     })));
     expect(await screen.findByText("Your self-graded attempt was recorded.")).toBeInTheDocument();
   });
+
+  it("does not offer rejected assets for interactive study", () => {
+    renderPanel("quiz", { ...baseAsset, asset_type: "practice_quiz", status: "rejected" });
+    expect(screen.getByRole("heading", { name: "No quiz asset yet" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reveal cited answer" })).not.toBeInTheDocument();
+  });
 });

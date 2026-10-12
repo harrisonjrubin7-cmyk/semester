@@ -256,6 +256,7 @@ class StudySession(Base, TimestampMixin):
     course_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"), index=True)
     study_asset_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("study_assets.id", ondelete="SET NULL"))
     mode: Mapped[str] = mapped_column(String(40))
+    result: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
