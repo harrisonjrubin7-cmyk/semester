@@ -319,9 +319,23 @@ def test_cancelling_extraction_restores_document_to_uploaded_state():
         client = TestClient(app)
         headers = {"Authorization": f"Bearer {create_access_token(owner_id)}"}
         assert client.post(f"/api/v1/jobs/{job_id}/cancel", headers=headers).status_code == 200
+        with testing_session() as session:
+            document = session.get(SourceDocument, document_id)
+            assert document is not None
+            assert document.status == "uploaded"
+            document.status = "needs_review"
+            session.add(
+                BackgroundJob(
+                    course_id=document.course_id,
+                    document_id=document.id,
+                    job_type="extract",
+                    status=JobStatus.completed,
+                )
+            )
+            session.commit()
         assert client.post(f"/api/v1/jobs/{job_id}/cancel", headers=headers).status_code == 200
         with testing_session() as session:
-            assert session.get(SourceDocument, document_id).status == "uploaded"
+            assert session.get(SourceDocument, document_id).status == "needs_review"
     finally:
         app.dependency_overrides.clear()
 

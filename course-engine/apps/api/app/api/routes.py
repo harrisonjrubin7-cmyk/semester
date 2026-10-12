@@ -607,7 +607,6 @@ def cancel_job(job_id: UUID, user: User = Depends(get_current_user), db: Session
         raise HTTPException(404)
     owned_course(db, user, job.course_id)
     if job.revoked_at is not None:
-        _restore_cancelled_extraction_document(db, job)
         return serialize(job)
     if job.status in (JobStatus.completed, JobStatus.failed):
         raise HTTPException(409, "Terminal jobs cannot be cancelled")
@@ -624,6 +623,7 @@ def cancel_job(job_id: UUID, user: User = Depends(get_current_user), db: Session
         db.refresh(job)
         if job.revoked_at is None:
             raise HTTPException(409, "Terminal jobs cannot be cancelled")
+        return serialize(job)
     _restore_cancelled_extraction_document(db, job)
     db.refresh(job)
     return serialize(job)
