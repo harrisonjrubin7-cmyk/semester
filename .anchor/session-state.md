@@ -1,6 +1,6 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-12 15:44:27_  ·  branch: `claude/busy-babbage-w7um9b`
+_Updated: 2026-10-12 15:45:14_  ·  branch: `claude/busy-babbage-w7um9b`
 
 ## Uncommitted changes
 ```
@@ -17,6 +17,7 @@ Diff stat:
 
 ## Recent commits
 ```
+1cd8735c chore: update the auto-saved session state snapshot
 0bf4c59d chore: update the auto-saved session state snapshot
 e2d50ac2 docs: name .anchor/ in the repository map
 0fb71375 Merge origin/main into claude/busy-babbage-w7um9b
@@ -24,7 +25,6 @@ e2d50ac2 docs: name .anchor/ in the repository map
 e0fcddd6 chore: update the auto-saved session state snapshot
 d9211858 chore: update the auto-saved session state snapshot
 90307010 chore: update the auto-saved session state snapshot
-1d274473 chore: update the auto-saved session state snapshot
 ```
 
 ## Resume
