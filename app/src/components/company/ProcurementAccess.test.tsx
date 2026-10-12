@@ -38,7 +38,7 @@ const DETAIL: ProcurementDetail = {
 let host: HTMLDivElement;
 let root: Root;
 let api: ProcurementAccessApi;
-let authorizationLost: ReturnType<typeof vi.fn>;
+let authorizationLost: ReturnType<typeof vi.fn<() => void>>;
 
 beforeEach(() => {
   api = {
@@ -51,7 +51,7 @@ beforeEach(() => {
       grant: { ...GRANT, revokedAt: '2026-10-11T22:00:00Z', revokedBy: 'account-team-1', revokeReason: 'Evidence superseded' },
     })),
   };
-  authorizationLost = vi.fn();
+  authorizationLost = vi.fn<() => void>();
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
