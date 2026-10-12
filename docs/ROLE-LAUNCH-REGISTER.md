@@ -309,7 +309,7 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `platform_admin` | `console:operate` | — | `capabilities.check.sql`<br>`console-control-plane.check.sql`<br>`projection-foundation.check.sql` |
 | `platform_admin` | `approval:decide` | — | `capabilities.check.sql`<br>`console-control-plane.check.sql` |
 | `platform_admin` | `breakglass:request` | — | `capabilities.check.sql`<br>`console-control-plane.check.sql` |
-| `platform_admin` | `access_review:manage` | — | `capabilities.check.sql` |
+| `platform_admin` | `access_review:manage` | — | `capabilities.check.sql`<br>`privileged-access-review.check.sql` |
 | `support_agent` | `support:ticket` | — | — |
 | `support_agent` | `beta:triage` | — | `capabilities.check.sql` |
 | `support_agent` | `console:operate` | — | `capabilities.check.sql`<br>`console-control-plane.check.sql`<br>`projection-foundation.check.sql` |
@@ -350,7 +350,7 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `account_executive` | `success:manage` | — | — |
 | `trust_officer` | `trust:publish` | — | — |
 | `trust_officer` | `console:operate` | — | `capabilities.check.sql`<br>`console-control-plane.check.sql`<br>`projection-foundation.check.sql` |
-| `trust_officer` | `access_review:manage` | — | `capabilities.check.sql` |
+| `trust_officer` | `access_review:manage` | — | `capabilities.check.sql`<br>`privileged-access-review.check.sql` |
 | `marketing_admin` | `campaign:manage` | `app/src/components/institutional/CampaignManager.tsx` | — |
 | `marketing_admin` | `campaign:report` | `app/src/components/institutional/CampaignManager.tsx` | — |
 | `marketing_analyst` | `campaign:report` | `app/src/components/institutional/CampaignManager.tsx` | — |
