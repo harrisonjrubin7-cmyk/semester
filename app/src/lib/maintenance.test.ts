@@ -171,7 +171,7 @@ describe('maintenanceActions', () => {
   it('proposes one calm, sourced follow-up per due request', () => {
     const r = request({ urgency: 'urgent' });
     const [action] = maintenanceActions([r], r.checkBackAt + 1);
-    expect(action.id).toBe(`maintenance:mr1:reported:${r.checkBackAt}`);
+    expect(action.id).toMatch(new RegExp(`^maintenance:mr1:reported:${r.checkBackAt}:`));
     expect(action.priority).toBe('high');
     expect(action.source.label).toBe('student_entered');
     expect(action.primary).toMatchObject({ kind: 'navigate', requiresConfirmation: false });
@@ -381,6 +381,20 @@ describe('review findings on 5200c9c', () => {
     for (const at of [read.reportedAt, read.checkBackAt, read.updated]) expect(() => whenLine(at)).not.toThrow();
     expect(read.status).toBe('reported');
     expect(read.scheduledFor).toBeNull();
+  });
+
+  it('brings a follow-up marked done back the next day while the repair is still open', () => {
+    const r = request();
+    const today = maintenanceActions([r], r.checkBackAt + 1)[0].id;
+    const tomorrow = maintenanceActions([r], addDays(r.checkBackAt + 1, 1))[0].id;
+    expect(maintenanceActions([r], r.checkBackAt + 2)[0].id).toBe(today);
+    expect(tomorrow).not.toBe(today);
+  });
+
+  it('says how to correct a repair the way the screen actually allows', () => {
+    const [action] = maintenanceActions([request()], request().checkBackAt + 1);
+    expect(action.source.correctionRoute).toMatch(/remove it, and record it again/);
+    expect(action.source.correctionRoute).not.toMatch(/update the request/);
   });
 
   it('bounds the building and room as the reader does, so a saved request survives a reload unchanged', () => {

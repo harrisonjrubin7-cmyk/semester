@@ -16,7 +16,6 @@ import {
   URGENCIES,
   URGENCY_TEXT,
   checkDraft,
-  followUpAt,
   fromLocalInput,
   isOpen,
   likelyDuplicate,
@@ -242,11 +241,11 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
               {MOVE_LABEL[to]}
             </button>
           ))}
-          {r.status === 'reported' ? (
+          {r.status === 'reported' && due ? (
             <button
               type="button"
               className="btn btn-ghost"
-              onClick={() => dispatch({ type: 'snoozeMaintenance', id: r.id, until: addDays(Math.max(Date.now(), followUpAt(r)), 1), at: Date.now() })}
+              onClick={() => dispatch({ type: 'snoozeMaintenance', id: r.id, until: addDays(Date.now(), 1), at: Date.now() })}
             >
               Remind me tomorrow
             </button>

@@ -20,6 +20,12 @@ import {
  * back through the store (architecture guard `legacy-cycles-do-not-grow`).
  */
 
+/** This device's calendar day, so a follow-up marked done in the Action Center comes back tomorrow while the repair is still open. */
+const dayKey = (ms: number): string => {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+};
+
 const short = (text: string) => (text.length > 60 ? `${text.slice(0, 57).trimEnd()}…` : text);
 
 function priorityOf(r: MaintenanceRequest): Priority {
@@ -33,7 +39,9 @@ function priorityOf(r: MaintenanceRequest): Priority {
  * One per open request whose follow-up time has come. The id carries the
  * status and the follow-up time, so "still waiting, check tomorrow" or a
  * scheduled visit is a new action rather than one the student already
- * dismissed — and a dismissal of today's reminder is remembered until then.
+ * dismissed. The id also carries the calendar day, because "Done" in the
+ * Action Center changes nothing about the repair: it holds for today, and the
+ * follow-up comes back tomorrow while the request is still open.
  */
 export function maintenanceActions(list: MaintenanceRequest[], now: number): Action[] {
   const out: Action[] = [];
@@ -46,7 +54,7 @@ export function maintenanceActions(list: MaintenanceRequest[], now: number): Act
     const visit = r.status === 'scheduled';
     const again = r.status === 'not_fixed';
     out.push({
-      id: `maintenance:${r.id}:${r.status}:${at}`,
+      id: `maintenance:${r.id}:${r.status}:${at}:${dayKey(now)}`,
       type: 'housing',
       group: 'Housing',
       title: again ? `Report again: ${what}` : visit ? `Did the repair visit happen? ${what}` : `Check on your repair: ${what}`,
@@ -66,7 +74,7 @@ export function maintenanceActions(list: MaintenanceRequest[], now: number): Act
         at: r.updated,
         authority: 'Your school’s housing or facilities office',
         dataOwner: 'You',
-        correctionRoute: 'Open Housing and update the request.',
+        correctionRoute: 'Semester cannot edit a recorded repair yet. Open Housing, remove it, and record it again with the right details; its status history goes with it.',
         officialFallback: 'Check the request in your housing portal, or call the housing office.',
       },
       explanation: {

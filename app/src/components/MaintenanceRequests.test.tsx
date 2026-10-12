@@ -193,6 +193,19 @@ describe('MaintenanceRequests, review findings on #1501', () => {
     expect(host.textContent).toContain('The visit has passed');
   });
 
+  it('offers "Remind me tomorrow" only once the follow-up is due, and sets it for tomorrow from now', async () => {
+    seed([existing({ checkBackAt: NOW.getTime() + 3 * 86_400_000 })]);
+    await render();
+    expect(button('Remind me tomorrow')).toBeUndefined();
+    await act(async () => root.unmount());
+    root = createRoot(host);
+    seed([existing({ checkBackAt: NOW.getTime() - 60_000 })]);
+    await render();
+    await click('Remind me tomorrow');
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}').maintenance[0];
+    expect(saved.checkBackAt).toBe(new Date(2026, 9, 13, 9, 0).getTime());
+  });
+
   it('takes the new ticket number when a repair is reported again', async () => {
     seed([existing({ status: 'not_fixed', updated: NOW.getTime() })]);
     await render();
