@@ -40,11 +40,18 @@
 create or replace function private.stamp_scim_group_mapping()
 returns trigger language plpgsql set search_path = '' as $$
 begin
+  new.updated_at := now();
+  -- The approver's account being erased: the foreign key clears the name and
+  -- that is the whole change. The approval's time stays what it was, and the
+  -- history trigger records the erasure as a change with no author.
+  if tg_op = 'UPDATE' and pg_trigger_depth() > 1
+     and old.approved_by is not null and new.approved_by is null then
+    return new;
+  end if;
   -- The session's user, when there is one. A service-role write (there is no
   -- such path today) keeps what it supplied rather than nulling the approver.
   new.approved_by := coalesce((select auth.uid()), new.approved_by);
   new.approved_at := now();
-  new.updated_at  := now();
   return new;
 end $$;
 revoke all on function private.stamp_scim_group_mapping() from public, anon, authenticated;
@@ -92,10 +99,45 @@ begin
   return new;
 end $$;
 
+-- Immutable to people; not to the foreign keys. A removed school's cascade
+-- takes its history with it, and a departed administrator's account can be
+-- erased because `changed_by` is allowed to clear and nothing else is. The
+-- cascade's own trigger is depth 1, so this one sees depth 2; a person's
+-- UPDATE is depth 1 (the shape 20260930233000 uses for guardian history).
 create or replace function private.refuse_scim_group_mapping_history_change()
 returns trigger language plpgsql set search_path = '' as $$
 begin
+  if tg_op = 'DELETE' and not exists (select 1 from public.schools s where s.id = old.tenant_id) then
+    return old;
+  end if;
+  if tg_op = 'UPDATE' and pg_trigger_depth() > 1
+     and old.changed_by is not null and new.changed_by is null
+     and new.id = old.id and new.mapping_id = old.mapping_id and new.tenant_id = old.tenant_id
+     and new.external_group_id = old.external_group_id and new.display_name = old.display_name
+     and new.roles = old.roles and new.active = old.active and new.changed_at = old.changed_at then
+    return new;
+  end if;
   raise exception 'Group mapping history is immutable.';
+end $$;
+
+-- The same shape has sat on tenant_sso_policy_history since 20260928011845:
+-- its refusal aborted the cascade from `schools` and the `set null` from
+-- `auth.users`, so a school could not be removed and an administrator's
+-- account could not be erased once either had an SSO policy change on record.
+-- Redefined here with the same two exceptions.
+create or replace function private.refuse_tenant_sso_policy_history_change()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  if tg_op = 'DELETE' and not exists (select 1 from public.schools s where s.id = old.tenant_id) then
+    return old;
+  end if;
+  if tg_op = 'UPDATE' and pg_trigger_depth() > 1
+     and old.changed_by is not null and new.changed_by is null
+     and new.id = old.id and new.tenant_id = old.tenant_id and new.require_sso = old.require_sso
+     and new.reason = old.reason and new.changed_at = old.changed_at then
+    return new;
+  end if;
+  raise exception 'Tenant SSO policy history is immutable.';
 end $$;
 
 revoke all on function private.record_scim_group_mapping_change() from public, anon, authenticated;

@@ -307,4 +307,62 @@ begin
   raise notice 'identity provisioning: every check passed';
 end $$;
 
+-- An immutable history must still let its foreign keys do their work: a
+-- departed administrator's account is erasable (`changed_by` clears). Found by
+-- review on the first cut of 20261012040000, whose refusal trigger aborted the
+-- erasure. The same shape sat in tenant_sso_policy_history since
+-- 20260928011845, so it is proved here for both.
+do $$
+declare
+  north_admin uuid;
+  n bigint;
+  state text;
+  approved_before timestamptz;
+begin
+  select id into north_admin from auth.users where email = 'idp-admin@northstar-identity.example';
+  perform pg_temp.become(north_admin);
+  insert into public.tenant_sso_policy (tenant_id, require_sso, reason)
+  values ('northstar-identity', true, 'campus policy');
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  insert into public.scim_group_mapping (tenant_id, external_group_id, display_name, roles)
+  values ('cedar-identity', 'cedar-staff', 'Staff', array['staff']);
+  select count(*) into n from public.tenant_sso_policy_history
+   where tenant_id = 'northstar-identity' and changed_by = north_admin;
+  perform pg_temp.counted('THE CONTROL: the SSO policy change is in its history, named', n, 1);
+
+  select approved_at into approved_before from public.scim_group_mapping
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars';
+  delete from auth.users where id = north_admin;
+  -- Two rows cleared of their author, and a third recorded by the erasure
+  -- itself: the live mapping lost its approver, and that is a change.
+  select count(*) into n from public.scim_group_mapping_history
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars' and changed_by is null;
+  perform pg_temp.counted('a departed administrator leaves the mapping history in place, unnamed, plus the erasure itself', n, 3);
+  select (approved_at = approved_before)::text into state from public.scim_group_mapping
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars';
+  perform pg_temp.answered('the erasure does not move the mapping''s approval time', state, 'true');
+  -- Likewise one cleared and one recorded: the live policy lost its author.
+  select count(*) into n from public.tenant_sso_policy_history
+   where tenant_id = 'northstar-identity' and changed_by is null;
+  perform pg_temp.counted('and the SSO policy history likewise', n, 2);
+
+  -- A school is never deleted here: the schools table refuses it, and disposal
+  -- goes through offboarding (docs/SCHOOL-OFFBOARDING.md), so the cascade half
+  -- of the review finding has no path to run. The refusal is the control.
+  if not pg_temp.refused('delete from public.schools where id = ''northstar-identity''') then
+    raise exception 'FAILED: a school was deleted outright';
+  end if;
+  raise notice 'ok  a school is offboarded, never deleted, so no cascade reaches its history';
+  select count(*) into n from public.scim_group_mapping_history where tenant_id = 'cedar-identity';
+  perform pg_temp.counted('CROSS-TENANT: cedar''s history is untouched by north''s erasures', n, 1);
+
+  if not pg_temp.refused(format(
+    'delete from public.scim_group_mapping_history where tenant_id = %L', 'cedar-identity'
+  )) then
+    raise exception 'FAILED: a direct delete of mapping history was accepted';
+  end if;
+  raise notice 'ok  a direct delete of mapping history is still refused';
+end $$;
+
 rollback;
