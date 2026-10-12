@@ -152,9 +152,10 @@ describe('Volunteer', () => {
     });
     await click('Remove it');
     expect(mock.decide).not.toHaveBeenCalled();
-    expect(host.textContent).toContain('If another independent volunteer already voted to remove it');
+    expect(host.textContent).toContain('If this is a real report');
+    expect(host.textContent).toContain('Practice answers only update your calibration');
     expect(host.textContent).toContain('Reason: Suspicious link');
-    expect(host.textContent).toContain('You cannot withdraw or edit this vote');
+    expect(host.textContent).toContain('You cannot withdraw or edit this answer');
     await click('Cancel');
     expect(mock.decide).not.toHaveBeenCalled();
     expect(host.querySelector('[aria-label="A post to review"]')).not.toBeNull();
