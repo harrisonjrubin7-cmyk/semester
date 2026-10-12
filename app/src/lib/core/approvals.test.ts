@@ -42,6 +42,24 @@ describe('two-person approval', () => {
     expect(isError(step(stale, { type: 'approve', by: 'x', at: NOW }))).toBe(true);
   });
 
+  it('rejects a second factor verified after the approval it backs', () => {
+    const later: Approval = { ...fresh, mfaAt: { x: NOW + MIN } };
+    expect(isError(step(later, { type: 'approve', by: 'x', at: NOW }))).toBe(true);
+  });
+
+  it('accepts a second factor exactly 15 minutes old, and rejects one 1 ms older', () => {
+    const exact: Approval = { ...fresh, mfaAt: { x: NOW - 15 * MIN } };
+    expect((step(exact, { type: 'approve', by: 'x', at: NOW }) as Approval).state).toBe('approved-1');
+    const older: Approval = { ...fresh, mfaAt: { x: NOW - 15 * MIN - 1 } };
+    expect(isError(step(older, { type: 'approve', by: 'x', at: NOW }))).toBe(true);
+  });
+
+  it('an approval exactly at the deadline is still live; one millisecond later it has expired', () => {
+    const late: Approval = { ...fresh, mfaAt: { x: fresh.expiresAt - MIN } };
+    expect((step(late, { type: 'approve', by: 'x', at: fresh.expiresAt }) as Approval).state).toBe('approved-1');
+    expect((step(late, { type: 'approve', by: 'x', at: fresh.expiresAt + 1 }) as Approval).state).toBe('expired');
+  });
+
   it('expires after the deadline and a rejection ends the request', () => {
     expect((step(fresh, { type: 'approve', by: 'x', at: NOW + 2 * H }) as Approval).state).toBe('expired');
     const rejected = step(fresh, { type: 'reject', by: 'x', at: NOW }) as Approval;
