@@ -2048,6 +2048,8 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Pass 7/7 focused eligibility, adjacent athletics-hours and isolation-policy tests.
 - [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the existing build chunk-size warning.
 - [x] Pass aggregate design-system check (9 token tests and 69 contracts) and the test-backed report; retain zero violations, 86 existing warnings and the existing CSS ledger.
+- [x] Commit the coherent slice as `88a86781a`, merge final upstream `ba24569ab` cleanly as `1948e3daa`, and confirm its access-saga, projection-dashboard and GitBook files do not overlap.
+- [x] Pass the same 7/7 focused tests, TypeScript and university gateway typecheck on the combined post-merge head.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace consequence slice; no full-suite result is claimed.
 - [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` and app-host environment values unset and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
 

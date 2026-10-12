@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `8107737a8` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `ba24569ab` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -999,3 +999,5 @@ Each removal now has an exact accessible name containing the student-entered req
 The focused eligibility, adjacent athletics-hours and worker-isolation set passes 7/7; the isolation register now also reconciles two pre-existing mocked tests left out by earlier local slices. TypeScript, lint, university gateway typecheck and production build pass with eight existing lint warnings and the existing chunk-size warning. The aggregate design-system check passes its 9 token tests and 69 contract tests; the test-backed report passes and writes a passing artifact with zero violations, 86 existing warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun.
 
 Mandatory HawkScan preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and no app-host environment value; `stackhawk.yml` exists and the local properties file was detected without reading it. No target, scan, finding result, fix/rescan loop or security pass exists. No route, dependency, schema, grant, RLS policy, server operation, provider configuration, deployment, production data or external system changed. Another fresh dependency/consequence ranking is required next.
+
+Slice commit `88a86781a` merged final upstream `ba24569ab` cleanly as `1948e3daa`. The new access-saga crash rehearsal, projection dashboard and GitBook files do not overlap this slice. Post-merge focused and type gates are recorded in the checklist and status page; no upstream result is represented as deployment or activation evidence.
