@@ -17,6 +17,7 @@ import { createWorkspace } from '../tools/workspace.ts';
 import { handlerFor } from './handlers.ts';
 import { noModel, type ModelPort } from './model.ts';
 import { noRelease, type ReleaseAdapter } from './release.ts';
+import { noSend, type SendAdapter } from './send.ts';
 
 /**
  * The runtime. One process, many bounded responsibilities. It owns the
@@ -32,6 +33,8 @@ export interface RuntimeOptions {
   model?: ModelPort;
   /** The release adapter behind release_adapter. Absent means release.execute is blocked before any approval is spent. */
   release?: ReleaseAdapter;
+  /** The sending adapter behind external_send. Absent means communication.send is blocked before any approval is spent. */
+  send?: SendAdapter;
   clock?: Clock;
   ids?: IdFactory;
   aggregate?: AggregateLimits;
@@ -96,6 +99,7 @@ export function createRuntime(options: RuntimeOptions): Runtime {
   const environment = options.environment ?? 'development';
   const model = options.model ?? noModel;
   const release = options.release ?? noRelease;
+  const send = options.send ?? noSend;
   const store = createFileStore(stateRoot);
   const audit = createAuditLog(store, clock);
   const killSwitch = createKillSwitch(store, clock, audit);
@@ -137,7 +141,7 @@ export function createRuntime(options: RuntimeOptions): Runtime {
       const tools = createToolbox(policy, contextFor(task, contract, workspaceRoot), limiter, audit);
       const handler = handlerFor(task.type);
       if (!contract.taskTypes.includes(task.type)) throw new Error(`${contract.id} does not accept task type ${task.type}.`);
-      const report = redact(await handler({ task, tools, store, model, release, limiter, workspaceRoot, repositoryRoot, execution }));
+      const report = redact(await handler({ task, tools, store, model, release, send, limiter, workspaceRoot, repositoryRoot, execution }));
       execution = { ...execution, status: report.outcome === 'failed' ? 'failed' : report.outcome === 'blocked' || report.outcome === 'insufficient_evidence' ? 'blocked' : 'succeeded', endedAt: clock.now().toISOString(), usage: limiter.usage(), evidence: [...execution.evidence, ...tools.evidence], report };
       store.saveExecution(execution);
       const next = workerStatus(report.outcome);

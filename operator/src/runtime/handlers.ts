@@ -1,13 +1,14 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { AcceptanceCriterion, EvidenceItem, ExecutionRecord, Task, WorkerReport } from '../../types.ts';
-import { sha256 } from '../store/hash.ts';
+import { payloadHash, sha256 } from '../store/hash.ts';
 import type { OperatorStore } from '../store/store.ts';
 import type { RunLimiter } from '../control/limits.ts';
 import { ToolDenied, literalPattern, type Toolbox } from '../tools/adapters.ts';
 import { modelDriven } from './agentloop.ts';
 import type { ModelPort } from './model.ts';
 import { ReleaseUnavailable, type ReleaseAdapter } from './release.ts';
+import { SendUnavailable, type SendAction, type SendAdapter } from './send.ts';
 
 /**
  * Deterministic worker handlers. Each one executes a structured task spec
@@ -21,6 +22,7 @@ export interface HandlerContext {
   store: OperatorStore;
   model: ModelPort;
   release: ReleaseAdapter;
+  send: SendAdapter;
   /** The run's limiter: a handler may only spend. */
   limiter: RunLimiter;
   workspaceRoot: string;
@@ -274,6 +276,66 @@ export const releaseExecute: Handler = async (context) => {
   }
 };
 
+/**
+ * A27 — communication.send: the one path that speaks for the company. Drafts
+ * first: the action is `draft` unless the spec says `send`, and an adapter
+ * that cannot perform the action refuses it before the gate is asked. Then
+ * the same order as a release: refuse before spending when no adapter exists;
+ * let the gate consume the approval bound to this exact action, channel,
+ * recipient and content hash (an approval to draft never sends, and an edit
+ * to the content after approval is `artifact_changed`); record the external
+ * action as pending before it fires; clear it only on a confirmed result.
+ * The body never appears in the report or the audit, only its hash.
+ */
+export const communicationSend: Handler = async (context) => {
+  const { channel, recipient, subject, body } = context.task.spec;
+  const action: SendAction = context.task.spec.action === 'send' ? 'send' : 'draft';
+  if (typeof channel !== 'string' || typeof recipient !== 'string' || typeof body !== 'string' || (subject !== undefined && typeof subject !== 'string')) {
+    throw new Error('spec.channel, spec.recipient and spec.body must be strings; spec.subject, when present, a string.');
+  }
+  if (!channel || !recipient || !body.trim()) throw new Error('spec.channel, spec.recipient and spec.body must not be empty.');
+  const contentHash = payloadHash({ channel, recipient, subject, body });
+  const needed = `external_send ${action} ${channel}:${recipient} content=${contentHash.slice(0, 12)}`;
+  if (context.send.name === 'none') {
+    return report(context, { outcome: 'blocked', status: 'send_adapter_unavailable', risks: [new SendUnavailable().message], approvalsRequired: [needed], nextStep: 'An owner wires a sending adapter with its credential in the operator process; a drafts-only adapter is enough to begin.' });
+  }
+  if (!context.send.supports[action]) {
+    return report(context, { outcome: 'blocked', status: 'send_action_unsupported', risks: [`The ${context.send.name} adapter does not ${action}; no approval was asked for.`], nextStep: action === 'send' ? 'Plan the task as a draft, or have the owner wire an adapter that sends.' : 'Have the owner wire an adapter that drafts.' });
+  }
+  let decision: EvidenceItem & { kind: 'decision' };
+  try {
+    decision = context.tools.send(action, channel, recipient, contentHash);
+  } catch (error) {
+    if (error instanceof ToolDenied) {
+      const needsApproval = APPROVAL_CODES.includes(error.code);
+      return report(context, {
+        outcome: needsApproval ? 'needs_approval' : 'blocked', status: error.code, risks: [error.message], approvalsRequired: needsApproval ? [needed] : [],
+        nextStep: needsApproval ? `An owner reads the exact content and grants an approval for ${needed}: tool external_send, target ${channel}:${recipient}, payload {action, channel, recipient, contentHash}, artifact the content hash, approver not ${context.task.agentId}.` : 'Grant operate mode to this task by a planner decision, or stop.',
+      });
+    }
+    throw error;
+  }
+  const pending = `${needed} via ${context.send.name}`;
+  context.execution.pendingExternalActions.push(pending);
+  try {
+    const request = { action, channel, recipient, subject, body, contentHash, taskId: context.task.id, environment: context.task.environment };
+    const result = action === 'send' ? await context.send.send(request) : await context.send.draft(request);
+    context.execution.pendingExternalActions.splice(context.execution.pendingExternalActions.indexOf(pending), 1);
+    context.execution.evidence.push({ kind: 'note', label: 'send', detail: `${context.send.name} ${action === 'send' ? 'sent' : 'drafted'} content ${contentHash.slice(0, 12)} to ${channel}:${recipient}: ${result.reference}${result.detail ? ` (${result.detail})` : ''}` });
+    return report(context, {
+      outcome: 'completed', status: action === 'send' ? `sent to ${channel}:${recipient}` : `drafted for ${channel}:${recipient}`,
+      changes: [action === 'send' ? `${channel}:${recipient} received content ${contentHash.slice(0, 12)}` : `a draft for ${channel}:${recipient} holds content ${contentHash.slice(0, 12)}`],
+      artifacts: [`${action} ${result.reference}`, `approval ${decision.code}`],
+      verification: [{ name: 'adapter confirmed', passed: true, detail: result.reference }],
+      nextStep: action === 'send' ? 'Record the send in the communications log; nothing is re-sent by the runtime.' : 'A person reviews the draft where it was placed and sends it themselves, or plans a send task against the same content.',
+    });
+  } catch (error) {
+    // The action may have happened. It stays pending in the record and is never retried by the runtime.
+    const message = (error instanceof Error ? error.message : String(error)).slice(0, 300);
+    return report(context, { outcome: 'failed', status: 'send_adapter_error', risks: [`The external action may have taken effect: ${message}. It stays recorded as pending for a person to confirm; the runtime never repeats it.`], artifacts: [`approval ${decision.code}`], nextStep: 'A person checks the channel before anything else is drafted or sent to this recipient.' });
+  }
+};
+
 /** Gate denials that an approval, granted by someone other than the actor, would clear. */
 const APPROVAL_CODES = ['approval_required', 'payload_hash_required', 'artifact_changed', 'payload_changed', 'target_mismatch', 'tool_mismatch', 'task_mismatch', 'self_approval', 'expired', 'consumed', 'revoked'];
 
@@ -287,6 +349,7 @@ export const HANDLERS: Record<string, Handler> = {
   'docs.continuation': docsContinuation,
   'release.prepare': releasePrepare,
   'release.execute': releaseExecute,
+  'communication.send': communicationSend,
 };
 
 export function handlerFor(type: string): Handler { return HANDLERS[type] ?? modelDriven; }

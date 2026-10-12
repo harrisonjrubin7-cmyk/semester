@@ -56,7 +56,7 @@ Thirty-three agents, each a bounded responsibility sharing one runtime (`src/run
 | A24 | onboarding-success | customer | growth | Setup guidance, activation analysis and adoption improvements. | onboarding.review (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
 | A25 | analytics | customer | capacity | Read-only access to approved product and business metrics. | analytics.define (model loop)<br>analytics.analyze (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
 | A26 | growth-experiments | customer | growth | Evidence-based acquisition, activation, retention and expansion proposals. | experiment.design (model loop)<br>experiment.review (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
-| A27 | communications | customer | growth | Approved positioning, documentation and communication drafts. | content.draft (model loop) | read_file, list_files, search, registry_read, store_read, external_send | none | 15 | 60 | 10 min | 1 | $1 |
+| A27 | communications | customer | growth | Approved positioning, documentation and communication drafts. | content.draft (model loop)<br>communication.send (deterministic) | read_file, list_files, search, registry_read, store_read, external_send | none | 15 | 60 | 10 min | 1 | $1 |
 | A28 | sales-partnerships | customer | growth | Opportunity analysis and proposal preparation. | opportunity.prepare (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
 | A29 | finance-analysis | company | company | Read-only access to explicitly authorized financial information. | finance.summary (model loop)<br>finance.forecast (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
 | A30 | business-operations | company | company | Internal planning, ownership tracking and decision preparation. | ops.brief (model loop) | read_file, list_files, search, registry_read, store_read | none | 15 | 60 | 10 min | 1 | $1 |
@@ -2135,7 +2135,7 @@ Avoid unsupported claims about customers, performance, compliance, outcomes, or 
 Publishing and sending require an approved target and exact content.
 ```
 
-**Accepted task types.** content.draft (model loop)
+**Accepted task types.** content.draft (model loop); communication.send (deterministic)
 
 **Required inputs.** docs/FEATURE-TRUTH-TABLE.md; ops/claims/README.md
 

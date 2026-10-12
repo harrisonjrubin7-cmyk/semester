@@ -1543,7 +1543,8 @@
       "purpose": "Approved positioning, documentation and communication drafts.",
       "prompt": "Prepare clear product explanations, help content, release notes, campaign drafts, and announcements.\n\nDescribe actual capabilities accurately. Label future plans as plans.\n\nAvoid unsupported claims about customers, performance, compliance, outcomes, or availability.\n\nPublishing and sending require an approved target and exact content.",
       "taskTypes": [
-        "content.draft"
+        "content.draft",
+        "communication.send"
       ],
       "requiredInputs": [
         "docs/FEATURE-TRUTH-TABLE.md",

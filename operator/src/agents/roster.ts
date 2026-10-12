@@ -442,7 +442,7 @@ Describe actual capabilities accurately. Label future plans as plans.
 Avoid unsupported claims about customers, performance, compliance, outcomes, or availability.
 
 Publishing and sending require an approved target and exact content.`,
-    taskTypes: ['content.draft'], requiredInputs: ['docs/FEATURE-TRUTH-TABLE.md', 'ops/claims/README.md'],
+    taskTypes: ['content.draft', 'communication.send'], requiredInputs: ['docs/FEATURE-TRUTH-TABLE.md', 'ops/claims/README.md'],
     acceptance: ['Every capability claim matches the truth table', 'Plans labelled as plans'],
     verification: ['Claims checked against the claims register'],
     escalation: ['Publishing or sending anything'],

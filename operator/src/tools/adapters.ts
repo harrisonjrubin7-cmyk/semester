@@ -39,6 +39,8 @@ export interface Toolbox {
   gitDiff(): EvidenceItem & { kind: 'diff'; text: string };
   /** Asks the gate for a release of one exact artifact to one exact target; consumes the bound approval. Returns the decision evidence; the adapter call is the handler's, bracketed by a pending record. */
   release(target: string, artifactHash: string): EvidenceItem & { kind: 'decision' };
+  /** Asks the gate for one send action to one exact recipient on one channel with one exact content hash; consumes the bound approval. A draft approval never sends: the action is in the payload. */
+  send(action: 'draft' | 'send', channel: string, recipient: string, contentHash: string): EvidenceItem & { kind: 'decision' };
   readonly evidence: EvidenceItem[];
 }
 
@@ -138,6 +140,10 @@ export function createToolbox(policy: PolicyController, context: PolicyContext, 
     },
     release(target, artifactHash) {
       gate({ tool: 'release_adapter', target, risk: 'high', external: true, payloadHash: payloadHash({ target, artifactHash }), artifactHash });
+      return evidence.at(-1) as EvidenceItem & { kind: 'decision' };
+    },
+    send(action, channel, recipient, contentHash) {
+      gate({ tool: 'external_send', target: `${channel}:${recipient}`, risk: 'high', external: true, payloadHash: payloadHash({ action, channel, recipient, contentHash }), artifactHash: contentHash });
       return evidence.at(-1) as EvidenceItem & { kind: 'decision' };
     },
     gitDiff() {

@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import type { PolicySet } from '../types.ts';
 import type { ModelPort, ModelRequest, ModelResponse } from '../src/runtime/model.ts';
 import type { ReleaseAdapter, ReleaseRequest } from '../src/runtime/release.ts';
+import type { SendAdapter, SendRequest, SendResult } from '../src/runtime/send.ts';
 
 export function tempDir(prefix = 'operator-'): string { return mkdtempSync(join(tmpdir(), prefix)); }
 
@@ -72,4 +73,14 @@ export function recordingRelease(options: { fail?: boolean } = {}): ReleaseAdapt
       return { reference: `deploy-${requests.length}`, detail: `${request.target}@${request.artifactHash.slice(0, 8)}` };
     },
   };
+}
+
+export function recordingSend(options: { fail?: boolean; sends?: boolean } = {}): SendAdapter & { requests: SendRequest[] } {
+  const requests: SendRequest[] = [];
+  const perform = async (request: SendRequest): Promise<SendResult> => {
+    requests.push(request);
+    if (options.fail) throw new Error('provider returned 502 after accepting the message');
+    return { reference: `${request.action}-${requests.length}`, detail: `${request.channel}:${request.recipient}@${request.contentHash.slice(0, 8)}` };
+  };
+  return { name: 'recording', requests, supports: { draft: true, send: options.sends === true }, draft: perform, send: perform };
 }
