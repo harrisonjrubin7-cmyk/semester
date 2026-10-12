@@ -939,9 +939,9 @@ describe('EDGE-FUNCTIONS.md', () => {
   const rows = edgeRows(md);
   const dirs = functionDirs();
 
-  it('has 17 functions to be right or wrong about, and the parser reads every row (control)', () => {
-    expect(dirs).toHaveLength(17);
-    expect(rows).toHaveLength(17);
+  it('has 18 functions to be right or wrong about, and the parser reads every row (control)', () => {
+    expect(dirs).toHaveLength(18);
+    expect(rows).toHaveLength(18);
     for (const r of rows) {
       expect(r.env.length, r.fn).toBeGreaterThan(0);
       expect(r.methods.length, r.fn).toBeGreaterThan(0);
