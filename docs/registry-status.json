@@ -372,7 +372,7 @@
     },
     "#/student/registration": {
       "status": "tested",
-      "evidence": "screen app/src/screens/Registration.tsx; screen app/src/components/enrollment/StudentRegistration.tsx; module app/src/lib/enrollment/client.ts; module app/src/lib/enrollment/service.ts; module app/src/lib/modulegate.ts; test app/src/screens/registration.test.tsx; test app/src/lib/enrollment/client.test.ts; test supabase/registration_transaction.check.sql",
+      "evidence": "screen app/src/screens/Registration.tsx; screen app/src/components/enrollment/StudentRegistration.tsx; module app/src/lib/enrollment/client.ts; module app/src/lib/enrollment/service.ts; module app/src/lib/modulegate.ts; test app/src/lib/enrollment/client.test.ts; test app/src/lib/path-readiness.test.ts; test app/src/screens/registration.test.tsx; test supabase/registration_transaction.check.sql",
       "deployment": "schema: applied on Supabase project lzrqvlugnawcgywkhqlz (listing 2026-10-11) · app: unverified — Vercel built preview deployments of this branch for the projects semester, api, web and semester-company-site (GitHub commit statuses \"Deployment has completed\", 2026-10-11) but they sit behind Vercel Authentication, and both the plain fetch (302) and the authorized Vercel fetch (403, team harrison22 not authorized for this session's connection) were refused; the production URL is the repository variable SEMESTER_PRODUCTION_APP_URL, not readable here. No deployment was seen running.",
       "blockers": "Behind the enrollment module/writeback flag, off unless a school turns it on; holds have no list screen (REPO_AUDIT B-018).; production app not probed from this session"
     },
@@ -564,7 +564,7 @@
     },
     "#/student/help": {
       "status": "tested",
-      "evidence": "screen app/src/screens/Help.tsx; screen app/src/components/AskAHuman.tsx; screen app/src/components/SupportTicketsPanel.tsx; screen app/src/screens/Support.tsx; module app/src/lib/help-routes.ts; module app/src/lib/supporttickets.ts; module app/src/lib/support.ts; test app/src/screens/help.knownlimitations.test.tsx; test app/src/lib/help-routes.test.ts; test app/src/lib/supporttickets.test.ts; test supabase/help-requests.check.sql; test supabase/support-tickets.check.sql",
+      "evidence": "screen app/src/screens/Help.tsx; screen app/src/components/AskAHuman.tsx; screen app/src/components/SupportTicketsPanel.tsx; screen app/src/screens/Support.tsx; module app/src/lib/help-routes.ts; module app/src/lib/supporttickets.ts; module app/src/lib/support.ts; test app/src/lib/help-routes.test.ts; test app/src/lib/supporttickets.test.ts; test app/src/screens/help.knownlimitations.test.tsx; test supabase/help-requests.check.sql; test supabase/support-tickets.check.sql",
       "deployment": "schema: applied on Supabase project lzrqvlugnawcgywkhqlz (listing 2026-10-11) · app: unverified — Vercel built preview deployments of this branch for the projects semester, api, web and semester-company-site (GitHub commit statuses \"Deployment has completed\", 2026-10-11) but they sit behind Vercel Authentication, and both the plain fetch (302) and the authorized Vercel fetch (403, team harrison22 not authorized for this session's connection) were refused; the production URL is the repository variable SEMESTER_PRODUCTION_APP_URL, not readable here. No deployment was seen running.",
       "blockers": "production app not probed from this session"
     },
@@ -756,7 +756,7 @@
     },
     "#/faculty/gradebook": {
       "status": "tested",
-      "evidence": "screen app/src/screens/Gradebook.tsx; screen app/src/components/gradebook/InstructorBook.tsx; module app/src/lib/gradebook/client.ts; module app/src/lib/gradebook/ledger.ts; module app/src/lib/gradebook/compute.ts; module app/src/lib/gradebook/views.ts; test supabase/gradebook.check.sql; test app/src/lib/gradebook/gradebook.test.ts; test app/src/lib/gradebook/client.test.ts; test app/src/screens/gradebook.test.tsx",
+      "evidence": "screen app/src/screens/Gradebook.tsx; screen app/src/components/gradebook/InstructorBook.tsx; module app/src/lib/gradebook/client.ts; module app/src/lib/gradebook/ledger.ts; module app/src/lib/gradebook/compute.ts; module app/src/lib/gradebook/views.ts; test app/src/lib/gradebook/client.test.ts; test app/src/lib/gradebook/gradebook.test.ts; test app/src/screens/gradebook.test.tsx; test supabase/gradebook.check.sql; test supabase/migrations/20261012010000_gradebook_release_emits_event.sql",
       "deployment": "schema: applied on Supabase project lzrqvlugnawcgywkhqlz (listing 2026-10-11) · app: unverified — Vercel built preview deployments of this branch for the projects semester, api, web and semester-company-site (GitHub commit statuses \"Deployment has completed\", 2026-10-11) but they sit behind Vercel Authentication, and both the plain fetch (302) and the authorized Vercel fetch (403, team harrison22 not authorized for this session's connection) were refused; the production URL is the repository variable SEMESTER_PRODUCTION_APP_URL, not readable here. No deployment was seen running.",
       "blockers": "production app not probed from this session"
     },

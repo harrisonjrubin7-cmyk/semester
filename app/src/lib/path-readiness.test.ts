@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EMPTY_MEETINGS, namedAgendaText, type Meeting } from './advisor-meeting';
 import { CHECKLIST, EMPTY_REGISTRATION_DAY } from './registration-day';
-import { namedCoursesFrom, overallReadiness, pathReadiness, readinessCount, readinessFacts, type PathReadinessInput } from './path-readiness';
+import { CATALOG_FRESH_DAYS, namedCoursesFrom, overallReadiness, pathReadiness, readinessCount, readinessFacts, type PathReadinessInput } from './path-readiness';
 import type { CatalogCourse } from './registration';
 
 const course = (id: string, start: number, end: number): CatalogCourse => ({
@@ -140,6 +140,27 @@ describe('overall readiness', () => {
     return overallReadiness(pathReadiness(input), readinessFacts(input));
   };
 
+  it('will not say Ready on a catalog imported longer ago than it stays fresh', () => {
+    // Phase 3, domain B: stale data cannot produce a false "ready". The steps
+    // are all done; only the import's age stands between them and Ready.
+    const now = new Date('2026-10-12T12:00:00Z');
+    const fresh = base({ catalog: [a], cart: [a], importedAt: '2026-10-01T00:00:00Z', now });
+    const stale = base({ catalog: [a], cart: [a], importedAt: '2026-08-01T00:00:00Z', now });
+    const done = pathReadiness(fresh).map((item) => ({ ...item, state: 'ready' as const }));
+    expect(overallReadiness(done, readinessFacts(fresh)).state).toBe('ready');
+    const old = overallReadiness(done, readinessFacts(stale));
+    expect(old.state).toBe('unavailable');
+    expect(old.why).toContain('72 days');
+    expect(old.why).toContain(`${CATALOG_FRESH_DAYS} days`);
+    // Exactly at the limit is still fresh; one day past it is not.
+    const edge = (days: number) => readinessFacts(base({ catalog: [a], cart: [a], now, importedAt: new Date(now.getTime() - days * 86_400_000).toISOString() }));
+    expect(overallReadiness(done, edge(CATALOG_FRESH_DAYS)).state).toBe('ready');
+    expect(overallReadiness(done, edge(CATALOG_FRESH_DAYS + 1)).state).toBe('unavailable');
+    // No import date (a catalog that was never imported, or an old record) says nothing about age.
+    expect(readinessFacts(base({ catalog: [a], cart: [a], now })).catalogAgeDays).toBeNull();
+    expect(readinessFacts(base({ catalog: [a], cart: [a], now, importedAt: 'not a date' })).catalogAgeDays).toBeNull();
+  });
+
   it('says information is unavailable, not "not started", when there is no catalog to check against', () => {
     expect(overall({}).state).toBe('unavailable');
     expect(overall({}).why).toContain('cannot be checked');
@@ -159,7 +180,7 @@ describe('overall readiness', () => {
 
   it('counts steps: getting ready, then almost ready, then ready', () => {
     const items = pathReadiness(base({ catalog: [a, b, c] }));
-    const facts = { catalogSize: 3, conflicts: 0, unchecked: 0 };
+    const facts = { catalogSize: 3, conflicts: 0, unchecked: 0, catalogAgeDays: null };
     const withReady = (n: number) => items.map((item, i) => ({ ...item, state: i < n ? ('ready' as const) : ('not_started' as const) }));
     expect(overallReadiness(withReady(2), facts)).toMatchObject({ state: 'getting_ready' });
     expect(overallReadiness(withReady(7), facts)).toMatchObject({ state: 'almost_ready', why: expect.stringContaining('Two steps left') });
@@ -192,7 +213,7 @@ describe('overall readiness', () => {
 
   it('ready still says the official system decides', () => {
     const items = pathReadiness(base({ catalog: [a] })).map((item) => ({ ...item, state: 'ready' as const }));
-    expect(overallReadiness(items, { catalogSize: 1, conflicts: 0, unchecked: 0 }).why).toContain('official system still decide');
+    expect(overallReadiness(items, { catalogSize: 1, conflicts: 0, unchecked: 0, catalogAgeDays: null }).why).toContain('official system still decide');
   });
 
   it('is unavailable, not ready, when a selected section has no meeting times to check', () => {

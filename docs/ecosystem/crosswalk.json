@@ -1447,15 +1447,16 @@
         "supabase/migrations/20260929310000_gradebook.sql"
       ],
       "tests": [
-        "supabase/gradebook.check.sql",
-        "app/src/lib/gradebook/gradebook.test.ts",
         "app/src/lib/gradebook/client.test.ts",
-        "app/src/screens/gradebook.test.tsx"
+        "app/src/lib/gradebook/gradebook.test.ts",
+        "app/src/screens/gradebook.test.tsx",
+        "supabase/gradebook.check.sql",
+        "supabase/migrations/20261012010000_gradebook_release_emits_event.sql"
       ],
       "flags": [
         "writeback.lms_grade_passback"
       ],
-      "note": "Gradebook of record: scheme, categories, items, draft versions, moderation, release, regrades, released-grade CSV, all through gradebook RPCs under RLS.",
+      "note": "Gradebook of record: scheme, categories, items, draft versions, moderation, release, regrades, released-grade CSV, all through gradebook RPCs under RLS. Phase 3: a release emits its outbox event in the same transaction (gradebook.check.sql).",
       "gap": ""
     },
     "#/faculty/gradesync": {
@@ -4313,14 +4314,14 @@
         "supabase/migrations/20260928210000_support_tickets.sql"
       ],
       "tests": [
-        "app/src/screens/help.knownlimitations.test.tsx",
         "app/src/lib/help-routes.test.ts",
         "app/src/lib/supporttickets.test.ts",
+        "app/src/screens/help.knownlimitations.test.tsx",
         "supabase/help-requests.check.sql",
         "supabase/support-tickets.check.sql"
       ],
       "flags": [],
-      "note": "Ask a human sends help_requests via send_help_request and tickets go through support_tickets; Support maps offices with privacy labels.",
+      "note": "Ask a human sends help_requests via send_help_request and tickets go through support_tickets; Support maps offices with privacy labels. Phase 3: the office acknowledges and the student reads the acknowledgement event.",
       "gap": ""
     },
     "#/student/housing": {
@@ -4800,14 +4801,15 @@
         "supabase/migrations/20260929300000_registration_transaction.sql"
       ],
       "tests": [
-        "app/src/screens/registration.test.tsx",
         "app/src/lib/enrollment/client.test.ts",
+        "app/src/lib/path-readiness.test.ts",
+        "app/src/screens/registration.test.tsx",
         "supabase/registration_transaction.check.sql"
       ],
       "flags": [
         "writeback.registration_submit"
       ],
-      "note": "Enrol, waitlist, drop, holds and approvals run through lib/enrollment/client.ts RPCs on the registration transaction ledger; the screen is module-gated.",
+      "note": "Enrol, waitlist, drop, holds and approvals run through lib/enrollment/client.ts RPCs on the registration transaction ledger; the screen is module-gated. Phase 3: the readiness headline refuses Ready on a catalog imported more than 30 days ago.",
       "gap": "Behind the enrollment module/writeback flag, off unless a school turns it on; holds have no list screen (REPO_AUDIT B-018)."
     },
     "#/student/regplan": {

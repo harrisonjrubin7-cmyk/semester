@@ -20,6 +20,27 @@ export interface PathReadinessInput {
   registration: RegistrationDayData;
   meetings: MeetingLibrary;
   institution: string | null;
+  /** When the catalog was imported (ISO), if a record of it exists. */
+  importedAt?: string | null;
+  /** The moment to measure the import's age from; the clock, unless a test says otherwise. */
+  now?: Date;
+}
+
+/**
+ * How many days a catalog import is trusted to describe the term. Sections,
+ * times and seats move during registration, so a plan checked against an
+ * older import is a plan checked against a term that may no longer exist;
+ * past this the headline says the information is unavailable rather than
+ * Ready, until the student imports again.
+ */
+export const CATALOG_FRESH_DAYS = 30;
+
+/** Whole days since the import, or null when there is no usable date. */
+export function catalogAgeDays(importedAt: string | null | undefined, now: Date): number | null {
+  if (!importedAt) return null;
+  const at = new Date(importedAt).getTime();
+  if (!Number.isFinite(at)) return null;
+  return Math.max(0, Math.floor((now.getTime() - at) / 86_400_000));
 }
 
 export interface PathReadinessItem {
@@ -223,6 +244,8 @@ export interface ReadinessFacts {
   conflicts: number;
   /** Selected sections with no meeting times (see `uncheckedSections`). */
   unchecked: number;
+  /** Days since the catalog was imported, or null when that is not known. */
+  catalogAgeDays: number | null;
 }
 
 export function readinessFacts(input: PathReadinessInput): ReadinessFacts {
@@ -230,6 +253,7 @@ export function readinessFacts(input: PathReadinessInput): ReadinessFacts {
     catalogSize: input.catalog.length,
     conflicts: readiness(input.registration, input.cart, input.catalog).conflicts,
     unchecked: uncheckedSections(input.cart),
+    catalogAgeDays: catalogAgeDays(input.importedAt, input.now ?? new Date()),
   };
 }
 
@@ -250,6 +274,13 @@ export function overallReadiness(items: readonly PathReadinessItem[], facts: Rea
       state: 'unavailable',
       label: 'Information unavailable',
       why: `${facts.unchecked} selected section${facts.unchecked === 1 ? ' has' : 's have'} no meeting times, so a conflict cannot be ruled out. Check the official listing.`,
+    };
+  }
+  if (facts.catalogAgeDays !== null && facts.catalogAgeDays > CATALOG_FRESH_DAYS) {
+    return {
+      state: 'unavailable',
+      label: 'Information unavailable',
+      why: `The course catalog was imported ${facts.catalogAgeDays} days ago, longer than the ${CATALOG_FRESH_DAYS} days an import is trusted for. Import it again before you rely on this.`,
     };
   }
   // A student who has not named a course has not left a step undone. Once they have, that row counts.

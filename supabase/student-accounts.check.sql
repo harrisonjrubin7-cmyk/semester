@@ -244,6 +244,10 @@ begin
       and prosrc like '%student_account_entry:%' and prosrc like '%pg_advisory_xact_lock(hashtextextended(''student_account_period:%'), 1);
   perform pg_temp.counted('and the close guard the month',
     (select count(*) from pg_proc where proname = 'student_account_close_guard' and prosrc like '%pg_advisory_xact_lock%'), 1);
+  -- Phase 3, domain F: a write that fails leaves no inconsistent record. The
+  -- ledger is counted before the refused write and again after it.
+  declare
+    ledger_before bigint := (select count(*) from public.student_account_entries);
   begin
     insert into public.student_account_entries (tenant_id, student_ref, kind, category, amount_cents, description, reference_entry_id,
       provider_ref, effective_on, period, request_id, high_value)
@@ -251,6 +255,8 @@ begin
     raise exception 'FAILED: a second reversal of one entry was written';
   exception when unique_violation then
     raise notice 'ok  and the database holds one reversal per entry, whoever writes it';
+    perform pg_temp.counted('and the refused write left the ledger exactly as it was',
+      (select count(*) from public.student_account_entries), ledger_before);
   end;
 
   -- ── reconciliation and the monthly close ───────────────────────────────

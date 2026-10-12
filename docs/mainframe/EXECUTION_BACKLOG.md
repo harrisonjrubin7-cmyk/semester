@@ -14,6 +14,7 @@ Phases follow the mainframe PDF. The operations roadmap’s P0 line (safe delive
 
 ## Next, in dependency order
 
+0b. **Phase 3 remainder** (`docs/execute/33-phase-3-cross-role-report.md`): decisions on submissions (A1), named help-request owners (C1), the coach role (D1), family grant history (E2); vendor access for Handshake and Big Interview (D3, D4); a mid-write failure test against a real database (F3); the cart's own view of catalog age (the headline now has it).
 0a. **Phase 2 remainder** (`docs/execute/32-phase-2-daily-loop-report.md`, "What the next stream needs"): titles for S01–S04/F03–F05; a test for workspace content never entering an institution write; one injection-through-tool-selection test in `converse.ts`; onboarding resume across devices via `onboarding_step_progress`; one shared spreadsheet-cell guard.
 0. **Phase 1 remainder** (`docs/execute/31-phase-1-foundation-report.md`, "What the next stream needs"): budgets decision; T01 storage sweep and the course-room switch; F02 AI-context and realtime post-revocation assertions and the deprovision trigger's scope; F01 audit-harness workflow (founder sees the CI change first).
 

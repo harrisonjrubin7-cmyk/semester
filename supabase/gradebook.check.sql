@@ -277,10 +277,23 @@ begin
   -- ── Release ─────────────────────────────────────────────────────────────
   perform pg_temp.refused('the TA releasing', ta, format($q$select public.gradebook_release(%L, 'ta-release-key')$q$, ps1));
   perform pg_temp.refused('the chair releasing', chair, format($q$select public.gradebook_release(%L, 'chair-release-key')$q$, ps1));
+  perform pg_temp.counted('a refused release writes no outbox event',
+    (select count(*) from private.domain_outbox_events e where e.aggregate_id = ps1::text and e.event_type = 'gradebook.grades_released'), 0);
   perform pg_temp.said('the instructor releases: Ana''s moderated grade goes, Ben''s draft is held',
     pg_temp.ask(prof, format($q$select public.gradebook_release(%L, 'release-ps1-key')::text$q$, ps1)), '{"held": 1, "released": 1}');
   perform pg_temp.said('and again with the key is the same answer, writing nothing',
     pg_temp.ask(prof, format($q$select public.gradebook_release(%L, 'release-ps1-key')::text$q$, ps1)), '{"held": 1, "released": 1}');
+  -- Publication and its outbox event are one transaction (20261012010000):
+  -- the release that went through wrote exactly one event, keyed like the
+  -- release, and the replay above added none.
+  perform pg_temp.counted('the release wrote one outbox event, and the replay none',
+    (select count(*) from private.domain_outbox_events e where e.aggregate_id = ps1::text and e.event_type = 'gradebook.grades_released'), 1);
+  perform pg_temp.counted('the event carries the counts and the item, and names no student',
+    (select count(*) from private.domain_outbox_events e
+      where e.aggregate_id = ps1::text and e.event_type = 'gradebook.grades_released'
+        and e.tenant_id = 'gb-u' and e.idempotency_key = 'release-ps1-key'
+        and e.payload->>'released' = '1' and e.payload->>'held' = '1'
+        and e.payload::text not like '%' || ana::text || '%'), 1);
   perform pg_temp.counted('Ana now sees exactly one row, released',
     pg_temp.seen(ana, $q$select * from public.grade_entries where status = 'released' and score = 9$q$), 1);
   perform pg_temp.counted('and nothing else, of hers or anybody''s', pg_temp.seen(ana, 'select * from public.grade_entries'), 1);

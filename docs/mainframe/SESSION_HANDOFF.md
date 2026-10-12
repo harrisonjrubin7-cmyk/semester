@@ -4,6 +4,9 @@
 
 ## Objective that was completed
 
+**Fourth pass (Phase 3 start, same branch).** `docs/execute/33-phase-3-cross-role-report.md` and D-1475 §13–14. Built: grade release emits its outbox event in the same transaction (new migration `20261012010000`, not applied to production); the readiness headline refuses Ready on a catalog older than 30 days. Proved: the help-request acknowledge step; a refused finance write leaves the ledger unchanged. Register rows `P3-A1`–`P3-F3`: 12 tested, 7 partial, 2 absent; the absent and most partial clauses are unbuilt product needing decisions or vendor access (see the report). Main merged twice; its budget rebaseline should end the `build` failure.
+
+
 **Third pass (Phase 2 start, same branch).** `docs/execute/32-phase-2-daily-loop-report.md` and D-1475 §11–12. Fixed: a revoked or expired share still allowed AI retrieval (`packages/institution/src/policy.ts`); interrupted onboarding restarted at step 0 (`state.onb` now persisted). Added: feed refresh/failure reducer tests. Register rows `P2-H1`–`P2-H8`, `P2-C1`–`P2-C11` (provisional IDs). CI on `0d1c2c11` ran the PostgreSQL 17 policy suites for the first time on this PR and passed all 152; only the budgets step is red.
 
 
@@ -17,7 +20,7 @@
 
 ## What the next session should read first
 
-1. This file, then [`D-1475`](../decisions/D-1475.md), then `docs/execute/32-phase-2-daily-loop-report.md` and `31-phase-1-foundation-report.md` ("What the next stream needs" in each).
+1. This file, then [`D-1475`](../decisions/D-1475.md), then `docs/execute/33-phase-3-cross-role-report.md`, `32-phase-2-daily-loop-report.md` and `31-phase-1-foundation-report.md` ("What the next stream needs" in each).
 2. `docs/ecosystem/INVENTORY.md` §10 and `docs/ecosystem/deployed.json`: the schema is verified against production by digest; the app is not. Establishing the production app URL (repository variable `SEMESTER_PRODUCTION_APP_URL`) and probing it is what moves rows to `deployed`.
 3. `EXECUTION_BACKLOG.md` next items: the second half of cart freshness, then matrix rows chosen by the phased plan's Phase 1 and 2 exit gates.
 4. The pull request's CI. Three tests were red on main itself at `a4742f6b` (`src/isolation.test.ts`, `src/lib/docs/trust-docs.test.ts`, `src/components/unity/rollout-c.test.tsx`) and main's CI had failed on them for five runs; this branch's third commit fixes them (isolation list, regenerated `CONTROL-FACTS.md`, two-step revoke in the test). After it merges, main's `build` job should be green again; if it is not, the failure is new.
@@ -32,7 +35,7 @@ Edit `docs/ecosystem/crosswalk.json` (a route's `status`, `screens`, `modules`, 
 - Do not hand-edit `COVERAGE-MATRIX.csv`, `registry-status.json` or the counts block of `INVENTORY.md`.
 - Do not mark a row `deployed` without a probe of the running app; `deployed.json` is where that fact goes.
 - Do not add a seat to the cart from a catalog match; the row is visibility only.
-- Do not apply migrations, change secrets, or deploy. Nothing of the kind was done this session.
+- Do not apply migrations, change secrets, or deploy. Nothing of the kind was done this session; `20261012010000_gradebook_release_emits_event.sql` is in the repository and awaits the normal approved apply.
 - Do not raise `app/perf-budgets.json` without the founder's word; a raise was rejected on #1473 (D-1475 §8).
 - Do not add a `*.check.sql` suite without adding its name to `supabase/check-suites.txt`; `check.sh` and the Vitest guard both refuse the disagreement.
 

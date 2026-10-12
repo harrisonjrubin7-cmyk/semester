@@ -1411,6 +1411,10 @@ describe('EVENTS.md and its schemas (generated)', () => {
       'supabase/migrations/20261009160000_registration_readiness_store.sql',
       // The expansion RPC preserves the same atomic minimized outbox emission while accepting rolling clients.
       'supabase/migrations/20261010140000_registration_readiness_timeout_contract.sql',
+      // Phase 3, domain A: a grade release emits gradebook.grades_released in its own transaction (D-1475 §13).
+      // The gradebook RPC is callable by instructors today, so this is the first producer a signed-in user reaches;
+      // nothing drains the outbox yet, so "none published" still holds.
+      'supabase/migrations/20261012010000_gradebook_release_emits_event.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);

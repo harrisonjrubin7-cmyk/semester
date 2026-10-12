@@ -444,7 +444,6 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
       'gradebook_file_regrade',
       'gradebook_moderate',
       'gradebook_queue_passback',
-      'gradebook_release',
       'gradebook_resolve_regrade',
       'gradebook_set_scheme',
     ],
@@ -470,7 +469,12 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * part of the exact register but are not retroactively counted in that
  * historical snapshot.
  */
-export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+/**
+ * `redefines`: the file replaces a function production already runs rather
+ * than adding one, so its row is held to this file (the winning body) but the
+ * function still counts among those applied on production.
+ */
+export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[]; redefines?: boolean }[] = [
   {
     file: '20261011000000_incident_evidence_custody.sql',
     functions: ['incident_evidence_custody', 'record_incident_evidence', 'record_incident_evidence_custody'],
@@ -494,6 +498,13 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261012000000_ops_projection_dashboard.sql',
     functions: ['ops_projection_dashboard'],
+  },
+  {
+    // Redefined, not added: the release now emits its outbox event in the
+    // same transaction, so the row is held to the file that last wrote it.
+    file: '20261012010000_gradebook_release_emits_event.sql',
+    functions: ['gradebook_release'],
+    redefines: true,
   },
   {
     file: '20261008223000_privileged_role_mfa.sql',

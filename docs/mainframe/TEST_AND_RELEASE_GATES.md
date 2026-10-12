@@ -84,3 +84,13 @@ Recorded from `docs/execute/31-phase-1-foundation-report.md`; the full-suite fig
 | `npx vitest run src/state` | 42 files, 556 passed |
 | CI run 38185868815 on `0d1c2c11` | Typecheck, Lint, Design-system gates, Test, Test in other timezones, Test in a different order, Build, Install PostgreSQL 17, Check the database policies (152 suites) all passed; Performance budgets failed (main's overrun, D-1475 §8) |
 | `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm test` | all exit 0; design-system 69 tests; suite: Test Files 1522 passed, 1 skipped (1523); Tests 24227 passed, 69 skipped (24296). A first run failed `export.test.ts`, `merge.test.ts`, `privacy.test.ts` on the new persisted field until the three tables named it. |
+
+## Phase 3 cross-role workflows, first pass (12 October 2026, #1475, fourth push)
+
+| Gate | Result |
+| --- | --- |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh gradebook help-requests student-accounts` | ✓ 148, ✓ 76, ✓ 70 checks on PostgreSQL 16, local; red run with the emit removed: "the release wrote one outbox event, and the replay none — expected 1, got 0" |
+| `npx vitest run src/lib/path-readiness.test.ts src/components/RegistrationReadiness` | 22 passed (1 new; red first) |
+| `REGISTERS=write` trust docs | 38 passed; 237 migration files |
+| `npm run ecosystem:build` | 12 passed |
+| `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm test` | all exit 0; design-system 69 tests; suite: Test Files 1522 passed, 2 skipped (1524); Tests 24232 passed, 76 skipped (24308). A first run found the new migration's version taken by main's `20261012000000_ops_projection_dashboard.sql` and the definer register, EVENTS producers and migration-order guards all red on it; renamed to `20261012010000`, modelled as a redefinition, registers regenerated. |
