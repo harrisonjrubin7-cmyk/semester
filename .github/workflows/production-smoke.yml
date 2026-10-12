@@ -3,6 +3,8 @@
 # The public check requires the configured Vercel origin. A separate Pages
 # check preserves monitoring of the deployed Pages bundle. The status history
 # remains explicitly Pages-scoped, so existing availability is not relabeled.
+# `SEMESTER_PUBLIC_APP_URL` is deliberately separate from the institutional
+# pair: configuring public availability must not activate an unready gateway.
 # The institutional check activates only when both production URLs
 # are configured; a half-configuration fails loudly instead of silently
 # claiming that a gateway nobody checked is healthy.
@@ -40,7 +42,7 @@ jobs:
         working-directory: app
         env:
           SEMESTER_PUBLIC_APP_TARGET: vercel
-          SEMESTER_PUBLIC_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}
+          SEMESTER_PUBLIC_APP_URL: ${{ vars.SEMESTER_PUBLIC_APP_URL }}
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
         run: node scripts/public-production-smoke.mjs
