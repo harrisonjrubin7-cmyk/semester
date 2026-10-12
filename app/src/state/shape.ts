@@ -2363,6 +2363,7 @@ export type Action =
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }
   | { type: 'setMyRules'; rules: MyRule[] }
+  | { type: 'deleteMyRule'; id: string }
   | { type: 'setAboutMe'; facts: Fact[] }
   | { type: 'setMyName'; name: string }
   | { type: 'setPronounce'; text: string }

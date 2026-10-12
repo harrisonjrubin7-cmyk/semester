@@ -206,8 +206,8 @@ describe('storage', () => {
     expect(await idbPort().all()).toEqual([]);
   });
 
-  it('erases quietly where there is nothing to open', async () => {
+  it('reports when browser storage cannot be opened', async () => {
     vi.stubGlobal('indexedDB', undefined);
-    await expect(clearOutbox()).resolves.toBeUndefined();
+    await expect(clearOutbox()).resolves.toBe(false);
   });
 });

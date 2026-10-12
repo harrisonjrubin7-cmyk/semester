@@ -17,8 +17,8 @@ Exit: merge review, complete browser journey tests, run DAST in a credentialed e
 
 1. Extend the protected source viewer from location-labeled chunks to exact bounding-box highlighting and correction actions. Owner-scoped source inspection, focus management, and protected original download are implemented.
 2. Review resolution and calendar editing are implemented with confirm/reject/correction decisions, optional notes, owner isolation, consequence preview, unspecified-time preservation, and one-step session undo. Durable cross-session undo remains a later enhancement.
-3. Add worker polling/cancellation and failure recovery.
-4. Complete Cards, Read, Quiz, and Doc interactions against real stored asset shapes.
+3. Worker polling/cancellation and failure recovery are implemented with an owner-scoped job feed, active-work polling, progress visibility, explicit cancellation, idempotent retry dispatch, and bounded redelivery of abandoned queued work.
+4. Cards, Read, Quiz, and Doc now use real stored asset shapes: cited card recall records progress, guide sections render as readable source-linked material, confirmed documents export through authenticated downloads, and self-graded cited quizzes persist an owned study session.
 5. Run browser accessibility, responsive, visual-regression, and end-to-end tests.
 
 Exit: a seeded user can complete `upload → review → calendar → study → source inspection → export` without CLI intervention.

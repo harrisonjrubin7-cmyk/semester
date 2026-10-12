@@ -63,6 +63,7 @@ How to read the **Status** column: it is the status the document gives itself, s
 | [`APM-RUNBOOK.md`](APM-RUNBOOK.md) | The target telemetry and alert set for a pilot, marked with what exists. | IN_PROGRESS |
 | [`DATA-SUBJECT-REQUEST-RUNBOOK.md`](DATA-SUBJECT-REQUEST-RUNBOOK.md) | How a data-subject request is received and answered. | Controlled draft; PARTIAL, not operationally accepted |
 | [`AI-INCIDENT-AND-KILL-SWITCH-RUNBOOK.md`](AI-INCIDENT-AND-KILL-SWITCH-RUNBOOK.md) | AI incidents and engaging the AI kill switch. | Controlled draft; limited drill evidence, target exercise required |
+| [INCIDENT-EVIDENCE-CUSTODY.md](../security/INCIDENT-EVIDENCE-CUSTODY.md) | Capture, transfer, digest verification and retention boundaries for incident evidence metadata. | Repository implementation only; provider, live migration and operated custody remain unverified |
 
 ## Evidence and assurance
 

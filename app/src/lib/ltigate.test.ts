@@ -4,9 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { passbackVerdict } from '../../../supabase/functions/_shared/ltigate';
 
 describe('reading the passback gate', () => {
-  it('lets through the two allowing words, and says which', () => {
+  it('lets through only the bound allowing word', () => {
     expect(passbackVerdict('allowed', null)).toEqual({ ok: true, bound: true });
-    expect(passbackVerdict('allowed-unbound', null)).toEqual({ ok: true, bound: false });
+    expect(passbackVerdict('allowed-unbound', null)).toEqual({
+      ok: false,
+      reason: 'passback-off',
+      detail: 'allowed-unbound',
+    });
   });
 
   it('refuses every other word and carries it as the detail', () => {
@@ -21,11 +25,11 @@ describe('reading the passback gate', () => {
     expect(passbackVerdict(null, null)).toMatchObject({ ok: false });
   });
 
-  it('keeps the old behaviour only while the function is not deployed yet', () => {
+  it('closes while the decision function is unavailable', () => {
     expect(passbackVerdict(null, { message: 'Could not find the function public.lti_passback_decision in the schema cache' }))
-      .toEqual({ ok: true, bound: false });
+      .toMatchObject({ ok: false, reason: 'gate-failed' });
     expect(passbackVerdict(null, { message: 'function public.lti_passback_decision(text, text) does not exist' }))
-      .toEqual({ ok: true, bound: false });
+      .toMatchObject({ ok: false, reason: 'gate-failed' });
   });
 
   it('closes on any other error', () => {
@@ -42,7 +46,7 @@ describe('reading the passback gate', () => {
     expect(words).toContain('allowed-unbound');
     for (const w of words) {
       const v = passbackVerdict(w, null);
-      if (w.startsWith('allowed')) expect(v.ok, w).toBe(true);
+      if (w === 'allowed') expect(v.ok, w).toBe(true);
       else expect(v, w).toEqual({ ok: false, reason: 'passback-off', detail: w });
     }
   });

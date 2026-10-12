@@ -1157,6 +1157,46 @@ describe('taking it back', () => {
     expect(back.undone).toBeNull();
   });
 
+  it('restores a dismissed suggestion without reverting other work', () => {
+    const wanted: State['wanted'] = {
+      year: 'third',
+      fields: ['public service'],
+      dismissed: ['older-programme'],
+    };
+    const s: State = { ...blank(), wanted };
+
+    const gone = reducer(s, { type: 'dismissProgramme', id: 'new-programme' });
+    expect(gone.wanted).toEqual({
+      ...wanted,
+      dismissed: ['older-programme', 'new-programme'],
+    });
+    expect(gone.undone?.label).toBe('Suggestion dismissed');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.wanted).toEqual(wanted);
+    expect(back.done['deadline-1']).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores one deleted reminder rule without reverting later work', () => {
+    const rules: State['myRules'] = [
+      { id: 'rule-one', watches: 'deadline', days: 3, hour: 9, courseId: '', on: true },
+      { id: 'rule-two', watches: 'exam', days: 1, hour: 8, courseId: 'econ', on: true },
+    ];
+    const s: State = { ...blank(), myRules: rules };
+
+    const gone = reducer(s, { type: 'deleteMyRule', id: 'rule-one' });
+    expect(gone.myRules).toEqual([rules[1]]);
+    expect(gone.undone?.label).toBe('Reminder rule deleted');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.myRules).toEqual(rules);
+    expect(back.done['deadline-1']).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
   it('offers nothing for an action that only edits', () => {
     // An edit leaves the thing there to edit back.
     const s = twoNotes();
