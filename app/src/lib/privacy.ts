@@ -144,7 +144,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
   {
     says: 'what you have recorded a term costing, and your housing, meal and map records',
     keys: [
-      'costs', 'charges', 'aid', 'payments', 'plans', 'balances', 'residences',
+      'costs', 'charges', 'aid', 'payments', 'plans', 'balances', 'residences', 'maintenance',
       'places', 'geocode',
     ],
   },

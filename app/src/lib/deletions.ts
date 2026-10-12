@@ -41,7 +41,7 @@ import { idOf } from './merge';
  */
 
 /** Lists with exactly one removal, an explicit delete. Courses included. */
-export const DELETABLE = ['courses', 'notes', 'tasks', 'appointments', 'documents', 'sheets', 'decks'] as const;
+export const DELETABLE = ['courses', 'notes', 'tasks', 'appointments', 'documents', 'sheets', 'decks', 'maintenance'] as const;
 export type Deletable = (typeof DELETABLE)[number];
 
 /** A removal of at least this many, and this share of what was agreed, is not a deletion anybody chose. */
