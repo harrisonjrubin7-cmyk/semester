@@ -331,6 +331,40 @@ export const REVIEWS: readonly Review[] = [
     monitoring: 'The time an order was placed is on its record; no cut by student characteristic exists or is collected.',
     findings: [],
   },
+  {
+    id: 'lib/core/provenance.ts#rank',
+    surface: 'Which copy of a fact is shown when sources disagree (resolve), and the ladder that orders them',
+    affects: 'Every student and staff member whose record has more than one source: a date, a grade, a room, a fee.',
+    inputs: ['the origin label of each copy (official, connected, made, personal, sample, stale, ai, estimated, external)', 'how old each synced copy is', 'whether the student entered the copy themselves'],
+    selfDeclared: ['whether the student entered the copy themselves'],
+    benefit: 'A verified source beats a guess, so the shown fact is the one most likely to be right; the UI says when sources disagree instead of hiding it.',
+    risks: 'A school that is not connected has its records shown as personal or stale, so an unconnected institution’s records lose to a connected one. A student’s own correction ranks below an institution feed, so the feed wins until the feed itself goes stale.',
+    access: OWN_SCREEN,
+    control: 'The conflict is shown with each source and its age; a student can correct their own copy, and staff can correct the feed.',
+    explains: 'resolve returns the conflict flag so the screen can say that two sources disagree; ageLabel shows how old the shown copy is.',
+    monitoring: NO_DEMOGRAPHICS,
+    findings: [
+      { id: 'P-1', text: 'Drafted in code by Claude Code. The named reviewer has not read it, so this entry is not yet a review. The reviewer must read it, change what is wrong, and remove this finding before the review counts.', owner: 'Harrison Rubin, the named reviewer' },
+      { id: 'P-2', text: 'Ranking by origin means the school’s integration status decides which copy of a fact a student sees. That is a tilt toward students at better-integrated institutions, and the surface should say so when it matters.', owner: 'Product' },
+    ],
+  },
+  {
+    id: 'lib/core/nextaction.ts#order',
+    surface: 'The order of a student’s next actions on Today and Runway',
+    affects: 'Every student with open assignments, holds, bills or other actions.',
+    inputs: ['the due date (or none)', 'the grade weight of the item', 'whether it blocks something else', 'the origin label of the item', 'the student’s own effort estimate', 'whether the student has snoozed or completed it', 'the item id, for a stable tie-break'],
+    selfDeclared: ['the student’s own effort estimate', 'whether the student has snoozed or completed it'],
+    benefit: 'The next step is the one with the most at stake now, shown first, with the reasons for it.',
+    risks: 'An item with no due date is treated as fourteen days away, so a student who does not enter dates sees less urgency than one who does. Items from AI or estimated sources lose up to 40% of their score, so a student whose school is not connected gets a lower confidence on every item.',
+    access: OWN_SCREEN,
+    control: 'Snooze, complete, or correct the date; the reasons for the score are listed under the item.',
+    explains: 'score returns reasons (overdue, due within 24 hours, grade weight, blocks) and the list is shown with them.',
+    monitoring: NO_DEMOGRAPHICS,
+    findings: [
+      { id: 'N-1', text: 'Drafted in code by Claude Code. The named reviewer has not read it, so this entry is not yet a review. The reviewer must read it, change what is wrong, and remove this finding before the review counts.', owner: 'Harrison Rubin, the named reviewer' },
+      { id: 'N-2', text: 'An undated item scores as if it were fourteen days away. A student who enters no dates gets a list that understates urgency, and nothing tells them the list is built on missing dates.', owner: 'Product' },
+    ],
+  },
 ];
 
 /** Surfaces that match the ranking names but rank no person or opportunity. */
