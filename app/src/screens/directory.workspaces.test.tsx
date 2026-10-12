@@ -23,7 +23,13 @@ vi.mock('../lib/cloud', () => ({
 }));
 
 const directory = await import('./Directory');
-const WorkspaceEntry = (directory as typeof directory & { WorkspaceEntry?: React.ComponentType }).WorkspaceEntry;
+type WorkspaceEntryProps = {
+  placement?: 'directory' | 'navigation';
+  onNavigate?: () => void;
+};
+const WorkspaceEntry = (
+  directory as typeof directory & { WorkspaceEntry?: React.ComponentType<WorkspaceEntryProps> }
+).WorkspaceEntry;
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 let host: HTMLDivElement;
@@ -66,10 +72,34 @@ describe('connected workspace visibility', () => {
 
     const operations = [...host.querySelectorAll('button')].find((button) => button.textContent?.includes('Semester Operations'))!;
     const listings = [...host.querySelectorAll('button')].find((button) => button.textContent?.includes('External listings'))!;
+    expect(listings.textContent).toContain('external listing drafts');
     act(() => operations.click());
     expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'console' });
     act(() => listings.click());
     expect(mock.dispatch).toHaveBeenCalledWith({ type: 'openWorkspace', screen: 'university', view: 'drafts' });
+  });
+
+  it('renders the same allowlisted destinations as compact persistent navigation', async () => {
+    if (!WorkspaceEntry) return;
+    mock.rpc.mockResolvedValue({
+      data: [{ capability: 'opportunity:moderate', scope_kind: 'school', scope_id: 'school-a' }],
+      error: null,
+    });
+    const onNavigate = vi.fn();
+
+    await act(async () => root.render(<WorkspaceEntry placement="navigation" onNavigate={onNavigate} />));
+
+    const group = host.querySelector('[role="group"][aria-label="Workspaces"]');
+    expect(group).not.toBeNull();
+    expect(buttons()).toContain('Teaching');
+    expect(buttons()).toContain('University services');
+    expect(buttons()).toContain('External listings');
+    expect(buttons()).not.toMatch(/Company|Investor|Developer/);
+
+    const teaching = [...group!.querySelectorAll('button')].find((button) => button.textContent?.includes('Teaching'))!;
+    act(() => teaching.click());
+    expect(onNavigate).toHaveBeenCalledOnce();
+    expect(mock.dispatch).toHaveBeenCalledWith({ type: 'openWorkspace', screen: 'account', view: 'course-studio' });
   });
 
   it('does not broaden a school-scoped console grant or another school’s listing grant', async () => {
