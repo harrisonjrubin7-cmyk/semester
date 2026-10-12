@@ -130,4 +130,30 @@ begin
   raise notice 'ok  only the service role can call add_tokens';
 end $$;
 
+-- ── who may touch the table ──────────────────────────────────────────────
+-- Supabase's default privileges hand `anon` every privilege on a new table
+-- in `public`; 20261005200000 revoked them for the tables of its day and
+-- asks each later table's migration to do the same. A reapply pass runs
+-- that revoke again over this table, so a grant left here is also a
+-- schema that differs between the first pass and the second.
+do $$
+declare p text;
+begin
+  foreach p in array array['select', 'insert', 'update', 'delete'] loop
+    if has_table_privilege('anon', 'public.usage_daily', p) then
+      raise exception 'FAILED: a visitor holds % on usage_daily', p;
+    end if;
+    if p <> 'select' and has_table_privilege('authenticated', 'public.usage_daily', p) then
+      raise exception 'FAILED: a signed-in account holds % on usage_daily', p;
+    end if;
+    if not has_table_privilege('service_role', 'public.usage_daily', p) then
+      raise exception 'FAILED: the service role lacks % on usage_daily', p;
+    end if;
+  end loop;
+  if not has_table_privilege('authenticated', 'public.usage_daily', 'select') then
+    raise exception 'FAILED: a signed-in account cannot read usage_daily';
+  end if;
+  raise notice 'ok  anon holds nothing on usage_daily; authenticated reads; the service role writes';
+end $$;
+
 rollback;

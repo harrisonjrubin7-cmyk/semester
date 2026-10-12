@@ -54,6 +54,13 @@ create policy "usage_daily is readable by its owner"
   on public.usage_daily for select
   using ((select auth.uid()) = user_id);
 
+-- Supabase's default privileges hand `anon` every privilege on a new table
+-- in `public`; 20261005200000 revoked them for the tables of its day and
+-- asks each later migration to say so for its own. Without this line the
+-- first pass leaves a visitor holding select, insert, update and delete
+-- here, and the reapply pass, which runs that revoke again, takes them
+-- away: two schemas from one migration set.
+revoke all on table public.usage_daily from public, anon, authenticated;
 grant select on public.usage_daily to authenticated;
 grant all on public.usage_daily to service_role;
 
