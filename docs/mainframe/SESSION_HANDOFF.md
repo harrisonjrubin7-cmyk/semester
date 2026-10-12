@@ -1,8 +1,10 @@
 # Session handoff
 
-**Date** 2026-10-11. **Branch** `claude/epic-galileo-aq26dg`, rebased onto `origin/main` at `ccf2d45f` (#1470). **Pull request** harrisonjrubin7-cmyk/semester#1475, draft. **Decision** [`D-1475`](../decisions/D-1475.md).
+**Date** 2026-10-12. **Branch** `claude/epic-galileo-aq26dg`, rebased onto `origin/main` at `ccf2d45f` (#1470). **Pull request** harrisonjrubin7-cmyk/semester#1475, draft. **Decision** [`D-1475`](../decisions/D-1475.md).
 
 ## Objective that was completed
+
+**Sixth pass (Phase 5 start, same branch).** `docs/execute/35-phase-5-enable-and-replace-report.md` and D-1475 §17–18. Three audits placed Phase 5's 78 clauses (`P5-R1`–`P5-N30`): 15 tested, 48 partial, 2 untested, 13 absent; the exit gate is institutional per domain and no domain can meet it (no eight-stage ladder exists; `DOMAIN-REPLACEMENT-REGISTER.md` still says 0 of 14). Built: `20261012060000_migration_approval_distinct_areas.sql` (one person cannot approve two areas of one cutover) and `20261012070000_student_account_provider_ref_once.sql` (one provider reference once per school and kind on the student ledger), each watched red first and neither applied to production; the Edge copy of the access saga policy regenerated. Next unblocked gap, needing a product decision first: couple Core to a completed cutover (`P5-R3`). Owner-only list: `EXECUTION_BACKLOG.md` 0d.
 
 **Fifth pass (Phase 4 start, same branch).** `docs/execute/34-phase-4-institutional-operation-report.md` and D-1475 §15–16. Main merged a fourth time (`c47a32db`, 104 commits, clean); the merged head failed two tests (CONTROL-FACTS migration count; a duplicated `MOCKS_MODULES` entry main carried) and both are repaired. Built: `20261012050000_provisioning_authority_hardening.sql` (not applied to production): group → role mappings stamped and kept in an immutable history; integration approval revocable with the approver's capability and a two-person rule on scopes; deprovisioning ends the person's sessions. Register rows `P4-I1`–`P4-L7`: 3 tested, 22 partial, 1 untested, 5 absent. The restore rehearsal ran on the merged head and is filed in `docs/evidence/restore/2026-10-12-logical-rehearsal.md` as a local PG16 run, not staging. Phase 4's exit gate (G01/O01/O02 `Authorized`) is a founder decision on IDs nothing defines; the owner-only list is `EXECUTION_BACKLOG.md` 0c.
 

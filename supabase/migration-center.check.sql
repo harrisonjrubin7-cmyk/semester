@@ -277,6 +277,8 @@ begin
   perform pg_temp.says('the creator cannot approve their own migration, whatever they hold',
     pg_temp.decide(lead, m, 'data_owner', 'approved'), 'does not approve its cutover');
   perform pg_temp.runs_clean('the registrar approves as data owner', pg_temp.decide(registrar, m, 'data_owner', 'approved'));
+  perform pg_temp.says('the same person cannot approve the second area too: two areas need two people',
+    pg_temp.decide(registrar, m, 'it', 'approved'), 'does not approve two areas');
   perform pg_temp.says('one of two areas is not enough', pg_temp.move(lead, m, 'archive'), 'approvals');
   perform pg_temp.runs_clean('the administrator rejects for IT', pg_temp.decide(admin, m, 'it', 'rejected'));
   perform pg_temp.says('a rejection is named', pg_temp.move(lead, m, 'archive'), 'rejected');
