@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act } from 'react';
+import { act, useLayoutEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as capabilities from './capabilities';
@@ -21,9 +21,19 @@ let host: HTMLDivElement;
 let root: Root;
 let latest: Discovery | null;
 
-function Probe({ accountId, load }: { accountId: string; load: (accountId: string) => Promise<Grant[]> }) {
-  latest = hook!(accountId, load);
-  return <span>{latest.status}</span>;
+function Probe({
+  accountId,
+  load,
+  onCommit,
+}: {
+  accountId: string;
+  load: (accountId: string) => Promise<Grant[]>;
+  onCommit?: (discovery: Discovery) => void;
+}) {
+  const discovery = hook!(accountId, load);
+  latest = discovery;
+  useLayoutEffect(() => { onCommit?.(discovery); }, [discovery, onCommit]);
+  return <span>{discovery.status}</span>;
 }
 
 function deferred<T>() {
@@ -73,6 +83,44 @@ describe('account-keyed capability discovery', () => {
       status: 'ready',
       grants: [{ capability: 'opportunity:publish', scopeKind: 'school', scopeId: 'school-b' }],
     });
+  });
+
+  it('invalidates ready account A grants in account B first commit', async () => {
+    if (!hook) return;
+    const accountB = deferred<Grant[]>();
+    const load = vi.fn((accountId: string) => accountId === 'account-a' ? Promise.resolve([
+      { capability: 'console:operate', scopeKind: 'platform', scopeId: '' },
+    ]) : accountB.promise);
+    const commits: Discovery[] = [];
+    const record = (discovery: Discovery) => commits.push(discovery);
+
+    await act(async () => root.render(<Probe accountId="account-a" load={load} onCommit={record} />));
+    expect(latest).toMatchObject({ status: 'ready', grants: [{ capability: 'console:operate' }] });
+    commits.length = 0;
+
+    await act(async () => root.render(<Probe accountId="account-b" load={load} onCommit={record} />));
+    expect(commits[0]).toMatchObject({ status: 'loading', grants: [], error: '' });
+
+    accountB.resolve([]);
+    await act(async () => {});
+    expect(latest).toMatchObject({ status: 'ready', grants: [] });
+  });
+
+  it('does not let account A failure replace account B loading state', async () => {
+    if (!hook) return;
+    const a = deferred<Grant[]>();
+    const b = deferred<Grant[]>();
+    const load = vi.fn((accountId: string) => accountId === 'account-a' ? a.promise : b.promise);
+
+    await act(async () => root.render(<Probe accountId="account-a" load={load} />));
+    await act(async () => root.render(<Probe accountId="account-b" load={load} />));
+    a.reject(new Error('account A is offline'));
+    await act(async () => {});
+    expect(latest).toMatchObject({ status: 'loading', grants: [], error: '' });
+
+    b.resolve([]);
+    await act(async () => {});
+    expect(latest).toMatchObject({ status: 'ready', grants: [], error: '' });
   });
 
   it('keeps failure distinct from no grants and retries explicitly', async () => {
