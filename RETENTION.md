@@ -215,6 +215,7 @@ behind and a client that believes it succeeded.
 | `course_source_resolution_choices` | with its `course_source_resolution_batches` row | append-only stable conflict keys and keep-current / use-imported choices. Cascades with the resolution batch; no compared values, quotations or source content are stored |
 | `course_source_resolution_applications` | rollback copy: **30 days** from apply; evidence row: with the resolution batch or owning account | private, service-only recovery state for one atomic re-import. The exact prior `courses.data` document is cleared immediately after rollback or by the manual hold-aware `private.prune_course_source_resolution_recovery()` operation after the deadline. Account, tenant and platform holds preserve the copy. No schedule, deployment or production run is claimed. Account deletion cascades the evidence row |
 | `usage` | account deletion | which screens have been opened, and the day each last was |
+| `usage_daily` | account deletion | tokens the shared key spent for the account on each UTC day; written only while TOKEN_QUOTA_DAILY is set on the claude Edge Function, which by default it is not |
 | `notes`, `tasks`, `appointments`, `sittings` | account deletion | soft-deleted rows leave a tombstone — see above |
 | `profiles`, `enrollments` | account deletion | |
 | `messages`, `message_reactions` | account deletion | |

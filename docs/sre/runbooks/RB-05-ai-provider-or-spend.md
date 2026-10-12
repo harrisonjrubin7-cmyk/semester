@@ -19,7 +19,7 @@ AI features refuse with a plain sentence. Every deterministic feature (schedule,
 ## Mitigate
 
 1. To stop spend now, engage `kill.ai_generation` (the `claude` function answers 503 with the stated sentence; an unreadable switch table counts as engaged). This is the control; the alert only tells you.
-2. Lower `MONTHLY_CALL_LIMIT` if one cohort is the whole bill.
+2. Lower `MONTHLY_CALL_LIMIT` if one cohort is the whole bill. For a burst inside one day, set `TOKEN_QUOTA_DAILY` (tokens per account per UTC day; unset is no quota, which is the default) — it takes effect on the next request and needs no deploy.
 3. If the shared key is compromised, this is RB-13 first and this runbook second.
 
 ## Escalate

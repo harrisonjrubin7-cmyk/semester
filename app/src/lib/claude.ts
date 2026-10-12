@@ -135,6 +135,14 @@ export const NOT_ACTIVATED_CODE = 'shared_provider_not_activated';
 export const ALLOWANCE_MARK = 'shared AI allowance';
 
 /**
+ * The phrase `functions/_shared/tokenquota.ts` puts in the refusal for a spent
+ * daily token quota — a quota that is off by default and only ever set by an
+ * operator — held in step by `tokenquota.test.ts`. Also a 429 that waiting a
+ * moment does not renew.
+ */
+export const TOKEN_QUOTA_MARK = "today's shared AI token quota";
+
+/**
  * Turn a failed call into a sentence that names the fix.
  *
  * The failure worth spelling out is the shared route against a project where
@@ -162,8 +170,8 @@ export function explainAskError(
     // are not all recorded. The function's own sentence already says what to
     // do, and "no key" or "not an API" would both be wrong here.
     if (status === 501 && detail.includes(NOT_ACTIVATED_MARK)) return detail;
-    // Spent for the month. Its own sentence says what renews it and what to do.
-    if (status === 429 && detail.includes(ALLOWANCE_MARK)) return detail;
+    // Spent for the month, or for the day. Each sentence says what renews it and what to do.
+    if (status === 429 && (detail.includes(ALLOWANCE_MARK) || detail.includes(TOKEN_QUOTA_MARK))) return detail;
     if (status === 404 || /function was not found|not_found/i.test(detail)) {
       return (
         'The shared key is not switched on for this deployment yet — the `claude` ' +
