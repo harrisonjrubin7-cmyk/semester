@@ -129,7 +129,7 @@ create trigger keep_privileged_access_review_investigation_state_immutable
 create or replace function private.privileged_access_review_grant_state_sha256(
   want_subject uuid, want_role text, want_scope_kind text, want_scope_id text,
   want_provenance text, want_granted_at timestamptz, want_expires_at timestamptz,
-  want_revoked_at timestamptz, want_capabilities text[]
+  want_revoked_at timestamptz, want_capabilities text[], want_live boolean
 ) returns text language sql immutable set search_path = '' as $$
   select private.role_audit_sha256(
     case when want_subject is null then 'missing'
@@ -137,10 +137,10 @@ create or replace function private.privileged_access_review_grant_state_sha256(
         want_provenance, extract(epoch from want_granted_at)::text,
         coalesce(extract(epoch from want_expires_at)::text, ''),
         coalesce(extract(epoch from want_revoked_at)::text, ''),
-        array_to_string(want_capabilities, ',')) end);
+        array_to_string(want_capabilities, ','), want_live::text) end);
 $$;
 revoke all on function private.privileged_access_review_grant_state_sha256(
-  uuid, text, text, text, text, timestamptz, timestamptz, timestamptz, text[]
+  uuid, text, text, text, text, timestamptz, timestamptz, timestamptz, text[], boolean
 ) from public, anon, authenticated, service_role;
 
 -- Preserve the original privileged_access_review(text) return contract. The
@@ -259,6 +259,7 @@ begin
     and grant_row.scope_kind = item.scope_kind and grant_row.scope_id = item.scope_id
     and grant_row.provenance = item.provenance and grant_row.granted_at = item.granted_at
     and grant_row.expires_at is not distinct from item.expires_at and grant_row.revoked_at is null
+    and (grant_row.expires_at is null or grant_row.expires_at > now())
     and not item.capabilities_backfilled and current_capabilities = item.capabilities;
   if not grant_current and want_decision <> 'investigate' then
     raise exception 'A changed grant can only be closed as investigate.' using errcode = '40001';
@@ -296,6 +297,9 @@ begin
     raise exception 'The item has no investigation to resolve.' using errcode = '22023';
   end if;
   select r.* into review from private.privileged_access_review r where r.id = item.review_id;
+  if exists (select 1 from private.privileged_access_review_signoff s where s.review_id = review.id) then
+    raise exception 'The review is already signed.' using errcode = '23505';
+  end if;
   if actor_hash in (item.subject_sha256, decision.decided_by_sha256) then
     raise exception 'A distinct operator must resolve the investigation.' using errcode = '42501';
   end if;
@@ -317,7 +321,16 @@ begin
     case when grant_found then grant_row.granted_at else null end,
     case when grant_found then grant_row.expires_at else null end,
     case when grant_found then grant_row.revoked_at else null end,
-    current_capabilities);
+    current_capabilities,
+    grant_found and grant_row.revoked_at is null
+      and (grant_row.expires_at is null or grant_row.expires_at > now()));
+  if exists (
+    select 1 from private.privileged_access_review_investigation_state_resolution x
+     where x.decision_id = decision.id and x.observed_state_sha256 = observed_state
+       and x.resolution_code <> want_resolution_code
+  ) then
+    raise exception 'That observed state already has a different investigation resolution.' using errcode = '23505';
+  end if;
   insert into private.privileged_access_review_investigation_resolution
     (decision_id, resolution_code, resolved_by_sha256)
   values (decision.id, want_resolution_code, actor_hash)
@@ -368,11 +381,18 @@ begin
     and grant_row.scope_kind = item.scope_kind and grant_row.scope_id = item.scope_id
     and grant_row.provenance = item.provenance and grant_row.granted_at = item.granted_at
     and grant_row.expires_at is not distinct from item.expires_at and grant_row.revoked_at is null
+    and (grant_row.expires_at is null or grant_row.expires_at > now())
     and not item.capabilities_backfilled and current_capabilities = item.capabilities;
   if (decision.decision = 'retain' and grant_current)
      or (decision.decision = 'revoke' and exists (
        select 1 from private.privileged_access_review_remediation x where x.decision_id = decision.id
-     ) and (not grant_found or grant_row.revoked_at is not null)) then
+     ) and (not grant_found or (
+       grant_row.role = item.role
+       and private.role_audit_sha256(grant_row.subject::text) = item.subject_sha256
+       and grant_row.scope_kind = item.scope_kind and grant_row.scope_id = item.scope_id
+       and grant_row.provenance = item.provenance and grant_row.granted_at = item.granted_at
+       and grant_row.expires_at is not distinct from item.expires_at
+       and grant_row.revoked_at is not null))) then
     raise exception 'The decided grant has not changed since the snapshot.' using errcode = '22023';
   end if;
   observed_state := private.privileged_access_review_grant_state_sha256(
@@ -384,7 +404,9 @@ begin
     case when grant_found then grant_row.granted_at else null end,
     case when grant_found then grant_row.expires_at else null end,
     case when grant_found then grant_row.revoked_at else null end,
-    current_capabilities);
+    current_capabilities,
+    grant_found and grant_row.revoked_at is null
+      and (grant_row.expires_at is null or grant_row.expires_at > now()));
   insert into private.privileged_access_review_post_decision_resolution
     (decision_id, resolution_code, observed_state_sha256, resolved_by_sha256)
   values (decision.id, 'superseded-by-approved-change', observed_state, actor_hash)
@@ -439,6 +461,19 @@ begin
     left join private.privileged_access_review_decision d on d.item_id = i.id
    where i.review_id = review.id and d.id is not null;
   if decided_n <> review.item_count then raise exception 'Every snapshot item needs a decision.' using errcode = '23514'; end if;
+  if exists (
+    select 1 from private.privileged_access_review_decision d
+    join private.privileged_access_review_item i on i.id = d.item_id
+    where i.review_id = review.id and not (
+      (d.decision = 'retain' and d.reason_code in ('still-required', 'least-privilege-confirmed'))
+      or (d.decision = 'revoke' and d.reason_code in (
+        'access-ended', 'unauthorized', 'inactive', 'scope-changed', 'mfa-not-current'))
+      or (d.decision = 'investigate' and d.reason_code in (
+        'mfa-not-current', 'ownership-unknown', 'conflict-review', 'activity-review'))
+    )
+  ) then
+    raise exception 'A legacy decision has an incompatible reason and cannot be signed.' using errcode = '23514';
+  end if;
   if exists (select 1 from private.privileged_access_review_decision d
       join private.privileged_access_review_item i on i.id = d.item_id
       left join public.role_grants g on g.id = i.grant_id
@@ -450,7 +485,9 @@ begin
                g.subject, g.role, g.scope_kind, g.scope_id, g.provenance,
                g.granted_at, g.expires_at, g.revoked_at,
                array(select distinct rc.capability from public.role_capabilities rc
-                 where rc.role = g.role order by rc.capability)))) then
+                 where rc.role = g.role order by rc.capability),
+               g.id is not null and g.revoked_at is null
+                 and (g.expires_at is null or g.expires_at > now())))) then
     raise exception 'Every investigation needs an independent resolution of its current state before signoff.' using errcode = '23514';
   end if;
   if exists (select 1 from private.privileged_access_review_decision d
@@ -462,6 +499,7 @@ begin
           or g.scope_id <> i.scope_id or g.provenance <> i.provenance
           or g.granted_at <> i.granted_at or g.expires_at is distinct from i.expires_at
           or g.revoked_at is not null
+          or (g.expires_at is not null and g.expires_at <= now())
           or i.capabilities_backfilled
           or array(select distinct rc.capability from public.role_capabilities rc
                where rc.role = i.role order by rc.capability) <> i.capabilities)
@@ -471,7 +509,9 @@ begin
             g.subject, g.role, g.scope_kind, g.scope_id, g.provenance,
             g.granted_at, g.expires_at, g.revoked_at,
             array(select distinct rc.capability from public.role_capabilities rc
-              where rc.role = g.role order by rc.capability)))) then
+              where rc.role = g.role order by rc.capability),
+            g.id is not null and g.revoked_at is null
+              and (g.expires_at is null or g.expires_at > now())))) then
     raise exception 'Every changed retain decision needs an independent post-decision resolution before signoff.' using errcode = '23514';
   end if;
   if exists (select 1 from private.privileged_access_review_decision d
@@ -492,12 +532,49 @@ begin
                  g.subject, g.role, g.scope_kind, g.scope_id, g.provenance,
                  g.granted_at, g.expires_at, g.revoked_at,
                  array(select distinct rc.capability from public.role_capabilities rc
-                   where rc.role = g.role order by rc.capability))))) then
+                   where rc.role = g.role order by rc.capability),
+                 g.id is not null and g.revoked_at is null
+                   and (g.expires_at is null or g.expires_at > now()))))) then
     raise exception 'Every revoke decision must have an applied remediation and remain revoked at signoff.' using errcode = '23514';
   end if;
   insert into private.privileged_access_review_signoff
     (review_id, signed_by_sha256, retained, revoked, investigating)
   values (review.id, actor_hash, keep_n, revoke_n, investigate_n);
+end $$;
+
+-- Keep the original RPC's return shape for existing clients, but align its
+-- resolution fields with the latest immutable state-bound investigation row.
+create or replace function public.privileged_access_review(want_review text)
+returns table (review_ref text, period_start date, period_end date, next_due date,
+  snapshot_at timestamptz, started_by_sha256 text, item_ref text, subject_sha256 text, role text, scope_kind text,
+  scope_id text, provenance text, granted_by_sha256 text, granted_at timestamptz, expires_at timestamptz,
+  decision text, reason_code text, decided_by_sha256 text, remediation_applied boolean, decided_at timestamptz,
+  investigation_resolution text, resolved_by_sha256 text, resolved_at timestamptz,
+  signed_by_sha256 text, signed_at timestamptz)
+language plpgsql volatile security definer set search_path = '' as $$
+declare me uuid := auth.uid(); review private.privileged_access_review;
+begin
+  if me is null or not private.has_capability('access_review:manage', 'platform', '') then
+    raise exception 'access_review:manage at platform scope is required.' using errcode = '42501';
+  end if;
+  perform private.assert_fresh_mfa();
+  select r.* into review from private.privileged_access_review r where r.public_id = want_review;
+  if not found then raise exception 'No such access review.' using errcode = '22023'; end if;
+  perform private.console_audit_write(me, 'authenticated', null, 'access_review.read', review.public_id,
+    jsonb_build_object('item_count', review.item_count), 'access-review-read:' || review.public_id);
+  return query select review.public_id, review.period_start, review.period_end, review.next_due,
+    review.snapshot_at, review.started_by_sha256, i.public_id, i.subject_sha256, i.role, i.scope_kind, i.scope_id,
+    i.provenance, i.granted_by_sha256, i.granted_at, i.expires_at, d.decision, d.reason_code,
+    d.decided_by_sha256, d.remediation_applied, d.decided_at, x.resolution_code,
+    x.resolved_by_sha256, x.resolved_at, s.signed_by_sha256, s.signed_at
+  from private.privileged_access_review_item i
+  left join private.privileged_access_review_decision d on d.item_id = i.id
+  left join lateral (
+    select x.* from private.privileged_access_review_investigation_state_resolution x
+     where x.decision_id = d.id order by x.resolved_at desc, x.id desc limit 1
+  ) x on true
+  left join private.privileged_access_review_signoff s on s.review_id = i.review_id
+  where i.review_id = review.id order by i.role, i.scope_kind, i.scope_id, i.public_id;
 end $$;
 
 create or replace function public.privileged_access_review_evidence(want_review text)

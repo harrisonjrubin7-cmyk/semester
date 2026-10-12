@@ -478,12 +478,8 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
     functions: ['incident_evidence_custody', 'record_incident_evidence', 'record_incident_evidence_custody'],
   },
   {
-    file: '20261011160000_privileged_access_review.sql',
-    functions: ['privileged_access_review'],
-  },
-  {
     file: '20261011213000_privileged_access_review_hardening.sql',
-    functions: ['begin_privileged_access_review', 'complete_privileged_access_review', 'decide_privileged_access_review_item', 'privileged_access_review_evidence', 'resolve_privileged_access_review_investigation', 'resolve_privileged_access_review_post_decision_change'],
+    functions: ['begin_privileged_access_review', 'complete_privileged_access_review', 'decide_privileged_access_review_item', 'privileged_access_review', 'privileged_access_review_evidence', 'resolve_privileged_access_review_investigation', 'resolve_privileged_access_review_post_decision_change'],
   },
   {
     file: '20261009230000_guardian_projection_foundation.sql',

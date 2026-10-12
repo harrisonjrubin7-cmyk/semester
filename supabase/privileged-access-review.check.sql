@@ -70,6 +70,16 @@ begin
       from information_schema.columns
      where table_schema = 'private' and table_name = 'privileged_access_review_decision'
        and column_name = 'remediation_applied'), false));
+  perform pg_temp.must('grant-state fingerprints distinguish live from expired state',
+    private.privileged_access_review_grant_state_sha256(
+      starter, 'trust_officer', 'platform', '', 'platform', now(), null, null,
+      array['access_review:manage'], true) <>
+    private.privileged_access_review_grant_state_sha256(
+      starter, 'trust_officer', 'platform', '', 'platform', now(), null, null,
+      array['access_review:manage'], false));
+  perform pg_temp.must('signoff rejects incompatible legacy decision semantics', position(
+    'legacy decision has an incompatible reason' in lower(pg_get_functiondef(
+      'public.complete_privileged_access_review(text)'::regprocedure))) > 0);
 
   perform pg_temp.become(starter);
   review_ref := public.begin_privileged_access_review('access-review-2026q4', current_date - 90, current_date, current_date + 90);
@@ -145,6 +155,11 @@ begin
   perform pg_temp.become(starter);
   perform public.resolve_privileged_access_review_post_decision_change(target_item);
   reset role;
+  update public.role_grants set granted_at = clock_timestamp(), revoked_at = clock_timestamp()
+   where subject = target and role = 'university_admin';
+  perform pg_temp.become(starter);
+  perform public.resolve_privileged_access_review_post_decision_change(target_item);
+  reset role;
   delete from auth.users where id = deleted_target;
   perform pg_temp.must('account deletion may remove an already-remediated grant',
     not exists (select 1 from public.role_grants where subject = deleted_target and role = 'moderator'));
@@ -154,13 +169,20 @@ begin
   perform public.resolve_privileged_access_review_investigation(investigate_item, 'remediated');
   perform public.resolve_privileged_access_review_investigation(steward_item, 'remediated');
   reset role;
+  perform pg_temp.must('the same observed state refuses a conflicting investigation resolution',
+    pg_temp.refused(starter, format(
+      'select public.resolve_privileged_access_review_investigation(%L,%L)',
+      investigate_item, 'false-positive')));
   insert into public.role_capabilities (role, capability) values ('data_steward', 'audit:read');
   perform pg_temp.must('an investigation resolution is invalidated by capability drift on the current role',
     pg_temp.refused(signer, format('select public.complete_privileged_access_review(%L)', review_ref)));
   perform pg_temp.become(starter);
-  perform public.resolve_privileged_access_review_investigation(investigate_item, 'remediated');
+  perform public.resolve_privileged_access_review_investigation(investigate_item, 'risk-accepted');
   perform public.resolve_privileged_access_review_investigation(steward_item, 'remediated');
   reset role;
+  perform pg_temp.must('the legacy reader reports the latest state-bound investigation resolution',
+    (select investigation_resolution = 'risk-accepted'
+       from public.privileged_access_review(review_ref) where item_ref = investigate_item));
   perform pg_temp.must('a starter cannot sign the review', pg_temp.refused(starter, format(
     'select public.complete_privileged_access_review(%L)', review_ref)));
   perform pg_temp.must('an item reviewer cannot sign the review', pg_temp.refused(reviewer, format(
@@ -190,6 +212,10 @@ begin
     into n, retained_n, revoked_n, investigating_n, remediated_n, unsigned_n
     from public.privileged_access_review_evidence(review_ref);
   reset role;
+  perform pg_temp.must('signed reviews reject later investigation resolution writes',
+    pg_temp.refused(starter, format(
+      'select public.resolve_privileged_access_review_investigation(%L,%L)',
+      investigate_item, 'risk-accepted')));
   perform pg_temp.must('the signed ledger returns every snapshot item', n = 7);
   perform pg_temp.must('the signed ledger preserves every decision and the signoff timestamp',
     retained_n = 3 and revoked_n = 2 and investigating_n = 2
