@@ -1,62 +1,286 @@
 ---
 stale-refs:
   - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
-    changed_at: "2026-10-12T14:41:20"
+    changed_at: "2026-10-12T14:56:20"
     sections_changed: []
     summary: externally modified
   - source: docs/INTEGRATION-CONTROL-PLANE.md
-    changed_at: "2026-10-12T14:41:21"
+    changed_at: "2026-10-12T14:56:21"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_COMPANY_OPERATING_SYSTEM.md
-    changed_at: "2026-10-12T14:41:24"
+    changed_at: "2026-10-12T14:56:23"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_DATA_AUTHORITY_MATRIX.md
-    changed_at: "2026-10-12T14:41:24"
+    changed_at: "2026-10-12T14:56:23"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/COMPANY_CONSOLE_CATALOG.md
-    changed_at: "2026-10-12T14:40:24"
+    changed_at: "2026-10-12T14:55:07"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_AUDIT_AND_EVIDENCE.md
-    changed_at: "2026-10-12T14:40:24"
+    changed_at: "2026-10-12T14:55:07"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_RELEASE_GATES.md
-    changed_at: "2026-10-12T14:41:25"
+    changed_at: "2026-10-12T14:56:24"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/SEMESTER_COMPANY_OPERATING_SYSTEM.md
-    changed_at: "2026-10-12T14:40:24"
+    changed_at: "2026-10-12T14:55:07"
     sections_changed: []
     summary: externally modified
   - source: docs/SSO-TENANT-ONBOARDING.md
-    changed_at: "2026-10-12T14:40:20"
+    changed_at: "2026-10-12T14:55:05"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_DOMAIN_AUTHORITY_MATRIX.md
-    changed_at: "2026-10-12T14:40:24"
+    changed_at: "2026-10-12T14:55:07"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/INSTITUTION_OPERATING_SYSTEM.md
-    changed_at: "2026-10-12T14:41:25"
+    changed_at: "2026-10-12T14:56:24"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_ROADMAP.md
-    changed_at: "2026-10-12T14:41:25"
+    changed_at: "2026-10-12T14:56:24"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/05-incident-and-continuity.md
-    changed_at: "2026-10-12T14:41:25"
+    changed_at: "2026-10-12T14:56:24"
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
-    changed_at: "2026-10-12T14:40:17"
+    changed_at: "2026-10-12T14:55:03"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

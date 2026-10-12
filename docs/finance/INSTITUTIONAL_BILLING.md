@@ -1,26 +1,106 @@
 ---
 stale-refs:
   - source: docs/commercial/REVENUE-OPERATIONS-ARCHITECTURE.md
-    changed_at: "2026-10-12T14:41:23"
+    changed_at: "2026-10-12T14:56:22"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/REFUND_CREDIT_DISPUTE_POLICY.md
-    changed_at: "2026-10-12T14:41:23"
+    changed_at: "2026-10-12T14:56:22"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/05-BUDGET-GOVERNANCE.md
-    changed_at: "2026-10-12T14:40:23"
+    changed_at: "2026-10-12T14:55:06"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/NATIVE_CHECKOUT_SPEC.md
-    changed_at: "2026-10-12T14:40:23"
+    changed_at: "2026-10-12T14:55:06"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/FINANCE_OPERATIONS_CONSOLE.md
-    changed_at: "2026-10-12T14:41:23"
+    changed_at: "2026-10-12T14:56:22"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,14 +1,46 @@
 ---
 stale-refs:
   - source: docs/CONFIGURATION-STUDIO.md
-    changed_at: "2026-10-12T14:41:20"
+    changed_at: "2026-10-12T14:56:20"
     sections_changed: []
     summary: externally modified
   - source: docs/WORKFLOW-BUILDER.md
-    changed_at: "2026-10-12T14:41:22"
+    changed_at: "2026-10-12T14:56:21"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

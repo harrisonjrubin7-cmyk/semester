@@ -1,14 +1,46 @@
 ---
 stale-refs:
   - source: docs/architecture/modularization/README.md
-    changed_at: "2026-10-12T14:41:23"
+    changed_at: "2026-10-12T14:56:22"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/D-1156.md
-    changed_at: "2026-10-12T14:40:22"
+    changed_at: "2026-10-12T14:55:06"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,10 +1,26 @@
 ---
 stale-refs:
   - source: docs/platform/OPERATIONS.md
-    changed_at: "2026-10-12T14:41:25"
+    changed_at: "2026-10-12T14:56:24"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

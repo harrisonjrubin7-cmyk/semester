@@ -1,14 +1,46 @@
 ---
 stale-refs:
   - source: docs/program/RISK_REGISTER.md
-    changed_at: "2026-10-12T14:40:25"
+    changed_at: "2026-10-12T14:55:08"
     sections_changed: []
     summary: externally modified
   - source: docs/program/PHASE_1_EXECUTION_BACKLOG.md
-    changed_at: "2026-10-12T14:41:25"
+    changed_at: "2026-10-12T14:56:24"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

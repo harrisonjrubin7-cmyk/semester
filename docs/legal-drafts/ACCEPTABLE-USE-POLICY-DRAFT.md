@@ -1,10 +1,26 @@
 ---
 stale-refs:
   - source: docs/legal/ACCEPTABLE-USE-POLICY-DRAFT.md
-    changed_at: "2026-10-12T14:40:24"
+    changed_at: "2026-10-12T14:55:07"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

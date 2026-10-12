@@ -1,9 +1,10 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-12 14:40:46_  ·  branch: `claude/upbeat-noether-u0sfun`
+_Updated: 2026-10-12 14:55:41_  ·  branch: `claude/upbeat-noether-u0sfun`
 
 ## Uncommitted changes
 ```
+ M .anchor/session-state.md
  M 30-60-90-DAY-EXECUTION-PLAN.md
  M ACTION-PLAN.md
  M ANALYTICS.md
@@ -42,7 +43,6 @@ _Updated: 2026-10-12 14:40:46_  ·  branch: `claude/upbeat-noether-u0sfun`
  M STAGING.md
  M TOPHAT.md
  M VALIDATED.md
- M app/src/lib/actions.ts
  M commercial/GO_TO_MARKET_READINESS.md
  M commercial/INDIVIDUAL_STUDENT_LAUNCH_READINESS.md
  M commercial/INSTITUTIONAL_PILOT_READINESS.md
@@ -897,36 +897,36 @@ _Updated: 2026-10-12 14:40:46_  ·  branch: `claude/upbeat-noether-u0sfun`
  M ops/strategic-boundaries/README.md
  M supabase/DEPLOY.md
  M supabase/history/README.md
-?? .anchor/
-?? .forgeproof/
+ M supabase/migrations/20261007000000_claim_complete_fail_replay_retention.sql
 ```
 
 Diff stat:
 ```
- docs/trust/VULNERABILITY-MANAGEMENT-POLICY.md      |   52 +-
- .../L5-NAMED-TENANT-APPROVAL-REGISTER.md           |   26 +-
- examples/README.md                                 |  234 +-
- examples/event-consumer/README.md                  |   26 +-
- examples/gateway-client/README.md                  |   52 +-
- examples/scim-provisioner/README.md                |   52 +-
- examples/sis-adapter/README.md                     |   52 +-
- infra/README.md                                    |  130 +-
- infra/bootstrap/README.md                          |   52 +-
- infra/changes/README.md                            |   26 +-
- operations/GO_NO_GO_SCORECARD.md                   |  208 +-
- operations/LAUNCH_COMMAND_CENTER.md                |  156 +-
- ops/README.md                                      |  130 +-
- ops/claims/README.md                               |  624 ++++-
- ops/customer-commitments/README.md                 |  104 +-
- ops/operations-console/README.md                   |  182 +-
- ops/strategic-boundaries/README.md                 |  286 ++-
- supabase/DEPLOY.md                                 |   26 +-
- supabase/history/README.md                         |   26 +-
- 893 files changed, 115176 insertions(+), 4938 deletions(-)
+ .../L5-NAMED-TENANT-APPROVAL-REGISTER.md           |   18 +-
+ examples/README.md                                 |  154 +-
+ examples/event-consumer/README.md                  |   16 +-
+ examples/gateway-client/README.md                  |   34 +-
+ examples/scim-provisioner/README.md                |   34 +-
+ examples/sis-adapter/README.md                     |   34 +-
+ infra/README.md                                    |   88 +-
+ infra/bootstrap/README.md                          |   36 +-
+ infra/changes/README.md                            |   18 +-
+ operations/GO_NO_GO_SCORECARD.md                   |  134 +-
+ operations/LAUNCH_COMMAND_CENTER.md                |  102 +-
+ ops/README.md                                      |   86 +-
+ ops/claims/README.md                               |  406 ++++-
+ ops/customer-commitments/README.md                 |   68 +-
+ ops/operations-console/README.md                   |  124 +-
+ ops/strategic-boundaries/README.md                 |  184 +-
+ supabase/DEPLOY.md                                 |   18 +-
+ supabase/history/README.md                         |   16 +-
+ ...000000_claim_complete_fail_replay_retention.sql |    2 +-
+ 894 files changed, 73747 insertions(+), 4647 deletions(-)
 ```
 
 ## Recent commits
 ```
+7b1a8d220 P1-03: Implement claim/complete/fail/replay RPCs and retention sweep
 8adb46f48 docs: update planning, architecture, and operational readiness documentation
 9a8d48e32 P1-03: Regenerate auto-generated documentation with event producer catalog update
 edd72fdd2 P1-03: Add event producer to documentation tests and .gitignore
@@ -934,7 +934,6 @@ edd72fdd2 P1-03: Add event producer to documentation tests and .gitignore
 7ce4d9ee7 fix(db): extend CHECK constraint to allow 'processing' outcome state in domain_event_receipts
 99152e72e chore: ignore .md-linker/ cache directory
 ceb861239 P1-03: Implement claim/complete/fail/replay RPCs and retention sweep
-76a8c3936 fix(registers): regenerate docs with P1-02 at 20261006170000
 ```
 
 ## Resume

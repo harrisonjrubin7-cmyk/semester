@@ -1,10 +1,26 @@
 ---
 stale-refs:
   - source: docs/design/DESIGN_SYSTEM_ADOPTION_AUDIT.md
-    changed_at: "2026-10-12T14:41:23"
+    changed_at: "2026-10-12T14:56:22"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

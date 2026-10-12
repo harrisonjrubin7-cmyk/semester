@@ -1,10 +1,26 @@
 ---
 stale-refs:
   - source: docs/commercial/PILOT-OFFER.md
-    changed_at: "2026-10-12T14:40:22"
+    changed_at: "2026-10-12T14:55:05"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

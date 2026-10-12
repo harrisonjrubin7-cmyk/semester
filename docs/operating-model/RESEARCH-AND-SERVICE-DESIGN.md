@@ -1,10 +1,26 @@
 ---
 stale-refs:
   - source: docs/operating-model/CONFIGURATION-TIERS.md
-    changed_at: "2026-10-12T14:41:24"
+    changed_at: "2026-10-12T14:56:23"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

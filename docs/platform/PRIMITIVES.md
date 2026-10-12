@@ -1,10 +1,26 @@
 ---
 stale-refs:
   - source: docs/platform/EVENTS-AND-OUTBOX.md
-    changed_at: "2026-10-12T14:40:25"
+    changed_at: "2026-10-12T14:55:08"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

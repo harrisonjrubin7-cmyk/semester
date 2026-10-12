@@ -1,10 +1,26 @@
 ---
 stale-refs:
   - source: docs/help/students/control-what-the-ai-sees.md
-    changed_at: "2026-10-12T14:40:23"
+    changed_at: "2026-10-12T14:55:06"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

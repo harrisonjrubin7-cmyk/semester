@@ -268,7 +268,7 @@ begin
      and published_at is not null
      and dead_lettered_at is null;
 
-  deleted_count := ROW_COUNT;
+  get diagnostics deleted_count = row_count;
 
   return deleted_count;
 end $$;
