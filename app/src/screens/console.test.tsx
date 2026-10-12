@@ -67,7 +67,14 @@ vi.mock('../lib/cloud', () => ({
   },
   cloud: vi.fn(),
 }));
-vi.mock('../lib/capabilities', () => ({ loadMyCapabilities: mock.caps }));
+vi.mock('../lib/capabilities', async (orig) => {
+  const actual = await orig<typeof import('../lib/capabilities')>();
+  return {
+    ...actual,
+    loadMyCapabilities: mock.caps,
+    useCapabilityDiscovery: (accountId: string) => actual.useCapabilityDiscovery(accountId, mock.caps),
+  };
+});
 vi.mock('../lib/environment', async (orig) => ({ ...(await orig<object>()), environment: () => mock.env }));
 vi.mock('../lib/experience-flags', () => ({ EXPERIENCE_FLAGS: { supportTickets: 'production' } }));
 vi.mock('../lib/console/client', async (orig) => ({
@@ -120,6 +127,14 @@ const INCIDENT_PLATFORM = [...PLATFORM, { capability: 'incident:communicate', sc
 const FRESH = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 2 * 60_000) };
 const STALE = { currentLevel: 'aal1', nextLevel: 'aal2', verifiedAt: null };
 const STALE_AAL2 = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 20 * 60_000) };
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; });
+  void promise.catch(() => {});
+  return { promise, resolve, reject };
+}
 
 const DUTIES = [
   { id: 'role-grant', action: 'Grant or widen a privileged role', requester: 'role:university_admin', approvers: ['security'], twoPerson: false, evidence: 'The access request, naming the person, the role, the tenant and the reason' },
@@ -431,6 +446,90 @@ describe('the gate', () => {
     await act(async () => answer(PLATFORM));
     await flush();
     expect(host.querySelector('[aria-label="Context bar"]')).toBeTruthy();
+  });
+
+  it('removes account A operations while account B grants are unresolved', async () => {
+    const accountB = deferred<never[]>();
+    mock.caps.mockResolvedValueOnce(PLATFORM).mockImplementationOnce(() => accountB.promise);
+
+    await render();
+    expect(host.querySelector('[aria-label="Context bar"]')).toBeTruthy();
+
+    mock.account = { id: 'op-2', email: 'other@semester.example', via: 'an email address and password' };
+    await render();
+    expect(mock.caps).toHaveBeenLastCalledWith('op-2');
+    expect(host.textContent).toContain('Reading your grants');
+    expect(host.querySelector('[aria-label="Context bar"]')).toBeNull();
+
+    await act(async () => accountB.resolve([]));
+    await flush();
+    expect(host.textContent).toContain('holds no console:operate grant at platform scope');
+  });
+
+  it('keeps account B closed when account A grants arrive after the switch', async () => {
+    const accountA = deferred<typeof PLATFORM>();
+    const accountB = deferred<never[]>();
+    mock.caps.mockImplementationOnce(() => accountA.promise).mockImplementationOnce(() => accountB.promise);
+
+    await render();
+    mock.account = { id: 'op-2', email: 'other@semester.example', via: 'an email address and password' };
+    await render();
+    expect(mock.caps).toHaveBeenCalledWith('op-1');
+    expect(mock.caps).toHaveBeenCalledWith('op-2');
+
+    await act(async () => accountA.resolve(PLATFORM));
+    await flush();
+    expect(host.textContent).toContain('Reading your grants');
+    expect(host.querySelector('[aria-label="Context bar"]')).toBeNull();
+    expect(mock.mfa).not.toHaveBeenCalled();
+
+    await act(async () => accountB.resolve([]));
+    await flush();
+    expect(host.textContent).toContain('holds no console:operate grant at platform scope');
+    expect(host.querySelector('[aria-label="Context bar"]')).toBeNull();
+  });
+
+  it('keeps account B pending when account A grant discovery fails after the switch', async () => {
+    const accountA = deferred<typeof PLATFORM>();
+    const accountB = deferred<typeof PLATFORM>();
+    mock.caps.mockImplementationOnce(() => accountA.promise).mockImplementationOnce(() => accountB.promise);
+
+    await render();
+    mock.account = { id: 'op-2', email: 'other@semester.example', via: 'an email address and password' };
+    await render();
+
+    await act(async () => accountA.reject(new Error('account A is offline')));
+    await flush();
+    expect(host.textContent).toContain('Reading your grants');
+    expect(host.textContent).not.toContain('Could not check connected access');
+    expect(host.textContent).not.toContain('holds no console:operate');
+    expect(mock.mfa).not.toHaveBeenCalled();
+
+    await act(async () => accountB.resolve(PLATFORM));
+    await flush();
+    expect(host.querySelector('[aria-label="Context bar"]')).toBeTruthy();
+    expect(host.textContent).toContain('other@semester.example');
+  });
+
+  it('shows a failed grant read as retryable instead of as a genuine denial', async () => {
+    const retry = deferred<typeof PLATFORM>();
+    mock.caps.mockRejectedValueOnce(new Error('offline')).mockImplementationOnce(() => retry.promise);
+
+    await render();
+    const alert = host.querySelector('[role="alert"]');
+    expect(alert).not.toBeNull();
+    expect(alert!.textContent).toContain('Could not check connected access.');
+    expect(host.textContent).not.toContain('holds no console:operate');
+    expect(host.querySelector('[aria-label="Context bar"]')).toBeNull();
+    expect(mock.mfa).not.toHaveBeenCalled();
+
+    await act(async () => must('Try again').click());
+    expect(host.textContent).toContain('Reading your grants');
+    expect(host.querySelector('[role="alert"]')).toBeNull();
+    await act(async () => retry.resolve(PLATFORM));
+    await flush();
+    expect(host.querySelector('[aria-label="Context bar"]')).toBeTruthy();
+    expect(mock.caps).toHaveBeenCalledTimes(2);
   });
 });
 
