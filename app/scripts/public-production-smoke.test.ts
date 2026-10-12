@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { runPublicProductionSmoke } from './public-production-smoke.mjs';
 import { PAGES_PRODUCTION_ORIGIN, resolveProductionTarget } from './production-target.mjs';
 
@@ -14,6 +15,29 @@ afterEach(() => {
 });
 
 describe('the explicit production smoke target', () => {
+  it('keeps public Vercel configuration independent from institutional activation', () => {
+    const workflow = readFileSync(
+      new URL('../../.github/workflows/production-smoke.yml', import.meta.url),
+      'utf8',
+    );
+    const publicJob = workflow.match(/\n  public:\n([\s\S]*?)\n  pages:/)?.[1] ?? '';
+    const institutionalJob = workflow.match(/\n  institutional:\n([\s\S]*?)\n  record:/)?.[1] ?? '';
+
+    expect(publicJob).toContain(
+      'SEMESTER_PUBLIC_APP_URL: ${{ vars.SEMESTER_PUBLIC_APP_URL }}',
+    );
+    expect(publicJob).not.toContain('SEMESTER_PRODUCTION_APP_URL');
+    expect(institutionalJob).toContain(
+      'APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}',
+    );
+    expect(institutionalJob).toContain(
+      'GATEWAY_URL: ${{ vars.SEMESTER_PRODUCTION_GATEWAY_URL }}',
+    );
+    expect(institutionalJob).toContain(
+      'Set both SEMESTER_PRODUCTION_APP_URL and SEMESTER_PRODUCTION_GATEWAY_URL',
+    );
+  });
+
   it('rejects an empty Vercel target before any fetch', async () => {
     process.env.SEMESTER_PUBLIC_APP_TARGET = 'vercel';
     delete process.env.SEMESTER_PUBLIC_APP_URL;
