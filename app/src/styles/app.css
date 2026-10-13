@@ -898,7 +898,7 @@ a:hover {
 }
 
 /* The general wordmark is milled from the active ground's metal sweep. The
-   rail has its own fixed teal ground, so both its mark and word use the
+   rail has its own fixed Ink ground, so both its mark and word use the
    navigation foreground instead of inheriting an occasionally black sweep. */
 .rail .rail-mark {
   color: var(--shell-navigation-text);
