@@ -1,20 +1,21 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-13 13:39:01_  ·  branch: `claude/friendly-goldberg-xmq92w`
+_Updated: 2026-10-13 13:56:46_  ·  branch: `claude/friendly-goldberg-xmq92w`
 
 ## Uncommitted changes
 ```
-?? .anchor/
-?? .md-linker/
+ M .anchor/session-state.md
 ```
 
 Diff stat:
 ```
-
+ .anchor/session-state.md | 23 ++---------------------
+ 1 file changed, 2 insertions(+), 21 deletions(-)
 ```
 
 ## Recent commits
 ```
+14440fba chore: commit session tool state (.anchor, .md-linker)
 eb1e0d96 docs: coverage matrix measuring the 16-week plan against the repository
 b711c5c7 Merge pull request #1530 from harrisonjrubin7-cmyk/claude/sharp-hypatia-cxzdsk
 6bebe76e fix(shell): hide Teaching destination while course studio is off
@@ -22,7 +23,6 @@ b711c5c7 Merge pull request #1530 from harrisonjrubin7-cmyk/claude/sharp-hypatia
 7d00ffa5 Unify Semester OS platform and governed Action Center (#1517)
 f4bd8a91 Merge pull request #1495 from harrisonjrubin7-cmyk/codex/design-system-ecosystem-live
 f8fe95ad feat: integrate connected Semester ecosystem
-a16fc2b5 Merge pull request #1525 from codex/registration-state-matrix
 ```
 
 ## Resume
