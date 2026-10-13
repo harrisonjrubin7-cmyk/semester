@@ -8,7 +8,7 @@ Decisions for the registration readiness pilot:
 
 | Decision | Record |
 | --- | --- |
-| Pilot artifact set and contract validator | `docs/decisions/` file for this pull request |
+| Pilot artifact set, YAML contracts checked in CI, pilot NO-GO | `docs/decisions/D-1538.md` |
 
 Open decisions that block build work are listed in `docs/launch/pilot-scope.md`
 under "Named before launch", and in `docs/architecture/ai-boundary.md` under
