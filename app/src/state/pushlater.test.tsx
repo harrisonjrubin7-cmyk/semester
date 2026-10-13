@@ -57,6 +57,7 @@ vi.mock('./persist', async (original) => ({
   prime: async () => undefined,
   flushNow: async () => undefined,
   flushOnLeave: () => undefined,
+  releaseHeldNote: async () => {},
 }));
 
 const { StoreProvider, useStore } = await import('./store');

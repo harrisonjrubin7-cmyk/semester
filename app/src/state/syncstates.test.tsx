@@ -60,6 +60,7 @@ vi.mock('./persist', () => ({
   acknowledgeRemoteWrite: () => acknowledgeRemoteWrite(),
   rollbackRemoteWrite: (...args: unknown[]) => rollbackRemoteWrite(...args),
   flushOnLeave: () => {},
+  releaseHeldNote: async () => {},
   whileWriting: () => {},
   load: async () => null,
 }));
@@ -822,6 +823,31 @@ describe('what a sync must not lose', () => {
     expect(savedCarriesNote()).toBe(false);
     vi.mocked(Storage.prototype.setItem).mockRestore();
   });
+
+  // Found reviewing 301db55: "Use this device" promises the account becomes
+  // this device's copy, and the account's newer fields went up anyway.
+  for (const choice of ['device', 'merge'] as const) {
+    it(`at the first sign-in, ${choice === 'device' ? 'using this device sends none of the account\u2019s newer fields' : 'a merge carries them (control)'}`, async () => {
+      const later = [{ id: 'f1', said: 'written by a build from the future' }];
+      localStorage.setItem(
+        'semester.v1',
+        JSON.stringify({ schemaVersion: 6, seenOnboarding: true, registered: true, notes: [{ id: 'mine', title: 'Mine', body: 'here', created: 1, updated: 1 }] }),
+      );
+      localStorage.removeItem(SEEN_KEY);
+      pull.mockResolvedValue({ state: { notes: [good], fromANewerBuild: later }, courses: [], updated: 1, seen: { state: 's1', courses: {} } });
+      await mount();
+      await wait(3_000);
+      expect(store.asking).not.toBeNull();
+      await act(async () => {
+        await store.settle(choice, null);
+      });
+      await addTask('an edit after choosing');
+      await wait(3_000);
+      expect(push).toHaveBeenCalled();
+      const sent = push.mock.calls.at(-1)![1] as { fromANewerBuild?: unknown };
+      expect(sent.fromANewerBuild).toEqual(choice === 'device' ? undefined : later);
+    });
+  }
 
   it('pushes back a field a newer build wrote, untouched', async () => {
     // A name no build has, so the test still means this once the field is real.

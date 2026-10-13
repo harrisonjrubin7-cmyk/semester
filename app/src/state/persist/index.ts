@@ -24,7 +24,7 @@
 import { readAll, isEmpty, held, open, write, MAPS_STORE, SETTINGS_STORE, type Write } from './db';
 import { COLLECTIONS, MAPS, SETTINGS, idOf } from './shape';
 import { readIncoming } from '../../lib/stored';
-import { droppedOnRead, noteIngressDrops } from '../../lib/deletions';
+import { HELD_KEY, droppedOnRead, heldInSaved, noteIngressDrops, unstoredIngressDrops } from '../../lib/deletions';
 import { migrate, versionOf } from '../../lib/migrate';
 import {
   DEFAULT_PERSISTED,
@@ -109,8 +109,13 @@ async function readEverything(): Promise<Partial<Persisted> | null> {
 
   const settings = await readAll(SETTINGS_STORE);
   if (settings === null) return null;
+  heldWritten = '';
   for (const [key, value] of settings) {
     if (key === MIGRATED) continue;
+    if (key === HELD_KEY) {
+      out[HELD_KEY] = value;
+      heldWritten = Array.isArray(value) && value.length > 0 ? JSON.stringify(value) : '';
+    }
     if (SETTINGS.includes(key as keyof Persisted)) out[key] = value;
   }
 
@@ -298,11 +303,14 @@ export async function load(): Promise<Persisted | null> {
   // before the reducer's initialiser runs, so its field rules are not in the
   // way. The third door, through the same reader as the other two. See
   // `lib/stored.ts`.
-  const moved = await forward(found);
+  // A note a refused localStorage write left in the database (`heldWrite`):
+  // read here, never part of the state.
+  const { [HELD_KEY]: carriedNote, ...stored } = found as Partial<Persisted> & { [HELD_KEY]?: unknown };
+  const moved = await forward(stored);
   const read = readIncoming(moved as Record<string, unknown>);
   // Rows the reader could not keep, noted the same way as on the
   // localStorage path. See `ingressDrops` in `lib/deletions.ts`.
-  noteIngressDrops(droppedOnRead(moved as Record<string, unknown>, read));
+  noteIngressDrops([...droppedOnRead(moved as Record<string, unknown>, read), ...heldInSaved({ [HELD_KEY]: carriedNote })]);
   return { ...DEFAULT_PERSISTED, ...read } as Persisted;
 }
 
@@ -403,6 +411,27 @@ export function writesFor(prev: Partial<Persisted>, next: Partial<Persisted>): W
   return out;
 }
 
+/**
+ * A note localStorage refused (`unstoredIngressDrops`), written beside the
+ * state in the same transaction, because that write can be the one that makes
+ * a lost row's gap durable. `heldWritten` is what the database holds for it.
+ */
+let heldWritten = '';
+
+function heldWrite(): Write | null {
+  const held = unstoredIngressDrops();
+  const want = held.length > 0 ? JSON.stringify(held) : '';
+  if (want === heldWritten) return null;
+  heldWritten = want;
+  return { store: SETTINGS_STORE, key: HELD_KEY, value: held.length > 0 ? held : null };
+}
+
+/** After a heal: takes a carried note out of the database, if it holds one. */
+export async function releaseHeldNote(): Promise<void> {
+  const note = heldWrite();
+  if (note && !(await write([note]))) heldWritten = '?';
+}
+
 /** How long after the last change the writes go out. */
 export const SETTLE_MS = 250;
 
@@ -471,6 +500,8 @@ async function flushValue(
    */
   const base = exact ? (confirmed ?? last) : last;
   const writes = writesFor(base, next);
+  const note = heldWrite();
+  if (note) writes.push(note);
   last = next;
   lastSeq = nextSeq;
   // Nothing to write is not something to announce. A tab told to re-read a

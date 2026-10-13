@@ -281,9 +281,16 @@ export function clearIngressDrops(): void {
  * storage can refuse the note and still take the saved copy, which is smaller
  * for the row the reader dropped; closed before the pull, the next boot would
  * find the gap and nothing saying it was damage. So the note goes inside the
- * copy that carries the gap. The reader takes it back out (`heldInSaved`).
+ * copy that carries the gap: the localStorage text, or a settings row in the
+ * same database write (`state/persist`). The reader takes it back out
+ * (`heldInSaved`).
  */
 export const HELD_KEY = 'heldIngressDrops';
+
+/** What this session noted that storage refused, for the saved copy to carry. Empty when storage took it. */
+export function unstoredIngressDrops(): string[] {
+  return notedIsStored ? [] : [...noted];
+}
 
 /** `text`, the saved copy as JSON, carrying any note storage refused. Unchanged otherwise. */
 export function withIngressNote(text: string): string {
