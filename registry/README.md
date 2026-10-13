@@ -1,31 +1,31 @@
-# Semester maturity registries
+# Registry
 
-Machine-readable form of the maturity program (source: `continue_12`). Every
-file here is **specified, not enforced**: no CI check reads these yet, and no
-capability is marked activated because of them.
+Machine-checked records that tie a product component to its owners, boundaries,
+dependencies, controls, tests, and lifecycle. The first slice is the **component
+passport**. Only shape is enforced here; whether the named owners, policies,
+tests, and evidence exist is not yet checked.
 
-| File | Covers |
-| --- | --- |
-| `maturity/capability-maturity.yaml` | Six facts that define "built"; what each status may and may not claim |
-| `platform/pillar-owners.yaml` | Twelve shared pillars; owner and certification where the source names them |
-| `connectors/connector-certification.yaml` | Sandbox → validated → pilot-approved → reusable gates |
-| `connectors/SIS-READINESS-001.yaml` | Connector passport for the readiness source (passport only, not certified) |
-| `portfolio/capability-intake.yaml` | Intake questions, rejection conditions, portfolio lanes |
-| `portfolio/domain-entry-criteria.yaml` | Prerequisites, 1–5 scoring factors, decision outcomes |
-| `developer/api-application.yaml` | Example partner application with prohibited scopes |
+## Passports
 
-Companion docs (outside this folder): `docs/strategy/platform-tiers.yaml`,
-`docs/strategy/next-50-actions.md`, `docs/engineering/contract-lab.yaml`,
-`docs/data/read-model-standard.yaml`, `docs/operations/operations-os-roadmap.yaml`,
-`docs/finance/native-finance-sequence.yaml`, `docs/platform/developer-platform-roadmap.yaml`,
-`docs/company/company-os-standard.yaml`, `docs/company/board-packet-standard.yaml`.
+`passports/<ID>.json` — one file per component, file name equal to `passport.identity.id`.
 
-The ship and launch procedure is `operations/SHIP_PROGRAM_RUNBOOK.md`, which
-already exists on `main` and is not duplicated here.
+Required sections: `identity`, `accountability`, `boundaries`, `dependencies`,
+`control_plane`, `quality`, `lifecycle`. The rules are in
+`app/src/lib/registry/passport.ts`; `app/src/lib/registry/passport.test.ts`
+validates every file here and proves the rules reject bad input.
 
-## Open gaps
+- `identity.type` is one of the nine types in `PASSPORT_TYPES`.
+- `identity.id` uses an uppercase prefix, e.g. `CAP-`, `WF-`, `POL-`, `SCR-`, `API-`,
+  `EVT-`, `TST-`, `EVD-`, `REL-`, `SLO-`.
+- `boundaries.allowed_uses` and `prohibited_uses` must both be non-empty.
+- A passport whose `lifecycle.current_status` is anything other than `proposed`
+  must carry dated `created_at` and `last_reviewed_at` (`YYYY-MM-DD`).
 
-- Six of twelve pillars have no owner or certification in the source. Assign them before relying on the pillar.
-- `SIS-READINESS-001` has no certification level reached; it is at most `sandbox`.
-- The contract-lab and read-model TypeScript shapes from the source are not included, since they belong in the app after a contract review.
-- Nothing has been deployed. Launch and deploy need an approved target, which this change does not establish.
+The source material writes passports as YAML. The app has no YAML parser and
+this change adds no dependency, so passports are JSON with the same keys.
+
+## Status of entries
+
+| ID | Status | Notes |
+| --- | --- | --- |
+| `WF-READINESS-001` | `proposed` | Shape from the continuation brief. Owners are the brief's role labels, not confirmed people. Upstream `SIS-001` and `POL-READINESS-001` are not in this repo yet. |
