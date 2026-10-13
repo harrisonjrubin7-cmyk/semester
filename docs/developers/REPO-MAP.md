@@ -28,6 +28,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `operator/` | The Semester Operator: the agent team's runtime. Thirty-three agent contracts as data, five deterministic control modules (policy, approvals, scheduler, limits, audit and kill switch), isolated worktrees, and the operator CLI. An npm workspace of its own because it is Node code, not a browser-safe package. See [`operator/README.md`](../../operator/README.md). |
 | `output/` | Generated PDF reports built from `docs/business/` by `npm run generate:gtm-pdf` (from `app/`): the GTM playbook, executive summary, board and investor summary, and the customer-safe pilot pack. Generated files; edit the Markdown and the manifest in `app/scripts/gtm-pdf/`, then rebuild. |
 | `packages/` | Two source-only packages shared by the app and the servers: `contract` and `institution`. Neither is published. |
+| `registry/` | Tenant and outcome registers as data: student-facing outcome taxonomy (`outcomes/`) and per-tenant success records (`tenants/`). Owners write them; nothing is assumed. |
 | `pipeline/` | Syllabus to course tooling: ingest, lessons, slides, handouts, alignment, and `validate.mjs`, which CI runs. See [`pipeline/README.md`](../../pipeline/README.md). |
 | `project/` | The original Claude Design handoff: HTML prototypes and the design system. Reference material; the app does not import it. |
 | `scripts/` | Scanners for the static company site (`company-site-scan-*.mjs`). Not the app's scripts; those are in `app/scripts/`. |

@@ -1,0 +1,58 @@
+# docs/assurance/assurance-model.yaml
+# Status: specified. Health-event contract implemented in app/src/lib/assurance/health-event.ts.
+# A release is not the end of delivery: each enabled capability must keep proving it is
+# authorized, source-correct, operationally healthy, accessible and understandable.
+
+assurance_model:
+  dimensions:
+    - authority
+    - access
+    - source_integrity
+    - workflow_integrity
+    - user_understanding
+    - accessibility
+    - reliability
+    - operational_response
+    - evidence_currency
+
+  rule: >
+    A capability remains enabled only while its required controls, evidence,
+    source conditions, and responsible owners remain current.
+
+  review_cadence:
+    continuously:
+      - authorization_decisions
+      - source_freshness
+      - workflow_failures
+      - queue_SLA
+      - security_alerts
+    weekly:
+      - reconciliation_backlog
+      - support_themes
+      - control_exceptions
+      - release_changes
+    monthly:
+      - pilot_health
+      - access_review
+      - risk_register
+      - evidence_expiry
+      - business_and_customer_review
+    at_trigger:
+      - source_schema_change
+      - policy_change
+      - incident
+      - new_tenant
+      - cohort_expansion
+      - material_product_change
+
+health_event:
+  # Every operator alert points to an accountable owner, an affected scope, a known-safe
+  # action and a durable case. Enforced by healthEventProblems().
+  categories: [source_freshness, authorization, workflow, integration, accessibility, security, privacy, support, release, evidence]
+  severities: [critical, high, medium, low]
+  states: [open, acknowledged, investigating, mitigated, closed]
+  rules:
+    - affectedScope names at least one scope key
+    - critical and high events carry a safeImmediateAction
+    - a closed event carries evidenceReferences
+    - timestamps are ISO and updatedAt is not before createdAt

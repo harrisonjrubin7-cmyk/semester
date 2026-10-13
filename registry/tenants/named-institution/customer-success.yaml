@@ -1,0 +1,38 @@
+# registry/tenants/named-institution/customer-success.yaml
+# Status: template. Owners are pending; no owner is assumed or invented.
+
+customer_success:
+  tenant: named_institution
+  pilot: registration_readiness
+
+  outcomes:
+    institutional:
+      - "Staff can identify and route readiness blockers."
+      - "The pilot creates a usable evidence base for future expansion."
+    student:
+      - "Students can distinguish planning readiness from enrollment."
+      - "Students can find an appropriate next action when blocked."
+
+  stakeholders:
+    executive_sponsor: pending
+    registrar_owner: pending
+    technical_owner: pending
+    support_owner: pending
+    accessibility_contact: pending
+    privacy_contact: pending
+
+  health_inputs:
+    - adoption_and_usage
+    - source_integrity
+    - staff_queue_health
+    - support_sentiment
+    - release_and_incident_history
+    - success_measurement
+
+  risks:
+    - institution_owner_availability
+    - source_system_change
+    - peak_registration_volume
+    - staff_training_gap
+
+  next_review: pending

@@ -1,0 +1,36 @@
+# registry/outcomes/readiness.yaml
+# Status: specified. Student-facing outcome taxonomy. Adopt the same meanings across
+# student, staff, support and communication surfaces.
+
+outcomes:
+  ready:
+    meaning: >
+      The approved source-backed checks currently support the listed planning
+      state. This is not enrollment.
+    action: Review your schedule or continue with the official registration process.
+  blocked:
+    meaning: >
+      A known requirement or hold needs attention before this planning state
+      can be treated as ready.
+    action: Review the named requirement and institution-approved next step.
+  needs_review:
+    meaning: >
+      The available information cannot support a final derived state.
+    action: Request review through the listed office or support path.
+  source_stale:
+    meaning: >
+      A required connected source is not current enough to support a final
+      readiness result.
+    action: Check again after refresh or contact the listed office.
+  source_missing:
+    meaning: >
+      A needed institutional record was not available to this check.
+    action: Contact the office that owns the record.
+  submitted:
+    meaning: >
+      Your readiness request was received and is being processed.
+    action: Keep this receipt; it does not change official registration.
+  referral_open:
+    meaning: >
+      Your request has been routed to the appropriate office for review.
+    action: Follow the office's instructions; Semester will show updates when available.
