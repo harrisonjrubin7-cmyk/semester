@@ -1132,6 +1132,13 @@ a:hover {
   margin-block: 0;
 }
 
+/* The assistant's docked column takes its width out of the page
+   (`--assist-dock`, set by ai/Panel.tsx while it is open). Two classes, because
+   `.device, .desk` sets `padding-inline` further down this sheet and wins at one. */
+.device.device-pane {
+  padding-inline-end: var(--assist-dock, 0);
+}
+
 /*
  * ── The measure ──────────────────────────────────────────────────────────
  *
