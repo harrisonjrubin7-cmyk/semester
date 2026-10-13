@@ -154,6 +154,7 @@ describe('Volunteer', () => {
     expect(mock.decide).not.toHaveBeenCalled();
     expect(host.textContent).toContain('If this is a real report');
     expect(host.textContent).toContain('A hidden practice answer updates your calibration');
+    expect(host.textContent).toContain('advance to active status and begin receiving real cases');
     expect(host.textContent).toContain('recent practice accuracy can move your standing between active, probation and paused');
     expect(host.textContent).toContain('including pausing queue access');
     expect(host.textContent).toContain('Reason: Suspicious link');
