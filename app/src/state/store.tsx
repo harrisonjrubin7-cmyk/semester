@@ -53,6 +53,7 @@ import {
   flushOnLeave,
   load as loadFromDb,
   persist as persistToDb,
+  releaseHeldNote,
 } from './persist';
 import { backupOf } from '../lib/export';
 import { countsOf, takeDaily } from '../lib/snapshots';
@@ -96,7 +97,7 @@ import {
   type Conflict,
 } from '../lib/conflicts';
 import { clearIngressDrops, coursesDeletedHere, ingressDrops, settleDeletions, withIngressNote } from '../lib/deletions';
-import { rememberCarried, withCarried } from '../lib/carried';
+import { forgetCarried, rememberCarried, withCarried } from '../lib/carried';
 import { baseForLegacy, forLegacy } from '../lib/sync/engine/ownership';
 import { withEngine } from '../lib/sync/engine/tasks';
 import { useTaskEngine } from './useTaskEngine';
@@ -523,8 +524,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   /** What localStorage last accepted, unlike `wrote`, which a refused save also sets. */
   const savedText = useRef('');
   const healed = useCallback(() => {
-    if (dbAvailable()) clearIngressDrops();
-    else healPending.current = true;
+    if (dbAvailable()) {
+      clearIngressDrops();
+      void releaseHeldNote();
+    } else healPending.current = true;
   }, []);
   /** When the browser was last asked how much room is left. */
   const checkedRoom = useRef(0);
@@ -2056,6 +2059,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // read — this device has seen it and chosen against it. The push effect
         // sends this device up on its next run, which is what makes it the
         // account's copy too, and records its own stamps when it does.
+        // The account's fields this build cannot read are not carried up
+        // either: that push replaces the account, as the question promised.
+        forgetCarried();
         markSeen(remote.seen);
       } else {
         const theirs = {

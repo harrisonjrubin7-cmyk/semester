@@ -42,6 +42,7 @@ vi.mock('./persist', () => ({
   persist: (...args: unknown[]) => persist(...args),
   flushNow: (signal?: AbortSignal) => flushNow(signal),
   flushOnLeave: () => {},
+  releaseHeldNote: async () => {},
   rollbackRemoteWrite: (target: unknown) => rollbackRemoteWrite(target),
   whileWriting: () => {},
   load: async () => null,
