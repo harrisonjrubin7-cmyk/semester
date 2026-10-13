@@ -102,6 +102,7 @@ Not built (all specified only):
 |---|---|---|---|
 | G1 | 16 starters fail as designed | `python3 -I grader.py --lab N --submission labs/week_0N/starter.py --report <out>` for N = 1..16 | 0 of N passed for every lab; exit code 1; no execution error; each report written |
 | G2 | Grader pass path works (control) | Scratch solution `classify_record` for lab 1 (dict lookup on `kind`) run through the grader | 3 of 3 passed; exit code 0 |
+| G4 | Learner `print()` does not corrupt results | Lab-1 control plus a `print()` call through the old runner, then the fixed runner | Old runner: 0 of 3, "Timeout or invalid output" (reproduced). Fixed runner: 3 of 3, exit 0. Fixed runner still exits 1 on all 16 starters with 0 passes |
 | G3 | Lab 1 control covers the visible cases | `tests.json` lab 1 expects draft→private, grade→official, fixture→synthetic | Matches the control's mapping |
 | O1 | OpenAPI validity | `openapi-spec-validator` (latest from PyPI, installed in a scratch venv) on `developer-console.openapi.json` | Valid. 67 operations, 0 missing or duplicate operationIds, 53 paths, 54 schemas |
 | P1 | Portal loads without JS errors | Headless Chromium (`/opt/pw-browsers/chromium`) with `--enable-logging=stderr`; control page with `console.error` and an uncaught throw was logged, so the logger works | 0 console or uncaught errors |

@@ -9,6 +9,7 @@ root=Path(__file__).resolve().parent
 spec=json.loads((root/'labs'/f'week_{a.lab:02d}'/'tests.json').read_text())
 source=Path(a.submission).read_text()
 runner="""import json,sys
+sys.stdout=sys.stderr
 ns={}
 exec(compile(sys.stdin.readline(),'<submission>','exec'),ns)
 spec=json.loads(sys.stdin.read())
@@ -20,7 +21,7 @@ for case in spec['cases']:
     except Exception as e:
         passed=case['expected']=='!ValueError' and type(e) is ValueError
     results.append(bool(passed))
-print(json.dumps(results))
+sys.__stdout__.write(json.dumps(results))
 """
 # JSON-encoded source avoids multiline transport ambiguity.
 runner=runner.replace("exec(compile(sys.stdin.readline(),", "exec(compile(json.loads(sys.stdin.readline()),")
