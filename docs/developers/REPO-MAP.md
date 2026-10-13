@@ -38,6 +38,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `video/` | Remotion project that renders lessons to video. Has its own `package.json`; CI typechecks it with `npm run check:video`. See [`video/README.md`](../../video/README.md). |
 | `.claude/` | Agent configuration checked into the repository: `commands/` and `skills/` (`run`, `add-course`, and the design-system skills `build-semester-ui`, `audit-semester-design-sync`, `create-semester-component`). The Figma MCP server is named in `.mcp.json` at the root. |
 | `.github/` | `CODEOWNERS`, `dependabot.yml`, `pull_request_template.md`, `rulesets/main.json` and the workflows. |
+| `.md-linker/` | `graph.json`, the link index the md-linker session hook writes from the Markdown in `docs/`. Generated; not edited by hand. |
 
 At the root there are also Markdown reports and registers (for example `CLAUDE.md`, `README.md`, `SECURITY.md`, `REGRESSION-CHECKLIST.md`, `VALIDATED.md`, `SEMESTER-OPERATING-SYSTEM.md`), `.gitignore`, `.gitleaks.toml`, `.gitleaksignore`, two StackHawk configuration files and `delete-landed-branches.sh`. The root [`README.md`](../../README.md) has a layout table that lists five of the directories above; this page lists all of them.
 
