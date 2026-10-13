@@ -1,6 +1,6 @@
 # Route coverage: checklist vs. app screens
 
-Generated from the uploaded `routes_checklist.yaml` (111 routes) and the `Screen` union in `app/src/lib/types.ts` (81 ids). Matching is by name only: a checklist `screen_key` with the `app_`/`teach_` prefix stripped against an app screen id. A name match does not prove the screen behaves as the route specifies. Roles, capabilities, tables, APIs, and audit events are not filled in: the checklist has them empty, and the app does not declare them per screen.
+Generated from the uploaded `routes_checklist.yaml` (111 routes) and the `Screen` union in `app/src/lib/types.ts` (lines 696-848, 97 ids). Matching is by name only: a checklist `screen_key` with the `app_`/`teach_`/etc. prefix stripped against an app screen id. A name match does not prove the screen behaves as the route specifies. Roles, capabilities, tables, APIs, and audit events are not filled in: the checklist has them empty, and the app does not declare them per screen.
 
 | Route | screen_key | App screen (name match) | Status |
 |---|---|---|---|
@@ -15,7 +15,7 @@ Generated from the uploaded `routes_checklist.yaml` (111 routes) and the `Screen
 | `/app/today` | `app_today` | — | unmapped |
 | `/app/action-center` | `app_action_center` | — | unmapped |
 | `/app/search` | `app_search` | search | mapped |
-| `/app/launchpad` | `app_launchpad` | — | unmapped |
+| `/app/launchpad` | `app_launchpad` | launchpad | mapped |
 | `/app/me` | `app_me` | me | mapped |
 | `/app/privacy` | `app_privacy` | privacy | mapped |
 | `/app/trust-room` | `app_trust_room` | — | unmapped |
@@ -55,7 +55,7 @@ Generated from the uploaded `routes_checklist.yaml` (111 routes) and the `Screen
 | `/app/activities` | `app_activities` | activities | mapped |
 | `/app/housing` | `app_housing` | housing | mapped |
 | `/app/meal-plan` | `app_meal_plan` | — | unmapped |
-| `/app/support` | `app_support` | — | unmapped |
+| `/app/support` | `app_support` | support | mapped |
 | `/app/back-on-track` | `app_back_on_track` | — | unmapped |
 | `/app/career` | `app_career` | career | mapped |
 | `/app/letters` | `app_letters` | — | unmapped |
@@ -75,7 +75,7 @@ Generated from the uploaded `routes_checklist.yaml` (111 routes) and the `Screen
 | `/finance/students` | `finance_students` | — | unmapped |
 | `/support/cases` | `support_cases` | — | unmapped |
 | `/admissions` | `admissions` | — | unmapped |
-| `/career-hub` | `career_hub` | — | unmapped |
+| `/career-hub` | `career_hub` | hub | mapped |
 | `/campus-services` | `campus_services` | — | unmapped |
 | `/insights` | `insights` | — | unmapped |
 | `/trust-console` | `trust_console` | console | mapped |
@@ -86,7 +86,7 @@ Generated from the uploaded `routes_checklist.yaml` (111 routes) and the `Screen
 | `/console` | `console` | console | mapped |
 | `/console/overview` | `console_overview` | — | unmapped |
 | `/console/approvals` | `console_approvals` | — | unmapped |
-| `/console/support` | `console_support` | — | unmapped |
+| `/console/support` | `console_support` | support | mapped |
 | `/console/integrations` | `console_integrations` | — | unmapped |
 | `/console/security` | `console_security` | — | unmapped |
 | `/console/audit` | `console_audit` | — | unmapped |
@@ -119,6 +119,7 @@ Generated from the uploaded `routes_checklist.yaml` (111 routes) and the `Screen
 ## App screens with no checklist route
 
 - `account`
+- `activity`
 - `analyse`
 - `announce`
 - `applying`
@@ -131,6 +132,7 @@ Generated from the uploaded `routes_checklist.yaml` (111 routes) and the `Screen
 - `connect`
 - `costs`
 - `course`
+- `create`
 - `data`
 - `deck`
 - `dining`
@@ -159,16 +161,27 @@ Generated from the uploaded `routes_checklist.yaml` (111 routes) and the `Screen
 - `note`
 - `notifs`
 - `onboarding`
+- `opportunities`
 - `pathway`
 - `people`
 - `profile`
 - `proof`
 - `quiz`
+- `recovery`
 - `runway`
+- `setAbout`
+- `setAlerts`
+- `setAssistant`
+- `setCourses`
+- `setGrading`
+- `setLook`
+- `setNav`
+- `setWorkload`
 - `settings`
 - `sheet`
 - `slides`
 - `update`
 - `volunteer`
 - `volunteers`
+- `whatsnew`
 - `yes`
