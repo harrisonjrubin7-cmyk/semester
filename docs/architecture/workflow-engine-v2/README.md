@@ -57,3 +57,11 @@ Decision needed: either add `transport` (`durable_queue`, `scheduled_job`, `guar
 `reference-model/` holds an in-memory model of the registration commit and recovery rules, its 22-test suite, and the 17-case REG test matrix. Run from that directory with `python3 -m unittest test_registration_recovery_reference_model`. On 2026-10-13 all 22 tests passed in a scratch copy, matching `registration_reference_test_results.csv`.
 
 Scope limits: these tests cover abstract contract behaviour only. Every matrix row is "not run" against the real authority adapter, database and row-level security, worker, provider or sandbox. Several checks are thin: the swap, withdrawal and authority-drift tests assert on constant return values, so they confirm the stub rather than the rule. The compiled `.pyc` in the upload was not loaded.
+
+## Spec pack (uploaded 2026-10-13)
+
+`spec-pack/` holds the uploaded contract and binding specifications, the onboarding fallback and resume test specifications (26 cases, not executed), and ten findings from inspected handoff code.
+
+I checked one finding against the repository. `docs/handoff/semester-platform/supabase/migrations/100_controlled_actions.sql.txt` confirms BIND-01: `api.execute_action` sets `executed` and enqueues `ctl.outbox` before any domain work. It also confirms BIND-02: `idempotency_key` is globally unique and the lookup uses the key alone, with no payload hash. The remaining findings are unverified.
+
+The pack's contract text says inline guards use synchronous delivery, while the schema requires `at_least_once` for every binding. That supports the open decision on `delivery.transport` above.
