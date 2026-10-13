@@ -7129,9 +7129,11 @@ section[data-drop] > .grip + * {
   color: var(--shell-navigation-text);
 }
 
+/* The current page is marked by the rail's raised surface, not the action
+   colour: orange reads as a button to press. */
 .desk-row.is-on {
-  background: var(--shell-primary);
-  color: var(--shell-on-primary);
+  background: var(--shell-navigation-surface-active);
+  color: var(--shell-navigation-text);
 }
 
 /* The same server-gated destinations appear in both persistent navigation
@@ -7176,8 +7178,8 @@ section[data-drop] > .grip + * {
 }
 
 .workspace-nav-item.is-on {
-  background: var(--shell-primary);
-  color: var(--shell-on-primary);
+  background: var(--shell-navigation-surface-active);
+  color: var(--shell-navigation-text);
 }
 
 .workspace-nav-item > span:first-child {
