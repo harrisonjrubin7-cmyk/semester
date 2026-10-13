@@ -67,11 +67,12 @@ describe('accent', () => {
 });
 
 describe('reference-inspired workspace shell tokens', () => {
-  it('keeps the dark rail and warm canvas while retaining a dark content ground', () => {
+  it('keeps the rail on the chosen ground and the warm canvas on light', () => {
     const light = tokensFor({ ground: 'parchment' });
     const dark = tokensFor({ ground: 'ink' });
 
-    expect(light['--workspace-rail']).toBe('#173336');
+    expect(light['--workspace-rail']).toBe(light['--app-bg']);
+    expect(dark['--workspace-rail']).toBe(dark['--app-bg']);
     expect(light['--workspace-canvas']).toBe('#f4f3ee');
     expect(dark['--workspace-canvas']).toBe(dark['--app-bg']);
   });
