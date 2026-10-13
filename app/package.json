@@ -44,6 +44,7 @@
     "smoke:a11y": "node scripts/accessibility-smoke.mjs",
     "smoke:pilot": "node scripts/pilot-smoke.mjs",
     "smoke:registration-handoff": "node scripts/registration-handoff-smoke.mjs",
+    "smoke:registration-states": "node scripts/registration-state-matrix-smoke.mjs",
     "smoke:golden": "node scripts/golden-path.mjs",
     "smoke:sync": "node scripts/account-sync.mjs",
     "drill:killswitch": "node scripts/killswitch-drill.mjs",

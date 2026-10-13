@@ -1,0 +1,47 @@
+# Launch-day command center (artifact 23). Times are relative to the enable
+# moment (T0). Names of the people in each role are TBD and must be filled
+# before the window opens.
+launch_day:
+  command_window:
+    start: "T-60 minutes"
+    end: "T+4 hours"
+
+  required_roles:
+    - release_manager
+    - platform_on_call
+    - integration_on_call
+    - security_on_call
+    - product_owner
+    - institution_technical_owner
+    - institution_business_owner
+    - support_lead
+
+  checkpoints:
+    T_minus_60:
+      - verify_feature_flag_off
+      - verify_on_call_contacts
+      - verify_alert_delivery
+      - verify_dashboard_freshness
+      - verify_rollback_steps
+    T_minus_15:
+      - final_SIS_health_check
+      - final_policy_engine_health_check
+      - final_RLS_smoke_test
+      - confirm_support_macro_ready
+    T_zero:
+      - enable_feature_flag_for_pilot_scope
+      - verify_first_student_path
+      - verify_first_registrar_path
+      - verify_first_audit_and_receipt
+    T_plus_15:
+      - review_errors_denials_and_latency
+      - review_source_freshness
+      - review_queue_and_support_volume
+    T_plus_60:
+      - reconciliation_check
+      - institution_owner_check_in
+      - decide_continue_pause_or_rollback
+    T_plus_240:
+      - close_command_window_or_extend_monitoring
+      - record_decisions
+      - prepare_day_one_summary
