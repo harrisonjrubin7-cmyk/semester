@@ -1,0 +1,26 @@
+// app/api/payments/webhook/route.ts — server-only. Verifies, de-duplicates, transitions, posts ledger, audits. Never trust the client.
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { sandboxAdapter } from '@/lib/payments/sandbox-adapter';
+import { assertTransition, ledgerFor, entitlementEffect, type PaymentStatus } from '@/lib/payments/state';
+const TO: Record<string, PaymentStatus> = { 'payment.authorized': 'authorized', 'payment.captured': 'captured', 'payment.failed': 'failed', 'payment.requires_action': 'requires_action', 'payment.settled': 'settled', 'refund.succeeded': 'refunded', 'dispute.opened': 'disputed', 'dispute.won': 'entitlement_active', 'dispute.lost': 'chargeback' };
+export async function POST(req: Request) {
+  const rawBody = await req.text();
+  let evt; try { evt = await sandboxAdapter.verifyWebhook({ headers: Object.fromEntries(req.headers), rawBody }); } catch { return NextResponse.json({ error: 'invalid signature' }, { status: 400 }); }
+  const db = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false }, db: { schema: 'fin' } });
+  const ins = await db.from('provider_events').insert({ provider: evt.provider, provider_event_id: evt.providerEventId, type: evt.type, payload_hash: evt.payloadHash, verified: true });
+  if (ins.error?.code === '23505') return NextResponse.json({ ok: true, duplicate: true });                    // replay: no-op
+  if (ins.error) return NextResponse.json({ error: 'store failed' }, { status: 500 });
+  const { data: att } = await db.from('payment_attempts').select('*').eq('id', evt.providerRef.replace(/^pi_/, '')).single();
+  if (!att) return NextResponse.json({ error: 'unknown payment' }, { status: 404 });
+  if (att.amount_cents !== evt.amountCents && evt.type !== 'refund.succeeded') return NextResponse.json({ error: 'amount mismatch' }, { status: 409 });
+  const to = TO[evt.type]; try { assertTransition(att.status, to); } catch { return NextResponse.json({ error: 'illegal transition' }, { status: 409 }); }
+  const lines = ledgerFor(to, att.status, att.amount_cents, { deferred: att.entitlement_key?.startsWith('student_') ?? false, refundCents: evt.type === 'refund.succeeded' ? evt.amountCents : undefined });
+  const idem = `${evt.provider}:${evt.providerEventId}`;
+  let journal: string | null = null;
+  if (lines) { const r = await db.schema('api').rpc('post_journal', { p_memo: `${evt.type} ${att.id}`, p_source: evt.type, p_idem: idem, p_lines: lines, p_customer: att.customer_ref, p_person: att.person_id }); if (r.error) return NextResponse.json({ error: 'ledger failed' }, { status: 500 }); journal = r.data; }
+  await db.from('payment_transitions').insert({ attempt_id: att.id, from_status: att.status, to_status: to, idempotency_key: idem, provider_event_id: evt.providerEventId, journal_id: journal, entitlement_effect: entitlementEffect(to), notification_rule: to, reconciliation_status: to === 'settled' ? 'settlement received' : 'unmatched' });
+  await db.from('payment_attempts').update({ status: to }).eq('id', att.id).eq('status', att.status);       // optimistic: only from the state we checked
+  await db.from('provider_events').update({ processed_at: new Date().toISOString() }).eq('provider', evt.provider).eq('provider_event_id', evt.providerEventId);
+  return NextResponse.json({ ok: true });
+}

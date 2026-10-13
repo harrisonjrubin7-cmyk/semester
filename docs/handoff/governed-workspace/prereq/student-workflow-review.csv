@@ -1,0 +1,9 @@
+workflow,proposed_steps,failure_handling,critical_control
+Discover course,Approved catalog fact → catalog version → prerequisites → permitted resources,Unverified/stale/contradictory rule shown unresolved,Cannot convert student notes into official rule
+Check readiness,Select term/section → pin rule version → read authorized evidence locally → evaluate all/any → explain satisfied/not_satisfied/unknown,Missing credit or pending equivalency yields unknown; revalidate before registration,No student record is sent to provider
+Study prerequisite gap,Unmet requirement → learning objective → instructor-approved readings/practice → private study plan,Studying material is not awarded credit or waived requirement,AI practice uses allowed course material only
+Import knowledge,Preview files/IDs/rights → stage → map links → review uncertain mappings → reconcile → publish private workspace,Broken links and unsupported formulas remain explicit gaps,Imported links are related_to unless reviewed typed meaning exists
+Submit exception,Request waiver/permission → explain scope → institution review → approved evidence/expiry → rerun eligibility,AI/student cannot self-approve waiver,Approval scoped to course/term/student; audited receipt
+Daily plan,Authorized facts/tasks → dedupe actions → student priority → study/assignment work → source receipt if submission,Offline task completion cannot claim official submission,Manual plan preferences preserved after feed updates
+Share study resources,Choose resource scope/recipient/purpose/duration → preview grant → share → revoke/expire,Recipient cannot infer other linked private nodes,Resource rights and owner approval required
+Source change,Rule/resource access event → append revision → invalidated readiness → alert → recompute after review,Out-of-order source event cannot overwrite newer fact,Revoked grants remove feed/cache/search access
