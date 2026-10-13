@@ -1,0 +1,52 @@
+// tests/controlled-actions.test.ts — capability scope, two-person approval, idempotent execution, tenant isolation (migration 100).
+import { describe, it, expect, beforeAll } from 'vitest';
+import { createClient } from '@supabase/supabase-js';
+import { asUser } from './helpers';
+const svc = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+const A = '00000000-0000-0000-0000-0000000000aa', B = '00000000-0000-0000-0000-0000000000bb';
+const IT = '00000000-0000-0000-0000-00000000a005', ADV = '00000000-0000-0000-0000-00000000a004', CFO = '00000000-0000-0000-0000-00000000c001';
+const preview = { affected: 1200, summary: 'Enable community for Campus A' };
+beforeAll(async () => {
+  await svc.schema('ctl').from('grants').insert([
+    { person_id: IT, capability: 'tenant.module.enable', tenant_id: A, granted_by: CFO, reason: 'test grant' },
+    { person_id: ADV, capability: 'tenant.module.enable', tenant_id: A, granted_by: CFO, reason: 'test grant' },
+  ]);
+  await svc.schema('ctl').from('capabilities').upsert({ key: 'tenant.module.approve', description: 'approve module', high_impact: false });
+  await svc.schema('ctl').from('grants').insert({ person_id: ADV, capability: 'tenant.module.approve', tenant_id: A, granted_by: CFO, reason: 'test approver' });
+});
+describe('controlled actions', () => {
+  it('denies a capability outside the granted tenant', async () => {
+    const it_ = await asUser('it@campus-a.test');
+    const r = await it_.schema('api').rpc('request_action', { p_cap: 'tenant.module.enable', p_tenant: B, p_reason: 'cross-tenant attempt', p_payload: {}, p_idem: 'x-' + Date.now(), p_preview: preview });
+    expect(r.error?.message).toMatch(/not granted/);
+  });
+  it('requires a reason', async () => {
+    const it_ = await asUser('it@campus-a.test');
+    const r = await it_.schema('api').rpc('request_action', { p_cap: 'tenant.module.enable', p_tenant: A, p_reason: 'x', p_payload: {}, p_idem: 'r-' + Date.now(), p_preview: preview });
+    expect(r.error).not.toBeNull();
+  });
+  it('requester cannot approve; a scoped approver can; execution is idempotent and audited', async () => {
+    const it_ = await asUser('it@campus-a.test'), adv = await asUser('advisor@campus-a.test');
+    const idem = 'mod-' + Date.now();
+    const { data: id } = await it_.schema('api').rpc('request_action', { p_cap: 'tenant.module.enable', p_tenant: A, p_reason: 'Pilot kickoff decision 2026-10', p_payload: { module: 'community' }, p_idem: idem, p_preview: preview });
+    const again = await it_.schema('api').rpc('request_action', { p_cap: 'tenant.module.enable', p_tenant: A, p_reason: 'Pilot kickoff decision 2026-10', p_payload: { module: 'community' }, p_idem: idem, p_preview: preview });
+    expect(again.data).toBe(id);
+    const notExec = await it_.schema('api').rpc('execute_action', { p_request: id }); expect(notExec.error?.message).toMatch(/not approved/);
+    // IT has no approver capability and is the requester
+    const self = await it_.schema('api').rpc('decide_action', { p_request: id, p_decision: 'approve' }); expect(self.error?.message).toMatch(/cannot approve/);
+    const ok = await adv.schema('api').rpc('decide_action', { p_request: id, p_decision: 'approve', p_note: 'checked impact' }); expect(ok.data).toBe('approved');
+    const e1 = await it_.schema('api').rpc('execute_action', { p_request: id }); const e2 = await it_.schema('api').rpc('execute_action', { p_request: id });
+    expect(e1.error).toBeNull(); expect(e2.data).toEqual(e1.data);
+    const { data: outbox } = await svc.schema('ctl').from('outbox').select('*').eq('topic', 'action.tenant.module.enable'); expect((outbox ?? []).filter((o) => o.payload.idempotency_key === idem)).toHaveLength(1);
+    const { data: audit } = await svc.schema('audit').from('events').select('action').eq('target', id); expect((audit ?? []).map((a) => a.action)).toEqual(expect.arrayContaining(['action.requested', 'action.approve', 'action.executed']));
+  });
+  it('break-glass grants longer than 4 hours are refused', async () => {
+    const r = await svc.schema('ctl').from('grants').insert({ person_id: IT, capability: 'incident.declare', tenant_id: A, granted_by: CFO, reason: 'incident', break_glass: true, expires_at: new Date(Date.now() + 5 * 3600e3).toISOString() });
+    expect(r.error).not.toBeNull();
+  });
+  it('students cannot read or write control-plane tables', async () => {
+    const s = await asUser('student@campus-a.test');
+    const w = await s.schema('ctl').from('grants').insert({ person_id: '00000000-0000-0000-0000-00000000a001', capability: 'tenant.module.enable', tenant_id: A, granted_by: '00000000-0000-0000-0000-00000000a001', reason: 'self grant attempt' });
+    expect(w.error).not.toBeNull();
+  });
+});

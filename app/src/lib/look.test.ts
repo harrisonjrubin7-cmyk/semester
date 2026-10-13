@@ -66,6 +66,40 @@ describe('accent', () => {
   });
 });
 
+describe('reference-inspired workspace shell tokens', () => {
+  it('keeps the dark rail and warm canvas while retaining a dark content ground', () => {
+    const light = tokensFor({ ground: 'parchment' });
+    const dark = tokensFor({ ground: 'ink' });
+
+    expect(light['--workspace-rail']).toBe('#173336');
+    expect(light['--workspace-canvas']).toBe('#f4f3ee');
+    expect(dark['--workspace-canvas']).toBe(dark['--app-bg']);
+  });
+
+  it('uses readable ink on the orange primary hierarchy', () => {
+    const tokens = tokensFor({ ground: 'parchment' });
+    expect(tokens['--workspace-action']).toBe('#e87441');
+    expect(contrast(tokens['--workspace-action-ink'], tokens['--workspace-action'])).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('keeps navigation text readable on the teal rail for every ground', () => {
+    for (const g of GROUNDS) {
+      const tokens = tokensFor({ ground: g.id });
+      expect(
+        contrast(tokens['--workspace-rail-text'], tokens['--workspace-rail']),
+        g.label,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('strengthens quiet rail text when increased contrast is active', () => {
+    const ordinary = tokensFor({ ground: 'parchment' });
+    const louder = tokensFor({ ground: 'parchment' }, true);
+    expect(louder['--workspace-rail-muted']).toBe(louder['--workspace-rail-text']);
+    expect(ordinary['--workspace-rail-muted']).not.toBe(ordinary['--workspace-rail-text']);
+  });
+});
+
 describe('scaleOf', () => {
   it('is one unless a size was chosen', () => {
     expect(scaleOf(undefined)).toBe(1);

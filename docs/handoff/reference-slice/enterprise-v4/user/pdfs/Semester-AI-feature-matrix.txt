@@ -1,0 +1,51 @@
+Computer
+Generate an automated study schedule and quiz tracker comparing RemNote Guided Learn and
+Gemini Notebook quiz performance across modules
+Computer
+Add a visual comparison chart to the dashboard
+Export the dashboard data as CSV or JSON
+Add code to style the dashboard with dark mode
+Built the interactive dashboard, along with standalone CSV and JSON feature-matrix exports. It
+includes dark mode, visual comparison charts, a study-schedule generator, and a quiz tracker
+that compares your recorded RemNote and Gemini Notebook results.
+Component Function
+Feature matrix Compare 12 entries across reading, notes, tutoring, and quiz generation; filter by module or search.
+Evidence chart Compare advertised/documented feature coverage—not product quality.
+Quiz-performance chart Compare weighted accuracy by app and module using results you enter.
+Schedule generator Choose a start date, 1–60 days, and daily study time; alternate apps within each module.
+Weakness prioritization Order modules by lowest recorded accuracy, with rotation as the fallback when data is missing.
+Quiz tracker Record app, module, topic, correct answers, total questions, duration, and date.
+Completion tracking Mark scheduled sessions complete.
+Export controls Export the matrix, schedule, and attempts as CSV, or the full dashboard data as JSON.
+Dark mode Switch themes; the dashboard remembers the preference when browser storage is available.
+The feature matrix retains the evidence distinction: Semester AIʼs reading, scanning, and
+tutoring functions are advertised, while its quiz generation remains unverified. Gemini
+Notebook and RemNote document quiz-generation workflows.
+Build an interactive Semester AI feature matrix
+comparing Gemini Notebook and RemNote across
+reading, note-scanning, tutoring, and quiz generation
+Whatʼs included
+[1] [2] [3]
+1. Open the attached HTML dashboard in a browser.
+2. Filter the feature matrix to inspect a module.
+3. Enter your start date, study duration, and scheduling priority.
+4. Generate your study schedule.
+5. Complete study sessions in RemNote or Gemini Notebook, then enter quiz results.
+6. Review the performance chart and export your data for backup.
+The performance chart calculates:
+It starts empty—there are no invented scores or benchmark results.
+This is a local dashboard prototype, not a live integration. It does not scan documents, generate
+AI questions, retrieve quiz results from either app, or create calendar events.
+The schedule is a configurable planning heuristic—not a validated spaced-repetition algorithm.
+Results from different topics, question difficulty, or quiz lengths should not be treated as a
+controlled comparison of the apps.
+The attached CSV and JSON contain the feature matrix. Once you add attempts and generate a
+schedule, use the dashboardʼs export controls to capture those additional records. Browser-
+local persistence depends on storage availability; clearing browser data may remove saved
+progress.
+⁂
+1. https://play.google.com/store/apps/details?id=tech.bawano.semester&hl=en_US
+2. https://notebooklm.google/students
+3. https://help.remnote.com/en/articles/15724936-guided-learn-mode
+Using the dashboard
+Scope and limitations

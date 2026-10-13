@@ -1,0 +1,17 @@
+test_account_plan (test_run_integration.RunnerTests.test_account_plan) ... ok
+test_baseline (test_run_integration.RunnerTests.test_baseline) ... ok
+test_credentials_rejected (test_run_integration.RunnerTests.test_credentials_rejected) ... ok
+test_failure (test_run_integration.RunnerTests.test_failure) ... ok
+test_loopback (test_run_integration.RunnerTests.test_loopback) ... ok
+test_missing_account_url (test_run_integration.RunnerTests.test_missing_account_url) ... ok
+test_missing_key (test_run_integration.RunnerTests.test_missing_key) ... ok
+test_pass_does_not_claim_production (test_run_integration.RunnerTests.test_pass_does_not_claim_production) ... ok
+test_public_rejected (test_run_integration.RunnerTests.test_public_rejected) ... ok
+test_query_rejected (test_run_integration.RunnerTests.test_query_rejected) ... ok
+test_timeout (test_run_integration.RunnerTests.test_timeout) ... ok
+test_unavailable (test_run_integration.RunnerTests.test_unavailable) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.003s
+
+OK

@@ -69,6 +69,7 @@ const Controls = lazy(() => import('../components/console/Controls').then((m) =>
 const FinancialModel = lazy(() => import('../finance/FinancialModel').then((m) => ({ default: m.FinancialModel })));
 // Approval confirmation and receipt code is needed only after the operator opens this workspace.
 const Approvals = lazy(() => import('../components/console/Approvals').then((m) => ({ default: m.Approvals })));
+const Ecosystem = lazy(() => import('../components/console/Ecosystem').then((m) => ({ default: m.Ecosystem })));
 
 const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures, release flags and evidence — for operators holding console:operate.';
 
@@ -320,6 +321,11 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
         {tab === 'finance' && (
           <Suspense fallback={<p role="status">Loading the finance model…</p>}>
             <FinancialModel />
+          </Suspense>
+        )}
+        {tab === 'ecosystem' && (
+          <Suspense fallback={<p role="status">Loading the connected ecosystem…</p>}>
+            <Ecosystem filter={filter} />
           </Suspense>
         )}
         {tab === 'releases' && (

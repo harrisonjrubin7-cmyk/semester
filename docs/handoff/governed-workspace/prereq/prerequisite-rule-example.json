@@ -1,0 +1,33 @@
+{
+  "status": "Fictional example, not a university catalog rule",
+  "target_course": "CS 220",
+  "operator": "all",
+  "children": [
+    {
+      "operator": "any",
+      "children": [
+        {
+          "operator": "course_completed",
+          "course": "CS 101",
+          "timing": "before_start",
+          "grade_policy": "approved_C_or_better_equivalence"
+        },
+        {
+          "operator": "placement_met",
+          "threshold_policy": "approved_CS_placement"
+        }
+      ]
+    },
+    {
+      "operator": "course_completed",
+      "course": "MATH 120",
+      "timing": "concurrent_allowed",
+      "grade_policy": "institution_co_requisite_policy"
+    }
+  ],
+  "evaluation_result_values": [
+    "satisfied",
+    "not_satisfied",
+    "unknown"
+  ]
+}

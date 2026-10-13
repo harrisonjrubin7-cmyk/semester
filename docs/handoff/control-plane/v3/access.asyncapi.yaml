@@ -1,0 +1,149 @@
+# v3 · orchestrator's perspective. Each participant's document reverses the relevant send/receive.
+# Broker not chosen: define bindings, workload auth, tenant ACLs, size limits, dead-letter policy and retention before deployment.
+# Conditional fields need operation-specific validation (or stricter oneOf) before release: prepare needs decisionId, install needs grantId.
+# x-semester-coordination documents rules; AsyncAPI tooling does not execute them.
+asyncapi: 3.0.0
+info:
+  title: Semester Access Saga Coordination
+  version: 0.1.0
+channels:
+  peCommands:
+    address: semester.access.pe.commands.v1
+    messages:
+      command: {$ref: '#/components/messages/CommandMessage'}
+  paCommands:
+    address: semester.access.pa.commands.v1
+    messages:
+      command: {$ref: '#/components/messages/CommandMessage'}
+  pepCommands:
+    address: semester.access.pep.commands.v1
+    messages:
+      command: {$ref: '#/components/messages/CommandMessage'}
+  results:
+    address: semester.access.results.v1
+    messages:
+      result: {$ref: '#/components/messages/ResultMessage'}
+  lifecycle:
+    address: semester.access.lifecycle.v1
+    messages:
+      changed: {$ref: '#/components/messages/LifecycleMessage'}
+  signals:
+    address: semester.access.signals.v1
+    messages:
+      signal: {$ref: '#/components/messages/SignalMessage'}
+operations:
+  sendPECommand:
+    action: send
+    channel: {$ref: '#/channels/peCommands'}
+    messages: [{$ref: '#/channels/peCommands/messages/command'}]
+  sendPACommand:
+    action: send
+    channel: {$ref: '#/channels/paCommands'}
+    messages: [{$ref: '#/channels/paCommands/messages/command'}]
+  sendPEPCommand:
+    action: send
+    channel: {$ref: '#/channels/pepCommands'}
+    messages: [{$ref: '#/channels/pepCommands/messages/command'}]
+  receiveResult:
+    action: receive
+    channel: {$ref: '#/channels/results'}
+    messages: [{$ref: '#/channels/results/messages/result'}]
+  publishLifecycle:
+    action: send
+    channel: {$ref: '#/channels/lifecycle'}
+    messages: [{$ref: '#/channels/lifecycle/messages/changed'}]
+  receiveSignal:
+    action: receive
+    channel: {$ref: '#/channels/signals'}
+    messages: [{$ref: '#/channels/signals/messages/signal'}]
+components:
+  messages:
+    CommandMessage:
+      contentType: application/json
+      correlationId: {location: '$message.payload#/sagaId'}
+      payload: {$ref: '#/components/schemas/Command'}
+    ResultMessage:
+      contentType: application/json
+      correlationId: {location: '$message.payload#/sagaId'}
+      payload: {$ref: '#/components/schemas/Result'}
+    LifecycleMessage:
+      contentType: application/json
+      payload:
+        type: object
+        additionalProperties: false
+        required: [eventId, sagaId, tenantId, revision, state, occurredAt]
+        properties:
+          eventId: {type: string}
+          sagaId: {type: string}
+          tenantId: {type: string}
+          revision: {type: integer, minimum: 0}
+          state: {$ref: './access.openapi.yaml#/components/schemas/Status/properties/state'}
+          occurredAt: {type: string, format: date-time}
+    SignalMessage:
+      contentType: application/json
+      payload:
+        type: object
+        additionalProperties: false
+        required: [eventId, sagaId, tenantId, kind, occurredAt]
+        properties:
+          eventId: {type: string}
+          sagaId: {type: string}
+          tenantId: {type: string}
+          kind: {enum: [requirements_changed, revoke, recover]}
+          occurredAt: {type: string, format: date-time}
+          evidenceRef: {type: string}
+  schemas:
+    Command:
+      type: object
+      additionalProperties: false
+      required: [commandId, sagaId, tenantId, generation, operation, idempotencyKey, requestDigest, contextRef]
+      properties:
+        commandId: {type: string}
+        sagaId: {type: string}
+        tenantId: {type: string}
+        generation: {type: integer, minimum: 1}
+        operation: {enum: [evaluate, prepare, install, inspect, revoke]}
+        idempotencyKey: {type: string}
+        requestDigest: {type: string}
+        contextRef: {type: string, description: 'Trusted server context reference, not a permission grant.'}
+        decisionId: {type: string}
+        grantId: {type: string}
+    Result:
+      type: object
+      additionalProperties: false
+      required: [eventId, commandId, sagaId, tenantId, generation, operation, status]
+      properties:
+        eventId: {type: string}
+        commandId: {type: string}
+        sagaId: {type: string}
+        tenantId: {type: string}
+        generation: {type: integer, minimum: 1}
+        operation: {enum: [evaluate, prepare, install, inspect, revoke]}
+        status: {enum: [succeeded, rejected, retryable_failure, unknown]}
+        decisionId: {type: string}
+        grantId: {type: string}
+        expiresAt: {type: string, format: date-time}
+        policyOutcome: {enum: [allow, deny, require_step_up, require_approval]}
+        enforcementStatus: {enum: [installed, absent, conflict, unknown]}
+        errorCode: {type: string}
+x-semester-coordination:
+  delivery: at_least_once
+  partition_key: sagaId
+  deduplication_key: eventId
+  command_routing:
+    evaluate: peCommands
+    prepare: paCommands
+    revoke: paCommands
+    install: pepCommands
+    inspect: pepCommands
+  result_acceptance:
+    require_authenticated_producer: true
+    require_matching_command_id: true
+    require_matching_tenant_and_generation: true
+    require_expected_operation: true
+    reject_stale_results: true
+  recovery:
+    install_timeout: inspect_before_retry
+    scope_conflict: revoke_and_escalate
+    approval_signal: rebuild_context_and_reevaluate
+    revoke_uncertain: retry_reconcile_and_contain

@@ -25,7 +25,7 @@
         "default"
       ],
       "default": "default",
-      "variables": 7
+      "variables": 15
     },
     "corners": {
       "modes": [
@@ -64,7 +64,7 @@
         "semester"
       ],
       "default": "ink",
-      "variables": 42
+      "variables": 43
     },
     "stylesheet": {
       "modes": [
@@ -2162,6 +2162,123 @@
           }
         }
       }
+    },
+    "workspace-action": {
+      "$type": "color",
+      "$value": "#e87441",
+      "$extensions": {
+        "semester": {
+          "varies": [
+            "constant"
+          ]
+        }
+      }
+    },
+    "workspace-action-ink": {
+      "$type": "color",
+      "$value": "#0b2022",
+      "$extensions": {
+        "semester": {
+          "varies": [
+            "constant"
+          ]
+        }
+      }
+    },
+    "workspace-action-strong": {
+      "$type": "color",
+      "$value": "#d9612e",
+      "$extensions": {
+        "semester": {
+          "varies": [
+            "constant"
+          ]
+        }
+      }
+    },
+    "workspace-canvas": {
+      "$type": "color",
+      "$value": "#090a0e",
+      "$extensions": {
+        "semester": {
+          "varies": [
+            "ground"
+          ],
+          "modes": {
+            "ground": {
+              "basalt": "#131211",
+              "bone": "#f4f3ee",
+              "fog": "#f4f3ee",
+              "forest": "#070d0a",
+              "graphite": "#16181c",
+              "industry": "#f4f3ee",
+              "industry-dark": "#1b1c1e",
+              "ink": "#090a0e",
+              "midnight": "#080b15",
+              "oxide": "#000000",
+              "paper": "#f4f3ee",
+              "parchment": "#f4f3ee",
+              "semester": "#f4f3ee",
+              "wine": "#0e090a"
+            }
+          }
+        }
+      }
+    },
+    "workspace-rail": {
+      "$type": "color",
+      "$value": "#173336",
+      "$extensions": {
+        "semester": {
+          "varies": [
+            "constant"
+          ]
+        }
+      }
+    },
+    "workspace-rail-border": {
+      "$type": "color",
+      "$value": "rgba(244, 243, 238, 0.16)",
+      "$extensions": {
+        "semester": {
+          "varies": [
+            "constant"
+          ]
+        }
+      }
+    },
+    "workspace-rail-muted": {
+      "$type": "color",
+      "$value": "rgba(244, 243, 238, 0.72)",
+      "$extensions": {
+        "semester": {
+          "varies": [
+            "constant"
+          ]
+        }
+      }
+    },
+    "workspace-rail-raised": {
+      "$type": "color",
+      "$value": "#21484b",
+      "$extensions": {
+        "semester": {
+          "varies": [
+            "constant"
+          ]
+        }
+      }
+    },
+    "workspace-rail-text": {
+      "$type": "color",
+      "$value": "#f4f3ee",
+      "$extensions": {
+        "semester": {
+          "varies": [
+            "constant"
+          ]
+        }
+      }
     }
   },
   "semantic": {
@@ -2893,6 +3010,96 @@
         "semester": {
           "css": "var(--surface-overlay)",
           "alias": "--surface-overlay"
+        }
+      }
+    },
+    "shell-content-canvas": {
+      "$type": "reference",
+      "$value": "{primitive.workspace-canvas}",
+      "$extensions": {
+        "semester": {
+          "css": "var(--workspace-canvas)",
+          "alias": "--workspace-canvas"
+        }
+      }
+    },
+    "shell-navigation-border": {
+      "$type": "reference",
+      "$value": "{primitive.workspace-rail-border}",
+      "$extensions": {
+        "semester": {
+          "css": "var(--workspace-rail-border)",
+          "alias": "--workspace-rail-border"
+        }
+      }
+    },
+    "shell-navigation-muted": {
+      "$type": "reference",
+      "$value": "{primitive.workspace-rail-muted}",
+      "$extensions": {
+        "semester": {
+          "css": "var(--workspace-rail-muted)",
+          "alias": "--workspace-rail-muted"
+        }
+      }
+    },
+    "shell-navigation-surface": {
+      "$type": "reference",
+      "$value": "{primitive.workspace-rail}",
+      "$extensions": {
+        "semester": {
+          "css": "var(--workspace-rail)",
+          "alias": "--workspace-rail"
+        }
+      }
+    },
+    "shell-navigation-surface-active": {
+      "$type": "reference",
+      "$value": "{primitive.workspace-rail-raised}",
+      "$extensions": {
+        "semester": {
+          "css": "var(--workspace-rail-raised)",
+          "alias": "--workspace-rail-raised"
+        }
+      }
+    },
+    "shell-navigation-text": {
+      "$type": "reference",
+      "$value": "{primitive.workspace-rail-text}",
+      "$extensions": {
+        "semester": {
+          "css": "var(--workspace-rail-text)",
+          "alias": "--workspace-rail-text"
+        }
+      }
+    },
+    "shell-on-primary": {
+      "$type": "reference",
+      "$value": "{primitive.workspace-action-ink}",
+      "$extensions": {
+        "semester": {
+          "css": "var(--workspace-action-ink)",
+          "alias": "--workspace-action-ink"
+        }
+      }
+    },
+    "shell-primary": {
+      "$type": "reference",
+      "$value": "{primitive.workspace-action}",
+      "$extensions": {
+        "semester": {
+          "css": "var(--workspace-action)",
+          "alias": "--workspace-action"
+        }
+      }
+    },
+    "shell-primary-strong": {
+      "$type": "reference",
+      "$value": "{primitive.workspace-action-strong}",
+      "$extensions": {
+        "semester": {
+          "css": "var(--workspace-action-strong)",
+          "alias": "--workspace-action-strong"
         }
       }
     },
