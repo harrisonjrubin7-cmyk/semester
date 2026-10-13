@@ -1,0 +1,30 @@
+# Operating plan object 6: incident severity. Response targets are TBD and must be
+# agreed with the institution during stage 1.
+escalation:
+  P0:
+    definition: >
+      Suspected unauthorized access, cross-tenant exposure, material data
+      integrity problem, or unsafe consequential behavior.
+    response_target: TBD
+    immediate_actions:
+      - safe_off_affected_capability
+      - preserve_evidence
+      - notify_security_and_institution_contacts
+      - begin_incident_runbook
+  P1:
+    definition: >
+      Pilot workflow unavailable or incorrect for a meaningful portion of the
+      active cohort without a safe automated fallback.
+    response_target: TBD
+    immediate_actions:
+      - activate_safe_review_or_manual_path
+      - open_incident
+      - notify_operational_owners
+  P2:
+    definition: >
+      Non-critical defect, usability issue, or contained source-data mismatch.
+    response_target: TBD
+    immediate_actions:
+      - create_case
+      - assign_owner
+      - communicate_next_step_if_student_affected
