@@ -81,3 +81,5 @@ app/reports/
 
 # Local memory-tool snapshot
 .anchor/
+# Local tool caches written by the md-linker plugin.
+.md-linker/
