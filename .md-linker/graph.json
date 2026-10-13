@@ -2,7 +2,7 @@
   "version": 1,
   "files": {
     "docs/ECOSYSTEM-COVERAGE-MATRIX.md": {
-      "content_hash": "sha256:175332e44198cac6",
+      "content_hash": "sha256:8a74dfcf504cffa0",
       "headings": [
         "Semester ecosystem — coverage matrix against the 16-week plan",
         "Status vocabulary",
@@ -30,7 +30,7 @@
         }
       ],
       "frontmatter_deps": [],
-      "last_indexed": "2026-10-13T13:36:45.007478+00:00"
+      "last_indexed": "2026-10-13T14:03:02.207391+00:00"
     },
     "30-60-90-DAY-EXECUTION-PLAN.md": {
       "content_hash": "sha256:09c1c1d2e636a694",
