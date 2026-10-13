@@ -1,0 +1,64 @@
+{
+  "id": "RDY-INC-003",
+  "title": "Source freshness and stale-state guard",
+  "state": "shaped",
+  "impact": "high",
+  "sensitivity": "restricted",
+  "release_train": "foundation",
+  "capability_key": "registration.readiness",
+  "capability_key_note": "Spec text uses registration_readiness; the registry key in packages/platform-control/registry/capabilities/registration.readiness.json is used here.",
+  "problem_statement": "A student can be shown a definitive readiness result from a required registration source that is out of date.",
+  "accountable_owner": "product-registration",
+  "institutional_authority_statement": "The institution is the official decision owner. Semester provides a source-aware derived planning state. Prohibited claim: 'Readiness confirms enrollment.'",
+  "user_roles": {
+    "student": "full",
+    "advisor": "scoped",
+    "registrar": "scoped",
+    "institution_admin": "audited",
+    "operations": "audited"
+  },
+  "workflow_definition": "packages/platform-control/registry/workflows/registration-readiness.json",
+  "source_authority_record": null,
+  "data_contract": "supabase/migrations/20261009160000_registration_readiness_store.sql",
+  "access_policy": "packages/institution/src/policy.ts",
+  "UI_states": null,
+  "acceptance_tests": ["AT-RDY-002", "AT-RDY-006", "DRL-001", "ACC-RDY-003", "SEC-RDY-002"],
+  "operational_runbook": null,
+  "release_evidence": null,
+  "rollout_and_rollback_plan": {
+    "feature_flag": "registration_readiness_v1",
+    "safe_off": "Read-only guidance and institution support handoff.",
+    "rollback": "Disable flag; retain audit and reconciliation history."
+  },
+  "scope": {
+    "includes": [
+      "freshness calculation",
+      "SourceBadge and SourceLine rendering",
+      "stale readiness state",
+      "source-detail sheet",
+      "registrar stale-case queue",
+      "stale-source alert"
+    ],
+    "excludes": [
+      "direct SIS record correction",
+      "enrollment command",
+      "automatic override of institutional holds"
+    ]
+  },
+  "hard_dependencies": [
+    "identity_context",
+    "source_authority_register",
+    "SIS_adapter",
+    "readiness_case_workflow",
+    "audit_event_store",
+    "alerting"
+  ],
+  "soft_dependencies": ["student_notification_service"],
+  "gaps": [
+    "source_authority_record: source_authority_register is not in the repository",
+    "UI_states: no state specification for the stale state in the repository",
+    "operational_runbook: ART-RDY-011 is missing",
+    "release_evidence: no evidence bundle exists",
+    "accountable_owner: registry owner is a team name; a named institution owner is required (see decision-rights.json)"
+  ]
+}

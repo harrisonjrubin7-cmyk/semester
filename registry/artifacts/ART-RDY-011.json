@@ -1,0 +1,18 @@
+{
+  "id": "ART-RDY-011",
+  "title": "Registration readiness incident runbook",
+  "kind": "operational_runbook",
+  "location": "docs/operations/incidents/INC-READINESS-001.yaml",
+  "capability_keys": ["registration.readiness"],
+  "owners": {
+    "accountable": "platform_on_call_owner",
+    "consulted": ["registrar_operations_owner", "institution_technical_owner"]
+  },
+  "classification": "internal_restricted",
+  "state": "missing",
+  "version": "1.0.0",
+  "review": {"cadence": "quarterly_and_after_incident", "next_due": "pending"},
+  "dependencies": ["source-authority-register", "alert-routing", "support-intake"],
+  "release_critical": true,
+  "note": "Spec lists this runbook as approved. The file at location does not exist in the repository, so the state is recorded as missing. The dependency artifacts were not found in packages/platform-control/registry either."
+}
