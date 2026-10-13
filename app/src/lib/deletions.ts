@@ -223,10 +223,22 @@ let noted = new Set<string>();
  */
 let storedIsStale = false;
 
+/**
+ * Whether what this session noted reached storage. If it did and the stored
+ * note is gone, another tab healed and cleared it, and this tab's copy goes
+ * too. If it never did, the note rides on the saved copy instead (`withIngressNote`).
+ */
+let notedIsStored = false;
+
 export function ingressDrops(): string[] {
   let stored: string[] = [];
   if (!storedIsStale) try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(INGRESS_KEY) ?? '[]');
+    const raw = localStorage.getItem(INGRESS_KEY);
+    if (raw === null && notedIsStored) {
+      noted = new Set();
+      notedIsStored = false;
+    }
+    const parsed: unknown = JSON.parse(raw ?? '[]');
     if (Array.isArray(parsed)) stored = parsed.filter((f): f is string => typeof f === 'string');
   } catch {
     // Unreadable: what this session noted still holds.
@@ -237,17 +249,24 @@ export function ingressDrops(): string[] {
 /** Adds to what is already noted: a second boot before any pull must not forget the first. */
 export function noteIngressDrops(fields: readonly string[]): void {
   if (fields.length === 0) return;
+  // Read first: the read can let go of a note another tab cleared, and must
+  // not take these fields with it.
+  const all = [...new Set([...ingressDrops(), ...fields])];
   noted = new Set([...noted, ...fields]);
   try {
-    localStorage.setItem(INGRESS_KEY, JSON.stringify([...new Set([...ingressDrops(), ...fields])]));
+    localStorage.setItem(INGRESS_KEY, JSON.stringify(all));
     storedIsStale = false;
+    notedIsStored = true;
   } catch {
-    // Storage full or blocked: held in memory above for this session.
+    // Storage full or blocked: held in memory above for this session, and on
+    // the saved copy for the next.
+    notedIsStored = false;
   }
 }
 
 export function clearIngressDrops(): void {
   noted = new Set();
+  notedIsStored = false;
   try {
     localStorage.removeItem(INGRESS_KEY);
     storedIsStale = false;
@@ -255,4 +274,31 @@ export function clearIngressDrops(): void {
     // Removal refused: ignore what is stored for the rest of this session.
     storedIsStale = true;
   }
+}
+
+/**
+ * The saved copy's own record of a note storage refused. At its quota,
+ * storage can refuse the note and still take the saved copy, which is smaller
+ * for the row the reader dropped; closed before the pull, the next boot would
+ * find the gap and nothing saying it was damage. So the note goes inside the
+ * copy that carries the gap. The reader takes it back out (`heldInSaved`).
+ */
+export const HELD_KEY = 'heldIngressDrops';
+
+/** `text`, the saved copy as JSON, carrying any note storage refused. Unchanged otherwise. */
+export function withIngressNote(text: string): string {
+  if (notedIsStored || noted.size === 0) return text;
+  try {
+    const copy = JSON.parse(text) as Record<string, unknown>;
+    return JSON.stringify({ ...copy, [HELD_KEY]: [...noted] });
+  } catch {
+    return text;
+  }
+}
+
+/** A note a previous session's saved copy carried, as deletable list names. */
+export function heldInSaved(saved: Record<string, unknown>): string[] {
+  const held = saved[HELD_KEY];
+  if (!Array.isArray(held)) return [];
+  return held.filter((f): f is string => typeof f === 'string' && (DELETABLE as readonly string[]).includes(f));
 }

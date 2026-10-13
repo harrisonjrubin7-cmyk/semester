@@ -96,7 +96,7 @@ import {
   writeReview,
   type Conflict,
 } from '../lib/conflicts';
-import { clearIngressDrops, coursesDeletedHere, ingressDrops, settleDeletions } from '../lib/deletions';
+import { clearIngressDrops, coursesDeletedHere, ingressDrops, settleDeletions, withIngressNote } from '../lib/deletions';
 import { rememberCarried, withCarried } from '../lib/carried';
 import { baseForLegacy, forLegacy } from '../lib/sync/engine/ownership';
 import { withEngine } from '../lib/sync/engine/tasks';
@@ -680,25 +680,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
     // Unchanged text means nothing to write, which is what the string dep used
     // to give for free before the database path took the dep over.
-    if (persisted === wrote.current) {
+    // A note storage refused rides on the saved copy (`withIngressNote`).
+    const text = withIngressNote(persisted);
+    /*
+     * The healed copy is on disk, so the note that the gap was damage can go.
+     * Not before: refused for room, the next boot reads the gap as clean. A
+     * note the saved copy carried goes with it, in a write of its own.
+     */
+    const heal = () => {
+      healPending.current = false;
+      clearIngressDrops();
+      if (savedText.current === persisted) return;
+      wrote.current = persisted;
+      if (save(persisted, (value) => localStorage.setItem(STORAGE_KEY, value)).ok) savedText.current = persisted;
+    };
+    if (text === wrote.current) {
       // A heal that added nothing: what is on disk is already the healed copy.
-      if (healPending.current && persisted === savedText.current) {
-        healPending.current = false;
-        clearIngressDrops();
-      }
+      if (healPending.current && text === savedText.current) heal();
       return;
     }
     const quiet = fromOtherTab.current;
     fromOtherTab.current = false;
-    wrote.current = persisted;
-    const result = save(persisted, (value) => localStorage.setItem(STORAGE_KEY, value));
-    // The healed copy is on disk, so the note that the gap was damage can go.
-    // Not before: refused for room, the next boot reads the gap as clean.
-    if (result.ok) savedText.current = persisted;
-    if (result.ok && healPending.current) {
-      healPending.current = false;
-      clearIngressDrops();
-    }
+    wrote.current = text;
+    const result = save(text, (value) => localStorage.setItem(STORAGE_KEY, value));
+    if (result.ok) savedText.current = text;
+    if (result.ok && healPending.current) heal();
     const said = trouble(result);
     // Only when it changes: setting the same string every dispatch would
     // re-render the whole app on every keystroke.

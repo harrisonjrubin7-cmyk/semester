@@ -33,6 +33,39 @@
  */
 export const CARRIED_KEY = 'semester.carried';
 
+/**
+ * What is stored is what is beyond these: the fields this build persists,
+ * written out rather than imported, so the set stays this build's while later
+ * builds add to theirs. Every build that carries knows at least these, so
+ * whatever is stored is everything any of them might not know.
+ *
+ * Not "what this build does not know": open tabs of two builds share one
+ * stored copy, and one stored by a build that knows a field leaves that field
+ * out, so an older tab that took it pushed without it. Each reader puts back
+ * only what it does not know itself (`withCarried`). A field retired from this
+ * set is one no build carries any more; `carried.test.ts` holds it to that.
+ */
+export const CARRIED_BASELINE: ReadonlySet<string> = new Set([
+  'aboutMe', 'accent', 'access', 'accessLeadDays', 'aid', 'alarms', 'answers', 'applications',
+  'appointments', 'archivedTerms', 'athlete', 'attendPolicy', 'attendance', 'badges', 'balances',
+  'boardOrder', 'bodyface', 'calm', 'charges', 'cleared', 'commitments', 'contract', 'controls',
+  'corners', 'costs', 'countScreens', 'courseColours', 'courseOrder', 'courses', 'dayBudget',
+  'deadlineSeen', 'decks', 'density', 'directory', 'documents', 'done', 'drops', 'equations',
+  'examCovers', 'extraLinks', 'favourites', 'feed', 'feedEvents', 'feedHidden', 'feedOrder',
+  'feeds', 'floor', 'folders', 'geocode', 'goal', 'gradeSystems', 'grades', 'ground', 'groupOrder',
+  'hue', 'iconShape', 'keyOpen', 'labels', 'lastSync', 'letters', 'lineHeight', 'linkUrls',
+  'liveSession', 'mailDrafts', 'mailMarks', 'mailPane', 'mailRules', 'maintenance', 'mathGiven',
+  'mathWorking', 'mutedCourses', 'myName', 'myRules', 'mySchools', 'nav', 'notes', 'notifs',
+  'opened', 'operatingWorkspace', 'payments', 'people', 'pieces', 'pinned', 'places', 'plans',
+  'plots', 'pretested', 'progress', 'pronounce', 'quiet', 'readingWidth', 'ready', 'recent',
+  'registered', 'registrar', 'regradeWindows', 'requirements', 'residences', 'rest', 'returned',
+  'reviews', 'role', 'sample', 'saved', 'scale', 'schemaVersion', 'schoolId', 'schoolPack',
+  'seenOnboarding', 'sessions', 'sheets', 'shell', 'shortcuts', 'showAll', 'sittings', 'sources',
+  'spent', 'started', 'submitted', 'tabs', 'taken', 'tasks', 'term', 'textSize', 'textSpacing',
+  'tickedAt', 'timers', 'tone', 'typeface', 'updates', 'visited', 'visits', 'wanted', 'waysOpen',
+  'windows', 'workspaceMode', 'yours',
+]);
+
 interface Held {
   account: string;
   fields: Record<string, unknown>;
@@ -42,6 +75,9 @@ interface Held {
 
 /** This session's copy. Storage wins only when something pulled later wrote it. */
 let memory: Held | null = null;
+
+/** The fields this build knows, from the last `rememberCarried`. Never put back. */
+let readerKnows: ReadonlySet<string> = new Set();
 
 function stored(): Held | null {
   try {
@@ -96,7 +132,8 @@ export function rememberCarried(
   known: ReadonlySet<string>,
   version?: string,
 ): void {
-  const fields = remote ? unknownFields(remote, known) : {};
+  readerKnows = known;
+  const fields = remote ? unknownFields(remote, CARRIED_BASELINE) : {};
   const held: Held = { account, fields, at: versionOf(version) };
   memory = held;
   try {
@@ -114,7 +151,7 @@ export function rememberCarried(
 export function withCarried<T extends Record<string, unknown>>(account: string, outgoing: T): T {
   const held = read();
   if (!held || held.account !== account) return outgoing;
-  const extra = Object.entries(held.fields).filter(([key]) => !(key in outgoing));
+  const extra = Object.entries(held.fields).filter(([key]) => !(key in outgoing) && !readerKnows.has(key));
   return extra.length === 0 ? outgoing : ({ ...Object.fromEntries(extra), ...outgoing } as T);
 }
 

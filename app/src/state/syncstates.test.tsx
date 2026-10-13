@@ -786,6 +786,43 @@ describe('what a sync must not lose', () => {
     expect(ingressDrops()).toEqual([]);
   });
 
+  // Found reviewing 36c7453: storage at its quota refused the note but took the
+  // smaller saved copy, and a close before the pull left the gap with no note.
+  const refuseNote = () => {
+    const real = Storage.prototype.setItem;
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+      if (key === 'semester.ingress-drops') throw new DOMException('full', 'QuotaExceededError');
+      return real.call(this, key, value);
+    });
+  };
+  const savedCarriesNote = () => localStorage.getItem('semester.v1')!.includes('heldIngressDrops');
+
+  for (const refused of [true, false]) {
+    it(`without a database, the saved copy carries a note storage refused (${refused ? 'refused' : 'control'})`, async () => {
+      db = false;
+      await seedDamaged(null);
+      if (refused) refuseNote();
+      pull.mockReturnValue(new Promise(() => {}));
+      await mount();
+      await addTask('saved before any pull lands');
+      await wait(1_000);
+      expect(savedCarriesNote()).toBe(refused);
+      vi.mocked(Storage.prototype.setItem).mockRestore?.();
+    });
+  }
+
+  it('without a database, drops the carried note from the saved copy once healed', async () => {
+    db = false;
+    await seedDamaged(null);
+    refuseNote();
+    pull.mockResolvedValue({ state: { notes: [good] }, courses: [], updated: 1, seen: { state: 's1', courses: {} } });
+    await mount();
+    await wait(3_000);
+    expect(ingressDrops()).toEqual([]);
+    expect(savedCarriesNote()).toBe(false);
+    vi.mocked(Storage.prototype.setItem).mockRestore();
+  });
+
   it('pushes back a field a newer build wrote, untouched', async () => {
     // A name no build has, so the test still means this once the field is real.
     const later = [{ id: 'f1', said: 'written by a build from the future' }];
