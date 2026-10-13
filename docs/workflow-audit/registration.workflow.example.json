@@ -1,0 +1,398 @@
+{
+  "contract_version": "1.0.0",
+  "id": "registration.enroll",
+  "version": 1,
+  "name": "Proposed registration enrollment flow",
+  "domain": "registration",
+  "catalog_links": [
+    "docs/native-platform/NATIVE_WORKFLOW_CATALOG.md"
+  ],
+  "purpose": "Produce a reconciled enrollment result without duplicate business effects",
+  "trigger": "Student submits reviewed section choice",
+  "scope": {
+    "tenant_scope": "institution",
+    "tenant_id": "illustrative-tenant",
+    "allowed_roles": [
+      "student"
+    ],
+    "access_basis_refs": [
+      "proposed:institution-membership-policy"
+    ]
+  },
+  "authority": {
+    "mode": "authoritative",
+    "system": "illustrative-authorized-registration-system",
+    "registry_ref": "proposed:domain-authority-registry",
+    "official_record_write": true,
+    "institution_scope": "illustrative-tenant/registration/enroll",
+    "activation_ref": "proposed:activation-record-required-before-use",
+    "effective_from": null,
+    "writer_policy": "single_authoritative_writer"
+  },
+  "data": {
+    "input_refs": [
+      "proposed:registration-request"
+    ],
+    "output_refs": [
+      "proposed:registration-receipt"
+    ],
+    "classification": [
+      "education_record"
+    ],
+    "provenance_required": true,
+    "freshness_rule_ref": "proposed:eligibility-freshness",
+    "private_official_boundary_ref": "proposed:private-official-boundary"
+  },
+  "states": {
+    "business": [
+      "requested",
+      "enrolled",
+      "denied"
+    ],
+    "execution": [
+      "queued",
+      "validating",
+      "executing",
+      "result_unknown",
+      "reconciling",
+      "committed",
+      "failed"
+    ],
+    "initial_business": "requested",
+    "initial_execution": "queued",
+    "terminal_business": [
+      "enrolled",
+      "denied"
+    ],
+    "terminal_execution": [
+      "committed",
+      "failed"
+    ]
+  },
+  "steps": [
+    {
+      "id": "commit",
+      "name": "Validate and commit enrollment",
+      "kind": "hybrid",
+      "actor_role": "student",
+      "required_capabilities": [
+        "registration.enroll.request"
+      ],
+      "surface_refs": [
+        "proposed:registration-review-and-status"
+      ],
+      "executor_ref": "proposed:registration-command-handler",
+      "input_refs": [
+        "proposed:registration-request"
+      ],
+      "output_refs": [
+        "proposed:registration-receipt"
+      ],
+      "policy_refs": [
+        "proposed:registration-policy"
+      ],
+      "audit_events": [
+        "registration.command.started",
+        "registration.command.reconciled"
+      ],
+      "failure_codes": [
+        "OUTCOME_UNKNOWN",
+        "NO_COMMIT"
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "business.requested.enrolled",
+      "step_id": "commit",
+      "track": "business",
+      "from": "requested",
+      "to": "enrolled",
+      "guard_refs": [
+        "proposed:validated-transition-guard"
+      ],
+      "audit_event": "registration.business.enrolled"
+    },
+    {
+      "id": "business.requested.denied",
+      "step_id": "commit",
+      "track": "business",
+      "from": "requested",
+      "to": "denied",
+      "guard_refs": [
+        "proposed:validated-transition-guard"
+      ],
+      "audit_event": "registration.business.denied"
+    },
+    {
+      "id": "execution.queued.validating",
+      "step_id": "commit",
+      "track": "execution",
+      "from": "queued",
+      "to": "validating",
+      "guard_refs": [
+        "proposed:validated-transition-guard"
+      ],
+      "audit_event": "registration.execution.validating"
+    },
+    {
+      "id": "execution.validating.executing",
+      "step_id": "commit",
+      "track": "execution",
+      "from": "validating",
+      "to": "executing",
+      "guard_refs": [
+        "proposed:validated-transition-guard"
+      ],
+      "audit_event": "registration.execution.executing"
+    },
+    {
+      "id": "execution.validating.failed",
+      "step_id": "commit",
+      "track": "execution",
+      "from": "validating",
+      "to": "failed",
+      "guard_refs": [
+        "proposed:validated-transition-guard"
+      ],
+      "audit_event": "registration.execution.failed"
+    },
+    {
+      "id": "execution.executing.committed",
+      "step_id": "commit",
+      "track": "execution",
+      "from": "executing",
+      "to": "committed",
+      "guard_refs": [
+        "proposed:validated-transition-guard"
+      ],
+      "audit_event": "registration.execution.committed"
+    },
+    {
+      "id": "execution.executing.result_unknown",
+      "step_id": "commit",
+      "track": "execution",
+      "from": "executing",
+      "to": "result_unknown",
+      "guard_refs": [
+        "proposed:validated-transition-guard"
+      ],
+      "audit_event": "registration.execution.result_unknown"
+    },
+    {
+      "id": "execution.executing.failed",
+      "step_id": "commit",
+      "track": "execution",
+      "from": "executing",
+      "to": "failed",
+      "guard_refs": [
+        "proposed:validated-transition-guard"
+      ],
+      "audit_event": "registration.execution.failed"
+    },
+    {
+      "id": "execution.result_unknown.reconciling",
+      "step_id": "commit",
+      "track": "execution",
+      "from": "result_unknown",
+      "to": "reconciling",
+      "guard_refs": [
+        "proposed:validated-transition-guard"
+      ],
+      "audit_event": "registration.execution.reconciling"
+    },
+    {
+      "id": "execution.reconciling.committed",
+      "step_id": "commit",
+      "track": "execution",
+      "from": "reconciling",
+      "to": "committed",
+      "guard_refs": [
+        "proposed:validated-transition-guard"
+      ],
+      "audit_event": "registration.execution.committed"
+    },
+    {
+      "id": "execution.reconciling.failed",
+      "step_id": "commit",
+      "track": "execution",
+      "from": "reconciling",
+      "to": "failed",
+      "guard_refs": [
+        "proposed:validated-transition-guard"
+      ],
+      "audit_event": "registration.execution.failed"
+    }
+  ],
+  "controls": {
+    "risk": "consequential",
+    "human_authority_required": true,
+    "approval_policy_ref": "proposed:delegated-registration-authority-and-exception-approval",
+    "policy_version_ref": "proposed:policy-version",
+    "idempotency": {
+      "required": true,
+      "key_scope": "tenant+actor+domain+command",
+      "payload_binding": true,
+      "unknown_outcome_rule": "Reconcile against authority before conflicting action; never new-key blind replay"
+    },
+    "concurrency_rule_ref": "proposed:capacity-and-record-version-check",
+    "provider_data_policy_ref": "proposed:no-protected-data-to-ai-provider"
+  },
+  "recovery_paths": [
+    {
+      "code": "OUTCOME_UNKNOWN",
+      "detection": "Dispatch timed out without authoritative receipt",
+      "to_execution_state": "reconciling",
+      "retry_policy": "same_key_if_supported",
+      "user_message": "Registration is being checked; do not submit a second request.",
+      "owner": "Registrar and integration operator",
+      "compensation": "Do not compensate until authoritative outcome known; committed errors require an approved correction",
+      "acceptance_test_ids": [
+        "timeout"
+      ]
+    },
+    {
+      "code": "NO_COMMIT",
+      "detection": "Authority confirms no commitment",
+      "to_execution_state": "failed",
+      "retry_policy": "bounded_after_no_commit",
+      "user_message": "No enrollment occurred; review and retry after the cause is resolved.",
+      "owner": "Registration operator",
+      "compensation": "None: no committed write",
+      "acceptance_test_ids": [
+        "recovery"
+      ]
+    }
+  ],
+  "completion": {
+    "receipt_schema_ref": "proposed:registration-receipt-schema",
+    "projection_refs": [
+      "proposed:plan",
+      "proposed:calendar"
+    ],
+    "reconciliation_rule_ref": "proposed:registration-reconciliation",
+    "action_center_update_ref": "proposed:registration-action-result"
+  },
+  "operations": {
+    "owner": "Proposed registrar domain lead",
+    "escalation_ref": "proposed:registrar-exception-queue",
+    "retention_rule_ref": "proposed:institution-retention",
+    "rollback_or_correction_ref": "proposed:academic-correction-workflow",
+    "accessibility_test_refs": [
+      "proposed:keyboard-and-screen-reader-tests"
+    ],
+    "monitoring_rule_ref": "proposed:command-and-reconciliation-monitoring"
+  },
+  "ai_policy": {
+    "enabled": false,
+    "policy_ref": null,
+    "consequential_decision_authority": false,
+    "tool_budget_ref": null
+  },
+  "acceptance_tests": [
+    {
+      "id": "happy_path",
+      "suite": "happy_path",
+      "criterion": "Proposed happy_path acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "tenant_isolation",
+      "suite": "tenant_isolation",
+      "criterion": "Proposed tenant_isolation acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "role_denial",
+      "suite": "role_denial",
+      "criterion": "Proposed role_denial acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "concurrency",
+      "suite": "concurrency",
+      "criterion": "Proposed concurrency acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "replay",
+      "suite": "replay",
+      "criterion": "Proposed replay acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "revocation",
+      "suite": "revocation",
+      "criterion": "Proposed revocation acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "stale_source",
+      "suite": "stale_source",
+      "criterion": "Proposed stale_source acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "timeout",
+      "suite": "timeout",
+      "criterion": "Proposed timeout acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "accessibility",
+      "suite": "accessibility",
+      "criterion": "Proposed accessibility acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "recovery",
+      "suite": "recovery",
+      "criterion": "Proposed recovery acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "privacy",
+      "suite": "privacy",
+      "criterion": "Proposed privacy acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "authority",
+      "suite": "authority",
+      "criterion": "Proposed authority acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    }
+  ],
+  "readiness": {
+    "designed": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "Illustrative definition; no runtime or institutional evidence claimed"
+    },
+    "implemented": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "Illustrative definition; no runtime or institutional evidence claimed"
+    },
+    "tested": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "Illustrative definition; no runtime or institutional evidence claimed"
+    },
+    "deployed": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "Illustrative definition; no runtime or institutional evidence claimed"
+    },
+    "institution_authorized": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "Illustrative definition; no runtime or institutional evidence claimed"
+    },
+    "production_enabled": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "Illustrative definition; no runtime or institutional evidence claimed"
+    }
+  }
+}
