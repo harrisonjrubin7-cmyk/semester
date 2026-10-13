@@ -83,7 +83,7 @@ only by RLS policies. Those policies were read for the operations-relevant ones:
 | `feature_cohort_members` I/U | `tenant:configure` | Same. |
 | `provider_registry` I/U | `platform:configure` | Low maturities and demotions stay direct. Raising a row to `incremental` or above is closed (`20261012060000`, duty `provider-maturity`, two approvers). Other columns remain directly writable; the AI model/policy side of duty `ai-provider` is not on this table. |
 | `trust_artifacts` I/U, `trust_artifact_versions` I | `trust:publish` | Direct publish. |
-| `gtm_pilot_metrics` I/U/**D**, `gtm_accounts`, `gtm_pilots`, `gtm_decision_log` | `account:manage` platform | Direct CRUD including **delete** of pilot metrics. |
+| `gtm_pilot_metrics` I/U/**D**, `gtm_accounts`, `gtm_pilots`, `gtm_decision_log` | `account:manage` platform | Direct CRUD. **Closed for pilot metrics** (`20261012070000`): once a pilot has started, its metrics cannot be deleted or reworded (a guard, not an approval duty). The other `gtm_*` tables remain directly writable. |
 | `legal_holds` I, release U | `hold:place` / `hold:release` | Two-person release is a check constraint, not an approval. |
 | `schools` ALL (role `public`) | `private.is_app_admin()` | Legacy admin gate; policy is on role `public`, effective only for the admin. |
 | `human_overrides` I | `override:record` | Recorded, by design. |

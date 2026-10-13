@@ -646,6 +646,10 @@ begin
   perform pg_temp.refused_with('starting with a metric that has no baseline', sales,
     format($q$update public.gtm_pilots set status = 'active' where id = %L$q$, pilot), 'not ready: metric_baseline');
   perform pg_temp.run(sales, format($q$update public.gtm_pilot_metrics set baseline = 'kickoff survey' where pilot_id = %L and baseline is null$q$, pilot));
+  -- While the pilot is still being agreed its measures are free to change (F-1 guard, 20261012070000).
+  perform pg_temp.run(sales, format($q$insert into public.gtm_pilot_metrics (pilot_id, name, target, baseline) values (%L, 'Scratch', '1', 'x')$q$, pilot));
+  perform pg_temp.counted('a proposed pilot''s metric can still be deleted',
+    pg_temp.run(sales, format($q$delete from public.gtm_pilot_metrics where pilot_id = %L and name = 'Scratch'$q$, pilot)), 1);
   -- Every pilot runs exactly 26 weeks (D-134): 109 days, inside the old 60–120, is refused.
   perform pg_temp.run(sales, format($q$update public.gtm_pilots set end_date = '2027-04-30', conversion_date = '2027-05-15' where id = %L$q$, pilot));
   perform pg_temp.refused_with('a pilot that is not 26 weeks', sales,
@@ -653,6 +657,26 @@ begin
   perform pg_temp.run(sales, format($q$update public.gtm_pilots set end_date = '2027-07-12', conversion_date = '2027-07-20' where id = %L$q$, pilot));
   perform pg_temp.counted('a ready pilot starts',
     pg_temp.run(sales, format($q$update public.gtm_pilots set status = 'active' where id = %L$q$, pilot)), 1);
+
+  -- ── A running pilot's measures are frozen (F-1) ──────────────────────────
+  perform pg_temp.refused_with('deleting a metric of a running pilot', sales,
+    format($q$delete from public.gtm_pilot_metrics where pilot_id = %L and name = 'Usefulness'$q$, pilot),
+    'cannot be deleted');
+  perform pg_temp.refused_with('rewording the target of a running pilot''s metric', sales,
+    format($q$update public.gtm_pilot_metrics set target = '1/5' where pilot_id = %L and name = 'Usefulness'$q$, pilot),
+    'cannot be reworded');
+  perform pg_temp.refused_with('renaming a running pilot''s metric', sales,
+    format($q$update public.gtm_pilot_metrics set name = 'Something easier' where pilot_id = %L and name = 'Usefulness'$q$, pilot),
+    'cannot be reworded');
+  perform pg_temp.counted('adding a metric to a running pilot still works',
+    pg_temp.run(sales, format($q$insert into public.gtm_pilot_metrics (pilot_id, name, target, baseline) values (%L, 'Late addition', '1', 'x')$q$, pilot)), 1);
+  perform pg_temp.counted('and the metrics are all still there',
+    (select count(*) from public.gtm_pilot_metrics where pilot_id = pilot), 4);
+  -- THE CONTROL: without the guard the same delete goes through.
+  alter table public.gtm_pilot_metrics disable trigger gtm_pilot_metrics_frozen;
+  perform pg_temp.counted('with the guard disabled the delete succeeds — THE CONTROL',
+    pg_temp.run(sales, format($q$delete from public.gtm_pilot_metrics where pilot_id = %L and name = 'Usefulness'$q$, pilot)), 1);
+  alter table public.gtm_pilot_metrics enable trigger gtm_pilot_metrics_frozen;
 
   perform pg_temp.refused_with('deciding a pilot with nothing signed', sales,
     format($q$update public.gtm_pilots set status = 'decided' where id = %L$q$, pilot), 'signed outcome');
