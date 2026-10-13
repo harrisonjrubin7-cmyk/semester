@@ -933,9 +933,11 @@ a:hover {
   color: var(--shell-navigation-text);
   background: var(--shell-navigation-surface-active);
 }
+/* The current page is marked by the rail's raised surface, not the action
+   colour: orange reads as a button to press. */
 .rail .rail-item.is-on {
-  color: var(--shell-on-primary);
-  background: var(--shell-primary);
+  color: var(--shell-navigation-text);
+  background: var(--shell-navigation-surface-active);
 }
 
 /* ── The collapsed rail (medium) ──────────────────────────────────────────
