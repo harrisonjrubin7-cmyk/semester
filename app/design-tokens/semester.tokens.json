@@ -2227,7 +2227,7 @@
     },
     "workspace-rail": {
       "$type": "color",
-      "$value": "#173336",
+      "$value": "#090a0e",
       "$extensions": {
         "semester": {
           "varies": [
@@ -2260,7 +2260,7 @@
     },
     "workspace-rail-raised": {
       "$type": "color",
-      "$value": "#21484b",
+      "$value": "#12141a",
       "$extensions": {
         "semester": {
           "varies": [

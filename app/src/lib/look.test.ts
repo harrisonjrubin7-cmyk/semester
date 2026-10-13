@@ -71,7 +71,7 @@ describe('reference-inspired workspace shell tokens', () => {
     const light = tokensFor({ ground: 'parchment' });
     const dark = tokensFor({ ground: 'ink' });
 
-    expect(light['--workspace-rail']).toBe('#173336');
+    expect(light['--workspace-rail']).toBe('#090a0e');
     expect(light['--workspace-canvas']).toBe('#f4f3ee');
     expect(dark['--workspace-canvas']).toBe(dark['--app-bg']);
   });
