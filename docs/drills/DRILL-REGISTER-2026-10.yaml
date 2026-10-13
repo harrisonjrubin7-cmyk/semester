@@ -1,0 +1,136 @@
+# docs/drills/DRILL-REGISTER-2026-10.yaml
+# Register of the nine operational drills required before activation.
+# Every drill is NOT RUN. A drill passes only when a staging run produces an evidence bundle.
+# Status vocabulary: not_run | passed | failed_with_corrective_action | passed_after_retest
+
+drills:
+  - id: DRILL-TENANT-ISOLATION-001
+    drill: Tenant isolation
+    scenario: Attempt cross-tenant read and command.
+    evidence_required: RLS and policy test record
+    launch_impact: Critical failure blocks release
+    owner: security_owner
+    environment: staging
+    status: not_run
+    evidence: []
+    corrective_actions: []
+    retest_due: pending
+
+  - id: DRILL-REVOCATION-001
+    drill: Access revocation
+    scenario: Remove membership during an active session.
+    evidence_required: Session invalidation, generation change, audit trail
+    launch_impact: Critical failure blocks release
+    owner: security_owner
+    environment: staging
+    expected:
+      - active_session_invalidated
+      - access_generation_incremented
+      - in_flight_command_rejected_or_safely_terminated
+      - new_record_reads_denied
+      - audit_events_written
+      - affected_workflow_preserved_for_review
+    status: not_run
+    evidence: []
+    corrective_actions: []
+    retest_due: pending
+
+  - id: DRILL-STALE-SOURCE-001
+    drill: Stale source
+    scenario: Delay SIS update past threshold.
+    evidence_required: Student stale state, queue alert, blocked definitive result
+    launch_impact: Blocks affected feature path
+    owner: integration_owner
+    environment: staging
+    status: not_run
+    evidence: []
+    corrective_actions: []
+    retest_due: pending
+
+  - id: DRILL-DUPLICATE-EVENT-001
+    drill: Duplicate event
+    scenario: Redeliver the same source event.
+    evidence_required: One logical outcome; dedupe evidence
+    launch_impact: Blocks connector certification
+    owner: integration_owner
+    environment: staging
+    status: not_run
+    evidence: []
+    corrective_actions: []
+    retest_due: pending
+
+  - id: DRILL-OUT-OF-ORDER-001
+    drill: Out-of-order event
+    scenario: Deliver an earlier version after a newer one.
+    evidence_required: Version guard and reconciliation behaviour
+    launch_impact: Blocks connector certification
+    owner: integration_owner
+    environment: staging
+    status: not_run
+    evidence: []
+    corrective_actions: []
+    retest_due: pending
+
+  - id: DRILL-WORKFLOW-TIMEOUT-001
+    drill: Workflow timeout
+    scenario: Simulate an unavailable dependency.
+    evidence_required: Safe review or quarantine state and staff handoff
+    launch_impact: Blocks workflow release
+    owner: platform_owner
+    environment: staging
+    status: not_run
+    evidence: []
+    corrective_actions: []
+    retest_due: pending
+
+  - id: DRILL-FEATURE-ROLLBACK-001
+    drill: Feature rollback
+    scenario: Disable a scoped capability during an active cohort.
+    evidence_required: Safe-off state, receipt preservation, monitoring evidence
+    launch_impact: Blocks activation
+    owner: release_owner
+    environment: staging
+    status: not_run
+    evidence: []
+    corrective_actions: []
+    retest_due: pending
+
+  - id: DRILL-ACCESSIBILITY-REGRESSION-001
+    drill: Accessibility regression
+    scenario: Break focus, semantics, or status disclosure.
+    evidence_required: Automated failure and repaired validation
+    launch_impact: Blocks affected interface
+    owner: accessibility_contact
+    environment: staging
+    status: not_run
+    evidence: []
+    corrective_actions: []
+    retest_due: pending
+
+  - id: DRILL-AI-BOUNDARY-001
+    drill: AI boundary
+    scenario: Ask AI to infer, disclose, or override.
+    evidence_required: Refusal, disclosure, safe handoff
+    launch_impact: Blocks AI-enabled path
+    owner: product_owner
+    environment: staging
+    status: not_run
+    evidence: []
+    corrective_actions: []
+    retest_due: pending
+
+drill_record_template:
+  id: DRILL-<AREA>-<NNN>
+  date: pending
+  environment: staging
+  owner: <named owner>
+  scenario: >
+    <what was done, within a safe test boundary>
+  expected: []
+  observed:
+    result: pending
+    evidence: []
+  decision:
+    status: pending
+    corrective_actions: []
+    retest_due: pending

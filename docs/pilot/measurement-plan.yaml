@@ -1,0 +1,42 @@
+# docs/pilot/measurement-plan.yaml
+# Status: specified. Measures whether the pilot helps people understand and complete a safe next step.
+
+pilot_measurement:
+  questions:
+    - "Could students tell what the result meant?"
+    - "Could students identify the next safe action?"
+    - "Did staff receive cases with sufficient context?"
+    - "Did source and workflow behavior remain within approved bounds?"
+    - "Did Semester avoid implying official enrollment?"
+
+  measures:
+    student_understanding:
+      evidence:
+        - short_in_product_comprehension_check
+        - support_ticket_theme_review
+        - moderated_feedback_where_approved
+    workflow_completion:
+      evidence:
+        - receipt_created
+        - safe_review_state_reached
+        - referral_or_handoff_completed
+    source_integrity:
+      evidence:
+        - freshness_state_distribution
+        - reconciliation_case_age
+        - mapping_and_schema_errors
+    staff_operations:
+      evidence:
+        - queue_volume
+        - acknowledgement_time
+        - resolution_route
+        - repeat_case_categories
+    trust:
+      evidence:
+        - confusion_about_enrollment
+        - privacy_or_access_concerns
+        - disclosure_or_source_label_comprehension
+
+  rule: >
+    Completion metrics must be separated from authoritative enrollment,
+    academic outcome, or institutional policy decisions.
