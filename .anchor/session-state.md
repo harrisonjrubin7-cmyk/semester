@@ -1,6 +1,6 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-13 13:59:44_  ·  branch: `claude/friendly-goldberg-xmq92w`
+_Updated: 2026-10-13 14:00:05_  ·  branch: `claude/friendly-goldberg-xmq92w`
 
 ## Uncommitted changes
 ```
@@ -15,6 +15,7 @@ Diff stat:
 
 ## Recent commits
 ```
+a159f309 chore: update session tool state checkpoint
 905fb2ba chore: update session tool state checkpoint
 99fe028d chore: update session tool state checkpoint
 42deb575 chore: update session tool state checkpoint
@@ -22,7 +23,6 @@ b414c437 chore: update session tool state checkpoint
 9722c199 chore: update session tool state checkpoint
 c01b9d90 chore: update session tool state checkpoint
 af104858 chore: update session tool state checkpoint
-14440fba chore: commit session tool state (.anchor, .md-linker)
 ```
 
 ## Resume
