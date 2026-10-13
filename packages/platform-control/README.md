@@ -25,3 +25,5 @@ npm run tenant:create -- --key demo-campus --name "Demo Campus" --owner platform
 `tenant:create` creates only a new, unactivated synthetic registry record and refuses production provisioning. It does not create credentials, deploy infrastructure, or activate a tenant.
 
 The first implemented registry slice is `registration.readiness`. Extend the registry one real job loop at a time; do not bulk-mark the larger ecosystem roster as implemented.
+
+Tenant activation for that slice is gated by `registry/activation-gates/registration.readiness.json`: the 21 items of the pilot brief (product, authority and policy, operations, trust), each `passed` with cited repository evidence or `not_verified` with a stated gap. The gate's `status` is derived, not set: it is `ready` only when every item passed and `decision.record` names a recorded decision by the three approvers. Today it is `not_ready` (one item passed: policy tests, 55 passing on 2026-10-13). A capability marked `tenant_activated` without a ready gate fails `registry:validate`.
