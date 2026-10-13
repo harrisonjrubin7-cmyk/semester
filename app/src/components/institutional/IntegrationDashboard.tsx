@@ -21,6 +21,7 @@ import {
 } from '../../lib/integration/dashboard';
 import { FRESHNESS_TEXT } from '../../lib/integration/freshness';
 import { ActionButton, EmptyState, Notice, Segmented, SectionLabel, TabList } from '../ui';
+import { ErrorState, LoadingState } from '../unity/States';
 
 type View = 'map' | 'connections' | 'mappings' | 'runs' | 'conflicts';
 
@@ -40,7 +41,11 @@ export interface IntegrationDashboardProps {
   now?: Date;
 }
 
-const when = (iso: string | null) => (iso ? `${iso.slice(0, 16).replace('T', ' ')} UTC` : '—');
+const when = (iso: string | null) => {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? 'Date unavailable' : `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+};
 const arrow = (n: MapNode) =>
   n.direction === 'bidirectional' ? '⇅' : n.direction === 'approved_write' ? '↑' : n.direction === 'read' ? '↓' : '·';
 
@@ -120,15 +125,28 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
   const [data, setData] = useState<DashboardData>(EMPTY_DASHBOARD);
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [message, setMessage] = useState('');
+  const [loadError, setLoadError] = useState('');
   const [view, setView] = useState<View>('map');
   const [shape, setShape] = useState<'diagram' | 'table'>('diagram');
   const [picked, setPicked] = useState<string | null>(null);
+  const [errorConnection, setErrorConnection] = useState('all');
+  const [errorCategory, setErrorCategory] = useState('all');
+  const [errorSeverity, setErrorSeverity] = useState('all');
+  const [errorRetry, setErrorRetry] = useState<'all' | 'retryable' | 'not-retryable'>('all');
 
   const reader = useMemo(() => load ?? (async () => loadDashboard(await cloud())), [load]);
   const refresh = () => {
     setState('loading');
-    reader().then((d) => { setData(d); setState('ready'); }, (e: unknown) => {
-      setMessage(e instanceof Error ? e.message : 'Could not load integration status.');
+    setLoadError('');
+    reader().then((d) => {
+      setData(d);
+      setErrorConnection('all');
+      setErrorCategory('all');
+      setErrorSeverity('all');
+      setErrorRetry('all');
+      setState('ready');
+    }, (e: unknown) => {
+      setLoadError(e instanceof Error ? e.message : 'Could not load integration status.');
       setState('error');
     });
   };
@@ -136,9 +154,45 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
   useEffect(refresh, [reader]);
 
   const map = useMemo(() => buildMap(data, now), [data, now]);
-  const groups = useMemo(() => conflicts(data), [data]);
+  const mappingGroups = useMemo(() => conflicts({ ...EMPTY_DASHBOARD, mappings: data.mappings }), [data.mappings]);
   const node = map.find((n) => n.domain === picked) ?? null;
-  const connectionName = (id: string) => data.connections.find((c) => c.id === id)?.connection_name ?? 'Unknown';
+  const connectionsById = new Map(data.connections.map((connection) => [connection.id, connection]));
+  const connectionName = (id: string) => connectionsById.get(id)?.connection_name ?? 'Unknown';
+  const errorConnectionOptions = (() => {
+    const idsWithErrors = new Set(data.errors.map((error) => error.connection_id));
+    const names = data.connections
+      .filter((connection) => idsWithErrors.has(connection.id))
+      .map((connection) => connection.connection_name);
+    const totals = new Map(names.map((name) => [name, names.filter((candidate) => candidate === name).length]));
+    const seen = new Map<string, number>();
+    const known = data.connections
+      .filter((connection) => idsWithErrors.has(connection.id))
+      .map((connection, index) => {
+        const ordinal = (seen.get(connection.connection_name) ?? 0) + 1;
+        seen.set(connection.connection_name, ordinal);
+        const total = totals.get(connection.connection_name) ?? 1;
+        return {
+          token: `connection-${index + 1}`,
+          label: total > 1 ? `${connection.connection_name} · ${ordinal} of ${total}` : connection.connection_name,
+          connectionId: connection.id,
+        };
+      });
+    return data.errors.some((error) => !connectionsById.has(error.connection_id))
+      ? [...known, { token: 'unknown', label: 'Unknown', connectionId: null }]
+      : known;
+  })();
+  const errorCategories = [...new Set(data.errors.map((error) => error.error_category))].sort();
+  const errorSeverities = [...new Set(data.errors.map((error) => error.severity))].sort();
+  const selectedErrorConnection = errorConnectionOptions.find((option) => option.token === errorConnection);
+  const shownErrors = data.errors.filter((error) => (
+    (errorConnection === 'all'
+      || (selectedErrorConnection?.connectionId === null
+        ? !connectionsById.has(error.connection_id)
+        : error.connection_id === selectedErrorConnection?.connectionId))
+    && (errorCategory === 'all' || error.error_category === errorCategory)
+    && (errorSeverity === 'all' || error.severity === errorSeverity)
+    && (errorRetry === 'all' || error.retryable === (errorRetry === 'retryable'))
+  ));
   const engaged = data.killSwitches.filter((k) => k.engaged);
 
   const doPause = async (c: ConnectionRow, paused: boolean, reason: string) => {
@@ -173,6 +227,7 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
           </p>
         </div>
         <ActionButton
+          disabled={state !== 'ready'}
           onClick={() => download({
             name: 'Semester integration health.json',
             mime: 'application/json',
@@ -189,13 +244,22 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
           Stopped by a kill switch: {engaged.map((k) => `${k.switch_key}${k.tenant_id === null ? ' (every school)' : ''}`).join(', ')}.
         </Notice>
       )}
-      {state === 'error' && <Notice alert>{message}</Notice>}
-      {state !== 'error' && message && <p role="status" className="control-plane-message">{message}</p>}
+      {message && <p role="status" className="control-plane-message">{message}</p>}
 
-      <TabList label="Integration views" tabs={VIEWS} value={view} onChange={setView} className="integration-tabs"
-        tabClassName={(on) => `integration-tab${on ? ' is-on' : ''}`} />
+      {state === 'loading' ? (
+        <LoadingState what="integration status" />
+      ) : state === 'error' ? (
+        <ErrorState
+          title="Integration status could not be loaded"
+          body={loadError}
+          recover={{ label: 'Retry', run: refresh }}
+        />
+      ) : (
+        <>
+          <TabList label="Integration views" tabs={VIEWS} value={view} onChange={setView} className="integration-tabs"
+            tabClassName={(on) => `integration-tab${on ? ' is-on' : ''}`} />
 
-      <div role="tabpanel" aria-label={VIEWS.find((v) => v.id === view)!.label} aria-busy={state === 'loading'}>
+          <div role="tabpanel" aria-label={VIEWS.find((v) => v.id === view)!.label}>
         {view === 'map' && (
           <>
             <Segmented
@@ -343,7 +407,7 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
 
         {view === 'runs' && (
           data.runs.length === 0
-            ? <EmptyState inline title="No sync runs" body="Nothing has synced. A run appears here the first time an approved connection is read." />
+            ? <EmptyState inline title="No sync runs in this window" body="No sync runs are available in this loaded window. That does not prove no prior sync occurred." />
             : (
               <div className="integration-table-wrap">
                 <table className="integration-table">
@@ -375,39 +439,129 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
 
         {view === 'conflicts' && (
           <>
-            {groups.length === 0 && data.deadLetters.length === 0 ? (
-              <EmptyState inline title="No open conflicts" body="Type, enum, missing-field, duplicate, timestamp, transform, scope, classification, consent, rate-limit and deletion conflicts appear here." />
+            <div className="integration-error-nav" role="group" aria-label="Error investigation">
+              <ActionButton tone="ghost" onClick={() => setView('runs')}>Sync history</ActionButton>
+              {data.deadLetters.length > 0 && <a className="btn btn-ghost" href="#integration-dead-letters">Dead letters</a>}
+            </div>
+            <p className="integration-conflict-note">
+              Sync errors and mapping conflicts are separate. Their counts can differ, and this view is not a complete history.
+            </p>
+            <SectionLabel>Sync errors</SectionLabel>
+            {data.errors.length === 0 ? (
+              <EmptyState
+                inline
+                title="No sync error rows in this window"
+                body="No unresolved sync error rows are available in this loaded window. That does not prove prior syncs succeeded."
+              />
+            ) : (
+              <>
+                <p className="integration-error-window" role="status">
+                  {data.errors.length === 200
+                    ? `Showing ${shownErrors.length} of the newest 200 unresolved sync errors available to your account. Earlier unresolved errors may exist.`
+                    : `Showing ${shownErrors.length} of ${data.errors.length} unresolved sync errors in the loaded window. Up to 200 newest rows are loaded; earlier unresolved errors may exist.`}
+                </p>
+                <fieldset className="integration-error-filters">
+                  <legend>Filter sync errors</legend>
+                  <label>
+                    <span>Connection</span>
+                    <select value={errorConnection} onChange={(event) => setErrorConnection(event.target.value)}>
+                      <option value="all">All connections</option>
+                      {errorConnectionOptions.map((option) => (
+                        <option key={option.token} value={option.token}>{option.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Category</span>
+                    <select value={errorCategory} onChange={(event) => setErrorCategory(event.target.value)}>
+                      <option value="all">All categories</option>
+                      {errorCategories.map((category) => (
+                        <option key={category} value={category}>{category.replace(/_/g, ' ')}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Severity</span>
+                    <select value={errorSeverity} onChange={(event) => setErrorSeverity(event.target.value)}>
+                      <option value="all">All severities</option>
+                      {errorSeverities.map((severity) => <option key={severity} value={severity}>{severity}</option>)}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Retry status</span>
+                    <select value={errorRetry} onChange={(event) => setErrorRetry(event.target.value as typeof errorRetry)}>
+                      <option value="all">All retry states</option>
+                      <option value="retryable">Retryable</option>
+                      <option value="not-retryable">Not retryable</option>
+                    </select>
+                  </label>
+                </fieldset>
+                {shownErrors.length === 0 ? (
+                  <EmptyState inline title="No matching sync errors" body="No loaded sync error matches all four filters. Clear or change a filter to see the loaded window." />
+                ) : (
+                  <ul className="integration-error-list" aria-label="Unresolved sync errors">
+                    {shownErrors.map((error) => (
+                      <li key={error.id}>
+                        <details>
+                          <summary>{connectionName(error.connection_id)} · {error.error_category.replace(/_/g, ' ')}</summary>
+                          <dl>
+                            <dt>Category</dt><dd>{error.error_category.replace(/_/g, ' ')}</dd>
+                            <dt>Severity</dt><dd>{error.severity}</dd>
+                            <dt>Retry status</dt>
+                            <dd>
+                              {error.retryable ? 'Retryable' : 'Not retryable'} · {error.retry_count} {error.retry_count === 1 ? 'retry' : 'retries'}
+                            </dd>
+                            <dt>Recorded</dt><dd>{when(error.created_at)}</dd>
+                          </dl>
+                        </details>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+            <SectionLabel>Mapping conflicts</SectionLabel>
+            {mappingGroups.length === 0 ? (
+              <EmptyState inline title="No mapping conflicts" body="No loaded field mapping currently reports a conflict." />
             ) : (
               <div className="integration-table-wrap">
-                <table className="integration-table">
-                  <caption className="sr-only">Open conflicts by kind</caption>
+                <table className="integration-table" aria-label="Mapping conflicts">
+                  <caption className="sr-only">Mapping conflicts by kind</caption>
                   <thead><tr><th scope="col">Kind</th><th scope="col">Count</th><th scope="col">Connections</th><th scope="col">Latest</th></tr></thead>
                   <tbody>
-                    {groups.map((g) => (
+                    {mappingGroups.map((g) => (
                       <tr key={g.kind}><th scope="row">{g.kind.replace(/_/g, ' ')}</th><td>{g.count}</td><td>{g.connections}</td><td>{when(g.latest || null)}</td></tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             )}
-            {data.deadLetters.length > 0 && (
-              <>
-                <SectionLabel>Dead letters</SectionLabel>
+            <section id="integration-dead-letters">
+              <SectionLabel>Dead letters</SectionLabel>
+              {data.deadLetters.length === 0 ? (
+                <EmptyState
+                  inline
+                  title="No dead letters in this loaded window"
+                  body="No unresolved dead-letter rows are available here. That does not establish a complete sync history."
+                />
+              ) : (
                 <ul className="integration-dead-letters">
                   {data.deadLetters.map((d) => (
                     <li key={d.id}>
-                      <span>{connectionName(d.connection_id)} — {d.reason} ({d.attempts} attempts, {when(d.created_at)})</span>
+                      <span>{connectionName(d.connection_id)} — {d.attempts} attempts, recorded {when(d.created_at)}</span>
                       {d.replay_requested_at
                         ? <span>Replay requested {when(d.replay_requested_at)}</span>
                         : <Confirmed label="Request replay" onConfirm={(r) => doReplay(d.id, r)} />}
                     </li>
                   ))}
                 </ul>
-              </>
-            )}
+              )}
+            </section>
           </>
         )}
-      </div>
+          </div>
+        </>
+      )}
     </section>
   );
 }
