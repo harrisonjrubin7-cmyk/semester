@@ -31,6 +31,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `pipeline/` | Syllabus to course tooling: ingest, lessons, slides, handouts, alignment, and `validate.mjs`, which CI runs. See [`pipeline/README.md`](../../pipeline/README.md). |
 | `project/` | The original Claude Design handoff: HTML prototypes and the design system. Reference material; the app does not import it. |
 | `scripts/` | Scanners for the static company site (`company-site-scan-*.mjs`). Not the app's scripts; those are in `app/scripts/`. |
+| `starter/` | The pnpm and Turborepo backbone for identity, row-level security, policy, the data access layer, a student app, and a workflow worker. Separate from `app/`; its CI is `.github/workflows/starter-ci.yml`. See [`starter/README.md`](../../starter/README.md). |
 | `supabase/` | The database and the edge functions, and the SQL that checks them. See below. |
 | `tasks/` | Planning notes (`plan.md`, `todo.md`). |
 | `infra/` | Infrastructure as code: Terraform modules and environments (`platform`, `staging`, `production`), the Rego policy that checks plans and workflows, and one change record per governed pull request. Nothing in it has been applied yet. See [`infra/README.md`](../../infra/README.md). |
