@@ -1567,9 +1567,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // Read from the base as well as from memory, so a course deleted while
       // offline is still a deletion after the app was closed and opened.
       const removed = [...new Set([...state.removedCourses, ...coursesDeletedHere(readBase(), courses, ingressDrops())])];
+      const outgoing = withCarried(account.id, rest as Record<string, unknown>);
       void pushCloud(
         account.id,
-        withCarried(account.id, rest as Record<string, unknown>),
+        outgoing,
         courses.map((c) => ({ id: c.course.id, data: c })),
         removed,
         seenRows(),
@@ -1578,6 +1579,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           // What the database stamped, not what this device's clock says.
           inFlight.current = false;
           markSeen(seen);
+          // The account's row is now what was sent, at the version this push
+          // made, so the carried copy is too: a tab of an older build reading
+          // it must not send the fields of the pull before this push.
+          rememberCarried(account.id, outgoing, KNOWN_FIELDS, seen?.state);
           // And the account now holds what was sent.
           writeBase(baseOf(forLegacy({ ...rest, courses } as Record<string, unknown>)));
           // Only if nothing changed while it was on its way: an edit made

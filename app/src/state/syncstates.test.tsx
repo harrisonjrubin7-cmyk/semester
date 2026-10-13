@@ -849,6 +849,28 @@ describe('what a sync must not lose', () => {
     });
   }
 
+  // Found reviewing 746bbbd: a push moved the account on, and the carried copy
+  // still named the pull before it, so a tab of an older build that took it
+  // later could send its stale fields at the new version.
+  it('records what it pushed as the carried copy, at the version the push made', async () => {
+    const later = [{ id: 'f1', said: 'written by a build from the future' }];
+    pull.mockResolvedValue({
+      state: { fromANewerBuild: later },
+      courses: [],
+      updated: 1,
+      seen: { state: '2026-10-12T10:00:00.000+00:00', courses: {} },
+    });
+    push.mockImplementation(async () => ({ state: '2026-10-12T10:05:00.000+00:00', courses: {} }));
+    await mount();
+    await wait(3_000);
+    await addTask('an edit that goes up');
+    await wait(3_000);
+    expect(push).toHaveBeenCalled();
+    const stored = JSON.parse(localStorage.getItem('semester.carried')!) as { at: number; fields: Record<string, unknown> };
+    expect(stored.at).toBe(Date.parse('2026-10-12T10:05:00.000+00:00') * 1000);
+    expect(stored.fields.fromANewerBuild).toEqual(later);
+  });
+
   it('pushes back a field a newer build wrote, untouched', async () => {
     // A name no build has, so the test still means this once the field is real.
     const later = [{ id: 'f1', said: 'written by a build from the future' }];
