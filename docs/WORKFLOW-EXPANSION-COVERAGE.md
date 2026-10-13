@@ -67,7 +67,7 @@ No workflow in this file meets the contract yet.
 | PROP-WF-027 | Developer platform | Partner app certification, installation, retirement | Developer platform lead | API-PLATFORM.md, DEVELOPER-TOOLS.md, LTI-1.3-LAUNCH-RUNBOOK.md | Unverified |
 | PROP-WF-028 | Operations | Release, incident, recovery, renewal | Reliability and operations lead | RELEASE-INCIDENT-OPERATOR-RUNBOOK.md, OPERATIONAL-READINESS-PACK.md, RUNBOOKS.md, CRISIS-RESPONSE-RUNBOOK.md | Unverified |
 
-Coverage summary by filename: 22 of 28 items have at least one related spec, and 10 items have none (PROP-WF-003, 006, 007, 011, 013, 014, 015, 016, 017, 018). No item has verified coverage.
+Coverage summary by filename: 18 of 28 items have at least one related spec, and 10 items have none (PROP-WF-003, 006, 007, 011, 013, 014, 015, 016, 017, 018). No item has verified coverage.
 
 ## Blockers and decisions required
 
