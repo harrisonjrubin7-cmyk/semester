@@ -1,13 +1,56 @@
-# Commands, the sensitive-command authorization chain, and failure drills.
+# Commands, the state machine, the sensitive-command authorization chain, and
+# the failure drills.
 #
-# Commands marked `provisional: true` are named by the capabilities or records
-# but not specified in the brief; their fields are a first draft for review.
+# Commands are the two that the existing store implements: `readiness.start`
+# (the RPC path for a new `requested` evaluation) and `readiness.transition`
+# (the compare-and-swap save of every later change). `readiness.refresh` is a
+# transition from a completed state back to `evaluating`, so it is not a
+# separate command. Routing and referral commands from the brief are not in
+# the store and are recorded as open items in README.md.
 #
 # Invariants the contract test enforces:
-#   - every writes entry is a record or one of audit_events/outbox_events;
+#   - every writes entry is a record;
 #   - a record's write_path.commands and the commands' writes agree;
-#   - a command that publishes writes outbox_events;
+#   - a command that publishes writes domain_outbox_events;
+#   - every write to the store also writes gateway_audit;
 #   - publishes entries are catalogued in events.yaml.
+
+readiness_states:
+  canonical:
+    - requested
+    - evaluating
+    - ready
+    - blocked
+    - needs_review
+    - unknown
+    - stale
+    - reconciling
+  # The five readiness outcomes confirmed for the pilot. Each maps onto one
+  # canonical state. `in_progress` is not a readiness outcome: it covers the
+  # three transitional states, which a student sees as "updating".
+  display:
+    unknown: unknown
+    stale: stale
+    blocked: blocked
+    needs_review: needs_review
+    resolved: ready
+  transitional: [requested, evaluating, reconciling]
+
+# Edges the save RPC enforces (private.registration_readiness_edge_ok).
+state_edges:
+  - [requested, evaluating]
+  - [evaluating, ready]
+  - [evaluating, blocked]
+  - [evaluating, needs_review]
+  - [evaluating, unknown]
+  - [evaluating, stale]
+  - [evaluating, reconciling]
+  - [ready, evaluating]
+  - [blocked, evaluating]
+  - [needs_review, reconciling]
+  - [unknown, reconciling]
+  - [stale, reconciling]
+  - [reconciling, evaluating]
 
 authorization_chain:
   - parse_and_validate_input
@@ -25,148 +68,77 @@ authorization_chain:
   - persist_audit_and_outbox_in_transaction
   - return_receipt_or_safe_error
 
-readiness_case_states:
-  - unknown
-  - stale
-  - blocked
-  - needs_review
-  - resolved
-
 commands:
-  - name: readiness.evaluate
+  - name: readiness.start
     version: 1
+    # Target actors from the brief; the RPC does not check roles itself.
     actor_roles:
       - student
       - advisor
       - registrar
     input_schema:
       tenant_id: uuid
-      student_id: uuid
+      subject_id: string
       term_id: string
-      goal: object
+      requested_by: string
       idempotency_key: string
-    preconditions:
-      - active_membership
-      - policy_allow
-      - student_scope_or_authorized_staff_scope
     state_guard:
+      creates: requested
+      allowed_from: []
+    writes:
+      - registration_readiness_evaluations
+      - registration_readiness_receipts
+      - domain_outbox_events
+      - gateway_audit
+    publishes:
+      - registration.readiness_requested
+    requires_audit: true
+    requires_idempotency: true
+    safe_failure:
+      - do_not_change_official_records
+      - return_retryable_or_review_state
+      - preserve_existing_case_history
+
+  - name: readiness.transition
+    version: 1
+    actor_roles:
+      - student
+      - registrar
+    input_schema:
+      tenant_id: uuid
+      evaluation_id: string
+      expected_version: integer
+      next_state: string
+      idempotency_key: string
+    state_guard:
+      # Every canonical state that has an outgoing edge.
       allowed_from:
+        - requested
+        - evaluating
+        - ready
+        - blocked
+        - needs_review
         - unknown
         - stale
-        - blocked
-        - needs_review
-        - resolved
+        - reconciling
     writes:
-      - readiness_cases
-      - readiness_checks
-      - registration_receipts
-      - audit_events
-      - outbox_events
+      - registration_readiness_evaluations
+      - registration_readiness_tasks
+      - registration_readiness_receipts
+      - domain_outbox_events
+      - gateway_audit
     publishes:
-      - readiness.evaluated
-      - receipt.created
+      - registration.readiness_evaluated
+      - registration.readiness_reconciliation_requested
     requires_audit: true
     requires_idempotency: true
     safe_failure:
       - do_not_change_official_records
       - return_retryable_or_review_state
-      - preserve_existing_case_history
-
-  - name: readiness.refresh
-    version: 1
-    provisional: true
-    actor_roles:
-      - student
-    input_schema:
-      tenant_id: uuid
-      student_id: uuid
-      term_id: string
-      idempotency_key: string
-    preconditions:
-      - active_membership
-      - policy_allow
-      - student_scope
-    state_guard:
-      allowed_from:
-        - stale
-        - needs_review
-    writes:
-      - readiness_cases
-      - readiness_checks
-      - registration_receipts
-      - audit_events
-      - outbox_events
-    publishes:
-      - readiness.evaluated
-      - receipt.created
-    requires_audit: true
-    requires_idempotency: true
-    safe_failure:
-      - do_not_change_official_records
-      - return_retryable_or_review_state
-      - preserve_existing_case_history
-
-  - name: readiness.case.route
-    version: 1
-    provisional: true
-    actor_roles:
-      - registrar
-    input_schema:
-      tenant_id: uuid
-      readiness_case_id: uuid
-      next_assigned_office: string
-      reason_code: string
-      idempotency_key: string
-    preconditions:
-      - active_membership
-      - policy_allow
-      - registrar_tenant_scope
-    state_guard:
-      allowed_from:
-        - needs_review
-        - blocked
-    writes:
-      - readiness_cases
-      - audit_events
-      - outbox_events
-    publishes:
-      - readiness.case_routed
-    requires_audit: true
-    requires_idempotency: true
-    safe_failure:
-      - do_not_change_official_records
-      - return_retryable_or_review_state
-      - preserve_existing_case_history
-
-  - name: referral.create
-    version: 1
-    provisional: true
-    actor_roles:
-      - student
-      - advisor
-    input_schema:
-      tenant_id: uuid
-      readiness_case_id: uuid
-      idempotency_key: string
-    preconditions:
-      - active_membership
-      - policy_allow
-      - student_scope_or_assigned_caseload
-    state_guard:
-      allowed_from:
-        - needs_review
-        - blocked
-    writes:
-      - registration_receipts
-      - audit_events
-    publishes: []
-    requires_audit: true
-    requires_idempotency: true
-    safe_failure:
-      - do_not_change_official_records
       - preserve_existing_case_history
 
 failure_drills:
+  # Recorded from the brief. None of these is executed by any test yet.
   - drill: SIS timeout
     expected: Mark data stale, prevent definitive readiness claim, offer refresh/review path
   - drill: Duplicate evaluation request

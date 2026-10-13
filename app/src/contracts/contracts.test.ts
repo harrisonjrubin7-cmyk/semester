@@ -20,24 +20,15 @@ const ACTORS = ['student', 'advisor', 'registrar', 'institution_admin', 'operati
 const LEVELS = ['low', 'moderate', 'high'];
 const CAPABILITY_STATUS = ['specified', 'in_progress', 'blocked', 'implemented', 'verified', 'deployed'];
 const DECISIONS = ['pending', 'approved', 'rejected'];
+const SCHEMAS = ['public', 'private'];
 const COMMON_AUDIT_FIELDS = ['tenant_id', 'actor_account_id', 'entity_id', 'correlation_id'];
-const ENVELOPE_FIELDS = [
-  'event_id',
-  'event_type',
-  'event_version',
-  'occurred_at',
-  'tenant_id',
-  'actor_account_id',
-  'correlation_id',
-  'causation_id',
-  'aggregate_type',
-  'aggregate_id',
-  'payload',
-];
+// The envelope the save RPC writes (private.registration_readiness_receipts.event_payload).
+const ENVELOPE_FIELDS = ['eventType', 'aggregateId', 'idempotencyKey', 'correlationId', 'payload'];
 const KEY = /^[a-z][a-z_]*(\.[a-z_]+)+$/;
 const FOREIGN_KEY = /^[a-z_]+ -> ([a-z_]+)\.([a-z_]+)$/;
 
 interface Passport {
+  schema: string;
   domain: string;
   owner: string;
   authority: string;
@@ -59,8 +50,7 @@ interface Command {
   provisional?: boolean;
   actor_roles: string[];
   input_schema: Record<string, string>;
-  preconditions: string[];
-  state_guard: { allowed_from: string[] };
+  state_guard: { creates?: string; allowed_from: string[] };
   writes: string[];
   publishes: string[];
   requires_audit: boolean;
@@ -69,7 +59,6 @@ interface Command {
 }
 
 interface EventDef {
-  version: number;
   aggregate_type: string;
   producer_commands: string[];
   payload_required: string[];
@@ -90,7 +79,7 @@ interface Capability {
   commands: string[];
   events: string[];
   audits: string[];
-  release_requirements: string[];
+  release_requirements?: string[];
 }
 
 interface RouteDef {
@@ -98,6 +87,7 @@ interface RouteDef {
   actors: string[];
   capabilities: string[];
   auth: string;
+  status: string;
 }
 
 interface AuditDef {
@@ -106,6 +96,7 @@ interface AuditDef {
   entity: string;
   severity: string;
   required_fields: string[];
+  status: string;
 }
 
 interface Release {
@@ -128,12 +119,14 @@ const events = eventFile.events;
 const audit = load<{ common_required_fields: string[]; audit_events: AuditDef[] }>('audit-events.yaml');
 const routes = load<{ routes: Record<string, RouteDef> }>('routes.yaml').routes;
 const workflows = load<{
+  readiness_states: { canonical: string[]; display: Record<string, string>; transitional: string[] };
+  state_edges: [string, string][];
   authorization_chain: string[];
-  readiness_case_states: string[];
   commands: Command[];
   failure_drills: { drill: string; expected: string }[];
 }>('workflows.yaml');
 const commands = workflows.commands;
+const readinessStates = workflows.readiness_states.canonical;
 const release = load<{ release_decision: Release }>('release-evidence.yaml').release_decision;
 
 const commandNames = new Set(commands.map((c) => c.name));
@@ -174,7 +167,7 @@ describe('capability registry', () => {
   });
 
   it('gives every capability release requirements', () => {
-    expect(capabilities.filter((c) => c.release_requirements.length === 0).map((c) => c.key)).toEqual([]);
+    expect(capabilities.filter((c) => !c.release_requirements?.length).map((c) => c.key)).toEqual([]);
   });
 
   it('agrees with the route file in both directions', () => {
@@ -195,10 +188,11 @@ describe('capability registry', () => {
 });
 
 describe('routes', () => {
-  it('names only known actors and requires an authenticated session', () => {
+  it('names only known actors, requires an authenticated session, and states whether it is built', () => {
     const violations = Object.entries(routes).flatMap(([path, r]) => [
       ...r.actors.filter((a) => !ACTORS.includes(a)).map((a) => `${path}: unknown actor ${a}`),
       ...(r.auth === 'required' ? [] : [`${path}: auth must be required, found ${r.auth}`]),
+      ...(['not_built', 'proposed', 'built'].includes(r.status) ? [] : [`${path}: unknown status ${r.status}`]),
       ...r.capabilities.filter((k) => !capabilityKeys.has(k)).map((k) => `${path}: unknown capability ${k}`),
     ]);
     expect(violations).toEqual([]);
@@ -209,6 +203,7 @@ describe('record passports', () => {
   it('is complete for every record', () => {
     const violations = Object.entries(records).flatMap(([name, p]) => {
       const missing = [
+        ['schema', p.schema],
         ['domain', p.domain],
         ['owner', p.owner],
         ['authority', p.authority],
@@ -222,9 +217,10 @@ describe('record passports', () => {
       ]
         .filter(([, v]) => v === undefined)
         .map(([f]) => `${name}: missing ${f}`);
+      const badSchema = SCHEMAS.includes(p.schema) ? [] : [`${name}: unknown schema ${p.schema}`];
       const badLevel = LEVELS.includes(p.sensitivity) ? [] : [`${name}: unknown sensitivity ${p.sensitivity}`];
       const badTenant = typeof p.tenant_scoped === 'boolean' ? [] : [`${name}: tenant_scoped must be a boolean`];
-      return [...missing, ...badLevel, ...badTenant];
+      return [...missing, ...badSchema, ...badLevel, ...badTenant];
     });
     expect(violations).toEqual([]);
   });
@@ -269,9 +265,7 @@ describe('record passports', () => {
       ),
       ...commands.flatMap((c) =>
         c.writes.flatMap((w) => {
-          if (!recordNames.has(w) && w !== 'audit_events' && w !== 'outbox_events') {
-            return [`${c.name} writes unknown ${w}`];
-          }
+          if (!recordNames.has(w)) return [`${c.name} writes unknown record ${w}`];
           const declared = records[w]?.write_path?.commands ?? [];
           return declared.includes(c.name) ? [] : [`${c.name} writes ${w}, which does not list it back`];
         }),
@@ -289,6 +283,32 @@ describe('record passports', () => {
   });
 });
 
+describe('readiness states', () => {
+  it('uses the eight canonical states the save RPC enforces, once each', () => {
+    expect(readinessStates).toHaveLength(8);
+    expect(duplicates(readinessStates)).toEqual([]);
+  });
+
+  it('maps each confirmed display outcome onto a canonical state, and no other', () => {
+    const display = workflows.readiness_states.display;
+    expect(Object.keys(display).sort()).toEqual(['blocked', 'needs_review', 'resolved', 'stale', 'unknown']);
+    const violations = Object.entries(display)
+      .filter(([, canonical]) => !readinessStates.includes(canonical))
+      .map(([outcome, canonical]) => `${outcome} maps to unknown state ${canonical}`);
+    expect(violations).toEqual([]);
+    expect(Object.keys(display)).toHaveLength(5);
+  });
+
+  it('uses only canonical states in every edge and guard', () => {
+    const edges = workflows.state_edges.flat().filter((s) => !readinessStates.includes(s));
+    const guards = commands.flatMap((c) => [
+      ...c.state_guard.allowed_from.filter((s) => !readinessStates.includes(s)),
+      ...(c.state_guard.creates && !readinessStates.includes(c.state_guard.creates) ? [c.state_guard.creates] : []),
+    ]);
+    expect([...edges, ...guards]).toEqual([]);
+  });
+});
+
 describe('commands and workflows', () => {
   it('uses the fourteen-step authorization chain, in order, once each', () => {
     expect(workflows.authorization_chain).toHaveLength(14);
@@ -297,25 +317,22 @@ describe('commands and workflows', () => {
     expect(workflows.authorization_chain.at(-1)).toBe('return_receipt_or_safe_error');
   });
 
-  it('gives every command an allowed actor, a state guard, a safe failure and audit', () => {
+  it('gives every command an allowed actor, a safe failure, audit and idempotency', () => {
     const violations = commands.flatMap((c) => [
       ...(c.actor_roles.length === 0 ? [`${c.name}: no actor roles`] : []),
       ...c.actor_roles.filter((a) => !ACTORS.includes(a)).map((a) => `${c.name}: unknown actor ${a}`),
-      ...c.state_guard.allowed_from
-        .filter((s) => !workflows.readiness_case_states.includes(s))
-        .map((s) => `${c.name}: unknown state ${s}`),
       ...(c.safe_failure.length === 0 ? [`${c.name}: no safe failure`] : []),
       ...(c.requires_audit ? [] : [`${c.name}: sensitive commands must require audit`]),
       ...(c.requires_idempotency ? [] : [`${c.name}: commands must require idempotency`]),
-      ...(c.writes.includes('audit_events') ? [] : [`${c.name}: writes no audit_events`]),
+      ...(c.writes.includes('gateway_audit') ? [] : [`${c.name}: writes no gateway_audit`]),
     ]);
     expect(violations).toEqual([]);
   });
 
   it('writes to the outbox whenever a command publishes an event', () => {
     const violations = commands
-      .filter((c) => c.publishes.length > 0 && !c.writes.includes('outbox_events'))
-      .map((c) => `${c.name} publishes ${c.publishes.join(', ')} without writing outbox_events`);
+      .filter((c) => c.publishes.length > 0 && !c.writes.includes('domain_outbox_events'))
+      .map((c) => `${c.name} publishes ${c.publishes.join(', ')} without writing domain_outbox_events`);
     expect(violations).toEqual([]);
   });
 
@@ -334,7 +351,7 @@ describe('commands and workflows', () => {
 });
 
 describe('domain events', () => {
-  it('keeps the envelope the brief specifies', () => {
+  it('keeps the envelope the save RPC writes', () => {
     expect(eventFile.event_envelope.required).toEqual(ENVELOPE_FIELDS);
   });
 
@@ -343,13 +360,13 @@ describe('domain events', () => {
       const publishers = commands.filter((c) => c.publishes.includes(name)).map((c) => c.name);
       const declared = [...e.producer_commands].sort();
       const actual = [...publishers].sort();
-      const producers = JSON.stringify(declared) === JSON.stringify(actual) ? [] : [`${name}: producers ${declared} vs publishers ${actual}`];
-      const payload = e.payload_required.length > 0 ? [] : [`${name}: no payload_required`];
+      const producers =
+        JSON.stringify(declared) === JSON.stringify(actual) ? [] : [`${name}: producers ${declared} vs publishers ${actual}`];
       const status =
-        e.payload_status === undefined || ['specified', 'provisional'].includes(e.payload_status)
+        e.payload_status === 'unverified' || (e.payload_status === 'specified' && e.payload_required.length > 0)
           ? []
-          : [`${name}: unknown payload_status ${e.payload_status}`];
-      return [...producers, ...payload, ...status];
+          : [`${name}: payload_status ${e.payload_status} needs payload_required or unverified`];
+      return [...producers, ...status];
     });
     expect(violations).toEqual([]);
   });
@@ -360,10 +377,7 @@ describe('domain events', () => {
       if (!def) return [`example ${ex.event_type}: not in the catalogue`];
       const missing = ENVELOPE_FIELDS.filter((f) => !(f in ex.envelope)).map((f) => `example missing ${f}`);
       const typeMismatch =
-        ex.envelope.event_type === ex.event_type ? [] : [`example envelope type ${String(ex.envelope.event_type)}`];
-      const versionMismatch =
-        ex.envelope.event_version === def.version ? [] : [`example version ${String(ex.envelope.event_version)}`];
-      // Shape checked by the `missing` rule above; a non-object payload fails the key comparison.
+        ex.envelope.eventType === ex.event_type ? [] : [`example envelope type ${String(ex.envelope.eventType)}`];
       const payload = (ex.envelope.payload ?? {}) as Record<string, unknown>;
       const payloadKeys = Object.keys(payload).sort();
       const expectedKeys = [...def.payload_required].sort();
@@ -371,7 +385,7 @@ describe('domain events', () => {
         JSON.stringify(payloadKeys) === JSON.stringify(expectedKeys)
           ? []
           : [`example ${ex.event_type} payload ${payloadKeys} vs ${expectedKeys}`];
-      return [...missing, ...typeMismatch, ...versionMismatch, ...payloadMismatch];
+      return [...missing, ...typeMismatch, ...payloadMismatch];
     });
     expect(violations).toEqual([]);
   });

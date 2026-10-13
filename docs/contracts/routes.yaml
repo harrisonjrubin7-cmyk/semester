@@ -1,10 +1,9 @@
-# Routes served by the pilot capabilities. Each route names the capabilities
-# that authorize it; the contract test checks that the list is the same in both
-# directions (capabilities.yaml `routes` and this file's `capabilities`).
+# Routes for the pilot capabilities. None is built: `status: not_built` means no
+# screen, route handler or navigation entry exists on main. Paths marked
+# `status: proposed` were chosen here and need confirming against the nav model.
 #
-# auth: required means an authenticated session with an active membership.
-# Authorization is still decided per command or query by the capability's
-# permissions and the 14-step chain in workflows.yaml.
+# Each route lists the capabilities that authorize it; the contract test checks
+# that this list and each capability's `routes` agree in both directions.
 
 routes:
   /app/registration:
@@ -15,6 +14,16 @@ routes:
       - student.readiness.read
       - student.readiness.refresh
     auth: required
+    status: not_built
+
+  /advisor/readiness:
+    screen: advisor_readiness_caseload
+    actors:
+      - advisor
+    capabilities:
+      - advisor.readiness.caseload.read
+    auth: required
+    status: proposed
 
   /registrar/readiness:
     screen: registrar_readiness_queue
@@ -23,11 +32,13 @@ routes:
     capabilities:
       - registrar.readiness.queue.read
     auth: required
+    status: not_built
 
-  /registrar/readiness/:caseId:
-    screen: registrar_readiness_case
+  /institution/readiness/audit:
+    screen: institution_readiness_audit
     actors:
-      - registrar
+      - institution_admin
     capabilities:
-      - registrar.readiness.case.route
+      - institution_admin.readiness.audit.read
     auth: required
+    status: proposed

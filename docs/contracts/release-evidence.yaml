@@ -13,8 +13,9 @@ release_decision:
   capability_keys:
     - student.readiness.read
     - student.readiness.refresh
+    - advisor.readiness.caseload.read
     - registrar.readiness.queue.read
-    - registrar.readiness.case.route
+    - institution_admin.readiness.audit.read
   decision: pending
   required_evidence:
     schema:
@@ -31,7 +32,7 @@ release_decision:
       - upstream_timeout_suite
       - reconciliation_suite
     product:
-      - six_state_coverage
+      - five_state_coverage
       - source_status_copy_review
       - accessibility_review
       - mobile_review
