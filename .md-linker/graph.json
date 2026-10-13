@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "files": {
+    "docs/governance/readiness/README.md": {
+      "content_hash": "sha256:b9326fe172756c15",
+      "headings": [
+        "Registration readiness: governance registries",
+        "Status rules",
+        "Not done (remaining tranche)",
+        "Choices made"
+      ],
+      "outgoing": [],
+      "frontmatter_deps": [],
+      "last_indexed": "2026-10-13T14:27:16.526468+00:00"
+    },
+    "docs/decisions/D-1542.md": {
+      "content_hash": "sha256:96e58f143d1bf465",
+      "headings": [
+        "D-1542 · Registration readiness is a derived planning state, never an enrollment record"
+      ],
+      "outgoing": [],
+      "frontmatter_deps": [],
+      "last_indexed": "2026-10-13T14:31:09.498939+00:00"
+    }
+  }
+}
