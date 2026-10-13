@@ -1,0 +1,66 @@
+# Reconciliation standard (artifact 10). Reconciliation is a first-class
+# workflow: classify the discrepancy, choose a safe repair, attach evidence,
+# recheck, and escalate when authority is unclear.
+reconciliation_case:
+  states:
+    - detected
+    - classified
+    - queued
+    - repairing
+    - awaiting_source
+    - awaiting_human_review
+    - verified
+    - closed
+    - escalated
+
+  discrepancy_types:
+    - missing_external_record
+    - unexpected_external_record
+    - field_value_mismatch
+    - authority_conflict
+    - stale_projection
+    - duplicate_delivery
+    - invalid_transition
+    - policy_decision_mismatch
+
+  repair_options:
+    recheck:
+      use_when: "The source may have changed or freshness is uncertain."
+    refresh_projection:
+      use_when: "The source is authoritative and current."
+    preserve_and_route:
+      use_when: "A human institutional decision is required."
+    stop_and_escalate:
+      use_when: "A security, authorization, or data-integrity boundary may be violated."
+
+  closure_requirements:
+    - source_reference
+    - before_and_after_values_or_hashes
+    - repair_action
+    - verifying_actor_or_system
+    - verification_timestamp
+    - linked_audit_event
+
+# Reference DDL from the pilot package. Not yet a migration: it must be
+# rehearsed in staging (environment-promotion.yaml) and added under
+# supabase/migrations/ before use. Note: it names public.tenants and
+# public.accounts, which must be checked against the existing schema first.
+reference_ddl: |
+  create table public.reconciliation_cases (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid not null references public.tenants(id),
+    component_key text not null,
+    aggregate_type text not null,
+    aggregate_id uuid not null,
+    discrepancy_type text not null,
+    state text not null default 'detected',
+    authority_system text,
+    source_reference text,
+    detected_at timestamptz not null default now(),
+    detected_by text not null,
+    assigned_to_account_id uuid references public.accounts(id),
+    resolution_summary text,
+    verified_at timestamptz,
+    closed_at timestamptz,
+    correlation_id uuid not null
+  );
