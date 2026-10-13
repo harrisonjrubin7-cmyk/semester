@@ -13,6 +13,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | Path | What it holds |
 | --- | --- |
 | `app/` | The application and the institution gateway. Vite, React 19 and TypeScript. The only client `package.json`. All npm commands run here. |
+| `architecture/` | Proposed release-transport contracts: an OpenAPI description and a PostgreSQL schema that is written but not applied. Not implemented; nothing here changes a running system. |
 | `audio/` | Podcast scripts, the manifest and the Python synthesiser that renders them. See [`audio/README.md`](../../audio/README.md). |
 | `chats/` | The design conversation that produced the first version. Source material; the app does not import it. |
 | `commercial/` | Commercial readiness evidence. Four files: [`commercial/READINESS_GAP_MATRIX.md`](../../commercial/READINESS_GAP_MATRIX.md), the Phase 0 reading of what is stated, implemented and enforced for pricing, plans, billing, procurement and support; and three completion-baseline assessments (`commercial/GO_TO_MARKET_READINESS.md`, `commercial/INSTITUTIONAL_PILOT_READINESS.md`, `commercial/INDIVIDUAL_STUDENT_LAUNCH_READINESS.md`) that approve no price, claim or sale. The controlling decision is `GO-NO-GO-DECISION.md`. Documentation only; no code. |
@@ -20,6 +21,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `contracts/` | A school's signed terms as data, one JSON file per tenant id. The owner writes them. See [`contracts/README.md`](../../contracts/README.md). |
 | `course-engine/` | Standalone citation-first course-workspace MVP: Next.js web app, FastAPI API, background worker, PostgreSQL/Redis/MinIO Compose stack, renderer benchmarks, tests, and its own documentation. It is isolated from the deployed `app/` and is not an npm workspace. |
 | `database/` | Catalog-derived isolation evidence for production, read read-only: the tenant-isolation matrix, grant allowlist, function-authorization matrix and data-classification register, and `schema/inventory.sql`, which regenerates every figure. Nothing in it was applied to a database. See [`database/README.md`](../../database/README.md). |
+| `deploy/` | Frontend-only container build (`Dockerfile.frontend`, `nginx.conf`, `compose.frontend.yml`). It returns 503 for `/api` and `/lab`, so it is not the multi-service Vercel deployment. |
 | `docs/` | Documentation: registers, runbooks, architecture records, decision records, design standards. Indexed by `docs/README.md`, which is written outside this page's slice and may not be in your checkout yet. |
 | `examples/` | Being added by another author. This row was written before the directory existed and says nothing about its contents. |
 | `extensions/` | `semester-capture`, a browser extension (`manifest.json`, `popup.html`, `popup.js`). |
