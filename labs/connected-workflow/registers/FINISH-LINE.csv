@@ -1,0 +1,9 @@
+stream,proposed_owner,remaining,required_evidence,state,activation
+Engineering,Engineering accountable lead + qualified authority,canonical registry/code/route/migration reconciliation + full loop,immutable SHA; applicable CI + negative/object/source tests,not established by local lab,disabled
+Security,Security accountable lead + qualified authority,independent assessment + egress/privilege findings,qualified report and exact-target remediation/retest,not established by local lab,disabled
+Accessibility,Accessibility accountable lead + qualified authority,manual keyboard/AT/zoom + documents/media,"qualified review, fixes and approved public posture",not established by local lab,disabled
+Privacy/legal,Privacy/legal accountable lead + qualified authority,"data scope, DPA/terms/retention/rights",qualified legal acceptance and witnessed rights exercises,not established by local lab,disabled
+Institution,Institution accountable lead + qualified authority,cohort/office/source/role/UAT approval,signed scope/authority and acceptance,not established by local lab,disabled
+Operations,Operations accountable lead + qualified authority,"staffed support, incidents, restoration, offboarding",named rota and dated witnessed target drills,not established by local lab,disabled
+Commercial/finance,Commercial/finance accountable lead + qualified authority,entity/signing/pricing/tax/payment/insurance,approved professional commercial authority,not established by local lab,disabled
+Measurement/claims,Measurement/claims accountable lead + qualified authority,baseline/denominators/source/ref permissions,"accepted protocol, actual results and specific publication permission",not established by local lab,disabled
