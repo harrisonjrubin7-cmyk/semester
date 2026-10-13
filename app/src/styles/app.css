@@ -1133,8 +1133,11 @@ a:hover {
 }
 
 /* The assistant's docked column takes its width out of the page
-   (`--assist-dock`, set by ai/Panel.tsx while it is open). Two classes, because
-   `.device, .desk` sets `padding-inline` further down this sheet and wins at one. */
+   (`--assist-dock`, set by ai/Panel.tsx while it is open). The workspace pane is
+   `device-pane deskwork-pane` with no `device` class, so it takes the one-class
+   rule; the device pane needs two, because `.device, .desk` sets `padding-inline`
+   further down this sheet and wins at one. */
+.device-pane,
 .device.device-pane {
   padding-inline-end: var(--assist-dock, 0);
 }
