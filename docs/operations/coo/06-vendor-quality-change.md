@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/SUPPLY-CHAIN.md
-    changed_at: "2026-10-13T16:00:29"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # 06 · Vendor management, quality operations and change management
 
 | Control | Value |

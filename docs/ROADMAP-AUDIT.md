@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/SUPPLY-CHAIN.md
-    changed_at: "2026-10-13T16:00:29"
-    sections_changed: []
-    summary: externally modified
----
-
-
 <!-- Rendered from app/src/lib/governance/roadmap-audit.ts by roadmap-audit.test.ts. Edit the data, then run `npm run registers` from app/. -->
 
 # Roadmap audit

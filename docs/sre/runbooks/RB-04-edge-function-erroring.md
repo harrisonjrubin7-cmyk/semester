@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/sre/generated/SERVICE-CATALOG.md
-    changed_at: "2026-10-13T16:00:29"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # RB-04 · An edge function is erroring
 
 Class C0 to C3, by function · role per catalog row · alerts `edge:error-shape`, `burn:privacy_request_intake` · components `supabase-edge-runtime` and every `fn:*`.

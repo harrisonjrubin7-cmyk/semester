@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/sre/generated/SERVICE-CATALOG.md
-    changed_at: "2026-10-13T16:00:29"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # 01 · Service catalog and ownership
 
 > Part of the [SRE pack](README.md). Status: **proposed**. Data: `app/src/lib/sre/catalog.ts`. Full table: [generated/SERVICE-CATALOG.md](generated/SERVICE-CATALOG.md).

@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/SUPPLY-CHAIN.md
-    changed_at: "2026-10-13T16:00:29"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Reviewer question map
 
 > **Type:** reference · **Audience:** security-reviewers, buyers · **Owner:** `trust` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/trust-docs.test.ts`
