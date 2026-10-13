@@ -24,7 +24,7 @@
 import { readAll, isEmpty, held, open, write, MAPS_STORE, SETTINGS_STORE, type Write } from './db';
 import { COLLECTIONS, MAPS, SETTINGS, idOf } from './shape';
 import { readIncoming } from '../../lib/stored';
-import { HELD_KEY, droppedOnRead, heldInSaved, noteIngressDrops, unstoredIngressDrops } from '../../lib/deletions';
+import { HELD_KEY, droppedOnRead, forgetUnstoredDrops, heldInSaved, noteIngressDrops, unstoredIngressDrops } from '../../lib/deletions';
 import { migrate, versionOf } from '../../lib/migrate';
 import {
   DEFAULT_PERSISTED,
@@ -109,6 +109,7 @@ async function readEverything(): Promise<Partial<Persisted> | null> {
 
   const settings = await readAll(SETTINGS_STORE);
   if (settings === null) return null;
+  const carried = heldWritten !== '' && heldWritten !== UNKNOWN;
   heldWritten = '';
   for (const [key, value] of settings) {
     if (key === MIGRATED) continue;
@@ -118,6 +119,10 @@ async function readEverything(): Promise<Partial<Persisted> | null> {
     }
     if (SETTINGS.includes(key as keyof Persisted)) out[key] = value;
   }
+
+  // The database carried this tab's note and no longer does: another tab
+  // healed and took it off.
+  if (carried && heldWritten === '') forgetUnstoredDrops();
 
   return out as Partial<Persisted>;
 }
@@ -189,8 +194,13 @@ async function migrateFromLocalStorage(): Promise<FirstRun> {
   // reimplementing any of it would be a second definition of what a stored
   // account means.
   const state = loadPersisted();
+  // A note localStorage refused while reading it rides in the same move. The
+  // database is empty, so it holds no note, whatever an earlier load said.
+  heldWritten = '';
+  const held = heldWrite();
   const ok = await write([
     ...writesFor(DEFAULT_PERSISTED, state),
+    ...(held.write ? [held.write] : []),
     {
       store: SETTINGS_STORE,
       key: MIGRATED,
@@ -216,6 +226,7 @@ async function migrateFromLocalStorage(): Promise<FirstRun> {
     { store: SETTINGS_STORE, key: 'schemaVersion', value: state.schemaVersion },
   ]);
   // The old copy stays. It is the way back for one release.
+  if (held.write) heldLanded(held.want, ok);
   return ok ? { kind: 'moved', state } : { kind: 'incomplete' };
 }
 
@@ -418,18 +429,29 @@ export function writesFor(prev: Partial<Persisted>, next: Partial<Persisted>): W
  */
 let heldWritten = '';
 
-function heldWrite(): Write | null {
+/** What `heldWritten` says after a write that failed: the next write sends the note whatever it holds. */
+const UNKNOWN = '?';
+
+/**
+ * The note's row, if the database does not already hold it, and what to
+ * record once the write carrying it lands (`heldLanded`). Never recorded
+ * before: a refused write must not count the note as written.
+ */
+function heldWrite(): { write: Write | null; want: string } {
   const held = unstoredIngressDrops();
   const want = held.length > 0 ? JSON.stringify(held) : '';
-  if (want === heldWritten) return null;
-  heldWritten = want;
-  return { store: SETTINGS_STORE, key: HELD_KEY, value: held.length > 0 ? held : null };
+  if (want === heldWritten) return { write: null, want };
+  return { write: { store: SETTINGS_STORE, key: HELD_KEY, value: held.length > 0 ? held : null }, want };
+}
+
+function heldLanded(want: string, ok: boolean): void {
+  heldWritten = ok ? want : UNKNOWN;
 }
 
 /** After a heal: takes a carried note out of the database, if it holds one. */
 export async function releaseHeldNote(): Promise<void> {
-  const note = heldWrite();
-  if (note && !(await write([note]))) heldWritten = '?';
+  const { write: note, want } = heldWrite();
+  if (note) heldLanded(want, await write([note]));
 }
 
 /** How long after the last change the writes go out. */
@@ -500,8 +522,8 @@ async function flushValue(
    */
   const base = exact ? (confirmed ?? last) : last;
   const writes = writesFor(base, next);
-  const note = heldWrite();
-  if (note) writes.push(note);
+  const held = heldWrite();
+  if (held.write) writes.push(held.write);
   last = next;
   lastSeq = nextSeq;
   // Nothing to write is not something to announce. A tab told to re-read a
@@ -543,6 +565,7 @@ async function flushValue(
   } catch {
     ok = false;
   }
+  if (held.write) heldLanded(held.want, ok);
 
   if (!ok) {
     /*
