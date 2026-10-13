@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/sre/generated/SERVICE-CATALOG.md
+    changed_at: "2026-10-13T16:00:29"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Runbooks
 
 Sixteen runbooks, one per way the system is expected to hurt. Every alert in the [alert register](../generated/ALERTS.md) and every row in the [service catalog](../generated/SERVICE-CATALOG.md) names one by id. `app/src/lib/sre/sre.test.ts` fails if:

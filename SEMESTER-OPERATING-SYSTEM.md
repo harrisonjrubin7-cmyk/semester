@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/SUPPLY-CHAIN.md
+    changed_at: "2026-10-13T16:00:29"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester operating system
 
 <!-- Rendered from app/src/lib/ops/operatingsystem.ts by operatingsystem.test.ts. Edit the data, then run `npm run registers` from app/. -->

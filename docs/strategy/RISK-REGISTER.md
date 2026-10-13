@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/SUPPLY-CHAIN.md
+    changed_at: "2026-10-13T16:00:29"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Strategic risk register
 
 > Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).
