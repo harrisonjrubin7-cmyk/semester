@@ -1,3 +1,56 @@
+# One app — the thirty-fifth pass: the audit before the merge
+
+Against `origin/main` at `fb51d663`. **<!--screens-->sixty-three<!--/--> destinations**, counted by `npm run counts`
+(the request said 59; the registry says 63, and this pass uses the registry). No merge and no
+code in this pass. It is Step 1 of the brief, partly done: what is measured is below, and what
+is not measured is listed as not measured.
+
+## What was counted
+
+| Measure | Count | Source |
+| --- | --- | --- |
+| Destinations in `lib/nav.ts` | 63 | `npm run counts -- --check` |
+| `type: 'go'` dispatches, all of `src/` (tests included) | 322 in 154 files | Grep |
+| Special-cased `'home'` in `App.tsx` | 2 | `App.tsx:717`, `:743` |
+| Files naming a settings setter (`setTabs`, `setDayBudget`, `setCutoffs`, `setScale`) | 13 | Grep |
+
+The setter count is files that name a setter, not screens that dispatch one. The per-setter
+dispatch table is not built yet.
+
+## Overlap groups, as far as they were read
+
+Read from the registry blurbs in `lib/nav.ts`, which are what a student is promised, not from
+what each screen renders. Those are the first thing to check, not the verdict.
+
+| Group | Members read | Read so far | Verdict |
+| --- | --- | --- | --- |
+| What is due and when | `home` Today, `brief` Reports, `calendar` | Three blurbs: Today promises "what is due, what is next"; Reports promises "the day, the week or the term"; Calendar promises "classes and deadlines by day, month or the whole semester" | Not decided. Two of the three promise the same question at the same grain. Needs the render check |
+| Calendar grains | `calendar`, `ahead`, `weekly` | Only `calendar` read | Not decided |
+| Where you stand | `courses`, `degree`, `grades` | `courses` blurb read ("what you have scored so far") | Not decided |
+| Conversation | `ask`, the assistant (`ai/Panel.tsx`, `ai/Chat.tsx`) | `ask` blurb read ("the conversation") | Not decided. The `/ask-tab` command owns the fix |
+| Changing course data | `update`, and the import/edit/announce/check screens | `update` blurb read ("New material into a course") | Not decided |
+
+Not measured in this pass: `ahead`, `weekly`, `tonight`, `mine`, `everything`, `me`, `springboard`,
+`help`, `chat`, `grades`, `standing`, `worked`, `proof`, `edit`, `announce`, `check`. The brief's
+list of overlaps is a hypothesis until each of those screens' state reads and renders are read.
+
+## Corrections to the brief
+
+- The count is 63. The brief said 59. Every row above uses 63.
+- `SIMPLIFY-AUDIT.md` already existed as a running audit of 34 passes. This pass is prepended and
+  the earlier passes are untouched. The brief's "write `SIMPLIFY-AUDIT.md`" was not a request to
+  overwrite the file.
+- The brief says "76 components" and "74 hand-rolled list rows". Neither has been counted in this
+  pass.
+
+## Next, in order
+
+1. Build the per-screen table: for each of the 63 destinations, the state keys it reads and the
+   question it answers. Overlap groups are decided from that table, not from blurbs.
+2. Build the setter table: for each `set*` in `state/slices/settings.ts`, the screens that dispatch it.
+3. Build the route table from the `type: 'go'` dispatches and the `open*` helpers.
+4. Only then, one merge per commit, each with the saved-state migration in `state/shape.ts` and its test.
+
 # One app — the thirty-fourth pass: the warning outlived the fault
 
 Against `main` at `593c235`. **<!--screens-->sixty-three<!--/--> destinations**,
