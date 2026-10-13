@@ -150,9 +150,21 @@ written down. The PDF's plan would reverse them without saying so.
 
 ## Top unbuilt items, in order
 
-1. **Phase 1 of the repository plan (§91, the deadline record).** It is the
-   repository's own stated next step, and the rest of Part B waits on it.
-   Blocks Phase 2.
+1. **Phase 1 of the repository plan (§91, the deadline record).** Re-measured
+   against `origin/main` on 13 October 2026, this is **partly built**, not
+   absent as the matrix first said:
+   - Status (step 1): **built.** `app/src/lib/stage.ts` derives the seven §91
+     statuses from existing facts (`task.from`, `state.started`, `state.done`,
+     `state.returned`) and adds two stored maps, `ready`/`submitted`.
+   - Stored effort override (step 2): **not built.** `lib/pace.ts`
+     `estimate(spent, courseId, kind)` infers effort per kind; no per-item
+     stored value overrides it.
+   - User-set priority (step 3): **not built.** No `priority` on `Item`.
+   - Subtasks on the item (step 4): **partly.** `components/BreakItUp.tsx`
+     writes tasks with `from`; they are not hung off the item as a record.
+   - Attachments and links on a deadline (step 5): **not built.** Note
+     attachments exist (`state/slices/notes.ts`); deadlines have none.
+   Blocks Phase 2 until steps 2–5 are done or explicitly deferred.
 2. **A notifications model.** Named in the PDF's Week 6 and in the Student
    routes. Not built as a table or service.
 3. **Tenant and membership model.** Week 2 in the PDF. Needed before any
