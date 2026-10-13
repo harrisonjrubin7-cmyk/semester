@@ -1,0 +1,10 @@
+{
+  "name": "@semester/permissions",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { "./*": "./src/*.ts" },
+  "scripts": { "typecheck": "tsc --noEmit", "test": "vitest run" },
+  "dependencies": { "@semester/policy": "workspace:*" },
+  "devDependencies": { "typescript": "^5.6.3", "vitest": "^2.1.8" }
+}

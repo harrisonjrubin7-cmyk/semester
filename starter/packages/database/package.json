@@ -1,0 +1,14 @@
+{
+  "name": "@semester/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { "./*": "./src/*.ts" },
+  "scripts": { "typecheck": "tsc --noEmit", "test": "vitest run" },
+  "dependencies": {
+    "@semester/contracts": "workspace:*",
+    "@semester/permissions": "workspace:*",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": { "@types/pg": "^8.11.10", "typescript": "^5.6.3", "vitest": "^2.1.8" }
+}

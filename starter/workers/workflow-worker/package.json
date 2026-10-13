@@ -1,0 +1,13 @@
+{
+  "name": "@semester/workflow-worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "start": "tsx src/main.ts"
+  },
+  "dependencies": { "@semester/database": "workspace:*" },
+  "devDependencies": { "tsx": "^4.19.2", "typescript": "^5.6.3", "vitest": "^2.1.8" }
+}
