@@ -1,6 +1,6 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-13 13:58:03_  ·  branch: `claude/friendly-goldberg-xmq92w`
+_Updated: 2026-10-13 13:58:23_  ·  branch: `claude/friendly-goldberg-xmq92w`
 
 ## Uncommitted changes
 ```
@@ -15,6 +15,7 @@ Diff stat:
 
 ## Recent commits
 ```
+9722c199 chore: update session tool state checkpoint
 c01b9d90 chore: update session tool state checkpoint
 af104858 chore: update session tool state checkpoint
 14440fba chore: commit session tool state (.anchor, .md-linker)
@@ -22,7 +23,6 @@ eb1e0d96 docs: coverage matrix measuring the 16-week plan against the repository
 b711c5c7 Merge pull request #1530 from harrisonjrubin7-cmyk/claude/sharp-hypatia-cxzdsk
 6bebe76e fix(shell): hide Teaching destination while course studio is off
 3f880131 Clarify hidden calibration outcomes in volunteer preview (#1528)
-7d00ffa5 Unify Semester OS platform and governed Action Center (#1517)
 ```
 
 ## Resume
