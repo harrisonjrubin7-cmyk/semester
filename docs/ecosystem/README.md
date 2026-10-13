@@ -4,7 +4,7 @@ Status as of 2026-10-13. This is an inventory, not a completion claim.
 
 ## What was inventoried
 
-`COVERAGE-MATRIX.csv` has 383 rows generated from the planning files supplied
+`COVERAGE-MATRIX.csv` has 410 rows generated from the planning files supplied
 for this session (continuation spec pack: demo storyboards and deck slide specs included; company OS feature map, functions, workflow swimlanes,
 catalog continuation register, component patterns, console workspaces,
 16-week plan, risk register, pilot activation gates, monthly package schema
@@ -39,7 +39,7 @@ because no implementation or deployment evidence for them was found.
 2. **No deployment.** The Supabase project is live and has production data.
    Applying migrations there, or to any staging target, needs explicit approval
    and a named target. No staging target was identified.
-3. **The full ecosystem is not built.** The matrix covers 383 items.
+3. **The full ecosystem is not built.** The matrix covers 410 items.
    Most have no code, and several depend on decisions listed below. Building
    them in one session is not possible, so delivery needs phases.
 
@@ -71,3 +71,16 @@ existing tables and must not create duplicates. That makes D-1582 a
 prerequisite for the work item and document contracts, not only for records.
 Its demo storyboards and deck outlines are scripts and drafts only. Nothing is
 rendered, approved, or distributed.
+
+## Product domain registry (reference)
+
+`reference/product-domains/` holds the 27-domain registry, its JSON contracts,
+the architecture register, and a local HTML explorer. The three data files agree
+on all 27 domain IDs and fields. The matrix now includes them as `DOM-*` rows.
+Two things must not be relied on:
+
+- The explorer's role lens is labelled "not authorization", and its grade
+  workflow is a hard-coded local simulation. It is not RLS, auth, or a gradebook.
+- The contracts list 10 unresolved source gaps (for example, 93 capabilities and
+  the 24 stages not supplied). They are not filled in, and the domains that
+  depend on them remain unverified.
