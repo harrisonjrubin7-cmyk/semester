@@ -51,3 +51,9 @@ Decision needed: either add `transport` (`durable_queue`, `scheduled_job`, `guar
 1. Validate the schema and examples with a JSON Schema 2020-12 validator, using a dependency that the owning package approves.
 2. Implement the state transition guards in the workflow engine for `registration.enroll` only, behind a disabled binding.
 3. Write tests for the acceptance suites (happy path, replay, concurrency, recovery, authority) before enabling anything.
+
+## Registration recovery reference model
+
+`reference-model/` holds an in-memory model of the registration commit and recovery rules, its 22-test suite, and the 17-case REG test matrix. Run from that directory with `python3 -m unittest test_registration_recovery_reference_model`. On 2026-10-13 all 22 tests passed in a scratch copy, matching `registration_reference_test_results.csv`.
+
+Scope limits: these tests cover abstract contract behaviour only. Every matrix row is "not run" against the real authority adapter, database and row-level security, worker, provider or sandbox. Several checks are thin: the swap, withdrawal and authority-drift tests assert on constant return values, so they confirm the stub rather than the rule. The compiled `.pyc` in the upload was not loaded.
