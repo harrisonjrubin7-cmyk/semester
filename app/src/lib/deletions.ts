@@ -292,6 +292,15 @@ export function unstoredIngressDrops(): string[] {
   return notedIsStored ? [] : [...noted];
 }
 
+/**
+ * Another tab's heal took the note off the saved copy that carried it (the
+ * database, `state/persist`), so a note held only here goes too. A note that
+ * reached localStorage is reconciled against localStorage instead.
+ */
+export function forgetUnstoredDrops(): void {
+  if (!notedIsStored) noted = new Set();
+}
+
 /** `text`, the saved copy as JSON, carrying any note storage refused. Unchanged otherwise. */
 export function withIngressNote(text: string): string {
   if (notedIsStored || noted.size === 0) return text;

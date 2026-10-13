@@ -8,6 +8,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
  */
 let notes: [string, unknown][] = [];
 let settings: [string, unknown][] = [];
+let emptyDb = false;
+let refuseWrites = 0;
 const writes: { store: string; key: string; value: unknown }[] = [];
 
 vi.mock('./db', () => ({
@@ -15,8 +17,12 @@ vi.mock('./db', () => ({
   SETTINGS_STORE: 'settings',
   open: async () => ({}),
   held: () => true,
-  isEmpty: async () => false,
+  isEmpty: async () => emptyDb,
   write: async (w: { store: string; key: string; value: unknown }[]) => {
+    if (refuseWrites > 0) {
+      refuseWrites -= 1;
+      return false;
+    }
     writes.push(...w);
     return true;
   },
@@ -33,7 +39,17 @@ afterEach(() => {
   localStorage.clear();
   settings = [];
   writes.length = 0;
+  emptyDb = false;
+  refuseWrites = 0;
 });
+
+const refuseNote = () => {
+  const real = Storage.prototype.setItem;
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+    if (key === 'semester.ingress-drops') throw new DOMException('full', 'QuotaExceededError');
+    return real.call(this, key, value);
+  });
+};
 
 const damaged = { title: 'Lab notes', body: 'lost its id', created: 1, updated: 1 };
 const settle = () => new Promise((r) => setTimeout(r, 400));
@@ -90,5 +106,47 @@ describe('the database boot read', () => {
     clearIngressDrops();
     await releaseHeldNote();
     expect(heldWrites().map((w) => w.value)).toEqual([null]);
+  });
+
+  // Found reviewing 3615f39: the move off localStorage writes the normalized
+  // copy in its own transaction, which carried no note.
+  it('carries a refused note in the move off localStorage', async () => {
+    emptyDb = true;
+    localStorage.setItem('semester.v1', JSON.stringify({ schemaVersion: 6, seenOnboarding: true, notes: [damaged] }));
+    refuseNote();
+    await load();
+    expect(heldWrites().map((w) => w.value)).toEqual([['notes']]);
+  });
+
+  // Found reviewing 3615f39: a write that failed left the note counted as
+  // written, and the retry that landed went without it.
+  it('sends the note again after a write that failed', async () => {
+    notes = [['n-good', damaged]];
+    refuseNote();
+    const loaded = (await load())!;
+    prime(loaded);
+    refuseWrites = 1;
+    persist({ ...loaded, notes: [] });
+    await settle();
+    expect(heldWrites(), 'the refused write recorded nothing').toEqual([]);
+    persist({ ...loaded, notes: [], tasks: [] });
+    await settle();
+    expect(heldWrites().map((w) => w.value)).toEqual([['notes']]);
+  });
+
+  // Found reviewing 3615f39: another tab's heal took the note out of the
+  // database, and this tab, whose note never reached localStorage, kept it.
+  it('lets go of a note the database carried once another tab has removed it', async () => {
+    notes = [['n-good', damaged]];
+    refuseNote();
+    const loaded = (await load())!;
+    prime(loaded);
+    persist({ ...loaded, notes: [] });
+    await settle();
+    expect(ingressDrops()).toEqual(['notes']);
+    notes = [];
+    settings = [];
+    await load();
+    expect(ingressDrops()).toEqual([]);
   });
 });
