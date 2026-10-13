@@ -62,7 +62,7 @@ function created(): Made[] {
   for (const f of readdirSync(MIGRATIONS).filter((n) => n.endsWith('.sql'))) {
     const sql = code(readFileSync(join(MIGRATIONS, f), 'utf8'));
     const re =
-      /\bcreate\s+table\s+(?:if\s+not\s+exists\s+)?(?:(private|public)\s*\.\s*)?([a-z_][a-z0-9_]*)/gi;
+      /\bcreate\s+table\s+(?:if\s+not\s+exists\s+)?(?:(private|public|registrar_ref)\s*\.\s*)?([a-z_][a-z0-9_]*)/gi;
     for (const m of sql.matchAll(re)) {
       out.push({ table: `${(m[1] ?? 'public').toLowerCase()}.${m[2].toLowerCase()}`, file: f });
     }
@@ -76,7 +76,7 @@ function enabled(): Set<string> {
   for (const f of readdirSync(MIGRATIONS).filter((n) => n.endsWith('.sql'))) {
     const sql = code(readFileSync(join(MIGRATIONS, f), 'utf8'));
     const re =
-      /\balter\s+table\s+(?:(private|public)\s*\.\s*)?([a-z_][a-z0-9_]*)\s+enable\s+row\s+level\s+security/gi;
+      /\balter\s+table\s+(?:(private|public|registrar_ref)\s*\.\s*)?([a-z_][a-z0-9_]*)\s+enable\s+row\s+level\s+security/gi;
     for (const m of sql.matchAll(re)) {
       found.add(`${(m[1] ?? 'public').toLowerCase()}.${m[2].toLowerCase()}`);
     }

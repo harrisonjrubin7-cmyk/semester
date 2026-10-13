@@ -60,11 +60,34 @@ CREATE TABLE IF NOT EXISTS registrar_ref.source_map(
  object_type text NOT NULL,source_key text NOT NULL,canonical_id uuid NOT NULL,
  source_version text,batch_reference text NOT NULL,
  PRIMARY KEY(institution_id,source_system,object_type,source_key));
-DO $$ DECLARE t record; BEGIN
- FOR t IN SELECT tablename FROM pg_tables WHERE schemaname='registrar_ref' LOOP
- EXECUTE format('ALTER TABLE registrar_ref.%I ENABLE ROW LEVEL SECURITY',t.tablename);
- EXECUTE format('ALTER TABLE registrar_ref.%I FORCE ROW LEVEL SECURITY',t.tablename);
- EXECUTE format('REVOKE ALL ON registrar_ref.%I FROM PUBLIC',t.tablename);
- END LOOP;
-END $$;
+alter table registrar_ref.institutions enable row level security;
+alter table registrar_ref.institutions force row level security;
+revoke all on registrar_ref.institutions from public;
+alter table registrar_ref.students enable row level security;
+alter table registrar_ref.students force row level security;
+revoke all on registrar_ref.students from public;
+alter table registrar_ref.terms enable row level security;
+alter table registrar_ref.terms force row level security;
+revoke all on registrar_ref.terms from public;
+alter table registrar_ref.courses enable row level security;
+alter table registrar_ref.courses force row level security;
+revoke all on registrar_ref.courses from public;
+alter table registrar_ref.sections enable row level security;
+alter table registrar_ref.sections force row level security;
+revoke all on registrar_ref.sections from public;
+alter table registrar_ref.operations enable row level security;
+alter table registrar_ref.operations force row level security;
+revoke all on registrar_ref.operations from public;
+alter table registrar_ref.enrollments enable row level security;
+alter table registrar_ref.enrollments force row level security;
+revoke all on registrar_ref.enrollments from public;
+alter table registrar_ref.grade_decisions enable row level security;
+alter table registrar_ref.grade_decisions force row level security;
+revoke all on registrar_ref.grade_decisions from public;
+alter table registrar_ref.outbox enable row level security;
+alter table registrar_ref.outbox force row level security;
+revoke all on registrar_ref.outbox from public;
+alter table registrar_ref.source_map enable row level security;
+alter table registrar_ref.source_map force row level security;
+revoke all on registrar_ref.source_map from public;
 -- Intentionally no permissive policies, roles, enrollment executor or API implementation.
