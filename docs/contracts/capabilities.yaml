@@ -1,0 +1,128 @@
+# Capability registry for the registration-readiness pilot.
+#
+# A capability is the unit of release. Every route, record, command, event and
+# audit key it names must exist in the sibling contract files; the contract test
+# (app/src/contracts/contracts.test.ts) fails the build when they do not.
+#
+# status: specified | in_progress | blocked | implemented | verified | deployed
+# A capability is `deployed` only with an approved release decision in
+# release-evidence.yaml. Nothing here is deployed yet.
+
+capabilities:
+  - key: student.readiness.read
+    title: Read registration readiness
+    domain: registration_readiness
+    impact: moderate
+    sensitivity: high
+    status: specified
+    actors:
+      - student
+    routes:
+      - /app/registration
+    records:
+      - readiness_cases
+      - readiness_checks
+      - registration_receipts
+    permissions:
+      - readiness.case.read
+    commands: []
+    events:
+      - readiness.evaluated
+      - receipt.created
+    audits:
+      - readiness.student_viewed
+      - readiness.case_viewed
+    release_requirements:
+      - rls_test
+      - route_authorization_test
+      - stale_source_test
+      - accessibility_test
+      - source_copy_review
+      - operator_runbook
+
+  - key: student.readiness.refresh
+    title: Refresh registration readiness
+    domain: registration_readiness
+    impact: moderate
+    sensitivity: high
+    status: specified
+    actors:
+      - student
+    routes:
+      - /app/registration
+    records:
+      - readiness_cases
+      - readiness_checks
+      - registration_receipts
+    permissions:
+      - readiness.case.refresh
+    commands:
+      - readiness.refresh
+    events:
+      - readiness.evaluated
+      - receipt.created
+    audits:
+      - readiness.refresh_requested
+    release_requirements:
+      - rls_test
+      - route_authorization_test
+      - stale_source_test
+      - accessibility_test
+      - source_copy_review
+      - operator_runbook
+
+  - key: registrar.readiness.queue.read
+    title: Read the registrar readiness queue
+    domain: registration_readiness
+    impact: moderate
+    sensitivity: high
+    status: specified
+    actors:
+      - registrar
+    routes:
+      - /registrar/readiness
+    records:
+      - readiness_cases
+      - readiness_checks
+    permissions:
+      - readiness.queue.read
+    commands: []
+    events: []
+    # The brief defines no audit key for queue views. Recorded as an open
+    # item in docs/contracts/README.md rather than invented here.
+    audits: []
+    release_requirements:
+      - rls_test
+      - route_authorization_test
+      - stale_source_test
+      - accessibility_test
+      - source_copy_review
+      - operator_runbook
+
+  - key: registrar.readiness.case.route
+    title: Route a readiness case to an assigned office
+    domain: registration_readiness
+    impact: high
+    sensitivity: high
+    status: specified
+    actors:
+      - registrar
+    routes:
+      - /registrar/readiness/:caseId
+    records:
+      - readiness_cases
+    permissions:
+      - readiness.case.route
+    commands:
+      - readiness.case.route
+    events:
+      - readiness.case_routed
+    audits:
+      - readiness.case_routed
+    release_requirements:
+      - rls_test
+      - route_authorization_test
+      - stale_source_test
+      - accessibility_test
+      - source_copy_review
+      - operator_runbook

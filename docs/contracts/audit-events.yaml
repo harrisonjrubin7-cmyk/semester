@@ -1,0 +1,62 @@
+# Stable audit keys. Free-form audit strings are not allowed: the institution
+# console, operations console, release evidence and incident review all read
+# this vocabulary.
+#
+# Every audit event carries the four common fields: tenant_id,
+# actor_account_id, entity_id, correlation_id. The contract test enforces it.
+
+common_required_fields:
+  - tenant_id
+  - actor_account_id
+  - entity_id
+  - correlation_id
+
+audit_events:
+  - key: readiness.student_viewed
+    actor: student
+    entity: readiness_case
+    severity: low
+    required_fields: []
+
+  - key: readiness.case_viewed
+    actor: registrar
+    entity: readiness_case
+    severity: low
+    required_fields: []
+
+  - key: readiness.refresh_requested
+    actor: student
+    entity: readiness_case
+    severity: moderate
+    required_fields:
+      - source_system
+      - prior_freshness_state
+
+  - key: readiness.case_routed
+    actor: registrar
+    entity: readiness_case
+    severity: moderate
+    required_fields:
+      - prior_assigned_office
+      - next_assigned_office
+      - reason_code
+
+  - key: override.request_created
+    actor: registrar
+    entity: override_request
+    severity: high
+    required_fields:
+      - target_record
+      - requested_outcome
+      - policy_decision_id
+      - reason_code
+
+  - key: access.revoked
+    actor: institution_admin
+    entity: grant
+    severity: high
+    required_fields:
+      - subject_account_id
+      - revoked_grant
+      - effective_at
+      - reason_code

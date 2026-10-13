@@ -1,0 +1,60 @@
+# Release decision record for the pilot. Required before any capability in
+# capability_keys may be marked `deployed` in capabilities.yaml.
+#
+# decision: pending | approved | rejected
+# An `approved` decision requires every approver to be `approved` and every
+# required_evidence item to be listed. Evidence items are checked for presence
+# here; the evidence itself is attached to the release, not stored in this file.
+
+release_decision:
+  release_id: registration-readiness-0.1.0
+  tenant: pilot-institution
+  environment: production
+  capability_keys:
+    - student.readiness.read
+    - student.readiness.refresh
+    - registrar.readiness.queue.read
+    - registrar.readiness.case.route
+  decision: pending
+  required_evidence:
+    schema:
+      - migrations_applied
+      - constraints_verified
+      - rollback_or_forward_fix_plan
+    security:
+      - rls_allow_deny_suite
+      - role_scope_suite
+      - session_revocation_suite
+    workflow:
+      - state_transition_suite
+      - idempotency_suite
+      - upstream_timeout_suite
+      - reconciliation_suite
+    product:
+      - six_state_coverage
+      - source_status_copy_review
+      - accessibility_review
+      - mobile_review
+    operations:
+      - runbook_review
+      - incident_drill
+      - alert_delivery_test
+      - support_handoff
+    institution:
+      - named_business_owner
+      - named_technical_owner
+      - source_system_confirmation
+      - pilot_scope_approval
+  approvers:
+    - role: product_owner
+      state: pending
+    - role: platform_owner
+      state: pending
+    - role: security_owner
+      state: pending
+    - role: institution_owner
+      state: pending
+  rollback:
+    feature_flag: registration_readiness_v1
+    safe_state: read_only_or_unavailable_with_support_handoff
+    data_handling: preserve_audit_and_receipt_history

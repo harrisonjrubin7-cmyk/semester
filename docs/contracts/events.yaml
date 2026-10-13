@@ -1,0 +1,86 @@
+# Domain event envelope and catalog.
+#
+# Every domain event uses the envelope below. A command's `publishes` list in
+# workflows.yaml and each event's `producer_commands` here must describe the
+# same pairs; the contract test checks both directions. A command that
+# publishes writes to outbox_events in the same transaction.
+
+event_envelope:
+  required:
+    - event_id
+    - event_type
+    - event_version
+    - occurred_at
+    - tenant_id
+    - actor_account_id
+    - correlation_id
+    - causation_id
+    - aggregate_type
+    - aggregate_id
+    - payload
+  rules:
+    - event_id_is_globally_unique
+    - payload_is_schema_validated
+    - tenant_id_required_for_tenant_events
+    - events_are_append_only
+    - consumers_are_idempotent
+    - external_delivery_uses_transactional_outbox
+
+events:
+  readiness.evaluated:
+    version: 1
+    aggregate_type: readiness_case
+    producer_commands:
+      - readiness.evaluate
+      - readiness.refresh
+    payload_required:
+      - term_id
+      - previous_state
+      - next_state
+      - freshness_state
+      - reason_codes
+
+  receipt.created:
+    version: 1
+    aggregate_type: registration_receipt
+    producer_commands:
+      - readiness.evaluate
+      - readiness.refresh
+    # Provisional: the brief names this event but not its payload.
+    payload_status: provisional
+    payload_required:
+      - readiness_case_id
+      - term_id
+
+  readiness.case_routed:
+    version: 1
+    aggregate_type: readiness_case
+    producer_commands:
+      - readiness.case.route
+    # Provisional: the brief names the audit fields, not an event payload.
+    payload_status: provisional
+    payload_required:
+      - prior_assigned_office
+      - next_assigned_office
+      - reason_code
+
+examples:
+  - event_type: readiness.evaluated
+    envelope:
+      event_id: 018f0d13-0dc0-7d31-91fc-a989af7a9105
+      event_type: readiness.evaluated
+      event_version: 1
+      occurred_at: "2026-10-13T15:05:00Z"
+      tenant_id: tenant-id
+      actor_account_id: student-account-id
+      correlation_id: request-id
+      causation_id: command-id
+      aggregate_type: readiness_case
+      aggregate_id: case-id
+      payload:
+        term_id: 2027-spring
+        previous_state: unknown
+        next_state: needs_review
+        freshness_state: current
+        reason_codes:
+          - missing_prerequisite_evidence

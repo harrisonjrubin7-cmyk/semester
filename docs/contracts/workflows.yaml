@@ -1,0 +1,189 @@
+# Commands, the sensitive-command authorization chain, and failure drills.
+#
+# Commands marked `provisional: true` are named by the capabilities or records
+# but not specified in the brief; their fields are a first draft for review.
+#
+# Invariants the contract test enforces:
+#   - every writes entry is a record or one of audit_events/outbox_events;
+#   - a record's write_path.commands and the commands' writes agree;
+#   - a command that publishes writes outbox_events;
+#   - publishes entries are catalogued in events.yaml.
+
+authorization_chain:
+  - parse_and_validate_input
+  - authenticate_session
+  - resolve_tenant_context
+  - resolve_workspace_context
+  - resolve_active_membership
+  - verify_membership_status
+  - verify_role_and_grants
+  - load_resource_scope
+  - apply_consent_and_delegation_rules
+  - evaluate_policy
+  - verify_source_freshness_requirement
+  - enforce_state_transition_guard
+  - persist_audit_and_outbox_in_transaction
+  - return_receipt_or_safe_error
+
+readiness_case_states:
+  - unknown
+  - stale
+  - blocked
+  - needs_review
+  - resolved
+
+commands:
+  - name: readiness.evaluate
+    version: 1
+    actor_roles:
+      - student
+      - advisor
+      - registrar
+    input_schema:
+      tenant_id: uuid
+      student_id: uuid
+      term_id: string
+      goal: object
+      idempotency_key: string
+    preconditions:
+      - active_membership
+      - policy_allow
+      - student_scope_or_authorized_staff_scope
+    state_guard:
+      allowed_from:
+        - unknown
+        - stale
+        - blocked
+        - needs_review
+        - resolved
+    writes:
+      - readiness_cases
+      - readiness_checks
+      - registration_receipts
+      - audit_events
+      - outbox_events
+    publishes:
+      - readiness.evaluated
+      - receipt.created
+    requires_audit: true
+    requires_idempotency: true
+    safe_failure:
+      - do_not_change_official_records
+      - return_retryable_or_review_state
+      - preserve_existing_case_history
+
+  - name: readiness.refresh
+    version: 1
+    provisional: true
+    actor_roles:
+      - student
+    input_schema:
+      tenant_id: uuid
+      student_id: uuid
+      term_id: string
+      idempotency_key: string
+    preconditions:
+      - active_membership
+      - policy_allow
+      - student_scope
+    state_guard:
+      allowed_from:
+        - stale
+        - needs_review
+    writes:
+      - readiness_cases
+      - readiness_checks
+      - registration_receipts
+      - audit_events
+      - outbox_events
+    publishes:
+      - readiness.evaluated
+      - receipt.created
+    requires_audit: true
+    requires_idempotency: true
+    safe_failure:
+      - do_not_change_official_records
+      - return_retryable_or_review_state
+      - preserve_existing_case_history
+
+  - name: readiness.case.route
+    version: 1
+    provisional: true
+    actor_roles:
+      - registrar
+    input_schema:
+      tenant_id: uuid
+      readiness_case_id: uuid
+      next_assigned_office: string
+      reason_code: string
+      idempotency_key: string
+    preconditions:
+      - active_membership
+      - policy_allow
+      - registrar_tenant_scope
+    state_guard:
+      allowed_from:
+        - needs_review
+        - blocked
+    writes:
+      - readiness_cases
+      - audit_events
+      - outbox_events
+    publishes:
+      - readiness.case_routed
+    requires_audit: true
+    requires_idempotency: true
+    safe_failure:
+      - do_not_change_official_records
+      - return_retryable_or_review_state
+      - preserve_existing_case_history
+
+  - name: referral.create
+    version: 1
+    provisional: true
+    actor_roles:
+      - student
+      - advisor
+    input_schema:
+      tenant_id: uuid
+      readiness_case_id: uuid
+      idempotency_key: string
+    preconditions:
+      - active_membership
+      - policy_allow
+      - student_scope_or_assigned_caseload
+    state_guard:
+      allowed_from:
+        - needs_review
+        - blocked
+    writes:
+      - registration_receipts
+      - audit_events
+    publishes: []
+    requires_audit: true
+    requires_idempotency: true
+    safe_failure:
+      - do_not_change_official_records
+      - preserve_existing_case_history
+
+failure_drills:
+  - drill: SIS timeout
+    expected: Mark data stale, prevent definitive readiness claim, offer refresh/review path
+  - drill: Duplicate evaluation request
+    expected: Return the same active receipt; do not create duplicate cases
+  - drill: Staff role removal mid-session
+    expected: Revoke action access at command time; log denial
+  - drill: Late worker success after revocation
+    expected: Reject stale result through generation/revocation barrier
+  - drill: Outbox delivery duplicate
+    expected: Consumer idempotency preserves one business effect
+  - drill: RLS bypass attempt
+    expected: Query returns no unauthorized row
+  - drill: Policy engine unavailable
+    expected: Fail closed for sensitive writes; explain safe next step
+  - drill: Bad migration
+    expected: Roll back app deployment; forward-fix DB migration using documented procedure
+  - drill: Read-model lag
+    expected: Present "updating" or freshness notice; do not claim current data
+  - drill: AI prompt injection in source text
+    expected: Keep answer bounded to approved sources; do not expose hidden/system data

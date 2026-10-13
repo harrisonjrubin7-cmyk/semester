@@ -1,0 +1,229 @@
+# Record passports. Every record a pilot capability reads or writes has one.
+#
+# Required on every record: owner, authority, source_of_truth, sensitivity,
+# tenant_scoped, primary_key, foreign_keys, allowed_roles, retention.
+# Required when write_path is present: commands (may be empty when a named
+# writer owns the table), requires_audit.
+#
+# foreign_keys entries are "column -> table.column" and the target table must
+# be a key in this file. Role scopes are free-text vocabulary used by the
+# read-model and policy layers; `operations` never reads student content.
+
+records:
+  tenants:
+    domain: platform
+    owner: platform_operations
+    authority: semester
+    source_of_truth: semester
+    sensitivity: moderate
+    tenant_scoped: false
+    primary_key: id
+    foreign_keys: []
+    allowed_roles:
+      institution_admin: tenant_scope
+      registrar: tenant_scope
+      operations: no_student_content
+    retention:
+      class: contract_term
+      deletion: subject_to_legal_hold_and_contract
+
+  students:
+    domain: student_records
+    owner: registrar_product
+    authority: institution
+    source_of_truth: sis_import
+    sensitivity: high
+    tenant_scoped: true
+    subject: student
+    primary_key: id
+    foreign_keys:
+      - tenant_id -> tenants.id
+    allowed_roles:
+      student: own_only
+      advisor: assigned_caseload_only
+      registrar: tenant_scope
+      institution_admin: audited_read
+      operations: no_student_content
+    write_path:
+      commands: []
+      writer: sis_sync_worker
+      requires_audit: true
+    source_requirements:
+      - source_type
+      - source_ref
+      - observed_at
+    retention:
+      class: institution_policy_required
+      deletion: subject_to_legal_hold_and_contract
+
+  workflow_instances:
+    domain: platform
+    owner: platform_operations
+    authority: semester
+    source_of_truth: semester
+    sensitivity: moderate
+    tenant_scoped: true
+    primary_key: id
+    foreign_keys:
+      - tenant_id -> tenants.id
+    allowed_roles:
+      registrar: tenant_scope
+      institution_admin: audited_read
+      operations: no_student_content
+    write_path:
+      commands: []
+      writer: workflow_runner
+      requires_audit: true
+    retention:
+      class: institution_policy_required
+      deletion: subject_to_legal_hold_and_contract
+
+  readiness_cases:
+    domain: registration_readiness
+    owner: registrar_product
+    authority: semester
+    source_of_truth: derived_from_institution_sources
+    sensitivity: high
+    tenant_scoped: true
+    subject: student
+    primary_key: id
+    foreign_keys:
+      - tenant_id -> tenants.id
+      - student_id -> students.id
+      - workflow_instance_id -> workflow_instances.id
+    allowed_roles:
+      student: own_only
+      advisor: assigned_caseload_only
+      registrar: tenant_scope
+      institution_admin: audited_read
+      operations: no_student_content
+    write_path:
+      commands:
+        - readiness.evaluate
+        - readiness.refresh
+        - readiness.case.route
+      requires_policy: true
+      requires_audit: true
+    source_requirements:
+      - source_type
+      - source_ref
+      - observed_at
+      - freshness_state
+    retention:
+      class: institution_policy_required
+      deletion: subject_to_legal_hold_and_contract
+
+  readiness_checks:
+    domain: registration_readiness
+    owner: registrar_product
+    authority: semester
+    source_of_truth: derived_from_institution_sources
+    sensitivity: high
+    tenant_scoped: true
+    subject: student
+    primary_key: id
+    foreign_keys:
+      - tenant_id -> tenants.id
+      - readiness_case_id -> readiness_cases.id
+    allowed_roles:
+      student: own_only
+      advisor: assigned_caseload_only
+      registrar: tenant_scope
+      institution_admin: audited_read
+      operations: no_student_content
+    write_path:
+      commands:
+        - readiness.evaluate
+        - readiness.refresh
+      requires_policy: true
+      requires_audit: true
+    source_requirements:
+      - source_type
+      - source_ref
+      - observed_at
+    retention:
+      class: institution_policy_required
+      deletion: subject_to_legal_hold_and_contract
+
+  registration_receipts:
+    domain: registration_readiness
+    owner: registrar_product
+    authority: semester
+    source_of_truth: workflow_receipt
+    sensitivity: high
+    immutable: true
+    tenant_scoped: true
+    subject: student
+    user_visible: true
+    primary_key: id
+    foreign_keys:
+      - tenant_id -> tenants.id
+      - student_id -> students.id
+      - readiness_case_id -> readiness_cases.id
+    required_copy:
+      - "This receipt records your readiness check."
+      - "It is not confirmation that you are enrolled."
+    allowed_roles:
+      student: own_only
+      advisor: assigned_caseload_only
+      registrar: tenant_scope
+      institution_admin: audited_read
+      operations: no_student_content
+    write_path:
+      commands:
+        - readiness.evaluate
+        - readiness.refresh
+        - referral.create
+      requires_idempotency: true
+      requires_audit: true
+    retention:
+      class: institution_policy_required
+      deletion: subject_to_legal_hold_and_contract
+
+  audit_events:
+    domain: platform_security
+    owner: platform_security
+    authority: semester
+    source_of_truth: audit_stream
+    sensitivity: high
+    immutable: true
+    tenant_scoped: true
+    primary_key: id
+    foreign_keys:
+      - tenant_id -> tenants.id
+    allowed_roles:
+      institution_admin: audited_read
+      operations: no_student_content
+    write_path:
+      commands:
+        - readiness.evaluate
+        - readiness.refresh
+        - readiness.case.route
+        - referral.create
+      requires_audit: true
+    retention:
+      class: audit_retention_policy
+      deletion: append_only_retained_per_institution_contract
+
+  outbox_events:
+    domain: platform
+    owner: platform_operations
+    authority: semester
+    source_of_truth: transactional_outbox
+    sensitivity: moderate
+    append_only: true
+    tenant_scoped: true
+    primary_key: id
+    foreign_keys:
+      - tenant_id -> tenants.id
+    allowed_roles:
+      operations: delivery_status_only
+    write_path:
+      commands:
+        - readiness.evaluate
+        - readiness.refresh
+        - readiness.case.route
+      requires_audit: true
+    retention:
+      class: operational
+      deletion: defined_before_pilot

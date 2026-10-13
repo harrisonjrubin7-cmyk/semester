@@ -1,0 +1,33 @@
+# Routes served by the pilot capabilities. Each route names the capabilities
+# that authorize it; the contract test checks that the list is the same in both
+# directions (capabilities.yaml `routes` and this file's `capabilities`).
+#
+# auth: required means an authenticated session with an active membership.
+# Authorization is still decided per command or query by the capability's
+# permissions and the 14-step chain in workflows.yaml.
+
+routes:
+  /app/registration:
+    screen: student_registration_readiness
+    actors:
+      - student
+    capabilities:
+      - student.readiness.read
+      - student.readiness.refresh
+    auth: required
+
+  /registrar/readiness:
+    screen: registrar_readiness_queue
+    actors:
+      - registrar
+    capabilities:
+      - registrar.readiness.queue.read
+    auth: required
+
+  /registrar/readiness/:caseId:
+    screen: registrar_readiness_case
+    actors:
+      - registrar
+    capabilities:
+      - registrar.readiness.case.route
+    auth: required

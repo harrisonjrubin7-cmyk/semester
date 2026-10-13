@@ -31,7 +31,7 @@ strategic expansion in [`STRATEGIC-EXPANSION-REGISTER.md`](STRATEGIC-EXPANSION-R
 | Licence | `app/` | `video/` | `pipeline/` |
 | --- | ---: | ---: | ---: |
 | MIT | 195 | 233 | 4 |
-| ISC | 35 | 18 |  |
+| ISC | 36 | 18 |  |
 | Apache-2.0 | 33 | 5 |  |
 | MPL-2.0 | 13 | 4 |  |
 | BSD-3-Clause | 8 | 6 |  |
@@ -50,7 +50,7 @@ strategic expansion in [`STRATEGIC-EXPANSION-REGISTER.md`](STRATEGIC-EXPANSION-R
 | MIT (stated in package) | 1 |  |  |
 | Python-2.0 |  | 1 |  |
 | Remotion License https://remotion.dev/license |  | 1 |  |
-| **total** | **297** | **297** | **4** |
+| **total** | **298** | **297** | **4** |
 
 - `app/` — The app: built and deployed to every user (the workspace root lockfile, which also locks packages/*) **(ships)**.
 - `video/` — Local video rendering; never deployed.
