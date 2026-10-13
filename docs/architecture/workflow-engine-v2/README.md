@@ -28,23 +28,21 @@ Status: **proposed, unverified.** These files are the specification inputs for t
 4. **Retry, lease and timeout values.** The register states these are illustrative and need approval per environment.
 5. **Acceptance evidence.** All readiness gates are `unverified`, and every acceptance test has empty `evidence_refs`.
 
-## Validation status (run with the uploaded validator, jsonschema 4.26.0)
+## Validation status (jsonschema 4.26.0, uploaded validator)
 
-Run against the schema as uploaded (`workflow_engine.schema.json`):
+The first schema version rejected every binding because `delivery` had no `transport` property. The revised schema in `semester_workflow_execution_pack.zip` (now `workflow_engine.schema.json`) adds `delivery.transport` and makes `semantics`, `ack_rule` and `outbox_ref` conditional on it. This resolves the earlier decision in favour of adding `transport`.
 
-- `registration_execution_binding.example.json`: **rejected.** `delivery` allows no `transport` property, and every binding carries one.
-- `workflow_engine.examples.json`: **rejected** for the same reason (its binding).
-- `background_task_bindings.json`: **17 of 17 rejected**, same reason.
+With the revised schema, the uploaded validator passes:
 
-Removing `delivery.transport` in a scratch copy isolates the remaining failures:
+- `workflow_engine.examples.json`: valid, 0 errors.
+- `background_task_bindings.json`: valid, 0 errors, including the two `guarded_inline` bindings.
+- `registration_execution_binding.example.json`: valid, 0 errors.
 
-- Registration example and workflow examples: pass.
-- 15 of 17 background bindings: pass.
-- `proposed.binding.ai.intent_identify` and `proposed.binding.ai.permission_validate` (`transport: guarded_inline`): still fail. The schema requires `delivery.semantics: at_least_once`, `ack_rule: after_durable_outcome` and a non-null `outbox_ref`, which a guarded inline call does not have.
+The strict resolved-binding mode was not run. All bindings are still drafts, so they should fail that gate; this has not been checked.
 
-`ee79049f-workflow_engine_validation_results.csv` reports these bindings as `accept`. Its fixtures are not in this repository, so this result has not been reproduced here.
+`commands/onboarding_command.schema.json` and `commands/registration_request.schema.json` pass Draft 2020-12 meta-validation. No instance tests exist for them yet.
 
-Decision needed: either add `transport` (`durable_queue`, `scheduled_job`, `guarded_inline`) to `delivery` and make the durable-delivery fields conditional on it, or drop `transport` from the data. The two `guarded_inline` bindings need the same decision. The schema is the contract, so it was not edited without sign-off.
+`ee79049f-workflow_engine_validation_results.csv` records 55 checks, including the 17 bindings as `accept`. Its fixtures are not in this repository, so that result has not been reproduced.
 
 ## Next executable steps
 

@@ -721,14 +721,29 @@
           "additionalProperties": false,
           "properties": {
             "semantics": {
-              "const": "at_least_once"
+              "type": "string",
+              "enum": [
+                "synchronous",
+                "at_least_once"
+              ]
             },
             "outbox_ref": {
-              "type": "string",
-              "minLength": 1
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "ack_rule": {
-              "const": "after_durable_outcome"
+              "type": "string",
+              "enum": [
+                "after_durable_outcome",
+                "after_return_inline"
+              ]
             },
             "lease": {
               "$ref": "#/$defs/lease"
@@ -739,6 +754,14 @@
             "partition_key_ref": {
               "type": "string",
               "minLength": 1
+            },
+            "transport": {
+              "type": "string",
+              "enum": [
+                "guarded_inline",
+                "durable_queue",
+                "scheduled_job"
+              ]
             }
           },
           "required": [
@@ -747,7 +770,62 @@
             "ack_rule",
             "lease",
             "retry",
-            "partition_key_ref"
+            "partition_key_ref",
+            "transport"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "transport": {
+                    "const": "guarded_inline"
+                  }
+                },
+                "required": [
+                  "transport"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "semantics": {
+                    "const": "synchronous"
+                  },
+                  "ack_rule": {
+                    "const": "after_return_inline"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "transport": {
+                    "type": "string",
+                    "enum": [
+                      "durable_queue",
+                      "scheduled_job"
+                    ]
+                  }
+                },
+                "required": [
+                  "transport"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "semantics": {
+                    "const": "at_least_once"
+                  },
+                  "ack_rule": {
+                    "const": "after_durable_outcome"
+                  },
+                  "outbox_ref": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
           ]
         },
         "idempotency": {
