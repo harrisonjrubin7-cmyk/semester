@@ -1029,6 +1029,7 @@ export default defineConfig(({ command, mode }) => {
             isolate: false,
             include: [
               ...configDefaults.include,
+              '../packages/domain-core/src/**/*.test.ts',
               '../packages/institution/src/**/*.test.ts',
               '../packages/offline-sync/src/**/*.test.ts',
               '../packages/platform/src/**/*.test.ts',
