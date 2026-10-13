@@ -27,6 +27,16 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class InstitutionCommandRequest(BaseModel):
+    command_type: Literal[
+        "registration.add",
+        "registration.drop",
+        "grades.submit_final",
+        "records.hold_release",
+    ]
+    payload: dict[str, Any]
+
+
 class UserOut(ORMModel):
     id: UUID
     email: EmailStr

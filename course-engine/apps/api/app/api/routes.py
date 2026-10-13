@@ -9,9 +9,9 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse
-from sqlalchemy import delete, func, select
+from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -23,6 +23,7 @@ from app.models.entities import (
     BackgroundJob,
     CalendarEvent,
     Citation,
+    CommandReceipt,
     Concept,
     Conflict,
     Course,
@@ -38,6 +39,7 @@ from app.models.entities import (
     StudySession,
     UploadCompletion,
     User,
+    WorkspaceGrant,
 )
 from app.schemas import (
     AssetPatch,
@@ -48,6 +50,7 @@ from app.schemas import (
     CourseOut,
     CoursePatch,
     GenerateAssetRequest,
+    InstitutionCommandRequest,
     LoginRequest,
     QuizAttempt,
     RegisterRequest,
@@ -64,6 +67,7 @@ from app.services.citations import (
     validate_study_asset_content,
 )
 from app.services.exports import export_flashcards_pdf, export_guide_docx, export_guide_pdf
+from app.services.institution_commands import _is_active, submit_institution_command
 from app.services.job_leases import revoke_job
 from app.services.storage import (
     MIME_FAMILIES,
@@ -209,6 +213,76 @@ def invalidate_citation_dependents(db: Session, citation: Citation) -> None:
             },
         ))
     db.execute(delete(StudyAssetCitation).where(StudyAssetCitation.citation_id == citation.id))
+
+
+@router.post("/institutions/{institution_id}/commands", status_code=202)
+def create_institution_command(
+    institution_id: UUID,
+    payload: InstitutionCommandRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key", min_length=16, max_length=240),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    receipt, replayed = submit_institution_command(
+        db,
+        institution_id,
+        user,
+        payload.command_type,
+        payload.payload,
+        idempotency_key,
+    )
+    return {**serialize(receipt), "replayed": replayed}
+
+
+@router.get("/institutions/{institution_id}/commands")
+def list_institution_commands(
+    institution_id: UUID,
+    cursor: UUID | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=100),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    grants = db.scalars(
+        select(WorkspaceGrant).where(
+            WorkspaceGrant.institution_id == institution_id,
+            WorkspaceGrant.user_id == user.id,
+            WorkspaceGrant.role.in_({"registrar", "institution", "operations"}),
+        )
+    ).all()
+    now = datetime.now(UTC)
+    if not any(_is_active(grant, now) for grant in grants):
+        raise HTTPException(403, "Institution operations grant required")
+    statement = select(CommandReceipt).where(CommandReceipt.institution_id == institution_id)
+    if cursor is not None:
+        anchor = db.scalar(
+            select(CommandReceipt).where(
+                CommandReceipt.id == cursor,
+                CommandReceipt.institution_id == institution_id,
+            )
+        )
+        if anchor is None:
+            raise HTTPException(404, "Command cursor not found")
+        statement = statement.where(
+            CommandReceipt.id != cursor,
+            or_(
+                CommandReceipt.created_at < anchor.created_at,
+                and_(
+                    CommandReceipt.created_at == anchor.created_at,
+                    CommandReceipt.id < anchor.id,
+                ),
+            )
+        )
+    receipts = db.scalars(
+        statement.order_by(CommandReceipt.created_at.desc(), CommandReceipt.id.desc()).limit(
+            limit + 1
+        )
+    ).all()
+    has_more = len(receipts) > limit
+    items = receipts[:limit]
+    return {
+        "items": [serialize(receipt) for receipt in items],
+        "next_cursor": str(items[-1].id) if has_more else None,
+    }
 
 
 @router.post("/auth/register", response_model=TokenResponse, status_code=201)
