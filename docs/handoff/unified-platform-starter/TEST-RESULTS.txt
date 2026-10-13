@@ -1,0 +1,13 @@
+test_audit (tests.Tests.test_audit) ... ok
+test_persistence (tests.Tests.test_persistence) ... ok
+test_preferences (tests.Tests.test_preferences) ... ok
+test_unknown_command (tests.Tests.test_unknown_command) ... ok
+test_validation (tests.Tests.test_validation) ... ok
+test_version_conflict (tests.Tests.test_version_conflict) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.018s
+
+OK
+
+Only store unit tests were executed. Browser, HTTP integration, accessibility and production controls were not tested.

@@ -79,8 +79,7 @@ override.tf.json
 # Generated design-system reports (uploaded as CI artifacts, not committed)
 app/reports/
 
-# Generated markdown-link index (tool cache, not project content)
-.md-linker/
-
-# Session-state checkpoint written by a local tool; not repository content.
+# Local memory-tool snapshot
 .anchor/
+# Local tool caches written by the md-linker plugin.
+.md-linker/

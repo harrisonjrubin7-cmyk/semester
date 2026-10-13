@@ -886,14 +886,30 @@ a:hover {
   flex-direction: column;
   gap: var(--sp-1);
   padding: calc(26px * var(--density, 1)) 0 calc(20px * var(--density, 1));
-  border-right: 1px solid var(--app-line);
-  background: var(--app-bg);
+  border-right: 1px solid var(--shell-navigation-border);
+  background: var(--shell-navigation-surface);
+  color: var(--shell-navigation-text);
   overflow-y: auto;
 }
 
 .rail-mark {
   font-size: calc(16px * var(--text-scale, 1));
   padding: 0 calc(20px * var(--density, 1)) calc(18px * var(--density, 1));
+}
+
+/* The general wordmark is milled from the active ground's metal sweep. The
+   rail has its own fixed Ink ground, so both its mark and word use the
+   navigation foreground instead of inheriting an occasionally black sweep. */
+.rail .rail-mark {
+  color: var(--shell-navigation-text);
+  background: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+.rail .rail-mark .brandword {
+  color: inherit;
+  background: none;
+  -webkit-text-fill-color: currentColor;
 }
 
 .rail .rail-item {
@@ -911,9 +927,17 @@ a:hover {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   transition: color var(--duration-fast) ease;
+  color: var(--shell-navigation-muted);
 }
 .rail .rail-item:hover {
-  color: var(--app-accent-bright);
+  color: var(--shell-navigation-text);
+  background: var(--shell-navigation-surface-active);
+}
+/* The current page is marked by the rail's raised surface, not the action
+   colour: orange reads as a button to press. */
+.rail .rail-item.is-on {
+  color: var(--shell-navigation-text);
+  background: var(--shell-navigation-surface-active);
 }
 
 /* ── The collapsed rail (medium) ──────────────────────────────────────────
@@ -941,11 +965,12 @@ a:hover {
   place-items: center;
   width: 44px;
   height: 44px;
-  color: var(--app-dim);
+  color: var(--shell-navigation-muted);
   border-radius: var(--r-md);
 }
 .rail .rail-toggle:hover {
-  color: var(--app-accent-bright);
+  color: var(--shell-navigation-text);
+  background: var(--shell-navigation-surface-active);
 }
 .rail[data-collapsed]:not([data-open]) .rail-head {
   justify-content: center;
@@ -1005,13 +1030,15 @@ a:hover {
   font-size: calc(11px * var(--text-scale, 1));
   padding: calc(9px * var(--density, 1)) calc(20px * var(--density, 1));
 }
-.rail .rail-item:hover {
-  background: rgba(236, 238, 242, 0.045);
-}
 .rail-gap {
   margin-top: calc(18px * var(--density, 1));
   padding-top: calc(14px * var(--density, 1));
-  border-top: 1px solid var(--app-line-soft);
+  border-top: 1px solid var(--shell-navigation-border);
+}
+
+.rail :focus-visible,
+.desk-side :focus-visible {
+  outline-color: var(--shell-navigation-text);
 }
 
 /*
@@ -6750,7 +6777,7 @@ section[data-drop] > .grip + * {
    are the two things `.device` asserts about being a phone, undone. */
 .deskwork {
   max-width: none;
-  background: var(--app-void);
+  background: var(--shell-content-canvas);
 }
 
 /* The skip link is absolute, and the blanket `position: relative` on
@@ -6792,7 +6819,7 @@ section[data-drop] > .grip + * {
   align-items: center;
   gap: var(--sp-6);
   padding: var(--sp-5) var(--sp-7);
-  background: var(--app-bg);
+  background: var(--shell-content-canvas);
 }
 
 .desktop-brand {
@@ -7068,7 +7095,7 @@ section[data-drop] > .grip + * {
   min-height: 0;
   display: grid;
   grid-template-columns: 232px minmax(0, 1fr);
-  background: var(--app-bg);
+  background: var(--shell-content-canvas);
 }
 
 .deskwork-one {
@@ -7083,6 +7110,8 @@ section[data-drop] > .grip + * {
      it gone the first row would start against the chrome above. */
   padding: var(--sp-3) var(--sp-6) var(--sp-7);
   overflow-y: auto;
+  background: var(--shell-navigation-surface);
+  color: var(--shell-navigation-text);
 }
 
 .desk-row {
@@ -7093,18 +7122,110 @@ section[data-drop] > .grip + * {
   text-align: left;
   padding: var(--sp-5) var(--sp-6);
   border-radius: 999px;
-  color: var(--app-dim);
+  color: var(--shell-navigation-muted);
   font-size: var(--type-md);
 }
 
 .desk-row:hover {
-  background: var(--app-line-soft);
-  color: var(--app-fg);
+  background: var(--shell-navigation-surface-active);
+  color: var(--shell-navigation-text);
 }
 
+/* The current page is marked by the rail's raised surface, not the action
+   colour: orange reads as a button to press. */
 .desk-row.is-on {
-  background: var(--app-accent-wash);
-  color: var(--app-fg);
+  background: var(--shell-navigation-surface-active);
+  color: var(--shell-navigation-text);
+}
+
+/* The same server-gated destinations appear in both persistent navigation
+   forms. The component is a group, not a second nav landmark, so the page
+   keeps one primary navigation and one current-page announcement. */
+.workspace-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--shell-navigation-border);
+}
+
+.workspace-nav-label {
+  padding: 0 var(--sp-6) var(--sp-2);
+  color: var(--shell-navigation-muted);
+  font-family: var(--font-heading);
+  font-size: var(--type-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.workspace-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  width: auto;
+  min-height: var(--target-compact);
+  margin-inline: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--shape-control);
+  color: var(--shell-navigation-muted);
+  font-size: var(--type-sm);
+  text-align: left;
+}
+
+.workspace-nav-item:hover {
+  background: var(--shell-navigation-surface-active);
+  color: var(--shell-navigation-text);
+}
+
+.workspace-nav-item.is-on {
+  background: var(--shell-navigation-surface-active);
+  color: var(--shell-navigation-text);
+}
+
+.workspace-nav-item > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-nav-go {
+  flex: none;
+}
+
+.workspace-nav-status {
+  padding: var(--sp-2) var(--sp-4) 0;
+  color: var(--shell-navigation-muted);
+  font-size: var(--type-xs);
+  line-height: var(--leading-normal);
+}
+
+.workspace-nav-retry {
+  width: auto;
+  align-self: flex-start;
+  margin-inline: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--shape-control);
+  color: var(--shell-navigation-text);
+  font-size: var(--type-sm);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.rail .workspace-nav {
+  margin-inline: var(--sp-4);
+  padding-inline: 0;
+}
+
+.rail .workspace-nav-label,
+.rail .workspace-nav-status {
+  padding-inline: var(--sp-2);
+}
+
+.rail .workspace-nav-item {
+  margin-inline: 0;
 }
 
 .desk-side-label {
@@ -7112,12 +7233,13 @@ section[data-drop] > .grip + * {
   font-size: var(--type-xs);
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  color: var(--shell-navigation-muted);
 }
 
 .desk-side-gap {
   margin-top: var(--sp-7);
   padding-top: var(--sp-7);
-  border-top: 1px solid var(--app-line-soft);
+  border-top: 1px solid var(--shell-navigation-border);
 }
 
 .desk-side-foot {
@@ -7125,6 +7247,7 @@ section[data-drop] > .grip + * {
   padding: var(--sp-7) var(--sp-6) 0;
   font-size: var(--type-xs);
   line-height: var(--leading-normal);
+  color: var(--shell-navigation-muted);
 }
 
 /* The pane: the one rounded surface every screen is drawn on. */
@@ -7152,7 +7275,7 @@ section[data-drop] > .grip + * {
    pane: it is the app's front door, and a door with a frame round it is a
    window. */
 .deskwork-pane:has(.deskhome) {
-  background: var(--app-void);
+  background: var(--shell-content-canvas);
   border: 0;
   border-radius: 0;
 }

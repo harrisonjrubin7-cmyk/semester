@@ -1,0 +1,96 @@
+import express, { type Request, type Response } from "express";
+import Stripe from "stripe";
+import type { Pool } from "pg";
+
+// Single-account, direct Stripe integration. Connect events are intentionally rejected.
+// Pin/test your stripe SDK and API version before deployment.
+function id(value: unknown): string | null {
+ if (typeof value === "string") return value;
+ if (value && typeof value === "object" && "id" in value && typeof value.id === "string") return value.id;
+ return null;
+}
+export function mountStripeWebhook(app: express.Express, stripe: Stripe, pool: Pool, secret: string, livemode: boolean) {
+ // Mount BEFORE express.json(), bearer-auth middleware, and generic API handlers.
+ app.post("/api/v1/webhooks/stripe", express.raw({ type: "application/json", limit: "512kb" }), async(req: Request,res: Response)=>{
+  const signature=req.header("stripe-signature");
+  if(!signature || !Buffer.isBuffer(req.body)){res.status(400).json({error:"Signature/raw body required"});return;}
+  let event: Stripe.Event;
+  try{event=stripe.webhooks.constructEvent(req.body,signature,secret);}catch{res.status(400).json({error:"Invalid signature"});return;}
+  if(event.livemode!==livemode || event.account){res.status(400).json({error:"Unexpected Stripe environment/account"});return;}
+  const supported=new Set(["customer.subscription.created","customer.subscription.updated","customer.subscription.deleted","invoice.paid","invoice.payment_failed"]);
+  if(!supported.has(event.type)){res.status(200).json({received:true,ignored:true});return;}
+  const object=event.data.object as unknown as Record<string,unknown>;
+  const customer=id(object.customer);
+  const subscription=event.type.startsWith("customer.subscription.") ? id(object) : null;
+  if(!customer){res.status(400).json({error:"Missing customer"});return;}
+  try {
+   // Only a VERIFIED event is queued. Stripe is acknowledged after durable DB commit.
+   // Pool uses a dedicated server credential, never a browser key.
+   await pool.query(`INSERT INTO sx_private.stripe_events(event_id,event_type,customer_id,subscription_id,livemode,payload) VALUES($1,$2,$3,$4,$5,$6::jsonb) ON CONFLICT(event_id) DO NOTHING`,[event.id,event.type,customer,subscription,event.livemode,JSON.stringify(event)]);
+   res.status(200).json({received:true});
+  }catch{res.status(503).json({error:"Durable receipt unavailable"});}
+ });
+}
+
+class PermanentError extends Error {}
+export async function processStripeEvent(stripe: Stripe,pool: Pool,livemode: boolean): Promise<boolean> {
+ const db=await pool.connect();
+ let eventId: string | null=null;
+ try{
+  await db.query("BEGIN");
+  await db.query("SET LOCAL lock_timeout='3s'");
+  await db.query("SET LOCAL statement_timeout='15s'");
+  const job=await db.query(`SELECT * FROM sx_private.stripe_events WHERE state IN ('pending','retry_wait') AND next_attempt_at<=now() ORDER BY received_at FOR UPDATE SKIP LOCKED LIMIT 1`);
+  if(!job.rows.length){await db.query("COMMIT");return false;}
+  const e=job.rows[0];eventId=e.event_id;
+  if(e.livemode!==livemode)throw new PermanentError("Wrong environment");
+  // Serialize by customer BEFORE fetching current subscription to avoid stale worker writes.
+  await db.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))",[e.customer_id]);
+  const mapped=await db.query("SELECT * FROM sx_private.personal_memberships WHERE stripe_customer_id=$1 FOR UPDATE",[e.customer_id]);
+  if(mapped.rows.length!==1)throw new Error("Customer mapping not ready or ambiguous");
+  const member=mapped.rows[0];
+  const subscriptionId=e.subscription_id ?? member.stripe_subscription_id;
+  if(!subscriptionId)throw new Error("Subscription mapping not ready");
+  // Never map users/plans from untrusted subscription metadata.
+  if(member.stripe_subscription_id && member.stripe_subscription_id!==subscriptionId)throw new PermanentError("Unexpected subscription for customer");
+  const sub=await stripe.subscriptions.retrieve(subscriptionId);
+  if(id(sub.customer)!==e.customer_id || sub.livemode!==livemode)throw new PermanentError("Subscription customer/environment mismatch");
+  const status=sub.status;
+  // Terminal and paused states revoke personal paid access under this reference policy.
+  if(["canceled","unpaid","incomplete_expired","paused"].includes(status)){
+   await db.query(`UPDATE sx_private.personal_memberships SET tier='free',status=CASE WHEN $2='canceled' THEN 'canceled' ELSE 'suspended' END,access_until=NULL,stripe_subscription_id=$3,cancel_at_period_end=$4,updated_at=now() WHERE user_id=$1`,[member.user_id,status,sub.id,sub.cancel_at_period_end]);
+  }else{
+   if(sub.items.data.length!==1 || sub.items.data[0].quantity!==1)throw new PermanentError("Only one personal recurring item supported");
+   const item=sub.items.data[0];
+   const price=await db.query("SELECT * FROM sx_private.stripe_prices WHERE price_id=$1 AND livemode=$2 AND enabled",[item.price.id,livemode]);
+   if(price.rows.length!==1 || item.price.recurring?.interval!==price.rows[0].cadence || item.price.recurring?.interval_count!==1)throw new PermanentError("Unapproved price/cadence");
+   // Supports legacy subscription-level and newer item-level period fields.
+   const subRaw=sub as unknown as Record<string,unknown>;
+   const itemRaw=item as unknown as Record<string,unknown>;
+   const end=itemRaw.current_period_end ?? subRaw.current_period_end;
+   if(typeof end!=="number" || !Number.isFinite(end))throw new PermanentError("Missing supported period end");
+   const invoiceId=id(sub.latest_invoice);
+   const invoice=invoiceId ? await stripe.invoices.retrieve(invoiceId) : null;
+   if(invoice && id(invoice.customer)!==e.customer_id)throw new PermanentError("Invoice customer mismatch");
+   const paid=status==='active' && invoice?.status==='paid';
+   const trial=status==='trialing' && member.trial_approved && typeof sub.trial_end==='number';
+   if(paid || trial){
+    const until=new Date((trial ? sub.trial_end! : end)*1000);
+    await db.query(`UPDATE sx_private.personal_memberships SET tier=$2,status=$3,access_until=$4,stripe_subscription_id=$5,cancel_at_period_end=$6,updated_at=now() WHERE user_id=$1`,[member.user_id,price.rows[0].tier,trial?'trialing':'active',until,sub.id,sub.cancel_at_period_end]);
+   }else{
+    // No unpaid upgrade: preserve prior paid-through tier only, with expiry enforced by personal_tier().
+    await db.query(`UPDATE sx_private.personal_memberships SET status=CASE WHEN $2='past_due' THEN 'past_due' ELSE status END,stripe_subscription_id=$3,cancel_at_period_end=$4,updated_at=now() WHERE user_id=$1`,[member.user_id,status,sub.id,sub.cancel_at_period_end]);
+   }
+  }
+  await db.query(`UPDATE sx_private.stripe_events SET state='processed',attempts=attempts+1,processed_at=now(),diagnostic=NULL WHERE event_id=$1`,[eventId]);
+  await db.query("COMMIT");return true;
+ }catch(error){
+  await db.query("ROLLBACK");
+  if(eventId){
+   const permanent=error instanceof PermanentError;
+   // Recheck state under update: never overwrite a job another worker already processed.
+   await db.query(`UPDATE sx_private.stripe_events SET attempts=attempts+1,state=CASE WHEN $2 OR attempts+1>=8 THEN 'dead_letter' ELSE 'retry_wait' END,next_attempt_at=now()+make_interval(secs=>least(3600,power(2,least(attempts,10))::integer*15)),diagnostic=$3 WHERE event_id=$1 AND state IN ('pending','retry_wait')`,[eventId,permanent,permanent?'Unsupported or mismatched billing configuration':'Transient processing failure; inspect correlation ID']);
+  }
+  throw error;
+ }finally{db.release();}
+}

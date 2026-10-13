@@ -24,9 +24,13 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Operators can inspect Semester as one connected ecosystem
+
+For operators holding the console grant, **Semester Operations** now has a read-only **Connected ecosystem** tab after **Finance model**. It maps the supplied Personal Education OS, Institution Operating OS and Semester Company OS into one platform view, and lets an operator inspect all 26 workspace, 281 screen and 122 capability contracts. The view labels the handoff as specification evidence and does not claim that a provider, institution, data connection or privileged operation is authorized or enabled. Students and school administrators will notice nothing.
+
 ### Volunteer post-removal votes show their consequence before submission
 
-Student volunteer moderators now see the reported post, their selected reason and the possible outcome before submitting **Remove it**. The preview says that a second independent removal vote can remove the post immediately, a first vote waits and a disagreement goes to a professional reviewer. Cancel submits nothing. It also says the vote cannot be withdrawn or edited, while the author’s account, other posts and retained review evidence stay unchanged by that vote. Keeping a post or adding a label still follows the existing review flow.
+Student volunteer moderators now see the reported post, their selected reason and the possible outcome before submitting **Remove it**. Because practice cases stay deliberately hidden among real reports, the preview distinguishes their effects: onboarding answers help decide whether the volunteer advances to active status and starts receiving real cases, while recent post-onboarding practice accuracy can move standing among active, probation and paused, including pausing queue access. For a real report, a second independent removal vote can remove the post immediately, a first vote waits and a disagreement goes to a professional reviewer. Cancel submits nothing. It also says the answer cannot be withdrawn or edited, while the author’s account, other posts and retained review evidence stay unchanged by a real-report vote. Keeping a post or adding a label still follows the existing review flow.
 
 ### Housing keeps track of repairs you reported
 

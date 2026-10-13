@@ -1,0 +1,28 @@
+// lib/auth/return-path.ts — safe continue_to handling. Allowlist only; never an open redirect; never grants access.
+const ALLOWED = /^\/app(\/(today|plan|course\/[a-z0-9-]{1,40}|studio|caseload|console|pilot|sandbox|path|family|settings(\/[a-z-]{1,30})?))?$/;
+export function safeReturn(input: unknown, fallback = '/app'): string {
+  if (typeof input !== 'string' || input.length > 160) return fallback;
+  let p: string;
+  try { p = decodeURIComponent(input); } catch { return fallback; }
+  if (p.includes('\\') || p.startsWith('//') || /^[a-z][a-z0-9+.-]*:/i.test(p)) return fallback;   // scheme, protocol-relative, backslash tricks
+  return ALLOWED.test(p) ? p : fallback;
+}
+export type EntryContext = {
+  source: 'organic_search' | 'paid_campaign' | 'social' | 'youtube' | 'email' | 'referral' | 'institution_invite' | 'partner' | 'direct';
+  campaignId?: string; contentId?: string; referralCode?: string;
+  intendedRole?: 'student' | 'applicant' | 'faculty' | 'advisor' | 'institution_admin' | 'institution_buyer' | 'guardian' | 'partner' | 'developer';
+  tenantHint?: string; continueTo?: string; onboardingJourneyHint?: string;
+};
+const SOURCES = new Set(['organic_search', 'paid_campaign', 'social', 'youtube', 'email', 'referral', 'institution_invite', 'partner', 'direct']);
+const ROLES = new Set(['student', 'applicant', 'faculty', 'advisor', 'institution_admin', 'institution_buyer', 'guardian', 'partner', 'developer']);
+const short = (v: string | null) => (v && /^[A-Za-z0-9_-]{1,64}$/.test(v) ? v : undefined);
+// Parse from a URL. intendedRole and tenantHint are HINTS for UI routing only; the server decides role and tenant after membership checks.
+export function parseEntryContext(url: URL): EntryContext {
+  const q = url.searchParams; const s = q.get('source') ?? 'direct'; const r = q.get('role');
+  return {
+    source: (SOURCES.has(s) ? s : 'direct') as EntryContext['source'],
+    campaignId: short(q.get('campaign')), contentId: short(q.get('cta')), referralCode: short(q.get('ref')),
+    intendedRole: r && ROLES.has(r) ? (r as EntryContext['intendedRole']) : undefined,
+    tenantHint: short(q.get('tenant')), continueTo: safeReturn(q.get('continue_to') ?? undefined),
+  };
+}

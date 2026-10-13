@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { readFileSync } from 'node:fs';
@@ -8,6 +8,18 @@ import { StoreProvider } from '../state/store';
 import { loadSeed } from '../data/seed';
 import { fromHash } from '../lib/route';
 import { Directory } from './Directory';
+
+// This test follows the Teaching link, which only exists while the course studio module is on.
+// Switch that one flag on; every other module keeps its real value.
+vi.mock('../lib/experience-flags', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/experience-flags')>();
+  return {
+    ...actual,
+    MODULE_FLAGS: { ...actual.MODULE_FLAGS, course_studio: 'course-studio-on' },
+    moduleOn: (state: unknown) =>
+      state === 'course-studio-on' || actual.moduleOn(state as Parameters<typeof actual.moduleOn>[0]),
+  };
+});
 
 /**
  * One directory, and the three lists that only it draws.
