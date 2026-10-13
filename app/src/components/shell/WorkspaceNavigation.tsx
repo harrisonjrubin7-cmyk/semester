@@ -2,6 +2,7 @@ import { useStore } from '../../state/store';
 import { forSchool, useCapabilityDiscovery } from '../../lib/capabilities';
 import { holdsConsole } from '../../lib/console/capability';
 import { secondLine } from '../../lib/dim';
+import { MODULE_FLAGS, moduleOn } from '../../lib/experience-flags';
 import { journeyFor } from '../../lib/rolejourney';
 import type { WorkspaceView } from '../../lib/route';
 import type { Screen } from '../../lib/types';
@@ -49,14 +50,19 @@ export function WorkspaceEntry({
     onNavigate?.();
     dispatch(action);
   };
+  // A Teaching entry only exists while the module is on. With it off, the
+  // destination would open a page that says the workspace is not enabled.
+  const teaching = moduleOn(MODULE_FLAGS.course_studio);
   const destinations: WorkspaceDestination[] = [
-    {
-      key: 'teaching',
-      label: 'Teaching',
-      description: 'Open the existing Course Studio check for this account.',
-      current: state.screen === 'account' && state.workspaceView === 'course-studio',
-      open: () => navigate({ type: 'openWorkspace', screen: 'account', view: 'course-studio' }),
-    },
+    ...(teaching
+      ? [{
+          key: 'teaching',
+          label: 'Teaching',
+          description: 'Open the existing Course Studio check for this account.',
+          current: state.screen === 'account' && state.workspaceView === 'course-studio',
+          open: () => navigate({ type: 'openWorkspace', screen: 'account', view: 'course-studio' }),
+        } satisfies WorkspaceDestination]
+      : []),
     {
       key: 'university',
       label: 'University services',

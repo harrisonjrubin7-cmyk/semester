@@ -1,11 +1,23 @@
 // @vitest-environment jsdom
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { AIProvider } from './ai/store';
 import { loadSeed } from './data/seed';
 import { StoreProvider } from './state/store';
+
+// These tests expect the Teaching destination, which exists only while the course studio module is on.
+// Switch that one flag on; every other module keeps its real value.
+vi.mock('./lib/experience-flags', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./lib/experience-flags')>();
+  return {
+    ...actual,
+    MODULE_FLAGS: { ...actual.MODULE_FLAGS, course_studio: 'course-studio-on' },
+    moduleOn: (state: unknown) =>
+      state === 'course-studio-on' || actual.moduleOn(state as Parameters<typeof actual.moduleOn>[0]),
+  };
+});
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
