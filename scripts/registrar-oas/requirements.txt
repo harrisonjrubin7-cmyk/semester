@@ -1,0 +1,4 @@
+# Versions executed for this package on Python 3.13. These are not a reviewed
+# compatibility or security assessment; review before relying on them in CI.
+jsonschema==4.26.0
+openapi-spec-validator==0.9.0

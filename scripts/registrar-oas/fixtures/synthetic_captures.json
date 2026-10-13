@@ -1,0 +1,135 @@
+[
+  {
+    "case": "valid add",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "add",
+      "sectionIds": [
+        "11111111-1111-4111-8111-111111111111"
+      ]
+    },
+    "expected_valid": true
+  },
+  {
+    "case": "invalid swap",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "swap",
+      "sectionIds": [
+        "11111111-1111-4111-8111-111111111111"
+      ]
+    },
+    "expected_valid": false
+  },
+  {
+    "case": "unknown operation",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "magic"
+    },
+    "expected_valid": false
+  },
+  {
+    "case": "invalid UUID",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "add",
+      "sectionIds": [
+        "bad"
+      ]
+    },
+    "expected_valid": false
+  },
+  {
+    "case": "extra field",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "drop",
+      "fromEnrollmentIds": [
+        "11111111-1111-4111-8111-111111111111"
+      ],
+      "admin": true
+    },
+    "expected_valid": false
+  },
+  {
+    "case": "empty array",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "add",
+      "sectionIds": []
+    },
+    "expected_valid": false
+  },
+  {
+    "case": "duplicate IDs",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "add",
+      "sectionIds": [
+        "11111111-1111-4111-8111-111111111111",
+        "11111111-1111-4111-8111-111111111111"
+      ]
+    },
+    "expected_valid": false
+  },
+  {
+    "case": "nullable receipt",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "response",
+    "status": 200,
+    "content_type": "application/json",
+    "payload": {
+      "receiptId": null,
+      "state": "pending"
+    },
+    "expected_valid": true
+  },
+  {
+    "case": "invalid state",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "response",
+    "status": 200,
+    "content_type": "application/json",
+    "payload": {
+      "receiptId": null,
+      "state": "invented"
+    },
+    "expected_valid": false
+  },
+  {
+    "case": "missing required",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "response",
+    "status": 200,
+    "content_type": "application/json",
+    "payload": {
+      "state": "pending"
+    },
+    "expected_valid": false
+  }
+]
