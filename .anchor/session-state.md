@@ -1,6 +1,6 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-13 14:05:16_  ·  branch: `claude/friendly-goldberg-xmq92w`
+_Updated: 2026-10-13 14:05:28_  ·  branch: `claude/friendly-goldberg-xmq92w`
 
 ## Uncommitted changes
 ```
@@ -15,6 +15,7 @@ Diff stat:
 
 ## Recent commits
 ```
+d22239f0 chore: update session tool state checkpoint
 c61bcd7f chore: update session tool state checkpoint
 b17fb5ce chore: update session tool state checkpoint
 2731c20e chore: update session tool state checkpoint
@@ -22,7 +23,6 @@ b17fb5ce chore: update session tool state checkpoint
 fafc39eb docs(matrix): re-measure §91 against main; status is built, effort/priority/subtasks/attachments are not
 d0525124 chore: update session tool state checkpoint
 ee7471bb chore: update session tool state checkpoint
-3e23b8dd chore: update session tool state checkpoint
 ```
 
 ## Resume
