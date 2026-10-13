@@ -1,0 +1,39 @@
+# Capability intake: a portfolio budget so capability count never exceeds
+# delivery and support capacity. The catalog holds 118 capabilities.
+capability_intake:
+  required_questions:
+    - which_user_or_operator_has_the_problem
+    - what_is_the_first_meaningful_action
+    - what_stays_external_or_institution_authoritative
+    - what_record_is_created_or_changed
+    - what_source_or_authority_is_required
+    - what_is_the_failure_safe_state
+    - who_supports_it
+    - how_is_success_measured
+    - which_existing_pillar_does_it_reuse
+    - what_capability_will_not_be_built_if_this_is_prioritized
+
+  rejection_conditions:
+    - no_named_owner
+    - no_authority_boundary
+    - no_support_path
+    - no_safe_failure_behavior
+    - duplicate_of_existing_capability
+    - requires_unavailable_control_plane_maturity
+
+  portfolio_lanes:
+    - lane: activate
+      rule: Finish and operate an approved pilot capability
+      current_priority: Registration readiness
+    - lane: deepen
+      rule: Add the minimum adjacent value to an active workflow
+      current_priority: Action center and advisor handoff
+    - lane: repeat
+      rule: Make a proven capability reusable across institutions
+      current_priority: Connector and implementation standards
+    - lane: explore
+      rule: Prototype but do not promise
+      current_priority: Future academic, campus, and career domains
+    - lane: park
+      rule: Preserve concept without active delivery
+      current_priority: High-risk authority domains

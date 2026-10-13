@@ -1,0 +1,51 @@
+# Capability maturity: the company's operating definition of "built".
+# A screen is not a capability; a prototype is not a production system.
+maturity:
+  facts:
+    designed:
+      definition: >
+        A documented interaction, copy model, states, role rendering, and
+        accessibility intent exist.
+    contracted:
+      definition: >
+        Records, API commands, events, policies, authority, sources, and
+        failures are explicitly specified.
+    implemented:
+      definition: >
+        Production-quality code, migrations, and configuration exist in the
+        repository and build successfully.
+    verified:
+      definition: >
+        Required automated and manual tests pass with current evidence.
+    operable:
+      definition: >
+        Monitoring, support, reconciliation, incident handling, safe-off, and
+        ownership are active.
+    activated:
+      definition: >
+        The capability is approved for a named tenant, cohort, scope, and
+        environment.
+
+  rule: >
+    A capability may be demoable when designed. It may be called available
+    only when activated for an approved scope.
+
+  statuses:
+    designed:
+      can_say: "Concept/prototype available for review"
+      cannot_say: "Available to students"
+    contracted:
+      can_say: "The intended behavior and boundaries are specified"
+      cannot_say: "Integrated"
+    implemented:
+      can_say: "Code exists"
+      cannot_say: "Reliable in production"
+    verified:
+      can_say: "Required tests currently pass"
+      cannot_say: "Activated for every institution"
+    operable:
+      can_say: "Monitoring and support controls are in place"
+      cannot_say: "Institution-approved"
+    activated:
+      can_say: "Available for the named scope"
+      cannot_say: "General availability"

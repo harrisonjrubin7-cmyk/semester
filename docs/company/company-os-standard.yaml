@@ -1,0 +1,30 @@
+# Company OS standard: the internal source of truth. Replace parallel founder documents.
+company_os:
+  functions:
+    - product
+    - engineering
+    - design
+    - customer_success
+    - implementation
+    - sales
+    - marketing
+    - finance
+    - legal_and_compliance
+    - trust_and_security
+    - operations
+    - people
+    - partnerships
+    - research
+    - investor_and_board
+
+  each_function_requires:
+    - accountable_owner
+    - mission
+    - system_of_record
+    - current_top_priorities
+    - operating_metrics
+    - controls
+    - recurring_cadence
+    - decision_log
+    - current_gaps
+    - escalation_path

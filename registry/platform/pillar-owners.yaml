@@ -1,0 +1,76 @@
+# The twelve shared platform pillars. No domain builds its own version of these.
+# Owners and certifications are recorded only where the source names them.
+# A null owner is an open gap, not a decision: assign one before the pillar
+# is relied on for a pilot.
+pillars:
+  identity_context:
+    shared_responsibility: Tenant, institution, role, membership, session
+    first_certification_target: Role/session revocation
+    owner: platform_owner
+    certification: CERT-ID-001
+
+  authorization:
+    shared_responsibility: Policy decision, scope, obligations, denial
+    first_certification_target: RLS and PEP behavior
+    owner: security_owner
+    certification: CERT-AUTHZ-001
+
+  source_authority:
+    shared_responsibility: Who owns a fact and what it can mean
+    first_certification_target: Readiness source map
+    owner: product_and_institution_owner
+    certification: CERT-SOURCE-001
+
+  freshness:
+    shared_responsibility: Timeliness, staleness, outage, replay
+    first_certification_target: Stale-source safe state
+    owner: null
+    certification: null
+
+  records:
+    shared_responsibility: Schemas, envelopes, versioning, retention
+    first_certification_target: Readiness receipt
+    owner: null
+    certification: null
+
+  commands:
+    shared_responsibility: Validation, idempotency, consequences
+    first_certification_target: Request evaluation
+    owner: null
+    certification: null
+
+  events:
+    shared_responsibility: Durable delivery, ordering, dedupe, outbox
+    first_certification_target: Evaluation completed
+    owner: null
+    certification: null
+
+  workflows:
+    shared_responsibility: Saga, deadlines, retries, compensation
+    first_certification_target: Source-check workflow
+    owner: platform_owner
+    certification: CERT-WF-001
+
+  consent_and_delegation:
+    shared_responsibility: Sharing, expiry, revocation, evidence
+    first_certification_target: Family/delegation control
+    owner: null
+    certification: null
+
+  AI_governance:
+    shared_responsibility: Scope, retrieval, disclosure, tools, review
+    first_certification_target: Ask Semester answer frame
+    owner: AI_governance_owner
+    certification: CERT-AI-001
+
+  operations:
+    shared_responsibility: Monitoring, support, incidents, reconciliation
+    first_certification_target: Pilot hypercare
+    owner: null
+    certification: null
+
+  evidence_release:
+    shared_responsibility: Tests, approvals, provenance, rollback
+    first_certification_target: Pilot activation gate
+    owner: operations_owner
+    certification: CERT-REL-001

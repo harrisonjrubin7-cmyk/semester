@@ -1,0 +1,36 @@
+# Shared contract lab: the only path for introducing records, commands, events,
+# integrations, and AI tools.
+contract_lab:
+  required_for:
+    - new_record_type
+    - new_command
+    - new_event
+    - new_connector
+    - new_external_audience
+    - new_AI_tool
+    - new_consequential_action
+
+  submission:
+    - capability_id
+    - owner
+    - authority_boundary
+    - record_schema
+    - API_or_event_contract
+    - tenant_scope
+    - policy_requirements
+    - source_and_freshness_rules
+    - idempotency_rule
+    - failure_and_compensation_plan
+    - audit_events
+    - retention_rule
+    - test_plan
+    - release_and_safe_off_plan
+
+  gates:
+    - schema_validation
+    - backward_compatibility_check
+    - policy_reference_check
+    - tenant_isolation_simulation
+    - event_version_check
+    - observability_field_check
+    - documentation_link_check

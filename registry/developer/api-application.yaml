@@ -1,0 +1,25 @@
+# Example API application for a design partner. Scopes are the allow-list;
+# prohibited_scopes are denied even if requested.
+api_application:
+  id: APP-PARTNER-001
+  partner_id: PARTNER-001
+  tenant_scope:
+    - tenant-a
+
+  scopes:
+    - readiness.receipt.read
+    - support.handoff.create
+
+  prohibited_scopes:
+    - student.record.read.all
+    - institution.policy.write
+    - delegation.manage
+    - payment.execute
+
+  controls:
+    - credential_rotation
+    - rate_limit
+    - webhook_signature
+    - audit_log
+    - revocation_test
+    - expiry_date
