@@ -6,6 +6,7 @@ import { baseOf } from './conflicts';
 import {
   BULK_COUNT,
   DELETABLE,
+  HELD_KEY,
   INGRESS_KEY,
   bulk,
   clearIngressDrops,
@@ -14,6 +15,7 @@ import {
   ingressDrops,
   noteIngressDrops,
   settleDeletions,
+  withIngressNote,
 } from './deletions';
 import { mergePersisted } from './merge';
 
@@ -247,5 +249,47 @@ describe('rows lost on the way in', () => {
     set.mockRestore();
     clearIngressDrops();
     expect(ingressDrops()).toEqual([]);
+  });
+
+  // Found reviewing 36c7453: two tabs booted from one damaged copy, one healed
+  // and removed the note, and the other went on holding deletions back.
+  for (const stored of [true, false]) {
+    it(`lets go of a stored note another tab has cleared (${stored ? 'stored' : 'control: never stored'})`, () => {
+      const set = stored
+        ? null
+        : vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+            throw new DOMException('full', 'QuotaExceededError');
+          });
+      noteIngressDrops(['courses']);
+      set?.mockRestore();
+      // The other tab's clear.
+      localStorage.removeItem(INGRESS_KEY);
+      expect(ingressDrops()).toEqual(stored ? [] : ['courses']);
+    });
+  }
+
+  // Found reviewing 36c7453: storage at its quota refused the note but took the
+  // smaller copy without the damaged row, and a close before the pull lost both.
+  it('rides on the saved copy when storage refused the note, and comes back on the next boot', async () => {
+    const set = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('full', 'QuotaExceededError');
+    });
+    noteIngressDrops(['notes']);
+    set.mockRestore();
+    const text = withIngressNote(JSON.stringify({ schemaVersion: 6, seenOnboarding: true, notes: [] }));
+    expect(JSON.parse(text)[HELD_KEY]).toEqual(['notes']);
+    localStorage.setItem('semester.v1', text);
+    vi.resetModules();
+    const fresh = await import('./deletions');
+    const { loadPersisted } = await import('../state/shape');
+    const read = loadPersisted();
+    expect(fresh.ingressDrops()).toEqual(['notes']);
+    expect(HELD_KEY in read, 'never part of the state').toBe(false);
+  });
+
+  it('leaves the saved copy alone when the note is stored', () => {
+    noteIngressDrops(['notes']);
+    const text = JSON.stringify({ notes: [] });
+    expect(withIngressNote(text)).toBe(text);
   });
 });

@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { CARRIED_KEY, forgetCarried, rememberCarried, unknownFields, withCarried } from './carried';
+import { DEFAULT_PERSISTED } from '../state/shape';
+import { CARRIED_BASELINE, CARRIED_KEY, forgetCarried, rememberCarried, unknownFields, withCarried } from './carried';
 
 /*
  * A field a newer build wrote goes back up with this build's push.
  *
- * Found reviewing #1501: an older device pulled a copy holding `maintenance`,
+ * Found reviewing #1501: an older device pulled a copy holding `repairs`,
  * could not name the field, left it out of its next push, and the push
  * replaced the account's row — every repair gone, from a device that never
  * opened Housing.
@@ -20,35 +21,35 @@ afterEach(() => {
 
 describe('fields this build cannot read', () => {
   it('keeps only what this build does not know', () => {
-    expect(unknownFields({ notes: [], maintenance: [{ id: 'm' }], later: 1 }, known)).toEqual({
-      maintenance: [{ id: 'm' }],
+    expect(unknownFields({ notes: [], repairs: [{ id: 'm' }], later: 1 }, known)).toEqual({
+      repairs: [{ id: 'm' }],
       later: 1,
     });
   });
 
   it('puts them back on the way up, and never over a field the push holds', () => {
-    rememberCarried('u1', { notes: ['old'], maintenance: [{ id: 'm' }] }, known);
+    rememberCarried('u1', { notes: ['old'], repairs: [{ id: 'm' }] }, known);
     const out = withCarried('u1', { notes: ['new'], tasks: [] });
-    expect(out).toEqual({ notes: ['new'], tasks: [], maintenance: [{ id: 'm' }] });
-    const own = withCarried('u1', { notes: [], maintenance: [] });
-    expect(own.maintenance, 'the outgoing copy wins a key it holds').toEqual([]);
+    expect(out).toEqual({ notes: ['new'], tasks: [], repairs: [{ id: 'm' }] });
+    const own = withCarried('u1', { notes: [], repairs: [] });
+    expect(own.repairs, 'the outgoing copy wins a key it holds').toEqual([]);
   });
 
   it('carries nothing into another account', () => {
-    rememberCarried('u1', { maintenance: [{ id: 'm' }] }, known);
+    rememberCarried('u1', { repairs: [{ id: 'm' }] }, known);
     expect(withCarried('u2', { notes: [] })).toEqual({ notes: [] });
   });
 
   it('outlives a reload, and is forgotten with the rest of the sync memory', () => {
-    rememberCarried('u1', { maintenance: [{ id: 'm' }] }, known);
-    expect(JSON.parse(localStorage.getItem(CARRIED_KEY)!).fields).toEqual({ maintenance: [{ id: 'm' }] });
+    rememberCarried('u1', { repairs: [{ id: 'm' }] }, known);
+    expect(JSON.parse(localStorage.getItem(CARRIED_KEY)!).fields).toEqual({ repairs: [{ id: 'm' }] });
     forgetCarried();
     expect(localStorage.getItem(CARRIED_KEY)).toBeNull();
     expect(withCarried('u1', { notes: [] })).toEqual({ notes: [] });
   });
 
   it('follows the account: a pull with nothing unknown carries nothing after it', () => {
-    rememberCarried('u1', { maintenance: [{ id: 'm' }] }, known);
+    rememberCarried('u1', { repairs: [{ id: 'm' }] }, known);
     rememberCarried('u1', { notes: [] }, known);
     expect(withCarried('u1', { notes: [] })).toEqual({ notes: [] });
     expect(JSON.parse(localStorage.getItem(CARRIED_KEY)!).fields, 'stored as empty, so another tab reads it too').toEqual({});
@@ -60,8 +61,8 @@ describe('fields this build cannot read', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('full', 'QuotaExceededError');
     });
-    rememberCarried('u1', { maintenance: [{ id: 'm' }] }, known);
-    expect(withCarried('u1', { notes: [] })).toEqual({ notes: [], maintenance: [{ id: 'm' }] });
+    rememberCarried('u1', { repairs: [{ id: 'm' }] }, known);
+    expect(withCarried('u1', { notes: [] })).toEqual({ notes: [], repairs: [{ id: 'm' }] });
   });
 
   // Found reviewing 60dd44c: after a refused write, the stale stored copy was
@@ -121,6 +122,25 @@ describe('fields this build cannot read', () => {
       expect(withCarried('u1', { notes: [] })).toEqual({ notes: [], later: 'new' });
       vi.useRealTimers();
     });
+
+    // Found reviewing 36c7453: a newer build knows the field this one carries,
+    // so the copy it stored left the field out, and this tab took that copy.
+    it('takes a field from a newer build’s copy even though that build knows it', async () => {
+      rememberCarried('u1', { later: 'old' }, known, v1);
+      (await otherTab()).rememberCarried('u1', { later: 'new' }, new Set([...known, 'later']), v2);
+      expect(withCarried('u1', { notes: [] })).toEqual({ notes: [], later: 'new' });
+    });
+
+    it('never puts back a field this build knows and left out, from an older build’s copy', async () => {
+      rememberCarried('u1', { later: 'mine' }, new Set([...known, 'later']), v1);
+      (await otherTab()).rememberCarried('u1', { later: 'theirs' }, known, v2);
+      expect(withCarried('u1', { notes: [] })).toEqual({ notes: [] });
+    });
+  });
+
+  it('holds back only fields every build from this one on can read', () => {
+    const persisted = new Set([...Object.keys(DEFAULT_PERSISTED), 'courses']);
+    expect([...CARRIED_BASELINE].filter((f) => !persisted.has(f)), 'retire a field here only on purpose').toEqual([]);
   });
 
   // Found reviewing df5dd87: after an account switch whose storage writes were

@@ -77,7 +77,7 @@ import type { Quiet } from '../lib/notify';
 import type { RecoveryIntent } from '../lib/academic-recovery';
 import { DEFAULTS as DEFAULT_CONTROLS, type Controls } from '../lib/controls';
 import { DEFAULT_ROLE, roleOf, type Role } from '../lib/role';
-import { clearIngressDrops, droppedOnRead, noteIngressDrops } from '../lib/deletions';
+import { HELD_KEY, clearIngressDrops, droppedOnRead, heldInSaved, noteIngressDrops } from '../lib/deletions';
 import { forgetCarried } from '../lib/carried';
 import type { Balance } from '../lib/meals';
 import type { Residence } from '../lib/housing';
@@ -1798,7 +1798,9 @@ export function loadPersisted(): Persisted {
      */
     const moved = migrate(JSON.parse(raw));
     lastMigration = moved;
-    const saved = moved.state as Partial<Persisted>;
+    // A note the saved copy carried for the sync (`withIngressNote`) is read
+    // below and is never part of the state.
+    const { [HELD_KEY]: _held, ...saved } = moved.state as Partial<Persisted> & { [HELD_KEY]?: unknown };
     const read: Persisted = {
       ...DEFAULT_PERSISTED,
       ...saved,
@@ -1987,7 +1989,10 @@ export function loadPersisted(): Persisted {
      * for. Noted so the first sync puts the account's copies back instead of
      * reading the gap as a deletion. See `ingressDrops` in `lib/deletions.ts`.
      */
-    noteIngressDrops(droppedOnRead(saved as Record<string, unknown>, read as unknown as Record<string, unknown>));
+    noteIngressDrops([
+      ...droppedOnRead(saved as Record<string, unknown>, read as unknown as Record<string, unknown>),
+      ...heldInSaved(moved.state as Record<string, unknown>),
+    ]);
     return read;
   } catch {
     // A private window, or storage disabled. Run with defaults.
