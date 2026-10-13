@@ -1,0 +1,116 @@
+{
+  "$comment": "Evidence registry for the registration-readiness pilot. Every release claim points at an entry here. An entry is accepted only with a reviewer, a review date, an expiry, and a sha256 content hash of a stored artifact that exists in the repository. Entries not yet produced are draft. Validated by app/src/lib/governance/readiness-governance.test.ts. Source: pilot governance brief, 2026-10-13. Stored as JSON, not YAML, because app/ has no YAML parser and this change adds no dependency.",
+  "required_fields": [
+    "id",
+    "title",
+    "capability_key",
+    "control_id",
+    "evidence_type",
+    "owner",
+    "environment",
+    "created_at",
+    "expires_at",
+    "status",
+    "storage_uri",
+    "content_hash",
+    "reviewed_by",
+    "review_date",
+    "invalidated_by"
+  ],
+  "statuses": ["draft", "submitted", "accepted", "expired", "superseded", "invalidated"],
+  "evidence_types": [
+    "automated_test_result",
+    "manual_test_script",
+    "accessibility_review",
+    "architecture_decision",
+    "migration_rehearsal",
+    "policy_test_result",
+    "RLS_test_result",
+    "incident_drill_record",
+    "reconciliation_record",
+    "institution_signoff",
+    "training_attestation",
+    "production_observation",
+    "security_review",
+    "release_decision",
+    "source_freshness_drill",
+    "provider_sandbox_verification",
+    "controlled_action_approval_test",
+    "source_status_copy_review",
+    "student_training_material"
+  ],
+  "invalidation_rules": [
+    {
+      "trigger": "database migration affects referenced table or policy",
+      "invalidates": ["RLS_test_result", "migration_rehearsal", "reconciliation_record"]
+    },
+    {
+      "trigger": "policy bundle version changes",
+      "invalidates": ["policy_test_result", "controlled_action_approval_test"]
+    },
+    {
+      "trigger": "screen copy or interaction changes",
+      "invalidates": ["accessibility_review", "source_status_copy_review", "student_training_material"]
+    },
+    {
+      "trigger": "integration adapter version or provider contract changes",
+      "invalidates": ["source_freshness_drill", "reconciliation_record", "provider_sandbox_verification"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EVD-RDY-SEC-001",
+      "title": "Cross-tenant readiness RLS denial suite",
+      "capability_key": "student.readiness.read",
+      "control_id": "CTRL-ACCESS-001",
+      "evidence_type": "RLS_test_result",
+      "owner": "platform_owner",
+      "environment": "staging",
+      "created_at": "2026-10-13T15:00:00Z",
+      "expires_at": null,
+      "status": "draft",
+      "storage_uri": null,
+      "content_hash": null,
+      "reviewed_by": null,
+      "review_date": null,
+      "invalidated_by": ["readiness_schema_change", "RLS_policy_change", "authorization_package_change"],
+      "note": "Not accepted. The suite is not in the repository yet. supabase/rls-coverage.check.sql checks table-level RLS; it does not test readiness denial cases. Moves to submitted once the suite runs in staging and its artifact is stored."
+    },
+    {
+      "id": "EVD-RDY-SRC-001",
+      "title": "Stale-source freshness drill",
+      "capability_key": "student.readiness_summary",
+      "control_id": "CTRL-SOURCE-002",
+      "evidence_type": "source_freshness_drill",
+      "owner": "integration_owner",
+      "environment": "staging",
+      "created_at": "2026-10-13T15:00:00Z",
+      "expires_at": null,
+      "status": "draft",
+      "storage_uri": null,
+      "content_hash": null,
+      "reviewed_by": null,
+      "review_date": null,
+      "invalidated_by": ["integration_adapter_version_change", "provider_contract_change"],
+      "note": "Not run. Required before CTRL-SOURCE-002 can be claimed. Brief item 7 (stale-source drill)."
+    },
+    {
+      "id": "EVD-RDY-WF-001",
+      "title": "Separation-of-duties override test",
+      "capability_key": "override.approve",
+      "control_id": "CTRL-WORKFLOW-003",
+      "evidence_type": "controlled_action_approval_test",
+      "owner": "registrar_product_owner",
+      "environment": "staging",
+      "created_at": "2026-10-13T15:00:00Z",
+      "expires_at": null,
+      "status": "draft",
+      "storage_uri": null,
+      "content_hash": null,
+      "reviewed_by": null,
+      "review_date": null,
+      "invalidated_by": ["policy_bundle_version_change", "role_grant_change"],
+      "note": "Not run. Must show a requester cannot approve their own override and that the reason and decision trail are written. Brief item 7 (revocation drill covers the late-action path)."
+    }
+  ]
+}
