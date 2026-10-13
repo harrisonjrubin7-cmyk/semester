@@ -81,3 +81,7 @@ app/reports/
 
 # Local memory-tool snapshot
 .anchor/
+
+# Local md-linker cache and per-user Claude config
+.md-linker/
+app/.claude/
