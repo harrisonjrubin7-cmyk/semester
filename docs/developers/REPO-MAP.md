@@ -30,6 +30,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `packages/` | Two source-only packages shared by the app and the servers: `contract` and `institution`. Neither is published. |
 | `pipeline/` | Syllabus to course tooling: ingest, lessons, slides, handouts, alignment, and `validate.mjs`, which CI runs. See [`pipeline/README.md`](../../pipeline/README.md). |
 | `project/` | The original Claude Design handoff: HTML prototypes and the design system. Reference material; the app does not import it. |
+| `registry/` | Machine-readable maturity registries and certification gates: capability maturity, platform pillar owners, connector certification, portfolio intake and domain entry criteria, and the developer API application. Specified, not yet enforced by CI. See [`registry/README.md`](../../registry/README.md). |
 | `scripts/` | Scanners for the static company site (`company-site-scan-*.mjs`). Not the app's scripts; those are in `app/scripts/`. |
 | `supabase/` | The database and the edge functions, and the SQL that checks them. See below. |
 | `tasks/` | Planning notes (`plan.md`, `todo.md`). |
