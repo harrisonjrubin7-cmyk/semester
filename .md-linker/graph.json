@@ -21,6 +21,112 @@
       "outgoing": [],
       "frontmatter_deps": [],
       "last_indexed": "2026-10-13T14:31:09.498939+00:00"
+    },
+    "docs/developers/REPO-MAP.md": {
+      "content_hash": "sha256:bfe4f337621f4f01",
+      "headings": [
+        "Repository map",
+        "Top-level directories",
+        "Inside `app/`",
+        "Inside `app/src/`",
+        "Inside `supabase/`",
+        "The two packages",
+        "Dependency direction rules that exist today"
+      ],
+      "outgoing": [
+        {
+          "target": "docs/FEATURE-TRUTH-TABLE.md",
+          "section": null,
+          "type": "markdown",
+          "line": 5
+        },
+        {
+          "target": "audio/README.md",
+          "section": null,
+          "type": "markdown",
+          "line": 16
+        },
+        {
+          "target": "commercial/READINESS_GAP_MATRIX.md",
+          "section": null,
+          "type": "markdown",
+          "line": 18
+        },
+        {
+          "target": "contracts/README.md",
+          "section": null,
+          "type": "markdown",
+          "line": 20
+        },
+        {
+          "target": "database/README.md",
+          "section": null,
+          "type": "markdown",
+          "line": 22
+        },
+        {
+          "target": "ops/README.md",
+          "section": null,
+          "type": "markdown",
+          "line": 26
+        },
+        {
+          "target": "operator/README.md",
+          "section": null,
+          "type": "markdown",
+          "line": 28
+        },
+        {
+          "target": "pipeline/README.md",
+          "section": null,
+          "type": "markdown",
+          "line": 31
+        },
+        {
+          "target": "infra/README.md",
+          "section": null,
+          "type": "markdown",
+          "line": 36
+        },
+        {
+          "target": "workflow-lab/README.md",
+          "section": null,
+          "type": "markdown",
+          "line": 37
+        },
+        {
+          "target": "video/README.md",
+          "section": null,
+          "type": "markdown",
+          "line": 38
+        },
+        {
+          "target": "README.md",
+          "section": null,
+          "type": "markdown",
+          "line": 43
+        },
+        {
+          "target": "docs/SUPPLY-CHAIN.md",
+          "section": null,
+          "type": "markdown",
+          "line": 55
+        },
+        {
+          "target": "docs/architecture/0002-rls-is-the-authorization-boundary.md",
+          "section": null,
+          "type": "markdown",
+          "line": 124
+        },
+        {
+          "target": "docs/target-architecture/02-MONOREPO-STRUCTURE.md",
+          "section": null,
+          "type": "markdown",
+          "line": 129
+        }
+      ],
+      "frontmatter_deps": [],
+      "last_indexed": "2026-10-13T14:39:10.801823+00:00"
     }
   }
 }
