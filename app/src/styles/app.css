@@ -1133,12 +1133,12 @@ a:hover {
 }
 
 /* The assistant's docked column takes its width out of the page
-   (`--assist-dock`, set by ai/Panel.tsx while it is open). The workspace pane is
-   `device-pane deskwork-pane` with no `device` class, so it takes the one-class
-   rule; the device pane needs two, because `.device, .desk` sets `padding-inline`
-   further down this sheet and wins at one. */
-.device-pane,
-.device.device-pane {
+   (`--assist-dock`, set by ai/Panel.tsx while it is open). It goes on the frame
+   that holds the full-width top bars and the pane, so the chrome and the body
+   shift together and nothing reserves twice. Two classes, because `.device, .desk`
+   sets `padding-inline` further down this sheet and wins at one. */
+.device.device-pane,
+.device.deskwork {
   padding-inline-end: var(--assist-dock, 0);
 }
 
