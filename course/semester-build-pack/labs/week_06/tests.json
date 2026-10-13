@@ -1,0 +1,38 @@
+{
+  "function": "tenant_access",
+  "cases": [
+    {
+      "input": {
+        "principal_tenant": "a",
+        "resource_tenant": "a",
+        "active": true,
+        "scopes": [
+          "tasks:read"
+        ]
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "principal_tenant": "a",
+        "resource_tenant": "b",
+        "active": true,
+        "scopes": [
+          "tasks:read"
+        ]
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "principal_tenant": "",
+        "resource_tenant": "",
+        "active": true,
+        "scopes": [
+          "tasks:read"
+        ]
+      },
+      "expected": false
+    }
+  ]
+}
