@@ -6,5 +6,5 @@
   "exports": { "./*": "./src/*.ts" },
   "scripts": { "typecheck": "tsc --noEmit", "test": "vitest run" },
   "dependencies": { "@semester/policy": "workspace:*" },
-  "devDependencies": { "typescript": "^5.6.3", "vitest": "^2.1.8" }
+  "devDependencies": { "typescript": "^5.6.3", "vitest": "^4.1.11" }
 }

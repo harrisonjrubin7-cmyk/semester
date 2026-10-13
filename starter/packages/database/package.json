@@ -10,5 +10,5 @@
     "@semester/permissions": "workspace:*",
     "pg": "^8.13.1"
   },
-  "devDependencies": { "@types/pg": "^8.11.10", "typescript": "^5.6.3", "vitest": "^2.1.8" }
+  "devDependencies": { "@types/pg": "^8.11.10", "typescript": "^5.6.3", "vitest": "^4.1.11" }
 }
