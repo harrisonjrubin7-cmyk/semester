@@ -51,7 +51,7 @@ jobs:
       - run: npm ci
 
       - name: Validator tests
-        run: npm run pilot:test
+        run: npm run pilot:test --workspace app
 
       - name: Validate pilot artifacts
-        run: npm run pilot:validate
+        run: npm run pilot:validate --workspace app

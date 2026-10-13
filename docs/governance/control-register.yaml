@@ -11,8 +11,8 @@ controls:
     type: preventive
     status: verified
     evidence:
-      check: npm run pilot:validate
-      test: npm run pilot:test
+      check: npm run pilot:validate --workspace app
+      test: npm run pilot:test --workspace app
       files: [scripts/validate-pilot-artifacts.mjs, scripts/validate-pilot-artifacts.test.mjs]
   CTL-MIG-GATE:
     title: Migration quality gate (docs/contracts/records.yaml, migration conventions).

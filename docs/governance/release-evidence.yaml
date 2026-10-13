@@ -40,6 +40,6 @@ items:
 # Contract-level evidence that exists today. It supports no product gate on its own.
 supporting_evidence:
   - id: EVD-CONTRACT-VALIDATOR
-    check: npm run pilot:validate
+    check: npm run pilot:validate --workspace app
     status: verified
     evidence: scripts/validate-pilot-artifacts.mjs

@@ -6,7 +6,7 @@ not start this runbook on a NO-GO.
 ## Before the flag
 
 1. Confirm `docs/launch/go-no-go.yaml` decision and the signer named in it.
-2. Run `npm run pilot:validate` from the repository root; it must pass.
+2. Run `npm run pilot:validate --workspace app` from the repository root; it must pass.
 3. Confirm dashboards for source freshness, evaluation failures and dead letters are live (REL-OPS-01).
 4. Confirm the on-call rota and the support owner named in `support-handoff.md`.
 5. Confirm the registrar product owner has walked the staff onboarding module (`communications/staff-onboarding-registrar.md`).

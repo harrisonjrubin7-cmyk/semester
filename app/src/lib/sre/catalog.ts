@@ -175,6 +175,7 @@ const ROWS: Row[] = [
   ['pipeline:hawkscan', 'Dynamic security scan', 'pipeline', 'C3', 'security', '', '', 'Scans pause; no runtime effect.', null, 'RB-08', '.github/workflows/hawkscan.yml'],
   ['pipeline:workflow-lab', 'Workflow Lab checks (standalone Next.js app)', 'pipeline', 'C3', 'platform', '', '', 'The Workflow Lab app loses its automated typecheck, lint, test and build; the Semester app is unaffected.', null, 'RB-08', '.github/workflows/workflow-lab.yml'],
   ['pipeline:codeql', 'Static analysis of the source (CodeQL)', 'pipeline', 'C3', 'security', '', '', 'Source analysis pauses; no runtime effect. Skipped, not red, where code scanning is unavailable.', null, 'RB-08', '.github/workflows/codeql.yml'],
+  ['pipeline:pilot-contracts', 'Pilot contract validation (registration readiness)', 'pipeline', 'C3', 'platform', '', '', 'Pilot contract checks pause; no runtime effect, because the pilot is not enabled.', null, 'RB-08', '.github/workflows/pilot-contracts.yml'],
 ];
 
 export const COMPONENTS: readonly Component[] = ROWS.map(

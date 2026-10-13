@@ -68,7 +68,9 @@
     "design-system:css": "node scripts/design-system-css.mjs",
     "design-system:check": "npm run tokens:check && node scripts/design-system-audit.mjs && node scripts/design-system-css.mjs && vitest run src/lib/designsystem.test.ts src/lib/designtooling.test.ts src/styles/hex.test.ts src/styles/tokens.test.ts src/styles/rawvalues.test.ts",
     "design-system:baseline": "node scripts/design-system-audit.mjs --write-baseline",
-    "generate:gtm-pdf": "node scripts/generate-gtm-pdf.mjs"
+    "generate:gtm-pdf": "node scripts/generate-gtm-pdf.mjs",
+    "pilot:validate": "node ../scripts/validate-pilot-artifacts.mjs",
+    "pilot:test": "node --test ../scripts/validate-pilot-artifacts.test.mjs"
   },
   "dependencies": {
     "@clerk/react": "^6.17.5",
