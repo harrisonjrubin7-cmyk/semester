@@ -28,5 +28,8 @@
     "dompurify": "3.4.16",
     "katex": "0.18.2",
     "source-map-js": "1.2.2"
+  },
+  "devDependencies": {
+    "yaml": "^2.8.3"
   }
 }

@@ -1,0 +1,54 @@
+# Capabilities: the unit of release and of authorization.
+# A route, UI screen or workflow belongs to exactly one capability.
+# Validated by scripts/validate-pilot-artifacts.mjs.
+
+capabilities:
+  registration_readiness_v1:
+    title: Registration readiness (pilot)
+    feature_flag: registration_readiness_v1
+    default_state: off
+    records:
+      - readiness_evaluations
+      - readiness_tasks
+      - readiness_receipts
+      - holds
+      - time_tickets
+      - readiness_cases
+      - readiness_checks
+      - referrals
+      - reconciliation_items
+      - source_records
+    routes:
+      - student.readiness
+      - registrar.readiness.queue
+      - registrar.readiness.case
+      - api.readiness.context
+      - api.readiness.evaluate
+    workflows:
+      - readiness_evaluation
+      - source_ingest_and_reconcile
+      - override_request
+    events:
+      - readiness.evaluation.requested
+      - readiness.evaluation.completed
+      - readiness.evaluation.failed
+      - source.record.received
+      - reconciliation.opened
+      - override.requested
+      - override.decided
+    audit_keys:
+      - readiness.evaluation.requested
+      - readiness.evaluation.completed
+      - readiness.evaluation.failed
+      - readiness.result.blocked_stale_source
+      - readiness.access.denied
+      - reconciliation.opened
+      - override.requested
+      - override.decided
+      - source.record.received
+    policies:
+      - student_own_record_only
+      - advisor_caseload_scope
+      - registrar_action_scope
+      - revoked_session_denied
+      - cross_tenant_deny

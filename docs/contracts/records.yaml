@@ -1,0 +1,111 @@
+# Canonical records for the pilot. `status` is the honest state:
+#   implemented  - a migration in supabase/migrations defines it
+#   specified    - named in the pilot spec, no migration yet
+# `classification` follows docs/architecture/data-classification.md.
+
+records:
+  # Platform stream (backlog item 2): tenancy, identity and authorization
+  tenants:
+    status: specified
+    classification: internal
+    tenant_scoped: false
+    owner: platform
+  accounts:
+    status: specified
+    classification: confidential
+    tenant_scoped: true
+    owner: platform
+  memberships:
+    status: specified
+    classification: confidential
+    tenant_scoped: true
+    owner: platform
+  grants:
+    status: specified
+    classification: confidential
+    tenant_scoped: true
+    owner: platform
+  policy_decisions:
+    status: specified
+    classification: confidential
+    tenant_scoped: true
+    owner: platform
+  audit_events:
+    status: specified
+    classification: confidential
+    tenant_scoped: true
+    owner: platform
+  outbox:
+    status: specified
+    classification: internal
+    tenant_scoped: true
+    owner: platform
+  jobs:
+    status: specified
+    classification: internal
+    tenant_scoped: true
+    owner: platform
+
+  # Readiness stream (backlog item 3)
+  students:
+    status: specified
+    classification: confidential
+    tenant_scoped: true
+    owner: institution_sync
+  holds:
+    status: specified
+    classification: confidential
+    tenant_scoped: true
+    owner: institution_sync
+  time_tickets:
+    status: specified
+    classification: confidential
+    tenant_scoped: true
+    owner: institution_sync
+  readiness_cases:
+    status: specified
+    classification: confidential
+    tenant_scoped: true
+    owner: semester
+  readiness_checks:
+    status: specified
+    classification: confidential
+    tenant_scoped: true
+    owner: semester
+  referrals:
+    status: specified
+    classification: confidential
+    tenant_scoped: true
+    owner: semester
+  readiness_evaluations:
+    status: implemented
+    migration: supabase/migrations/20261009160000_registration_readiness_store.sql
+    table: private.registration_readiness_evaluations
+    classification: confidential
+    tenant_scoped: true
+    owner: semester
+  readiness_tasks:
+    status: implemented
+    migration: supabase/migrations/20261009160000_registration_readiness_store.sql
+    table: private.registration_readiness_tasks
+    classification: confidential
+    tenant_scoped: true
+    owner: semester
+  readiness_receipts:
+    status: implemented
+    migration: supabase/migrations/20261009160000_registration_readiness_store.sql
+    table: private.registration_readiness_receipts
+    classification: confidential
+    tenant_scoped: true
+    owner: semester
+  reconciliation_items:
+    status: specified
+    classification: confidential
+    tenant_scoped: true
+    owner: semester
+  source_records:
+    status: specified
+    classification: confidential
+    tenant_scoped: true
+    owner: institution_sync
+    note: Normalized envelope from docs/contracts/integration-adapter.yaml; raw payloads kept separately under retention.

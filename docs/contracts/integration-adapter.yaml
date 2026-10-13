@@ -1,0 +1,41 @@
+# Integration adapter contract. Downstream systems never write product tables
+# directly. Each adapter: maps external records to a normalized envelope, stores a
+# raw receipt or reference, updates a projection, and opens reconciliation work
+# when assumptions fail.
+
+adapter:
+  required_methods:
+    - authenticate
+    - pull_since_cursor
+    - normalize
+    - validate
+    - apply_projection
+    - reconcile
+    - health_check
+  required_metadata:
+    - provider_key
+    - tenant_id
+    - cursor
+    - source_watermark
+    - observed_at
+    - correlation_id
+    - idempotency_key
+  safety_rules:
+    - Raw provider payloads are stored only under the approved retention and sensitivity rules.
+    - External IDs are unique within provider and tenant scope.
+    - Projection updates are idempotent.
+    - A lower-authority adapter cannot overwrite a higher-authority projection.
+    - Failed normalization creates a reconciliation item, not a silent drop.
+
+normalized_source_record:
+  type: NormalizedSourceRecord
+  fields:
+    tenantId: string
+    providerKey: string
+    externalId: string
+    entityType: [hold, time_ticket, course, enrollment, grade]
+    authority: institution
+    observedAt: iso8601
+    sourceWatermark: string | null
+    payload: object
+    checksum: string

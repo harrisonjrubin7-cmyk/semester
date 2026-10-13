@@ -1,0 +1,98 @@
+# Controls. `status` is the honest state:
+#   specified   - written down, not built
+#   implemented - built in the repository
+#   verified    - implemented AND an automated check ran and passed (evidence required)
+# A control is `verified` only when `evidence.check` names a command that passes.
+
+controls:
+  # Contract and migration discipline
+  CTL-CONTRACT-VALIDATE:
+    title: "Contract registry validator. Docs cannot reference missing capabilities, tables, routes, events or audit keys."
+    type: preventive
+    status: verified
+    evidence:
+      check: npm run pilot:validate --workspace app
+      test: npm run pilot:test --workspace app
+      files: [scripts/validate-pilot-artifacts.mjs, scripts/validate-pilot-artifacts.test.mjs]
+  CTL-MIG-GATE:
+    title: Migration quality gate (docs/contracts/records.yaml, migration conventions).
+    type: preventive
+    status: specified
+    evidence: null
+  CTL-RLS:
+    title: RLS enabled with select/insert/update/delete policies on every tenant-scoped table.
+    type: preventive
+    status: specified
+    evidence: null
+  CTL-POLICY-GATE:
+    title: Policy decision point gate on every route and workflow.
+    type: preventive
+    status: specified
+    evidence: null
+  CTL-ROLE-SCOPE-TEST:
+    title: Role-scope test suite (same-tenant allow, cross-tenant deny, role-scope deny, revoked-access deny).
+    type: detective
+    status: specified
+    evidence: null
+  CTL-ACCESS-REVIEW:
+    title: Periodic access review for registrar and advisor grants.
+    type: detective
+    status: specified
+    evidence: null
+
+  # Freshness
+  CTL-FRESH-POLICY:
+    title: Freshness thresholds defined once in source-freshness-policy.md.
+    type: preventive
+    status: implemented
+    evidence:
+      files: [docs/architecture/source-freshness-policy.md]
+  CTL-SRC-STATUS-UI:
+    title: Source status component renders current, updating, stale, failed and unknown copy.
+    type: preventive
+    status: specified
+    evidence: null
+  CTL-SRC-TIMEOUT-TEST:
+    title: Tests for source timeouts and stale-source responses.
+    type: detective
+    status: specified
+    evidence: null
+
+  # Staff wording
+  CTL-COPY-REVIEW:
+    title: Copy review of readiness screens against the approved boundary copy.
+    type: preventive
+    status: specified
+    evidence: null
+  CTL-TRAINING:
+    title: Registrar onboarding module completed before access is granted.
+    type: preventive
+    status: specified
+    evidence: null
+  CTL-RECEIPT-LANG:
+    title: Receipt and evaluation language never says enrolled or registered.
+    type: preventive
+    status: specified
+    evidence: null
+  CTL-NO-ENROLL-SCHEMA:
+    title: Readiness schema has no enrollment-status field.
+    type: preventive
+    status: specified
+    evidence: null
+
+  # Workflow and operations
+  CTL-IDEMPOTENCY-TEST:
+    title: Idempotency and legal-transition tests for every workflow in workflows.yaml.
+    type: detective
+    status: specified
+    evidence: null
+  CTL-DEAD-LETTER-DRILL:
+    title: Dead-letter runbook exercised in staging.
+    type: responsive
+    status: specified
+    evidence: null
+  CTL-ROUTE-STATE-TEST:
+    title: Every UI route in routes.yaml renders all of its declared states in end-to-end tests.
+    type: detective
+    status: specified
+    evidence: null

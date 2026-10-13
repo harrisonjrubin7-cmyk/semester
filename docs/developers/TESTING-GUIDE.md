@@ -115,6 +115,7 @@ Other workflows:
 | Docs | `docs.yml` | Pull request opened, updated, reopened or edited | Runs `npm run docs:impact`: fails a pull request that changes a gateway, edge function, screen, script or example without touching a page that describes it, unless its description says `Docs: none because …`. Needs no install. |
 | HawkScan | `hawkscan.yml` | Pull request and push to `main`, or by hand | Dynamic application scan through StackHawk; pull requests from forks do not run it. The primary scan exports the exact GitHub commit, branch and agent into the tags declared by `stackhawk.yml`. The `company_site` job scans an isolated static copy and fails closed when the paged finding evidence does not match the scan summary. Forms that submit with GET and carry no session are named in `stackhawk-company-site.yml`, so the Anti-CSRF plugin stays enabled. |
 | CodeQL | `codeql.yml` | Pull request and push to `main`, weekly on Monday at 05:23 UTC, or by hand | Static analysis (SAST) of the TypeScript and JavaScript. Runs only where code scanning is available (a public repository, or `CODEQL_ENABLED=true`); otherwise it is skipped, not red. |
+| Pilot contracts | `pilot-contracts.yml` | Pull request and push to `main` that touch the pilot's docs, contracts, validator or migrations | Runs `npm run pilot:test` and `npm run pilot:validate --workspace app`: every pilot reference resolves, and a GO decision cannot carry unverified evidence. |
 
 ## Where the policy tests live
 

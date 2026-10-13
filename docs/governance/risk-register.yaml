@@ -1,0 +1,41 @@
+# Risks for the registration readiness pilot. Control ids refer to control-register.yaml.
+# Validated by scripts/validate-pilot-artifacts.mjs.
+
+risks:
+  - id: RSK-001
+    title: Pilot describes stale institutional data as definitive.
+    likelihood: medium
+    impact: high
+    prevention: [CTL-FRESH-POLICY, CTL-SRC-STATUS-UI, CTL-SRC-TIMEOUT-TEST]
+    response:
+      - mark_stale
+      - stop_definitive_evaluations
+      - trigger_reconciliation
+      - notify_institution_owner
+    runbook: docs/launch/incident-runbooks/stale-source.md
+    owner: integration_lead
+
+  - id: RSK-002
+    title: Role configuration exposes a student outside authorized scope.
+    likelihood: low
+    impact: critical
+    prevention: [CTL-RLS, CTL-POLICY-GATE, CTL-ROLE-SCOPE-TEST, CTL-ACCESS-REVIEW]
+    response:
+      - revoke_session_and_grant
+      - preserve_audit_evidence
+      - assess_scope
+      - notify_per_agreed_process
+    runbook: docs/launch/incident-runbooks/access-exposure.md
+    owner: security_owner
+
+  - id: RSK-003
+    title: Staff mistake readiness for official enrollment.
+    likelihood: medium
+    impact: high
+    prevention: [CTL-COPY-REVIEW, CTL-TRAINING, CTL-RECEIPT-LANG, CTL-NO-ENROLL-SCHEMA]
+    response:
+      - correct_record_communication
+      - retrain
+      - review_screen_copy
+    runbook: docs/launch/incident-runbooks/staff-misreads-readiness.md
+    owner: registrar_product_owner

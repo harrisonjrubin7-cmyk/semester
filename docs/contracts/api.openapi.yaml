@@ -1,0 +1,163 @@
+openapi: 3.1.0
+info:
+  title: Semester pilot API
+  version: 0.1.0
+  description: Registration-readiness pilot. Readiness is not enrollment.
+servers:
+  - url: /
+paths:
+  /v1/readiness/context:
+    get:
+      operationId: getReadinessContext
+      summary: Get the current actor's registration-readiness context
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Readiness summary with source labels and freshness.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessContext"
+        "401":
+          $ref: "#/components/responses/ApiError"
+        "403":
+          $ref: "#/components/responses/ApiError"
+        "503":
+          description: Source health prevents a definitive response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /v1/readiness/evaluations:
+    post:
+      operationId: evaluateReadiness
+      summary: Request a registration-readiness evaluation
+      security:
+        - sessionCookie: []
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 128
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvaluationRequest"
+      responses:
+        "202":
+          description: Evaluation accepted; receipt returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationReceipt"
+        "401":
+          $ref: "#/components/responses/ApiError"
+        "403":
+          $ref: "#/components/responses/ApiError"
+        "409":
+          description: Existing evaluation returned for a duplicate idempotency key.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationReceipt"
+        "422":
+          description: Input is valid but cannot be evaluated without review.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: semester_session
+  responses:
+    ApiError:
+      description: Error envelope
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+  schemas:
+    ApiError:
+      type: object
+      required: [code, message, correlationId]
+      properties:
+        code:
+          type: string
+          enum:
+            - UNAUTHENTICATED
+            - FORBIDDEN
+            - SOURCE_STALE
+            - POLICY_UNAVAILABLE
+            - CONFLICT
+            - VALIDATION_ERROR
+        message:
+          type: string
+          description: Plain-language message from the approved copy table.
+        correlationId:
+          type: string
+        fieldErrors:
+          type: object
+          additionalProperties:
+            type: string
+        safeNextAction:
+          type: string
+        retryAfterSeconds:
+          type: integer
+          minimum: 0
+    EvaluationRequest:
+      type: object
+      required: [termId, goal]
+      additionalProperties: false
+      properties:
+        termId:
+          type: string
+        goal:
+          type: object
+          additionalProperties: true
+    EvaluationReceipt:
+      type: object
+      required: [evaluationId, status, correlationId]
+      properties:
+        evaluationId:
+          type: string
+        status:
+          type: string
+          enum: [requested, running, completed, failed, superseded]
+        correlationId:
+          type: string
+    ReadinessContext:
+      type: object
+      required: [state, sources, correlationId]
+      description: state is a readiness state, never an enrollment status.
+      properties:
+        state:
+          type: string
+          enum: [ready, needs_review, blocked, not_evaluated]
+        sources:
+          type: array
+          items:
+            type: object
+            required: [label, sourceSystem, observedAt, freshness]
+            properties:
+              label:
+                type: string
+                enum: [institution_verified, connected, student_entered, estimated, ai_assisted, needs_review]
+              sourceSystem:
+                type: string
+              observedAt:
+                type: string
+                format: date-time
+              freshness:
+                type: string
+                enum: [current, updating, stale, failed, unknown]
+        correlationId:
+          type: string

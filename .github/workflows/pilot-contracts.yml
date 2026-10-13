@@ -1,0 +1,57 @@
+# Pilot contract validation (registration readiness).
+#
+# Checks that docs/contracts, docs/launch and docs/governance agree with each
+# other and with the migrations they claim: every reference resolves, every
+# route has an operation, every GO decision has verified evidence. Runs only when
+# one of those inputs changes. Gate definitions: docs/launch/go-no-go.yaml.
+
+name: Pilot contracts
+
+on:
+  pull_request:
+    branches: ['main']
+    paths:
+      - 'docs/architecture/**'
+      - 'docs/contracts/**'
+      - 'docs/launch/**'
+      - 'docs/governance/**'
+      - 'scripts/validate-pilot-artifacts*.mjs'
+      - 'supabase/migrations/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/pilot-contracts.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'docs/architecture/**'
+      - 'docs/contracts/**'
+      - 'docs/launch/**'
+      - 'docs/governance/**'
+      - 'scripts/validate-pilot-artifacts*.mjs'
+      - 'supabase/migrations/**'
+
+concurrency:
+  group: pilot-contracts-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Validator tests
+        run: npm run pilot:test --workspace app
+
+      - name: Validate pilot artifacts
+        run: npm run pilot:validate --workspace app

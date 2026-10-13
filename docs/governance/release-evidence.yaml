@@ -1,0 +1,45 @@
+# Release evidence for registration_readiness_v1. One item per go/no-go evidence id.
+# `status` uses the vocabulary: proposed, specified, in_progress, blocked, implemented, verified, deployed.
+# `verified` requires a non-empty `evidence` entry. Validated by scripts/validate-pilot-artifacts.mjs.
+
+capability: registration_readiness_v1
+release_decision: NO-GO
+
+items:
+  REL-PRD-01: { title: All role variants rendered, status: specified, owner: product, evidence: null }
+  REL-PRD-02: { title: All state variants rendered, status: specified, owner: product, evidence: null }
+  REL-PRD-03: { title: Source and freshness labels present, status: specified, owner: product, evidence: null }
+  REL-PRD-04: { title: Official status boundary copy approved, status: specified, owner: registrar_product_owner, evidence: null }
+
+  REL-SEC-01: { title: Cross-tenant isolation verified, status: specified, owner: security_owner, evidence: null }
+  REL-SEC-02: { title: Student own-record-only verified, status: specified, owner: security_owner, evidence: null }
+  REL-SEC-03: { title: Advisor caseload scope verified, status: specified, owner: security_owner, evidence: null }
+  REL-SEC-04: { title: Registrar action scope verified, status: specified, owner: security_owner, evidence: null }
+  REL-SEC-05: { title: Revoked session denied, status: specified, owner: security_owner, evidence: null }
+
+  REL-DAT-01: { title: Migration reset passes on an empty database, status: specified, owner: data, evidence: null }
+  REL-DAT-02: { title: Constraints tested, status: specified, owner: data, evidence: null }
+  REL-DAT-03: { title: Reconciliation flow tested, status: specified, owner: data, evidence: null }
+  REL-DAT-04: { title: Stale-source behaviour tested, status: specified, owner: data, evidence: null }
+
+  REL-WF-01: { title: Idempotency tested, status: specified, owner: backend, evidence: null }
+  REL-WF-02: { title: Duplicate event handled, status: specified, owner: backend, evidence: null }
+  REL-WF-03: { title: Outbox delivery tested, status: specified, owner: backend, evidence: null }
+  REL-WF-04: { title: Dead-letter runbook tested, status: specified, owner: reliability, evidence: null }
+
+  REL-OPS-01: { title: Dashboards live, status: specified, owner: reliability, evidence: null }
+  REL-OPS-02: { title: Alerts routed, status: specified, owner: reliability, evidence: null }
+  REL-OPS-03: { title: Incident drill completed, status: specified, owner: reliability, evidence: null }
+  REL-OPS-04: { title: Support owners confirmed, status: specified, owner: support, evidence: null }
+
+  REL-INS-01: { title: Pilot scope signed off, status: blocked, owner: institution_sponsor, evidence: null, blocker: Institution not named }
+  REL-INS-02: { title: Data sources confirmed, status: blocked, owner: integration_lead, evidence: null, blocker: Institution not named }
+  REL-INS-03: { title: Escalation contacts named, status: blocked, owner: support_owner, evidence: null, blocker: Institution not named }
+  REL-INS-04: { title: Student and staff communications approved, status: blocked, owner: registrar_product_owner, evidence: null, blocker: Copy in draft }
+
+# Contract-level evidence that exists today. It supports no product gate on its own.
+supporting_evidence:
+  - id: EVD-CONTRACT-VALIDATOR
+    check: npm run pilot:validate --workspace app
+    status: verified
+    evidence: scripts/validate-pilot-artifacts.mjs
