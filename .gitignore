@@ -79,6 +79,7 @@ override.tf.json
 # Generated design-system reports (uploaded as CI artifacts, not committed)
 app/reports/
 
-# Local tool caches written by the anchor-memory and md-linker plugins.
+# Local memory-tool snapshot
 .anchor/
+# Local tool caches written by the md-linker plugin.
 .md-linker/
