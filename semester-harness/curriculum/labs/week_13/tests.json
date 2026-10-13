@@ -1,0 +1,17 @@
+{
+  "function": "safe_destination",
+  "cases": [
+    {
+      "input": {
+        "url": "https://127.0.0.1/hook"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "url": "https://8.8.8.8/hook"
+      },
+      "expected": true
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "function": "error_model",
+  "cases": [
+    {
+      "input": {
+        "field": "email",
+        "message": "Required"
+      },
+      "expected": {
+        "field": "email",
+        "message": "Required",
+        "described_by": "email-error"
+      }
+    }
+  ]
+}

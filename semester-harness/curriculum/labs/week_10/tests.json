@@ -1,0 +1,18 @@
+{
+  "function": "deduplicate",
+  "cases": [
+    {
+      "input": {
+        "ids": [
+          "a",
+          "b",
+          "a"
+        ]
+      },
+      "expected": [
+        "a",
+        "b"
+      ]
+    }
+  ]
+}

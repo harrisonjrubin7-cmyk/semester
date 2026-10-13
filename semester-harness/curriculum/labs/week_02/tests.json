@@ -1,0 +1,13 @@
+{
+  "function": "validate_pr",
+  "cases": [
+    {
+      "input": {
+        "title": "Fix",
+        "test_evidence": "run",
+        "reviewer": "A"
+      },
+      "expected": true
+    }
+  ]
+}
