@@ -31,6 +31,7 @@
      */
     "paths": {
       "@semester/contract": ["../packages/contract/src/index.ts"],
+      "@semester/domain-core": ["../packages/domain-core/src/index.ts"],
       /*
        * The gateway contract, on the same terms and for the same reason.
        *
