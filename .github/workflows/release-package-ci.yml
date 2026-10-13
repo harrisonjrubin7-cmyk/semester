@@ -1,0 +1,26 @@
+name: Supplemental release CI
+on: [pull_request, workflow_dispatch]
+permissions: {contents: read}
+concurrency:
+  group: release-check-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: npm ci
+      - run: python -m unittest discover -s scripts/release -p 'test_evidence_bundle.py'
+      - run: bash -n scripts/release/deploy-vercel.sh
+      - run: npm run lint --workspace app
+      - run: npm test --workspace app
+      - run: npm run build --workspace app
+      - run: npm run check:university --workspace app
+      - run: npm run platform-control:test
+      - run: npm run registry:validate
+# Pin action commit SHAs before activation (currently version tags). Existing CI jobs are untouched.
