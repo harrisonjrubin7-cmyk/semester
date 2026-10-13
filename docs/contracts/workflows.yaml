@@ -1,0 +1,53 @@
+# Workflows are state machines with legal transitions only. Anything not listed
+# is rejected. Every workflow must pass the checks in CI workflow_contracts:
+# idempotency, legal transitions, retry and dead-letter, late-result rejection,
+# compensation or safe failure.
+
+workflows:
+  readiness_evaluation:
+    capability: registration_readiness_v1
+    initial: requested
+    states: [requested, running, completed, failed, dead_lettered, superseded]
+    terminal: [completed, dead_lettered, superseded]
+    transitions:
+      - { from: requested, to: running, event: readiness.evaluation.requested }
+      - { from: running, to: completed, event: readiness.evaluation.completed }
+      - { from: running, to: failed, event: readiness.evaluation.failed }
+      - { from: failed, to: running, event: retry, max_attempts: 5 }
+      - { from: failed, to: dead_lettered, event: retries_exhausted }
+      - { from: requested, to: superseded, event: newer_input_received }
+      - { from: running, to: superseded, event: newer_input_received }
+    idempotency_key: "Idempotency-Key header scoped to tenant + actor + termId"
+    late_result: "A result for a superseded or dead-lettered evaluation is recorded to audit and not applied."
+    safe_failure: "A failed run keeps the last completed result, labelled stale, and never shows an empty ready state."
+    dead_letter_runbook: docs/launch/incident-runbooks/dead-letter-and-reconciliation.md
+
+  source_ingest_and_reconcile:
+    capability: registration_readiness_v1
+    initial: received
+    states: [received, validated, applied, quarantined, reconciling, reconciled]
+    terminal: [reconciled]
+    transitions:
+      - { from: received, to: validated, event: source.record.received }
+      - { from: received, to: quarantined, event: normalization_failed }
+      - { from: validated, to: applied, event: projection_applied }
+      - { from: validated, to: reconciling, event: assumption_failed }
+      - { from: quarantined, to: reconciling, event: reconciliation.opened }
+      - { from: reconciling, to: reconciled, event: resolved }
+    rules:
+      - "Failed normalization creates a reconciliation item, never a silent drop."
+      - "A lower-authority adapter cannot overwrite a higher-authority projection (AUTH-001)."
+      - "Projection updates are idempotent per (providerKey, externalId, sourceWatermark)."
+
+  override_request:
+    capability: registration_readiness_v1
+    initial: requested
+    states: [requested, approved, declined, withdrawn]
+    terminal: [approved, declined, withdrawn]
+    transitions:
+      - { from: requested, to: approved, event: override.decided, guard: "decider != requester" }
+      - { from: requested, to: declined, event: override.decided, guard: "decider != requester" }
+      - { from: requested, to: withdrawn, event: requester_withdrew }
+    rules:
+      - "The requester cannot approve their own override."
+      - "An approved override records the decider, reason and scope; it does not edit a SIS value."

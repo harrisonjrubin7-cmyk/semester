@@ -1,0 +1,52 @@
+# Routes map to a capability, an operationId (API) and the states they must render.
+# `kind: api` routes must have a matching operation in api.openapi.yaml.
+# `kind: ui` routes must render every state in `states` (see CI check route_state_coverage).
+
+states: [ready, loading, empty, error, forbidden, offline, stale_source]
+
+routes:
+  api.readiness.context:
+    kind: api
+    method: GET
+    path: /v1/readiness/context
+    operationId: getReadinessContext
+    capability: registration_readiness_v1
+    auth: session
+    audit: readiness.access.denied
+
+  api.readiness.evaluate:
+    kind: api
+    method: POST
+    path: /v1/readiness/evaluations
+    operationId: evaluateReadiness
+    capability: registration_readiness_v1
+    auth: session
+    idempotency: required
+    audit: readiness.evaluation.requested
+
+  student.readiness:
+    kind: ui
+    path: /readiness
+    role: student
+    capability: registration_readiness_v1
+    states: [ready, loading, empty, error, forbidden, offline, stale_source]
+    navigation: student.primary
+    audit: readiness.access.denied
+
+  registrar.readiness.queue:
+    kind: ui
+    path: /registrar/readiness
+    role: registrar
+    capability: registration_readiness_v1
+    states: [ready, loading, empty, error, forbidden, offline, stale_source]
+    navigation: registrar.primary
+    audit: readiness.access.denied
+
+  registrar.readiness.case:
+    kind: ui
+    path: /registrar/readiness/:caseId
+    role: registrar
+    capability: registration_readiness_v1
+    states: [ready, loading, empty, error, forbidden, offline, stale_source]
+    navigation: none
+    audit: readiness.access.denied

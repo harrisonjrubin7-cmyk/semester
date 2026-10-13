@@ -1,0 +1,43 @@
+# Audit keys. Every key referenced by routes, events, workflows or controls must
+# exist here. Each entry names what it proves and the class of the subject.
+
+audit_keys:
+  readiness.evaluation.requested:
+    proves: An actor asked for a readiness evaluation (idempotency key recorded).
+    subject_class: confidential
+  readiness.evaluation.completed:
+    proves: A readiness result was produced from named source inputs.
+    subject_class: confidential
+  readiness.evaluation.failed:
+    proves: An evaluation failed; the last completed result is retained.
+    subject_class: internal
+  readiness.result.blocked_stale_source:
+    proves: A definitive result was withheld because a source was stale or failed.
+    subject_class: confidential
+  readiness.access.denied:
+    proves: A request was refused by the policy decision point.
+    subject_class: confidential
+  source.record.received:
+    proves: A source record entered the adapter with its watermark and checksum.
+    subject_class: confidential
+  reconciliation.opened:
+    proves: An assumption failed and a reconciliation item was created.
+    subject_class: confidential
+  override.requested:
+    proves: A registrar requested an override (reason and scope recorded).
+    subject_class: confidential
+  override.decided:
+    proves: A different actor decided an override.
+    subject_class: confidential
+  access.revoked:
+    proves: A session or grant was revoked and when.
+    subject_class: confidential
+  export.requested:
+    proves: A restricted export was requested.
+    subject_class: restricted
+  export.approved:
+    proves: A restricted export was approved by a named approver.
+    subject_class: restricted
+  ai.call.recorded:
+    proves: An AI call was made, with model version and output reference (ai-boundary.md).
+    subject_class: confidential

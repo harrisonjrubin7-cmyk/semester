@@ -21,12 +21,17 @@
     "operator:test": "npm test --workspace @semester/operator",
     "operator:build": "npm run build --workspace @semester/operator",
     "operator:demo": "npm run demo --workspace @semester/operator",
-    "operator": "npm run operator --workspace @semester/operator --"
+    "operator": "npm run operator --workspace @semester/operator --",
+    "pilot:validate": "node scripts/validate-pilot-artifacts.mjs",
+    "pilot:test": "node --test scripts/validate-pilot-artifacts.test.mjs"
   },
   "overrides": {
     "lodash-es": "4.18.1",
     "dompurify": "3.4.16",
     "katex": "0.18.2",
     "source-map-js": "1.2.2"
+  },
+  "devDependencies": {
+    "yaml": "^2.5.1"
   }
 }

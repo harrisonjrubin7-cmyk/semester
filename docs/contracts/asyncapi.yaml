@@ -1,0 +1,82 @@
+asyncapi: 3.0.0
+info:
+  title: Semester pilot events
+  version: 0.1.0
+  description: Outbox-delivered domain events. Delivery is at least once; consumers dedupe on eventId.
+channels:
+  readiness.evaluation:
+    address: readiness.evaluation.{eventType}
+    messages:
+      requested:
+        $ref: "#/components/messages/readiness.evaluation.requested"
+      completed:
+        $ref: "#/components/messages/readiness.evaluation.completed"
+      failed:
+        $ref: "#/components/messages/readiness.evaluation.failed"
+  source.record:
+    address: source.record.received
+    messages:
+      received:
+        $ref: "#/components/messages/source.record.received"
+  reconciliation:
+    address: reconciliation.opened
+    messages:
+      opened:
+        $ref: "#/components/messages/reconciliation.opened"
+  override:
+    address: override.{eventType}
+    messages:
+      requested:
+        $ref: "#/components/messages/override.requested"
+      decided:
+        $ref: "#/components/messages/override.decided"
+components:
+  messages:
+    readiness.evaluation.requested:
+      name: readiness.evaluation.requested
+      payload:
+        $ref: "#/components/schemas/Envelope"
+    readiness.evaluation.completed:
+      name: readiness.evaluation.completed
+      payload:
+        $ref: "#/components/schemas/Envelope"
+    readiness.evaluation.failed:
+      name: readiness.evaluation.failed
+      payload:
+        $ref: "#/components/schemas/Envelope"
+    source.record.received:
+      name: source.record.received
+      payload:
+        $ref: "#/components/schemas/Envelope"
+    reconciliation.opened:
+      name: reconciliation.opened
+      payload:
+        $ref: "#/components/schemas/Envelope"
+    override.requested:
+      name: override.requested
+      payload:
+        $ref: "#/components/schemas/Envelope"
+    override.decided:
+      name: override.decided
+      payload:
+        $ref: "#/components/schemas/Envelope"
+  schemas:
+    Envelope:
+      type: object
+      required: [eventId, eventType, tenantId, occurredAt, correlationId, idempotencyKey, payload]
+      properties:
+        eventId:
+          type: string
+        eventType:
+          type: string
+        tenantId:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+        correlationId:
+          type: string
+        idempotencyKey:
+          type: string
+        payload:
+          type: object

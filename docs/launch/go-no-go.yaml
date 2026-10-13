@@ -1,0 +1,67 @@
+# Go/no-go gates for enabling registration_readiness_v1.
+# Every gate names the release-evidence item(s) that prove it. A gate can only be
+# marked passed when each named evidence item is `verified` with evidence.
+# Validated by scripts/validate-pilot-artifacts.mjs.
+
+decision: NO-GO
+decided_on: null
+decided_by: null
+note: Pilot not authorized. Several gates depend on institution sign-off and on controls not yet built.
+
+gates:
+  product:
+    - id: product.all_role_variants_rendered
+      evidence: [REL-PRD-01]
+    - id: product.all_state_variants_rendered
+      evidence: [REL-PRD-02]
+    - id: product.source_and_freshness_labels_present
+      evidence: [REL-PRD-03]
+    - id: product.official_status_boundary_copy_approved
+      evidence: [REL-PRD-04]
+  security:
+    - id: security.cross_tenant_isolation_verified
+      evidence: [REL-SEC-01]
+    - id: security.student_own_record_only_verified
+      evidence: [REL-SEC-02]
+    - id: security.advisor_caseload_scope_verified
+      evidence: [REL-SEC-03]
+    - id: security.registrar_action_scope_verified
+      evidence: [REL-SEC-04]
+    - id: security.revoked_session_denied
+      evidence: [REL-SEC-05]
+  data:
+    - id: data.migration_reset_passes
+      evidence: [REL-DAT-01]
+    - id: data.constraints_tested
+      evidence: [REL-DAT-02]
+    - id: data.reconciliation_flow_tested
+      evidence: [REL-DAT-03]
+    - id: data.stale_source_behavior_tested
+      evidence: [REL-DAT-04]
+  workflow:
+    - id: workflow.idempotency_tested
+      evidence: [REL-WF-01]
+    - id: workflow.duplicate_event_handled
+      evidence: [REL-WF-02]
+    - id: workflow.outbox_delivery_tested
+      evidence: [REL-WF-03]
+    - id: workflow.dead_letter_runbook_tested
+      evidence: [REL-WF-04]
+  operations:
+    - id: operations.dashboards_live
+      evidence: [REL-OPS-01]
+    - id: operations.alerts_routed
+      evidence: [REL-OPS-02]
+    - id: operations.incident_drill_completed
+      evidence: [REL-OPS-03]
+    - id: operations.support_owners_confirmed
+      evidence: [REL-OPS-04]
+  institution:
+    - id: institution.pilot_scope_signed_off
+      evidence: [REL-INS-01]
+    - id: institution.data_sources_confirmed
+      evidence: [REL-INS-02]
+    - id: institution.escalation_contacts_named
+      evidence: [REL-INS-03]
+    - id: institution.student_staff_communications_approved
+      evidence: [REL-INS-04]

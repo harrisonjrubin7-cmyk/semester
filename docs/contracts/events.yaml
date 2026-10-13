@@ -1,0 +1,56 @@
+# Domain events. Every event is written to the outbox in the same transaction as
+# the state change that produces it, carries the standard envelope, and is
+# delivered at least once. Consumers must be idempotent on eventId.
+
+envelope:
+  required: [eventId, eventType, tenantId, occurredAt, correlationId, idempotencyKey, payload]
+
+events:
+  readiness.evaluation.requested:
+    producer: api.readiness.evaluate
+    consumers: [readiness_worker]
+    workflow: readiness_evaluation
+    audit: readiness.evaluation.requested
+    payload_classification: confidential
+
+  readiness.evaluation.completed:
+    producer: readiness_worker
+    consumers: [student_projection, registrar_queue_projection]
+    workflow: readiness_evaluation
+    audit: readiness.evaluation.completed
+    payload_classification: confidential
+
+  readiness.evaluation.failed:
+    producer: readiness_worker
+    consumers: [ops_alerting, registrar_queue_projection]
+    workflow: readiness_evaluation
+    audit: readiness.evaluation.failed
+    payload_classification: internal
+
+  source.record.received:
+    producer: integration_adapter
+    consumers: [source_ingest_worker]
+    workflow: source_ingest_and_reconcile
+    audit: source.record.received
+    payload_classification: confidential
+
+  reconciliation.opened:
+    producer: source_ingest_worker
+    consumers: [registrar_queue_projection, ops_alerting]
+    workflow: source_ingest_and_reconcile
+    audit: reconciliation.opened
+    payload_classification: confidential
+
+  override.requested:
+    producer: registrar_ui
+    consumers: [registrar_queue_projection]
+    workflow: override_request
+    audit: override.requested
+    payload_classification: confidential
+
+  override.decided:
+    producer: registrar_ui
+    consumers: [student_projection, registrar_queue_projection]
+    workflow: override_request
+    audit: override.decided
+    payload_classification: confidential
