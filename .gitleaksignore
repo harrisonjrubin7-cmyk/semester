@@ -14,3 +14,5 @@
 # docs/handoff intake (2026-10-14): the module registry text "Enrollment/teaching scope" on an
 # "access" field reads as a generic key to the entropy rule. Plain prose, not a credential.
 83cf283ae098ecbdb693ee00b1437d7422562c24:docs/handoff/reference-slice/live/module_registry.json:generic-api-key:36
+# The same line as the working-tree scan (`gitleaks dir`) names it, which carries no commit.
+docs/handoff/reference-slice/live/module_registry.json:generic-api-key:36
