@@ -1,0 +1,8 @@
+tenant_offboarding:
+  triggers: [contract_end, pilot_conclusion, institution_request, material_security_or_compliance_issue, business_closure]
+  phases:
+    notify: ["confirm authorized contacts","agree timeline","freeze new scope changes"]
+    disable: ["disable feature flags","prevent new workflow commands","disable connectors","revoke partner and staff access","invalidate sessions and tokens"]
+    preserve: ["retain required audit records","preserve release and incident evidence","maintain legal hold if applicable"]
+    return_or_delete: ["produce approved export if required","delete per agreed schedule","retain only required minimum","record deletion or retention decision"]
+    close: ["confirm connector shutdown","confirm access revocation","close support paths","deliver completion record","update tenant registry status"]

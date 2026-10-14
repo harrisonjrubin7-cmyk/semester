@@ -1,0 +1,18 @@
+release_train:
+  cadence: {planning_cutoff: institution_and_team_agreed, verification_window: before_activation, activation_window: institution_and_team_agreed, hypercare_window: after_activation}
+  release_types:
+    patch: {scope: low-risk fix, requires: [regression_tests, release_note, production_verification]}
+    scoped_feature: {scope: named capability and cohort, requires: [full_capability_evidence, safe_off_test, training_or_support_update, institution_approval_when_required]}
+    control_change: {scope: authorization, source, retention or AI boundary, requires: [security_and_policy_review, regression_and_revocation_tests, change_approval, rollback_plan]}
+  freeze_conditions: [active S1 or unresolved S2 incident, expired required evidence, unresolved P0 test failure, unreviewed high-risk configuration change]
+change_classes:
+  - {class: editorial, examples: approved help text, review: content owner (+ accessibility if meaning changes)}
+  - {class: visual, examples: tokenized layout or styling, review: design and accessibility}
+  - {class: functional, examples: new low-risk private student action, review: product, engineering, test evidence}
+  - {class: workflow, examples: new state, retry, routing or queue behaviour, review: product, operations, workflow tests}
+  - {class: authority, examples: source meaning, policy, role, permission, delegation, review: institution owner, security, policy/RLS evidence}
+  - {class: sensitive_data, examples: new restricted element, retention, export, AI scope, review: privacy/security + data inventory update}
+  - {class: consequential_action, examples: enrollment-adjacent, financial, grade, formal approval, review: institutional approval, strict gate, audit and rollback}
+  - {class: emergency, examples: containment, credential rotation, safe-off, review: incident commander; evidence after action}
+example_change: {id: CHG-001, classification: authority, capability_ids: [CAP-REG-001], summary: add an approved source mapping for a readiness blocker category, approvals: [institution_authority_owner, security_owner, product_owner], verification: [mapping_contract_test, stale_source_test, policy_test, UI_source_label_test, reconciliation_test], rollback: disable the mapping and route to review}
+relation: traceability "Tenant config" tab tiers config changes; this table classifies every change. Highest class wins.

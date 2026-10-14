@@ -1,0 +1,14 @@
+rollout: [freeze_candidate_and_scope, verify_recovery_and_n_n1_compatibility, apply_reviewed_additive_schema, deploy_compatible_consumers_workers, deploy_api_with_activation_disabled, backfill_resumably, compare_old_new_results, validate_hosted_role_workflows, obtain_target_specific_acceptance, activate_approved_cohort, monitor_and_expand, remove_obsolete_schema_later_release]
+recovery_matrix:
+  application_regression: Return traffic to the compatible release
+  worker_failure: Pause the consumer; keep jobs; replay safely
+  bad_projection: Rebuild from accepted records
+  migration_defect: Stop batch; quarantine; repair mappings; reconcile
+  unknown_external_outcome: Block repetition; inspect the authoritative result
+  authority_transfer_failure: Invoke approved continuity plan; reconcile all new writes
+  data_corruption: Reviewed restore/repair procedure under incident controls
+warning: "A restore can lose legitimate post-backup writes. Authority-transfer rollback needs a reconciliation plan, not just a backup."
+infrastructure: [isolated_environments_and_credentials, server_only_privileged_secrets, db_constraints_and_rls, restricted_object_storage, durable_workers_with_leases_and_bounded_concurrency, sanitized_telemetry_named_responders, source_mappings_and_quotas, server_enforced_activation, exact_commit_deployment_config_evidence]
+iam: "identity + valid membership + scoped capability + course/program/caseload relationship + approved purpose + record lifecycle + current delegation/approval. Technical administration is separate from education-record access; company roles get no default access."
+migration_reconciliation: [identity_linkage, historical_and_active_enrollments, grade_and_credit_calculations, catalog_assignments, transfer_awards, degree_audit_outcomes, credential_awards, transcript_representation, access_restrictions, incremental_change_replay]
+row_counts_rule: "Right counts with wrong student relationships is a failed migration."

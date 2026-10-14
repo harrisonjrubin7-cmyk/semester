@@ -1,0 +1,9 @@
+# Investor and board portal — current canonical specification
+V1 retained as historical/read-only redirect; no second financial metric store. Invitation-only audience grants: board, investor, diligence, observer, preparer, publisher. Reader audiences see approved immutable packages only; preparer edits drafts, not published snapshots; publisher requires separate accepted review and cannot bypass finance/disclosure acceptance. Board rights derive from actual governance/agreements, not label. Company roles never receive student records.
+
+Six-question overview: What changed? What is demonstrably delivered? What traction is authorized and measured? What is cash/runway with assumptions? What are material risks/decisions? What help is requested?
+Monthly package pins accounting close, metric-definition versions, source watermarks, cash forecast scenario, pipeline stage snapshot, risk/control status, documents, claim permission and audience policy. Publish creates immutable package/hash/audit. Correction creates new version with reason, approver, supersedes pointer; original retained and clearly marked. Withdraw exposure when needed while retaining audit.
+
+Reconciled actual versus forecast separate. Cash runway calculated from scenario monthly cash paths; unknown cash/expenses => unknown, not zero or infinity. Pipeline never presented as contracted ARR. Minimum-cell suppression and re-identification review before aggregates; labels and identifiers can themselves leak. Data room per-item access/download/expiry/classification and access history; invite revocation stops future retrieval, cannot erase already downloaded copies.
+
+Acceptance: wrong audience/deep link denied; preparer cannot self-publish; correction preserves original; metric/finance variance explained; revocation, suppression, restore/export and disclosure tests. No live company performance invented.

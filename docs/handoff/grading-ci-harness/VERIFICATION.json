@@ -1,0 +1,34 @@
+{
+  "python_syntax": "passed",
+  "week3_unittest_methods": 4,
+  "week3_invalid_subcases": 8,
+  "week3_local_grader": {
+    "lab": 3,
+    "passed": 4,
+    "total": 4,
+    "correctness_points": 30.0,
+    "manual_points_available": 70,
+    "final_grade": null,
+    "results": [
+      {
+        "passed": true
+      },
+      {
+        "passed": true
+      },
+      {
+        "passed": true
+      },
+      {
+        "passed": true
+      }
+    ],
+    "assurance": "trusted local feedback only"
+  },
+  "static_build": "passed",
+  "unpinned_image_rejection": "passed",
+  "docker_executed": false,
+  "ci_executed": false,
+  "browser_e2e": false,
+  "deployed": false
+}

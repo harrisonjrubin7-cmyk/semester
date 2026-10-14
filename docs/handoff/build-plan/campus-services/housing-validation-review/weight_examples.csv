@@ -1,0 +1,8 @@
+configuration,lifestyle,noise,sleep,A_B_score,A_C_score,coverage,preferred_candidate
+Equal,1,1,1,75.0,83.33,1.0,C
+Lifestyle-heavy,4,1,1,68.75,91.67,1.0,C
+Noise-heavy,1,4,1,81.25,72.92,1.0,B
+Sleep-heavy,1,1,4,75.0,85.42,1.0,C
+Lifestyle-only,1,0,0,62.5,100.0,1.0,C
+Noise-only,0,1,0,87.5,62.5,1.0,B
+Sleep-only,0,0,1,75.0,87.5,1.0,C

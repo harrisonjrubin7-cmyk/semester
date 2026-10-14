@@ -1,0 +1,6 @@
+native_finance:
+  stage_1_company_billing: {purpose: Semester customer invoicing and subscriptions, includes: [quote_to_contract_link, invoice_status, subscription_lifecycle, payment_receipt, internal_ledger, finance_reconciliation]}
+  stage_2_partner_payment_adapters: {purpose: approved external payment handoff, includes: [external_checkout, payment_status_import, refund_status_visibility, reconciliation_case]}
+  stage_3_institutional_finance: {preconditions: [institution_authority_contract, legal_and_regulatory_review, financial_controls, segregation_of_duties, immutable_ledger, dispute_and_refund_process, recovery_and_audit_drills]}
+  rule: Do not accept, hold, move or decide student institutional funds until authority, controls, regulatory obligations and operating model are established.
+  note: campus-services payment and credit-balance work is stage-3 design; it stays prototype until these preconditions exist

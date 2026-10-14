@@ -1,0 +1,941 @@
+{
+  "contract_version": "1.0.0",
+  "id": "registration.enroll",
+  "version": 1,
+  "name": "Enroll, waitlist, add/drop",
+  "domain": "Registration",
+  "catalog_links": [
+    "B:Registration readiness",
+    "E:Capacity management",
+    "E:Waitlist management",
+    "E:Overrides",
+    "PROP-WF-004"
+  ],
+  "purpose": "Request enrollment in a section through the institution’s authoritative registration system with a durable receipt.",
+  "trigger": "Student submits an enroll, add, drop or swap request",
+  "scope": {
+    "tenant_scope": "institution",
+    "tenant_id": "vanderbilt",
+    "allowed_roles": [
+      "student",
+      "registrar_staff"
+    ],
+    "access_basis_refs": [
+      "ferpa_school_official_agreement",
+      "membership:student"
+    ]
+  },
+  "authority": {
+    "mode": "assist",
+    "system": "SIS",
+    "registry_ref": "data/source-authority-register.yaml#enrollment",
+    "official_record_write": true,
+    "institution_scope": "vanderbilt",
+    "activation_ref": "implementation/tenant-activation.yaml#registration",
+    "effective_from": null,
+    "writer_policy": "legacy_authoritative_writer"
+  },
+  "data": {
+    "input_refs": [
+      "section",
+      "term",
+      "time_ticket",
+      "holds",
+      "prerequisites",
+      "cart"
+    ],
+    "output_refs": [
+      "enrollment_receipt",
+      "waitlist_position"
+    ],
+    "classification": [
+      "education_record"
+    ],
+    "provenance_required": true,
+    "freshness_rule_ref": "assurance/service-objectives.yaml#SLO-SOURCE-001",
+    "private_official_boundary_ref": "docs/boundaries#plan-vs-enrollment"
+  },
+  "states": {
+    "business": [
+      "requested",
+      "enrolled",
+      "waitlisted",
+      "denied"
+    ],
+    "execution": [
+      "received",
+      "validating",
+      "awaiting_information",
+      "awaiting_approval",
+      "dispatched",
+      "reconciling",
+      "committed_pending_projection",
+      "committed_pending_reconciliation",
+      "completed",
+      "existing_command",
+      "reauthenticate",
+      "denied",
+      "waitlisted_or_denied",
+      "waitlisted_or_expired",
+      "failed",
+      "failed_or_reconciling",
+      "correction_pending",
+      "paused"
+    ],
+    "initial_business": "requested",
+    "initial_execution": "received",
+    "terminal_business": [
+      "enrolled",
+      "waitlisted",
+      "denied"
+    ],
+    "terminal_execution": [
+      "completed",
+      "existing_command",
+      "denied",
+      "waitlisted_or_expired",
+      "failed",
+      "correction_pending",
+      "committed_pending_reconciliation",
+      "reauthenticate",
+      "paused"
+    ]
+  },
+  "steps": [
+    {
+      "id": "s1",
+      "name": "Validate identity, tenant, window, holds and requisites",
+      "kind": "background",
+      "actor_role": "system",
+      "required_capabilities": [
+        "registration.read"
+      ],
+      "surface_refs": [],
+      "executor_ref": "registrar/policy.evaluate",
+      "input_refs": [
+        "section",
+        "term",
+        "time_ticket",
+        "holds",
+        "prerequisites"
+      ],
+      "output_refs": [
+        "policy_decision"
+      ],
+      "policy_refs": [
+        "registration_policy_v1"
+      ],
+      "audit_events": [
+        "registration.validated"
+      ],
+      "failure_codes": [
+        "IDENTITY_TENANT_MISMATCH",
+        "SOURCE_STALE_OR_UNKNOWN_AUTHORITY",
+        "WINDOW_CLOSED",
+        "BLOCKING_HOLD",
+        "REQUISITE_OR_CREDIT_LIMIT",
+        "APPROVAL_EXPIRED_OR_PERMISSION_LOST",
+        "AUTHORITY_DRIFT_PAUSE"
+      ]
+    },
+    {
+      "id": "s2",
+      "name": "Submit request with idempotency key",
+      "kind": "hybrid",
+      "actor_role": "student",
+      "required_capabilities": [
+        "registration.submit"
+      ],
+      "surface_refs": [
+        "B:Registration readiness"
+      ],
+      "executor_ref": "live-institution-command:registration.add",
+      "input_refs": [
+        "cart"
+      ],
+      "output_refs": [
+        "command_receipt"
+      ],
+      "policy_refs": [
+        "registration_policy_v1"
+      ],
+      "audit_events": [
+        "registration.submitted"
+      ],
+      "failure_codes": [
+        "DUPLICATE_SAME_PAYLOAD",
+        "KEY_PAYLOAD_CONFLICT",
+        "PRECOMMIT_FAILURE"
+      ]
+    },
+    {
+      "id": "s3",
+      "name": "Dispatch to SIS and confirm",
+      "kind": "background",
+      "actor_role": "system",
+      "required_capabilities": [
+        "sis.write.registration"
+      ],
+      "surface_refs": [],
+      "executor_ref": "outbox/publisher → sis adapter",
+      "input_refs": [
+        "command_receipt"
+      ],
+      "output_refs": [
+        "enrollment_receipt",
+        "waitlist_position"
+      ],
+      "policy_refs": [
+        "registration_policy_v1"
+      ],
+      "audit_events": [
+        "registration.dispatched",
+        "registration.confirmed"
+      ],
+      "failure_codes": [
+        "CAPACITY_RACE",
+        "TIMEOUT_AFTER_DISPATCH",
+        "PARTIAL_PROJECTION",
+        "SWAP_FAILURE",
+        "WAITLIST_OFFER_EXPIRED"
+      ]
+    },
+    {
+      "id": "s4",
+      "name": "Registrar correction",
+      "kind": "operational_review",
+      "actor_role": "registrar_staff",
+      "required_capabilities": [
+        "registration.correct"
+      ],
+      "surface_refs": [
+        "E:Overrides"
+      ],
+      "executor_ref": null,
+      "input_refs": [
+        "enrollment_receipt"
+      ],
+      "output_refs": [
+        "correction_record"
+      ],
+      "policy_refs": [
+        "registration_policy_v1"
+      ],
+      "audit_events": [
+        "registration.corrected"
+      ],
+      "failure_codes": [
+        "WRONG_COMMITTED_ENROLLMENT",
+        "WITHDRAWAL_REFUND_MISMATCH"
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "t1",
+      "step_id": "s1",
+      "track": "execution",
+      "from": "received",
+      "to": "validating",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.validating"
+    },
+    {
+      "id": "t2",
+      "step_id": "s1",
+      "track": "execution",
+      "from": "validating",
+      "to": "awaiting_information",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.awaiting_information"
+    },
+    {
+      "id": "t3",
+      "step_id": "s1",
+      "track": "execution",
+      "from": "validating",
+      "to": "awaiting_approval",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.awaiting_approval"
+    },
+    {
+      "id": "t4",
+      "step_id": "s1",
+      "track": "execution",
+      "from": "validating",
+      "to": "denied",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.denied"
+    },
+    {
+      "id": "t5",
+      "step_id": "s1",
+      "track": "execution",
+      "from": "validating",
+      "to": "reauthenticate",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.reauthenticate"
+    },
+    {
+      "id": "t6",
+      "step_id": "s1",
+      "track": "execution",
+      "from": "validating",
+      "to": "paused",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.paused"
+    },
+    {
+      "id": "t7",
+      "step_id": "s2",
+      "track": "execution",
+      "from": "validating",
+      "to": "dispatched",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.dispatched"
+    },
+    {
+      "id": "t8",
+      "step_id": "s2",
+      "track": "execution",
+      "from": "received",
+      "to": "existing_command",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.existing_command"
+    },
+    {
+      "id": "t9",
+      "step_id": "s2",
+      "track": "execution",
+      "from": "validating",
+      "to": "failed",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.failed"
+    },
+    {
+      "id": "t10",
+      "step_id": "s3",
+      "track": "execution",
+      "from": "dispatched",
+      "to": "completed",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.completed"
+    },
+    {
+      "id": "t11",
+      "step_id": "s3",
+      "track": "execution",
+      "from": "dispatched",
+      "to": "reconciling",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.reconciling"
+    },
+    {
+      "id": "t12",
+      "step_id": "s3",
+      "track": "execution",
+      "from": "reconciling",
+      "to": "completed",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.completed"
+    },
+    {
+      "id": "t13",
+      "step_id": "s3",
+      "track": "execution",
+      "from": "dispatched",
+      "to": "waitlisted_or_denied",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.waitlisted_or_denied"
+    },
+    {
+      "id": "t14",
+      "step_id": "s3",
+      "track": "execution",
+      "from": "dispatched",
+      "to": "committed_pending_projection",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.committed_pending_projection"
+    },
+    {
+      "id": "t15",
+      "step_id": "s3",
+      "track": "execution",
+      "from": "committed_pending_projection",
+      "to": "completed",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.completed"
+    },
+    {
+      "id": "t16",
+      "step_id": "s3",
+      "track": "execution",
+      "from": "dispatched",
+      "to": "failed_or_reconciling",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.failed_or_reconciling"
+    },
+    {
+      "id": "t17",
+      "step_id": "s3",
+      "track": "execution",
+      "from": "waitlisted_or_denied",
+      "to": "waitlisted_or_expired",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.waitlisted_or_expired"
+    },
+    {
+      "id": "t20",
+      "step_id": "s3",
+      "track": "business",
+      "from": "requested",
+      "to": "enrolled",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.business.enrolled"
+    },
+    {
+      "id": "t21",
+      "step_id": "s3",
+      "track": "business",
+      "from": "requested",
+      "to": "waitlisted",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.business.waitlisted"
+    },
+    {
+      "id": "t22",
+      "step_id": "s1",
+      "track": "business",
+      "from": "requested",
+      "to": "denied",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.business.denied"
+    },
+    {
+      "id": "t18",
+      "step_id": "s4",
+      "track": "execution",
+      "from": "reconciling",
+      "to": "correction_pending",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.correction_pending"
+    },
+    {
+      "id": "t19",
+      "step_id": "s4",
+      "track": "execution",
+      "from": "reconciling",
+      "to": "committed_pending_reconciliation",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.committed_pending_reconciliation"
+    },
+    {
+      "id": "t25",
+      "step_id": "s3",
+      "track": "execution",
+      "from": "waitlisted_or_denied",
+      "to": "completed",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.completed"
+    },
+    {
+      "id": "t26",
+      "step_id": "s3",
+      "track": "execution",
+      "from": "failed_or_reconciling",
+      "to": "reconciling",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.reconciling"
+    },
+    {
+      "id": "t27",
+      "step_id": "s1",
+      "track": "execution",
+      "from": "awaiting_information",
+      "to": "validating",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.validating"
+    },
+    {
+      "id": "t28",
+      "step_id": "s1",
+      "track": "execution",
+      "from": "awaiting_information",
+      "to": "denied",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.denied"
+    },
+    {
+      "id": "t29",
+      "step_id": "s1",
+      "track": "execution",
+      "from": "awaiting_approval",
+      "to": "validating",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.validating"
+    },
+    {
+      "id": "t30",
+      "step_id": "s1",
+      "track": "execution",
+      "from": "awaiting_approval",
+      "to": "denied",
+      "guard_refs": [
+        "policy:registration_policy_v1"
+      ],
+      "audit_event": "registration.execution.denied"
+    }
+  ],
+  "controls": {
+    "risk": "consequential",
+    "human_authority_required": true,
+    "approval_policy_ref": "registrar/overrides#scoped-approval",
+    "policy_version_ref": "registration_policy_v1",
+    "idempotency": {
+      "required": true,
+      "key_scope": "actor+tenant",
+      "payload_binding": true,
+      "unknown_outcome_rule": "Reconcile with the authority before any retry; reuse the same key only if the SIS deduplicates."
+    },
+    "concurrency_rule_ref": "registrar/enrollment-engine#row-lock-seat",
+    "provider_data_policy_ref": "no_ai_provider_access"
+  },
+  "recovery_paths": [
+    {
+      "code": "IDENTITY_TENANT_MISMATCH",
+      "detection": "Stop before protected reads",
+      "to_execution_state": "denied",
+      "retry_policy": "never",
+      "user_message": "This account doesn't have access to registration at this school. Nothing was shown or changed. If you have another school account, sign in with that one.",
+      "owner": "Identity support",
+      "compensation": "Denied-access audit; no protected data disclosed",
+      "acceptance_test_ids": [
+        "AT-IDENTITY_TENANT_MISMATCH"
+      ]
+    },
+    {
+      "code": "SOURCE_STALE_OR_UNKNOWN_AUTHORITY",
+      "detection": "Block official command; refresh source and registry",
+      "to_execution_state": "awaiting_information",
+      "retry_policy": "safe_read",
+      "user_message": "We can't confirm current registration data yet. Nothing was submitted.",
+      "owner": "Registrar/integration",
+      "compensation": "Freshness and writer check",
+      "acceptance_test_ids": [
+        "AT-SOURCE_STALE_OR_UNKNOWN_AUTHORITY"
+      ]
+    },
+    {
+      "code": "WINDOW_CLOSED",
+      "detection": "Explain institution rule and next opportunity",
+      "to_execution_state": "denied",
+      "retry_policy": "never",
+      "user_message": "Your registration window isn't open. Your next opportunity is shown.",
+      "owner": "Registrar",
+      "compensation": "No command committed",
+      "acceptance_test_ids": [
+        "AT-WINDOW_CLOSED"
+      ]
+    },
+    {
+      "code": "BLOCKING_HOLD",
+      "detection": "Permitted reason plus responsible-office handoff",
+      "to_execution_state": "awaiting_information",
+      "retry_policy": "safe_read",
+      "user_message": "A hold from the office named here needs to be cleared first.",
+      "owner": "Hold-owning office",
+      "compensation": "No inferred clearance from task completion",
+      "acceptance_test_ids": [
+        "AT-BLOCKING_HOLD"
+      ]
+    },
+    {
+      "code": "REQUISITE_OR_CREDIT_LIMIT",
+      "detection": "Explain rule; scoped override request if permitted",
+      "to_execution_state": "awaiting_approval",
+      "retry_policy": "new_approved_command",
+      "user_message": "This section has a requirement you haven't met. You can request an override if the rule allows it.",
+      "owner": "Registrar/approver",
+      "compensation": "Versioned rule and scoped approval",
+      "acceptance_test_ids": [
+        "AT-REQUISITE_OR_CREDIT_LIMIT"
+      ]
+    },
+    {
+      "code": "CAPACITY_RACE",
+      "detection": "Commit-time capacity check; waitlist or alternative",
+      "to_execution_state": "waitlisted_or_denied",
+      "retry_policy": "never",
+      "user_message": "The section filled. You're on the waitlist (or here are open alternatives).",
+      "owner": "Registration operations",
+      "compensation": "One final seat allocated once",
+      "acceptance_test_ids": [
+        "AT-CAPACITY_RACE"
+      ]
+    },
+    {
+      "code": "DUPLICATE_SAME_PAYLOAD",
+      "detection": "Return original status/receipt",
+      "to_execution_state": "existing_command",
+      "retry_policy": "same_key_if_supported",
+      "user_message": "You already sent this — here's the original receipt.",
+      "owner": "Platform",
+      "compensation": "One business effect",
+      "acceptance_test_ids": [
+        "AT-DUPLICATE_SAME_PAYLOAD"
+      ]
+    },
+    {
+      "code": "KEY_PAYLOAD_CONFLICT",
+      "detection": "Reject conflict",
+      "to_execution_state": "denied",
+      "retry_policy": "new_approved_command",
+      "user_message": "This request conflicts with one already sent. Start a new request.",
+      "owner": "Platform",
+      "compensation": "No changed effect",
+      "acceptance_test_ids": [
+        "AT-KEY_PAYLOAD_CONFLICT"
+      ]
+    },
+    {
+      "code": "TIMEOUT_AFTER_DISPATCH",
+      "detection": "Result unknown; lookup authority and reconcile",
+      "to_execution_state": "reconciling",
+      "retry_policy": "same_key_if_supported",
+      "user_message": "We're confirming the result with the registrar's system. Don't resubmit.",
+      "owner": "Integration/registrar",
+      "compensation": "Resolve before conflicting next command",
+      "acceptance_test_ids": [
+        "AT-TIMEOUT_AFTER_DISPATCH"
+      ]
+    },
+    {
+      "code": "PARTIAL_PROJECTION",
+      "detection": "Retain authoritative result; repair projections",
+      "to_execution_state": "committed_pending_projection",
+      "retry_policy": "projection_only",
+      "user_message": "Your registration went through. Some views are still updating.",
+      "owner": "Integration/platform",
+      "compensation": "Ledger agrees; failed projection visible",
+      "acceptance_test_ids": [
+        "AT-PARTIAL_PROJECTION"
+      ]
+    },
+    {
+      "code": "PRECOMMIT_FAILURE",
+      "detection": "Failure with safe resume",
+      "to_execution_state": "failed",
+      "retry_policy": "bounded_after_no_commit",
+      "user_message": "This didn't go through and nothing changed. You can try again.",
+      "owner": "Platform",
+      "compensation": "Evidence authority did not commit",
+      "acceptance_test_ids": [
+        "AT-PRECOMMIT_FAILURE"
+      ]
+    },
+    {
+      "code": "APPROVAL_EXPIRED_OR_PERMISSION_LOST",
+      "detection": "Stop; request approval if permitted",
+      "to_execution_state": "awaiting_approval",
+      "retry_policy": "new_approved_command",
+      "user_message": "The approval for this has expired. Request a new one.",
+      "owner": "Registrar/security",
+      "compensation": "Commit-time role and approval check",
+      "acceptance_test_ids": [
+        "AT-APPROVAL_EXPIRED_OR_PERMISSION_LOST"
+      ]
+    },
+    {
+      "code": "WAITLIST_OFFER_EXPIRED",
+      "detection": "Record expiry under policy; show next action",
+      "to_execution_state": "waitlisted_or_expired",
+      "retry_policy": "never",
+      "user_message": "Your waitlist offer expired. Here's what you can do next.",
+      "owner": "Registration operations",
+      "compensation": "Ordered waitlist; traceable offer",
+      "acceptance_test_ids": [
+        "AT-WAITLIST_OFFER_EXPIRED"
+      ]
+    },
+    {
+      "code": "SWAP_FAILURE",
+      "detection": "Preserve original enrollment until replacement assured",
+      "to_execution_state": "failed_or_reconciling",
+      "retry_policy": "never",
+      "user_message": "The swap didn't complete. You're still enrolled in your original section.",
+      "owner": "Registrar",
+      "compensation": "No unintended drop",
+      "acceptance_test_ids": [
+        "AT-SWAP_FAILURE"
+      ]
+    },
+    {
+      "code": "WRONG_COMMITTED_ENROLLMENT",
+      "detection": "Human correction case; assess policy and impacts",
+      "to_execution_state": "correction_pending",
+      "retry_policy": "new_approved_command",
+      "user_message": "The registrar is correcting this enrollment. The history is kept.",
+      "owner": "Registrar",
+      "compensation": "Original plus correction ledger",
+      "acceptance_test_ids": [
+        "AT-WRONG_COMMITTED_ENROLLMENT"
+      ]
+    },
+    {
+      "code": "WITHDRAWAL_REFUND_MISMATCH",
+      "detection": "Retain academic decision; reconcile financial difference",
+      "to_execution_state": "committed_pending_reconciliation",
+      "retry_policy": "never",
+      "user_message": "Your withdrawal is recorded. Student accounts is reconciling the charges.",
+      "owner": "Registrar/student accounts",
+      "compensation": "Separate academic and financial receipts",
+      "acceptance_test_ids": [
+        "AT-WITHDRAWAL_REFUND_MISMATCH"
+      ]
+    },
+    {
+      "code": "AUTHORITY_DRIFT_PAUSE",
+      "detection": "Pause scope; reconcile in-flight commands and writer",
+      "to_execution_state": "paused",
+      "retry_policy": "never",
+      "user_message": "Registration is paused while systems are reconciled. Nothing was lost.",
+      "owner": "Implementation/registrar",
+      "compensation": "No split-brain writer",
+      "acceptance_test_ids": [
+        "AT-AUTHORITY_DRIFT_PAUSE"
+      ]
+    }
+  ],
+  "completion": {
+    "receipt_schema_ref": "contracts/receipt.schema.json#enrollment",
+    "projection_refs": [
+      "read_model.student_schedule",
+      "read_model.action_center"
+    ],
+    "reconciliation_rule_ref": "assurance/reconciliation.yaml",
+    "action_center_update_ref": "action_center.registration"
+  },
+  "operations": {
+    "owner": "Registrar",
+    "escalation_ref": "operations/support-model.yaml#tier3",
+    "retention_rule_ref": "privacy/data-lifecycle.yaml#registration",
+    "rollback_or_correction_ref": "s4",
+    "accessibility_test_refs": [
+      "a11y.registration.submit",
+      "a11y.registration.status"
+    ],
+    "monitoring_rule_ref": "assurance/service-objectives.yaml#SLO-READINESS-001"
+  },
+  "ai_policy": {
+    "enabled": false,
+    "policy_ref": null,
+    "consequential_decision_authority": false,
+    "tool_budget_ref": null
+  },
+  "acceptance_tests": [
+    {
+      "id": "AT-HAPPY",
+      "suite": "happy_path",
+      "criterion": "Eligible student enrolls once and gets one receipt",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-IDENTITY_TENANT_MISMATCH",
+      "suite": "tenant_isolation",
+      "criterion": "Denied-access audit; no protected data disclosed",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-SOURCE_STALE_OR_UNKNOWN_AUTHORITY",
+      "suite": "stale_source",
+      "criterion": "Freshness and writer check",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-WINDOW_CLOSED",
+      "suite": "authority",
+      "criterion": "No command committed",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-BLOCKING_HOLD",
+      "suite": "authority",
+      "criterion": "No inferred clearance from task completion",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-REQUISITE_OR_CREDIT_LIMIT",
+      "suite": "authority",
+      "criterion": "Versioned rule and scoped approval",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-CAPACITY_RACE",
+      "suite": "concurrency",
+      "criterion": "One final seat allocated once",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-DUPLICATE_SAME_PAYLOAD",
+      "suite": "replay",
+      "criterion": "One business effect",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-KEY_PAYLOAD_CONFLICT",
+      "suite": "replay",
+      "criterion": "No changed effect",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-TIMEOUT_AFTER_DISPATCH",
+      "suite": "timeout",
+      "criterion": "Resolve before conflicting next command",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-PARTIAL_PROJECTION",
+      "suite": "recovery",
+      "criterion": "Ledger agrees; failed projection visible",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-PRECOMMIT_FAILURE",
+      "suite": "recovery",
+      "criterion": "Evidence authority did not commit",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-APPROVAL_EXPIRED_OR_PERMISSION_LOST",
+      "suite": "revocation",
+      "criterion": "Commit-time role and approval check",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-WAITLIST_OFFER_EXPIRED",
+      "suite": "recovery",
+      "criterion": "Ordered waitlist; traceable offer",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-SWAP_FAILURE",
+      "suite": "recovery",
+      "criterion": "No unintended drop",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-WRONG_COMMITTED_ENROLLMENT",
+      "suite": "recovery",
+      "criterion": "Original plus correction ledger",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-WITHDRAWAL_REFUND_MISMATCH",
+      "suite": "recovery",
+      "criterion": "Separate academic and financial receipts",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-AUTHORITY_DRIFT_PAUSE",
+      "suite": "authority",
+      "criterion": "No split-brain writer",
+      "evidence_refs": []
+    }
+  ],
+  "readiness": {
+    "designed": {
+      "status": "verified",
+      "evidence": [
+        {
+          "reference": "ui_kits/registrar-replacement (enrollment engine tab)",
+          "version": "2026-10-14",
+          "environment": "design project",
+          "scope": "prototype only",
+          "reviewer": "pending",
+          "verified_at": "2026-10-14T00:00:00Z"
+        }
+      ],
+      "reason": "Design prototype exists; reviewer still to be named."
+    },
+    "implemented": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "tested": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "deployed": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "institution_authorized": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "production_enabled": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    }
+  },
+  "notes": "Drop, swap-back and registrar correction of a completed enrollment are separate runs (registration.drop, registration.correct), not transitions out of a terminal state. Waiting states resolve by revalidation (information arrives / approval granted) or denial (withdrawn, window closes, approval refused)."
+}

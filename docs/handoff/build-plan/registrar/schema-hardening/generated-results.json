@@ -1,0 +1,103 @@
+{
+  "validator": "ajv 8.17.1 draft 2020-12 + ajv-formats 3.0.1",
+  "ran": "2026-10-14 in the design project (synthetic payloads)",
+  "cases": [
+    {
+      "case": "add one section",
+      "expect": "valid",
+      "got": "valid",
+      "pass": true
+    },
+    {
+      "case": "add with an approved override",
+      "expect": "valid",
+      "got": "valid",
+      "pass": true
+    },
+    {
+      "case": "add 8 sections (max)",
+      "expect": "valid",
+      "got": "valid",
+      "pass": true
+    },
+    {
+      "case": "add 9 sections rejected",
+      "expect": "invalid",
+      "got": "invalid",
+      "pass": true
+    },
+    {
+      "case": "swap one-for-one",
+      "expect": "valid",
+      "got": "valid",
+      "pass": true
+    },
+    {
+      "case": "swap 1→2 rejected",
+      "expect": "invalid",
+      "got": "invalid",
+      "pass": true
+    },
+    {
+      "case": "drop ok",
+      "expect": "valid",
+      "got": "valid",
+      "pass": true
+    },
+    {
+      "case": "drop with sectionIds rejected",
+      "expect": "invalid",
+      "got": "invalid",
+      "pass": true
+    },
+    {
+      "case": "withdraw ok",
+      "expect": "valid",
+      "got": "valid",
+      "pass": true
+    },
+    {
+      "case": "withdraw without reason rejected",
+      "expect": "invalid",
+      "got": "invalid",
+      "pass": true
+    },
+    {
+      "case": "termCode instead of termId rejected",
+      "expect": "invalid",
+      "got": "invalid",
+      "pass": true
+    },
+    {
+      "case": "term not a uuid rejected",
+      "expect": "invalid",
+      "got": "invalid",
+      "pass": true
+    },
+    {
+      "case": "idempotency key in body rejected",
+      "expect": "invalid",
+      "got": "invalid",
+      "pass": true
+    },
+    {
+      "case": "6 overrides rejected",
+      "expect": "invalid",
+      "got": "invalid",
+      "pass": true
+    },
+    {
+      "case": "unknown operation rejected",
+      "expect": "invalid",
+      "got": "invalid",
+      "pass": true
+    },
+    {
+      "case": "negative version rejected",
+      "expect": "invalid",
+      "got": "invalid",
+      "pass": true
+    }
+  ],
+  "passed": true
+}

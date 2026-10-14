@@ -1,0 +1,28 @@
+test_duplicate (test_evidence_gate.EvidenceGateTests.test_duplicate) ... ok
+test_duplicate_contract (test_evidence_gate.EvidenceGateTests.test_duplicate_contract) ... ok
+test_empty_contract (test_evidence_gate.EvidenceGateTests.test_empty_contract) ... ok
+test_expired (test_evidence_gate.EvidenceGateTests.test_expired) ... ok
+test_failed (test_evidence_gate.EvidenceGateTests.test_failed) ... ok
+test_future (test_evidence_gate.EvidenceGateTests.test_future) ... ok
+test_killed (test_evidence_gate.EvidenceGateTests.test_killed) ... ok
+test_mismatch_config (test_evidence_gate.EvidenceGateTests.test_mismatch_config) ... ok
+test_mismatch_deployment (test_evidence_gate.EvidenceGateTests.test_mismatch_deployment) ... ok
+test_mismatch_operation (test_evidence_gate.EvidenceGateTests.test_mismatch_operation) ... ok
+test_mismatch_schema (test_evidence_gate.EvidenceGateTests.test_mismatch_schema) ... ok
+test_mismatch_scope (test_evidence_gate.EvidenceGateTests.test_mismatch_scope) ... ok
+test_mismatch_sha (test_evidence_gate.EvidenceGateTests.test_mismatch_sha) ... ok
+test_missing (test_evidence_gate.EvidenceGateTests.test_missing) ... ok
+test_naive_time (test_evidence_gate.EvidenceGateTests.test_naive_time) ... ok
+test_no_reference (test_evidence_gate.EvidenceGateTests.test_no_reference) ... ok
+test_no_reviewer (test_evidence_gate.EvidenceGateTests.test_no_reviewer) ... ok
+test_unaccepted (test_evidence_gate.EvidenceGateTests.test_unaccepted) ... ok
+test_unresolved (test_evidence_gate.EvidenceGateTests.test_unresolved) ... ok
+test_valid (test_evidence_gate.EvidenceGateTests.test_valid) ... ok
+test_withdrawn (test_evidence_gate.EvidenceGateTests.test_withdrawn) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.001s
+
+OK
+
+Scope: reference helper only. Semester app, browser, database and deployment tests NOT RUN.

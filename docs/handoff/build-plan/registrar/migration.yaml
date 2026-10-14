@@ -1,0 +1,7 @@
+stages:
+  - { n: 1, name: Discover, inventory: [sis_modules_and_customizations, academic_policies, historical_records, interfaces_and_reporting_obligations, transcript_layouts, identity_keys, scheduled_jobs, operational_calendars, exceptional_cases] }
+  - { n: 2, name: Map, mappings: [people_and_identifiers, courses_and_offerings, enrollment_statuses, grade_scales_and_historical_meanings, credits_and_repeat_treatment, programs_and_catalog_years, transfer_awards, degree_requirements, credentials_and_annotations] }
+  - { n: 3, name: Rehearse, validate: [referential_integrity, identity_linkage, counts_and_status_distributions, gpa_credit_calculations, degree_audit_results, transcript_comparison, historical_correction_behavior, permissions_and_revoked_access] }
+  - { n: 4, name: Shadow, rule: "Semester evaluates and projects without becoming authoritative. Investigate differences — neither system is assumed correct." }
+  - { n: 5, name: Transfer authority by domain, uses: authority-register.yaml }
+  - { n: 6, name: Retire, requires: [accepted_reconciliation, stable_supported_operation, archive_export_acceptance, recovery_rehearsal, reporting_continuity, contractual_and_retention_review, institution_authorized_decommissioning] }

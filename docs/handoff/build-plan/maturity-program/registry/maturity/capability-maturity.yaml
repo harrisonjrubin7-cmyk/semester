@@ -1,0 +1,19 @@
+# DEC-MATURITY-001 (2026-10-14): ONE maturity scale. Three earlier models are reconciled here.
+canonical: ui_kits/scale-system ladder 0–7 (scale-data.js levels)
+mapping:
+  - {level: 0, ladder: Framed,     six_fact: —,           completion_register: —}
+  - {level: 1, ladder: Designed,   six_fact: designed,    completion_register: Designed}
+  - {level: 2, ladder: Contracted, six_fact: contracted,  completion_register: —}
+  - {level: 3, ladder: Built,      six_fact: implemented, completion_register: Implemented}
+  - {level: 4, ladder: Verified,   six_fact: verified,    completion_register: Tested}
+  - {level: 5, ladder: Operated,   six_fact: "operable + activated (named tenant, cohort, scope, environment)", completion_register: "Deployed + Institution-authorized + Production-enabled"}
+  - {level: 6, ladder: Repeatable, six_fact: —,           completion_register: —}
+  - {level: 7, ladder: Scalable,   six_fact: —,           completion_register: —}
+rule: A capability may be demoed when designed. It may be called available only when activated for an approved scope (Level 5).
+say:
+  - {status: Designed, can: "Concept/prototype available for review", cannot: "Available to students"}
+  - {status: Contracted, can: "Intended behaviour and boundaries are specified", cannot: "Integrated"}
+  - {status: Implemented, can: "Code exists", cannot: "Reliable in production"}
+  - {status: Verified, can: "Required tests currently pass", cannot: "Activated for every institution"}
+  - {status: Operable, can: "Monitoring and support controls are in place", cannot: "Institution-approved"}
+  - {status: Activated, can: "Available for the named scope", cannot: "General availability"}

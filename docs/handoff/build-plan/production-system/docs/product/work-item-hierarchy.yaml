@@ -1,0 +1,13 @@
+work_item_hierarchy:   # every ticket traces up to a theme and down to evidence (traceability chain)
+  - {level: strategy_theme, example: Trusted academic planning}
+  - {level: outcome, example: Students can understand a registration blocker and reach the right office}
+  - {level: capability, example: CAP-REG-001 Registration readiness}
+  - {level: journey, example: Student requests readiness check and receives a receipt}
+  - {level: workflow, example: WF-READINESS-001}
+  - {level: contract, example: API-READINESS-POST-001}
+  - {level: implementation_slice, example: Safe stale-source result state}
+  - {level: ticket, example: "ENG-421 Add stale outcome to readiness projection"}
+  - {level: verification, example: TST-WF-READINESS-STALE-001}
+  - {level: evidence, example: EVD-REL-READINESS-STALE-001}
+  - {level: release, example: REL-READINESS-001}
+priority_score_note: Use the scale-system Domain intake scorer for portfolio decisions; the PDF's 7 dimensions map onto it (validated_value→value, reusable_foundation→reuse, readiness→prerequisites, authority_complexity, operational_burden→ops, dependency_risk→connector). No score overrides a missing authority boundary, owner, data classification or safe failure state.

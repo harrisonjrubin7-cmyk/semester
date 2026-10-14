@@ -1,0 +1,5 @@
+contract_lab:
+  required_for: [new_record_type, new_command, new_event, new_connector, new_external_audience, new_AI_tool, new_consequential_action]
+  submission: [capability_id, owner, authority_boundary, record_schema, API_or_event_contract, tenant_scope, policy_requirements, source_and_freshness_rules, idempotency_rule, failure_and_compensation_plan, audit_events, retention_rule, test_plan, release_and_safe_off_plan]
+  gates: [schema_validation, backward_compatibility_check, policy_reference_check, tenant_isolation_simulation, event_version_check, observability_field_check, documentation_link_check]
+  existing_checks_that_already_do_part_of_this: [traceability/scripts/verify/registry.ts, traceability/scripts/verify/record-envelope.ts, workflow-expansion/validate-contract.mjs, registrar/api/oas-migration compare, platform-ops/scripts/registry/check.mjs]

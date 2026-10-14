@@ -65,7 +65,7 @@ END $$;
 -- Conflict engine: instructor double-booked, room double-booked or over capacity, non-standard meeting pattern. Returns codes; callers
 -- store them in conflict_codes, which blocks approval and publishing.
 CREATE FUNCTION semester.detect_schedule_conflicts(p_tenant uuid, p_section uuid, p_room uuid, p_instructor uuid, p_during tstzrange[], p_expected_enrollment integer, p_standard_patterns jsonb, p_pattern text)
-RETURNS text[] LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = '' AS $
+RETURNS text[] LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = '' AS $$
 DECLARE codes text[] := '{}'; cap integer;
 BEGIN
   IF p_room IS NOT NULL AND EXISTS (SELECT 1 FROM semester.room_bookings b, unnest(p_during) d WHERE b.tenant_id = p_tenant AND b.room_id = p_room AND b.status IN ('held', 'confirmed') AND b.during && d AND b.section_id IS DISTINCT FROM p_section) THEN codes := codes || 'ROOM_OVERLAP'; END IF;
@@ -74,7 +74,7 @@ BEGIN
                                           WHERE si.tenant_id = p_tenant AND si.person_id = p_instructor AND si.section_id <> p_section AND b.status IN ('held', 'confirmed') AND b.during && d) THEN codes := codes || 'INSTRUCTOR_OVERLAP'; END IF;
   IF p_pattern IS NOT NULL AND NOT (p_standard_patterns ? p_pattern) THEN codes := codes || 'NON_STANDARD_PATTERN'; END IF;
   RETURN codes;
-END $;
+END $$;
 
 -- Term schedule lifecycle (term-scheduling PDF): one row per term; transitions only through set_term_stage, which enforces the order
 -- and the gate rules (a term can't open for department build until time patterns, milestones and publication targets exist).
@@ -82,7 +82,7 @@ CREATE TABLE term_schedule_cycles (tenant_id uuid NOT NULL, term_id uuid NOT NUL
   stage text NOT NULL DEFAULT 'draft' CHECK (stage IN ('draft', 'in_review', 'open_for_department_build', 'validation_failed', 'registrar_review', 'room_coordination', 'published', 'refine', 'locked', 'archived')),
   time_patterns jsonb, publish_target_at timestamptz, changed_by uuid, changed_at timestamptz NOT NULL DEFAULT now(), version bigint NOT NULL DEFAULT 1,
   PRIMARY KEY (tenant_id, term_id), FOREIGN KEY (tenant_id, term_id) REFERENCES academic_terms(tenant_id, id));
-CREATE FUNCTION semester.set_term_stage(p_tenant uuid, p_term uuid, p_to text, p_expected_version bigint) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $
+CREATE FUNCTION semester.set_term_stage(p_tenant uuid, p_term uuid, p_to text, p_expected_version bigint) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE c record; allowed jsonb := '{"draft":["in_review"],"in_review":["draft","open_for_department_build"],"open_for_department_build":["validation_failed","registrar_review"],"validation_failed":["open_for_department_build","registrar_review"],"registrar_review":["open_for_department_build","room_coordination"],"room_coordination":["registrar_review","published"],"published":["refine","locked"],"refine":["locked"],"locked":["archived"],"archived":[]}';
 BEGIN
   IF NOT semester.has_permission(p_tenant, 'schedule.registrar.publish') THEN RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'FORBIDDEN'; END IF;
@@ -96,10 +96,10 @@ BEGIN
     RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'CONFLICTS_UNRESOLVED'; END IF;
   UPDATE semester.term_schedule_cycles SET stage = p_to, changed_by = semester.actor_person(p_tenant), changed_at = now(), version = version + 1 WHERE tenant_id = p_tenant AND term_id = p_term;
   PERFORM semester.write_audit(p_tenant, 'update', 'registrar', 'term_schedule_cycle', p_term, 'allow', 'STAGE_' || upper(p_to));
-END $;
+END $$;
 -- In refine mode, department changes are limited to scoped rights and go to a special review queue; locked terms accept only registrar corrections.
 
-DO $ DECLARE t text; BEGIN
+DO $$ DECLARE t text; BEGIN
   FOREACH t IN ARRAY ARRAY['term_schedule_cycles', 'calendar_milestones', 'rooms', 'room_bookings', 'department_scheduling_windows', 'section_change_requests'] LOOP
     EXECUTE format('ALTER TABLE semester.%I ENABLE ROW LEVEL SECURITY', t); EXECUTE format('ALTER TABLE semester.%I FORCE ROW LEVEL SECURITY', t); EXECUTE format('REVOKE ALL ON semester.%I FROM PUBLIC, anon', t);
   END LOOP;

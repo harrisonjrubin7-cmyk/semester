@@ -1,0 +1,17 @@
+// P0 safe-off — Playwright against staging. Rename to .spec.ts.
+import { test, expect } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+const URL = process.env.SUPABASE_URL!, ANON = process.env.SUPABASE_ANON_KEY!, SR = process.env.SUPABASE_SERVICE_ROLE_KEY!, A = process.env.INST_A!;
+const admin = createClient(URL, SR, { auth: { persistSession: false } });
+const fn = (n: string, t: string, b: unknown, h: Record<string, string> = {}) => fetch(`${URL}/functions/v1/${n}`, { method: "POST", headers: { authorization: `Bearer ${t}`, "content-type": "application/json", ...h }, body: JSON.stringify(b) });
+async function signIn(e: string, p: string) { const c = createClient(URL, ANON, { auth: { persistSession: false } }); const { data } = await c.auth.signInWithPassword({ email: e, password: p }); return { c, token: data.session!.access_token, id: data.user!.id }; }
+test("kill switch blocks new commands without touching existing records", async () => {
+  const s = await signIn(process.env.STUDENT_EMAIL!, process.env.STUDENT_PASSWORD!);
+  const before = await admin.from("live_command_receipts").select("idempotency_key", { count: "exact", head: true }).eq("institution_id", A);
+  await admin.from("live_tenant_capabilities").update({ kill_switch: true }).eq("institution_id", A).eq("capability", "writes.registration");
+  const r = await fn("live-institution-command", s.token, { institution_id: A, command: "registration.add", payload: { section_id: "S1", term_id: "T1" } }, { "idempotency-key": crypto.randomUUID() });
+  expect(r.status).toBe(423);
+  const after = await admin.from("live_command_receipts").select("idempotency_key", { count: "exact", head: true }).eq("institution_id", A);
+  expect(after.count).toBe(before.count);
+  await admin.from("live_tenant_capabilities").update({ kill_switch: false }).eq("institution_id", A).eq("capability", "writes.registration");
+});

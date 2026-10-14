@@ -1,0 +1,14 @@
+{
+  "function": "redact",
+  "cases": [
+    {
+      "input": {
+        "token": "secret",
+        "request_id": "r"
+      },
+      "expected": {
+        "request_id": "r"
+      }
+    }
+  ]
+}

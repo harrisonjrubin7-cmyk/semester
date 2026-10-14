@@ -1,0 +1,13 @@
+capability:
+  id: CAP-PRIVACY-001
+  title: Delegated access
+  placement: native
+  maturity_level: 1
+  default: no_delegated_access
+  delegation:
+    requires: [student_initiated_grant, specific_scope_selection, recipient_identity_confirmation, expiry_date_or_explicit_no_expiry_policy, receipt_and_access_history]
+    scope_examples: [calendar_selected_items_read, billing_summary_read, support_request_status_read, emergency_contact_update_request]
+  prohibited_scopes_without_separate_authorized_basis: [gradebook_full_access, advising_notes, private_study_history, private_messages, broad_academic_record_export]
+  revocation: {availability: any_time_from_privacy_center, effect: block_future_access_and_invalidate_active_tokens}
+  copy: "Only what you choose here can be shared. Nothing else — not your study history, grades, notes, or anything else — is included. You can change or end this access at any time."
+  prototype: ui_kits/network (Family tab)

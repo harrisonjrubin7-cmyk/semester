@@ -1,0 +1,6452 @@
+[
+  {
+    "id": "public.site.home",
+    "workspace": "public",
+    "area": "Company identity",
+    "routes": [
+      "/",
+      "/about",
+      "/team",
+      "/contact"
+    ],
+    "actors": [
+      "visitor"
+    ],
+    "permissions": [
+      "content.read"
+    ],
+    "records": [
+      "cms.pages",
+      "cms.approved_claims"
+    ],
+    "commands": [],
+    "events": [],
+    "screen_types": [
+      "overview"
+    ],
+    "design_reference": "company-site",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "public.product.pages",
+    "workspace": "public",
+    "area": "Product marketing",
+    "routes": [
+      "/product",
+      "/product/*"
+    ],
+    "actors": [
+      "visitor"
+    ],
+    "permissions": [
+      "content.read"
+    ],
+    "records": [
+      "cms.pages",
+      "commerce.products"
+    ],
+    "commands": [],
+    "events": [],
+    "screen_types": [
+      "overview",
+      "detail"
+    ],
+    "design_reference": "company-site",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "public.solutions",
+    "workspace": "public",
+    "area": "Audience solutions",
+    "routes": [
+      "/solutions/*"
+    ],
+    "actors": [
+      "visitor"
+    ],
+    "permissions": [
+      "content.read"
+    ],
+    "records": [
+      "cms.pages",
+      "growth.entry_contexts"
+    ],
+    "commands": [
+      "record_entry"
+    ],
+    "events": [
+      "entry.recorded"
+    ],
+    "screen_types": [
+      "overview",
+      "detail"
+    ],
+    "design_reference": "company-site",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "public.pricing.quote",
+    "workspace": "public",
+    "area": "Pricing",
+    "routes": [
+      "/pricing",
+      "/pricing/quote"
+    ],
+    "actors": [
+      "visitor",
+      "prospect"
+    ],
+    "permissions": [
+      "quote.request"
+    ],
+    "records": [
+      "commerce.plans",
+      "commerce.price_versions",
+      "growth.leads"
+    ],
+    "commands": [
+      "api.submit_lead"
+    ],
+    "events": [
+      "lead.submitted"
+    ],
+    "screen_types": [
+      "overview",
+      "edit"
+    ],
+    "design_reference": "company-site",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "public.demo.book",
+    "workspace": "public",
+    "area": "Demonstrations",
+    "routes": [
+      "/demo",
+      "/demo/tour"
+    ],
+    "actors": [
+      "prospect"
+    ],
+    "permissions": [
+      "demo.request"
+    ],
+    "records": [
+      "growth.leads",
+      "biz.opportunities"
+    ],
+    "commands": [
+      "api.submit_lead"
+    ],
+    "events": [
+      "demo.requested"
+    ],
+    "screen_types": [
+      "overview",
+      "edit"
+    ],
+    "design_reference": "demo-video",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "public.resources",
+    "workspace": "public",
+    "area": "Content marketing",
+    "routes": [
+      "/resources",
+      "/resources/*"
+    ],
+    "actors": [
+      "visitor"
+    ],
+    "permissions": [
+      "content.read"
+    ],
+    "records": [
+      "cms.pages",
+      "growth.consent_records"
+    ],
+    "commands": [],
+    "events": [],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "company-site",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "public.trust.center",
+    "workspace": "public",
+    "area": "Trust",
+    "routes": [
+      "/trust",
+      "/legal",
+      "/status"
+    ],
+    "actors": [
+      "buyer",
+      "reviewer"
+    ],
+    "permissions": [
+      "evidence.request"
+    ],
+    "records": [
+      "biz.subprocessors",
+      "gov.evidence",
+      "opsx.incident_updates"
+    ],
+    "commands": [
+      "request_evidence"
+    ],
+    "events": [
+      "evidence.requested"
+    ],
+    "screen_types": [
+      "overview",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "compliance",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "public.signup",
+    "workspace": "public",
+    "area": "Signup",
+    "routes": [
+      "/auth/signup",
+      "/join"
+    ],
+    "actors": [
+      "visitor"
+    ],
+    "permissions": [
+      "account.create"
+    ],
+    "records": [
+      "core.profiles",
+      "growth.consent_records",
+      "onboard.assignments"
+    ],
+    "commands": [
+      "api.assign_journey"
+    ],
+    "events": [
+      "user.registered"
+    ],
+    "screen_types": [
+      "edit"
+    ],
+    "design_reference": "journey",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "public.app.handoff",
+    "workspace": "public",
+    "area": "Application handoff",
+    "routes": [
+      "/open",
+      "/download"
+    ],
+    "actors": [
+      "visitor",
+      "student"
+    ],
+    "permissions": [
+      "handoff.consume"
+    ],
+    "records": [
+      "onboard.handoff_transactions",
+      "onboard.preview_drafts"
+    ],
+    "commands": [
+      "api.create_handoff",
+      "api.consume_handoff",
+      "api.claim_preview"
+    ],
+    "events": [
+      "handoff.consumed"
+    ],
+    "screen_types": [
+      "detail"
+    ],
+    "design_reference": "journey",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "public.partners.careers",
+    "workspace": "public",
+    "area": "Partners and careers",
+    "routes": [
+      "/partners",
+      "/careers",
+      "/careers/*"
+    ],
+    "actors": [
+      "visitor"
+    ],
+    "permissions": [
+      "application.submit"
+    ],
+    "records": [
+      "biz.accounts",
+      "people.candidates"
+    ],
+    "commands": [
+      "submit_application"
+    ],
+    "events": [
+      "application.submitted"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "company-site",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "shared.identity.signin",
+    "workspace": "shared",
+    "area": "Identity",
+    "routes": [
+      "/auth/signin",
+      "/auth/mfa",
+      "/auth/recover"
+    ],
+    "actors": [
+      "any"
+    ],
+    "permissions": [
+      "session.create"
+    ],
+    "records": [
+      "auth.users",
+      "onboard.devices"
+    ],
+    "commands": [
+      "sign_in",
+      "verify_mfa"
+    ],
+    "events": [
+      "session.started"
+    ],
+    "screen_types": [
+      "edit"
+    ],
+    "design_reference": "device-permissions",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "shared.identity.sessions",
+    "workspace": "shared",
+    "area": "Identity",
+    "routes": [
+      "/app/settings/sessions"
+    ],
+    "actors": [
+      "any"
+    ],
+    "permissions": [
+      "session.revoke"
+    ],
+    "records": [
+      "onboard.devices",
+      "onboard.push_tokens"
+    ],
+    "commands": [
+      "api.revoke_device"
+    ],
+    "events": [
+      "device.revoked"
+    ],
+    "screen_types": [
+      "list",
+      "settings"
+    ],
+    "design_reference": "device-permissions",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "shared.org.memberships",
+    "workspace": "shared",
+    "area": "Memberships",
+    "routes": [
+      "/institution/members",
+      "/invite/*"
+    ],
+    "actors": [
+      "institution_admin"
+    ],
+    "permissions": [
+      "membership.invite",
+      "membership.revoke"
+    ],
+    "records": [
+      "core.profiles",
+      "iam.invitations",
+      "iam.memberships"
+    ],
+    "commands": [
+      "api.issue_invitation",
+      "api.accept_invitation",
+      "api.revoke_invitation"
+    ],
+    "events": [
+      "invitation.issued",
+      "invitation.accepted",
+      "invitation.revoked"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit",
+      "history"
+    ],
+    "design_reference": "role-lifecycle",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "shared.authz.grants",
+    "workspace": "shared",
+    "area": "Authorization",
+    "routes": [
+      "/ops/access",
+      "/institution/access"
+    ],
+    "actors": [
+      "access_reviewer"
+    ],
+    "permissions": [
+      "grant.create",
+      "grant.revoke"
+    ],
+    "records": [
+      "ctl.capabilities",
+      "ctl.grants"
+    ],
+    "commands": [
+      "api.grant_capability",
+      "api.revoke_grant"
+    ],
+    "events": [
+      "grant.created",
+      "grant.revoked"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review",
+      "history"
+    ],
+    "design_reference": "governance-backbone",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "shared.authz.approvals",
+    "workspace": "shared",
+    "area": "Workflows",
+    "routes": [
+      "/app/approvals",
+      "/ops/approvals"
+    ],
+    "actors": [
+      "approver"
+    ],
+    "permissions": [
+      "action.request",
+      "action.approve"
+    ],
+    "records": [
+      "ctl.action_requests",
+      "ctl.action_approvals"
+    ],
+    "commands": [
+      "api.request_action",
+      "api.decide_action",
+      "api.execute_action"
+    ],
+    "events": [
+      "action.requested",
+      "action.approved",
+      "action.executed"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review",
+      "history"
+    ],
+    "design_reference": "workflow-runner",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "shared.delegation",
+    "workspace": "shared",
+    "area": "Authorization",
+    "routes": [
+      "/app/settings/sharing"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "delegation.grant"
+    ],
+    "records": [
+      "core.delegations"
+    ],
+    "commands": [
+      "api.grant_delegation",
+      "api.revoke_delegation"
+    ],
+    "events": [
+      "delegation.granted",
+      "delegation.revoked"
+    ],
+    "screen_types": [
+      "list",
+      "edit",
+      "history"
+    ],
+    "design_reference": "role-pages",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "shared.notifications",
+    "workspace": "shared",
+    "area": "Notifications",
+    "routes": [
+      "/app/notifications",
+      "/app/settings/notifications"
+    ],
+    "actors": [
+      "any"
+    ],
+    "permissions": [
+      "notification.read",
+      "preference.edit"
+    ],
+    "records": [
+      "comms.notifications",
+      "comms.preferences"
+    ],
+    "commands": [
+      "mark_read",
+      "set_preferences"
+    ],
+    "events": [
+      "notification.delivered"
+    ],
+    "screen_types": [
+      "list",
+      "settings"
+    ],
+    "design_reference": "mobile",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "shared.search",
+    "workspace": "shared",
+    "area": "Search",
+    "routes": [
+      "/app/search"
+    ],
+    "actors": [
+      "any"
+    ],
+    "permissions": [
+      "search.query"
+    ],
+    "records": [
+      "search.documents"
+    ],
+    "commands": [
+      "search"
+    ],
+    "events": [],
+    "screen_types": [
+      "list"
+    ],
+    "design_reference": "one-place",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "shared.files",
+    "workspace": "shared",
+    "area": "Files",
+    "routes": [
+      "/app/files"
+    ],
+    "actors": [
+      "any"
+    ],
+    "permissions": [
+      "file.upload",
+      "file.read"
+    ],
+    "records": [
+      "comms.files"
+    ],
+    "commands": [
+      "upload_file",
+      "delete_file"
+    ],
+    "events": [
+      "file.scanned"
+    ],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "forms",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "shared.audit",
+    "workspace": "shared",
+    "area": "Audit",
+    "routes": [
+      "/ops/audit",
+      "/institution/audit"
+    ],
+    "actors": [
+      "auditor"
+    ],
+    "permissions": [
+      "audit.read"
+    ],
+    "records": [
+      "audit.events"
+    ],
+    "commands": [],
+    "events": [],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "governance-backbone",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "shared.documents",
+    "workspace": "shared",
+    "area": "Documents",
+    "routes": [
+      "/company/documents",
+      "/institution/documents"
+    ],
+    "actors": [
+      "document_owner",
+      "reviewer"
+    ],
+    "permissions": [
+      "document.submit",
+      "document.execute",
+      "document.archive"
+    ],
+    "records": [
+      "docs.documents",
+      "docs.document_versions",
+      "docs.version_states",
+      "docs.review_tasks",
+      "docs.transition_events",
+      "docs.contract_documents",
+      "docs.signature_requests",
+      "docs.acknowledgments"
+    ],
+    "commands": [
+      "api.transition_document",
+      "acknowledge"
+    ],
+    "events": [
+      "document.transitioned"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit",
+      "review",
+      "history"
+    ],
+    "design_reference": "company-os",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "shared.ai.gateway",
+    "workspace": "shared",
+    "area": "AI gateway",
+    "routes": [
+      "/app/assistant"
+    ],
+    "actors": [
+      "student",
+      "instructor"
+    ],
+    "permissions": [
+      "ai.use"
+    ],
+    "records": [
+      "core.ai_policy",
+      "core.course_ai_rules",
+      "core.sources",
+      "audit.ai_usage"
+    ],
+    "commands": [
+      "api.ai_policy",
+      "api.ai_context",
+      "api.ai_log"
+    ],
+    "events": [
+      "ai.answered"
+    ],
+    "screen_types": [
+      "detail",
+      "settings"
+    ],
+    "design_reference": "student",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "shared.events.outbox",
+    "workspace": "shared",
+    "area": "Events and jobs",
+    "routes": [
+      "(worker)"
+    ],
+    "actors": [
+      "service_account"
+    ],
+    "permissions": [
+      "event.publish"
+    ],
+    "records": [
+      "ctl.outbox"
+    ],
+    "commands": [
+      "outbox.publish"
+    ],
+    "events": [
+      "*"
+    ],
+    "screen_types": [],
+    "design_reference": "architecture",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.today",
+    "workspace": "edu",
+    "area": "Personal command center",
+    "routes": [
+      "/app",
+      "/app/today"
+    ],
+    "actors": [
+      "student",
+      "instructor",
+      "advisor"
+    ],
+    "permissions": [
+      "self.read"
+    ],
+    "records": [
+      "work.tasks",
+      "comms.calendar_events",
+      "acad.readiness_items",
+      "comms.notifications"
+    ],
+    "commands": [],
+    "events": [],
+    "screen_types": [
+      "overview"
+    ],
+    "design_reference": "student",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.profile",
+    "workspace": "edu",
+    "area": "Identity and profile",
+    "routes": [
+      "/app/profile",
+      "/app/settings"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "profile.edit"
+    ],
+    "records": [
+      "core.profiles",
+      "growth.consent_records"
+    ],
+    "commands": [
+      "update_profile"
+    ],
+    "events": [
+      "profile.updated"
+    ],
+    "screen_types": [
+      "detail",
+      "settings"
+    ],
+    "design_reference": "student",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.courses",
+    "workspace": "edu",
+    "area": "Courses and terms",
+    "routes": [
+      "/app/courses",
+      "/app/courses/:id"
+    ],
+    "actors": [
+      "student",
+      "instructor"
+    ],
+    "permissions": [
+      "course.read"
+    ],
+    "records": [
+      "acad.terms",
+      "acad.courses",
+      "acad.sections",
+      "acad.enrollments"
+    ],
+    "commands": [],
+    "events": [],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "course-studio",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.calendar",
+    "workspace": "edu",
+    "area": "Calendar",
+    "routes": [
+      "/app/calendar"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "calendar.edit"
+    ],
+    "records": [
+      "comms.calendar_events",
+      "acad.advising_slots",
+      "work.assignments"
+    ],
+    "commands": [
+      "create_event"
+    ],
+    "events": [
+      "event.created"
+    ],
+    "screen_types": [
+      "overview",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "student",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.tasks",
+    "workspace": "edu",
+    "area": "Tasks and planning",
+    "routes": [
+      "/app/tasks",
+      "/app/planner"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "task.edit"
+    ],
+    "records": [
+      "work.tasks"
+    ],
+    "commands": [
+      "create_task",
+      "complete_task"
+    ],
+    "events": [
+      "task.completed"
+    ],
+    "screen_types": [
+      "list",
+      "edit"
+    ],
+    "design_reference": "student",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.content",
+    "workspace": "edu",
+    "area": "Learning content",
+    "routes": [
+      "/app/courses/:id/content"
+    ],
+    "actors": [
+      "student",
+      "instructor",
+      "course_designer"
+    ],
+    "permissions": [
+      "content.read",
+      "content.publish"
+    ],
+    "records": [
+      "learn.modules",
+      "learn.content_items",
+      "comms.files"
+    ],
+    "commands": [
+      "api.publish_module"
+    ],
+    "events": [
+      "module.published"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "course-studio",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.assignments",
+    "workspace": "edu",
+    "area": "Assignments",
+    "routes": [
+      "/app/courses/:id/assignments/:aid"
+    ],
+    "actors": [
+      "student",
+      "instructor"
+    ],
+    "permissions": [
+      "submission.create",
+      "extension.request"
+    ],
+    "records": [
+      "work.assignments",
+      "learn.submissions",
+      "learn.submission_files"
+    ],
+    "commands": [
+      "api.submit_work",
+      "api.request_extension"
+    ],
+    "events": [
+      "submission.created",
+      "extension.requested"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit",
+      "history"
+    ],
+    "design_reference": "course-studio",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.assessment",
+    "workspace": "edu",
+    "area": "Assessment",
+    "routes": [
+      "/app/assess/:id",
+      "/app/courses/:id/authoring"
+    ],
+    "actors": [
+      "student",
+      "instructor"
+    ],
+    "permissions": [
+      "attempt.create",
+      "assessment.author"
+    ],
+    "records": [
+      "learn.assessments",
+      "learn.assessment_attempts",
+      "learn.rubrics"
+    ],
+    "commands": [
+      "api.start_attempt",
+      "api.submit_attempt"
+    ],
+    "events": [
+      "attempt.submitted"
+    ],
+    "screen_types": [
+      "detail",
+      "edit",
+      "review"
+    ],
+    "design_reference": "course-studio",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.grading",
+    "workspace": "edu",
+    "area": "Grading",
+    "routes": [
+      "/app/courses/:id/gradebook"
+    ],
+    "actors": [
+      "instructor",
+      "ta"
+    ],
+    "permissions": [
+      "grade.provisional",
+      "grade.approve"
+    ],
+    "records": [
+      "work.grades",
+      "learn.grade_entries",
+      "learn.grade_revisions",
+      "learn.feedback"
+    ],
+    "commands": [
+      "api.record_grade",
+      "api.submit_grades_for_approval"
+    ],
+    "events": [
+      "grades.submitted"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review",
+      "history"
+    ],
+    "design_reference": "faculty-grading",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.study",
+    "workspace": "edu",
+    "area": "Study tools",
+    "routes": [
+      "/app/study"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "study.edit"
+    ],
+    "records": [
+      "learn.study_artifacts",
+      "core.sources"
+    ],
+    "commands": [
+      "create_deck",
+      "practice"
+    ],
+    "events": [
+      "study.reviewed"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "study-studio",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.assistant",
+    "workspace": "edu",
+    "area": "AI learning assistance",
+    "routes": [
+      "/app/assistant"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "ai.use"
+    ],
+    "records": [
+      "core.sources",
+      "audit.ai_usage",
+      "core.course_ai_rules"
+    ],
+    "commands": [
+      "api.ai_context",
+      "api.ai_log"
+    ],
+    "events": [
+      "ai.answered"
+    ],
+    "screen_types": [
+      "detail",
+      "history"
+    ],
+    "design_reference": "study-studio",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.groups",
+    "workspace": "edu",
+    "area": "Collaboration",
+    "routes": [
+      "/app/groups",
+      "/app/groups/:id"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "post.create",
+      "report.create"
+    ],
+    "records": [
+      "community.groups",
+      "community.members",
+      "community.posts",
+      "community.reports"
+    ],
+    "commands": [
+      "api.create_post",
+      "api.report"
+    ],
+    "events": [
+      "post.created",
+      "report.filed"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "community",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.inbox",
+    "workspace": "edu",
+    "area": "Communications",
+    "routes": [
+      "/app/inbox",
+      "/app/inbox/:thread"
+    ],
+    "actors": [
+      "student",
+      "instructor",
+      "advisor"
+    ],
+    "permissions": [
+      "message.send"
+    ],
+    "records": [
+      "comms.threads",
+      "comms.participants",
+      "comms.messages"
+    ],
+    "commands": [
+      "api.send_message"
+    ],
+    "events": [
+      "message.sent"
+    ],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "ops-inbox",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.advising",
+    "workspace": "edu",
+    "area": "Advising",
+    "routes": [
+      "/app/advising"
+    ],
+    "actors": [
+      "student",
+      "advisor"
+    ],
+    "permissions": [
+      "appointment.book",
+      "note.write"
+    ],
+    "records": [
+      "acad.advising_assignments",
+      "acad.advising_slots",
+      "acad.advising_notes"
+    ],
+    "commands": [
+      "api.book_advising"
+    ],
+    "events": [
+      "advising.booked"
+    ],
+    "screen_types": [
+      "overview",
+      "detail",
+      "edit",
+      "history"
+    ],
+    "design_reference": "readiness-pilot",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.degree",
+    "workspace": "edu",
+    "area": "Degree planning",
+    "routes": [
+      "/app/degree"
+    ],
+    "actors": [
+      "student",
+      "advisor"
+    ],
+    "permissions": [
+      "plan.edit"
+    ],
+    "records": [
+      "acad.requirements",
+      "acad.programs",
+      "acad.degree_evaluations"
+    ],
+    "commands": [
+      "run_scenario"
+    ],
+    "events": [],
+    "screen_types": [
+      "overview",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "student",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.registration",
+    "workspace": "edu",
+    "area": "Registration readiness",
+    "routes": [
+      "/app/registration"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "readiness.read",
+      "blocker.route"
+    ],
+    "records": [
+      "acad.readiness_items",
+      "acad.holds",
+      "acad.office_handoffs",
+      "acad.terms"
+    ],
+    "commands": [
+      "api.route_blocker"
+    ],
+    "events": [
+      "readiness.routed"
+    ],
+    "screen_types": [
+      "overview",
+      "detail",
+      "history"
+    ],
+    "design_reference": "readiness-pilot",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.student_account",
+    "workspace": "edu",
+    "area": "Student accounts",
+    "routes": [
+      "/app/account"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "self.read"
+    ],
+    "records": [
+      "instfin.student_accounts",
+      "instfin.charges",
+      "acad.holds"
+    ],
+    "commands": [],
+    "events": [],
+    "screen_types": [
+      "overview",
+      "detail"
+    ],
+    "design_reference": "native-finance",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.services",
+    "workspace": "edu",
+    "area": "Campus services",
+    "routes": [
+      "/app/services",
+      "/app/services/:id"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "service_request.create"
+    ],
+    "records": [
+      "svc.service_definitions",
+      "svc.service_requests"
+    ],
+    "commands": [
+      "api.submit_request"
+    ],
+    "events": [
+      "request.submitted"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "student",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.careers",
+    "workspace": "edu",
+    "area": "Career development",
+    "routes": [
+      "/app/careers"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "application.submit"
+    ],
+    "records": [
+      "career.positions",
+      "career.applications",
+      "career.artifacts"
+    ],
+    "commands": [
+      "apply"
+    ],
+    "events": [
+      "application.submitted"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "student",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.wellbeing",
+    "workspace": "edu",
+    "area": "Wellbeing and accessibility",
+    "routes": [
+      "/app/support"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "restricted_case.create"
+    ],
+    "records": [
+      "svc.restricted_cases",
+      "svc.accommodation_plans"
+    ],
+    "commands": [
+      "api.request_support"
+    ],
+    "events": [
+      "support.requested"
+    ],
+    "screen_types": [
+      "overview",
+      "edit"
+    ],
+    "design_reference": "student",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.credentials",
+    "workspace": "edu",
+    "area": "Credentials",
+    "routes": [
+      "/app/credentials",
+      "/verify/:id"
+    ],
+    "actors": [
+      "student",
+      "verifier"
+    ],
+    "permissions": [
+      "credential.share"
+    ],
+    "records": [
+      "cred.credentials",
+      "cred.verification_records"
+    ],
+    "commands": [
+      "api.share_credential"
+    ],
+    "events": [
+      "credential.verified"
+    ],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "student",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.privacy",
+    "workspace": "edu",
+    "area": "Personal data control",
+    "routes": [
+      "/app/privacy"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "privacy_request.create"
+    ],
+    "records": [
+      "opsx.privacy_requests",
+      "growth.consent_records"
+    ],
+    "commands": [
+      "api.submit_privacy_request"
+    ],
+    "events": [
+      "privacy.requested"
+    ],
+    "screen_types": [
+      "overview",
+      "edit",
+      "history"
+    ],
+    "design_reference": "student",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.marketplace",
+    "workspace": "edu",
+    "area": "Campus marketplace",
+    "routes": [
+      "/app/market",
+      "/app/market/:id"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "listing.create",
+      "offer.make"
+    ],
+    "records": [
+      "market.listings",
+      "market.offers",
+      "market.drops",
+      "market.bids"
+    ],
+    "commands": [
+      "api.create_listing",
+      "api.make_offer"
+    ],
+    "events": [
+      "offer.made"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "community",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.support_access",
+    "workspace": "edu",
+    "area": "Support access approval",
+    "routes": [
+      "/app/support/access"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "support_access.approve"
+    ],
+    "records": [
+      "opsx.support_access_windows",
+      "opsx.support_cases"
+    ],
+    "commands": [
+      "api.approve_support_access",
+      "api.revoke_support_access"
+    ],
+    "events": [
+      "support.access_approved"
+    ],
+    "screen_types": [
+      "detail",
+      "history"
+    ],
+    "design_reference": "console-entry",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.family",
+    "workspace": "edu",
+    "area": "Family and guardian access",
+    "routes": [
+      "/family",
+      "/app/settings/sharing"
+    ],
+    "actors": [
+      "student",
+      "guardian"
+    ],
+    "permissions": [
+      "delegation.grant"
+    ],
+    "records": [
+      "core.delegations",
+      "core.delegation_scopes"
+    ],
+    "commands": [
+      "api.grant_delegation",
+      "api.revoke_delegation"
+    ],
+    "events": [
+      "delegation.granted"
+    ],
+    "screen_types": [
+      "list",
+      "edit",
+      "history"
+    ],
+    "design_reference": "role-pages",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "edu.housing",
+    "workspace": "edu",
+    "area": "Campus housing",
+    "routes": [
+      "/app/campus",
+      "/app/campus/maintenance"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "housing.apply"
+    ],
+    "records": [
+      "housing.applications",
+      "housing.assignments",
+      "housing.rooms",
+      "housing.maintenance_requests"
+    ],
+    "commands": [
+      "api.apply_housing",
+      "api.request_maintenance"
+    ],
+    "events": [
+      "maintenance.requested"
+    ],
+    "screen_types": [
+      "overview",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "student",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.setup",
+    "workspace": "inst",
+    "area": "Institution setup",
+    "routes": [
+      "/institution",
+      "/institution/structure"
+    ],
+    "actors": [
+      "institution_admin"
+    ],
+    "permissions": [
+      "org.edit"
+    ],
+    "records": [
+      "core.institutions",
+      "iam.organization_units",
+      "iam.campuses"
+    ],
+    "commands": [
+      "update_structure"
+    ],
+    "events": [
+      "org.updated"
+    ],
+    "screen_types": [
+      "overview",
+      "edit",
+      "settings"
+    ],
+    "design_reference": "registrar-console",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.people",
+    "workspace": "inst",
+    "area": "People administration",
+    "routes": [
+      "/institution/directory"
+    ],
+    "actors": [
+      "institution_admin"
+    ],
+    "permissions": [
+      "membership.invite"
+    ],
+    "records": [
+      "core.profiles",
+      "iam.memberships",
+      "iam.invitations"
+    ],
+    "commands": [
+      "api.issue_invitation"
+    ],
+    "events": [
+      "invitation.issued"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "role-lifecycle",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.catalog",
+    "workspace": "inst",
+    "area": "Academic catalog",
+    "routes": [
+      "/institution/catalog"
+    ],
+    "actors": [
+      "program_manager"
+    ],
+    "permissions": [
+      "catalog.edit"
+    ],
+    "records": [
+      "acad.courses",
+      "acad.programs",
+      "acad.requirements"
+    ],
+    "commands": [
+      "propose_course_change"
+    ],
+    "events": [
+      "catalog.changed"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit",
+      "history"
+    ],
+    "design_reference": "registrar-console",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.sections",
+    "workspace": "inst",
+    "area": "Term and section management",
+    "routes": [
+      "/institution/terms",
+      "/institution/sections"
+    ],
+    "actors": [
+      "registrar"
+    ],
+    "permissions": [
+      "section.edit"
+    ],
+    "records": [
+      "acad.terms",
+      "acad.sections"
+    ],
+    "commands": [
+      "sync_sections"
+    ],
+    "events": [
+      "section.synced"
+    ],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "registrar-console",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.scheduling",
+    "workspace": "inst",
+    "area": "Scheduling",
+    "routes": [
+      "/institution/timetable"
+    ],
+    "actors": [
+      "registrar"
+    ],
+    "permissions": [
+      "schedule.edit"
+    ],
+    "records": [
+      "acad.sections",
+      "acad.rooms"
+    ],
+    "commands": [
+      "check_conflicts"
+    ],
+    "events": [],
+    "screen_types": [
+      "overview",
+      "detail"
+    ],
+    "design_reference": "registrar-console",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.admissions",
+    "workspace": "inst",
+    "area": "Admissions",
+    "routes": [
+      "/institution/admissions"
+    ],
+    "actors": [
+      "admissions_reviewer"
+    ],
+    "permissions": [
+      "application.review",
+      "application.decide"
+    ],
+    "records": [
+      "adm.applications",
+      "adm.decisions"
+    ],
+    "commands": [
+      "api.review_application",
+      "record_decision"
+    ],
+    "events": [
+      "decision.recorded"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "registrar-console",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.registrar",
+    "workspace": "inst",
+    "area": "Registrar",
+    "routes": [
+      "/institution/records"
+    ],
+    "actors": [
+      "registrar"
+    ],
+    "permissions": [
+      "records.read",
+      "change.approve"
+    ],
+    "records": [
+      "acad.enrollments",
+      "ctl.action_requests"
+    ],
+    "commands": [
+      "api.request_action"
+    ],
+    "events": [
+      "record_change.requested"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review",
+      "history"
+    ],
+    "design_reference": "registrar-console",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.governance",
+    "workspace": "inst",
+    "area": "Academic governance",
+    "routes": [
+      "/institution/proposals"
+    ],
+    "actors": [
+      "department_chair"
+    ],
+    "permissions": [
+      "proposal.review",
+      "proposal.approve"
+    ],
+    "records": [
+      "gov.proposals",
+      "gov.votes"
+    ],
+    "commands": [
+      "api.submit_proposal",
+      "api.record_vote"
+    ],
+    "events": [
+      "proposal.approved"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "registrar-console",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.success",
+    "workspace": "inst",
+    "area": "Student success",
+    "routes": [
+      "/institution/success"
+    ],
+    "actors": [
+      "advisor"
+    ],
+    "permissions": [
+      "case.work"
+    ],
+    "records": [
+      "svc.cases",
+      "acad.readiness_items",
+      "acad.advising_assignments"
+    ],
+    "commands": [
+      "api.open_case",
+      "refer"
+    ],
+    "events": [
+      "case.opened"
+    ],
+    "screen_types": [
+      "overview",
+      "list",
+      "detail"
+    ],
+    "design_reference": "role-workspaces",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.handoffs",
+    "workspace": "inst",
+    "area": "Office handoffs",
+    "routes": [
+      "/institution/handoffs"
+    ],
+    "actors": [
+      "office_staff"
+    ],
+    "permissions": [
+      "handoffs.work"
+    ],
+    "records": [
+      "acad.office_handoffs",
+      "acad.holds"
+    ],
+    "commands": [
+      "api.resolve_handoff"
+    ],
+    "events": [
+      "handoff.resolved"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "ops-inbox",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.billing",
+    "workspace": "inst",
+    "area": "Institution billing",
+    "routes": [
+      "/institution/billing"
+    ],
+    "actors": [
+      "student_account_specialist"
+    ],
+    "permissions": [
+      "charge.adjust",
+      "refund.approve"
+    ],
+    "records": [
+      "instfin.student_accounts",
+      "instfin.charges",
+      "fin.refund_requests",
+      "fin.refund_approvals"
+    ],
+    "commands": [
+      "api.approve_refund"
+    ],
+    "events": [
+      "refund.approved"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "native-finance",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.aid",
+    "workspace": "inst",
+    "area": "Financial aid",
+    "routes": [
+      "/institution/aid"
+    ],
+    "actors": [
+      "aid_reviewer"
+    ],
+    "permissions": [
+      "award.review"
+    ],
+    "records": [
+      "instfin.awards"
+    ],
+    "commands": [
+      "review_award"
+    ],
+    "events": [
+      "award.reviewed"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "native-finance",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.services",
+    "workspace": "inst",
+    "area": "Services operations",
+    "routes": [
+      "/institution/services"
+    ],
+    "actors": [
+      "service_specialist"
+    ],
+    "permissions": [
+      "request.assign"
+    ],
+    "records": [
+      "svc.service_requests",
+      "svc.service_definitions"
+    ],
+    "commands": [
+      "api.assign_request",
+      "api.resolve_request"
+    ],
+    "events": [
+      "request.resolved"
+    ],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "ops-inbox",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.accommodations",
+    "workspace": "inst",
+    "area": "Accommodation operations",
+    "routes": [
+      "/institution/accommodations"
+    ],
+    "actors": [
+      "accessibility_coordinator"
+    ],
+    "permissions": [
+      "accommodation.decide"
+    ],
+    "records": [
+      "svc.accommodation_plans",
+      "svc.restricted_cases"
+    ],
+    "commands": [
+      "api.decide_accommodation"
+    ],
+    "events": [
+      "accommodation.decided"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "role-workspaces",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.reporting",
+    "workspace": "inst",
+    "area": "Reporting",
+    "routes": [
+      "/institution/reports"
+    ],
+    "actors": [
+      "institution_admin"
+    ],
+    "permissions": [
+      "report.run",
+      "report.export"
+    ],
+    "records": [
+      "analytics.datasets",
+      "analytics.reports"
+    ],
+    "commands": [
+      "run_report"
+    ],
+    "events": [
+      "report.generated"
+    ],
+    "screen_types": [
+      "list",
+      "reporting"
+    ],
+    "design_reference": "platform-maturity",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.security",
+    "workspace": "inst",
+    "area": "Institution security",
+    "routes": [
+      "/institution/identity",
+      "/institution/access-reviews"
+    ],
+    "actors": [
+      "identity_admin"
+    ],
+    "permissions": [
+      "sso.configure",
+      "access_review.run"
+    ],
+    "records": [
+      "opsx.integrations",
+      "ctl.grants",
+      "iam.access_reviews"
+    ],
+    "commands": [
+      "configure_sso",
+      "api.run_access_review"
+    ],
+    "events": [
+      "access_review.completed"
+    ],
+    "screen_types": [
+      "settings",
+      "review"
+    ],
+    "design_reference": "governance-backbone",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.data_governance",
+    "workspace": "inst",
+    "area": "Data governance",
+    "routes": [
+      "/institution/data"
+    ],
+    "actors": [
+      "privacy_officer"
+    ],
+    "permissions": [
+      "retention.edit"
+    ],
+    "records": [
+      "gov.retention_policies",
+      "integ.mappings"
+    ],
+    "commands": [
+      "set_retention"
+    ],
+    "events": [],
+    "screen_types": [
+      "list",
+      "settings"
+    ],
+    "design_reference": "compliance",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.integrations",
+    "workspace": "inst",
+    "area": "Institution integrations",
+    "routes": [
+      "/institution/connectors"
+    ],
+    "actors": [
+      "integration_admin"
+    ],
+    "permissions": [
+      "integration.configure"
+    ],
+    "records": [
+      "opsx.integrations",
+      "opsx.sync_runs",
+      "integ.mappings",
+      "integ.sync_errors"
+    ],
+    "commands": [
+      "configure_integration",
+      "api.run_sync"
+    ],
+    "events": [
+      "sync.completed"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "settings",
+      "history"
+    ],
+    "design_reference": "native-ops",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.account",
+    "workspace": "inst",
+    "area": "Institution account",
+    "routes": [
+      "/institution/account"
+    ],
+    "actors": [
+      "account_owner"
+    ],
+    "permissions": [
+      "account.read"
+    ],
+    "records": [
+      "biz.contracts",
+      "commerce.subscriptions"
+    ],
+    "commands": [],
+    "events": [],
+    "screen_types": [
+      "overview"
+    ],
+    "design_reference": "business",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.rollout",
+    "workspace": "inst",
+    "area": "Institutional change",
+    "routes": [
+      "/institution/rollout"
+    ],
+    "actors": [
+      "institution_admin"
+    ],
+    "permissions": [
+      "rollout.approve"
+    ],
+    "records": [
+      "impl.projects",
+      "impl.milestones"
+    ],
+    "commands": [
+      "api.approve_rollout"
+    ],
+    "events": [
+      "rollout.approved"
+    ],
+    "screen_types": [
+      "overview",
+      "list",
+      "review"
+    ],
+    "design_reference": "launch-kit",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "inst.housing",
+    "workspace": "inst",
+    "area": "Housing operations",
+    "routes": [
+      "/institution/housing"
+    ],
+    "actors": [
+      "housing_staff"
+    ],
+    "permissions": [
+      "housing.assign"
+    ],
+    "records": [
+      "housing.buildings",
+      "housing.rooms",
+      "housing.applications",
+      "housing.assignments",
+      "housing.maintenance_requests"
+    ],
+    "commands": [],
+    "events": [],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "registrar-console",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "acct.overview",
+    "workspace": "acct",
+    "area": "Customer account",
+    "routes": [
+      "/account"
+    ],
+    "actors": [
+      "account_owner",
+      "billing_admin"
+    ],
+    "permissions": [
+      "account.read"
+    ],
+    "records": [
+      "biz.accounts",
+      "commerce.subscriptions",
+      "commerce.entitlements"
+    ],
+    "commands": [],
+    "events": [],
+    "screen_types": [
+      "overview"
+    ],
+    "design_reference": "business",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "acct.invoices",
+    "workspace": "acct",
+    "area": "Billing",
+    "routes": [
+      "/account/invoices"
+    ],
+    "actors": [
+      "billing_admin"
+    ],
+    "permissions": [
+      "invoice.read",
+      "invoice.pay"
+    ],
+    "records": [
+      "cofin.invoices",
+      "cofin.payments"
+    ],
+    "commands": [
+      "pay_invoice"
+    ],
+    "events": [
+      "invoice.paid"
+    ],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "business",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "acct.contracts",
+    "workspace": "acct",
+    "area": "Contracts",
+    "routes": [
+      "/account/contracts"
+    ],
+    "actors": [
+      "contract_contact"
+    ],
+    "permissions": [
+      "contract.read",
+      "contract.sign"
+    ],
+    "records": [
+      "biz.contracts",
+      "docs.documents"
+    ],
+    "commands": [
+      "sign_contract"
+    ],
+    "events": [
+      "contract.signed"
+    ],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "business",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "acct.support",
+    "workspace": "acct",
+    "area": "Support",
+    "routes": [
+      "/account/support"
+    ],
+    "actors": [
+      "account_owner"
+    ],
+    "permissions": [
+      "case.create"
+    ],
+    "records": [
+      "opsx.support_cases",
+      "opsx.case_events"
+    ],
+    "commands": [
+      "api.open_case"
+    ],
+    "events": [
+      "case.opened"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "console",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.exec",
+    "workspace": "company",
+    "area": "Executive operations",
+    "routes": [
+      "/company"
+    ],
+    "actors": [
+      "executive"
+    ],
+    "permissions": [
+      "metrics.read",
+      "decision.record"
+    ],
+    "records": [
+      "exec.objectives",
+      "exec.decisions",
+      "analytics.metrics"
+    ],
+    "commands": [
+      "record_decision"
+    ],
+    "events": [
+      "decision.recorded"
+    ],
+    "screen_types": [
+      "overview",
+      "list",
+      "detail"
+    ],
+    "design_reference": "company-os",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.marketing",
+    "workspace": "company",
+    "area": "Marketing",
+    "routes": [
+      "/company/campaigns"
+    ],
+    "actors": [
+      "marketer",
+      "marketing_approver"
+    ],
+    "permissions": [
+      "campaign.edit",
+      "content.publish"
+    ],
+    "records": [
+      "mkt.campaigns",
+      "cms.pages",
+      "growth.entry_contexts"
+    ],
+    "commands": [
+      "publish_content"
+    ],
+    "events": [
+      "content.published"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit",
+      "review"
+    ],
+    "design_reference": "company-os",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.crm",
+    "workspace": "company",
+    "area": "Sales CRM",
+    "routes": [
+      "/company/pipeline",
+      "/company/accounts/:id"
+    ],
+    "actors": [
+      "sales_rep",
+      "sales_manager"
+    ],
+    "permissions": [
+      "opportunity.edit"
+    ],
+    "records": [
+      "biz.accounts",
+      "biz.contacts",
+      "biz.opportunities",
+      "growth.leads"
+    ],
+    "commands": [
+      "api.update_opportunity"
+    ],
+    "events": [
+      "opportunity.stage_changed"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit",
+      "history"
+    ],
+    "design_reference": "company-workflows",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.sales_eng",
+    "workspace": "company",
+    "area": "Sales engineering",
+    "routes": [
+      "/company/evaluations"
+    ],
+    "actors": [
+      "sales_engineer"
+    ],
+    "permissions": [
+      "evaluation.edit"
+    ],
+    "records": [
+      "biz.opportunities",
+      "sales.requirements"
+    ],
+    "commands": [
+      "record_requirement"
+    ],
+    "events": [],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "company-workflows",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.quotes",
+    "workspace": "company",
+    "area": "Commercial approvals",
+    "routes": [
+      "/company/quotes"
+    ],
+    "actors": [
+      "sales_rep",
+      "finance_approver"
+    ],
+    "permissions": [
+      "quote.create",
+      "quote.approve"
+    ],
+    "records": [
+      "sales.quotes",
+      "commerce.price_versions",
+      "ctl.action_requests"
+    ],
+    "commands": [
+      "api.create_quote",
+      "approve_quote"
+    ],
+    "events": [
+      "quote.approved"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit",
+      "review"
+    ],
+    "design_reference": "company-workflows",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.contracts",
+    "workspace": "company",
+    "area": "Contract lifecycle",
+    "routes": [
+      "/company/contracts"
+    ],
+    "actors": [
+      "legal_operator"
+    ],
+    "permissions": [
+      "contract.edit",
+      "contracts:sign"
+    ],
+    "records": [
+      "biz.contracts",
+      "docs.document_versions",
+      "docs.signature_requests",
+      "docs.signature_evidence"
+    ],
+    "commands": [
+      "record_signature"
+    ],
+    "events": [
+      "contract.signed"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit",
+      "review",
+      "history"
+    ],
+    "design_reference": "company-workflows",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.onboarding",
+    "workspace": "company",
+    "area": "Customer onboarding",
+    "routes": [
+      "/company/onboarding"
+    ],
+    "actors": [
+      "implementation_specialist"
+    ],
+    "permissions": [
+      "project.edit"
+    ],
+    "records": [
+      "impl.projects",
+      "impl.milestones",
+      "biz.pilots"
+    ],
+    "commands": [
+      "open_project"
+    ],
+    "events": [
+      "project.opened"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "launch-kit",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.implementation",
+    "workspace": "company",
+    "area": "Implementation",
+    "routes": [
+      "/company/implementations/:id"
+    ],
+    "actors": [
+      "implementation_specialist"
+    ],
+    "permissions": [
+      "migration.run",
+      "acceptance.record"
+    ],
+    "records": [
+      "impl.migration_batches",
+      "impl.acceptance_records",
+      "opsx.sync_runs"
+    ],
+    "commands": [
+      "run_migration",
+      "record_acceptance"
+    ],
+    "events": [
+      "acceptance.recorded"
+    ],
+    "screen_types": [
+      "detail",
+      "review",
+      "history"
+    ],
+    "design_reference": "launch-kit",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.success",
+    "workspace": "company",
+    "area": "Customer success",
+    "routes": [
+      "/company/customers",
+      "/company/renewals"
+    ],
+    "actors": [
+      "csm"
+    ],
+    "permissions": [
+      "health.edit",
+      "renewal.plan"
+    ],
+    "records": [
+      "biz.accounts",
+      "biz.pilots",
+      "biz.pilot_measures",
+      "biz.contracts"
+    ],
+    "commands": [
+      "api.record_measure"
+    ],
+    "events": [
+      "renewal.due"
+    ],
+    "screen_types": [
+      "overview",
+      "list",
+      "detail"
+    ],
+    "design_reference": "business",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.support",
+    "workspace": "company",
+    "area": "Support",
+    "routes": [
+      "/company/support",
+      "/console/support"
+    ],
+    "actors": [
+      "support_agent",
+      "support_lead"
+    ],
+    "permissions": [
+      "support:ticket"
+    ],
+    "records": [
+      "opsx.support_cases",
+      "opsx.case_events",
+      "opsx.support_access_windows"
+    ],
+    "commands": [
+      "api.assign_case",
+      "api.reply_case"
+    ],
+    "events": [
+      "case.updated"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "history"
+    ],
+    "design_reference": "console-entry",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.product",
+    "workspace": "company",
+    "area": "Product management",
+    "routes": [
+      "/company/roadmap"
+    ],
+    "actors": [
+      "product_manager"
+    ],
+    "permissions": [
+      "feedback.triage"
+    ],
+    "records": [
+      "product.feedback",
+      "product.requirements"
+    ],
+    "commands": [
+      "triage_feedback"
+    ],
+    "events": [],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "company-os",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.subscriptions",
+    "workspace": "company",
+    "area": "Subscriptions",
+    "routes": [
+      "/company/subscriptions"
+    ],
+    "actors": [
+      "billing_operator"
+    ],
+    "permissions": [
+      "subscription.edit"
+    ],
+    "records": [
+      "commerce.subscriptions",
+      "commerce.subscription_items",
+      "commerce.entitlements",
+      "commerce.account_organization_links"
+    ],
+    "commands": [
+      "update_subscription"
+    ],
+    "events": [
+      "subscription.changed"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit",
+      "history"
+    ],
+    "design_reference": "business",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.billing",
+    "workspace": "company",
+    "area": "Company billing",
+    "routes": [
+      "/company/invoices"
+    ],
+    "actors": [
+      "billing_operator"
+    ],
+    "permissions": [
+      "invoice.issue",
+      "credit.issue"
+    ],
+    "records": [
+      "cofin.invoices",
+      "cofin.invoice_lines",
+      "cofin.credits"
+    ],
+    "commands": [
+      "api.issue_invoice",
+      "issue_credit"
+    ],
+    "events": [
+      "invoice.issued"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "native-finance",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.accounting",
+    "workspace": "company",
+    "area": "Accounting",
+    "routes": [
+      "/company/ledger",
+      "/company/close"
+    ],
+    "actors": [
+      "accountant"
+    ],
+    "permissions": [
+      "journal.post",
+      "close.run"
+    ],
+    "records": [
+      "fin.ledger_accounts",
+      "fin.ledger_journals",
+      "fin.ledger_lines"
+    ],
+    "commands": [
+      "api.post_journal"
+    ],
+    "events": [
+      "journal.posted"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "native-finance",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.treasury",
+    "workspace": "company",
+    "area": "Treasury",
+    "routes": [
+      "/company/cash"
+    ],
+    "actors": [
+      "finance_approver"
+    ],
+    "permissions": [
+      "payment.approve"
+    ],
+    "records": [
+      "fin.payment_rails",
+      "fin.payment_attempts",
+      "fin.settlement_batches"
+    ],
+    "commands": [
+      "approve_payment"
+    ],
+    "events": [
+      "payment.approved"
+    ],
+    "screen_types": [
+      "overview",
+      "list",
+      "review"
+    ],
+    "design_reference": "native-finance",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.expenses",
+    "workspace": "company",
+    "area": "Expenses",
+    "routes": [
+      "/company/expenses"
+    ],
+    "actors": [
+      "employee",
+      "finance_approver"
+    ],
+    "permissions": [
+      "expense.submit",
+      "expense.approve"
+    ],
+    "records": [
+      "cofin.expense_claims",
+      "comms.files"
+    ],
+    "commands": [
+      "api.submit_claim",
+      "api.approve_claim"
+    ],
+    "events": [
+      "claim.approved"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit",
+      "review"
+    ],
+    "design_reference": "native-finance",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.procurement",
+    "workspace": "company",
+    "area": "Procurement",
+    "routes": [
+      "/company/procurement"
+    ],
+    "actors": [
+      "requester",
+      "finance_approver"
+    ],
+    "permissions": [
+      "purchase.request",
+      "purchase.approve"
+    ],
+    "records": [
+      "vend.purchase_orders",
+      "vend.vendors"
+    ],
+    "commands": [
+      "api.request_purchase",
+      "api.approve_purchase"
+    ],
+    "events": [
+      "purchase.approved"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit",
+      "review"
+    ],
+    "design_reference": "company-workflows",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.vendors",
+    "workspace": "company",
+    "area": "Vendor management",
+    "routes": [
+      "/company/vendors"
+    ],
+    "actors": [
+      "security_analyst"
+    ],
+    "permissions": [
+      "vendor.review"
+    ],
+    "records": [
+      "vend.vendors",
+      "vend.vendor_reviews",
+      "biz.subprocessors"
+    ],
+    "commands": [
+      "review_vendor"
+    ],
+    "events": [
+      "vendor.reviewed"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "company-workflows",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.people",
+    "workspace": "company",
+    "area": "People operations",
+    "routes": [
+      "/company/people",
+      "/company/hiring"
+    ],
+    "actors": [
+      "people_admin",
+      "recruiter",
+      "manager"
+    ],
+    "permissions": [
+      "employee.edit",
+      "candidate.edit"
+    ],
+    "records": [
+      "people.employees",
+      "people.candidates",
+      "people.positions",
+      "people.training_records"
+    ],
+    "commands": [
+      "make_offer",
+      "onboard_employee",
+      "api.offboard_employee"
+    ],
+    "events": [
+      "employee.onboarded",
+      "employee.offboarded"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit",
+      "history"
+    ],
+    "design_reference": "company-workflows",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.compensation",
+    "workspace": "company",
+    "area": "Compensation",
+    "routes": [
+      "/company/compensation"
+    ],
+    "actors": [
+      "people_admin"
+    ],
+    "permissions": [
+      "compensation.read"
+    ],
+    "records": [
+      "people.compensation_records"
+    ],
+    "commands": [
+      "approve_compensation"
+    ],
+    "events": [],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "company-os",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.legal",
+    "workspace": "company",
+    "area": "Legal and corporate",
+    "routes": [
+      "/company/legal"
+    ],
+    "actors": [
+      "legal_operator"
+    ],
+    "permissions": [
+      "matter.edit"
+    ],
+    "records": [
+      "legal.entities",
+      "legal.matters",
+      "docs.documents"
+    ],
+    "commands": [
+      "open_matter"
+    ],
+    "events": [],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "company-os",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.partners",
+    "workspace": "company",
+    "area": "Partnerships",
+    "routes": [
+      "/company/partners"
+    ],
+    "actors": [
+      "partnerships"
+    ],
+    "permissions": [
+      "partner.edit",
+      "app.review"
+    ],
+    "records": [
+      "biz.accounts",
+      "biz.partner_apps",
+      "biz.app_installs"
+    ],
+    "commands": [
+      "review_app"
+    ],
+    "events": [
+      "app.approved"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "company-workflows",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.it",
+    "workspace": "company",
+    "area": "Company IT",
+    "routes": [
+      "/company/it"
+    ],
+    "actors": [
+      "it_admin"
+    ],
+    "permissions": [
+      "asset.edit",
+      "access.request"
+    ],
+    "records": [
+      "it.assets",
+      "ctl.grants"
+    ],
+    "commands": [
+      "request_access"
+    ],
+    "events": [
+      "access.granted"
+    ],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "company-os",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.knowledge",
+    "workspace": "company",
+    "area": "Knowledge management",
+    "routes": [
+      "/company/knowledge"
+    ],
+    "actors": [
+      "any_employee"
+    ],
+    "permissions": [
+      "document.acknowledge"
+    ],
+    "records": [
+      "docs.documents",
+      "docs.acknowledgments"
+    ],
+    "commands": [
+      "acknowledge"
+    ],
+    "events": [
+      "document.acknowledged"
+    ],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "company-os",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "company.research",
+    "workspace": "company",
+    "area": "Strategy and research",
+    "routes": [
+      "/company/research"
+    ],
+    "actors": [
+      "researcher"
+    ],
+    "permissions": [
+      "experiment.edit"
+    ],
+    "records": [
+      "research.records",
+      "research.experiments"
+    ],
+    "commands": [
+      "record_experiment"
+    ],
+    "events": [],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "company-os",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.command",
+    "workspace": "ops",
+    "area": "Command center",
+    "routes": [
+      "/console"
+    ],
+    "actors": [
+      "operator"
+    ],
+    "permissions": [
+      "console:operate"
+    ],
+    "records": [
+      "ops.services",
+      "opsx.incidents",
+      "ops.alerts"
+    ],
+    "commands": [],
+    "events": [],
+    "screen_types": [
+      "overview"
+    ],
+    "design_reference": "console",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.tenants",
+    "workspace": "ops",
+    "area": "Tenant lifecycle",
+    "routes": [
+      "/console/tenants"
+    ],
+    "actors": [
+      "operator"
+    ],
+    "permissions": [
+      "tenant:implement",
+      "tenant.suspend"
+    ],
+    "records": [
+      "core.institutions",
+      "ops.tenant_lifecycle_requests"
+    ],
+    "commands": [
+      "api.request_tenant_action"
+    ],
+    "events": [
+      "tenant.provisioned"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review",
+      "history"
+    ],
+    "design_reference": "console",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.config",
+    "workspace": "ops",
+    "area": "Product configuration",
+    "routes": [
+      "/console/flags"
+    ],
+    "actors": [
+      "release_manager"
+    ],
+    "permissions": [
+      "flag.edit"
+    ],
+    "records": [
+      "core.institutions",
+      "commerce.entitlements",
+      "ops.feature_flags"
+    ],
+    "commands": [
+      "api.set_flag"
+    ],
+    "events": [
+      "flag.changed"
+    ],
+    "screen_types": [
+      "list",
+      "settings",
+      "history"
+    ],
+    "design_reference": "console",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.releases",
+    "workspace": "ops",
+    "area": "Release operations",
+    "routes": [
+      "/console/releases"
+    ],
+    "actors": [
+      "release_manager"
+    ],
+    "permissions": [
+      "deploy.approve",
+      "deploy.rollback"
+    ],
+    "records": [
+      "ops.builds",
+      "ops.deployments"
+    ],
+    "commands": [
+      "api.approve_deploy",
+      "api.rollback"
+    ],
+    "events": [
+      "deploy.completed"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "console",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.reliability",
+    "workspace": "ops",
+    "area": "Reliability",
+    "routes": [
+      "/console/reliability"
+    ],
+    "actors": [
+      "reliability_engineer"
+    ],
+    "permissions": [
+      "telemetry.read"
+    ],
+    "records": [
+      "ops.objectives",
+      "ops.telemetry"
+    ],
+    "commands": [],
+    "events": [],
+    "screen_types": [
+      "overview",
+      "reporting"
+    ],
+    "design_reference": "native-ops",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.incidents",
+    "workspace": "ops",
+    "area": "Incident management",
+    "routes": [
+      "/console/incidents"
+    ],
+    "actors": [
+      "incident_commander"
+    ],
+    "permissions": [
+      "incident:communicate"
+    ],
+    "records": [
+      "opsx.incidents",
+      "opsx.incident_updates"
+    ],
+    "commands": [
+      "api.open_incident",
+      "api.publish_update"
+    ],
+    "events": [
+      "incident.updated"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit",
+      "history"
+    ],
+    "design_reference": "console",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.jobs",
+    "workspace": "ops",
+    "area": "Background processing",
+    "routes": [
+      "/console/jobs"
+    ],
+    "actors": [
+      "reliability_engineer"
+    ],
+    "permissions": [
+      "job.replay"
+    ],
+    "records": [
+      "ops.jobs",
+      "ops.job_attempts",
+      "ctl.outbox",
+      "opsx.access_jobs"
+    ],
+    "commands": [
+      "api.replay_job"
+    ],
+    "events": [
+      "job.replayed"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "governance-backbone",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.integrations",
+    "workspace": "ops",
+    "area": "Integration operations",
+    "routes": [
+      "/console/integrations"
+    ],
+    "actors": [
+      "operator"
+    ],
+    "permissions": [
+      "integration:view"
+    ],
+    "records": [
+      "opsx.integrations",
+      "opsx.sync_runs",
+      "integ.sync_errors"
+    ],
+    "commands": [
+      "retry_sync"
+    ],
+    "events": [
+      "sync.completed"
+    ],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "native-ops",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.database",
+    "workspace": "ops",
+    "area": "Database operations",
+    "routes": [
+      "/console/database"
+    ],
+    "actors": [
+      "reliability_engineer"
+    ],
+    "permissions": [
+      "repair.request"
+    ],
+    "records": [
+      "ops.migrations",
+      "ops.repair_requests"
+    ],
+    "commands": [
+      "api.request_repair"
+    ],
+    "events": [
+      "repair.completed"
+    ],
+    "screen_types": [
+      "list",
+      "review"
+    ],
+    "design_reference": "native-ops",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.recovery",
+    "workspace": "ops",
+    "area": "Recovery",
+    "routes": [
+      "/console/recovery"
+    ],
+    "actors": [
+      "reliability_engineer"
+    ],
+    "permissions": [
+      "restore.test"
+    ],
+    "records": [
+      "ops.backups",
+      "ops.restore_exercises"
+    ],
+    "commands": [
+      "api.record_restore_test"
+    ],
+    "events": [
+      "restore.tested"
+    ],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "native-ops",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.security",
+    "workspace": "ops",
+    "area": "Security",
+    "routes": [
+      "/console/security"
+    ],
+    "actors": [
+      "security_analyst"
+    ],
+    "permissions": [
+      "finding.edit"
+    ],
+    "records": [
+      "sec.findings",
+      "sec.investigations"
+    ],
+    "commands": [
+      "api.open_finding"
+    ],
+    "events": [
+      "finding.opened"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "compliance",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.access",
+    "workspace": "ops",
+    "area": "Access administration",
+    "routes": [
+      "/console/access"
+    ],
+    "actors": [
+      "access_reviewer"
+    ],
+    "permissions": [
+      "grant.create",
+      "grant.revoke"
+    ],
+    "records": [
+      "ctl.grants",
+      "iam.access_reviews"
+    ],
+    "commands": [
+      "api.grant_capability",
+      "api.revoke_grant"
+    ],
+    "events": [
+      "grant.revoked"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "governance-backbone",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.privacy",
+    "workspace": "ops",
+    "area": "Privacy operations",
+    "routes": [
+      "/console/privacy"
+    ],
+    "actors": [
+      "privacy_operator"
+    ],
+    "permissions": [
+      "data_request:handle"
+    ],
+    "records": [
+      "opsx.privacy_requests"
+    ],
+    "commands": [
+      "api.verify_privacy_identity",
+      "api.fulfil_privacy_request"
+    ],
+    "events": [
+      "privacy.fulfilled"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review",
+      "history"
+    ],
+    "design_reference": "console",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.audit",
+    "workspace": "ops",
+    "area": "Audit investigation",
+    "routes": [
+      "/console/audit"
+    ],
+    "actors": [
+      "auditor"
+    ],
+    "permissions": [
+      "audit.read"
+    ],
+    "records": [
+      "audit.events"
+    ],
+    "commands": [],
+    "events": [],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "governance-backbone",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.ai",
+    "workspace": "ops",
+    "area": "AI operations",
+    "routes": [
+      "/console/ai"
+    ],
+    "actors": [
+      "ai_operator"
+    ],
+    "permissions": [
+      "ai.configure"
+    ],
+    "records": [
+      "core.ai_policy",
+      "audit.ai_usage",
+      "ai.model_configs",
+      "ai.evaluations"
+    ],
+    "commands": [
+      "publish_prompt",
+      "run_evaluation"
+    ],
+    "events": [
+      "evaluation.completed"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "governance-backbone",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.costs",
+    "workspace": "ops",
+    "area": "Capacity and costs",
+    "routes": [
+      "/console/costs"
+    ],
+    "actors": [
+      "reliability_engineer"
+    ],
+    "permissions": [
+      "usage.read"
+    ],
+    "records": [
+      "ops.usage_records"
+    ],
+    "commands": [],
+    "events": [],
+    "screen_types": [
+      "overview",
+      "reporting"
+    ],
+    "design_reference": "native-ops",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.moderation",
+    "workspace": "ops",
+    "area": "Abuse and moderation",
+    "routes": [
+      "/console/moderation"
+    ],
+    "actors": [
+      "moderator"
+    ],
+    "permissions": [
+      "report.decide"
+    ],
+    "records": [
+      "community.reports",
+      "community.posts"
+    ],
+    "commands": [
+      "api.decide_report"
+    ],
+    "events": [
+      "report.decided"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "community",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.support_session",
+    "workspace": "ops",
+    "area": "Support tooling",
+    "routes": [
+      "/console/support/:case/session"
+    ],
+    "actors": [
+      "support_agent"
+    ],
+    "permissions": [
+      "support_session.open"
+    ],
+    "records": [
+      "opsx.support_access_windows"
+    ],
+    "commands": [
+      "open_support_session"
+    ],
+    "events": [
+      "support.session_opened"
+    ],
+    "screen_types": [
+      "detail"
+    ],
+    "design_reference": "console-entry",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.services",
+    "workspace": "ops",
+    "area": "Service inventory",
+    "routes": [
+      "/console/services"
+    ],
+    "actors": [
+      "reliability_engineer"
+    ],
+    "permissions": [
+      "service.edit"
+    ],
+    "records": [
+      "ops.services",
+      "ops.dependencies"
+    ],
+    "commands": [],
+    "events": [],
+    "screen_types": [
+      "list",
+      "detail"
+    ],
+    "design_reference": "architecture",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "ops.dead_letters",
+    "workspace": "ops",
+    "area": "Webhook dead letters",
+    "routes": [
+      "/console/integrations/dead-letters"
+    ],
+    "actors": [
+      "reliability_engineer"
+    ],
+    "permissions": [
+      "job.replay"
+    ],
+    "records": [
+      "opsx.webhook_endpoints",
+      "opsx.webhook_deliveries"
+    ],
+    "commands": [
+      "api.replay_webhook"
+    ],
+    "events": [
+      "webhook.replayed"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "review"
+    ],
+    "design_reference": "native-ops",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "dev.apps",
+    "workspace": "dev",
+    "area": "Developer apps",
+    "routes": [
+      "/developers/apps"
+    ],
+    "actors": [
+      "approved_developer"
+    ],
+    "permissions": [
+      "app.register"
+    ],
+    "records": [
+      "biz.partner_apps"
+    ],
+    "commands": [
+      "register_app"
+    ],
+    "events": [
+      "app.registered"
+    ],
+    "screen_types": [
+      "list",
+      "detail",
+      "edit"
+    ],
+    "design_reference": "external",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "dev.keys",
+    "workspace": "dev",
+    "area": "API credentials",
+    "routes": [
+      "/developers/keys"
+    ],
+    "actors": [
+      "approved_developer"
+    ],
+    "permissions": [
+      "credential.rotate"
+    ],
+    "records": [
+      "dev.credentials"
+    ],
+    "commands": [
+      "api.rotate_key"
+    ],
+    "events": [
+      "key.rotated"
+    ],
+    "screen_types": [
+      "list",
+      "settings"
+    ],
+    "design_reference": "external",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  },
+  {
+    "id": "dev.sandbox",
+    "workspace": "dev",
+    "area": "Sandbox tenants",
+    "routes": [
+      "/developers/sandbox"
+    ],
+    "actors": [
+      "approved_developer"
+    ],
+    "permissions": [
+      "sandbox.create"
+    ],
+    "records": [
+      "core.institutions"
+    ],
+    "commands": [
+      "create_sandbox"
+    ],
+    "events": [
+      "sandbox.created"
+    ],
+    "screen_types": [
+      "detail"
+    ],
+    "design_reference": "external",
+    "status": "source-declared design contract; production unverified",
+    "maturity": {
+      "designed": "unknown; current evidence required",
+      "implemented": "unknown; current evidence required",
+      "tested": "unknown; current evidence required",
+      "deployed": "unknown; current evidence required",
+      "institution_authorized": "unknown; current evidence required",
+      "production_enabled": "unknown; current evidence required"
+    },
+    "activation": "disabled",
+    "acceptance": [
+      "authorized complete job loop",
+      "tenant/object negative access",
+      "expiry/revocation enforcement",
+      "source authority and freshness",
+      "approval target/payload/version binding",
+      "idempotent durable command",
+      "outbox replay/reconciliation",
+      "seven data-region states",
+      "manual accessibility review",
+      "exact-target deployment and applicable authority acceptance"
+    ]
+  }
+]

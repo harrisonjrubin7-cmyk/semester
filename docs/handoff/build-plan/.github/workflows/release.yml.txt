@@ -1,0 +1,55 @@
+# .github/workflows/release.yml — rename to .yml. Adapted from the plan PDF to the repo's npm workspaces.
+# Production needs a manual approval (GitHub environment "production" with required reviewers).
+name: release
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency: release-${{ github.ref }}
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run lint --if-present
+      - run: npm run typecheck --if-present
+      - run: npm test --if-present
+      - uses: open-policy-agent/setup-opa@v2
+      - run: opa test policies -v
+      - run: npm run test:rls --if-present        # cross-tenant + owner denial against a local Supabase
+      - run: npm run release:check                # repo's existing release profile
+  staging:
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+      - run: supabase link --project-ref ${{ secrets.SUPABASE_STAGING_REF }}
+        env: { SUPABASE_ACCESS_TOKEN: "${{ secrets.SUPABASE_ACCESS_TOKEN }}" }
+      - run: supabase db push --dry-run && supabase db push
+        env: { SUPABASE_ACCESS_TOKEN: "${{ secrets.SUPABASE_ACCESS_TOKEN }}", SUPABASE_DB_PASSWORD: "${{ secrets.SUPABASE_STAGING_DB_PASSWORD }}" }
+      - run: supabase functions deploy --project-ref ${{ secrets.SUPABASE_STAGING_REF }}
+        env: { SUPABASE_ACCESS_TOKEN: "${{ secrets.SUPABASE_ACCESS_TOKEN }}" }
+      - run: npx vercel deploy --token ${{ secrets.VERCEL_TOKEN }} --yes > url.txt
+      - run: npx playwright install --with-deps && npx playwright test e2e/connected-journeys.spec.ts
+        env:
+          SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+  production:
+    needs: staging
+    runs-on: ubuntu-latest
+    environment: production                       # required reviewers gate this job
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+      - run: supabase link --project-ref ${{ secrets.SUPABASE_PROD_REF }} && supabase db push --dry-run && supabase db push
+        env: { SUPABASE_ACCESS_TOKEN: "${{ secrets.SUPABASE_ACCESS_TOKEN }}", SUPABASE_DB_PASSWORD: "${{ secrets.SUPABASE_PROD_DB_PASSWORD }}" }
+      - run: supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROD_REF }}
+        env: { SUPABASE_ACCESS_TOKEN: "${{ secrets.SUPABASE_ACCESS_TOKEN }}" }
+      - run: npx vercel deploy --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+      - run: npm run smoke:prod --if-present      # read-only smoke; capabilities stay off until activation

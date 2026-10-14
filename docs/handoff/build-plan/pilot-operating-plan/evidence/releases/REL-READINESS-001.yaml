@@ -1,0 +1,19 @@
+release:
+  id: REL-READINESS-001
+  capability: CAP-REG-001
+  tenant: vanderbilt (approved_tenant pending)
+  status: pending — approvers named; 0 of 15 evidence items have a run artifact (founder reports tests pass)
+  required_evidence:   # 15 items, all pending
+    product: [EVD-JOURNEY-READINESS-001, EVD-STATES-READINESS-001, EVD-RECEIPT-READINESS-001]
+    access: [EVD-RLS-READINESS-001, EVD-POLICY-READINESS-001, EVD-REVOCATION-READINESS-001]
+    source: [EVD-SOURCE-MAPPING-001, EVD-FRESHNESS-READINESS-001, EVD-RECONCILIATION-001]
+    operations: [EVD-RUNBOOK-001, EVD-SAFE-OFF-001, EVD-HYPERCARE-001]
+    quality: [EVD-ACCESSIBILITY-CRITICAL-PATH-001, EVD-FAILURE-DRILLS-001, EVD-RELEASE-NOTES-001]
+  invalidates_on: [policy_change, source_mapping_change, RLS_change, workflow_state_change, connector_change, material_UI_or_consequence_copy_change]
+  approvals:   # four different people
+    semester_product_owner: Harrison (founder)
+    semester_engineering_or_security_owner: Bramm Rubin, security advisor (independence founder-attested)
+    semester_operations_owner: Teo Katz, contractor
+    institution_pilot_owner: Wyatt Rose, Registrar's Office
+  activation_rule: All required evidence current, no blocking finding open, scope matches approval, safe-off proven.
+  supersedes_partial: platform-ops/evidence/acceptance/REL-READINESS-001.yaml (P0/P1/P2 tests feed EVD-* above)

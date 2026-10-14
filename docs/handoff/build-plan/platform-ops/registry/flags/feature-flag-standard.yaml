@@ -1,0 +1,9 @@
+feature_flags:
+  required_metadata: [flag_key, capability_id, owner, tenant_scope, cohort_scope, environment_scope, created_at, expiry_or_review_date, safe_off_effect, release_id, monitoring_query, rollback_runbook]
+  prohibited: [permanent_unowned_flags, global_enablement_of_unverified_capability, flag_changes_without_audit_event, flags_that_bypass_authorization_or_RLS, flags_that_mask_required_safety_failure]
+  lifecycle: [proposed, approved, staged, active, retired]
+  safe_off_effects: [hide_entry_point, block_new_commands, pause_worker, disable_connector, full_capability_safe_off]
+  repo_count_2026_10: 28 flags in source (21 in the dated audit), all default off
+  live_layer: per-tenant capability switches in live_tenant_capabilities (approval_ref required to enable, kill_switch)
+  example:
+    - {flag_key: registration_readiness_v1, capability_id: CAP-REG-001, owner: pending, tenant_scope: [vanderbilt], cohort_scope: [pending], environment_scope: [staging], created_at: 2026-10-14, expiry_or_review_date: 2027-01-31, safe_off_effect: block_new_commands, release_id: REL-READINESS-001, monitoring_query: readiness.evaluation_* by result_code, rollback_runbook: docs/operations/rollback/registration-readiness.yaml, state: proposed}

@@ -1,0 +1,27 @@
+{
+  "function": "error_model",
+  "cases": [
+    {
+      "input": {
+        "field": "email",
+        "message": "Required"
+      },
+      "expected": {
+        "field": "email",
+        "message": "Required",
+        "described_by": "email-error"
+      }
+    },
+    {
+      "input": {
+        "field": "name",
+        "message": "Too long"
+      },
+      "expected": {
+        "field": "name",
+        "message": "Too long",
+        "described_by": "name-error"
+      }
+    }
+  ]
+}

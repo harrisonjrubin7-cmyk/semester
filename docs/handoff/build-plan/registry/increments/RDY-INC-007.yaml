@@ -1,0 +1,18 @@
+increment:
+  id: RDY-INC-007
+  capability_key: registration_readiness
+  title: Receipts for every readiness action
+  impact: high
+  sensitivity: internal
+  release_train: readiness
+  state: shaped
+  outcome:
+    user: "Every check, refresh and referral returns a receipt saying what happened and what it does not mean."
+    institution: "Support can find any action by receipt id."
+  authority: { official_decision_owner: institution, semester_role: source-aware derived planning state, prohibited_claim: "Readiness confirms enrollment." }
+  scope:
+    includes: [receipt_records, idempotent_replay_returns_same_receipt, receipt_copy_not_enrollment, support_lookup_by_receipt]
+    excludes: [receipts_for_SIS_actions]
+  acceptance: [AT-RDY-003, AT-RDY-010]
+  dependencies: { hard: [readiness_workflow, audit_event_store], soft: [support_intake] }
+  release: { feature_flag: registration_readiness_v1, safe_off: "Read-only guidance and institution support handoff.", rollback: "Disable flag; retain audit and reconciliation history." }

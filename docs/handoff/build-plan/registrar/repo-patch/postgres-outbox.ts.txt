@@ -1,0 +1,81 @@
+/**
+ * The production OutboxStore: `drainOutbox` against Postgres, through the claim functions in
+ * 20261014010000_outbox_publisher_store.sql. Rename to packages/institution/src/postgres-outbox.ts.
+ *
+ * `pending()` claims rows under a lease, so two publishers never send the same row. The marks carry the
+ * claim id the row was taken under; a mark that returns false means another publisher has since claimed
+ * the row (this one's lease ran out), and is reported rather than thrown, so one late write doesn't
+ * abort the rest of the batch.
+ *
+ * Server only: needs a service-role client. Never construct this in the browser.
+ */
+import { validateEvent, type OutboxRow, type OutboxStore, type SemesterEvent } from './events.ts';
+
+/** The one call this store makes. A supabase-js client satisfies it: `{ rpc: (fn, args) => client.rpc(fn, args) }`. */
+export interface RpcClient {
+  rpc(fn: string, args: Record<string, unknown>): PromiseLike<{ data: unknown; error: { message: string } | null }>;
+}
+
+interface ClaimedRow { id: string; claim_id: string; publish_attempts: number; envelope: Record<string, unknown> }
+
+export interface PostgresOutboxOptions {
+  leaseSeconds?: number;
+  /** Called when a mark finds the row already re-claimed, or a claimed row doesn't validate. */
+  onWarning?: (message: string, rowId: string) => void;
+}
+
+const clean = (envelope: Record<string, unknown>): Record<string, unknown> => {
+  // Postgres returns null for unset optional fields; the envelope contract uses absence.
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(envelope)) if (v !== null && k !== 'payloadHash') out[k] = v;
+  return out;
+};
+
+export class PostgresOutbox implements OutboxStore {
+  private readonly claims = new Map<string, string>();
+  private readonly lease: number;
+  private readonly warn: (message: string, rowId: string) => void;
+
+  constructor(private readonly db: RpcClient, options: PostgresOutboxOptions = {}) {
+    this.lease = options.leaseSeconds ?? 120;
+    this.warn = options.onWarning ?? (() => {});
+  }
+
+  /** Producers write through private.emit_domain_event inside their own transaction, never through here. */
+  append(_event: SemesterEvent): never {
+    throw new Error('PostgresOutbox.append is not used: emit events with private.emit_domain_event in the producing transaction');
+  }
+
+  async pending(limit: number): Promise<OutboxRow[]> {
+    const { data, error } = await this.db.rpc('outbox_claim', { want_batch: limit, want_lease_seconds: this.lease });
+    if (error) throw new Error(`outbox claim failed: ${error.message}`);
+    const rows: OutboxRow[] = [];
+    for (const r of (data ?? []) as ClaimedRow[]) {
+      this.claims.set(r.id, r.claim_id);
+      const verdict = validateEvent(clean(r.envelope));
+      if (!verdict.ok) {
+        // Not something a publisher can send. Park it now instead of retrying it maxAttempts times.
+        await this.mark(r.id, 'dead_lettered', `invalid envelope: ${verdict.reason}`);
+        this.warn(`dead-lettered an invalid envelope: ${verdict.reason}`, r.id);
+        continue;
+      }
+      rows.push({ id: r.id, event: verdict.event, publishedAt: null, publishAttempts: r.publish_attempts, lastError: null, deadLetteredAt: null });
+    }
+    return rows;
+  }
+
+  markPublished(id: string, _at: string): Promise<void> { return this.mark(id, 'published'); }
+  markFailed(id: string, error: string, _attempts: number): Promise<void> { return this.mark(id, 'failed', error); }
+  markDeadLettered(id: string, _at: string, error: string): Promise<void> { return this.mark(id, 'dead_lettered', error); }
+
+  private async mark(id: string, outcome: 'published' | 'failed' | 'dead_lettered', message?: string): Promise<void> {
+    const claim = this.claims.get(id);
+    if (!claim) throw new Error(`no claim held for outbox row ${id}`);
+    this.claims.delete(id);
+    const { data, error } = await this.db.rpc('outbox_mark', {
+      want_id: id, want_claim: claim, want_outcome: outcome, want_error: message ? message.slice(0, 500) : null,
+    });
+    if (error) throw new Error(`outbox mark ${outcome} failed: ${error.message}`);
+    if (data !== true) this.warn(`mark ${outcome} landed on a row another publisher has since claimed`, id);
+  }
+}

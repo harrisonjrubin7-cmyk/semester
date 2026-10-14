@@ -1,0 +1,33 @@
+// Playwright, staging. Rename to .spec.ts.
+import { test, expect } from "@playwright/test";
+test.describe("CAP-TODAY-001 action center", () => {
+  test("every item explains why it appears and names its source", async ({ page }) => {
+    await page.goto("/#/app/today");
+    for (const item of await page.getByTestId("action-item").all()) {
+      await expect(item.getByTestId("why")).not.toBeEmpty();
+      await expect(item.getByTestId("source-line")).toContainText(/Institution verified|Connected|You added|Estimated|AI-assisted/);
+    }
+  });
+  test("stale calendar shows the stale copy, not current deadlines", async ({ page }) => {
+    await page.route("**/v1/actions", r => r.fulfill({ json: { items: [{ id: "a1", title: "PS4", whyItAppears: "Due soon", nextStep: "Check the course page", urgency: "soon", source: "connected", sourceReference: "canvas:PS4", observedAt: "2026-10-06T10:00:00Z", freshness: "stale", visibility: "shared_with_student", actionType: "review", required: false }], generated_at: new Date().toISOString() } }));
+    await page.goto("/#/app/today");
+    await expect(page.getByText(/may have moved/)).toBeVisible();
+  });
+  test("required institutional notice can't be dismissed", async ({ page }) => {
+    await page.goto("/#/app/today");
+    const req = page.getByTestId("action-item").filter({ has: page.getByText("Required") }).first();
+    await expect(req.getByRole("button", { name: /dismiss/i })).toHaveCount(0);
+  });
+  test("readiness item never says enrolled", async ({ page }) => {
+    await page.goto("/#/app/today");
+    await expect(page.getByText(/does not confirm enrollment/)).toBeVisible();
+    await expect(page.getByText(/you are enrolled/i)).toHaveCount(0);
+  });
+  test("private task stays private", async ({ page }) => {
+    await page.goto("/#/app/today");
+    await page.getByRole("button", { name: /add task/i }).click();
+    await page.getByLabel(/task/i).fill("Email study group");
+    await page.getByRole("button", { name: /save/i }).click();
+    await expect(page.getByText(/Only you can see it/)).toBeVisible();
+  });
+});

@@ -1,0 +1,14 @@
+# data-classification.yaml — decide before ingestion.
+classes:
+  public: { examples: [public_course_catalog, published_events], access: public_or_tenant_public, ai: allowed }
+  internal: { examples: [feature_flags, operations_metrics], access: authenticated_and_granted, ai: allowed_internal_only }
+  confidential: { examples: [student_tasks, advising_notes, support_cases, readiness_cases], access: least_privilege_rls, audit: sensitive_reads_and_all_writes, ai: student_visible_summary_only }
+  restricted: { examples: [grades, financial_data, accommodation_references, access_tokens, holds], access: explicit_capability_and_policy_allow, audit: all_reads_and_writes, export: approval_required, ai: prohibited }
+pilot_records:
+  readiness_cases: confidential
+  readiness_checks: confidential
+  readiness_receipts: confidential
+  holds: restricted
+  time_tickets: confidential
+  students: restricted
+  audit_events: restricted

@@ -1,0 +1,30 @@
+document,result
+registration.drop.v2,valid
+registration.correct.v2,valid
+example 1 workflow_definition,valid
+example 2 execution_binding,valid
+example 3 execution_instance,valid
+example 4 execution_receipt,valid
+example 5 approval_grant,valid
+example 6 domain_event,valid
+registration binding,valid
+background 1 reconciliation_gate,valid
+background 2 sandbox_validate,valid
+background 3 monitoring_enable,valid
+background 4 rollback_verify,valid
+background 5 intent_identify,valid
+background 6 permission_validate,valid
+background 7 response_generate,valid
+background 8 usage_record,valid
+background 9 route,valid
+background 10 validate,valid
+background 11 dual_run,valid
+background 12 monitor,valid
+background 13 listing_filter,valid
+background 14 audit_retain,valid
+background 15 sandbox_create,valid
+background 16 instrument_validate,valid
+background 17 aggregate,valid
+NEGATIVE inline transport with write effect,rejected
+NEGATIVE queue transport with no outbox,rejected
+NEGATIVE unknown transport,rejected

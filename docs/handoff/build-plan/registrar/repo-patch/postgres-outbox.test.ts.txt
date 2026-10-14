@@ -1,0 +1,110 @@
+// Rename to packages/institution/src/postgres-outbox.test.ts. Runs with the package's existing vitest setup.
+import { describe, expect, it } from 'vitest';
+import { drainOutbox } from './events.ts';
+import { PostgresOutbox, type RpcClient } from './postgres-outbox.ts';
+
+const T0 = '2026-10-14T12:00:00.000Z';
+const env = (id: string, over: Record<string, unknown> = {}) => ({
+  eventId: id, eventType: 'task.created', eventVersion: 1, occurredAt: T0, producer: 'test', environment: 'production',
+  tenantId: 'ob-u', subject: { type: 'task', id: 't' }, correlationId: 'corr-test-0001', causationId: null,
+  idempotencyKey: 'k', dataClassification: 'student_private', retentionClass: 'student_record',
+  payload: { taskId: 't' }, payloadHash: 'sha256:' + '0'.repeat(64), ...over,
+});
+const ID = (n: number) => `00000000-0000-4000-8000-00000000000${n}`;
+
+/** A fake of the two SQL functions, with the same claim/lease/mark rules. */
+function fakeDb(envelopes: Record<string, unknown>[]) {
+  const rows = envelopes.map((e) => ({ id: e.eventId as string, envelope: e, attempts: 0, state: 'pending' as 'pending' | 'published' | 'dead', claim: null as string | null }));
+  const calls: Array<[string, Record<string, unknown>]> = [];
+  let n = 0;
+  const db: RpcClient = {
+    async rpc(fn, args) {
+      calls.push([fn, args]);
+      if (fn === 'outbox_claim') {
+        const claim = `c${++n}`;
+        const picked = rows.filter((r) => r.state === 'pending' && r.claim === null).slice(0, args.want_batch as number);
+        picked.forEach((r) => (r.claim = claim));
+        return { data: picked.map((r) => ({ id: r.id, claim_id: claim, publish_attempts: r.attempts, envelope: r.envelope })), error: null };
+      }
+      if (fn === 'outbox_mark') {
+        const r = rows.find((x) => x.id === args.want_id && x.claim === args.want_claim && x.state === 'pending');
+        if (!r) return { data: false, error: null };
+        r.claim = null;
+        if (args.want_outcome === 'published') r.state = 'published';
+        else { r.attempts += 1; if (args.want_outcome === 'dead_lettered') r.state = 'dead'; }
+        return { data: true, error: null };
+      }
+      return { data: null, error: { message: `unknown fn ${fn}` } };
+    },
+  };
+  return { db, rows, calls };
+}
+
+describe('PostgresOutbox', () => {
+  it('publishes a claimed batch and marks each row under its claim', async () => {
+    const { db, rows } = fakeDb([env(ID(1)), env(ID(2))]);
+    const report = await drainOutbox(new PostgresOutbox(db), async () => {});
+    expect(report).toEqual({ published: 2, failed: 0, deadLettered: 0 });
+    expect(rows.map((r) => r.state)).toEqual(['published', 'published']);
+  });
+
+  it('turns Postgres nulls into absent fields so the envelope validates', async () => {
+    const { db } = fakeDb([env(ID(1))]);
+    const seen: unknown[] = [];
+    await drainOutbox(new PostgresOutbox(db), async (e) => { seen.push(e); });
+    expect(seen[0]).not.toHaveProperty('causationId');
+    expect(seen[0]).not.toHaveProperty('payloadHash');
+  });
+
+  it('records a failure, retries it on the next pass, and dead-letters at maxAttempts', async () => {
+    const { db, rows } = fakeDb([env(ID(1))]);
+    const store = new PostgresOutbox(db);
+    const boom = async () => { throw new Error('provider 503'); };
+    expect(await drainOutbox(store, boom, { maxAttempts: 2 })).toEqual({ published: 0, failed: 1, deadLettered: 0 });
+    expect(rows[0]).toMatchObject({ state: 'pending', attempts: 1, claim: null });
+    expect(await drainOutbox(store, boom, { maxAttempts: 2 })).toEqual({ published: 0, failed: 0, deadLettered: 1 });
+    expect(rows[0].state).toBe('dead');
+  });
+
+  it('two publishers draining at once never send the same row', async () => {
+    const { db } = fakeDb([env(ID(1)), env(ID(2)), env(ID(3))]);
+    const sent: string[] = [];
+    const a = new PostgresOutbox(db), b = new PostgresOutbox(db);
+    const [ra, rb] = await Promise.all([
+      drainOutbox(a, async (e) => { sent.push(e.eventId); }, { batch: 2 }),
+      drainOutbox(b, async (e) => { sent.push(e.eventId); }, { batch: 2 }),
+    ]);
+    expect(ra.published + rb.published).toBe(3);
+    expect(new Set(sent).size).toBe(sent.length);
+  });
+
+  it('parks an envelope that does not validate instead of retrying it', async () => {
+    const warnings: string[] = [];
+    const { db, rows } = fakeDb([env(ID(1), { eventType: 'not.a_real_type' })]);
+    const report = await drainOutbox(new PostgresOutbox(db, { onWarning: (m) => warnings.push(m) }), async () => {});
+    expect(report).toEqual({ published: 0, failed: 0, deadLettered: 0 });
+    expect(rows[0].state).toBe('dead');
+    expect(warnings[0]).toMatch(/invalid envelope/);
+  });
+
+  it('reports, without throwing, a mark that lost its claim', async () => {
+    const warnings: string[] = [];
+    const { db, rows } = fakeDb([env(ID(1))]);
+    const store = new PostgresOutbox(db, { onWarning: (m) => warnings.push(m) });
+    await drainOutbox(store, async () => { rows[0].claim = 'someone-else'; });
+    expect(warnings[0]).toMatch(/another publisher/);
+    expect(rows[0].state).toBe('pending');
+  });
+
+  it('never appends: producers emit in their own transaction', () => {
+    const { db } = fakeDb([]);
+    expect(() => new PostgresOutbox(db).append(env(ID(1)) as never)).toThrow(/emit_domain_event/);
+  });
+
+  it('bounds the error it sends to 500 characters', async () => {
+    const { db, calls } = fakeDb([env(ID(1))]);
+    await drainOutbox(new PostgresOutbox(db), async () => { throw new Error('x'.repeat(900)); });
+    const mark = calls.find(([fn]) => fn === 'outbox_mark')!;
+    expect((mark[1].want_error as string).length).toBe(500);
+  });
+});

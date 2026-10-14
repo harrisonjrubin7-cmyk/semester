@@ -1,0 +1,12 @@
+environments:
+  local: { data: synthetic_only, access: developer, promotes_to: preview }
+  preview: { data: synthetic_or_approved_masked, access: team_and_named_reviewers, promotes_to: staging, required: [unit_tests, contract_validation, ui_state_review] }
+  staging: { data: synthetic_or_institution_approved_nonproduction, access: limited_pilot_team, promotes_to: production, required: [migration_rehearsal, rls_suite, integration_sandbox_verification, failure_drill, accessibility_check, release_candidate_approval] }
+  production: { data: approved_pilot_scope_only, access: least_privilege, required: [signed_go_no_go, feature_flag, alert_routes_verified, rollback_exercised, named_on_call] }
+invariants:
+  - "Production data never appears in local or preview."
+  - "Every schema migration is rehearsed before production."
+  - "Every pilot capability has a feature flag."
+  - "A release can be disabled without deleting data."
+  - "No direct production DB mutation outside an approved break-glass procedure."
+  - "Every deployment references a release decision and evidence bundle."

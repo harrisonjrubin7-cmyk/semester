@@ -1,0 +1,56 @@
+{
+  "mode": "review_only",
+  "term": "Example Fall Term",
+  "operations": [
+    {
+      "action": "create_folder",
+      "logical_path": "Example-Fall-Term/BIO-210-11bd27377a",
+      "course": "BIO 210"
+    },
+    {
+      "action": "create_folder",
+      "logical_path": "Example-Fall-Term/BIO-210-11bd27377a/Assignments",
+      "course": "BIO 210"
+    },
+    {
+      "action": "create_folder",
+      "logical_path": "Example-Fall-Term/BIO-210-11bd27377a/Lecture notes",
+      "course": "BIO 210"
+    },
+    {
+      "action": "create_folder",
+      "logical_path": "Example-Fall-Term/BIO-210-11bd27377a/Research",
+      "course": "BIO 210"
+    },
+    {
+      "action": "create_folder",
+      "logical_path": "Example-Fall-Term/BIO-210-11bd27377a/Deliverables",
+      "course": "BIO 210"
+    },
+    {
+      "action": "create_folder",
+      "logical_path": "Example-Fall-Term/ENG-101-121a40d04b",
+      "course": "ENG 101"
+    },
+    {
+      "action": "create_folder",
+      "logical_path": "Example-Fall-Term/ENG-101-121a40d04b/Assignments",
+      "course": "ENG 101"
+    },
+    {
+      "action": "create_folder",
+      "logical_path": "Example-Fall-Term/ENG-101-121a40d04b/Lecture notes",
+      "course": "ENG 101"
+    },
+    {
+      "action": "create_folder",
+      "logical_path": "Example-Fall-Term/ENG-101-121a40d04b/Research",
+      "course": "ENG 101"
+    },
+    {
+      "action": "create_folder",
+      "logical_path": "Example-Fall-Term/ENG-101-121a40d04b/Deliverables",
+      "course": "ENG 101"
+    }
+  ]
+}

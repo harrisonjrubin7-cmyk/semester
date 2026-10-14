@@ -1,0 +1,18 @@
+increment:
+  id: RDY-INC-006
+  capability_key: registration_readiness
+  title: Role provisioning and revocation
+  impact: high
+  sensitivity: restricted
+  release_train: foundation
+  state: shaped
+  outcome:
+    user: "A student only ever sees their own readiness."
+    institution: "Staff access follows Vanderbilt groups and ends on the next action after removal."
+  authority: { official_decision_owner: institution, semester_role: source-aware derived planning state, prohibited_claim: "Readiness confirms enrollment." }
+  scope:
+    includes: [sso_group_mapping, scoped_role_grants, revocation_on_next_request, break_glass_audit]
+    excludes: [manual_role_grants_outside_mapping]
+  acceptance: [AT-RDY-004, AT-RDY-008, SEC-RDY-001]
+  dependencies: { hard: [institution_activation, identity_role_mapping], soft: [] }
+  release: { feature_flag: registration_readiness_v1, safe_off: "Read-only guidance and institution support handoff.", rollback: "Disable flag; retain audit and reconciliation history." }

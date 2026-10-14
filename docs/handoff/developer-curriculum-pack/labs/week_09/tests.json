@@ -1,0 +1,33 @@
+{
+  "function": "idempotency",
+  "cases": [
+    {
+      "input": {
+        "previous_digest": null,
+        "digest": "a"
+      },
+      "expected": "execute"
+    },
+    {
+      "input": {
+        "previous_digest": "a",
+        "digest": "a"
+      },
+      "expected": "replay"
+    },
+    {
+      "input": {
+        "previous_digest": "a",
+        "digest": "b"
+      },
+      "expected": "conflict"
+    },
+    {
+      "input": {
+        "previous_digest": "",
+        "digest": "a"
+      },
+      "expected": "conflict"
+    }
+  ]
+}

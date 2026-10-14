@@ -1,0 +1,21 @@
+id,column,title
+G-DES-01,Designed,Journey/role/state coverage
+G-DES-02,Designed,Accessibility and consequence specification
+G-IMP-01,Implemented,UI-to-authorized-durable-state trace
+G-IMP-02,Implemented,Forged identity/tenant/owner/scope denial
+G-IMP-03,Implemented,Cross-device durability and provenance
+G-TST-01,Tested,Executed candidate-bound blocking suite
+G-TST-02,Tested,Qualified keyboard/AT/reflow acceptance
+G-TST-03,Tested,Independent security blocker closure
+G-DEP-01,Deployed,Actual build/config/schema match
+G-DEP-02,Deployed,Allowed/denied target journeys and queues
+G-DEP-03,Deployed,Previous-version rollback compatibility
+G-AUT-01,Institution-authorized,Current target/cohort/operation authority
+G-AUT-02,Institution-authorized,Withdrawn/expired approval denial
+G-AUT-03,Institution-authorized,Customer UAT and accepted limitations
+G-PRD-01,Production-enabled,Out-of-scope server/API/worker denial
+G-PRD-02,Production-enabled,Measured kill propagation
+G-PRD-03,Production-enabled,Isolated DB/object/config restore integrity
+G-PRD-04,Production-enabled,Primary/backup alert and support drill
+G-PRD-05,Production-enabled,Export/delete/revoke/offboard with holds
+G-PRD-06,Production-enabled,"Operated window, outcomes and stop criteria"

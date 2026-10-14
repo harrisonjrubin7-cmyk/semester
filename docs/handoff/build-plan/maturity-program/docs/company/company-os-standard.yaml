@@ -1,0 +1,7 @@
+company_os:
+  functions: [product, engineering, design, customer_success, implementation, sales, marketing, finance, legal_and_compliance, trust_and_security, operations, people, partnerships, research, investor_and_board]
+  each_function_requires: [accountable_owner, mission, system_of_record, current_top_priorities, operating_metrics, controls, recurring_cadence, decision_log, current_gaps, escalation_path]
+  source_of_truth: ui_kits/company-os (replaces parallel founder documents)
+board_packet:
+  sections: [headline_and_material_changes, pilot_and_customer_status, product_delivery_vs_evidence, reliability_and_trust_status, commercial_pipeline_and_cash, risks_and_decisions_needed, hiring_and_capacity, next_period_commitments]
+  rules: [no_unverified_customer_or_product_claims, label_sample_or_estimated_figures, separate_activated_from_designed_capabilities, report_control_gaps_with_owners_and_dates]

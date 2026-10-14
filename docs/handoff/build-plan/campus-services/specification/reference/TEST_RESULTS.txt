@@ -1,0 +1,22 @@
+test_adjacent (test_campus_reference.CampusReferenceTests.test_adjacent) ... ok
+test_cancellation (test_campus_reference.CampusReferenceTests.test_cancellation) ... ok
+test_credit_after_classes (test_campus_reference.CampusReferenceTests.test_credit_after_classes) ... ok
+test_credit_before_classes (test_campus_reference.CampusReferenceTests.test_credit_before_classes) ... ok
+test_credit_on_start (test_campus_reference.CampusReferenceTests.test_credit_on_start) ... ok
+test_explained (test_campus_reference.CampusReferenceTests.test_explained) ... ok
+test_float (test_campus_reference.CampusReferenceTests.test_float) ... ok
+test_invalid (test_campus_reference.CampusReferenceTests.test_invalid) ... ok
+test_missing_roommate (test_campus_reference.CampusReferenceTests.test_missing_roommate) ... ok
+test_negative_weight (test_campus_reference.CampusReferenceTests.test_negative_weight) ... ok
+test_overdrawn (test_campus_reference.CampusReferenceTests.test_overdrawn) ... ok
+test_overlap (test_campus_reference.CampusReferenceTests.test_overlap) ... ok
+test_reserved (test_campus_reference.CampusReferenceTests.test_reserved) ... ok
+test_roll_cap (test_campus_reference.CampusReferenceTests.test_roll_cap) ... ok
+test_roll_ineligible (test_campus_reference.CampusReferenceTests.test_roll_ineligible) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.000s
+
+OK
+
+Reference only: no concurrent allocation/DB/provider/runtime/eligibility/legal verification.

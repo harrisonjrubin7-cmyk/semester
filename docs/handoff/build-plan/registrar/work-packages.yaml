@@ -1,0 +1,15 @@
+# Owners are proposed roles. Assign named people, capacity and reviewers before committing dates.
+packages:
+  - { id: R01, name: Current-state reconciliation, owner: "Engineering + Registrar product", deliverable: "Capability/code/evidence map (capability-register.yaml code_ref fields)" }
+  - { id: R02, name: Policy and academic structure, owner: "Registrar + Academic affairs", deliverable: "Versioned rule definitions and golden cases" }
+  - { id: R03, name: Canonical records, owner: Database engineering, deliverable: "Schema, constraints, provenance and corrections" }
+  - { id: R04, name: Scheduling, owner: "Scheduling team + Engineering", deliverable: "Offerings, capacity and publication" }
+  - { id: R05, name: Enrollment, owner: Registration engineering, deliverable: "Transactional commands, waitlists and receipts" }
+  - { id: R06, name: Academic history, owner: "Records team + Engineering", deliverable: "Grade posting, credits, standing, corrections" }
+  - { id: R07, name: Transfer, owner: "Evaluators + Engineering", deliverable: "Intake, equivalencies, awards" }
+  - { id: R08, name: Degree and graduation, owner: "Academic/registrar owners", deliverable: "Audits, clearance, conferral" }
+  - { id: R09, name: Record services, owner: "Records services + Engineering", deliverable: "Transcripts, verification, fulfillment" }
+  - { id: R10, name: Governance and operations, owner: "Security + Privacy + Operations", deliverable: "Access, audit, support, release controls" }
+  - { id: R11, name: Migration, owner: "Implementation + Institution IT", deliverable: "Reconciled migration and authority-transfer plan" }
+  - { id: R12, name: Replacement acceptance, owner: Institutional authorities, deliverable: "Signed domain-specific activation and retirement decisions" }
+order: [R01, R02, R03, R10, R04, R05, R06, R07, R08, R09, R11, R12]

@@ -1,0 +1,87 @@
+openapi: 3.1.0
+info: { title: Semester pilot API — registration readiness, version: 0.1.0 }
+servers: [{ url: "https://<project>.supabase.co/functions/v1" }]
+components:
+  securitySchemes: { bearer: { type: http, scheme: bearer, bearerFormat: JWT } }
+  parameters:
+    IdempotencyKey: { in: header, name: Idempotency-Key, required: true, schema: { type: string, minLength: 16 } }
+    CorrelationId: { in: header, name: X-Correlation-Id, required: false, schema: { type: string, format: uuid } }
+  schemas:
+    Freshness: { type: string, enum: [current, stale, syncing, failed, unknown] }
+    ReadinessState: { type: string, enum: [unknown, ready, blocked, needs_review, stale, referred, resolved] }
+    SourceType: { type: string, enum: [institution_verified, connected, student_entered, estimated, ai_assisted, needs_review] }
+    Check:
+      type: object
+      required: [key, label, state, sourceType, freshness]
+      properties: { key: { type: string }, label: { type: string }, state: { $ref: "#/components/schemas/ReadinessState" }, sourceType: { $ref: "#/components/schemas/SourceType" }, sourceRef: { type: string }, observedAt: { type: string, format: date-time }, freshness: { $ref: "#/components/schemas/Freshness" } }
+    ReadinessSummary:
+      type: object
+      required: [termId, state, freshness, checks]
+      properties: { termId: { type: string }, state: { $ref: "#/components/schemas/ReadinessState" }, reasonCode: { type: string }, freshness: { $ref: "#/components/schemas/Freshness" }, assignedOffice: { type: string }, evaluatedAt: { type: string, format: date-time }, checks: { type: array, items: { $ref: "#/components/schemas/Check" } } }
+    Receipt:
+      type: object
+      required: [id, type, status, statement, correlationId, issuedAt]
+      properties: { id: { type: string, format: uuid }, type: { type: string, enum: [readiness_evaluation, refresh_requested, referral_created] }, status: { type: string, enum: [accepted, completed, failed, needs_review] }, statement: { type: string, description: "Must say this is not enrollment." }, correlationId: { type: string }, issuedAt: { type: string, format: date-time } }
+    ApiError:
+      type: object
+      required: [code, message, correlationId]
+      properties:
+        code: { type: string, enum: [UNAUTHENTICATED, FORBIDDEN, NOT_ENABLED, SOURCE_STALE, POLICY_UNAVAILABLE, CONFLICT, VALIDATION_ERROR, INTERNAL] }
+        message: { type: string }
+        correlationId: { type: string }
+        fieldErrors: { type: object, additionalProperties: { type: string } }
+        safeNextAction: { type: string }
+        retryAfterSeconds: { type: integer }
+  responses:
+    Unauthenticated: { description: "Sign in to continue.", content: { application/json: { schema: { $ref: "#/components/schemas/ApiError" } } } }
+    Forbidden: { description: "You don't have access to this record.", content: { application/json: { schema: { $ref: "#/components/schemas/ApiError" } } } }
+    NotEnabled: { description: "Not enabled for this institution (423).", content: { application/json: { schema: { $ref: "#/components/schemas/ApiError" } } } }
+    SourceStale: { description: "Source health prevents a definitive answer.", content: { application/json: { schema: { $ref: "#/components/schemas/ApiError" } } } }
+security: [{ bearer: [] }]
+paths:
+  /v1/readiness/context:
+    get:
+      operationId: getReadinessContext
+      parameters: [{ in: query, name: termId, required: true, schema: { type: string } }, { $ref: "#/components/parameters/CorrelationId" }]
+      responses:
+        "200": { description: Readiness summary for the caller's own record, content: { application/json: { schema: { $ref: "#/components/schemas/ReadinessSummary" } } } }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "423": { $ref: "#/components/responses/NotEnabled" }
+        "503": { $ref: "#/components/responses/SourceStale" }
+  /v1/readiness/evaluations:
+    post:
+      operationId: evaluateReadiness
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }, { $ref: "#/components/parameters/CorrelationId" }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [termId, goal], properties: { termId: { type: string }, goal: { type: object } } } } } }
+      responses:
+        "202": { description: Evaluation accepted; receipt returned, content: { application/json: { schema: { $ref: "#/components/schemas/Receipt" } } } }
+        "200": { description: Duplicate key — the existing receipt is returned, content: { application/json: { schema: { $ref: "#/components/schemas/Receipt" } } } }
+        "409": { description: Same key reused with a different body, content: { application/json: { schema: { $ref: "#/components/schemas/ApiError" } } } }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { description: Valid input that needs review before evaluation, content: { application/json: { schema: { $ref: "#/components/schemas/ApiError" } } } }
+        "423": { $ref: "#/components/responses/NotEnabled" }
+  /v1/readiness/refresh:
+    post:
+      operationId: refreshReadiness
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [termId], properties: { termId: { type: string } } } } } }
+      responses: { "202": { description: Refresh requested; receipt returned, content: { application/json: { schema: { $ref: "#/components/schemas/Receipt" } } } }, "401": { $ref: "#/components/responses/Unauthenticated" }, "403": { $ref: "#/components/responses/Forbidden" } }
+  /v1/readiness/referrals:
+    post:
+      operationId: createReferral
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [termId, office], properties: { termId: { type: string }, office: { type: string }, note: { type: string, maxLength: 1000 } } } } } }
+      responses: { "202": { description: Referral created; receipt returned, content: { application/json: { schema: { $ref: "#/components/schemas/Receipt" } } } }, "401": { $ref: "#/components/responses/Unauthenticated" }, "403": { $ref: "#/components/responses/Forbidden" } }
+  /v1/registrar/readiness/queue:
+    get:
+      operationId: getReadinessQueue
+      parameters: [{ in: query, name: state, schema: { $ref: "#/components/schemas/ReadinessState" } }, { in: query, name: freshness, schema: { $ref: "#/components/schemas/Freshness" } }, { in: query, name: cursor, schema: { type: string } }]
+      responses: { "200": { description: Scoped queue page (ids, state, freshness; no names) }, "403": { $ref: "#/components/responses/Forbidden" } }
+  /v1/registrar/readiness/cases/{caseId}/route:
+    post:
+      operationId: routeReadinessCase
+      parameters: [{ in: path, name: caseId, required: true, schema: { type: string, format: uuid } }, { $ref: "#/components/parameters/IdempotencyKey" }, { in: header, name: If-Match, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [office, reasonCode], properties: { office: { type: string }, reasonCode: { type: string } } } } } }
+      responses: { "202": { description: Routed }, "403": { $ref: "#/components/responses/Forbidden" }, "412": { description: Case changed since viewed } }

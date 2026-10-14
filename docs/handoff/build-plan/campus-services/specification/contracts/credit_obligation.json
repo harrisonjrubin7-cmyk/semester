@@ -1,0 +1,22 @@
+{
+  "kind": null,
+  "institution": null,
+  "student": null,
+  "payment_period": null,
+  "amount_minor": null,
+  "currency": null,
+  "qualifying_funds_refs": [],
+  "applicable_charges_refs": [],
+  "calculation_version": null,
+  "created_date": null,
+  "classes_start_date": null,
+  "authorization": null,
+  "cancellation_received_date": null,
+  "recipient": null,
+  "deadline": null,
+  "deadline_basis": null,
+  "attempts": [],
+  "delivery_reconciliation": null,
+  "owner": null,
+  "status": "UNCLASSIFIED_HELD"
+}

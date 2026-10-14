@@ -1,0 +1,18 @@
+test_id,failure,expected,contract_code,contract_state,contract_test,agrees
+REG-01,Identity/tenant mismatch,denied,IDENTITY_TENANT_MISMATCH,denied,AT-IDENTITY_TENANT_MISMATCH,yes (fixed 14 Oct)
+REG-02,Stale source/unknown authority,awaiting_information,SOURCE_STALE_OR_UNKNOWN_AUTHORITY,awaiting_information,AT-SOURCE_STALE_OR_UNKNOWN_AUTHORITY,yes
+REG-03,Window/time ticket closed,denied,WINDOW_CLOSED,denied,AT-WINDOW_CLOSED,yes
+REG-04,Blocking hold,awaiting_information,BLOCKING_HOLD,awaiting_information,AT-BLOCKING_HOLD,yes
+REG-05,Prerequisite/corequisite/credit limit,awaiting_approval,REQUISITE_OR_CREDIT_LIMIT,awaiting_approval,AT-REQUISITE_OR_CREDIT_LIMIT,yes
+REG-06,Capacity race/section full,"one committed, one waitlisted",CAPACITY_RACE,waitlisted_or_denied,AT-CAPACITY_RACE,yes
+REG-07,Repeated same request,original result,DUPLICATE_SAME_PAYLOAD,existing_command,AT-DUPLICATE_SAME_PAYLOAD,yes
+REG-08,Same key different payload,conflict,KEY_PAYLOAD_CONFLICT,denied,AT-KEY_PAYLOAD_CONFLICT,yes
+REG-09,Timeout after dispatch,result_unknown → reconciling → committed/failed,TIMEOUT_AFTER_DISPATCH,reconciling,AT-TIMEOUT_AFTER_DISPATCH,yes
+REG-10,Partial multi-system success,committed with projection pending → complete,PARTIAL_PROJECTION,committed_pending_projection,AT-PARTIAL_PROJECTION,yes
+REG-11,Confirmed precommit failure,failed → revalidated → committed,PRECOMMIT_FAILURE,failed,AT-PRECOMMIT_FAILURE,yes
+REG-12,Approval expiry/permission revocation,awaiting_approval or denied,APPROVAL_EXPIRED_OR_PERMISSION_LOST,awaiting_approval,AT-APPROVAL_EXPIRED_OR_PERMISSION_LOST,yes
+REG-13,Waitlist expiry/delivery failure,waitlisted/expired,WAITLIST_OFFER_EXPIRED,waitlisted_or_expired,AT-WAITLIST_OFFER_EXPIRED,yes
+REG-14,Swap/add-drop failure,failed; original retained,SWAP_FAILURE,failed_or_reconciling,AT-SWAP_FAILURE,yes
+REG-15,Wrong committed enrollment,correction_pending → corrected,WRONG_COMMITTED_ENROLLMENT,correction_pending,AT-WRONG_COMMITTED_ENROLLMENT,yes
+REG-16,Withdrawal/refund mismatch,committed pending financial reconciliation,WITHDRAWAL_REFUND_MISMATCH,committed_pending_reconciliation,AT-WITHDRAWAL_REFUND_MISMATCH,yes
+REG-17,Cutover/authority drift,paused,AUTHORITY_DRIFT_PAUSE,paused,AT-AUTHORITY_DRIFT_PAUSE,yes

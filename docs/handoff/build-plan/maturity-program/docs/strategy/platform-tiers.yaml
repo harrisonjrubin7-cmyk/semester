@@ -1,0 +1,4 @@
+platform_tiers:
+  tier_1_trusted_wedge: {goal: one source-backed, policy-controlled, operationally supported workflow students and staff can safely use, scope: [registration_readiness, student_action_center, advisor_and_registrar_handoff, privacy_and_session_controls, institution_console_basics], status: current tier}
+  tier_2_repeatable_institution_platform: {goal: same foundation supports a second journey and a second tenant (or simulation), candidate_scope: [degree_planning_scenarios, advising_collaboration, course_studio_or_study_studio, reusable_connector_program, implementation_toolkit]}
+  tier_3_selective_native_education_platform: {goal: native only where Semester can own authority, operational burden, commercial model and long-term support, candidate_scope: [native_finance_for_Semester_commerce, partner_and_developer_platform, governed_community_and_marketplace, advanced_institution_operations]}

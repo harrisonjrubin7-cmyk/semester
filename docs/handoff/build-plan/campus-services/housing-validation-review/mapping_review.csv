@@ -1,0 +1,11 @@
+field_area,review,disposition
+Identity,No email primary key; immutable scoped person mapping,Accepted pattern; source ownership/merge rules required
+Term/occupancy,Academic term and occupancy dates may differ,Keep both; do not force lease range to term dates
+Inventory,Building/unit/bed lifecycle and closures,Add source deletion/tombstones and retired inventory policy
+Contracts,Signature metadata and attachments,"Verify object bytes, version digest, retention/legal holds"
+Groups,Reciprocal acceptance,Source group membership is not itself consent proof
+Accommodation,Operational requirement only,No diagnosis/document body in allocator/search
+ERP charges,Currency/rate/ref transaction,"Allocation, refund/fee and source authority per field required"
+Payment rail,Authoritative attempt/business transition,Transport ACK not payment/ledger reconciliation
+Facilities,Assigned minimal-context task,Failure pending vs completed distinguish
+Access control,Hardware authority,No app-generated unlock failover; emergency behavior accepted by owner

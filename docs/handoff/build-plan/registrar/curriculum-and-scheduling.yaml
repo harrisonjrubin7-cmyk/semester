@@ -1,0 +1,14 @@
+curriculum:
+  versioning: "Stable identity + effective versions. Never update the current row and assume history stays correct."
+  publication: [draft_proposal, department_review, required_academic_approval, policy_schema_validation, student_impact_analysis, approved_version, effective_term_publication]
+  rule: "A new catalog version doesn't change a student's assigned catalog."
+  requirement_nodes: [all, any, min_credits, course_or_equivalency, min_grade, residency, program_gpa, time_limited_applicability, substitution_or_waiver]
+  validation: [no_invalid_refs_or_cycles, defined_credit_allocation_and_double_counting, transfer_repeat_incomplete_in_progress_treatment, approved_rounding_and_boundaries]
+  implementation: requirements/requirement-graph.ts + requirements/golden-cases.yaml
+scheduling:
+  inputs: [approved_course_versions, term_session_dates, instructional_modes, instructor_availability_and_workload, rooms_capacity_accessibility, meeting_patterns_and_exceptions, student_program_demand, linked_components, cross_list_and_reserved_capacity]
+  pipeline: [demand_and_offering_proposals, constraint_validation, candidate_schedule, human_review, publication_snapshot, enrollment_enabled_sections, controlled_changes_and_impact_resolution]
+  rule: "Optimization may propose. Publication requires authorized review."
+  capacity: proposed-schema/110_capacity_pools.sql
+  change_after_publication: [identify_affected_students_and_systems, require_approved_authority, record_change_and_effective_date, create_resolution_actions, notify_permitted_audiences_only, reconcile_calendars_access_enrollment]
+waitlist: { flow: [join_eligible_queue, record_position, seat_available, recheck_eligibility, reserve_under_offer_policy, accept_before_expiry, confirm_enrollment], rule: "Queue policy is institution-approved; don't assume FIFO. Expired offers release capacity." }

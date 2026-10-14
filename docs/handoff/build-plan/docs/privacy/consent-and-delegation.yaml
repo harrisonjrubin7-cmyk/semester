@@ -1,0 +1,14 @@
+consent_grant:
+  required_fields: [grant_id, tenant_id, subject_account_id, recipient_account_or_party_id, purpose, data_categories, permission_set, granted_at, expires_at, revocable, source_of_consent, receipt_id, access_generation]
+  rules:
+    default: private
+    minimum_scope: "Only the named purpose, recipient, data categories and permissions."
+    expiration: required_for_delegated_access
+    change_history: immutable
+  withdrawal: [end_active_grant, increment_access_generation, revoke_active_delegated_sessions, enqueue_downstream_revocation, show_receipt]
+  prohibited:
+    - "Infer family consent from a relationship."
+    - "Reuse consent for a new purpose."
+    - "Share academic, financial, study or AI history merely because a user has family access."
+student_copy: "You are sharing only the items listed here with the person you choose. This doesn't give them access to your grades, study history, notes or other records unless you add those items separately."
+gate: "Family, guardian, employer and external-sharing features don't start build until this service passes GATE-02."

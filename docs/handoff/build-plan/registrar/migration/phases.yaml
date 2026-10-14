@@ -1,0 +1,15 @@
+phases:
+  - { id: M0, name: Scope and authority, owner: "Registrar + IT + privacy + implementation lead", deliver: [included_modules_and_periods, data_owners_and_authorized_extraction, integration_and_reporting_inventory, current_writer_of_record, target_transfer_boundaries, retention_and_archive_obligations] }
+  - { id: M1, name: Source profiling and mapping, deliver: [source_schema_and_code_dictionaries, identifier_crosswalks, status_and_grade_mappings, effective_date_interpretation, catalog_and_program_mappings, null_missing_rules, exception_ownership] }
+  - { id: M2, name: Controlled staging, deliver: [restricted_extract_storage, manifest_hashes_and_checkpoints, parse_without_publishing, quarantine_malformed_and_unresolved, staging_cleanup_and_retention] }
+  - { id: M3, name: Repeatable transformation, deliver: [dependency_ordered_load, stable_source_mappings, idempotent_batches] }
+  - { id: M4, name: Reconciliation, checks: [person_linkage, referential_integrity, enrollment_states_and_dates, grade_codes_and_history, attempted_earned_credits_and_gpa, program_catalog_assignment, transfer_awards, degree_results, transcript_representation, permissions_and_inactive_identities], rule: "Counts alone are insufficient." }
+  - { id: M5, name: Shadow operation, compare: [eligibility, last_seat_and_waitlist_controlled_tests, grade_calculations, degree_audits, transcript_output, incremental_updates], rule: "Semester reads and computes without replacing authority; differences get a data-owner decision." }
+  - { id: M6, name: Cutover rehearsal, steps: [source_checkpoint, baseline_import, final_incremental_capture, reconciliation, interface_redirection, writer_of_record_change, validation, recovery], rule: "Without change-data capture, use an approved export/freeze. Don't promise uninterrupted writes without a safe transfer mechanism." }
+  - { id: M7, name: Production authority transfer, steps: [exact_domain_acceptance, drain_or_classify_in_flight_commands, final_source_checkpoint, apply_and_reconcile_final_changes, disable_competing_legacy_writers, enable_semester_commands, redirect_downstream_integrations, verify_representative_roles, monitor_stop_criteria] }
+  - { id: M8, name: Stabilize and retire, requires: [accepted_operation_over_observation_period, reporting_continuity, recovery_and_export_acceptance, historical_archive_accessible, retention_legal_review, approved_decommissioning] }
+rollback:
+  before_new_writes: "Return to the legacy writer — straightforward if rehearsed."
+  after_new_writes: [preserve_them, translate_to_legacy_compatible_replay_where_approved, reconcile_decisions_and_issued_documents, re_establish_one_writer_of_record]
+  rule: "A database restore alone is not a safe registrar rollback."
+activation_blockers: [cross_tenant_relationships, access_affecting_identity_ambiguity, unexplained_grade_credit_discrepancies, incorrect_catalog_assignments, unreconciled_consequential_operations, broken_recovery, missing_institutional_approval]

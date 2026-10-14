@@ -1,0 +1,17 @@
+import { describe, it, expect } from "vitest";
+import { canUseProjectionForOutcome as can } from "./read-model-integrity";
+const b = { projectionLagSeconds: 10, maximumLagSeconds: 60 };
+describe("projection guard", () => {
+  it("current + within lag allows derived and consequential", () => {
+    expect(can({ ...b, freshnessState: "current", outcomeType: "derived" })).toBe(true);
+    expect(can({ ...b, freshnessState: "current", outcomeType: "consequential" })).toBe(true);
+  });
+  it("over the lag limit blocks consequential", () => expect(can({ ...b, projectionLagSeconds: 61, freshnessState: "current", outcomeType: "consequential" })).toBe(false));
+  for (const s of ["updating", "stale", "unknown", "failed"] as const) it(s + " blocks derived", () => expect(can({ ...b, freshnessState: s, outcomeType: "derived" })).toBe(false));
+  it("stale stays informational", () => expect(can({ ...b, freshnessState: "stale", outcomeType: "informational" })).toBe(true));
+  it("failed isn't shown even as information", () => expect(can({ ...b, freshnessState: "failed", outcomeType: "informational" })).toBe(false));
+  it("negative or NaN lag is never fresh", () => {
+    expect(can({ ...b, projectionLagSeconds: -1, freshnessState: "current", outcomeType: "derived" })).toBe(false);
+    expect(can({ ...b, projectionLagSeconds: NaN, freshnessState: "current", outcomeType: "derived" })).toBe(false);
+  });
+});

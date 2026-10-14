@@ -1,0 +1,14 @@
+sequence: [freeze_candidate_and_mapping, confirm_recovery_evidence, rehearse_additive_db_changes, deploy_compatible_apis_workers_activation_disabled, load_baseline, reconcile, shadow_read_and_compare, catch_up_to_checkpoint, drain_or_classify_in_flight_commands, fence_old_writer_for_transferred_scope, apply_final_changes_and_reconcile, obtain_authority_acceptance, enable_semester_writer, redirect_approved_integrations, verify_representative_workflows, monitor_and_expand_after_acceptance]
+point_of_no_return:
+  definition: "The earliest native authoritative commit OR externally effective consequence in the transferred scope. An unknown dispatched outcome counts as possibly crossing it."
+  crossing_it: "Forbids destructive automatic rollback. Doesn't forbid an approved return after preservation, reverse mapping and reconciliation."
+  before: [fence_candidate, verify_no_native_commits_or_uncertain_operations, record_final_source_checkpoint, return_authority_to_legacy, preserve_candidate_and_evidence]
+  after: [hold_affected_commands, preserve_accepted_decisions, classify_uncertain_execution, seek_registrar_it_incident_authority, choose_forward_repair_or_verified_reverse_replay, reconcile_then_declare_one_writer]
+  approval: [institutional_registrar, it_change_authority, semester_release_authority, privacy_security_for_disclosure_incidents]
+  record: [institution, domain, cohort, source_checkpoint, fencing_epoch, manifest, first_native_decision, external_effects]
+zero_downtime: "Only with reliable change capture, writer fencing and a tested handover. Otherwise an approved write pause with reads available — never described as guaranteed zero-downtime registration."
+rollback_triggers_immediate: [cross_tenant_disclosure, wrong_student_linkage_affecting_records_or_access, lost_or_duplicated_enrollment, incorrect_official_grade, unexplained_capacity_oversubscription, unreconciled_consequential_execution, failed_writer_fencing]
+rollback_triggers_measured: [latency, error_rate, queue_age, sync_lag]   # thresholds approved per tenant
+before_transfer: "Hold activation, keep the legacy writer, preserve migration evidence, repair the candidate. Don't truncate or restore automatically."
+after_transfer: [disable_unsafe_actions, preserve_legitimate_new_writes, determine_accepted_decisions_since_handover, choose_forward_repair_or_approved_reverse_replay, reconcile_all_affected_outputs, re_establish_one_writer_of_record, obtain_renewed_acceptance]
+never: [DROP, TRUNCATE, restore_over_legitimate_writes]

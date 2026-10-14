@@ -1,0 +1,15 @@
+export type SourceClass = "institution_verified" | "connected" | "student_entered" | "estimated" | "ai_assisted" | "needs_review";
+export type FreshnessState = "current" | "updating" | "stale" | "unknown" | "failed";
+export type SourceVerdict = { state: FreshnessState; canSupportDefinitiveOutcome: boolean; displayLabel: string; reason?: string };
+/** Labels are computed from metadata, never chosen by a screen. Only a current institution_verified source can support a definitive result. */
+export function verifySourceAuthority(i: { sourceClass: SourceClass; sourceSystem?: string; observedAt?: Date; maximumAgeMinutes?: number; hasAuthorityOwner: boolean; hasSourceReference: boolean; now?: Date }): SourceVerdict {
+  if (i.sourceClass === "ai_assisted") return { state: "current", canSupportDefinitiveOutcome: false, displayLabel: "AI-assisted", reason: "AI output never supports an official outcome." };
+  if (i.sourceClass === "student_entered") return { state: "current", canSupportDefinitiveOutcome: false, displayLabel: "You entered this" };
+  if (i.sourceClass === "estimated") return { state: "current", canSupportDefinitiveOutcome: false, displayLabel: "Estimate" };
+  if (i.sourceClass === "needs_review" || !i.hasAuthorityOwner || !i.hasSourceReference) return { state: "unknown", canSupportDefinitiveOutcome: false, displayLabel: "Needs review", reason: "The source and authority record are incomplete." };
+  if (!i.observedAt || !i.maximumAgeMinutes) return { state: "unknown", canSupportDefinitiveOutcome: false, displayLabel: "Needs review", reason: "Freshness can't be confirmed." };
+  const age = ((i.now ?? new Date()).getTime() - i.observedAt.getTime()) / 60_000;
+  if (age < -5) return { state: "unknown", canSupportDefinitiveOutcome: false, displayLabel: "Needs review", reason: "Observation time is in the future — clock or source error." };
+  if (age > i.maximumAgeMinutes) return { state: "stale", canSupportDefinitiveOutcome: false, displayLabel: "Source needs refresh", reason: "Older than the approved freshness window." };
+  return { state: "current", canSupportDefinitiveOutcome: i.sourceClass === "institution_verified", displayLabel: i.sourceClass === "institution_verified" ? "Institution verified" : "Connected source" };
+}

@@ -1,0 +1,6 @@
+case,passed,scope
+valid illustrative draft,True,Local schema only; no immutable storage/permission proof
+reject invalid status,True,Local schema only; no immutable storage/permission proof
+reject invalid version,True,Local schema only; no immutable storage/permission proof
+reject invalid period,True,Local schema only; no immutable storage/permission proof
+reject invalid content_hash,True,Local schema only; no immutable storage/permission proof

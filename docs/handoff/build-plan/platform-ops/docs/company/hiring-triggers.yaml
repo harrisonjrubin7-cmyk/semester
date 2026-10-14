@@ -1,0 +1,6 @@
+hiring_triggers:
+  implementation_and_customer_success: {trigger: [multiple_active_implementations, repeated_founder_bottleneck_in_training_or_support, support_and_hypercare_load_exceeds_defined_capacity], first_mission: [standardize_tenant_implementation, operate_launch_and_adoption_cadence, maintain_customer_health_evidence]}
+  platform_engineering: {trigger: [connector_or_worker_reliability_work_is_continuous, security_and_tenant_controls_need_dedicated_ownership, deployment_and_incident_load_competes_with_product_delivery], first_mission: [own_reliability, automate_controls, harden_data_and_workflow_platform]}
+  product_and_design: {trigger: [evidence_identifies_repeated_student_or_staff_workflow_gaps, research_and_delivery_exceed_founder_capacity], first_mission: [deepen_proven_wedges, maintain_design_and_accessibility_quality]}
+  trust_and_compliance: {trigger: [institution_reviews_or_data_scope_expand, control_evidence_and_vendor_governance_exceed_available_capacity], first_mission: [own_evidence_currency, coordinate_reviews_and_remediation]}
+  rule: hire on persistent operational load and proven demand, not on visual breadth or module count

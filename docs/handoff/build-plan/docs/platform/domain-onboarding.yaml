@@ -1,0 +1,8 @@
+phases:
+  - { phase: Define, required: [domain_charter, accountable_owner, institution_authority_boundary, role_and_outcome_map, prohibited_claims] }
+  - { phase: Model, required: [component_passport, record_envelopes, source_authority_register, data_classification, retention_and_export_rules] }
+  - { phase: Govern, required: [command_contracts, event_contracts, access_policy, controlled_action_rules, audit_and_receipt_plan] }
+  - { phase: Build, required: [migrations, rls, policy_tests, workflow_and_idempotency_tests, source_projections, all_required_screen_states] }
+  - { phase: Operate, required: [dashboards, alerts, incident_runbook, support_and_reconciliation_queue, training_material, release_evidence] }
+  - { phase: Learn, required: [adoption_measurement, usability_feedback, reliability_review, trust_and_safety_review, renewal_or_expansion_decision] }
+next_domain: advising_or_degree_planning   # recommended over broadening registration

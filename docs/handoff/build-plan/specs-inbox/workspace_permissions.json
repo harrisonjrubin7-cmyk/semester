@@ -1,0 +1,82 @@
+{
+  "status": "proposed simulation, not production policy",
+  "roles": {
+    "Company operator": [
+      "company.read",
+      "company.edit",
+      "package.draft"
+    ],
+    "Finance reviewer": [
+      "company.read",
+      "package.review"
+    ],
+    "Institution admin": [
+      "admin.read",
+      "admin.request"
+    ],
+    "Security approver": [
+      "admin.read",
+      "admin.approve"
+    ],
+    "Investor": [
+      "investor.read",
+      "question.create"
+    ],
+    "Board director": [
+      "board.read",
+      "decision.record",
+      "question.create"
+    ],
+    "Board observer": [
+      "board.read",
+      "question.create"
+    ],
+    "Alumni": [
+      "alumni.read",
+      "profile.edit",
+      "mentor.request"
+    ]
+  },
+  "resources": [
+    {
+      "id": "company",
+      "title": "Company execution plan",
+      "scope": "company",
+      "cap": "company.read",
+      "classification": "Company confidential",
+      "detail": "Synthetic implementation plan. No real customer or financial data."
+    },
+    {
+      "id": "admin",
+      "title": "Institution A integration change",
+      "scope": "institution-a",
+      "cap": "admin.read",
+      "classification": "Institution restricted",
+      "detail": "Synthetic mapping change awaiting independent approval."
+    },
+    {
+      "id": "investor",
+      "title": "Published investor package v1",
+      "scope": "company",
+      "cap": "investor.read",
+      "classification": "Approved investor disclosure",
+      "detail": "Synthetic monthly update. Published audience only; no student records."
+    },
+    {
+      "id": "board",
+      "title": "Board meeting package v1",
+      "scope": "company",
+      "cap": "board.read",
+      "classification": "Board confidential",
+      "detail": "Synthetic strategy briefing. Observer may read, not record decisions."
+    },
+    {
+      "id": "alumni",
+      "title": "Personal alumni portfolio",
+      "scope": "personal",
+      "cap": "alumni.read",
+      "classification": "Personal private",
+      "detail": "Synthetic personal portfolio. Mentoring does not grant academic-record access."
+    }
+  ]
+}

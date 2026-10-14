@@ -1,0 +1,1007 @@
+{
+  "schema_version": "2.0.0",
+  "document_type": "workflow_definition",
+  "id": "registration.enroll",
+  "version": 2,
+  "name": "Enroll, waitlist, add/drop",
+  "domain": "Registration",
+  "purpose": "Request enrollment in a section through the institution’s authoritative registration system with a durable receipt.",
+  "trigger": "Student submits an enroll, add, drop or swap request",
+  "scope": {
+    "kind": "institution",
+    "tenant_id": "0b7e5c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+    "subject_id": null,
+    "resource_refs": [
+      "proposed:section",
+      "proposed:term",
+      "proposed:cart"
+    ],
+    "access_basis_refs": [
+      "proposed:ferpa_school_official",
+      "proposed:membership.student"
+    ]
+  },
+  "authority": {
+    "mode": "assist",
+    "official_write": true,
+    "system_ref": "proposed:sis.vanderbilt",
+    "registry_ref": "data/source-authority-register.yaml#enrollment",
+    "institution_scope_ref": "proposed:vanderbilt",
+    "activation_ref": "implementation/tenant-activation.yaml#registration",
+    "writer_policy": "legacy_single_writer",
+    "freshness_policy_ref": "assurance/service-objectives.yaml#SLO-SOURCE-001"
+  },
+  "controls": {
+    "risk": "consequential",
+    "human_authority_required": true,
+    "approval_policy_ref": "proposed:registrar.approval",
+    "policy_version_ref": "proposed:policy.registration_v1",
+    "idempotency_required": true,
+    "payload_binding_required": true,
+    "concurrency_policy_ref": "registrar/enrollment-engine#row-lock-seat",
+    "private_official_boundary_ref": "proposed:boundary.plan_vs_enrollment",
+    "provider_data_policy_ref": "proposed:no_ai_provider_access"
+  },
+  "states": {
+    "business": [
+      "requested",
+      "enrolled",
+      "waitlisted",
+      "denied"
+    ],
+    "execution": [
+      "received",
+      "validating",
+      "awaiting_information",
+      "awaiting_approval",
+      "dispatched",
+      "reconciling",
+      "committed_pending_projection",
+      "committed_pending_reconciliation",
+      "completed",
+      "existing_command",
+      "reauthenticate",
+      "denied",
+      "waitlisted_or_denied",
+      "waitlisted_or_expired",
+      "failed",
+      "failed_or_reconciling",
+      "correction_pending",
+      "paused"
+    ],
+    "initial_business": "requested",
+    "initial_execution": "received",
+    "terminal_business": [
+      "enrolled",
+      "waitlisted",
+      "denied"
+    ],
+    "terminal_execution": [
+      "completed",
+      "existing_command",
+      "denied",
+      "waitlisted_or_expired",
+      "failed",
+      "correction_pending",
+      "committed_pending_reconciliation",
+      "reauthenticate",
+      "paused"
+    ]
+  },
+  "steps": [
+    {
+      "id": "s1",
+      "name": "Validate identity, tenant, window, holds and requisites",
+      "kind": "background",
+      "actor_role": "system",
+      "capabilities": [
+        "registration.read"
+      ],
+      "surface_refs": [],
+      "binding_id": "proposed:binding.s1",
+      "input_schema_ref": "engine/registration_request.schema.json",
+      "output_schema_ref": "proposed:schema.s1.out",
+      "policy_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "failure_codes": [
+        "IDENTITY_TENANT_MISMATCH",
+        "SOURCE_STALE_OR_UNKNOWN_AUTHORITY",
+        "WINDOW_CLOSED",
+        "BLOCKING_HOLD",
+        "REQUISITE_OR_CREDIT_LIMIT",
+        "APPROVAL_EXPIRED_OR_PERMISSION_LOST",
+        "AUTHORITY_DRIFT_PAUSE"
+      ],
+      "audit_events": [
+        "registration.validated"
+      ]
+    },
+    {
+      "id": "s2",
+      "name": "Submit request with idempotency key",
+      "kind": "hybrid",
+      "actor_role": "student",
+      "capabilities": [
+        "registration.submit"
+      ],
+      "surface_refs": [
+        "B:Registration readiness"
+      ],
+      "binding_id": "proposed:binding.s2",
+      "input_schema_ref": "engine/registration_request.schema.json",
+      "output_schema_ref": "proposed:schema.s2.out",
+      "policy_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "failure_codes": [
+        "DUPLICATE_SAME_PAYLOAD",
+        "KEY_PAYLOAD_CONFLICT",
+        "PRECOMMIT_FAILURE"
+      ],
+      "audit_events": [
+        "registration.submitted"
+      ]
+    },
+    {
+      "id": "s3",
+      "name": "Dispatch to SIS and confirm",
+      "kind": "background",
+      "actor_role": "system",
+      "capabilities": [
+        "sis.write.registration"
+      ],
+      "surface_refs": [],
+      "binding_id": "proposed:binding.s3",
+      "input_schema_ref": "engine/registration_request.schema.json",
+      "output_schema_ref": "proposed:schema.s3.out",
+      "policy_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "failure_codes": [
+        "CAPACITY_RACE",
+        "TIMEOUT_AFTER_DISPATCH",
+        "PARTIAL_PROJECTION",
+        "SWAP_FAILURE",
+        "WAITLIST_OFFER_EXPIRED"
+      ],
+      "audit_events": [
+        "registration.dispatched",
+        "registration.confirmed"
+      ]
+    },
+    {
+      "id": "s4",
+      "name": "Registrar correction",
+      "kind": "operational_review",
+      "actor_role": "registrar_staff",
+      "capabilities": [
+        "registration.correct"
+      ],
+      "surface_refs": [
+        "E:Overrides"
+      ],
+      "binding_id": null,
+      "input_schema_ref": "engine/registration_request.schema.json",
+      "output_schema_ref": "proposed:schema.s4.out",
+      "policy_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "failure_codes": [
+        "WRONG_COMMITTED_ENROLLMENT",
+        "WITHDRAWAL_REFUND_MISMATCH"
+      ],
+      "audit_events": [
+        "registration.corrected"
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "t1",
+      "track": "execution",
+      "from": "received",
+      "to": "validating",
+      "step_id": "s1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.validating"
+    },
+    {
+      "id": "t2",
+      "track": "execution",
+      "from": "validating",
+      "to": "awaiting_information",
+      "step_id": "s1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.awaiting_information"
+    },
+    {
+      "id": "t3",
+      "track": "execution",
+      "from": "validating",
+      "to": "awaiting_approval",
+      "step_id": "s1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.awaiting_approval"
+    },
+    {
+      "id": "t4",
+      "track": "execution",
+      "from": "validating",
+      "to": "denied",
+      "step_id": "s1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.denied"
+    },
+    {
+      "id": "t5",
+      "track": "execution",
+      "from": "validating",
+      "to": "reauthenticate",
+      "step_id": "s1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.reauthenticate"
+    },
+    {
+      "id": "t6",
+      "track": "execution",
+      "from": "validating",
+      "to": "paused",
+      "step_id": "s1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.paused"
+    },
+    {
+      "id": "t7",
+      "track": "execution",
+      "from": "validating",
+      "to": "dispatched",
+      "step_id": "s2",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.dispatched"
+    },
+    {
+      "id": "t8",
+      "track": "execution",
+      "from": "received",
+      "to": "existing_command",
+      "step_id": "s2",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.existing_command"
+    },
+    {
+      "id": "t9",
+      "track": "execution",
+      "from": "validating",
+      "to": "failed",
+      "step_id": "s2",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.failed"
+    },
+    {
+      "id": "t10",
+      "track": "execution",
+      "from": "dispatched",
+      "to": "completed",
+      "step_id": "s3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.completed"
+    },
+    {
+      "id": "t11",
+      "track": "execution",
+      "from": "dispatched",
+      "to": "reconciling",
+      "step_id": "s3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.reconciling"
+    },
+    {
+      "id": "t12",
+      "track": "execution",
+      "from": "reconciling",
+      "to": "completed",
+      "step_id": "s3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.completed"
+    },
+    {
+      "id": "t13",
+      "track": "execution",
+      "from": "dispatched",
+      "to": "waitlisted_or_denied",
+      "step_id": "s3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.waitlisted_or_denied"
+    },
+    {
+      "id": "t14",
+      "track": "execution",
+      "from": "dispatched",
+      "to": "committed_pending_projection",
+      "step_id": "s3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.committed_pending_projection"
+    },
+    {
+      "id": "t15",
+      "track": "execution",
+      "from": "committed_pending_projection",
+      "to": "completed",
+      "step_id": "s3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.completed"
+    },
+    {
+      "id": "t16",
+      "track": "execution",
+      "from": "dispatched",
+      "to": "failed_or_reconciling",
+      "step_id": "s3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.failed_or_reconciling"
+    },
+    {
+      "id": "t17",
+      "track": "execution",
+      "from": "waitlisted_or_denied",
+      "to": "waitlisted_or_expired",
+      "step_id": "s3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.waitlisted_or_expired"
+    },
+    {
+      "id": "t20",
+      "track": "business",
+      "from": "requested",
+      "to": "enrolled",
+      "step_id": "s3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.business.enrolled"
+    },
+    {
+      "id": "t21",
+      "track": "business",
+      "from": "requested",
+      "to": "waitlisted",
+      "step_id": "s3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.business.waitlisted"
+    },
+    {
+      "id": "t22",
+      "track": "business",
+      "from": "requested",
+      "to": "denied",
+      "step_id": "s1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.business.denied"
+    },
+    {
+      "id": "t18",
+      "track": "execution",
+      "from": "reconciling",
+      "to": "correction_pending",
+      "step_id": "s4",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.correction_pending"
+    },
+    {
+      "id": "t19",
+      "track": "execution",
+      "from": "reconciling",
+      "to": "committed_pending_reconciliation",
+      "step_id": "s4",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.committed_pending_reconciliation"
+    },
+    {
+      "id": "t25",
+      "track": "execution",
+      "from": "waitlisted_or_denied",
+      "to": "completed",
+      "step_id": "s3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.completed"
+    },
+    {
+      "id": "t26",
+      "track": "execution",
+      "from": "failed_or_reconciling",
+      "to": "reconciling",
+      "step_id": "s3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.reconciling"
+    },
+    {
+      "id": "t27",
+      "track": "execution",
+      "from": "awaiting_information",
+      "to": "validating",
+      "step_id": "s1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.validating"
+    },
+    {
+      "id": "t28",
+      "track": "execution",
+      "from": "awaiting_information",
+      "to": "denied",
+      "step_id": "s1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.denied"
+    },
+    {
+      "id": "t29",
+      "track": "execution",
+      "from": "awaiting_approval",
+      "to": "validating",
+      "step_id": "s1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.validating"
+    },
+    {
+      "id": "t30",
+      "track": "execution",
+      "from": "awaiting_approval",
+      "to": "denied",
+      "step_id": "s1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.denied"
+    }
+  ],
+  "recovery_paths": [
+    {
+      "code": "IDENTITY_TENANT_MISMATCH",
+      "trigger": "Stop before protected reads",
+      "from_execution_states": [
+        "validating",
+        "awaiting_information",
+        "awaiting_approval"
+      ],
+      "to_execution_state": "denied",
+      "retry_class": "no_retry",
+      "fallback_ref": "proposed:fallback.identity_tenant_mismatch",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Identity support",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-IDENTITY_TENANT_MISMATCH"
+      ]
+    },
+    {
+      "code": "SOURCE_STALE_OR_UNKNOWN_AUTHORITY",
+      "trigger": "Block official command; refresh source and registry",
+      "from_execution_states": [
+        "validating"
+      ],
+      "to_execution_state": "awaiting_information",
+      "retry_class": "read_refresh",
+      "fallback_ref": "proposed:fallback.source_stale_or_unknown_authority",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Registrar/integration",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-SOURCE_STALE_OR_UNKNOWN_AUTHORITY"
+      ]
+    },
+    {
+      "code": "WINDOW_CLOSED",
+      "trigger": "Explain institution rule and next opportunity",
+      "from_execution_states": [
+        "validating",
+        "awaiting_information",
+        "awaiting_approval"
+      ],
+      "to_execution_state": "denied",
+      "retry_class": "no_retry",
+      "fallback_ref": "proposed:fallback.window_closed",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Registrar",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-WINDOW_CLOSED"
+      ]
+    },
+    {
+      "code": "BLOCKING_HOLD",
+      "trigger": "Permitted reason plus responsible-office handoff",
+      "from_execution_states": [
+        "validating"
+      ],
+      "to_execution_state": "awaiting_information",
+      "retry_class": "read_refresh",
+      "fallback_ref": "proposed:fallback.blocking_hold",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Hold-owning office",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-BLOCKING_HOLD"
+      ]
+    },
+    {
+      "code": "REQUISITE_OR_CREDIT_LIMIT",
+      "trigger": "Explain rule; scoped override request if permitted",
+      "from_execution_states": [
+        "validating"
+      ],
+      "to_execution_state": "awaiting_approval",
+      "retry_class": "new_approved_command",
+      "fallback_ref": "proposed:fallback.requisite_or_credit_limit",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Registrar/approver",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-REQUISITE_OR_CREDIT_LIMIT"
+      ]
+    },
+    {
+      "code": "CAPACITY_RACE",
+      "trigger": "Commit-time capacity check; waitlist or alternative",
+      "from_execution_states": [
+        "dispatched"
+      ],
+      "to_execution_state": "waitlisted_or_denied",
+      "retry_class": "no_retry",
+      "fallback_ref": "proposed:fallback.capacity_race",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Registration operations",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-CAPACITY_RACE"
+      ]
+    },
+    {
+      "code": "DUPLICATE_SAME_PAYLOAD",
+      "trigger": "Return original status/receipt",
+      "from_execution_states": [
+        "received"
+      ],
+      "to_execution_state": "existing_command",
+      "retry_class": "safe_same_key",
+      "fallback_ref": "proposed:fallback.duplicate_same_payload",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Platform",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-DUPLICATE_SAME_PAYLOAD"
+      ]
+    },
+    {
+      "code": "KEY_PAYLOAD_CONFLICT",
+      "trigger": "Reject conflict",
+      "from_execution_states": [
+        "received",
+        "validating"
+      ],
+      "to_execution_state": "denied",
+      "retry_class": "new_approved_command",
+      "fallback_ref": "proposed:fallback.key_payload_conflict",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Platform",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-KEY_PAYLOAD_CONFLICT"
+      ]
+    },
+    {
+      "code": "TIMEOUT_AFTER_DISPATCH",
+      "trigger": "Result unknown; lookup authority and reconcile",
+      "from_execution_states": [
+        "dispatched",
+        "failed_or_reconciling"
+      ],
+      "to_execution_state": "reconciling",
+      "retry_class": "safe_same_key",
+      "fallback_ref": "proposed:fallback.timeout_after_dispatch",
+      "compensation_kind": "projection_repair",
+      "compensation_ref": "proposed:compensation.timeout_after_dispatch",
+      "owner": "Integration/registrar",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-TIMEOUT_AFTER_DISPATCH"
+      ]
+    },
+    {
+      "code": "PARTIAL_PROJECTION",
+      "trigger": "Retain authoritative result; repair projections",
+      "from_execution_states": [
+        "dispatched"
+      ],
+      "to_execution_state": "committed_pending_projection",
+      "retry_class": "projection_only",
+      "fallback_ref": "proposed:fallback.partial_projection",
+      "compensation_kind": "projection_repair",
+      "compensation_ref": "proposed:compensation.partial_projection",
+      "owner": "Integration/platform",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-PARTIAL_PROJECTION"
+      ]
+    },
+    {
+      "code": "PRECOMMIT_FAILURE",
+      "trigger": "Failure with safe resume",
+      "from_execution_states": [
+        "validating"
+      ],
+      "to_execution_state": "failed",
+      "retry_class": "bounded_no_commit",
+      "fallback_ref": "proposed:fallback.precommit_failure",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Platform",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-PRECOMMIT_FAILURE"
+      ]
+    },
+    {
+      "code": "APPROVAL_EXPIRED_OR_PERMISSION_LOST",
+      "trigger": "Stop; request approval if permitted",
+      "from_execution_states": [
+        "validating"
+      ],
+      "to_execution_state": "awaiting_approval",
+      "retry_class": "new_approved_command",
+      "fallback_ref": "proposed:fallback.approval_expired_or_permission_lost",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Registrar/security",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-APPROVAL_EXPIRED_OR_PERMISSION_LOST"
+      ]
+    },
+    {
+      "code": "WAITLIST_OFFER_EXPIRED",
+      "trigger": "Record expiry under policy; show next action",
+      "from_execution_states": [
+        "waitlisted_or_denied"
+      ],
+      "to_execution_state": "waitlisted_or_expired",
+      "retry_class": "no_retry",
+      "fallback_ref": "proposed:fallback.waitlist_offer_expired",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Registration operations",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-WAITLIST_OFFER_EXPIRED"
+      ]
+    },
+    {
+      "code": "SWAP_FAILURE",
+      "trigger": "Preserve original enrollment until replacement assured",
+      "from_execution_states": [
+        "dispatched"
+      ],
+      "to_execution_state": "failed_or_reconciling",
+      "retry_class": "no_retry",
+      "fallback_ref": "proposed:fallback.swap_failure",
+      "compensation_kind": "authorized_correction",
+      "compensation_ref": "proposed:compensation.swap_failure",
+      "owner": "Registrar",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-SWAP_FAILURE"
+      ]
+    },
+    {
+      "code": "WRONG_COMMITTED_ENROLLMENT",
+      "trigger": "Human correction case; assess policy and impacts",
+      "from_execution_states": [
+        "reconciling"
+      ],
+      "to_execution_state": "correction_pending",
+      "retry_class": "new_approved_command",
+      "fallback_ref": "proposed:fallback.wrong_committed_enrollment",
+      "compensation_kind": "authorized_correction",
+      "compensation_ref": "proposed:compensation.wrong_committed_enrollment",
+      "owner": "Registrar",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-WRONG_COMMITTED_ENROLLMENT"
+      ]
+    },
+    {
+      "code": "WITHDRAWAL_REFUND_MISMATCH",
+      "trigger": "Retain academic decision; reconcile financial difference",
+      "from_execution_states": [
+        "reconciling"
+      ],
+      "to_execution_state": "committed_pending_reconciliation",
+      "retry_class": "no_retry",
+      "fallback_ref": "proposed:fallback.withdrawal_refund_mismatch",
+      "compensation_kind": "projection_repair",
+      "compensation_ref": "proposed:compensation.withdrawal_refund_mismatch",
+      "owner": "Registrar/student accounts",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-WITHDRAWAL_REFUND_MISMATCH"
+      ]
+    },
+    {
+      "code": "AUTHORITY_DRIFT_PAUSE",
+      "trigger": "Pause scope; reconcile in-flight commands and writer",
+      "from_execution_states": [
+        "validating"
+      ],
+      "to_execution_state": "paused",
+      "retry_class": "no_retry",
+      "fallback_ref": "proposed:fallback.authority_drift_pause",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Implementation/registrar",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-AUTHORITY_DRIFT_PAUSE"
+      ]
+    }
+  ],
+  "completion": {
+    "receipt_schema_ref": "proposed:receipt.enrollment",
+    "projection_refs": [
+      "proposed:read_model.student_schedule",
+      "proposed:read_model.action_center"
+    ],
+    "reconciliation_ref": "assurance/reconciliation.yaml",
+    "action_center_ref": "proposed:action_center.registration"
+  },
+  "operations": {
+    "owner": "Registrar",
+    "escalation_ref": "operations/support-model.yaml#tier3",
+    "retention_ref": "privacy/data-lifecycle.yaml#registration",
+    "accessibility_test_refs": [
+      "proposed:a11y.registration.submit",
+      "proposed:a11y.registration.status"
+    ],
+    "monitoring_ref": "assurance/service-objectives.yaml#SLO-READINESS-001"
+  },
+  "ai_policy": {
+    "enabled": false,
+    "policy_ref": null,
+    "tool_budget_ref": null,
+    "consequential_decision_authority": false
+  },
+  "acceptance_tests": [
+    {
+      "id": "AT-HAPPY",
+      "suite": "happy_path",
+      "criterion": "Eligible student enrolls once and gets one receipt",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-IDENTITY_TENANT_MISMATCH",
+      "suite": "tenant_isolation",
+      "criterion": "Denied-access audit; no protected data disclosed",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-SOURCE_STALE_OR_UNKNOWN_AUTHORITY",
+      "suite": "stale_source",
+      "criterion": "Freshness and writer check",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-WINDOW_CLOSED",
+      "suite": "authority",
+      "criterion": "No command committed",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-BLOCKING_HOLD",
+      "suite": "authority",
+      "criterion": "No inferred clearance from task completion",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-REQUISITE_OR_CREDIT_LIMIT",
+      "suite": "authority",
+      "criterion": "Versioned rule and scoped approval",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-CAPACITY_RACE",
+      "suite": "concurrency",
+      "criterion": "One final seat allocated once",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-DUPLICATE_SAME_PAYLOAD",
+      "suite": "replay",
+      "criterion": "One business effect",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-KEY_PAYLOAD_CONFLICT",
+      "suite": "replay",
+      "criterion": "No changed effect",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-TIMEOUT_AFTER_DISPATCH",
+      "suite": "timeout",
+      "criterion": "Resolve before conflicting next command",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-PARTIAL_PROJECTION",
+      "suite": "recovery",
+      "criterion": "Ledger agrees; failed projection visible",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-PRECOMMIT_FAILURE",
+      "suite": "recovery",
+      "criterion": "Evidence authority did not commit",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-APPROVAL_EXPIRED_OR_PERMISSION_LOST",
+      "suite": "revocation",
+      "criterion": "Commit-time role and approval check",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-WAITLIST_OFFER_EXPIRED",
+      "suite": "recovery",
+      "criterion": "Ordered waitlist; traceable offer",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-SWAP_FAILURE",
+      "suite": "recovery",
+      "criterion": "No unintended drop",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-WRONG_COMMITTED_ENROLLMENT",
+      "suite": "recovery",
+      "criterion": "Original plus correction ledger",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-WITHDRAWAL_REFUND_MISMATCH",
+      "suite": "recovery",
+      "criterion": "Separate academic and financial receipts",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-AUTHORITY_DRIFT_PAUSE",
+      "suite": "authority",
+      "criterion": "No split-brain writer",
+      "evidence_refs": []
+    }
+  ],
+  "readiness": {
+    "designed": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "Design prototype exists (ui_kits/registrar-replacement); reviewer not yet named, so not verified."
+    },
+    "implemented": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "tested": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "deployed": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "institution_authorized": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "production_enabled": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    }
+  }
+}

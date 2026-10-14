@@ -1,0 +1,13 @@
+import { z } from "zod";
+const DISCLAIMER = "This is a planning scenario. Your institution determines official degree progress.";
+export const DegreeScenario = z.object({
+  id: z.string(), tenantId: z.string().uuid(), studentId: z.string(),
+  status: z.enum(["draft", "shared_with_advisor", "reviewed", "archived"]),
+  courses: z.array(z.object({ courseId: z.string(), termId: z.string().optional(), source: z.enum(["institution_verified", "student_entered"]), scenarioRole: z.enum(["completed", "planned", "considering"]) })),
+  officialDegreeAuditReference: z.string().optional(),
+  disclaimer: z.object({ required: z.literal(true), text: z.literal(DISCLAIMER) }),
+  createdAt: z.string().datetime(), updatedAt: z.string().datetime(),
+}).superRefine((s, ctx) => {
+  s.courses.forEach((c, i) => { if (c.scenarioRole === "completed" && c.source !== "institution_verified") ctx.addIssue({ code: "custom", path: ["courses", i], message: "Only institution-verified courses can be completed" }); });
+  if (s.status === "reviewed" && !s.officialDegreeAuditReference) ctx.addIssue({ code: "custom", message: "A reviewed scenario must cite the official audit it was compared against" });
+});

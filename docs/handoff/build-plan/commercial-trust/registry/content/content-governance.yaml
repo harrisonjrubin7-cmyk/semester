@@ -1,0 +1,15 @@
+content_governance:
+  content_types: [in_product_copy, student_help, staff_training, release_notes, buyer_material, trust_status, policy_document, legal_document, incident_communication]
+  required_metadata: [content_id, owner, audience, capability_or_control_link, source_of_truth, reviewed_at, review_trigger, status, approved_by_when_required]
+  review_triggers: [product_behavior_change, policy_change, connector_or_source_change, accessibility_finding, incident_or_support_pattern, legal_or_contract_change, pilot_scope_change]
+design_closure_gates:
+  accessibility: [enforce_AA_contrast_for_each_shipped_ground, test_focus_keyboard_and_screen_reader_paths, validate_reduced_motion_and_transparency_fallbacks, verify_icon_only_accessible_names, complete_legibility_font_decision]
+  factual_integrity: [label_samples_in_all_views, replace_sample_claims_before_external_publication, require_source_for_metric_and_case_study_claim, prevent_unapproved_trust_claims]
+  media: [publish_only_rights_cleared_media, provide_captions_and_transcripts, provide_nonvideo_equivalent_for_required_information, ensure_no_media_is_required_to_understand_critical_workflow]
+operating_cadence:
+  - {when: Daily during launch, what: Hypercare review, decides: contain incidents, assign reconciliation, update known issues}
+  - {when: Weekly, what: Pilot operating review, decides: remove blockers, approve scoped changes, track evidence freshness}
+  - {when: Biweekly, what: Product-control review, decides: what advances design → build → test}
+  - {when: Monthly, what: Trust and risk review, decides: security, privacy, accessibility, vendors, claims, exceptions}
+  - {when: Monthly, what: Buyer/pipeline review, decides: qualify scope, document commitments, validate implementation capacity}
+  - {when: End of term, what: Pilot decision review, decides: renew, expand, remediate, pause or end}

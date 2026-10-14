@@ -1,0 +1,33 @@
+id,domain,scenario,assertion,runner,status,evidence
+AT001,Housing,Race final bed,At most one accepted overlapping allocation,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT002,Housing,Retry same key/different payload,Same payload same receipt; changed digest rejected,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT003,Housing,Alter group after preview,Membership version mismatch blocks commit,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT004,Housing,Expire reservation after uncertain payment,Reconcile provider outcome; no unsafe release/duplicate payment,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT005,Housing,Accommodation request exposure,Only approved operational requirement reaches allocator,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT006,Housing,Lottery input/seed manipulation,Frozen inputs and independently accepted draw controls,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT007,Roommates,Missing comparison fields,Unknown with coverage explanation; no false incompatibility,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT008,Roommates,Blocked/withdrawn invitation,No leaked profile or forged acceptance,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT009,Maintenance,Duplicate ticket,Linked/one dispatch,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT010,Maintenance,Vendor requests another residence,Denied metadata and attachments,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT011,Maintenance,Close without completion evidence,Held or reviewed exception,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT012,Dining,Concurrent last entitlement redemption,No overdraft/double consume,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT013,Dining,Repeat rollover batch,No duplicate transfer,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT014,Dining,Reserved near-expiry order,Approved hold/settlement without double rollover,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT015,Dining,Downgrade after consumption,Accepted versioned charge/grant adjustment,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT016,Dining,POS accepted then timeout,One reconciled order; no blind retry,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT017,Dining,Refund pending/failed,Open obligation and staffed exception,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT018,Dining,Stale ingredient data,"Explicit stale/unknown, no safety assurance",UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT019,Tuition,Enrollment reassessment,Delta journal; original calculation preserved,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT020,Tuition,Pending aid shown as posted,Rejected classification/UI state,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT021,Tuition,Payment success/posting failure,Retry journal not charge,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT022,Tuition,Posted payment/hold failure,Payment retained; independent hold retry,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT023,Tuition,Duplicate/out-of-order webhook,One business transition; source reconcile,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT024,Tuition,Payer grant revocation,Billing scope denied; no grades access,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT025,Credit balance,Negative aggregate vs qualifying Title IV,Qualified source-based classification; not naive refund,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT026,Credit balance,Before/after start deadline,Standard date arithmetic plus accepted case policy,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT027,Credit balance,Hold authorization cancellation,Correct deadline/basis/recipient with review,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT028,Credit balance,Rejected disbursement,Obligation remains open,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT029,Credit balance,Withdrawal/R2T4 case,Separate approved computation and timing,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT030,Shared,Cross-tenant access,All reads/writes/files/search denied,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT031,Shared,Audit write failure,No consequential mutation,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required
+AT032,Shared,Restore after revocation,Current access and post-backup changes reconciled,UNBOUND,NOT RUN,candidate/config/schema/scope/fixture/run/approver/expiry required

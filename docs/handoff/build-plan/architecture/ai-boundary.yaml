@@ -1,0 +1,9 @@
+ai_rules:
+  default_for_pilot: off
+  allowed: [explain_student_visible_readiness_status, summarize_included_sources, draft_support_or_referral_message, find_correct_office]
+  prohibited: [decide_eligibility, override_a_hold, submit_or_confirm_registration, modify_institutional_records, infer_restricted_attributes, access_records_outside_scope]
+  required_response_elements: [ai_assisted_label, data_scope_statement, source_list, uncertainty_statement, human_or_office_handoff_for_consequential_steps]
+data_handling:
+  student_records_to_external_model: prohibited
+  deidentified_evaluation: requires_documented_review
+  prompt_logging: redacted_or_disabled_for_restricted_data

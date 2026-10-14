@@ -1,0 +1,3 @@
+// Exact inspected excerpt from ui_kits/company-site/Pages.jsx.
+// Retained for audit: setSent(true) here is not a network delivery receipt.
+const submit = (e) => { e.preventDefault(); const x = {}; if (!v.name.trim()) x.name = 'Enter your name.'; if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.email)) x.email = 'Enter a full email address, like name@university.edu.'; setErr(x); if (Object.keys(x).length) setTimeout(() => { const f = document.querySelector('#' + id + ' [aria-invalid="true"]'); f && f.focus(); }, 0); else setSent(true); };

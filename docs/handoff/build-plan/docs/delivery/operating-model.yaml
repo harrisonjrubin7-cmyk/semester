@@ -1,0 +1,23 @@
+# Delivery operating model. Every piece of work: one capability, one outcome, one owner, one release train, one evidence path.
+delivery_model:
+  unit_of_delivery: capability_increment
+  every_increment_requires: [capability_key, problem_statement, accountable_owner, institutional_authority_statement, user_roles, workflow_definition, source_authority_record, data_contract, access_policy, ui_states, acceptance_tests, operational_runbook, release_evidence, rollout_and_rollback_plan]
+  delivery_states: [proposed, shaped, approved_for_build, in_build, integration_ready, evidence_ready, approved_for_release, enabled, monitored, retired]
+  transitions:
+    shaped: { requires_gate: GATE-01 }
+    approved_for_build: { requires: definition_of_ready }
+    integration_ready: { requires_gate: GATE-02 }
+    approved_for_release: { requires_gate: GATE-03, requires: definition_of_done }
+    enabled: { requires_gate: [GATE-04, GATE-05], requires: named_go_no_go_approvers }
+  prohibited_states:
+    - "Deployed without an approved release decision."
+    - "Enabled without a safe-off behavior."
+    - "Marked complete with untested policy or missing source authority."
+release_trains:
+  - { id: foundation, objective: "Tenant, identity, source authority, policy, audit", entry: "Accountable owners and scope approved", exit: "RLS, policy, audit and revocation tests" }
+  - { id: readiness, objective: "Source-aware student and registrar workflows", entry: "Sources and workflow contracts implemented", exit: "State, source-freshness and accessibility tests" }
+  - { id: operations, objective: "Queues, alerts, reconciliation, support, incident response", entry: "Workflow events observable", exit: "Drill records, support macros, alert tests" }
+  - { id: pilot_launch, objective: "Activate a bounded cohort safely", entry: "Release gate fully accepted", exit: "Go/no-go decision, first-live-journey verification" }
+  - { id: learning, objective: "Measure value and repair operational gaps", entry: "Hypercare operating", exit: "Pilot review, prioritized remediation, renewal recommendation" }
+  - { id: expansion, objective: "Add cohorts, sources or workflow depth", entry: "No unresolved expansion blockers", exit: "Revised scope, evidence, training, tenant approval" }
+sequence: "Identity and authority first; policy and source integrity second; workflow durability third; student/staff surfaces fourth; launch evidence last."

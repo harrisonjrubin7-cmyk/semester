@@ -1,0 +1,13 @@
+branch,purpose,status,merge_gate
+feat/ops-tenant-capability-foundation,Reuse grants; scoped discovery; console admission,PROPOSED; NOT CREATED,"reviewed diff, candidate tests, current scope authority"
+feat/ops-audit-policy-source,"Audit contract, policy/source metadata",PROPOSED; NOT CREATED,"reviewed diff, candidate tests, current scope authority"
+feat/ops-controlled-actions,Extend existing approved commands; no duplicate executor,PROPOSED; NOT CREATED,"reviewed diff, candidate tests, current scope authority"
+feat/ops-inbox-work-approvals,Shared work items and approvals,PROPOSED; NOT CREATED,"reviewed diff, candidate tests, current scope authority"
+feat/ops-tenant-customer-360,Read models from canonical customer/tenant records,PROPOSED; NOT CREATED,"reviewed diff, candidate tests, current scope authority"
+feat/ops-support-escalation,Minimum-context queues/access,PROPOSED; NOT CREATED,"reviewed diff, candidate tests, current scope authority"
+feat/ops-release-incident,"Kills, alerts, incident/rollback",PROPOSED; NOT CREATED,"reviewed diff, candidate tests, current scope authority"
+feat/ops-integration-visibility,Outbox/adapter/reconciliation,PROPOSED; NOT CREATED,"reviewed diff, candidate tests, current scope authority"
+feat/inst-registration-readiness-console,Registrar accepted read feed,PROPOSED; NOT CREATED,"reviewed diff, candidate tests, current scope authority"
+feat/ops-billing-entitlements,Finance sandbox plus approved ledger,PROPOSED; NOT CREATED,"reviewed diff, candidate tests, current scope authority"
+feat/ops-reporting-portal,Immutable audience snapshots,PROPOSED; NOT CREATED,"reviewed diff, candidate tests, current scope authority"
+feat/ops-agents-observe,Bounded draft/observe runners,PROPOSED; NOT CREATED,"reviewed diff, candidate tests, current scope authority"

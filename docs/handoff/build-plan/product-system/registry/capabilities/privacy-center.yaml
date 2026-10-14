@@ -1,0 +1,10 @@
+capability:
+  id: CAP-PRIVACY-002
+  title: Privacy and account controls
+  placement: native
+  maturity_level: 1
+  functions: [view_connected_sources, manage_data_permissions, manage_AI_data_scope, view_and_revoke_delegations, manage_sessions, request_data_export, request_deletion_or_correction, manage_device_permissions, view_access_history]
+  device_permission_pattern: {required_steps: [explain_why, request_permission, show_fallback_if_denied, provide_revoke_path, record_current_state]}
+  account_security: {required: [session_list, sign_out_specific_session, sign_out_all_other_sessions, recent_sensitive_actions, recovery_path, suspicious_activity_handoff]}
+  rule: A setting that isn't enforced server-side is not shown as a control.
+  prototype: ui_kits/semester-account · ui_kits/device-permissions

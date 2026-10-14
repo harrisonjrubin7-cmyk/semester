@@ -1,0 +1,8 @@
+command:
+  commandType: consent.withdraw
+  version: 1
+  aggregateType: consent_grant
+  purpose: "Withdraw the student's previously granted family-sharing permission."
+  required_policy_checks: [actor_matches_subject_or_authorized_delegate, consent_is_withdrawable, tenant_matches_record, grant_is_active]
+  effects: [revoke_access_generation, end_delegated_session, write_audit_event, queue_downstream_revocation, publish_consent_withdrawn_event, issue_student_receipt]
+  idempotency: "Same key returns the original receipt; withdrawing an already-withdrawn grant is a no-op with the original receipt."

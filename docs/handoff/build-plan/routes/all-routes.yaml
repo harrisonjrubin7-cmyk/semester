@@ -1,0 +1,1913 @@
+# all-routes.yaml — GENERATED DRAFT from routes.csv + area rules. Every record needs product/engineering review.
+# Tables are validated against the 227-table manifest; unknown names would be flagged.
+
+- route: "/"
+  screen_key: public.home
+  workspace: public
+  purpose: "Hero, proof, role paths, trust status, CTA routing"
+  status: draft_generated
+  roles:
+    - { role: anonymous, access: read }
+  capabilities: [public.home.read]
+  tables: [tenants]
+  commands: []
+  audit_events: [public.home.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: growth_product
+
+- route: "/solutions"
+  screen_key: public.solutions
+  workspace: public
+  purpose: "Role-specific value props, institution/student/company paths"
+  status: draft_generated
+  roles:
+    - { role: anonymous, access: read }
+  capabilities: [public.solutions.read]
+  tables: [tenants]
+  commands: []
+  audit_events: [public.solutions.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: growth_product
+
+- route: "/pricing"
+  screen_key: public.pricing
+  workspace: public
+  purpose: "Pricing states, enterprise contact, legal disclaimers"
+  status: draft_generated
+  roles:
+    - { role: anonymous, access: read }
+  capabilities: [public.pricing.read]
+  tables: [tenants]
+  commands: []
+  audit_events: [public.pricing.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: growth_product
+
+- route: "/pilot"
+  screen_key: public.pilot
+  workspace: public
+  purpose: "Pilot scope, outcomes, what stays official"
+  status: draft_generated
+  roles:
+    - { role: anonymous, access: read }
+  capabilities: [public.pilot.read]
+  tables: [tenants]
+  commands: []
+  audit_events: [public.pilot.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: growth_product
+
+- route: "/trust"
+  screen_key: public.trust
+  workspace: public
+  purpose: "Security/privacy status, claims discipline, docs"
+  status: draft_generated
+  roles:
+    - { role: anonymous, access: read }
+  capabilities: [public.trust.read]
+  tables: [tenants]
+  commands: []
+  audit_events: [public.trust.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: growth_product
+
+- route: "/resources"
+  screen_key: public.resources
+  workspace: public
+  purpose: "Briefs, FAQ, decks, downloads"
+  status: draft_generated
+  roles:
+    - { role: anonymous, access: read }
+  capabilities: [public.resources.read]
+  tables: [tenants]
+  commands: []
+  audit_events: [public.resources.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: growth_product
+
+- route: "/signup"
+  screen_key: identity.signup
+  workspace: public
+  purpose: "Verified entry, role choice, tenant discovery"
+  status: draft_generated
+  roles:
+    - { role: anonymous, access: full }
+  capabilities: [identity.signup.read]
+  tables: [accounts, account_emails, sessions, memberships]
+  commands: []
+  audit_events: [identity.signup.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: identity_platform
+
+- route: "/account-recovery"
+  screen_key: identity.recovery
+  workspace: public
+  purpose: "Recovery flow, safe fallback, audit"
+  status: draft_generated
+  roles:
+    - { role: anonymous, access: full }
+  capabilities: [identity.recovery.read]
+  tables: [accounts, account_emails, sessions, memberships]
+  commands: []
+  audit_events: [identity.recovery.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: identity_platform
+
+- route: "/app/today"
+  screen_key: student.today
+  workspace: student
+  purpose: "Prioritized next actions, source labels, stale warnings"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.today.read]
+  tables: [students, student_tasks, calendar_events, notifications]
+  commands: []
+  audit_events: [student.today.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/action-center"
+  screen_key: student.action_center
+  workspace: student
+  purpose: "Notices, confirmations, escalations, due items"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.action_center.read]
+  tables: [students]
+  commands: []
+  audit_events: [student.action_center.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/search"
+  screen_key: student.search
+  workspace: student
+  purpose: "Global search, source filters, permissions"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.search.read]
+  tables: [students]
+  commands: []
+  audit_events: [student.search.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/launchpad"
+  screen_key: student.launchpad
+  workspace: student
+  purpose: "Workspace switching, pinned tasks, first actions"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.launchpad.read]
+  tables: [students]
+  commands: []
+  audit_events: [student.launchpad.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/me"
+  screen_key: student.me
+  workspace: student
+  purpose: "Profile, device, session, settings"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.me.read]
+  tables: [students]
+  commands: []
+  audit_events: [student.me.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/privacy"
+  screen_key: student.privacy
+  workspace: student
+  purpose: "AI/data/export/delete/sharing controls"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.privacy.read, student.privacy.export, student.privacy.delete, student.privacy.consent]
+  tables: [students, consents, data_exports, deletion_requests]
+  commands: [student.privacy.export, student.privacy.delete, student.privacy.consent]
+  audit_events: [student.privacy.viewed, student.privacy.exported, student.privacy.deleted, student.privacy.consented]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls, policy]
+  release_evidence: [rls_policy_test, accessibility_check, action_authorization_test]
+  owner: student_product
+
+- route: "/app/trust-room"
+  screen_key: student.trust_room
+  workspace: student
+  purpose: "Access history, source authority, policy explanations"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.trust_room.read]
+  tables: [students, audit_events, grants, consents]
+  commands: []
+  audit_events: [student.trust_room.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/whats-new"
+  screen_key: student.whats_new
+  workspace: student
+  purpose: "Release notes by audience"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.whats_new.read]
+  tables: [students]
+  commands: []
+  audit_events: [student.whats_new.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/university"
+  screen_key: student.university
+  workspace: student
+  purpose: "Institution profile, official links, operating contacts"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.university.read]
+  tables: [students]
+  commands: []
+  audit_events: [student.university.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/calendar"
+  screen_key: student.calendar
+  workspace: student
+  purpose: "Events, conflicts, source freshness"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.calendar.read]
+  tables: [students, calendar_sources, calendar_events]
+  commands: []
+  audit_events: [student.calendar.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/calendar/conflicts"
+  screen_key: student.calendar_conflicts
+  workspace: student
+  purpose: "Conflict logic, resolution options"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.calendar_conflicts.read]
+  tables: [students, calendar_conflicts, calendar_events]
+  commands: []
+  audit_events: [student.calendar_conflicts.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/courses"
+  screen_key: student.courses
+  workspace: student
+  purpose: "Course list, status, policy ribbons"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.courses.read]
+  tables: [students, courses, sections, enrollment_refs]
+  commands: []
+  audit_events: [student.courses.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/courses/:courseId"
+  screen_key: student.course_home
+  workspace: student
+  purpose: "Course context, sources, assignments, study entry"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.course_home.read]
+  tables: [students, courses, sections, assignments, source_documents]
+  commands: []
+  audit_events: [student.course_home.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/assignments"
+  screen_key: student.assignments
+  workspace: student
+  purpose: "Due work, filters, source status"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.assignments.read]
+  tables: [students, assignments, student_tasks]
+  commands: []
+  audit_events: [student.assignments.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/work"
+  screen_key: student.work_for_this
+  workspace: student
+  purpose: "Scoped workboard for course/timeframe"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.work_for_this.read]
+  tables: [students]
+  commands: []
+  audit_events: [student.work_for_this.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/messages"
+  screen_key: student.messages
+  workspace: student
+  purpose: "Official vs peer channels, safe send states"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.messages.read]
+  tables: [students, messages_threads, messages_entries]
+  commands: []
+  audit_events: [student.messages.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/grades"
+  screen_key: student.grades
+  workspace: student
+  purpose: "Official-only release logic, projections labeled derived"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.grades.read]
+  tables: [students, gradebooks, grade_entries, grade_release_batches, grade_sync_receipts]
+  commands: []
+  audit_events: [student.grades.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/registration"
+  screen_key: student.registration
+  workspace: student
+  purpose: "Show readiness for a selected term and route the student to the right office; never presented as enrollment"
+  status: pilot_wedge_v1
+  roles:
+    - { role: student, access: full }
+    - { role: advisor, access: scoped_read }
+    - { role: registrar, access: scoped_manage }
+  capabilities: [student.readiness.read, student.readiness.refresh, student.readiness.request_referral]
+  tables: [students, readiness_cases, readiness_checks, holds, time_tickets, readiness_receipts]
+  commands: [readiness.evaluate, readiness.refresh, referral.create]
+  events: [readiness.evaluated, readiness.source_stale, readiness.referral_created, receipt.created]
+  audit_events: [readiness.student_viewed, readiness.refresh_requested, readiness.referral_requested]
+  view_states: [ready, loading, no_term_selected, no_data, stale_source, blocked, needs_review, offline, forbidden, error]
+  ai_rule: "May explain status and next steps from approved student-visible sources; cannot change state, clear holds or register"
+  acceptance: [receipt_says_not_enrollment, source_label_on_each_check, stale_source_blocks_definitive_claim, visible_office_handoff, keyboard_and_screen_reader_flow, own_records_only_rls_test]
+  owner: registrar_product
+- route: "/app/advising"
+  screen_key: student.advising
+  workspace: student
+  purpose: "Appointments, notes, referrals, advisor authority"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.advising.read]
+  tables: [students, appointments, referrals, success_plans]
+  commands: []
+  audit_events: [student.advising.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/degree"
+  screen_key: student.degree
+  workspace: student
+  purpose: "Progress, requirement provenance, what-if isolation"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.degree.read]
+  tables: [students, degree_programs, degree_requirements, degree_audits]
+  commands: []
+  audit_events: [student.degree.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/degree/what-if"
+  screen_key: student.degree_what_if
+  workspace: student
+  purpose: "Scenario calculations, clearly non-official"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.degree_what_if.read]
+  tables: [students, degree_requirements, what_if_plans]
+  commands: []
+  audit_events: [student.degree_what_if.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/study"
+  screen_key: learning.study_home
+  workspace: student
+  purpose: "Mode switcher, course scope"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.study_home.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.study_home.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/study/cards"
+  screen_key: learning.cards
+  workspace: student
+  purpose: "Spaced repetition data"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.cards.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.cards.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/study/read"
+  screen_key: learning.read
+  workspace: student
+  purpose: "Reader, citations, source panel"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.read.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.read.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/study/field-guide"
+  screen_key: learning.field_guide
+  workspace: student
+  purpose: "Guide sections, citations, regeneration"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.field_guide.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.field_guide.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/study/watch"
+  screen_key: learning.watch
+  workspace: student
+  purpose: "Media player, transcript, source sync"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.watch.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.watch.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/study/slides"
+  screen_key: learning.slides
+  workspace: student
+  purpose: "Slide generation, evidence labels"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.slides.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.slides.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/study/doc"
+  screen_key: learning.doc
+  workspace: student
+  purpose: "Long-form guide export"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.doc.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.doc.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/study/quiz"
+  screen_key: learning.quiz
+  workspace: student
+  purpose: "Question source trace and attempts"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.quiz.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.quiz.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/study/figures"
+  screen_key: learning.figures
+  workspace: student
+  purpose: "Figure extraction and review"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.figures.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.figures.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/study/cases"
+  screen_key: learning.cases
+  workspace: student
+  purpose: "Case studies and linked sources"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.cases.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.cases.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/study/cram"
+  screen_key: learning.cram
+  workspace: student
+  purpose: "Compressed review mode"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.cram.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.cram.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/study/listen"
+  screen_key: learning.listen
+  workspace: student
+  purpose: "Audio generation and controls"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.listen.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.listen.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/ask"
+  screen_key: learning.ask
+  workspace: student
+  purpose: "AI disclosure, source bounding, action limits"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.ask.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.ask.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/write"
+  screen_key: learning.write
+  workspace: student
+  purpose: "Dradrift ing, provenance rails, export"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.write.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.write.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/solve"
+  screen_key: learning.solve
+  workspace: student
+  purpose: "Worked steps, source links"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.solve.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.solve.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/sources"
+  screen_key: learning.sources
+  workspace: student
+  purpose: "Uploaded docs, extraction state, review queue"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [learning.sources.read]
+  tables: [students, courses, source_documents, citations, ai_requests, ai_responses]
+  commands: []
+  audit_events: [learning.sources.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "Bounded to approved course sources; disclosed; follows course AI policy; never sees student records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: learning_product
+
+- route: "/app/classmates"
+  screen_key: student.classmates
+  workspace: student
+  purpose: "Opt-in directory and privacy"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.classmates.read]
+  tables: [students]
+  commands: []
+  audit_events: [student.classmates.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/groupwork"
+  screen_key: student.groupwork
+  workspace: student
+  purpose: "Shared tasks and study groups"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.groupwork.read]
+  tables: [students]
+  commands: []
+  audit_events: [student.groupwork.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/maps"
+  screen_key: student.maps
+  workspace: student
+  purpose: "Campus map and linked services"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.maps.read]
+  tables: [students]
+  commands: []
+  audit_events: [student.maps.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/activities"
+  screen_key: student.activities
+  workspace: student
+  purpose: "Events and clubs"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.activities.read]
+  tables: [students]
+  commands: []
+  audit_events: [student.activities.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/housing"
+  screen_key: student.housing
+  workspace: student
+  purpose: "Assignment, requests, source authority"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.housing.read]
+  tables: [students, housing_refs, room_assignments]
+  commands: []
+  audit_events: [student.housing.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/meal-plan"
+  screen_key: student.meal_plan
+  workspace: student
+  purpose: "Balances, dining access, freshness"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.meal_plan.read]
+  tables: [students, meal_plan_refs, dining_locations]
+  commands: []
+  audit_events: [student.meal_plan.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/support"
+  screen_key: student.support
+  workspace: student
+  purpose: "Cases, handoff, help routing"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.support.read]
+  tables: [students]
+  commands: []
+  audit_events: [student.support.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/back-on-track"
+  screen_key: student.back_on_track
+  workspace: student
+  purpose: "Outreach, blockers, approved interventions"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.back_on_track.read]
+  tables: [students]
+  commands: []
+  audit_events: [student.back_on_track.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/career"
+  screen_key: student.career
+  workspace: student
+  purpose: "Jobs, profile, consented applications"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.career.read]
+  tables: [students, opportunities, applications_career, candidate_consents]
+  commands: []
+  audit_events: [student.career.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/letters"
+  screen_key: student.letters
+  workspace: student
+  purpose: "Requests, recommendation status"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.letters.read]
+  tables: [students, recommendation_letters]
+  commands: []
+  audit_events: [student.letters.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/nil"
+  screen_key: student.nil
+  workspace: student
+  purpose: "Eligibility and tracked opportunities"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.nil.read]
+  tables: [students, nil_profiles]
+  commands: []
+  audit_events: [student.nil.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/exam-runway"
+  screen_key: student.exam_runway
+  workspace: student
+  purpose: "Exam planning and countdown"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.exam_runway.read]
+  tables: [students, exam_runways]
+  commands: []
+  audit_events: [student.exam_runway.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/timers"
+  screen_key: student.timers
+  workspace: student
+  purpose: "Focus sessions and logs"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.timers.read]
+  tables: [students]
+  commands: []
+  audit_events: [student.timers.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/reports"
+  screen_key: student.reports
+  workspace: student
+  purpose: "Student-visible summaries"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.reports.read]
+  tables: [students]
+  commands: []
+  audit_events: [student.reports.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: student_product
+
+- route: "/app/family"
+  screen_key: student.family_sharing
+  workspace: student
+  purpose: "Delegation scopes, expiry, revocation"
+  status: draft_generated
+  roles:
+    - { role: student, access: full }
+  capabilities: [student.family_sharing.read, student.family_sharing.grant, student.family_sharing.revoke]
+  tables: [students, family_links, family_visibility_rules, delegations]
+  commands: [student.family_sharing.grant, student.family_sharing.revoke]
+  audit_events: [student.family_sharing.viewed, student.family_sharing.granted, student.family_sharing.revoked]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May explain and summarize; cannot submit, approve or change official records"
+  tests: [unit, integration, e2e, accessibility, rls, policy]
+  release_evidence: [rls_policy_test, accessibility_check, action_authorization_test]
+  owner: student_product
+
+- route: "/teach"
+  screen_key: faculty.home
+  workspace: faculty
+  purpose: "First action, courses, release queue"
+  status: draft_generated
+  roles:
+    - { role: faculty, access: scoped_manage }
+    - { role: ta, access: scoped_read }
+  capabilities: [faculty.home.read]
+  tables: [teaching_assignments, sections]
+  commands: []
+  audit_events: [faculty.home.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "May draft feedback for review; cannot release grades"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: faculty_product
+
+- route: "/teach/gradebook"
+  screen_key: faculty.gradebook
+  workspace: faculty
+  purpose: "Dradrift  grades vs official sync"
+  status: draft_generated
+  roles:
+    - { role: faculty, access: scoped_manage }
+    - { role: ta, access: scoped_read }
+  capabilities: [faculty.gradebook.read, faculty.gradebook.enter, faculty.gradebook.release, faculty.gradebook.submit_final]
+  tables: [teaching_assignments, sections, gradebooks, grade_entries, rubrics, accommodations_refs]
+  commands: [faculty.gradebook.enter, faculty.gradebook.release, faculty.gradebook.submit_final]
+  audit_events: [faculty.gradebook.viewed, faculty.gradebook.entered, faculty.gradebook.released, faculty.gradebook.submit_finaled]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "May draft feedback for review; cannot release grades"
+  tests: [unit, integration, e2e, accessibility, rls, policy]
+  release_evidence: [rls_policy_test, accessibility_check, action_authorization_test]
+  owner: faculty_product
+
+- route: "/teach/assessments"
+  screen_key: faculty.assessments
+  workspace: faculty
+  purpose: "Rubrics, queues, AI dradrift  boundaries"
+  status: draft_generated
+  roles:
+    - { role: faculty, access: scoped_manage }
+    - { role: ta, access: scoped_read }
+  capabilities: [faculty.assessments.read, faculty.assessments.publish]
+  tables: [teaching_assignments, sections, assignments, rubrics, rubric_rows]
+  commands: [faculty.assessments.publish]
+  audit_events: [faculty.assessments.viewed, faculty.assessments.published]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "May draft feedback for review; cannot release grades"
+  tests: [unit, integration, e2e, accessibility, rls, policy]
+  release_evidence: [rls_policy_test, accessibility_check, action_authorization_test]
+  owner: faculty_product
+
+- route: "/ta/queue"
+  screen_key: ta.queue
+  workspace: faculty
+  purpose: "Assignment grading queue and accommodation scope"
+  status: draft_generated
+  roles:
+    - { role: ta, access: scoped_manage }
+  capabilities: [ta.queue.read]
+  tables: [teaching_assignments, grade_entries]
+  commands: []
+  audit_events: [ta.queue.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: faculty_product
+
+- route: "/advising"
+  screen_key: advisor.home
+  workspace: advisor
+  purpose: "Caseload summary, next meetings"
+  status: draft_generated
+  roles:
+    - { role: advisor, access: scoped_manage }
+  capabilities: [advisor.home.read]
+  tables: [advising_caseloads, advising_assignments, students]
+  commands: []
+  audit_events: [advisor.home.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: advising_product
+
+- route: "/advising/caseload"
+  screen_key: advisor.caseload
+  workspace: advisor
+  purpose: "Student filters, scoped access"
+  status: draft_generated
+  roles:
+    - { role: advisor, access: scoped_manage }
+  capabilities: [advisor.caseload.read]
+  tables: [advising_caseloads, advising_assignments, students]
+  commands: []
+  audit_events: [advisor.caseload.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: advising_product
+
+- route: "/advising/referrals"
+  screen_key: advisor.referrals
+  workspace: advisor
+  purpose: "Referral workflow and outcomes"
+  status: draft_generated
+  roles:
+    - { role: advisor, access: scoped_manage }
+  capabilities: [advisor.referrals.read]
+  tables: [advising_caseloads, advising_assignments, students]
+  commands: []
+  audit_events: [advisor.referrals.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: advising_product
+
+- route: "/finance"
+  screen_key: finance.home
+  workspace: finance
+  purpose: "Accounts, reconciliation exceptions"
+  status: draft_generated
+  roles:
+    - { role: finance_staff, access: scoped_manage }
+  capabilities: [finance.home.read]
+  tables: [billing_accounts, ledger_entries]
+  commands: []
+  audit_events: [finance.home.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: finance_product
+
+- route: "/finance/students"
+  screen_key: finance.student_accounts
+  workspace: finance
+  purpose: "Student account state and actions"
+  status: draft_generated
+  roles:
+    - { role: finance_staff, access: scoped_manage }
+  capabilities: [finance.student_accounts.read]
+  tables: [billing_accounts, ledger_entries]
+  commands: []
+  audit_events: [finance.student_accounts.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: finance_product
+
+- route: "/support/cases"
+  screen_key: support.cases
+  workspace: student_affairs
+  purpose: "Case triage, SLA, handoffs"
+  status: draft_generated
+  roles:
+    - { role: support_staff, access: scoped_manage }
+  capabilities: [support.cases.read]
+  tables: [support_cases, support_case_updates]
+  commands: []
+  audit_events: [support.cases.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: support_ops
+
+- route: "/admissions"
+  screen_key: admissions.home
+  workspace: student_affairs
+  purpose: "Applicant queue, transitions"
+  status: draft_generated
+  roles:
+    - { role: admissions_staff, access: scoped_manage }
+  capabilities: [admissions.home.read]
+  tables: [applicants, applications]
+  commands: []
+  audit_events: [admissions.home.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: admissions_product
+
+- route: "/career-hub"
+  screen_key: career.staff_hub
+  workspace: student_affairs
+  purpose: "Employer/opportunity operations"
+  status: draft_generated
+  roles:
+    - { role: career_staff, access: scoped_manage }
+  capabilities: [career.staff_hub.read]
+  tables: [employers, opportunities]
+  commands: []
+  audit_events: [career.staff_hub.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: career_product
+
+- route: "/campus-services"
+  screen_key: campus.services_hub
+  workspace: student_affairs
+  purpose: "Requests, facilities, resource flows"
+  status: draft_generated
+  roles:
+    - { role: campus_staff, access: scoped_manage }
+  capabilities: [campus.services_hub.read]
+  tables: [service_requests, campus_events]
+  commands: []
+  audit_events: [campus.services_hub.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: campus_product
+
+- route: "/insights"
+  screen_key: executive.insights
+  workspace: institution
+  purpose: "Aggregate only, no raw sensitive data"
+  status: draft_generated
+  roles:
+    - { role: executive, access: aggregate_read }
+  capabilities: [executive.insights.read]
+  tables: [audit_projections]
+  commands: []
+  audit_events: [executive.insights.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: insights_product
+
+- route: "/trust-console"
+  screen_key: trust.console
+  workspace: institution
+  purpose: "Moderation, privacy, safety actions"
+  status: draft_generated
+  roles:
+    - { role: trust_safety, access: scoped_manage }
+  capabilities: [trust.console.read]
+  tables: [reports, moderation_actions, appeals]
+  commands: []
+  audit_events: [trust.console.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: trust_safety
+
+- route: "/registrar"
+  screen_key: registrar.home
+  workspace: registrar
+  purpose: "Cohorts, blockers, overrides"
+  status: draft_generated
+  roles:
+    - { role: registrar, access: scoped_manage }
+    - { role: advisor, access: scoped_read }
+  capabilities: [registrar.home.read]
+  tables: [readiness_cases, readiness_checks, holds, override_requests]
+  commands: []
+  audit_events: [registrar.home.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "May summarize evidence; cannot decide or override"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: registrar_product
+
+- route: "/registrar/readiness"
+  screen_key: registrar.readiness_queue
+  workspace: registrar
+  purpose: "Prioritize readiness cases needing institutional action, filterable by state, office and source freshness"
+  status: pilot_wedge_v1
+  roles:
+    - { role: registrar, access: full }
+    - { role: advisor, access: scoped_read }
+    - { role: institution_admin, access: audited_read }
+  capabilities: [registrar.readiness.queue.read, registrar.readiness.case.assign, registrar.readiness.case.route, registrar.readiness.override.request]
+  tables: [readiness_cases, readiness_checks, holds, referrals, override_requests, audit_events]
+  commands: [readiness.case.assign, readiness.case.route, override.request]
+  events: [readiness.case_assigned, readiness.case_routed, override.requested]
+  audit_events: [registrar.readiness_queue_viewed, readiness.case_assigned, readiness.case_routed, override.request_created]
+  view_states: [ready, loading, empty, stale_data, forbidden, error]
+  ai_rule: "May summarize case facts with cited system sources; cannot recommend or apply outcomes"
+  acceptance: [caseload_scope_enforced, bulk_actions_require_reason, decision_trail_visible, source_freshness_filterable, export_is_audited]
+  owner: registrar_product
+- route: "/registrar/readiness/:caseId"
+  screen_key: registrar.readiness_case
+  workspace: registrar
+  purpose: "Review one case: evidence per check, source freshness, routing history and decisions"
+  status: pilot_wedge_v1
+  roles:
+    - { role: registrar, access: full }
+    - { role: advisor, access: scoped_read }
+    - { role: student, access: own_summary }
+  capabilities: [registrar.readiness.case.read, registrar.readiness.case.update, registrar.readiness.case.refer, registrar.readiness.override.request]
+  tables: [readiness_cases, readiness_checks, referrals, override_requests, policy_decisions, readiness_receipts, audit_events]
+  commands: [readiness.case.refresh, readiness.case.refer, override.request]
+  events: [readiness.case_refreshed, readiness.case_referred, override.requested]
+  audit_events: [readiness.case_viewed, readiness.case_refreshed, readiness.case_referred]
+  view_states: [ready, loading, not_found, stale_source, forbidden, offline, error]
+  ai_rule: "No autonomous decisioning; AI suggestions are marked draft and cite sources"
+  acceptance: [authority_per_check_visible, decision_trail_immutable, source_details_available, sensitive_fields_role_filtered]
+  owner: registrar_product
+- route: "/registrar/overrides"
+  screen_key: registrar.overrides
+  workspace: registrar
+  purpose: "Exceptions, approvals, audit"
+  status: draft_generated
+  roles:
+    - { role: registrar, access: scoped_manage }
+    - { role: advisor, access: scoped_read }
+  capabilities: [registrar.overrides.read, registrar.overrides.approve]
+  tables: [readiness_cases, readiness_checks, holds, override_requests, policy_decisions]
+  commands: [registrar.overrides.approve]
+  audit_events: [registrar.overrides.viewed, registrar.overrides.approved]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "May summarize evidence; cannot decide or override"
+  tests: [unit, integration, e2e, accessibility, rls, policy]
+  release_evidence: [rls_policy_test, accessibility_check, action_authorization_test]
+  owner: registrar_product
+
+- route: "/console"
+  screen_key: institution.home
+  workspace: institution
+  purpose: "Overview, tenant health"
+  status: draft_generated
+  roles:
+    - { role: institution_admin, access: scoped_manage }
+    - { role: it_security, access: scoped_read }
+  capabilities: [institution.home.read]
+  tables: [tenant_settings, integrations, access_reviews]
+  commands: []
+  audit_events: [institution.home.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: institution_platform
+
+- route: "/console/overview"
+  screen_key: institution.overview
+  workspace: institution
+  purpose: "KPIs, integrations, policy notices"
+  status: draft_generated
+  roles:
+    - { role: institution_admin, access: scoped_manage }
+    - { role: it_security, access: scoped_read }
+  capabilities: [institution.overview.read]
+  tables: [tenant_settings, integrations, access_reviews]
+  commands: []
+  audit_events: [institution.overview.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: institution_platform
+
+- route: "/console/approvals"
+  screen_key: institution.approvals
+  workspace: institution
+  purpose: "Pending controlled actions"
+  status: draft_generated
+  roles:
+    - { role: institution_admin, access: scoped_manage }
+    - { role: it_security, access: scoped_read }
+  capabilities: [institution.approvals.read, institution.approvals.approve]
+  tables: [tenant_settings, integrations, access_reviews, policy_decisions]
+  commands: [institution.approvals.approve]
+  audit_events: [institution.approvals.viewed, institution.approvals.approved]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls, policy]
+  release_evidence: [rls_policy_test, accessibility_check, action_authorization_test]
+  owner: institution_platform
+
+- route: "/console/support"
+  screen_key: institution.support_queue
+  workspace: institution
+  purpose: "Institution-scoped support"
+  status: draft_generated
+  roles:
+    - { role: institution_admin, access: scoped_manage }
+    - { role: it_security, access: scoped_read }
+  capabilities: [institution.support_queue.read]
+  tables: [tenant_settings, integrations, access_reviews]
+  commands: []
+  audit_events: [institution.support_queue.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: institution_platform
+
+- route: "/console/integrations"
+  screen_key: institution.integrations
+  workspace: institution
+  purpose: "Health, freshness, credentials"
+  status: draft_generated
+  roles:
+    - { role: institution_admin, access: scoped_manage }
+    - { role: it_security, access: scoped_read }
+  capabilities: [institution.integrations.read, institution.integrations.connect, institution.integrations.refresh]
+  tables: [tenant_settings, integrations, access_reviews, integration_sync_runs, freshness_snapshots]
+  commands: [institution.integrations.connect, institution.integrations.refresh]
+  audit_events: [institution.integrations.viewed, institution.integrations.connected, institution.integrations.refreshed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls, policy]
+  release_evidence: [rls_policy_test, accessibility_check, action_authorization_test]
+  owner: institution_platform
+
+- route: "/console/security"
+  screen_key: institution.security
+  workspace: institution
+  purpose: "Access reviews, incidents"
+  status: draft_generated
+  roles:
+    - { role: institution_admin, access: scoped_manage }
+    - { role: it_security, access: scoped_read }
+  capabilities: [institution.security.read]
+  tables: [tenant_settings, integrations, access_reviews, incidents]
+  commands: []
+  audit_events: [institution.security.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: institution_platform
+
+- route: "/console/audit"
+  screen_key: institution.audit
+  workspace: institution
+  purpose: "Audit browsing and export"
+  status: draft_generated
+  roles:
+    - { role: institution_admin, access: scoped_manage }
+    - { role: it_security, access: scoped_read }
+  capabilities: [institution.audit.read]
+  tables: [tenant_settings, integrations, access_reviews, audit_events, audit_projections]
+  commands: []
+  audit_events: [institution.audit.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: institution_platform
+
+- route: "/portal/applicant"
+  screen_key: external.applicant
+  workspace: external
+  purpose: "Application status, document requests"
+  status: draft_generated
+  roles:
+    - { role: external_party, access: scoped_read }
+  capabilities: [external.applicant.read]
+  tables: [delegations, delegation_scopes]
+  commands: []
+  audit_events: [external.applicant.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: partnerships
+
+- route: "/portal/family"
+  screen_key: external.family
+  workspace: external
+  purpose: "Scoped visibility, student-granted data"
+  status: draft_generated
+  roles:
+    - { role: external_party, access: scoped_read }
+  capabilities: [external.family.read]
+  tables: [delegations, delegation_scopes]
+  commands: []
+  audit_events: [external.family.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: partnerships
+
+- route: "/portal/alumni"
+  screen_key: external.alumni
+  workspace: external
+  purpose: "Profile, events, connections"
+  status: draft_generated
+  roles:
+    - { role: external_party, access: scoped_read }
+  capabilities: [external.alumni.read]
+  tables: [delegations, delegation_scopes]
+  commands: []
+  audit_events: [external.alumni.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: partnerships
+
+- route: "/portal/employer"
+  screen_key: external.employer
+  workspace: external
+  purpose: "Opportunity posting, student consent"
+  status: draft_generated
+  roles:
+    - { role: external_party, access: scoped_read }
+  capabilities: [external.employer.read]
+  tables: [delegations, delegation_scopes]
+  commands: []
+  audit_events: [external.employer.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: partnerships
+
+- route: "/portal/partner"
+  screen_key: external.partner
+  workspace: external
+  purpose: "Partner ops and agreements"
+  status: draft_generated
+  roles:
+    - { role: external_party, access: scoped_read }
+  capabilities: [external.partner.read]
+  tables: [delegations, delegation_scopes]
+  commands: []
+  audit_events: [external.partner.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: partnerships
+
+- route: "/developers"
+  screen_key: developer.home
+  workspace: developer
+  purpose: "App creation, scopes, status"
+  status: draft_generated
+  roles:
+    - { role: developer, access: scoped_manage }
+  capabilities: [developer.home.read]
+  tables: [developer_orgs, developer_apps, api_keys, scope_grants]
+  commands: []
+  audit_events: [developer.home.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: developer_platform
+
+- route: "/developers/apps"
+  screen_key: developer.apps
+  workspace: developer
+  purpose: "App registry, secrets, environments"
+  status: draft_generated
+  roles:
+    - { role: developer, access: scoped_manage }
+  capabilities: [developer.apps.read, developer.apps.create, developer.apps.rotate_key]
+  tables: [developer_orgs, developer_apps, api_keys, scope_grants]
+  commands: [developer.apps.create, developer.apps.rotate_key]
+  audit_events: [developer.apps.viewed, developer.apps.created, developer.apps.rotate_keyed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls, policy]
+  release_evidence: [rls_policy_test, accessibility_check, action_authorization_test]
+  owner: developer_platform
+
+- route: "/developers/webhooks"
+  screen_key: developer.webhooks
+  workspace: developer
+  purpose: "Delivery logs, replay, signatures"
+  status: draft_generated
+  roles:
+    - { role: developer, access: scoped_manage }
+  capabilities: [developer.webhooks.read, developer.webhooks.replay]
+  tables: [developer_orgs, developer_apps, api_keys, scope_grants, webhook_endpoints, webhook_deliveries]
+  commands: [developer.webhooks.replay]
+  audit_events: [developer.webhooks.viewed, developer.webhooks.replayed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls, policy]
+  release_evidence: [rls_policy_test, accessibility_check, action_authorization_test]
+  owner: developer_platform
+
+- route: "/investor"
+  screen_key: investor.portal
+  workspace: external
+  purpose: "Aggregate metrics and board materials"
+  status: draft_generated
+  roles:
+    - { role: investor, access: aggregate_read }
+    - { role: board_member, access: scoped_read }
+  capabilities: [investor.portal.read]
+  tables: [board_reports]
+  commands: []
+  audit_events: [investor.portal.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "AI may explain; human confirms every consequential action"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: company_finance
+
+- route: "/company"
+  screen_key: company.home
+  workspace: company
+  purpose: "Company dashboard"
+  status: draft_generated
+  roles:
+    - { role: company_staff, access: scoped_manage }
+  capabilities: [company.home.read]
+  tables: [b2b_accounts, crm_opportunities]
+  commands: []
+  audit_events: [company.home.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May draft; human sends"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: company_ops
+
+- route: "/company/sales"
+  screen_key: company.sales
+  workspace: company
+  purpose: "Pipeline, accounts, opportunities"
+  status: draft_generated
+  roles:
+    - { role: company_staff, access: scoped_manage }
+  capabilities: [company.sales.read]
+  tables: [b2b_accounts, crm_opportunities]
+  commands: []
+  audit_events: [company.sales.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May draft; human sends"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: company_ops
+
+- route: "/company/quotes"
+  screen_key: company.quotes
+  workspace: company
+  purpose: "Quote workflow and approvals"
+  status: draft_generated
+  roles:
+    - { role: company_staff, access: scoped_manage }
+  capabilities: [company.quotes.read, company.quotes.approve]
+  tables: [b2b_accounts, crm_opportunities, quotes]
+  commands: [company.quotes.approve]
+  audit_events: [company.quotes.viewed, company.quotes.approved]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May draft; human sends"
+  tests: [unit, integration, e2e, accessibility, rls, policy]
+  release_evidence: [rls_policy_test, accessibility_check, action_authorization_test]
+  owner: company_ops
+
+- route: "/company/contracts"
+  screen_key: company.contracts
+  workspace: company
+  purpose: "Contract lifecycle and signatures"
+  status: draft_generated
+  roles:
+    - { role: company_staff, access: scoped_manage }
+  capabilities: [company.contracts.read, company.contracts.send, company.contracts.sign]
+  tables: [b2b_accounts, crm_opportunities, contracts, quotes, renewals, partner_agreements]
+  commands: [company.contracts.send, company.contracts.sign]
+  audit_events: [company.contracts.viewed, company.contracts.sended, company.contracts.signed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May draft; human sends"
+  tests: [unit, integration, e2e, accessibility, rls, policy]
+  release_evidence: [rls_policy_test, accessibility_check, action_authorization_test]
+  owner: company_ops
+
+- route: "/company/billing"
+  screen_key: company.billing
+  workspace: company
+  purpose: "Subscription, invoicing, collections"
+  status: draft_generated
+  roles:
+    - { role: company_staff, access: scoped_manage }
+  capabilities: [company.billing.read]
+  tables: [b2b_accounts, crm_opportunities, plans_subscriptions, invoice_refs]
+  commands: []
+  audit_events: [company.billing.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline, stale_source]
+  ai_rule: "May draft; human sends"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: company_ops
+
+- route: "/company/vendors"
+  screen_key: company.vendors
+  workspace: company
+  purpose: "Vendor reviews and renewals"
+  status: draft_generated
+  roles:
+    - { role: company_staff, access: scoped_manage }
+  capabilities: [company.vendors.read]
+  tables: [b2b_accounts, crm_opportunities]
+  commands: []
+  audit_events: [company.vendors.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May draft; human sends"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: company_ops
+
+- route: "/company/agreements"
+  screen_key: company.agreements
+  workspace: company
+  purpose: "Legal document management"
+  status: draft_generated
+  roles:
+    - { role: company_staff, access: scoped_manage }
+  capabilities: [company.agreements.read]
+  tables: [b2b_accounts, crm_opportunities]
+  commands: []
+  audit_events: [company.agreements.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May draft; human sends"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: company_ops
+
+- route: "/company/board"
+  screen_key: company.board
+  workspace: company
+  purpose: "Read-only aggregate executive reporting"
+  status: draft_generated
+  roles:
+    - { role: company_staff, access: scoped_manage }
+  capabilities: [company.board.read]
+  tables: [b2b_accounts, crm_opportunities]
+  commands: []
+  audit_events: [company.board.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "May draft; human sends"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: company_ops
+
+- route: "/ops"
+  screen_key: ops.home
+  workspace: operations
+  purpose: "Command center"
+  status: draft_generated
+  roles:
+    - { role: operations, access: scoped_manage }
+    - { role: security, access: scoped_read }
+  capabilities: [ops.home.read]
+  tables: [ops_queues, ops_work_items, incidents]
+  commands: []
+  audit_events: [ops.home.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI actions"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: platform_ops
+
+- route: "/ops/inbox"
+  screen_key: ops.inbox
+  workspace: operations
+  purpose: "Unified queue, SLAs, controlled actions"
+  status: draft_generated
+  roles:
+    - { role: operations, access: scoped_manage }
+    - { role: security, access: scoped_read }
+  capabilities: [ops.inbox.read]
+  tables: [ops_queues, ops_work_items, incidents]
+  commands: []
+  audit_events: [ops.inbox.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI actions"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: platform_ops
+
+- route: "/ops/incidents"
+  screen_key: ops.incidents
+  workspace: operations
+  purpose: "Incident state machine"
+  status: draft_generated
+  roles:
+    - { role: operations, access: scoped_manage }
+    - { role: security, access: scoped_read }
+  capabilities: [ops.incidents.read]
+  tables: [ops_queues, ops_work_items, incidents, incident_updates, postmortems]
+  commands: []
+  audit_events: [ops.incidents.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI actions"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: platform_ops
+
+- route: "/ops/releases"
+  screen_key: ops.releases
+  workspace: operations
+  purpose: "Promotion evidence and rollout"
+  status: draft_generated
+  roles:
+    - { role: operations, access: scoped_manage }
+    - { role: security, access: scoped_read }
+  capabilities: [ops.releases.read]
+  tables: [ops_queues, ops_work_items, incidents, release_manifests, release_approvals, release_rollbacks]
+  commands: []
+  audit_events: [ops.releases.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI actions"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: platform_ops
+
+- route: "/ops/access"
+  screen_key: ops.access
+  workspace: operations
+  purpose: "Grants, revocations, reviews"
+  status: draft_generated
+  roles:
+    - { role: operations, access: scoped_manage }
+    - { role: security, access: scoped_read }
+  capabilities: [ops.access.read, ops.access.grant, ops.access.revoke, ops.access.review]
+  tables: [ops_queues, ops_work_items, incidents, grants, revocations, access_reviews, policy_decisions]
+  commands: [ops.access.grant, ops.access.revoke, ops.access.review]
+  audit_events: [ops.access.viewed, ops.access.granted, ops.access.revoked, ops.access.reviewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI actions"
+  tests: [unit, integration, e2e, accessibility, rls, policy]
+  release_evidence: [rls_policy_test, accessibility_check, action_authorization_test]
+  owner: platform_ops
+
+- route: "/ops/privacy"
+  screen_key: ops.privacy
+  workspace: operations
+  purpose: "Export/delete requests, policy holds"
+  status: draft_generated
+  roles:
+    - { role: operations, access: scoped_manage }
+    - { role: security, access: scoped_read }
+  capabilities: [ops.privacy.read]
+  tables: [ops_queues, ops_work_items, incidents, data_exports, deletion_requests]
+  commands: []
+  audit_events: [ops.privacy.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI actions"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: platform_ops
+
+- route: "/ops/dead-letters"
+  screen_key: ops.dead_letters
+  workspace: operations
+  purpose: "Queue failures and replay"
+  status: draft_generated
+  roles:
+    - { role: operations, access: scoped_manage }
+    - { role: security, access: scoped_read }
+  capabilities: [ops.dead_letters.read, ops.dead_letters.replay]
+  tables: [ops_queues, ops_work_items, incidents, dead_letters, jobs]
+  commands: [ops.dead_letters.replay]
+  audit_events: [ops.dead_letters.viewed, ops.dead_letters.replayed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI actions"
+  tests: [unit, integration, e2e, accessibility, rls, policy]
+  release_evidence: [rls_policy_test, accessibility_check, action_authorization_test]
+  owner: platform_ops
+
+- route: "/ops/architecture"
+  screen_key: ops.architecture
+  workspace: operations
+  purpose: "Components, dridrift , dependencies"
+  status: draft_generated
+  roles:
+    - { role: operations, access: scoped_manage }
+    - { role: security, access: scoped_read }
+  capabilities: [ops.architecture.read]
+  tables: [ops_queues, ops_work_items, incidents]
+  commands: []
+  audit_events: [ops.architecture.viewed]
+  view_states: [ready, loading, empty, error, forbidden, offline]
+  ai_rule: "No AI actions"
+  tests: [unit, integration, e2e, accessibility, rls]
+  release_evidence: [rls_policy_test, accessibility_check]
+  owner: platform_ops

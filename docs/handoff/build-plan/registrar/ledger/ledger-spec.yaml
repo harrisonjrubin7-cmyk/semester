@@ -1,0 +1,11 @@
+two_systems:
+  working_gradebook: [assignment_scores, rubrics, feedback, faculty_ta_scoped_editing, draft_and_released_assessment_states, estimated_course_totals]
+  official_ledger: [course_attempts, official_grades, credits, authorized_posting_and_correction, accepted_institutional_decisions, policy_governed_calculations]
+rule: "Releasing assignment feedback does not post an official course grade."
+posting_workflow: [faculty_prepares_final, validate_scale_and_required_fields, submit_section, required_review_or_approval, official_posting_transaction, history_gpa_standing_projections, degree_and_transcript_impact_evaluation]
+ledger_entry: [entry_id, student_academic_context, course_attempt_id, decision_type, grade_or_credit_value, policy_version, effective_at, recorded_at, actor_and_authority, approval_reference, supersedes_entry_id, reason, provenance]
+calculation_versions: [grade_point_mapping, gpa_inclusion_exclusion, repeat_treatment, transfer_credit_treatment, credit_earned_rules, rounding, academic_standing, incomplete_resolution, multiple_career_separation]
+arithmetic: "Decimal (numeric), never float. Keep calculation inputs. Projections rebuild deterministically from accepted entries."
+correction: [request, evidence, authorized_review, correction_posting, recompute_affected_projections, issued_document_impact_review]
+issued_documents: "Never silently regenerate a previously issued transcript as though the old issuance didn't exist."
+note: "Append-oriented entries with controlled supersession. Append-only isn't a substitute for lawful records administration (access, retention, recovery)."

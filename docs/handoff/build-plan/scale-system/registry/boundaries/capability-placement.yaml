@@ -1,0 +1,188 @@
+# registry/boundaries/capability-placement.yaml — generated from ui_kits/scale-system/scale-data.js (2026-10-14)
+# Levels: 0 Framed · 1 Designed · 2 Contracted · 3 Built · 4 Verified · 5 Operated · 6 Repeatable · 7 Scalable
+placement_options:
+  native: "Semester owns the experience, workflow, record model, policy enforcement, audit and operational responsibility."
+  connected: "Another system stays authoritative; Semester uses a versioned, governed connector and shows source authority."
+  embedded: "Semester provides the entry point and continuity; the action is completed in an approved external experience."
+  external: "Semester neither stores nor mediates the process beyond an optional non-authoritative link or explanation."
+capabilities:
+  - key: registration_readiness
+    name: "Registration readiness"
+    placement: native
+    maturity_level: 2
+    authoritative: "Registrar (holds, windows, prerequisites)"
+    semester_may: "Show source-aware readiness, explain blockers, keep a planning receipt, hand off to enrollment"
+    semester_may_not: "Claim readiness equals enrollment; override a hold"
+    evidence: "Contracts, policies and acceptance tests drafted (handoff/build-plan/wave-1, pilot assurance); repo has server code not release-ready"
+    next_proof: "Approved schemas + source-authority register signed by registrar"
+  - key: course_enrollment
+    name: "Course enrollment"
+    placement: embedded
+    maturity_level: 1
+    authoritative: "Registrar / SIS"
+    semester_may: "Show context, link or hand off to official enrollment, reconcile source-backed status when authorized"
+    semester_may_not: "Create enrollment without an institution-authorized command path; alter the official record"
+    evidence: "Registrar replacement design + enrollment engine simulator"
+    next_proof: "Institution-authorized command path decision (stays embedded until then)"
+  - key: degree_planning
+    name: "Degree planning"
+    placement: native
+    maturity_level: 1
+    authoritative: "Registrar / academic departments (audit, requirements, exceptions, credentials)"
+    semester_may: "Organise approved program info, model student scenarios, raise advising questions, label source and freshness"
+    semester_may_not: "Declare a requirement officially satisfied; approve substitutions; make a policy ruling"
+    evidence: "Degree audit prototype; requirement engine with illustrative cases"
+    next_proof: "Charter accepted; institution authority statement; requirement source register"
+  - key: advisor_handoff
+    name: "Advisor handoff"
+    placement: native
+    maturity_level: 1
+    authoritative: "Advising office"
+    semester_may: "Share student-chosen context, schedule, carry questions from planning"
+    semester_may_not: "Read outside the assigned caseload; see sensitive offices’ records"
+    evidence: "Role workspaces + advising screens"
+    next_proof: "Charter; caseload access model contract"
+  - key: action_center
+    name: "Today / Action Center"
+    placement: native
+    maturity_level: 1
+    authoritative: "Each item’s source system"
+    semester_may: "Collect deadlines and actions with source and freshness"
+    semester_may_not: "Present a derived item as official"
+    evidence: "Student app + course workspace prototypes"
+    next_proof: "Event catalog entries for each source"
+  - key: consent_sharing
+    name: "Consent & family sharing"
+    placement: native
+    maturity_level: 1
+    authoritative: "Student (own data); institution (official records)"
+    semester_may: "Category grants with expiry, access history"
+    semester_may_not: "Share advising notes; share by default"
+    evidence: "Network prototype; consent records screen"
+    next_proof: "Retention and consent model contract"
+  - key: gradebook
+    name: "Gradebook (working grades)"
+    placement: native
+    maturity_level: 1
+    authoritative: "Instructor (working) · Registrar (official)"
+    semester_may: "Calculate working grades; release; submit final to SIS"
+    semester_may_not: "Write the official grade directly"
+    evidence: "Academic records prototype"
+    next_proof: "Grade state machine + passback contract"
+  - key: official_grades
+    name: "Official grades & transcripts"
+    placement: connected
+    maturity_level: 1
+    authoritative: "Registrar / SIS"
+    semester_may: "Show posted grades with source; order transcripts through the approved provider"
+    semester_may_not: "Edit posted grades; issue official transcripts itself"
+    evidence: "Transcript center prototype"
+    next_proof: "SIS read contract for posted grades"
+  - key: housing
+    name: "Housing"
+    placement: connected
+    maturity_level: 2
+    authoritative: "Residence life (until authority transfer)"
+    semester_may: "Applications, selection, assignments under the authority mode in force"
+    semester_may_not: "Assign beds while housing system is authoritative, unless controlled writes are approved"
+    evidence: "Campus services SQL + 34 checks + review fixes (not run)"
+    next_proof: "Branch run of checks; signed authority mode per service"
+  - key: dining
+    name: "Dining & meal plans"
+    placement: connected
+    maturity_level: 2
+    authoritative: "Dining / card office"
+    semester_may: "Show entitlements; redeem through the approved path"
+    semester_may_not: "Keep a second meal-plan copy; overdraw"
+    evidence: "Entitlement lots + redemption SQL (not run)"
+    next_proof: "Card-system connector passport"
+  - key: student_payments
+    name: "Student payments"
+    placement: connected
+    maturity_level: 2
+    authoritative: "Bursar + payment processor"
+    semester_may: "Start checkout; show confirmed / settled / posted separately"
+    semester_may_not: "Store card data; mark paid on redirect"
+    evidence: "live-payments function + campus payment states (not deployed)"
+    next_proof: "Processor sandbox verification"
+  - key: financial_aid
+    name: "Financial aid determinations"
+    placement: embedded
+    maturity_level: 0
+    authoritative: "Financial aid office"
+    semester_may: "Explain status, link to the official aid portal"
+    semester_may_not: "Make or display a determination as final"
+    evidence: "Credit-balance obligations modelled only"
+    next_proof: "Defer (portfolio rule)"
+  - key: ai_gateway
+    name: "Governed AI gateway"
+    placement: native
+    maturity_level: 1
+    authoritative: "Semester (policy) · institution (sources)"
+    semester_may: "Draft and explain from approved sources"
+    semester_may_not: "Send protected records to a provider; take consequential actions"
+    evidence: "Gateway blueprint; repo has one real gateway + ~38 bypass sites"
+    next_proof: "Route every AI call through the gateway"
+  - key: marketplace
+    name: "Campus marketplace"
+    placement: native
+    maturity_level: 1
+    authoritative: "Semester (platform) · institution (affiliation only)"
+    semester_may: "Use account id, affiliation eligibility, preferences, safety reports"
+    semester_may_not: "Use grades, registration, aid, advising notes, holds, readiness cases"
+    evidence: "Network prototype; moderation queue"
+    next_proof: "Moderation policy + appeal path contract"
+  - key: counseling
+    name: "Counseling & clinical care"
+    placement: external
+    maturity_level: 0
+    authoritative: "Counseling / health center"
+    semester_may: "Link and explain"
+    semester_may_not: "Store or mediate clinical information"
+    evidence: "—"
+    next_proof: "Stays external"
+  - key: emergency
+    name: "Emergency response"
+    placement: external
+    maturity_level: 0
+    authoritative: "Campus safety / emergency management"
+    semester_may: "Relay the official alert text unchanged"
+    semester_may_not: "Write or summarise emergency instructions"
+    evidence: "Emergency handoff screen"
+    next_proof: "Stays external"
+  - key: policy_interpretation
+    name: "Official academic policy interpretation"
+    placement: external
+    maturity_level: 0
+    authoritative: "Academic affairs"
+    semester_may: "Show the published policy with source"
+    semester_may_not: "Rule on a policy question"
+    evidence: "—"
+    next_proof: "Stays external"
+  - key: sis
+    name: "Student information system"
+    placement: connected
+    maturity_level: 1
+    authoritative: "Registrar"
+    semester_may: "Read via governed connector into staging"
+    semester_may_not: "Treat staged rows as official before reconciliation"
+    evidence: "live-sis-sync drafted (OneRoster read); not deployed"
+    next_proof: "Sandbox verification (connector passport SIS-001)"
+  - key: lms
+    name: "Learning management system"
+    placement: connected
+    maturity_level: 1
+    authoritative: "Faculty / LMS admin"
+    semester_may: "LTI 1.3 launch; course context"
+    semester_may_not: "Act as the LMS of record"
+    evidence: "live-lti drafted; not deployed"
+    next_proof: "Sandbox verification (LMS-001)"
+  - key: identity
+    name: "Institutional identity provider"
+    placement: connected
+    maturity_level: 1
+    authoritative: "Institution IT"
+    semester_may: "SSO sign-in; role mapping from groups"
+    semester_may_not: "Merge accounts on matching email"
+    evidence: "Account Center prototype; repo auth"
+    next_proof: "IdP mapping contract (IDP-001)"

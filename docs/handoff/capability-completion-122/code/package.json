@@ -1,0 +1,9 @@
+{
+  "name": "semester-capability-completion-lab",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "test": "node --test ../tests/core.test.cjs"
+  },
+  "description": "Offline synthetic review tooling, not Semester production backend"
+}

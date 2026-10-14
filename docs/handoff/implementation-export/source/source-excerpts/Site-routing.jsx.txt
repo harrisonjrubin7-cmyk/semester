@@ -1,0 +1,7 @@
+// Exact inspected excerpt from ui_kits/company-site/Site.jsx.
+const PAGES = ['home', 'product', 'students', 'institutions', 'pilot', 'trust', 'pricing', 'about', 'contact', 'legal'];
+const read = () => { const h = (location.hash || '').replace('#/', ''); return PAGES.includes(h) ? h : 'home'; };
+const [page, setPageS] = React.useState(read);
+React.useEffect(() => { const f = () => setPageS(read()); window.addEventListener('hashchange', f); return () => window.removeEventListener('hashchange', f); }, []);
+const setPage = (p) => { location.hash = '#/' + p; setPageS(p); const r = document.getElementById('root'); if (r) r.scrollTop = 0; window.scrollTo(0, 0); };
+const map = { Product: 'product', Students: 'students', Institutions: 'institutions', Pilot: 'pilot', Trust: 'trust', Pricing: 'pricing', About: 'about' };

@@ -1,0 +1,46 @@
+openapi: 3.1.0
+info: {title: Student actions, version: 1.0.0}
+paths:
+  /v1/actions:
+    get:
+      operationId: listActions
+      x-capability: CAP-TODAY-001
+      x-scope: actions.read.self
+      x-audit-event: actions.listed
+      x-rate-limit: 60/min per actor
+      parameters: [{name: cursor, in: query, schema: {type: string}}]
+      responses:
+        '200': {description: Ordered actions, content: {application/json: {schema: {type: object, required: [items, generated_at], properties: {items: {type: array, items: {$ref: '#/components/schemas/StudentAction'}}, generated_at: {type: string, format: date-time}, next_cursor: {type: [string, 'null']}}}}}}
+        '401': {$ref: '#/components/responses/Problem'}
+  /v1/actions/{id}/dismiss:
+    post:
+      operationId: dismissAction
+      x-scope: actions.write.self
+      x-idempotency: required
+      x-audit-event: actions.dismissed
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}, {name: Idempotency-Key, in: header, required: true, schema: {type: string, minLength: 16, maxLength: 128}}]
+      responses:
+        '204': {description: Dismissed}
+        '409': {description: Required institutional notice — can't be dismissed, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+components:
+  responses:
+    Problem: {description: Error, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
+  schemas:
+    Problem: {type: object, required: [type, title, status], properties: {type: {type: string}, title: {type: string}, status: {type: integer}, code: {enum: [AUTHENTICATION_REQUIRED, TENANT_SCOPE_MISMATCH, REQUIRED_NOTICE, IDEMPOTENCY_CONFLICT]}}}
+    StudentAction:
+      type: object
+      additionalProperties: false
+      required: [id, title, whyItAppears, nextStep, urgency, source, freshness, visibility, actionType, required]
+      properties:
+        id: {type: string}
+        title: {type: string}
+        whyItAppears: {type: string, minLength: 1}
+        nextStep: {type: string, minLength: 1}
+        urgency: {enum: [attention, soon, when_ready]}
+        source: {enum: [institution_verified, connected, student_entered, estimated, ai_assisted]}
+        sourceReference: {type: string}
+        observedAt: {type: string, format: date-time}
+        freshness: {enum: [current, updating, stale, unknown]}
+        visibility: {enum: [private, shared_with_student]}
+        actionType: {enum: [open, review, handoff, external_link]}
+        required: {type: boolean, description: Required institutional notice — can't be dismissed}

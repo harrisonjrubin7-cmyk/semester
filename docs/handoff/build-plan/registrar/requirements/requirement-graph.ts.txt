@@ -1,0 +1,57 @@
+// Typed requirement graph + evaluator. Rename .txt -> .ts. Deterministic; no I/O.
+export type Grade = string;
+export type Attempt = { course: string; credits: number; grade?: Grade; status: "completed" | "in_progress" | "transfer_awarded" | "transfer_pending" | "planned"; institution: "home" | "transfer"; term: string; repeatOf?: string };
+export type Node =
+  | { kind: "all"; id: string; children: Node[] }
+  | { kind: "any"; id: string; children: Node[] }
+  | { kind: "course"; id: string; course: string; equivalents?: string[]; minGrade?: Grade }
+  | { kind: "min_credits"; id: string; credits: number; from: string[] }        // course prefixes
+  | { kind: "residency"; id: string; minHomeCredits: number }
+  | { kind: "program_gpa"; id: string; min: number; from: string[] }
+  | { kind: "waiver"; id: string; replaces: string; approvalRef: string };
+export type Result = "met" | "not_met" | "in_progress" | "unknown";
+export type Policy = { version: string; scale: Record<Grade, number>; passing: Grade; repeat: "latest" | "highest"; countTransferPending: false };
+const rank = (p: Policy, g?: Grade) => (g === undefined ? -1 : p.scale[g] ?? -1);
+
+export function effectiveAttempts(p: Policy, a: Attempt[]): Attempt[] {
+  const by = new Map<string, Attempt>();
+  for (const x of a) { const k = x.repeatOf ?? x.course; const cur = by.get(k);
+    if (!cur) { by.set(k, x); continue; }
+    if (p.repeat === "latest" ? x.term > cur.term : rank(p, x.grade) > rank(p, cur.grade)) by.set(k, x); }
+  return [...by.values()];
+}
+
+export function evaluate(n: Node, p: Policy, a: Attempt[], used = new Set<string>()): { result: Result; why: string } {
+  const eff = effectiveAttempts(p, a);
+  switch (n.kind) {
+    case "all": { const r = n.children.map((c) => evaluate(c, p, a, used).result);
+      return { result: r.every((x) => x === "met") ? "met" : r.includes("not_met") ? "not_met" : r.includes("unknown") ? "unknown" : "in_progress", why: `all of ${r.length}` }; }
+    case "any": { const r = n.children.map((c) => evaluate(c, p, a, used).result);
+      return { result: r.includes("met") ? "met" : r.includes("in_progress") ? "in_progress" : r.includes("unknown") ? "unknown" : "not_met", why: `any of ${r.length}` }; }
+    case "course": { const ids = [n.course, ...(n.equivalents ?? [])];
+      const x = eff.find((e) => ids.includes(e.course) && !used.has(e.course));
+      if (!x || x.status === "planned") return { result: "not_met", why: "no counting attempt (planned never counts)" };
+      if (x.status === "transfer_pending") return { result: "unknown", why: "transfer evaluation pending" };
+      if (x.status === "in_progress") return { result: "in_progress", why: "in progress" };
+      if (rank(p, x.grade) < rank(p, n.minGrade ?? p.passing)) return { result: "not_met", why: `${x.grade} below ${n.minGrade ?? p.passing}` };
+      used.add(x.course); return { result: "met", why: `${x.course} ${x.grade}` }; }
+    case "min_credits": { const c = eff.filter((e) => (e.status === "completed" || e.status === "transfer_awarded") && n.from.some((f) => e.course.startsWith(f)) && rank(p, e.grade) >= rank(p, p.passing)).reduce((s, e) => s + e.credits, 0);
+      return { result: c >= n.credits ? "met" : "not_met", why: `${c}/${n.credits} credits` }; }
+    case "residency": { const c = eff.filter((e) => e.institution === "home" && e.status === "completed").reduce((s, e) => s + e.credits, 0);
+      return { result: c >= n.minHomeCredits ? "met" : "not_met", why: `${c}/${n.minHomeCredits} home credits` }; }
+    case "program_gpa": { const xs = eff.filter((e) => e.status === "completed" && e.grade && n.from.some((f) => e.course.startsWith(f)));
+      if (!xs.length) return { result: "unknown", why: "no graded attempts" };
+      const g = xs.reduce((s, e) => s + p.scale[e.grade!] * e.credits, 0) / xs.reduce((s, e) => s + e.credits, 0);
+      return { result: Math.round(g * 1000) / 1000 >= n.min ? "met" : "not_met", why: `GPA ${g.toFixed(3)} vs ${n.min}` }; }
+    case "waiver": return { result: "met", why: `waived (${n.approvalRef})` };
+  }
+}
+
+/** Publication check: no dangling ids, no cycles, groups ≥ 2 children. */
+export function validate(root: Node): string[] {
+  const errs: string[] = [], seen = new Set<string>();
+  const walk = (n: Node, path: string[]) => { if (path.includes(n.id)) { errs.push("cycle at " + n.id); return; } if (seen.has(n.id)) errs.push("duplicate id " + n.id); seen.add(n.id);
+    if ((n.kind === "all" || n.kind === "any") && n.children.length < 2) errs.push(n.id + ": group needs ≥2 children");
+    if (n.kind === "all" || n.kind === "any") n.children.forEach((c) => walk(c, [...path, n.id])); };
+  walk(root, []); return errs;
+}

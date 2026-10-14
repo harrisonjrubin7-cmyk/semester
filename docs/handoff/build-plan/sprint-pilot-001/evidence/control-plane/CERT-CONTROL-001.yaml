@@ -1,0 +1,8 @@
+certification:
+  id: CERT-CONTROL-001
+  title: Pilot control-plane baseline (v4)
+  status: not_started
+  hard_invariants: [A revoked actor cannot gain access from a late success event., Duplicate delivery creates one logical outcome., A workflow cannot be manually closed around a failed control., An unknown external outcome becomes review or reconciliation, not success., Every consequential command has a correlation ID and receipt.]
+  required_evidence: [policy_test_suite, tenant_isolation_suite, revocation_barrier_suite, idempotency_suite, event_authenticity_suite, timeout_and_compensation_suite, reconciliation_suite, operational_drill, release_safe_off_drill]
+  blocking_failures: [cross_tenant_access, policy_bypass, revoked_access_restoration, duplicate_consequential_execution, untracked_sensitive_action]
+  existing_drafts: [live-integration connected-journeys spec, platform-ops operations specs, staff-workspace 12 scenarios (prototype only)]

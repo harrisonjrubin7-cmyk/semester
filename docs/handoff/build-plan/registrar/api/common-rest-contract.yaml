@@ -1,0 +1,5 @@
+headers: { Authorization: authenticated actor, Idempotency-Key: required for consequential command retries, If-Match: required where a route uses resource-version preconditions }
+version_rule: "Each route documents exactly one of If-Match or expected_version (or both with a stated consistency rule). Never ambiguous."
+statuses: { 200: completed read/update or existing idempotent result, 201: created, 202: durable operation accepted — not yet confirmed, 400: malformed, 401: auth required, 403: not permitted, 404: missing or intentionally not disclosed, 409: domain conflict or idempotency-payload conflict, 412: failed version precondition, 422: readable but semantically invalid, 429: rate limit, 503: required dependency unavailable }
+error_body: { code: VERSION_CONFLICT, message: "This record changed after you opened it.", correlation_id: "<trace>", operation_id: null, retryable: false, safe_next_action: "Reload and review the current record." }
+disclosure: "Errors return only permitted facts — never hold details, grading information or other students' identities."

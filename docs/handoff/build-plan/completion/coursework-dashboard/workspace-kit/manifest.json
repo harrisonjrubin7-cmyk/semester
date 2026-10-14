@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "assignments": 2,
+  "courses": 2,
+  "timezone": "America/Chicago",
+  "input_sha256": "07d92346716065589c5b3548d4ce9711791ac6a450193944e264751686ddfeec",
+  "files": [
+    {
+      "name": "drive-folder-plan.json",
+      "sha256": "abc534058278baf6e74752e4473e893cc8e4447b4c27d12c5f7bf7fadcc4b513"
+    },
+    {
+      "name": "gradebook-planner.xlsx",
+      "sha256": "5534478f37cd1ab8fd96a51996988cb3b38f9c0f7bcccd56eae4bcdb8f2599ee"
+    },
+    {
+      "name": "syllabus-outline.docx",
+      "sha256": "b5a85c11e0715aba30a29bd4d2b2187e6e547e77fa6d14bffdc313041436ec30"
+    }
+  ],
+  "external_actions_executed": false
+}

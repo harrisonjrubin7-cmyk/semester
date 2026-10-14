@@ -1,0 +1,18 @@
+pilot:
+  id: PILOT-READINESS-001
+  title: Registration readiness pilot
+  institution: Vanderbilt (signed paid pilot, founder-reported — launch Spring 2027, pending institutional activation; no dates in source materials)
+  objective: Show that a defined cohort can understand an approved readiness status, take an appropriate next step and get safely routed support — without Semester representing itself as enrollment, the registrar or the system of record.
+  capability: CAP-REG-001
+  release: REL-READINESS-001
+  student_promise: Semester shows what information is available, what it means for your next step, and where to go when it can't safely determine an outcome.
+  institutional_promise: A bounded, source-aware workflow with scoped access, staff routing, receipts, reconciliation and measurable pilot evidence.
+  non_promises: [enrollment_confirmation, official_registration_action, hold_removal, prerequisite_override, policy_override, official_degree_audit, autonomous_staff_or_AI_decision]
+  success_questions:
+    - {q: Can students understand their next safe step?, evidence: completion path, safe-next-step selection, feedback, support reasons, decides: continue or revise student experience}
+    - {q: Can the institution trust the boundary?, evidence: source labels, policy/RLS tests, receipts, reconciliations, decides: expand, maintain or narrow scope}
+    - {q: Can staff operate exceptions?, evidence: queue volume, time to triage, escalation outcomes, runbook use, decides: resource and workflow design}
+    - {q: Is the connector reliable enough?, evidence: freshness, failures, retries, mismatches, safe-state behaviour, decides: certify, remediate or replace}
+    - {q: Is Semester repeatable?, evidence: implementation artifact quality, config changes, launch effort, decides: prepare a second implementation}
+    - {q: Is there renewal value?, evidence: sponsor evidence, adoption, support impact, outcome narrative, decides: renew, expand or conclude}
+  reporting_rule: every metric states numerator, denominator, period, scope, source, owner and limitations

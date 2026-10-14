@@ -1,0 +1,18 @@
+// P0 access revocation — Playwright against staging. Rename to .spec.ts.
+import { test, expect } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+const URL = process.env.SUPABASE_URL!, ANON = process.env.SUPABASE_ANON_KEY!, SR = process.env.SUPABASE_SERVICE_ROLE_KEY!, A = process.env.INST_A!;
+const admin = createClient(URL, SR, { auth: { persistSession: false } });
+const fn = (n: string, t: string, b: unknown, h: Record<string, string> = {}) => fetch(`${URL}/functions/v1/${n}`, { method: "POST", headers: { authorization: `Bearer ${t}`, "content-type": "application/json", ...h }, body: JSON.stringify(b) });
+async function signIn(e: string, p: string) { const c = createClient(URL, ANON, { auth: { persistSession: false } }); const { data } = await c.auth.signInWithPassword({ email: e, password: p }); return { c, token: data.session!.access_token, id: data.user!.id }; }
+test("revoked grant blocks the next read and command in the same session", async () => {
+  const s = await signIn(process.env.STUDENT_EMAIL!, process.env.STUDENT_PASSWORD!);
+  const ok = await s.c.from("live_workspace_grants").select("workspace").eq("institution_id", A);
+  expect(ok.data!.length).toBeGreaterThan(0);
+  await admin.from("live_workspace_grants").update({ valid_until: new Date(Date.now() - 1000).toISOString() }).eq("user_id", s.id).eq("institution_id", A);
+  const read = await s.c.from("live_workspace_grants").select("workspace").eq("institution_id", A);
+  expect(read.data).toEqual([]);
+  const cmd = await fn("live-institution-command", s.token, { institution_id: A, command: "registration.add", payload: { section_id: "S1", term_id: "T1" } }, { "idempotency-key": crypto.randomUUID() });
+  expect(cmd.status).toBe(403);
+  await admin.from("live_workspace_grants").update({ valid_until: null }).eq("user_id", s.id).eq("institution_id", A);
+});

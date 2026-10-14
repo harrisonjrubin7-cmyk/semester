@@ -1,0 +1,13 @@
+// Vitest: runs every golden case through the evaluator. Rename .txt -> .ts. npm i -D yaml
+import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { parse } from "yaml";
+import { evaluate, validate, type Node } from "./requirement-graph";
+const g = parse(readFileSync(new URL("./golden-cases.yaml", import.meta.url), "utf8"));
+describe("golden cases (" + g.policy.version + ")", () => {
+  for (const c of g.cases) it(c.id + " " + c.description, () => {
+    expect(validate(c.node as Node)).toEqual([]);
+    expect(evaluate(c.node as Node, g.policy, c.attempts).result).toBe(c.expect);
+  });
+  it("policy pack is approved before production", () => { if (process.env.REQUIRE_APPROVED_GOLDEN) expect(g.approved_by).toBeTruthy(); });
+});

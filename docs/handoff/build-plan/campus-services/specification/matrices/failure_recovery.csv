@@ -1,0 +1,10 @@
+failure,hold,recovery,acceptance
+Last-bed race,Conflicting allocation,Transactional lock/exclusion; deny loser,retained source result and reviewer; no external execution by this kit
+Provider timeout,Unknown order/payment,Reconcile authoritative object,retained source result and reviewer; no external execution by this kit
+Webhook replay,Duplicate business posting,Provider+semantic idempotency,retained source result and reviewer; no external execution by this kit
+Rollover conflict,Reserved/changed lots,Versioned atomic resolution,retained source result and reviewer; no external execution by this kit
+Ledger failure,Payment confirmed but unposted,Retry posting only,retained source result and reviewer; no external execution by this kit
+Refund failure,Obligation outstanding,Exception queue and approved alternate handling,retained source result and reviewer; no external execution by this kit
+Legacy drift,Affected authority boundary,Quarantine/reconcile before cutover,retained source result and reviewer; no external execution by this kit
+Tenant leak,Affected service,Incident containment and accepted negative retest,retained source result and reviewer; no external execution by this kit
+Restore,Writes held,Isolated DB+file restore and current revocation reconciliation,retained source result and reviewer; no external execution by this kit

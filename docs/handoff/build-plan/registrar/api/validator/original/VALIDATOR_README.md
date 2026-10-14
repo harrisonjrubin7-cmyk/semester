@@ -1,0 +1,6 @@
+# Registrar OAS validator
+Reference implementation with captured-fixture request/response checking and sanitized errors. No production endpoint was called.
+Requires jsonschema and openapi-spec-validator; pin reviewed compatible versions in your project lockfile.
+Run: python registrar_oas_validator.py --spec actual.openapi.json --captures approved-captures.json --report oas-report.json
+Capture format: case,path (template),method,direction,content_type,payload,expected_valid; response adds status. Use synthetic identities, never raw student payloads in CI reports. Negative cases pass only when expected invalid.
+Ten synthetic JSON Schema self-tests executed. Full OAS document validation remains blocked until dependency installed. Not a comprehensive OAS transport/auth validator. readOnly/writeOnly required-omission semantics and inherited annotations need an OAS-aware instance validator before production CI approval. Direct directional fields are rejected by policy. Dynamic refs, custom vocabularies, non-JSON media and remote resources require further integration. Missing cases fail coverage checks but not every status/branch is automatically enumerated. Live HTTP runner must require allowlisted target and authorization, never auto-submit enrollment to production.

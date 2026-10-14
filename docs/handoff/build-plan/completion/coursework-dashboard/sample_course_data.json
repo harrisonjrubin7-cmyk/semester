@@ -1,0 +1,150 @@
+{
+  "sample": true,
+  "courses": [
+    {
+      "name": "Sample Writing Seminar",
+      "mode": "equal",
+      "target": 85,
+      "totalPoints": null
+    },
+    {
+      "name": "Sample Data Science",
+      "mode": "points",
+      "target": 85,
+      "totalPoints": 300
+    },
+    {
+      "name": "Sample Product Studio",
+      "mode": "weighted",
+      "target": 85,
+      "categories": [
+        {
+          "name": "Research",
+          "weight": 30
+        },
+        {
+          "name": "Prototype",
+          "weight": 40
+        },
+        {
+          "name": "Final",
+          "weight": 30
+        }
+      ]
+    }
+  ],
+  "assignments": [
+    {
+      "course": "Sample Writing Seminar",
+      "title": "Argument essay",
+      "category": "",
+      "due": "2026-10-12",
+      "possible": 100,
+      "earned": 90,
+      "status": "graded",
+      "daysLate": 1,
+      "rule": "percent_earned_daily",
+      "rate": 10,
+      "cap": 30,
+      "alreadyAdjusted": false
+    },
+    {
+      "course": "Sample Writing Seminar",
+      "title": "Peer review",
+      "category": "",
+      "due": "2026-10-20",
+      "possible": 100,
+      "earned": null,
+      "status": "pending",
+      "daysLate": 0,
+      "rule": "none",
+      "rate": 0,
+      "cap": 100,
+      "alreadyAdjusted": false
+    },
+    {
+      "course": "Sample Data Science",
+      "title": "Notebook",
+      "category": "",
+      "due": "2026-10-12",
+      "possible": 50,
+      "earned": 45,
+      "status": "graded",
+      "daysLate": 2,
+      "rule": "percent_possible_daily",
+      "rate": 5,
+      "cap": 20,
+      "alreadyAdjusted": false
+    },
+    {
+      "course": "Sample Data Science",
+      "title": "Midterm",
+      "category": "",
+      "due": "2026-10-13",
+      "possible": 100,
+      "earned": 80,
+      "status": "graded",
+      "daysLate": 0,
+      "rule": "none",
+      "rate": 0,
+      "cap": 100,
+      "alreadyAdjusted": false
+    },
+    {
+      "course": "Sample Data Science",
+      "title": "Final analysis",
+      "category": "",
+      "due": "2026-10-30",
+      "possible": 150,
+      "earned": null,
+      "status": "pending",
+      "daysLate": 0,
+      "rule": "none",
+      "rate": 0,
+      "cap": 100,
+      "alreadyAdjusted": false
+    },
+    {
+      "course": "Sample Product Studio",
+      "title": "Research report",
+      "category": "Research",
+      "due": "2026-10-12",
+      "possible": 100,
+      "earned": 90,
+      "status": "graded",
+      "daysLate": 1,
+      "rule": "percentage_points_daily",
+      "rate": 5,
+      "cap": 20,
+      "alreadyAdjusted": false
+    },
+    {
+      "course": "Sample Product Studio",
+      "title": "Prototype",
+      "category": "Prototype",
+      "due": "2026-10-21",
+      "possible": 100,
+      "earned": null,
+      "status": "pending",
+      "daysLate": 0,
+      "rule": "none",
+      "rate": 0,
+      "cap": 100,
+      "alreadyAdjusted": false
+    },
+    {
+      "course": "Sample Product Studio",
+      "title": "Final presentation",
+      "category": "Final",
+      "due": "2026-10-30",
+      "possible": 100,
+      "earned": null,
+      "status": "pending",
+      "daysLate": 0,
+      "rule": "none",
+      "rate": 0,
+      "cap": 100,
+      "alreadyAdjusted": false
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+tables:
+  readiness_evaluations: {tenant_key: tenant_id (NOT NULL), classification: restricted_institutional, authority: institution for inputs · Semester for evaluation receipt, retention: institution agreement + operational need, RLS: {student: self_only, advisor: assigned_scope_only, registrar: institution_scope, operator: break_glass_only}, audit: [created, viewed, status_changed, reconciled]}
+  readiness_receipts: {tenant_key: tenant_id (NOT NULL), classification: restricted_institutional, authority: Semester operational receipt, RLS: {student: self_only, authorized_staff: scoped_read}}
+  writes: only through definer commands (AUTHZ-DECISION.md); no client insert/update/delete policies
+  first_task: map these names to the repo's existing registration_* tables before creating new ones (repo audit: 227 tables, migrations under supabase/migrations)

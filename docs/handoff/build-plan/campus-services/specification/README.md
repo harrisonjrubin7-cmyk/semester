@@ -1,0 +1,3 @@
+# Semester campus native specification package
+Start with MASTER_SPECIFICATION.md. Housing/roommate/maintenance; dining/billing/rollover; tuition/credit obligations; integration/recovery; JSON policies/commands/obligations; console/test/recovery CSVs; Mermaid diagram; pure Python reference and tests.
+15 local unittests passed; 32 actual-system acceptance cases NOT RUN. No deployed code, SQL migration, source connector, approved fee or contract. Rule values and operators intentionally unresolved. Legacy contracts and credit-balance authority need qualified institutional review. Run reference tests from reference folder: python -B -m unittest test_campus_reference.py -v

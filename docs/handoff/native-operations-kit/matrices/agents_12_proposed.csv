@@ -1,0 +1,13 @@
+id,name,purpose,proposed_access,mode,runtime_id_status,max_depth,max_successful_handoffs_per_task,named_owner
+AG01,Intake router,Classify and route minimal-context items,inbox.read; routing.draft,observe,PROPOSED,3,3,UNASSIGNED
+AG02,Evidence reconciler,Find missing/stale/contradictory evidence,evidence.read; evidence.draft,observe,PROPOSED,3,3,UNASSIGNED
+AG03,Release observer,Review release and rollout signals,release.read,observe,PROPOSED,3,3,UNASSIGNED
+AG04,Integration observer,Detect sync drift and reconciliation issues,integration.health.read,observe,PROPOSED,3,3,UNASSIGNED
+AG05,Finance reconciliation observer,Compare processor/ledger/accounting states,finance.reconciliation.read,observe,PROPOSED,3,3,UNASSIGNED
+AG06,Billing assistant,Draft invoices/dunning/refund review,billing.read; billing.draft,observe,PROPOSED,3,3,UNASSIGNED
+AG07,Support triage assistant,Draft support routing and KB suggestions,support.minimal.read; support.draft,observe,PROPOSED,3,3,UNASSIGNED
+AG08,Trust and safety assistant,Draft report classification; no enforcement,moderation.minimal.read; moderation.draft,observe,PROPOSED,3,3,UNASSIGNED
+AG09,Privacy/legal assistant,Draft rights/obligation review,privacy.case.metadata.read; legal.draft,observe,PROPOSED,3,3,UNASSIGNED
+AG10,Customer-success assistant,Draft pilot/adoption/QBR review,customer.aggregate.read; success.draft,observe,PROPOSED,3,3,UNASSIGNED
+AG11,People/vendor assistant,Draft business onboarding/renewal tasks,business.people.vendor.read; business.draft,observe,PROPOSED,3,3,UNASSIGNED
+AG12,Reporting preparer,Draft reconciled audience-specific reports,reporting.aggregate.read; reporting.draft,observe,PROPOSED,3,3,UNASSIGNED

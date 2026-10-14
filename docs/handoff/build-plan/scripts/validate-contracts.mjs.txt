@@ -1,0 +1,44 @@
+// validate-contracts.mjs — CI check that the contract files agree with each other. Rename to .mjs.
+// npm i -D yaml   then:   node scripts/validate-contracts.mjs   (exit 1 on any error)
+import { readFileSync } from "node:fs";
+import { parse } from "yaml";
+
+const dir = new URL("../contracts/", import.meta.url);
+const read = (f) => parse(readFileSync(new URL(f, dir), "utf8"));
+const caps = read("capabilities.yaml").capabilities;
+const records = read("records.yaml").records;
+const events = new Set(read("events.yaml").events.map((e) => e.type));
+const audits = new Set(read("audit-events.yaml").audit_events.map((a) => a.key));
+const commands = new Map(read("workflows.yaml").commands.map((c) => [c.name, c]));
+const routes = new Set(parse(readFileSync(new URL("../routes/all-routes.yaml", dir), "utf8")).map((r) => r.route));
+const manifest = new Set(readFileSync(new URL("../schema-manifest.csv", dir), "utf8").split("\n").slice(1).map((l) => l.split(",")[1]).filter(Boolean));
+manifest.add("readiness_receipts"); // added by 065_readiness_wedge.sql
+
+const errors = [];
+const err = (m) => errors.push(m);
+const seen = new Set();
+for (const c of caps) {
+  if (seen.has(c.key)) err(`duplicate capability ${c.key}`); seen.add(c.key);
+  if (!/^[a-z_]+(\.[a-z_]+)+$/.test(c.key)) err(`${c.key}: bad key format`);
+  if (c.status === "active") err(`${c.key}: status may not be set to active by hand`);
+  for (const r of c.routes) if (!routes.has(r)) err(`${c.key}: route ${r} not in all-routes.yaml`);
+  for (const t of c.records) if (!manifest.has(t)) err(`${c.key}: record ${t} not in schema manifest`);
+  for (const e of c.events) if (!events.has(e)) err(`${c.key}: event ${e} not in events.yaml`);
+  for (const a of c.audits) if (!audits.has(a)) err(`${c.key}: audit ${a} not in audit-events.yaml`);
+  for (const k of c.commands) if (!commands.has(k) && !/^(support|integration|incident)\./.test(k)) err(`${c.key}: command ${k} not in workflows.yaml`);
+  if (c.commands.length && !c.release_requirements.includes("idempotency_test")) err(`${c.key}: commands without idempotency_test`);
+  if (c.impact === "high" && !c.audits.length) err(`${c.key}: high-impact capability with no audit event`);
+}
+const need = ["authority", "source_of_truth", "sensitivity", "tenant_scoped", "allowed_roles", "write_path", "retention"];
+for (const [name, p] of Object.entries(records)) {
+  for (const f of need) if (p[f] === undefined) err(`record ${name}: passport missing ${f}`);
+  if (p.write_path?.client_writes !== "none") err(`record ${name}: client writes must be none`);
+  if (p.authority === "institution" && !(p.source_requirements || []).includes("freshness_state")) err(`record ${name}: institution record without freshness`);
+}
+for (const [name, c] of commands) {
+  if (c.idempotency !== "required") err(`command ${name}: idempotency must be required`);
+  if (!c.writes.includes("audit_events") || !c.writes.includes("outbox_events")) err(`command ${name}: must write audit + outbox`);
+  for (const e of c.publishes) if (!events.has(e)) err(`command ${name}: publishes unknown event ${e}`);
+}
+if (errors.length) { console.error(errors.map((e) => "✗ " + e).join("\n")); process.exit(1); }
+console.log(`✓ ${caps.length} capabilities · ${Object.keys(records).length} records · ${events.size} events · ${audits.size} audit keys · ${commands.size} commands — consistent`);

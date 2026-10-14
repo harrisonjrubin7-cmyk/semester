@@ -1,0 +1,9 @@
+# Cross-artifact assertions checked by validate-contracts.mjs (beyond YAML syntax).
+rules:
+  - { id: SEM-001, assertion: "Every consequential command has owner, input schema, policy rule, audit event, receipt rule, idempotency and a failure mode." }
+  - { id: SEM-002, assertion: "Every route references a capability, allowed roles, view states and an owner." }
+  - { id: SEM-003, assertion: "Every capability's records exist in the schema manifest and have a record passport." }
+  - { id: SEM-004, assertion: "Every event a command publishes is in events.yaml; every audit key used is in audit-events.yaml." }
+  - { id: SEM-005, assertion: "Every invariant names the artifact that enforces it." }
+  - { id: SEM-006, assertion: "Every accepted evidence record has storage_uri, content_hash and a reviewer who isn't the owner." }
+  - { id: SEM-007, assertion: "Every feature flag has an owner, an expiry and default false." }

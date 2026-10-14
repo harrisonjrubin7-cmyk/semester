@@ -1,0 +1,1820 @@
+TAP version 13
+# Subtest: 122 unique source capabilities
+ok 1 - 122 unique source capabilities
+  ---
+  duration_ms: 1.248402
+  ...
+# Subtest: all specifications have bespoke goal/boundary and 11 acceptance checks
+ok 2 - all specifications have bespoke goal/boundary and 11 acceptance checks
+  ---
+  duration_ms: 0.252903
+  ...
+# Subtest: build dependency graph is valid and ordered
+ok 3 - build dependency graph is valid and ordered
+  ---
+  duration_ms: 0.576915
+  ...
+# Subtest: dependency cycles rejected
+ok 4 - dependency cycles rejected
+  ---
+  duration_ms: 0.257095
+  ...
+# Subtest: missing dependency rejected
+ok 5 - missing dependency rejected
+  ---
+  duration_ms: 0.16176
+  ...
+# Subtest: public.site.home remains release-blocked without verified authority
+ok 6 - public.site.home remains release-blocked without verified authority
+  ---
+  duration_ms: 0.182307
+  ...
+# Subtest: public.product.pages remains release-blocked without verified authority
+ok 7 - public.product.pages remains release-blocked without verified authority
+  ---
+  duration_ms: 0.105563
+  ...
+# Subtest: public.solutions remains release-blocked without verified authority
+ok 8 - public.solutions remains release-blocked without verified authority
+  ---
+  duration_ms: 0.081109
+  ...
+# Subtest: public.solutions authorized synthetic command / replay / changed payload
+ok 9 - public.solutions authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.831868
+  ...
+# Subtest: public.solutions cross-tenant rejected
+ok 10 - public.solutions cross-tenant rejected
+  ---
+  duration_ms: 0.220019
+  ...
+# Subtest: public.pricing.quote remains release-blocked without verified authority
+ok 11 - public.pricing.quote remains release-blocked without verified authority
+  ---
+  duration_ms: 0.097838
+  ...
+# Subtest: public.pricing.quote authorized synthetic command / replay / changed payload
+ok 12 - public.pricing.quote authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.166904
+  ...
+# Subtest: public.pricing.quote cross-tenant rejected
+ok 13 - public.pricing.quote cross-tenant rejected
+  ---
+  duration_ms: 0.089739
+  ...
+# Subtest: public.demo.book remains release-blocked without verified authority
+ok 14 - public.demo.book remains release-blocked without verified authority
+  ---
+  duration_ms: 0.121354
+  ...
+# Subtest: public.demo.book authorized synthetic command / replay / changed payload
+ok 15 - public.demo.book authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.231312
+  ...
+# Subtest: public.demo.book cross-tenant rejected
+ok 16 - public.demo.book cross-tenant rejected
+  ---
+  duration_ms: 0.136323
+  ...
+# Subtest: public.resources remains release-blocked without verified authority
+ok 17 - public.resources remains release-blocked without verified authority
+  ---
+  duration_ms: 0.080828
+  ...
+# Subtest: public.trust.center remains release-blocked without verified authority
+ok 18 - public.trust.center remains release-blocked without verified authority
+  ---
+  duration_ms: 0.185569
+  ...
+# Subtest: public.trust.center authorized synthetic command / replay / changed payload
+ok 19 - public.trust.center authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.152377
+  ...
+# Subtest: public.trust.center cross-tenant rejected
+ok 20 - public.trust.center cross-tenant rejected
+  ---
+  duration_ms: 0.129687
+  ...
+# Subtest: public.signup remains release-blocked without verified authority
+ok 21 - public.signup remains release-blocked without verified authority
+  ---
+  duration_ms: 0.115302
+  ...
+# Subtest: public.signup authorized synthetic command / replay / changed payload
+ok 22 - public.signup authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.171196
+  ...
+# Subtest: public.signup cross-tenant rejected
+ok 23 - public.signup cross-tenant rejected
+  ---
+  duration_ms: 0.108486
+  ...
+# Subtest: public.app.handoff remains release-blocked without verified authority
+ok 24 - public.app.handoff remains release-blocked without verified authority
+  ---
+  duration_ms: 0.065972
+  ...
+# Subtest: public.app.handoff authorized synthetic command / replay / changed payload
+ok 25 - public.app.handoff authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.109588
+  ...
+# Subtest: public.app.handoff cross-tenant rejected
+ok 26 - public.app.handoff cross-tenant rejected
+  ---
+  duration_ms: 0.056273
+  ...
+# Subtest: public.partners.careers remains release-blocked without verified authority
+ok 27 - public.partners.careers remains release-blocked without verified authority
+  ---
+  duration_ms: 2.941763
+  ...
+# Subtest: public.partners.careers authorized synthetic command / replay / changed payload
+ok 28 - public.partners.careers authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.134962
+  ...
+# Subtest: public.partners.careers cross-tenant rejected
+ok 29 - public.partners.careers cross-tenant rejected
+  ---
+  duration_ms: 0.074395
+  ...
+# Subtest: shared.identity.signin remains release-blocked without verified authority
+ok 30 - shared.identity.signin remains release-blocked without verified authority
+  ---
+  duration_ms: 0.051983
+  ...
+# Subtest: shared.identity.signin authorized synthetic command / replay / changed payload
+ok 31 - shared.identity.signin authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.916553
+  ...
+# Subtest: shared.identity.signin cross-tenant rejected
+ok 32 - shared.identity.signin cross-tenant rejected
+  ---
+  duration_ms: 0.115404
+  ...
+# Subtest: shared.identity.sessions remains release-blocked without verified authority
+ok 33 - shared.identity.sessions remains release-blocked without verified authority
+  ---
+  duration_ms: 0.094865
+  ...
+# Subtest: shared.identity.sessions authorized synthetic command / replay / changed payload
+ok 34 - shared.identity.sessions authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.119389
+  ...
+# Subtest: shared.identity.sessions cross-tenant rejected
+ok 35 - shared.identity.sessions cross-tenant rejected
+  ---
+  duration_ms: 0.056043
+  ...
+# Subtest: shared.org.memberships remains release-blocked without verified authority
+ok 36 - shared.org.memberships remains release-blocked without verified authority
+  ---
+  duration_ms: 0.044086
+  ...
+# Subtest: shared.org.memberships authorized synthetic command / replay / changed payload
+ok 37 - shared.org.memberships authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.125523
+  ...
+# Subtest: shared.org.memberships cross-tenant rejected
+ok 38 - shared.org.memberships cross-tenant rejected
+  ---
+  duration_ms: 0.058859
+  ...
+# Subtest: shared.authz.grants remains release-blocked without verified authority
+ok 39 - shared.authz.grants remains release-blocked without verified authority
+  ---
+  duration_ms: 0.045402
+  ...
+# Subtest: shared.authz.grants authorized synthetic command / replay / changed payload
+ok 40 - shared.authz.grants authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.089003
+  ...
+# Subtest: shared.authz.grants cross-tenant rejected
+ok 41 - shared.authz.grants cross-tenant rejected
+  ---
+  duration_ms: 0.052473
+  ...
+# Subtest: shared.authz.approvals remains release-blocked without verified authority
+ok 42 - shared.authz.approvals remains release-blocked without verified authority
+  ---
+  duration_ms: 0.045444
+  ...
+# Subtest: shared.authz.approvals authorized synthetic command / replay / changed payload
+ok 43 - shared.authz.approvals authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.082644
+  ...
+# Subtest: shared.authz.approvals cross-tenant rejected
+ok 44 - shared.authz.approvals cross-tenant rejected
+  ---
+  duration_ms: 0.059978
+  ...
+# Subtest: shared.delegation remains release-blocked without verified authority
+ok 45 - shared.delegation remains release-blocked without verified authority
+  ---
+  duration_ms: 0.04675
+  ...
+# Subtest: shared.delegation authorized synthetic command / replay / changed payload
+ok 46 - shared.delegation authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.082604
+  ...
+# Subtest: shared.delegation cross-tenant rejected
+ok 47 - shared.delegation cross-tenant rejected
+  ---
+  duration_ms: 0.053494
+  ...
+# Subtest: shared.notifications remains release-blocked without verified authority
+ok 48 - shared.notifications remains release-blocked without verified authority
+  ---
+  duration_ms: 0.104889
+  ...
+# Subtest: shared.notifications authorized synthetic command / replay / changed payload
+ok 49 - shared.notifications authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.096746
+  ...
+# Subtest: shared.notifications cross-tenant rejected
+ok 50 - shared.notifications cross-tenant rejected
+  ---
+  duration_ms: 0.096916
+  ...
+# Subtest: shared.search remains release-blocked without verified authority
+ok 51 - shared.search remains release-blocked without verified authority
+  ---
+  duration_ms: 0.073576
+  ...
+# Subtest: shared.search authorized synthetic command / replay / changed payload
+ok 52 - shared.search authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.089299
+  ...
+# Subtest: shared.search cross-tenant rejected
+ok 53 - shared.search cross-tenant rejected
+  ---
+  duration_ms: 0.052824
+  ...
+# Subtest: shared.files remains release-blocked without verified authority
+ok 54 - shared.files remains release-blocked without verified authority
+  ---
+  duration_ms: 0.045049
+  ...
+# Subtest: shared.files authorized synthetic command / replay / changed payload
+ok 55 - shared.files authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.083423
+  ...
+# Subtest: shared.files cross-tenant rejected
+ok 56 - shared.files cross-tenant rejected
+  ---
+  duration_ms: 0.051136
+  ...
+# Subtest: shared.audit remains release-blocked without verified authority
+ok 57 - shared.audit remains release-blocked without verified authority
+  ---
+  duration_ms: 0.053
+  ...
+# Subtest: shared.documents remains release-blocked without verified authority
+ok 58 - shared.documents remains release-blocked without verified authority
+  ---
+  duration_ms: 0.043037
+  ...
+# Subtest: shared.documents authorized synthetic command / replay / changed payload
+ok 59 - shared.documents authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.080365
+  ...
+# Subtest: shared.documents cross-tenant rejected
+ok 60 - shared.documents cross-tenant rejected
+  ---
+  duration_ms: 0.048531
+  ...
+# Subtest: shared.ai.gateway remains release-blocked without verified authority
+ok 61 - shared.ai.gateway remains release-blocked without verified authority
+  ---
+  duration_ms: 0.042932
+  ...
+# Subtest: shared.ai.gateway authorized synthetic command / replay / changed payload
+ok 62 - shared.ai.gateway authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.105374
+  ...
+# Subtest: shared.ai.gateway cross-tenant rejected
+ok 63 - shared.ai.gateway cross-tenant rejected
+  ---
+  duration_ms: 0.063164
+  ...
+# Subtest: shared.events.outbox remains release-blocked without verified authority
+ok 64 - shared.events.outbox remains release-blocked without verified authority
+  ---
+  duration_ms: 0.054009
+  ...
+# Subtest: shared.events.outbox authorized synthetic command / replay / changed payload
+ok 65 - shared.events.outbox authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.109532
+  ...
+# Subtest: shared.events.outbox cross-tenant rejected
+ok 66 - shared.events.outbox cross-tenant rejected
+  ---
+  duration_ms: 0.065744
+  ...
+# Subtest: edu.today remains release-blocked without verified authority
+ok 67 - edu.today remains release-blocked without verified authority
+  ---
+  duration_ms: 0.055464
+  ...
+# Subtest: edu.profile remains release-blocked without verified authority
+ok 68 - edu.profile remains release-blocked without verified authority
+  ---
+  duration_ms: 0.051759
+  ...
+# Subtest: edu.profile authorized synthetic command / replay / changed payload
+ok 69 - edu.profile authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.11181
+  ...
+# Subtest: edu.profile cross-tenant rejected
+ok 70 - edu.profile cross-tenant rejected
+  ---
+  duration_ms: 0.064906
+  ...
+# Subtest: edu.courses remains release-blocked without verified authority
+ok 71 - edu.courses remains release-blocked without verified authority
+  ---
+  duration_ms: 0.054432
+  ...
+# Subtest: edu.calendar remains release-blocked without verified authority
+ok 72 - edu.calendar remains release-blocked without verified authority
+  ---
+  duration_ms: 0.05327
+  ...
+# Subtest: edu.calendar authorized synthetic command / replay / changed payload
+ok 73 - edu.calendar authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.108089
+  ...
+# Subtest: edu.calendar cross-tenant rejected
+ok 74 - edu.calendar cross-tenant rejected
+  ---
+  duration_ms: 0.067045
+  ...
+# Subtest: edu.tasks remains release-blocked without verified authority
+ok 75 - edu.tasks remains release-blocked without verified authority
+  ---
+  duration_ms: 0.056711
+  ...
+# Subtest: edu.tasks authorized synthetic command / replay / changed payload
+ok 76 - edu.tasks authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.14173
+  ...
+# Subtest: edu.tasks cross-tenant rejected
+ok 77 - edu.tasks cross-tenant rejected
+  ---
+  duration_ms: 0.073836
+  ...
+# Subtest: edu.content remains release-blocked without verified authority
+ok 78 - edu.content remains release-blocked without verified authority
+  ---
+  duration_ms: 0.058325
+  ...
+# Subtest: edu.content authorized synthetic command / replay / changed payload
+ok 79 - edu.content authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.118431
+  ...
+# Subtest: edu.content cross-tenant rejected
+ok 80 - edu.content cross-tenant rejected
+  ---
+  duration_ms: 0.062508
+  ...
+# Subtest: edu.assignments remains release-blocked without verified authority
+ok 81 - edu.assignments remains release-blocked without verified authority
+  ---
+  duration_ms: 0.053146
+  ...
+# Subtest: edu.assignments authorized synthetic command / replay / changed payload
+ok 82 - edu.assignments authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.112772
+  ...
+# Subtest: edu.assignments cross-tenant rejected
+ok 83 - edu.assignments cross-tenant rejected
+  ---
+  duration_ms: 0.064855
+  ...
+# Subtest: edu.assessment remains release-blocked without verified authority
+ok 84 - edu.assessment remains release-blocked without verified authority
+  ---
+  duration_ms: 0.054293
+  ...
+# Subtest: edu.assessment authorized synthetic command / replay / changed payload
+ok 85 - edu.assessment authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.119371
+  ...
+# Subtest: edu.assessment cross-tenant rejected
+ok 86 - edu.assessment cross-tenant rejected
+  ---
+  duration_ms: 0.079649
+  ...
+# Subtest: edu.grading remains release-blocked without verified authority
+ok 87 - edu.grading remains release-blocked without verified authority
+  ---
+  duration_ms: 0.056099
+  ...
+# Subtest: edu.grading authorized synthetic command / replay / changed payload
+ok 88 - edu.grading authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.10424
+  ...
+# Subtest: edu.grading cross-tenant rejected
+ok 89 - edu.grading cross-tenant rejected
+  ---
+  duration_ms: 0.87811
+  ...
+# Subtest: edu.study remains release-blocked without verified authority
+ok 90 - edu.study remains release-blocked without verified authority
+  ---
+  duration_ms: 0.080472
+  ...
+# Subtest: edu.study authorized synthetic command / replay / changed payload
+ok 91 - edu.study authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.130254
+  ...
+# Subtest: edu.study cross-tenant rejected
+ok 92 - edu.study cross-tenant rejected
+  ---
+  duration_ms: 0.069804
+  ...
+# Subtest: edu.assistant remains release-blocked without verified authority
+ok 93 - edu.assistant remains release-blocked without verified authority
+  ---
+  duration_ms: 0.057693
+  ...
+# Subtest: edu.assistant authorized synthetic command / replay / changed payload
+ok 94 - edu.assistant authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.108816
+  ...
+# Subtest: edu.assistant cross-tenant rejected
+ok 95 - edu.assistant cross-tenant rejected
+  ---
+  duration_ms: 0.066325
+  ...
+# Subtest: edu.groups remains release-blocked without verified authority
+ok 96 - edu.groups remains release-blocked without verified authority
+  ---
+  duration_ms: 0.054963
+  ...
+# Subtest: edu.groups authorized synthetic command / replay / changed payload
+ok 97 - edu.groups authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.100338
+  ...
+# Subtest: edu.groups cross-tenant rejected
+ok 98 - edu.groups cross-tenant rejected
+  ---
+  duration_ms: 0.068991
+  ...
+# Subtest: edu.inbox remains release-blocked without verified authority
+ok 99 - edu.inbox remains release-blocked without verified authority
+  ---
+  duration_ms: 0.054792
+  ...
+# Subtest: edu.inbox authorized synthetic command / replay / changed payload
+ok 100 - edu.inbox authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.105092
+  ...
+# Subtest: edu.inbox cross-tenant rejected
+ok 101 - edu.inbox cross-tenant rejected
+  ---
+  duration_ms: 0.065343
+  ...
+# Subtest: edu.advising remains release-blocked without verified authority
+ok 102 - edu.advising remains release-blocked without verified authority
+  ---
+  duration_ms: 0.051811
+  ...
+# Subtest: edu.advising authorized synthetic command / replay / changed payload
+ok 103 - edu.advising authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.139109
+  ...
+# Subtest: edu.advising cross-tenant rejected
+ok 104 - edu.advising cross-tenant rejected
+  ---
+  duration_ms: 0.066664
+  ...
+# Subtest: edu.degree remains release-blocked without verified authority
+ok 105 - edu.degree remains release-blocked without verified authority
+  ---
+  duration_ms: 0.060783
+  ...
+# Subtest: edu.degree authorized synthetic command / replay / changed payload
+ok 106 - edu.degree authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.103022
+  ...
+# Subtest: edu.degree cross-tenant rejected
+ok 107 - edu.degree cross-tenant rejected
+  ---
+  duration_ms: 0.070515
+  ...
+# Subtest: edu.registration remains release-blocked without verified authority
+ok 108 - edu.registration remains release-blocked without verified authority
+  ---
+  duration_ms: 0.053805
+  ...
+# Subtest: edu.registration authorized synthetic command / replay / changed payload
+ok 109 - edu.registration authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.376153
+  ...
+# Subtest: edu.registration cross-tenant rejected
+ok 110 - edu.registration cross-tenant rejected
+  ---
+  duration_ms: 0.074111
+  ...
+# Subtest: edu.student_account remains release-blocked without verified authority
+ok 111 - edu.student_account remains release-blocked without verified authority
+  ---
+  duration_ms: 0.05972
+  ...
+# Subtest: edu.services remains release-blocked without verified authority
+ok 112 - edu.services remains release-blocked without verified authority
+  ---
+  duration_ms: 0.051602
+  ...
+# Subtest: edu.services authorized synthetic command / replay / changed payload
+ok 113 - edu.services authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.104392
+  ...
+# Subtest: edu.services cross-tenant rejected
+ok 114 - edu.services cross-tenant rejected
+  ---
+  duration_ms: 0.059349
+  ...
+# Subtest: edu.careers remains release-blocked without verified authority
+ok 115 - edu.careers remains release-blocked without verified authority
+  ---
+  duration_ms: 0.05212
+  ...
+# Subtest: edu.careers authorized synthetic command / replay / changed payload
+ok 116 - edu.careers authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.108154
+  ...
+# Subtest: edu.careers cross-tenant rejected
+ok 117 - edu.careers cross-tenant rejected
+  ---
+  duration_ms: 0.058697
+  ...
+# Subtest: edu.wellbeing remains release-blocked without verified authority
+ok 118 - edu.wellbeing remains release-blocked without verified authority
+  ---
+  duration_ms: 0.061515
+  ...
+# Subtest: edu.wellbeing authorized synthetic command / replay / changed payload
+ok 119 - edu.wellbeing authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.101932
+  ...
+# Subtest: edu.wellbeing cross-tenant rejected
+ok 120 - edu.wellbeing cross-tenant rejected
+  ---
+  duration_ms: 0.061471
+  ...
+# Subtest: edu.credentials remains release-blocked without verified authority
+ok 121 - edu.credentials remains release-blocked without verified authority
+  ---
+  duration_ms: 0.057141
+  ...
+# Subtest: edu.credentials authorized synthetic command / replay / changed payload
+ok 122 - edu.credentials authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 2.785453
+  ...
+# Subtest: edu.credentials cross-tenant rejected
+ok 123 - edu.credentials cross-tenant rejected
+  ---
+  duration_ms: 0.076643
+  ...
+# Subtest: edu.privacy remains release-blocked without verified authority
+ok 124 - edu.privacy remains release-blocked without verified authority
+  ---
+  duration_ms: 0.050043
+  ...
+# Subtest: edu.privacy authorized synthetic command / replay / changed payload
+ok 125 - edu.privacy authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.091758
+  ...
+# Subtest: edu.privacy cross-tenant rejected
+ok 126 - edu.privacy cross-tenant rejected
+  ---
+  duration_ms: 0.047819
+  ...
+# Subtest: edu.marketplace remains release-blocked without verified authority
+ok 127 - edu.marketplace remains release-blocked without verified authority
+  ---
+  duration_ms: 0.040118
+  ...
+# Subtest: edu.marketplace authorized synthetic command / replay / changed payload
+ok 128 - edu.marketplace authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.068366
+  ...
+# Subtest: edu.marketplace cross-tenant rejected
+ok 129 - edu.marketplace cross-tenant rejected
+  ---
+  duration_ms: 0.066348
+  ...
+# Subtest: edu.support_access remains release-blocked without verified authority
+ok 130 - edu.support_access remains release-blocked without verified authority
+  ---
+  duration_ms: 0.038151
+  ...
+# Subtest: edu.support_access authorized synthetic command / replay / changed payload
+ok 131 - edu.support_access authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.071351
+  ...
+# Subtest: edu.support_access cross-tenant rejected
+ok 132 - edu.support_access cross-tenant rejected
+  ---
+  duration_ms: 0.043111
+  ...
+# Subtest: edu.family remains release-blocked without verified authority
+ok 133 - edu.family remains release-blocked without verified authority
+  ---
+  duration_ms: 0.036068
+  ...
+# Subtest: edu.family authorized synthetic command / replay / changed payload
+ok 134 - edu.family authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.065101
+  ...
+# Subtest: edu.family cross-tenant rejected
+ok 135 - edu.family cross-tenant rejected
+  ---
+  duration_ms: 0.041793
+  ...
+# Subtest: edu.housing remains release-blocked without verified authority
+ok 136 - edu.housing remains release-blocked without verified authority
+  ---
+  duration_ms: 0.036829
+  ...
+# Subtest: edu.housing authorized synthetic command / replay / changed payload
+ok 137 - edu.housing authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.065006
+  ...
+# Subtest: edu.housing cross-tenant rejected
+ok 138 - edu.housing cross-tenant rejected
+  ---
+  duration_ms: 0.042826
+  ...
+# Subtest: inst.setup remains release-blocked without verified authority
+ok 139 - inst.setup remains release-blocked without verified authority
+  ---
+  duration_ms: 1.063107
+  ...
+# Subtest: inst.setup authorized synthetic command / replay / changed payload
+ok 140 - inst.setup authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.117618
+  ...
+# Subtest: inst.setup cross-tenant rejected
+ok 141 - inst.setup cross-tenant rejected
+  ---
+  duration_ms: 0.050995
+  ...
+# Subtest: inst.people remains release-blocked without verified authority
+ok 142 - inst.people remains release-blocked without verified authority
+  ---
+  duration_ms: 0.039793
+  ...
+# Subtest: inst.people authorized synthetic command / replay / changed payload
+ok 143 - inst.people authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.068976
+  ...
+# Subtest: inst.people cross-tenant rejected
+ok 144 - inst.people cross-tenant rejected
+  ---
+  duration_ms: 1.418168
+  ...
+# Subtest: inst.catalog remains release-blocked without verified authority
+ok 145 - inst.catalog remains release-blocked without verified authority
+  ---
+  duration_ms: 0.076214
+  ...
+# Subtest: inst.catalog authorized synthetic command / replay / changed payload
+ok 146 - inst.catalog authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.119323
+  ...
+# Subtest: inst.catalog cross-tenant rejected
+ok 147 - inst.catalog cross-tenant rejected
+  ---
+  duration_ms: 0.044386
+  ...
+# Subtest: inst.sections remains release-blocked without verified authority
+ok 148 - inst.sections remains release-blocked without verified authority
+  ---
+  duration_ms: 0.035943
+  ...
+# Subtest: inst.sections authorized synthetic command / replay / changed payload
+ok 149 - inst.sections authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.063657
+  ...
+# Subtest: inst.sections cross-tenant rejected
+ok 150 - inst.sections cross-tenant rejected
+  ---
+  duration_ms: 0.038383
+  ...
+# Subtest: inst.scheduling remains release-blocked without verified authority
+ok 151 - inst.scheduling remains release-blocked without verified authority
+  ---
+  duration_ms: 0.032905
+  ...
+# Subtest: inst.scheduling authorized synthetic command / replay / changed payload
+ok 152 - inst.scheduling authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.062778
+  ...
+# Subtest: inst.scheduling cross-tenant rejected
+ok 153 - inst.scheduling cross-tenant rejected
+  ---
+  duration_ms: 0.03826
+  ...
+# Subtest: inst.admissions remains release-blocked without verified authority
+ok 154 - inst.admissions remains release-blocked without verified authority
+  ---
+  duration_ms: 0.032887
+  ...
+# Subtest: inst.admissions authorized synthetic command / replay / changed payload
+ok 155 - inst.admissions authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.061734
+  ...
+# Subtest: inst.admissions cross-tenant rejected
+ok 156 - inst.admissions cross-tenant rejected
+  ---
+  duration_ms: 0.036956
+  ...
+# Subtest: inst.registrar remains release-blocked without verified authority
+ok 157 - inst.registrar remains release-blocked without verified authority
+  ---
+  duration_ms: 1.36463
+  ...
+# Subtest: inst.registrar authorized synthetic command / replay / changed payload
+ok 158 - inst.registrar authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.112385
+  ...
+# Subtest: inst.registrar cross-tenant rejected
+ok 159 - inst.registrar cross-tenant rejected
+  ---
+  duration_ms: 0.048376
+  ...
+# Subtest: inst.governance remains release-blocked without verified authority
+ok 160 - inst.governance remains release-blocked without verified authority
+  ---
+  duration_ms: 0.037731
+  ...
+# Subtest: inst.governance authorized synthetic command / replay / changed payload
+ok 161 - inst.governance authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.066794
+  ...
+# Subtest: inst.governance cross-tenant rejected
+ok 162 - inst.governance cross-tenant rejected
+  ---
+  duration_ms: 0.052851
+  ...
+# Subtest: inst.success remains release-blocked without verified authority
+ok 163 - inst.success remains release-blocked without verified authority
+  ---
+  duration_ms: 0.03403
+  ...
+# Subtest: inst.success authorized synthetic command / replay / changed payload
+ok 164 - inst.success authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.066116
+  ...
+# Subtest: inst.success cross-tenant rejected
+ok 165 - inst.success cross-tenant rejected
+  ---
+  duration_ms: 0.043908
+  ...
+# Subtest: inst.handoffs remains release-blocked without verified authority
+ok 166 - inst.handoffs remains release-blocked without verified authority
+  ---
+  duration_ms: 0.032965
+  ...
+# Subtest: inst.handoffs authorized synthetic command / replay / changed payload
+ok 167 - inst.handoffs authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.062112
+  ...
+# Subtest: inst.handoffs cross-tenant rejected
+ok 168 - inst.handoffs cross-tenant rejected
+  ---
+  duration_ms: 0.038293
+  ...
+# Subtest: inst.billing remains release-blocked without verified authority
+ok 169 - inst.billing remains release-blocked without verified authority
+  ---
+  duration_ms: 0.034435
+  ...
+# Subtest: inst.billing authorized synthetic command / replay / changed payload
+ok 170 - inst.billing authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.061614
+  ...
+# Subtest: inst.billing cross-tenant rejected
+ok 171 - inst.billing cross-tenant rejected
+  ---
+  duration_ms: 0.039205
+  ...
+# Subtest: inst.aid remains release-blocked without verified authority
+ok 172 - inst.aid remains release-blocked without verified authority
+  ---
+  duration_ms: 0.043343
+  ...
+# Subtest: inst.aid authorized synthetic command / replay / changed payload
+ok 173 - inst.aid authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.062501
+  ...
+# Subtest: inst.aid cross-tenant rejected
+ok 174 - inst.aid cross-tenant rejected
+  ---
+  duration_ms: 0.051385
+  ...
+# Subtest: inst.services remains release-blocked without verified authority
+ok 175 - inst.services remains release-blocked without verified authority
+  ---
+  duration_ms: 0.036958
+  ...
+# Subtest: inst.services authorized synthetic command / replay / changed payload
+ok 176 - inst.services authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.065533
+  ...
+# Subtest: inst.services cross-tenant rejected
+ok 177 - inst.services cross-tenant rejected
+  ---
+  duration_ms: 0.037469
+  ...
+# Subtest: inst.accommodations remains release-blocked without verified authority
+ok 178 - inst.accommodations remains release-blocked without verified authority
+  ---
+  duration_ms: 0.031431
+  ...
+# Subtest: inst.accommodations authorized synthetic command / replay / changed payload
+ok 179 - inst.accommodations authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.060559
+  ...
+# Subtest: inst.accommodations cross-tenant rejected
+ok 180 - inst.accommodations cross-tenant rejected
+  ---
+  duration_ms: 0.038275
+  ...
+# Subtest: inst.reporting remains release-blocked without verified authority
+ok 181 - inst.reporting remains release-blocked without verified authority
+  ---
+  duration_ms: 0.036885
+  ...
+# Subtest: inst.reporting authorized synthetic command / replay / changed payload
+ok 182 - inst.reporting authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.068741
+  ...
+# Subtest: inst.reporting cross-tenant rejected
+ok 183 - inst.reporting cross-tenant rejected
+  ---
+  duration_ms: 0.040318
+  ...
+# Subtest: inst.security remains release-blocked without verified authority
+ok 184 - inst.security remains release-blocked without verified authority
+  ---
+  duration_ms: 0.037291
+  ...
+# Subtest: inst.security authorized synthetic command / replay / changed payload
+ok 185 - inst.security authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.070144
+  ...
+# Subtest: inst.security cross-tenant rejected
+ok 186 - inst.security cross-tenant rejected
+  ---
+  duration_ms: 0.041222
+  ...
+# Subtest: inst.data_governance remains release-blocked without verified authority
+ok 187 - inst.data_governance remains release-blocked without verified authority
+  ---
+  duration_ms: 0.035723
+  ...
+# Subtest: inst.data_governance authorized synthetic command / replay / changed payload
+ok 188 - inst.data_governance authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.071335
+  ...
+# Subtest: inst.data_governance cross-tenant rejected
+ok 189 - inst.data_governance cross-tenant rejected
+  ---
+  duration_ms: 0.04357
+  ...
+# Subtest: inst.integrations remains release-blocked without verified authority
+ok 190 - inst.integrations remains release-blocked without verified authority
+  ---
+  duration_ms: 0.036155
+  ...
+# Subtest: inst.integrations authorized synthetic command / replay / changed payload
+ok 191 - inst.integrations authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.071281
+  ...
+# Subtest: inst.integrations cross-tenant rejected
+ok 192 - inst.integrations cross-tenant rejected
+  ---
+  duration_ms: 0.042404
+  ...
+# Subtest: inst.account remains release-blocked without verified authority
+ok 193 - inst.account remains release-blocked without verified authority
+  ---
+  duration_ms: 0.034545
+  ...
+# Subtest: inst.rollout remains release-blocked without verified authority
+ok 194 - inst.rollout remains release-blocked without verified authority
+  ---
+  duration_ms: 0.035675
+  ...
+# Subtest: inst.rollout authorized synthetic command / replay / changed payload
+ok 195 - inst.rollout authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.070955
+  ...
+# Subtest: inst.rollout cross-tenant rejected
+ok 196 - inst.rollout cross-tenant rejected
+  ---
+  duration_ms: 0.040231
+  ...
+# Subtest: inst.housing remains release-blocked without verified authority
+ok 197 - inst.housing remains release-blocked without verified authority
+  ---
+  duration_ms: 0.034665
+  ...
+# Subtest: acct.overview remains release-blocked without verified authority
+ok 198 - acct.overview remains release-blocked without verified authority
+  ---
+  duration_ms: 0.033733
+  ...
+# Subtest: acct.invoices remains release-blocked without verified authority
+ok 199 - acct.invoices remains release-blocked without verified authority
+  ---
+  duration_ms: 0.033365
+  ...
+# Subtest: acct.invoices authorized synthetic command / replay / changed payload
+ok 200 - acct.invoices authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.072775
+  ...
+# Subtest: acct.invoices cross-tenant rejected
+ok 201 - acct.invoices cross-tenant rejected
+  ---
+  duration_ms: 0.042686
+  ...
+# Subtest: acct.contracts remains release-blocked without verified authority
+ok 202 - acct.contracts remains release-blocked without verified authority
+  ---
+  duration_ms: 0.034809
+  ...
+# Subtest: acct.contracts authorized synthetic command / replay / changed payload
+ok 203 - acct.contracts authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.068454
+  ...
+# Subtest: acct.contracts cross-tenant rejected
+ok 204 - acct.contracts cross-tenant rejected
+  ---
+  duration_ms: 0.040769
+  ...
+# Subtest: acct.support remains release-blocked without verified authority
+ok 205 - acct.support remains release-blocked without verified authority
+  ---
+  duration_ms: 0.036237
+  ...
+# Subtest: acct.support authorized synthetic command / replay / changed payload
+ok 206 - acct.support authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.07027
+  ...
+# Subtest: acct.support cross-tenant rejected
+ok 207 - acct.support cross-tenant rejected
+  ---
+  duration_ms: 0.042269
+  ...
+# Subtest: company.exec remains release-blocked without verified authority
+ok 208 - company.exec remains release-blocked without verified authority
+  ---
+  duration_ms: 0.03693
+  ...
+# Subtest: company.exec authorized synthetic command / replay / changed payload
+ok 209 - company.exec authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.070858
+  ...
+# Subtest: company.exec cross-tenant rejected
+ok 210 - company.exec cross-tenant rejected
+  ---
+  duration_ms: 0.041607
+  ...
+# Subtest: company.marketing remains release-blocked without verified authority
+ok 211 - company.marketing remains release-blocked without verified authority
+  ---
+  duration_ms: 0.035844
+  ...
+# Subtest: company.marketing authorized synthetic command / replay / changed payload
+ok 212 - company.marketing authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.070695
+  ...
+# Subtest: company.marketing cross-tenant rejected
+ok 213 - company.marketing cross-tenant rejected
+  ---
+  duration_ms: 0.041361
+  ...
+# Subtest: company.crm remains release-blocked without verified authority
+ok 214 - company.crm remains release-blocked without verified authority
+  ---
+  duration_ms: 0.039604
+  ...
+# Subtest: company.crm authorized synthetic command / replay / changed payload
+ok 215 - company.crm authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.070065
+  ...
+# Subtest: company.crm cross-tenant rejected
+ok 216 - company.crm cross-tenant rejected
+  ---
+  duration_ms: 0.040456
+  ...
+# Subtest: company.sales_eng remains release-blocked without verified authority
+ok 217 - company.sales_eng remains release-blocked without verified authority
+  ---
+  duration_ms: 0.035608
+  ...
+# Subtest: company.sales_eng authorized synthetic command / replay / changed payload
+ok 218 - company.sales_eng authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.068037
+  ...
+# Subtest: company.sales_eng cross-tenant rejected
+ok 219 - company.sales_eng cross-tenant rejected
+  ---
+  duration_ms: 0.043888
+  ...
+# Subtest: company.quotes remains release-blocked without verified authority
+ok 220 - company.quotes remains release-blocked without verified authority
+  ---
+  duration_ms: 0.03552
+  ...
+# Subtest: company.quotes authorized synthetic command / replay / changed payload
+ok 221 - company.quotes authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.068589
+  ...
+# Subtest: company.quotes cross-tenant rejected
+ok 222 - company.quotes cross-tenant rejected
+  ---
+  duration_ms: 0.040803
+  ...
+# Subtest: company.contracts remains release-blocked without verified authority
+ok 223 - company.contracts remains release-blocked without verified authority
+  ---
+  duration_ms: 0.034792
+  ...
+# Subtest: company.contracts authorized synthetic command / replay / changed payload
+ok 224 - company.contracts authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.069757
+  ...
+# Subtest: company.contracts cross-tenant rejected
+ok 225 - company.contracts cross-tenant rejected
+  ---
+  duration_ms: 0.055428
+  ...
+# Subtest: company.onboarding remains release-blocked without verified authority
+ok 226 - company.onboarding remains release-blocked without verified authority
+  ---
+  duration_ms: 0.037976
+  ...
+# Subtest: company.onboarding authorized synthetic command / replay / changed payload
+ok 227 - company.onboarding authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.071896
+  ...
+# Subtest: company.onboarding cross-tenant rejected
+ok 228 - company.onboarding cross-tenant rejected
+  ---
+  duration_ms: 0.041721
+  ...
+# Subtest: company.implementation remains release-blocked without verified authority
+ok 229 - company.implementation remains release-blocked without verified authority
+  ---
+  duration_ms: 0.034298
+  ...
+# Subtest: company.implementation authorized synthetic command / replay / changed payload
+ok 230 - company.implementation authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.070136
+  ...
+# Subtest: company.implementation cross-tenant rejected
+ok 231 - company.implementation cross-tenant rejected
+  ---
+  duration_ms: 0.040929
+  ...
+# Subtest: company.success remains release-blocked without verified authority
+ok 232 - company.success remains release-blocked without verified authority
+  ---
+  duration_ms: 0.036947
+  ...
+# Subtest: company.success authorized synthetic command / replay / changed payload
+ok 233 - company.success authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.100337
+  ...
+# Subtest: company.success cross-tenant rejected
+ok 234 - company.success cross-tenant rejected
+  ---
+  duration_ms: 0.046722
+  ...
+# Subtest: company.support remains release-blocked without verified authority
+ok 235 - company.support remains release-blocked without verified authority
+  ---
+  duration_ms: 0.03833
+  ...
+# Subtest: company.support authorized synthetic command / replay / changed payload
+ok 236 - company.support authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.069739
+  ...
+# Subtest: company.support cross-tenant rejected
+ok 237 - company.support cross-tenant rejected
+  ---
+  duration_ms: 0.043474
+  ...
+# Subtest: company.product remains release-blocked without verified authority
+ok 238 - company.product remains release-blocked without verified authority
+  ---
+  duration_ms: 0.036543
+  ...
+# Subtest: company.product authorized synthetic command / replay / changed payload
+ok 239 - company.product authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.0689
+  ...
+# Subtest: company.product cross-tenant rejected
+ok 240 - company.product cross-tenant rejected
+  ---
+  duration_ms: 0.044149
+  ...
+# Subtest: company.subscriptions remains release-blocked without verified authority
+ok 241 - company.subscriptions remains release-blocked without verified authority
+  ---
+  duration_ms: 0.036052
+  ...
+# Subtest: company.subscriptions authorized synthetic command / replay / changed payload
+ok 242 - company.subscriptions authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.070981
+  ...
+# Subtest: company.subscriptions cross-tenant rejected
+ok 243 - company.subscriptions cross-tenant rejected
+  ---
+  duration_ms: 0.041834
+  ...
+# Subtest: company.billing remains release-blocked without verified authority
+ok 244 - company.billing remains release-blocked without verified authority
+  ---
+  duration_ms: 0.035017
+  ...
+# Subtest: company.billing authorized synthetic command / replay / changed payload
+ok 245 - company.billing authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.119468
+  ...
+# Subtest: company.billing cross-tenant rejected
+ok 246 - company.billing cross-tenant rejected
+  ---
+  duration_ms: 0.058397
+  ...
+# Subtest: company.accounting remains release-blocked without verified authority
+ok 247 - company.accounting remains release-blocked without verified authority
+  ---
+  duration_ms: 0.042811
+  ...
+# Subtest: company.accounting authorized synthetic command / replay / changed payload
+ok 248 - company.accounting authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.092015
+  ...
+# Subtest: company.accounting cross-tenant rejected
+ok 249 - company.accounting cross-tenant rejected
+  ---
+  duration_ms: 0.053734
+  ...
+# Subtest: company.treasury remains release-blocked without verified authority
+ok 250 - company.treasury remains release-blocked without verified authority
+  ---
+  duration_ms: 0.043402
+  ...
+# Subtest: company.treasury authorized synthetic command / replay / changed payload
+ok 251 - company.treasury authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.098715
+  ...
+# Subtest: company.treasury cross-tenant rejected
+ok 252 - company.treasury cross-tenant rejected
+  ---
+  duration_ms: 0.085688
+  ...
+# Subtest: company.expenses remains release-blocked without verified authority
+ok 253 - company.expenses remains release-blocked without verified authority
+  ---
+  duration_ms: 0.050251
+  ...
+# Subtest: company.expenses authorized synthetic command / replay / changed payload
+ok 254 - company.expenses authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.093624
+  ...
+# Subtest: company.expenses cross-tenant rejected
+ok 255 - company.expenses cross-tenant rejected
+  ---
+  duration_ms: 3.482468
+  ...
+# Subtest: company.procurement remains release-blocked without verified authority
+ok 256 - company.procurement remains release-blocked without verified authority
+  ---
+  duration_ms: 0.075372
+  ...
+# Subtest: company.procurement authorized synthetic command / replay / changed payload
+ok 257 - company.procurement authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.11834
+  ...
+# Subtest: company.procurement cross-tenant rejected
+ok 258 - company.procurement cross-tenant rejected
+  ---
+  duration_ms: 0.067198
+  ...
+# Subtest: company.vendors remains release-blocked without verified authority
+ok 259 - company.vendors remains release-blocked without verified authority
+  ---
+  duration_ms: 0.054397
+  ...
+# Subtest: company.vendors authorized synthetic command / replay / changed payload
+ok 260 - company.vendors authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 9.955901
+  ...
+# Subtest: company.vendors cross-tenant rejected
+ok 261 - company.vendors cross-tenant rejected
+  ---
+  duration_ms: 0.086955
+  ...
+# Subtest: company.people remains release-blocked without verified authority
+ok 262 - company.people remains release-blocked without verified authority
+  ---
+  duration_ms: 0.048008
+  ...
+# Subtest: company.people authorized synthetic command / replay / changed payload
+ok 263 - company.people authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.082136
+  ...
+# Subtest: company.people cross-tenant rejected
+ok 264 - company.people cross-tenant rejected
+  ---
+  duration_ms: 0.477899
+  ...
+# Subtest: company.compensation remains release-blocked without verified authority
+ok 265 - company.compensation remains release-blocked without verified authority
+  ---
+  duration_ms: 0.057327
+  ...
+# Subtest: company.compensation authorized synthetic command / replay / changed payload
+ok 266 - company.compensation authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.081887
+  ...
+# Subtest: company.compensation cross-tenant rejected
+ok 267 - company.compensation cross-tenant rejected
+  ---
+  duration_ms: 0.04477
+  ...
+# Subtest: company.legal remains release-blocked without verified authority
+ok 268 - company.legal remains release-blocked without verified authority
+  ---
+  duration_ms: 0.036441
+  ...
+# Subtest: company.legal authorized synthetic command / replay / changed payload
+ok 269 - company.legal authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.068457
+  ...
+# Subtest: company.legal cross-tenant rejected
+ok 270 - company.legal cross-tenant rejected
+  ---
+  duration_ms: 0.040121
+  ...
+# Subtest: company.partners remains release-blocked without verified authority
+ok 271 - company.partners remains release-blocked without verified authority
+  ---
+  duration_ms: 0.036505
+  ...
+# Subtest: company.partners authorized synthetic command / replay / changed payload
+ok 272 - company.partners authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.067961
+  ...
+# Subtest: company.partners cross-tenant rejected
+ok 273 - company.partners cross-tenant rejected
+  ---
+  duration_ms: 0.040177
+  ...
+# Subtest: company.it remains release-blocked without verified authority
+ok 274 - company.it remains release-blocked without verified authority
+  ---
+  duration_ms: 2.885813
+  ...
+# Subtest: company.it authorized synthetic command / replay / changed payload
+ok 275 - company.it authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.094348
+  ...
+# Subtest: company.it cross-tenant rejected
+ok 276 - company.it cross-tenant rejected
+  ---
+  duration_ms: 0.044075
+  ...
+# Subtest: company.knowledge remains release-blocked without verified authority
+ok 277 - company.knowledge remains release-blocked without verified authority
+  ---
+  duration_ms: 0.038486
+  ...
+# Subtest: company.knowledge authorized synthetic command / replay / changed payload
+ok 278 - company.knowledge authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.062062
+  ...
+# Subtest: company.knowledge cross-tenant rejected
+ok 279 - company.knowledge cross-tenant rejected
+  ---
+  duration_ms: 0.036407
+  ...
+# Subtest: company.research remains release-blocked without verified authority
+ok 280 - company.research remains release-blocked without verified authority
+  ---
+  duration_ms: 0.031458
+  ...
+# Subtest: company.research authorized synthetic command / replay / changed payload
+ok 281 - company.research authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.116115
+  ...
+# Subtest: company.research cross-tenant rejected
+ok 282 - company.research cross-tenant rejected
+  ---
+  duration_ms: 0.04842
+  ...
+# Subtest: ops.command remains release-blocked without verified authority
+ok 283 - ops.command remains release-blocked without verified authority
+  ---
+  duration_ms: 0.035241
+  ...
+# Subtest: ops.tenants remains release-blocked without verified authority
+ok 284 - ops.tenants remains release-blocked without verified authority
+  ---
+  duration_ms: 0.032215
+  ...
+# Subtest: ops.tenants authorized synthetic command / replay / changed payload
+ok 285 - ops.tenants authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.062487
+  ...
+# Subtest: ops.tenants cross-tenant rejected
+ok 286 - ops.tenants cross-tenant rejected
+  ---
+  duration_ms: 0.041031
+  ...
+# Subtest: ops.config remains release-blocked without verified authority
+ok 287 - ops.config remains release-blocked without verified authority
+  ---
+  duration_ms: 0.033659
+  ...
+# Subtest: ops.config authorized synthetic command / replay / changed payload
+ok 288 - ops.config authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.059483
+  ...
+# Subtest: ops.config cross-tenant rejected
+ok 289 - ops.config cross-tenant rejected
+  ---
+  duration_ms: 0.038508
+  ...
+# Subtest: ops.releases remains release-blocked without verified authority
+ok 290 - ops.releases remains release-blocked without verified authority
+  ---
+  duration_ms: 0.032183
+  ...
+# Subtest: ops.releases authorized synthetic command / replay / changed payload
+ok 291 - ops.releases authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.071934
+  ...
+# Subtest: ops.releases cross-tenant rejected
+ok 292 - ops.releases cross-tenant rejected
+  ---
+  duration_ms: 0.040179
+  ...
+# Subtest: ops.reliability remains release-blocked without verified authority
+ok 293 - ops.reliability remains release-blocked without verified authority
+  ---
+  duration_ms: 0.035529
+  ...
+# Subtest: ops.incidents remains release-blocked without verified authority
+ok 294 - ops.incidents remains release-blocked without verified authority
+  ---
+  duration_ms: 0.030631
+  ...
+# Subtest: ops.incidents authorized synthetic command / replay / changed payload
+ok 295 - ops.incidents authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.059313
+  ...
+# Subtest: ops.incidents cross-tenant rejected
+ok 296 - ops.incidents cross-tenant rejected
+  ---
+  duration_ms: 0.036502
+  ...
+# Subtest: ops.jobs remains release-blocked without verified authority
+ok 297 - ops.jobs remains release-blocked without verified authority
+  ---
+  duration_ms: 0.031137
+  ...
+# Subtest: ops.jobs authorized synthetic command / replay / changed payload
+ok 298 - ops.jobs authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.057408
+  ...
+# Subtest: ops.jobs cross-tenant rejected
+ok 299 - ops.jobs cross-tenant rejected
+  ---
+  duration_ms: 0.038808
+  ...
+# Subtest: ops.integrations remains release-blocked without verified authority
+ok 300 - ops.integrations remains release-blocked without verified authority
+  ---
+  duration_ms: 0.030783
+  ...
+# Subtest: ops.integrations authorized synthetic command / replay / changed payload
+ok 301 - ops.integrations authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.061673
+  ...
+# Subtest: ops.integrations cross-tenant rejected
+ok 302 - ops.integrations cross-tenant rejected
+  ---
+  duration_ms: 0.036316
+  ...
+# Subtest: ops.database remains release-blocked without verified authority
+ok 303 - ops.database remains release-blocked without verified authority
+  ---
+  duration_ms: 0.03249
+  ...
+# Subtest: ops.database authorized synthetic command / replay / changed payload
+ok 304 - ops.database authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.058362
+  ...
+# Subtest: ops.database cross-tenant rejected
+ok 305 - ops.database cross-tenant rejected
+  ---
+  duration_ms: 0.03447
+  ...
+# Subtest: ops.recovery remains release-blocked without verified authority
+ok 306 - ops.recovery remains release-blocked without verified authority
+  ---
+  duration_ms: 0.037699
+  ...
+# Subtest: ops.recovery authorized synthetic command / replay / changed payload
+ok 307 - ops.recovery authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.058088
+  ...
+# Subtest: ops.recovery cross-tenant rejected
+ok 308 - ops.recovery cross-tenant rejected
+  ---
+  duration_ms: 0.035917
+  ...
+# Subtest: ops.security remains release-blocked without verified authority
+ok 309 - ops.security remains release-blocked without verified authority
+  ---
+  duration_ms: 0.0307
+  ...
+# Subtest: ops.security authorized synthetic command / replay / changed payload
+ok 310 - ops.security authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.059988
+  ...
+# Subtest: ops.security cross-tenant rejected
+ok 311 - ops.security cross-tenant rejected
+  ---
+  duration_ms: 0.069844
+  ...
+# Subtest: ops.access remains release-blocked without verified authority
+ok 312 - ops.access remains release-blocked without verified authority
+  ---
+  duration_ms: 0.036033
+  ...
+# Subtest: ops.access authorized synthetic command / replay / changed payload
+ok 313 - ops.access authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.063127
+  ...
+# Subtest: ops.access cross-tenant rejected
+ok 314 - ops.access cross-tenant rejected
+  ---
+  duration_ms: 0.035776
+  ...
+# Subtest: ops.privacy remains release-blocked without verified authority
+ok 315 - ops.privacy remains release-blocked without verified authority
+  ---
+  duration_ms: 0.032305
+  ...
+# Subtest: ops.privacy authorized synthetic command / replay / changed payload
+ok 316 - ops.privacy authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.05786
+  ...
+# Subtest: ops.privacy cross-tenant rejected
+ok 317 - ops.privacy cross-tenant rejected
+  ---
+  duration_ms: 0.03517
+  ...
+# Subtest: ops.audit remains release-blocked without verified authority
+ok 318 - ops.audit remains release-blocked without verified authority
+  ---
+  duration_ms: 0.031705
+  ...
+# Subtest: ops.ai remains release-blocked without verified authority
+ok 319 - ops.ai remains release-blocked without verified authority
+  ---
+  duration_ms: 0.033587
+  ...
+# Subtest: ops.ai authorized synthetic command / replay / changed payload
+ok 320 - ops.ai authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.056984
+  ...
+# Subtest: ops.ai cross-tenant rejected
+ok 321 - ops.ai cross-tenant rejected
+  ---
+  duration_ms: 0.035431
+  ...
+# Subtest: ops.costs remains release-blocked without verified authority
+ok 322 - ops.costs remains release-blocked without verified authority
+  ---
+  duration_ms: 0.030928
+  ...
+# Subtest: ops.moderation remains release-blocked without verified authority
+ok 323 - ops.moderation remains release-blocked without verified authority
+  ---
+  duration_ms: 0.029616
+  ...
+# Subtest: ops.moderation authorized synthetic command / replay / changed payload
+ok 324 - ops.moderation authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.056487
+  ...
+# Subtest: ops.moderation cross-tenant rejected
+ok 325 - ops.moderation cross-tenant rejected
+  ---
+  duration_ms: 0.038736
+  ...
+# Subtest: ops.support_session remains release-blocked without verified authority
+ok 326 - ops.support_session remains release-blocked without verified authority
+  ---
+  duration_ms: 0.032207
+  ...
+# Subtest: ops.support_session authorized synthetic command / replay / changed payload
+ok 327 - ops.support_session authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.058011
+  ...
+# Subtest: ops.support_session cross-tenant rejected
+ok 328 - ops.support_session cross-tenant rejected
+  ---
+  duration_ms: 0.034448
+  ...
+# Subtest: ops.services remains release-blocked without verified authority
+ok 329 - ops.services remains release-blocked without verified authority
+  ---
+  duration_ms: 0.032599
+  ...
+# Subtest: ops.dead_letters remains release-blocked without verified authority
+ok 330 - ops.dead_letters remains release-blocked without verified authority
+  ---
+  duration_ms: 0.029681
+  ...
+# Subtest: ops.dead_letters authorized synthetic command / replay / changed payload
+ok 331 - ops.dead_letters authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.057366
+  ...
+# Subtest: ops.dead_letters cross-tenant rejected
+ok 332 - ops.dead_letters cross-tenant rejected
+  ---
+  duration_ms: 0.038357
+  ...
+# Subtest: dev.apps remains release-blocked without verified authority
+ok 333 - dev.apps remains release-blocked without verified authority
+  ---
+  duration_ms: 0.033815
+  ...
+# Subtest: dev.apps authorized synthetic command / replay / changed payload
+ok 334 - dev.apps authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.057481
+  ...
+# Subtest: dev.apps cross-tenant rejected
+ok 335 - dev.apps cross-tenant rejected
+  ---
+  duration_ms: 0.035215
+  ...
+# Subtest: dev.keys remains release-blocked without verified authority
+ok 336 - dev.keys remains release-blocked without verified authority
+  ---
+  duration_ms: 0.031069
+  ...
+# Subtest: dev.keys authorized synthetic command / replay / changed payload
+ok 337 - dev.keys authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.057275
+  ...
+# Subtest: dev.keys cross-tenant rejected
+ok 338 - dev.keys cross-tenant rejected
+  ---
+  duration_ms: 0.03867
+  ...
+# Subtest: dev.sandbox remains release-blocked without verified authority
+ok 339 - dev.sandbox remains release-blocked without verified authority
+  ---
+  duration_ms: 0.031131
+  ...
+# Subtest: dev.sandbox authorized synthetic command / replay / changed payload
+ok 340 - dev.sandbox authorized synthetic command / replay / changed payload
+  ---
+  duration_ms: 0.05705
+  ...
+# Subtest: dev.sandbox cross-tenant rejected
+ok 341 - dev.sandbox cross-tenant rejected
+  ---
+  duration_ms: 0.035713
+  ...
+# Subtest: unauthenticated rejected
+ok 342 - unauthenticated rejected
+  ---
+  duration_ms: 0.142437
+  ...
+# Subtest: inactive session rejected
+ok 343 - inactive session rejected
+  ---
+  duration_ms: 0.0613
+  ...
+# Subtest: ungranted workspace rejected
+ok 344 - ungranted workspace rejected
+  ---
+  duration_ms: 0.060159
+  ...
+# Subtest: ungranted capability rejected
+ok 345 - ungranted capability rejected
+  ---
+  duration_ms: 0.206823
+  ...
+# Subtest: wrong object owner rejected
+ok 346 - wrong object owner rejected
+  ---
+  duration_ms: 0.115797
+  ...
+# Subtest: missing purpose rejected
+ok 347 - missing purpose rejected
+  ---
+  duration_ms: 0.060379
+  ...
+# Subtest: data blocked rejected
+ok 348 - data blocked rejected
+  ---
+  duration_ms: 0.055406
+  ...
+# Subtest: unconfirmed authority rejected
+ok 349 - unconfirmed authority rejected
+  ---
+  duration_ms: 0.04956
+  ...
+# Subtest: stale source rejected
+ok 350 - stale source rejected
+  ---
+  duration_ms: 0.085938
+  ...
+# Subtest: version changed rejected
+ok 351 - version changed rejected
+  ---
+  duration_ms: 0.062862
+  ...
+# Subtest: policy blocked rejected
+ok 352 - policy blocked rejected
+  ---
+  duration_ms: 0.052147
+  ...
+# Subtest: consent blocked rejected
+ok 353 - consent blocked rejected
+  ---
+  duration_ms: 0.051989
+  ...
+# Subtest: self approval rejected
+ok 354 - self approval rejected
+  ---
+  duration_ms: 0.056717
+  ...
+# Subtest: expired approval rejected
+ok 355 - expired approval rejected
+  ---
+  duration_ms: 0.304007
+  ...
+# Subtest: changed binding rejected
+ok 356 - changed binding rejected
+  ---
+  duration_ms: 0.082899
+  ...
+# Subtest: revoked grant rejected
+ok 357 - revoked grant rejected
+  ---
+  duration_ms: 0.05956
+  ...
+# Subtest: expired grant rejected
+ok 358 - expired grant rejected
+  ---
+  duration_ms: 0.050033
+  ...
+# Subtest: missing idempotency rejected
+ok 359 - missing idempotency rejected
+  ---
+  duration_ms: 0.04874
+  ...
+# Subtest: unlisted command rejected
+ok 360 - unlisted command rejected
+  ---
+  duration_ms: 0.058052
+  ...
+# Subtest: naive grant timestamp rejected
+ok 361 - naive grant timestamp rejected
+  ---
+  duration_ms: 0.052796
+  ...
+# Subtest: seven UI region states
+ok 362 - seven UI region states
+  ---
+  duration_ms: 0.04849
+  ...
+1..362
+# tests 362
+# suites 0
+# pass 362
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 283.914902

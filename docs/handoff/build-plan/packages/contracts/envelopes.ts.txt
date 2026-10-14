@@ -1,0 +1,43 @@
+// Shared platform envelopes. Rename .txt -> .ts and export from packages/contracts.
+export type ActorReference = { accountId: string; actorType: "student" | "staff" | "service" | "support" | "system" };
+export type SourceType = "institution_verified" | "connected" | "student_entered" | "derived" | "ai_assisted" | "needs_review";
+export type Freshness = "current" | "updating" | "stale" | "unknown" | "failed";
+export type Classification = "public" | "internal" | "sensitive" | "restricted";
+
+export type RecordEnvelope<T> = {
+  id: string; tenantId: string; recordType: string; schemaVersion: number;
+  lifecycleState: "active" | "archived" | "deleted" | "held";
+  authority: { ownerType: "institution" | "student" | "semester" | "partner" | "external_provider"; ownerReference: string; sourceType: SourceType; sourceSystem?: string; sourceRecordReference?: string; observedAt?: string; freshnessState: Freshness };
+  classification: Classification; retentionClass: string;
+  version: number;     // +1 on every update
+  generation: number;  // +1 when access or workflow is revoked; invalidates cached permissions
+  createdAt: string; updatedAt: string; createdBy: ActorReference; updatedBy: ActorReference;
+  data: T;
+};
+
+export type CommandEnvelope<T> = {
+  commandId: string; commandType: string; commandVersion: number; tenantId: string;
+  aggregateType: string; aggregateId: string; expectedVersion?: number; expectedGeneration?: number;
+  actor: ActorReference & { sessionId?: string; roleContext: string[] };
+  idempotencyKey: string; correlationId: string; causationId?: string; submittedAt: string; purpose: string; payload: T;
+};
+
+export type EventEnvelope<T> = {
+  eventId: string; eventType: string; eventVersion: number; tenantId: string;
+  aggregateType: string; aggregateId: string; aggregateVersion: number; aggregateGeneration?: number;
+  occurredAt: string; producer: { component: string; releaseVersion: string };
+  correlationId: string; causationId?: string; idempotencyKey?: string;
+  classification: Exclude<Classification, "public">; payload: T; // references + approved summaries only
+};
+
+export type PermissionDecision = { allowed: boolean; reason: string; policyVersion: string; evaluatedAt: string; obligations?: ("audit" | "receipt" | "preview" | "second_approver")[] };
+
+/** Pipeline every command handler runs, in order. Throwing at any step leaves no state change. */
+export const COMMAND_STEPS = ["validate_schema", "resolve_tenant_context", "authenticate_actor", "evaluate_membership_and_scope", "evaluate_policy", "enforce_expected_version", "write_audit_intent", "execute_or_enqueue_durable_work", "write_receipt_when_user_visible", "publish_event_only_after_commit"] as const;
+
+export function assertEnvelope<T>(r: RecordEnvelope<T>): void {
+  if (!r.tenantId) throw new Error("record has no tenantId");
+  if (r.classification === "restricted" && !r.authority?.ownerReference) throw new Error("restricted record without authority");
+  if (["connected", "institution_verified"].includes(r.authority.sourceType) && !r.authority.observedAt) throw new Error("source-backed record without observedAt");
+  if (r.authority.sourceType === "institution_verified" && !r.authority.sourceRecordReference) throw new Error("institution_verified needs a source record reference — copying a value doesn't make it verified");
+}

@@ -1,0 +1,13 @@
+institution_buyer_brief:
+  problem: Students often receive information across disconnected systems and need a clear, trustworthy next step without ambiguity about what is official.
+  pilot_solution: A bounded workflow connecting approved institutional information, student-facing explanation, safe routing, staff visibility, receipts and operational evidence.
+  authority_statement: Semester does not replace institutional systems of record or institutional decision-making.
+  proof: [source_and_freshness_labels, scoped_role_access, audit_and_receipt_model, support_and_reconciliation_process, defined_success_measurement]
+  audiences:
+    - {who: Student affairs / registrar, concern: student clarity and safe routing, show: readiness workflow · source labels · handoff receipt, avoid: general AI claims}
+    - {who: CIO / IT, concern: architecture, access, integration, operations, show: environment model · SSO status · RLS · audit · incident process, avoid: visual prototype breadth}
+    - {who: Security / privacy, concern: data scope and control evidence, show: data map · DPA · access model · AI boundary · subprocessor status, avoid: "secure by design" slogans}
+    - {who: Accessibility team, concern: usability and documented conformance work, show: VPAT/ACR status · tests · issue log · remediation plan, avoid: aesthetic system details}
+    - {who: Procurement / legal, concern: contracting and accountability, show: pilot agreement · SOW · DPA · insurance status · policies, avoid: unverified growth metrics}
+    - {who: Executive sponsor, concern: measurable pilot value and risk, show: scope · success plan · governance · renewal criteria, avoid: a roadmap of every future domain}
+  materials_derived_from_this: [templates/institution-deck, templates/sales-one-pager, docs/pilot one-pager, company-site trust section, release notes, training deck]

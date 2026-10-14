@@ -1,0 +1,29 @@
+// Worker safety guard — rename to .ts. A result is applied once, only if tenant, aggregate, generation, lease,
+// state and policy all still match. Everything runs in one transaction with row locks.
+export type ApplyResultInput = { jobId: string; leaseToken: string; tenantId: string; aggregateId: string; expectedGeneration: number; expectedState: string; workerId: string; result: unknown; correlationId: string };
+export type Reject = { ok: false; code: "TENANT_MISMATCH" | "AGGREGATE_MISMATCH" | "LEASE_LOST" | "STALE_GENERATION" | "TERMINAL_JOB" | "STATE_CHANGED" | "POLICY_DENY" | "ALREADY_APPLIED" };
+export type Tx = {
+  jobForUpdate(id: string): Promise<{ tenantId: string; aggregateId: string; generation: number; state: string; leaseToken: string | null; leaseExpiresAt: string | null }>;
+  caseForUpdate(id: string): Promise<{ state: string; generation: number }>;
+  policy(input: Record<string, unknown>): Promise<{ result: "allow" | "deny" | "require_approval" | "require_review" }>;
+  applyOnce(input: ApplyResultInput): Promise<"applied" | "duplicate">;   // transition + audit + receipt + outbox in this tx
+  markJob(id: string, state: string, code?: string): Promise<void>;
+};
+export async function applyWorkerResult(tx: Tx, i: ApplyResultInput): Promise<{ ok: true } | Reject> {
+  const job = await tx.jobForUpdate(i.jobId);
+  const rej = async (code: Reject["code"], jobState = "cancelled") => { await tx.markJob(i.jobId, jobState, code); return { ok: false as const, code }; };
+  if (job.tenantId !== i.tenantId) return rej("TENANT_MISMATCH", "quarantined");
+  if (job.aggregateId !== i.aggregateId) return rej("AGGREGATE_MISMATCH", "quarantined");
+  if (job.state === "cancelled" || job.state === "expired" || job.state === "succeeded") return { ok: false, code: "TERMINAL_JOB" };
+  if (job.leaseToken !== i.leaseToken || !job.leaseExpiresAt || Date.parse(job.leaseExpiresAt) < Date.now()) return { ok: false, code: "LEASE_LOST" }; // another worker owns it now
+  if (job.generation !== i.expectedGeneration) return rej("STALE_GENERATION");
+  const c = await tx.caseForUpdate(i.aggregateId);
+  if (c.generation !== i.expectedGeneration) return rej("STALE_GENERATION");   // case moved on (cancelled, re-evaluated, revoked)
+  if (c.state !== i.expectedState) return rej("STATE_CHANGED", "retry_scheduled");
+  const d = await tx.policy({ command: "readiness.apply_worker_result", tenantId: i.tenantId, resourceId: i.aggregateId });
+  if (d.result !== "allow") return rej("POLICY_DENY");
+  const r = await tx.applyOnce(i);
+  if (r === "duplicate") { await tx.markJob(i.jobId, "succeeded"); return { ok: false, code: "ALREADY_APPLIED" }; }
+  await tx.markJob(i.jobId, "succeeded");
+  return { ok: true };
+}

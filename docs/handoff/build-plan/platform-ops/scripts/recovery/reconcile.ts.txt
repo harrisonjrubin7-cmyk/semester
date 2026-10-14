@@ -1,0 +1,6 @@
+// Reconcile restored records against authoritative sources. Opens REC- cases; never overwrites the source.
+const target = process.argv.find((a) => a.startsWith("--target="))?.split("=")[1] ?? "";
+if (!/recovery|drill|isolated|local/.test(target) || /prod/.test(target)) { console.error("Refused: recovery scripts only run against an isolated recovery/drill target, never production."); process.exit(2); }
+const apply = process.argv.includes("--apply");   // default is a dry run
+const tenant = process.argv.find((a) => a.startsWith("--tenant="))?.split("=")[1];
+console.log(apply ? "RUN" : "PLAN", `for ${tenant}: fetch source versions → diff → open REC case per mismatch (source wins; Semester record superseded with reason) → no connector re-enable until 0 open P0 cases`);

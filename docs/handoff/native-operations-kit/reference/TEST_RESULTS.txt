@@ -1,0 +1,26 @@
+test_all_checks (test_native_controls.Controls.test_all_checks) ... ok
+test_balanced (test_native_controls.Controls.test_balanced) ... ok
+test_cross_currency (test_native_controls.Controls.test_cross_currency) ... ok
+test_cycle (test_native_controls.Controls.test_cycle) ... ok
+test_dedupe (test_native_controls.Controls.test_dedupe) ... ok
+test_depth (test_native_controls.Controls.test_depth) ... ok
+test_digest_change (test_native_controls.Controls.test_digest_change) ... ok
+test_digest_order (test_native_controls.Controls.test_digest_order) ... ok
+test_double_sided (test_native_controls.Controls.test_double_sided) ... ok
+test_each_denial (test_native_controls.Controls.test_each_denial) ... ok
+test_float (test_native_controls.Controls.test_float) ... ok
+test_forbidden (test_native_controls.Controls.test_forbidden) ... ok
+test_missing (test_native_controls.Controls.test_missing) ... ok
+test_negative (test_native_controls.Controls.test_negative) ... ok
+test_observe (test_native_controls.Controls.test_observe) ... ok
+test_receiver_auth (test_native_controls.Controls.test_receiver_auth) ... ok
+test_string_truth (test_native_controls.Controls.test_string_truth) ... ok
+test_total_budget (test_native_controls.Controls.test_total_budget) ... ok
+test_unbalanced (test_native_controls.Controls.test_unbalanced) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 0.001s
+
+OK
+
+Scope: 19 local reference tests; 14 denial subcases. No runtime/DB/browser/payment-provider tests.

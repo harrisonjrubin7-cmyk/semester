@@ -1,0 +1,36 @@
+# Rename to .yml. Adapted to the repo's npm workspaces.
+name: contract-validation
+on: [pull_request]
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci && npm i --no-save yaml
+      - run: node scripts/validate-contracts.mjs        # routes→capabilities→tables→commands→events→audits
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+      - run: supabase start
+      - run: supabase db reset                          # all migrations apply on an empty DB; seeds load; views compile
+      - run: supabase db lint
+      - run: supabase test db                           # same-tenant allow, cross-tenant/role-scope/revoked deny, wedge state machine
+  policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: open-policy-agent/setup-opa@v2
+      - run: opa test policies -v
+  workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm test --workspace workers/workflow-worker --if-present   # idempotency, transitions, retry/dead letter, late-result rejection
+      - run: npx playwright install --with-deps && npx playwright test e2e/readiness --reporter=line   # 7 states + stale_source

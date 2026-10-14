@@ -1,0 +1,9 @@
+plan_roadmap:
+  phase_1: [registration_readiness, official_system_handoff, advisor_referral, term_calendar]
+  phase_2: [degree_information_view, student_entered_course_scenarios, advisor_shared_plan, requirement_question_handoff]
+  phase_3: [institution_approved_degree_audit_connection, approved_what_if_scenarios, registration_plan_export, proactive_milestone_reminders]
+  hard_boundaries:
+    - Semester does not certify degree completion.
+    - Semester does not approve substitutions or overrides.
+    - Semester does not claim enrollment unless an institution-approved authoritative source confirms it.
+  gate_between_phases: every phase-N capability at maturity >= 4 (verified) before phase N+1 starts

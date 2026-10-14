@@ -1,0 +1,15 @@
+id,check,criterion
+C01,Authenticated principal,Server-derived identity; no request-selected role
+C02,Scope membership,Current personal/business/institution scope membership
+C03,Environment and release,"Approved candidate, target, configuration and data mode"
+C04,Kill and hold,Current server kill/read-only/incident holds respected
+C05,Entitlement and module authority,Contract entitlement and off/shadow/assist/authoritative mode accepted
+C06,Capability and delegation,Scoped capability; delegation current and revocable
+C07,Role/cohort restrictions,All narrower audience and cohort policies respected
+C08,Data classification and purpose,"Allowed class, declared purpose and route"
+C09,Consent/retention/hold,"Applicable sharing grant, retention and legal hold rules"
+C10,Source and integration scope,Authority/freshness; approved connection/scopes; no fake source success
+C11,Domain policy and eligibility,Course/account/finance/record policy rechecked
+C12,Independent approval and MFA,"Required distinct approvers, current MFA and exact action digest"
+C13,Idempotency/version/preconditions,"Exact command key, current object version and unchanged preview"
+C14,Audit/receipt/dispatch readiness,Durable fail-closed audit/outbox/receipt; operations coverage

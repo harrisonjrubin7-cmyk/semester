@@ -1,0 +1,14 @@
+case,failure,where_enforced,status
+ONB-01,Identity provider outage,identity service / sign-in UI,not in 111
+ONB-02,Expired or used verification link,identity service,not in 111
+ONB-03,Institution id maps to another person,identity linking (semester-account: no email-match merge),not in 111
+ONB-04,Stale or wrong-tenant affiliation,membership sync,not in 111
+ONB-05,Required consent missing,consent service,not in 111
+ONB-06,Bad deep-link handoff,router / platform shell,not in 111
+ONB-07,Draft version conflict,workspace save (expected version),not in 111
+ONB-08,Course import extraction unconfirmed,syllabus ingestion,not in 111
+ONB-09,Missing step or forged verified event,111: evaluate_activation + complete_step,"covered — forgery impossible via API (server-only domain_events); incomplete returns not_yet without escalating. Test expects support_required for a forged claim: since a client cannot submit one, assert the call is rejected instead"
+ONB-10,Registration timeout during onboarding,101: accepted/result_unknown + reconcile,covered by 101; onboarding stays paused and never undoes a committed enrollment
+ONB-11,Push permission refused,notifications client,not in 111
+ONB-12,Session lost mid-step,client + complete_step (idempotent upsert),partly — resume is safe; pausing is client-side
+ONB-13,No published matching version / role changed,111: complete_step,covered — sets support_required (added 14 Oct); stale step list returns step_not_in_version

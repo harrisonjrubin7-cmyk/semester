@@ -1,0 +1,68 @@
+// Wave 1 registration-readiness client. Mirrors handoff/build-plan/contracts/api.openapi.yaml.
+// Copy to app/src/features/readiness/api.ts (drop .txt). No fetch happens unless the readiness flag is on for the tenant.
+export type Freshness = "current" | "stale" | "syncing" | "failed" | "unknown";
+export type ReadinessState = "unknown" | "ready" | "blocked" | "needs_review" | "stale" | "referred" | "resolved";
+export type SourceType = "institution_verified" | "connected" | "student_entered" | "estimated" | "ai_assisted" | "needs_review";
+export interface Check { key: string; label: string; state: ReadinessState; sourceType: SourceType; sourceRef?: string; freshness: Freshness; observedAt?: string; office?: string; nextStep?: string }
+export interface ReadinessSummary { termId: string; state: ReadinessState; reasonCode?: string; freshness: Freshness; assignedOffice?: string; checks: Check[]; evaluatedAt?: string }
+export interface Receipt { id: string; type: "readiness_evaluation" | "refresh_requested" | "referral_created"; status: "accepted" | "completed" | "failed" | "unknown"; statement: string; correlationId: string; issuedAt: string }
+export interface QueueRow { caseId: string; studentRef: string; state: ReadinessState; freshness: Freshness; office?: string; version: string; ageHours: number }
+export interface ExceptionRequest { id: string; caseId: string; reasonCode: string; justification: string; requestedBy: string; status: "pending" | "approved" | "denied" | "withdrawn"; version: string }
+
+export class ApiError extends Error {
+  constructor(public status: number, public code: string, message: string, public correlationId?: string) { super(message); }
+  /** Plain-language copy for the person on screen. Never shows raw server text for 5xx. */
+  get userMessage(): string {
+    switch (this.status) {
+      case 401: return "Your session ended. Sign in again.";
+      case 403: return "You don't have access to this.";
+      case 409: return "Someone else changed this. Reload to see the latest.";
+      case 422: return this.message;
+      case 423: return "Registration readiness isn't turned on for your school yet.";
+      case 503: return "We can't confirm right now — your school's system hasn't updated. Nothing is wrong with your account.";
+      default: return "Something went wrong. Nothing was changed.";
+    }
+  }
+}
+
+type Opts = { baseUrl: string; getToken: () => Promise<string | null> };
+const uuid = () => crypto.randomUUID();
+
+export function createReadinessClient({ baseUrl, getToken }: Opts) {
+  async function call<T>(method: string, path: string, body?: unknown, headers: Record<string, string> = {}): Promise<T> {
+    const token = await getToken();
+    if (!token) throw new ApiError(401, "unauthenticated", "Sign in first");
+    const correlationId = uuid();
+    const res = await fetch(baseUrl + path, { method, headers: { authorization: `Bearer ${token}`, "content-type": "application/json", "x-correlation-id": correlationId, ...headers }, body: body === undefined ? undefined : JSON.stringify(body) });
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      throw new ApiError(res.status, e.code ?? "error", e.message ?? res.statusText, e.correlationId ?? correlationId);
+    }
+    return (res.status === 204 ? undefined : await res.json()) as T;
+  }
+  // Each write takes a caller-held idempotency key so a retry after a timeout reuses it.
+  return {
+    context: (termId: string) => call<ReadinessSummary>("GET", `/v1/readiness/context?termId=${encodeURIComponent(termId)}`),
+    evaluate: (termId: string, goal: Record<string, unknown>, key = uuid()) => call<{ summary: ReadinessSummary; receipt: Receipt }>("POST", "/v1/readiness/evaluations", { termId, goal }, { "idempotency-key": key }),
+    refresh: (termId: string, key = uuid()) => call<Receipt>("POST", "/v1/readiness/refresh", { termId }, { "idempotency-key": key }),
+    refer: (termId: string, office: string, note: string, key = uuid()) => call<Receipt>("POST", "/v1/readiness/referrals", { termId, office, note }, { "idempotency-key": key }),
+    queue: (q: { state?: ReadinessState; freshness?: Freshness; office?: string; cursor?: string }) => call<{ rows: QueueRow[]; next?: string }>("GET", "/v1/registrar/readiness/queue?" + new URLSearchParams(Object.entries(q).filter(([, v]) => v) as [string, string][])),
+    route: (caseId: string, version: string, office: string, reasonCode: string, key = uuid()) => call<Receipt>("POST", `/v1/registrar/readiness/cases/${caseId}/route`, { office, reasonCode }, { "idempotency-key": key, "if-match": version }),
+    requestException: (caseId: string, reasonCode: string, justification: string, key = uuid()) => call<ExceptionRequest>("POST", `/v1/registrar/readiness/cases/${caseId}/exceptions`, { reasonCode, justification }, { "idempotency-key": key }),
+    decideException: (id: string, version: string, decision: "approved" | "denied", note: string, key = uuid()) => call<ExceptionRequest>("POST", `/v1/registrar/readiness/exceptions/${id}/decision`, { decision, note }, { "idempotency-key": key, "if-match": version }),
+  };
+}
+export type ReadinessClient = ReturnType<typeof createReadinessClient>;
+
+/** What a student sees for each state. Readiness never claims enrollment. */
+export const STATE_COPY: Record<ReadinessState, { title: string; body: string; tone: "ok" | "warn" | "bad" | "neutral" }> = {
+  ready: { title: "Ready to register", body: "Your school's records show nothing blocking you. You still register in your school's system.", tone: "ok" },
+  blocked: { title: "Something is blocking registration", body: "Clear the item below with the office named. Semester can't remove it for you.", tone: "bad" },
+  needs_review: { title: "Needs a person to check", body: "Something doesn't match. The office named below will review it.", tone: "warn" },
+  stale: { title: "Can't confirm right now", body: "Your school's system hasn't updated recently, so we won't guess.", tone: "warn" },
+  referred: { title: "Sent to an office", body: "An office has your case. You'll see their reply here.", tone: "neutral" },
+  resolved: { title: "Resolved", body: "The office closed this. Check again to see your current status.", tone: "ok" },
+  unknown: { title: "Not checked yet", body: "Check your readiness to see what your school's records show.", tone: "neutral" },
+};
+/** A result is definitive only when every check is current and institution-verified. */
+export const isDefinitive = (s: ReadinessSummary) => s.freshness === "current" && s.checks.every((c) => c.freshness === "current" && c.sourceType === "institution_verified");

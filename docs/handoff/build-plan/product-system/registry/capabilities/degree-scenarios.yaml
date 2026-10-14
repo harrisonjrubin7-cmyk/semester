@@ -1,0 +1,11 @@
+capability:
+  id: CAP-PLAN-002
+  title: Degree scenarios
+  placement: native
+  maturity_level: 1
+  charter: ui_kits/scale-system (Domain charter tab)
+  states: [draft, shared_with_advisor, reviewed, archived]
+  rules:
+    - Completed courses come only from institution_verified source; a student can't mark a course completed.
+    - Every scenario shows the planning disclaimer.
+    - Sharing with an advisor is the student's choice; reviewed means an advisor looked, not that it is approved.

@@ -1,0 +1,6 @@
+production_system:
+  lifecycle: [discover, charter, design, contract, build, verify, activate, operate, measure, decide, scale_or_retire]
+  invariant: No feature moves forward because its screen is complete. Each stage produces evidence for its authority, sensitivity, operational burden and user impact.
+  decision_owners: {discover: product_owner, charter: product_and_institution_owner, design: product_design_owner, contract: platform_and_security_owner, build: engineering_owner, verify: quality_and_accessibility_owner, operate: operations_owner, measure: product_operations_owner, scale_or_retire: executive_and_institution_owner}
+  decide_outcomes: {expand: back to charter, improve: back to design, pause: safe off, retire: archive and retain}
+  stage_to_level: {charter: 0, design: 1, contract: 2, build: 3, verify: 4, activate+operate: 5, scale: 6–7}   # DEC-MATURITY-001

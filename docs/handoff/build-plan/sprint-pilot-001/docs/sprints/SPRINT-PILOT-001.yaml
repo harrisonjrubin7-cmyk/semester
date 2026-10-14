@@ -1,0 +1,27 @@
+sprint:
+  id: SPRINT-PILOT-001
+  objective: Convert registration readiness from a designed pilot into an end-to-end verifiable release candidate.
+  owner: Harrison (founder) · backup: contractor (to engage) · gate approver: security advisor (to engage)
+  environments: {production: semester, staging: Semester-Platform, development: Semester2, drill: semester-restore-drill-2026-10-01}
+  scope:
+    - establish_canonical_repository_map            # docs/engineering/repository-map.yaml
+    - select_and_build_one_control_plane_baseline   # v4 — CERT-CONTROL-001
+    - implement_readiness_request_command           # SLICE-READINESS-002
+    - implement_idempotent_receipt_generation
+    - implement_source_state_projection             # packages/domain-core/source-state.ts
+    - implement_stale_unknown_and_review_UI_states
+    - implement_staff_needs_review_queue            # pilot command center
+    - implement_audit_and_correlation_events
+    - implement_RLS_policy_and_workflow_tests       # tests/rls/readiness-access.spec.ts
+    - run_revocation_and_duplicate_delivery_drills  # evidence/drills/*
+    - create_activation_gate_evidence
+  explicitly_not_in_scope: [degree_planning, course_studio, marketplace, native_finance, external_partner_API, broad_AI_assistant_expansion, official_enrollment_action, prerequisite_override_execution, hold_removal, official_degree_audit, grade_or_financial_aid_decision, autonomous_AI_action]
+  done_when: [release_gate_passes, safe_off_is_tested, institution_scope_is_confirmed, operational_owner_accepts_runbook]
+  slices: # seven, in order
+    - {id: SLICE-READINESS-001, name: Identity and context, proves: tenant + membership isolation; session revocation}
+    - {id: SLICE-READINESS-002, name: Readiness request, proves: schema validation, idempotency, audit receipt}
+    - {id: SLICE-READINESS-003, name: Source evaluation, proves: authority/freshness labels; stale/unknown block definitive results}
+    - {id: SLICE-READINESS-004, name: Student result, proves: ready, blocked, review, unknown, stale, error states}
+    - {id: SLICE-READINESS-005, name: Staff handoff, proves: caseload/office scope; student-visible status}
+    - {id: SLICE-READINESS-006, name: Reconciliation, proves: human review; immutable decision trail}
+    - {id: SLICE-READINESS-007, name: Operations, proves: monitoring, safe-off, incident and rollback drills}

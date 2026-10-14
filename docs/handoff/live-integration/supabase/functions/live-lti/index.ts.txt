@@ -1,0 +1,50 @@
+// LTI 1.3 tool endpoints. GET/POST /login (third-party initiated login) and POST /launch (id_token).
+// Requires an lti13 connection per institution: config { issuer, client_id, auth_endpoint, jwks_url, deployment_ids: "a,b", app_url }.
+import { createRemoteJWKSet, jwtVerify } from "npm:jose@5";
+import { admin, Denied, handler, requireCapability } from "../_shared/gate.ts";
+
+async function connByIssuer(iss: string, aud: string) {
+  const { data } = await admin().from("live_integration_connections").select("institution_id,config,status")
+    .eq("kind", "lti13").eq("config->>issuer", iss).eq("config->>client_id", aud).maybeSingle();
+  if (!data || !["sandbox", "active"].includes(data.status)) throw new Denied(403, "unknown_platform", "This LMS is not registered");
+  return data as { institution_id: string; config: Record<string, string> };
+}
+
+const html = (s: string, status = 200) => new Response(`<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;padding:24px">${s}</body>`, { status, headers: { "content-type": "text/html; charset=utf-8" } });
+
+Deno.serve(handler(async (req) => {
+  const url = new URL(req.url), path = url.pathname.split("/").pop();
+  const p = req.method === "POST" ? Object.fromEntries(new URLSearchParams(await req.text())) : Object.fromEntries(url.searchParams);
+
+  if (path === "login") {
+    const c = await connByIssuer(p.iss, p.client_id);
+    await requireCapability(c.institution_id, "lms.lti");
+    const state = crypto.randomUUID(), nonce = crypto.randomUUID();
+    await admin().from("live_outbox").insert({ institution_id: c.institution_id, aggregate: "lti", event: "lti.login_started", payload: { state, nonce, exp: Date.now() + 600_000 } });
+    const a = new URL(c.config.auth_endpoint);
+    Object.entries({ scope: "openid", response_type: "id_token", response_mode: "form_post", prompt: "none", client_id: c.config.client_id,
+      redirect_uri: p.target_link_uri, login_hint: p.login_hint, lti_message_hint: p.lti_message_hint ?? "", state, nonce }).forEach(([k, v]) => a.searchParams.set(k, v));
+    return new Response(null, { status: 302, headers: { location: a.toString(), "set-cookie": `lti_state=${state}; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=600` } });
+  }
+
+  if (path === "launch") {
+    const cookieState = (req.headers.get("cookie") ?? "").match(/lti_state=([^;]+)/)?.[1];
+    if (!p.id_token || !p.state || p.state !== cookieState) throw new Denied(400, "bad_state", "Launch state mismatch");
+    const unverified = JSON.parse(atob(p.id_token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    const c = await connByIssuer(unverified.iss, Array.isArray(unverified.aud) ? unverified.aud[0] : unverified.aud);
+    await requireCapability(c.institution_id, "lms.lti");
+    const { payload } = await jwtVerify(p.id_token, createRemoteJWKSet(new URL(c.config.jwks_url)), { issuer: c.config.issuer, audience: c.config.client_id });
+    const { data: started } = await admin().from("live_outbox").select("id,payload").eq("event", "lti.login_started").eq("payload->>state", p.state).maybeSingle();
+    if (!started || started.payload.nonce !== payload.nonce || started.payload.exp < Date.now()) throw new Denied(400, "bad_nonce", "Nonce invalid or expired");
+    await admin().from("live_outbox").update({ delivered_at: new Date().toISOString() }).eq("id", started.id); // single use
+    const dep = payload["https://purl.imsglobal.org/spec/lti/claim/deployment_id"] as string;
+    if (!c.config.deployment_ids.split(",").includes(dep)) throw new Denied(403, "unknown_deployment", "Deployment not registered");
+    const roles = (payload["https://purl.imsglobal.org/spec/lti/claim/roles"] as string[]) ?? [];
+    const ctx = payload["https://purl.imsglobal.org/spec/lti/claim/context"] as { id: string; title?: string } | undefined;
+    await admin().from("live_outbox").insert({ institution_id: c.institution_id, aggregate: "lti", event: "lti.launch_verified", payload: { sub: payload.sub, context: ctx?.id, roles } });
+    // Hand off to the app; the app maps (issuer, sub) to a Semester account through an approved link, never by email match.
+    const to = new URL(c.config.app_url); to.hash = `/teach?lti_context=${encodeURIComponent(ctx?.id ?? "")}`;
+    return html(`Launch verified for ${ctx?.title ?? "your course"}. <a href="${to}">Continue to Semester</a>`);
+  }
+  throw new Denied(404, "not_found", "Unknown LTI endpoint");
+}));

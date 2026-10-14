@@ -1,0 +1,17 @@
+week,stream,proposed_owner,exit_evidence,dependency,status,blocker
+1,Baseline and traceability,Platform Engineering,Canonical registry/code/migration reconciliation; no schema duplication,prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required
+2,Identity and object policy,Security + Platform,Verified actor/tenant/object decisions; negative tests,prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required
+3,Student-faculty records,Academic Engineering,Course/enrollment integrity and privacy scopes,prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required
+4,Submission transactions,Academic Engineering,"Durable receipt, duplicate/conflict behavior",prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required
+5,Rubric and draft grading,Faculty Product,Score validation; unreleased access denial,prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required
+6,Controlled grade release,Academic + Security,Independent approval bound to current grade version,prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required
+7,Readiness evidence,Registrar Engineering,Unknown/stale/blocked distinction and source time,prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required
+8,Office handoff,Institution Implementation,"Named receiving office, acknowledgement, escalation",prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required
+9,Outbox/projection,Platform Engineering,Replay/order/lease/gap handling and lag controls,prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required
+10,Privacy lifecycle,Privacy + Security,Delegation expiry/revoke; export/delete exceptions,prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required
+11,AI gateway,AI Platform + Privacy,"Record egress denied, source/tool policies",prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required
+12,Company operating loops,Company Operations,Deal/renewal/hiring/vendor/partner/research authority,prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required
+13,Developer sandbox,Developer Platform,"Isolated synthetic scopes, key rotation, safe labs",prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required
+14,Independent and target assurance,Qualified reviewers,Manual accessibility/security and target recovery drills,prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required
+15,Customer UAT and operations,Institution + Support,Exact cohort/responsibility/rota/stop criteria acceptance,prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required
+16,Scoped decision and closeout,Founder + customer authority,Activate only if all gates accepted; otherwise held,prior applicable gates,"planned, not schedule promise",current canonical code/target/professional evidence required

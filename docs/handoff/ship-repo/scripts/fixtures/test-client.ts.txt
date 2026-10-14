@@ -1,0 +1,25 @@
+// Synthetic tenants + a client that acts as one account under RLS. Staging/local only; refuses production URLs.
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+const URL = process.env.SUPABASE_URL ?? "http://127.0.0.1:54321";
+if (/supabase\.co/.test(URL) && process.env.SEMESTER_FIXTURES !== "synthetic-only") throw new Error("Refusing to seed a hosted project without SEMESTER_FIXTURES=synthetic-only");
+const admin = createClient(URL, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+async function user(email: string) { const { data, error } = await admin.auth.admin.createUser({ email, password: "synthetic-" + crypto.randomUUID(), email_confirm: true }); if (error) throw error; return data.user!; }
+export async function seedTenant(slug: string) {
+  const id = crypto.randomUUID();
+  await admin.from("institutions").insert({ id, name: "Synthetic " + slug, slug: slug + "-" + id.slice(0, 6) });
+  const mk = async (role: string, extra: Record<string, unknown> = {}) => { const u = await user(`${role}-${crypto.randomUUID().slice(0, 8)}@${slug}.synthetic.test`); await admin.from("memberships").insert({ institution_id: id, account_id: u.id, role, status: "active", ...extra }); return { id: u.id, email: u.email! }; };
+  return {
+    id,
+    createStudent: (o: { advisorId?: string } = {}) => mk("student", o.advisorId ? { advisor_id: o.advisorId } : {}),
+    createAdvisor: () => mk("advisor"),
+    createReadinessCase: async (c: { studentId: string; goal: string }) => { const { data, error } = await admin.from("readiness_cases").insert({ institution_id: id, student_id: c.studentId, goal: c.goal, state: "unknown" }).select().single(); if (error) throw error; return data; },
+  };
+}
+export function createTestClient({ accountId }: { tenantId: string; accountId: string }) {
+  let c: SupabaseClient | null = null;
+  const get = async () => { if (c) return c; const { data } = await admin.auth.admin.generateLink({ type: "magiclink", email: (await admin.auth.admin.getUserById(accountId)).data.user!.email! }); c = createClient(URL, process.env.SUPABASE_ANON_KEY!, { auth: { persistSession: false } }); await c.auth.verifyOtp({ token_hash: data.properties!.hashed_token, type: "magiclink" }); return c; };
+  return {
+    read: async (table: string, id: string) => (await (await get()).from(table).select("*").eq("id", id).maybeSingle()).data,
+    canReadStudent: async (studentId: string) => !!(await (await get()).from("student_profiles").select("id").eq("id", studentId).maybeSingle()).data,
+  };
+}

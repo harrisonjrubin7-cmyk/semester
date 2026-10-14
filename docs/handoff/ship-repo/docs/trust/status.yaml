@@ -1,0 +1,19 @@
+trust_status:
+  product_boundary:
+    - "Semester is a source-aware student action platform."
+    - "During the pilot, Semester doesn't replace the institution's registrar, gradebook or billing systems of record."
+    - "AI-assisted experiences are labeled and bounded by approved data scope."
+  current_review_items: [HECVAT (institution-required version), VPAT/ACR, SAML SSO, insurance]
+  status_each: in_progress
+  communication_rule:
+    - "Say in progress, planned or under review where accurate."
+    - "Never present an incomplete assessment as certification or conformance."
+    - "Attach current evidence or say it's unavailable."
+questionnaire_matrix:
+  - { question: What data is processed?, artifact: data-flow map + classification register, owner: privacy_owner, status: tenant_specific }
+  - { question: Who can access records?, artifact: role mapping + RLS design + access-policy summary, owner: security_owner, status: evidence_backed_when_tests_run }
+  - { question: How is access revoked?, artifact: revocation workflow + session controls + audit sample, owner: security_owner, status: tested_before_activation }
+  - { question: How are integrations handled?, artifact: connector certification + source-authority register, owner: integration_owner, status: per_connector }
+  - { question: How is AI constrained?, artifact: AI capability register + data-scope rules, owner: product_and_security, status: evidence_backed_when_tests_run }
+  - { question: What is your accessibility status?, artifact: VPAT/ACR status + test evidence, owner: accessibility_owner, status: in_progress_do_not_overclaim }
+  - { question: How are incidents handled?, artifact: docs/operations/incidents/INC-SEC-001.yaml + contact path, owner: operations_owner, status: approved_before_launch }

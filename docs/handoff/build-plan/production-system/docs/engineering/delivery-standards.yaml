@@ -1,0 +1,13 @@
+vertical_slice:
+  minimum_contents: [user_or_operator_entry_point, server_authorization, command_validation, domain_rule, record_change_or_receipt, audit_event, user_visible_result, error_and_safe_failure_state, automated_test, observability_event]
+  first_slice: {id: SLICE-REG-001, capabilityId: CAP-REG-001, userOutcome: student requests a readiness evaluation and sees a pending receipt, entryPoint: "Check my readiness" on Today, command: readiness.evaluate, policy: POL-READINESS-001, workflow: WF-READINESS-001, auditEvents: [readiness.evaluation_requested], tests: [TST-RLS-003, TST-WF-001, TST-E2E-REG-001], safeFailureState: needs_review with handoff, releaseEvidence: [EVD-RLS-001, EVD-POLICY-001]}
+definition_of_ready:
+  required: [capability_id, user_or_operator_outcome, named_owner, role_and_tenant_scope, authority_boundary, source_and_data_classification, record_and_command_contract, state_model, failure_and_safe_fallback, copy_for_ready_loading_empty_error_and_offline, accessibility_requirements, test_plan, support_or_escalation_path, release_scope, safe_off_plan]
+  blocks_start_when: [institution authority unknown, data source unknown, action consequence undefined, copy overclaims certainty, no owner for failure recovery]
+  SLICE-REG-001_today: ready to start build — owner and support path named (DEC-OWNER-001)
+definition_of_done:
+  code: [builds_and_lints, migrations_reviewed, contract_compatibility_checked, feature_flag_configured_when_needed]
+  quality: [unit_and_contract_tests_pass, authorization_and_RLS_tests_pass, workflow_failure_tests_pass, accessibility_critical_path_passes, mobile_or_responsive_behavior_verified]
+  operations: [dashboards_and_alerts_added, runbook_updated, support_guidance_published, safe_off_tested, reconciliation_behavior_confirmed]
+  evidence: [capability_registry_updated, screen_atlas_updated, control_links_updated, release_note_draft_updated, evidence_artifacts_attached, owner_and_review_date_current]
+  activation: [tenant_scope_approved, release_gate_approved, production_verification_completed]

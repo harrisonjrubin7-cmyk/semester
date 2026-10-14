@@ -1,0 +1,7 @@
+repository_map:   # which artifact is authoritative
+  production_application: {where: github harrisonjrubin7-cmyk/semester (app/, supabase/), status: canonical, owns: [application_code, migrations, policies, workers, tests, deployment_configuration]}
+  design_system: {where: this design project (tokens, components, guidelines), status: canonical_for_design_rules}
+  capability_registry: {where: this project — ui_kits/scale-system/scale-data.js + handoff/build-plan/catalog/*.csv, status: canonical_for_product_scope until moved into the repo}
+  control_plane_handoff: {where: handoff/live-integration, handoff/build-plan/*, status: candidate_until_built_and_tested}
+  prototype_kits: {where: ui_kits/*, templates/*, status: illustrative, must_not_be_used_as: [production_status_proof, security_control_evidence, institutional_claim_basis]}
+  rule: when a handoff file and the repo disagree, the repo wins; the handoff is updated or retired

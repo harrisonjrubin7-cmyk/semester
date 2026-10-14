@@ -1,0 +1,674 @@
+id,group,name,canonical_id,is_variant,is_gap_screen,has_prototype
+SCR-A-001,A,"Homepage",SCR-A-001,false,false,true
+SCR-A-002,A,"Product overview",SCR-A-002,false,false,false
+SCR-A-003,A,"Student workspace page",SCR-A-003,false,false,false
+SCR-A-004,A,"Institution platform page",SCR-A-004,false,false,false
+SCR-A-005,A,"Registration Readiness Pilot page",SCR-A-005,false,false,true
+SCR-A-006,A,"Course Studio page",SCR-A-006,false,false,false
+SCR-A-007,A,"Governed AI page",SCR-A-007,false,false,false
+SCR-A-008,A,"Advising and Student Success page",SCR-A-008,false,false,false
+SCR-A-009,A,"Registrar and Academic Operations page",SCR-A-009,false,false,false
+SCR-A-010,A,"Campus Services page",SCR-A-010,false,false,false
+SCR-A-011,A,"Career and Lifelong Learning page",SCR-A-011,false,false,false
+SCR-A-012,A,"Integrations page",SCR-A-012,false,false,false
+SCR-A-013,A,"Solutions: Students",SCR-A-013,false,false,false
+SCR-A-014,A,"Solutions: Advisors",SCR-A-014,false,false,false
+SCR-A-015,A,"Solutions: Student Success",SCR-A-015,false,false,false
+SCR-A-016,A,"Solutions: Faculty",SCR-A-016,false,false,false
+SCR-A-017,A,"Solutions: Registrars",SCR-A-017,false,false,false
+SCR-A-018,A,"Solutions: Departments",SCR-A-018,false,false,false
+SCR-A-019,A,"Solutions: Institutions",SCR-A-019,false,false,false
+SCR-A-020,A,"Solutions: Enterprise/Multi-campus",SCR-A-020,false,false,false
+SCR-A-021,A,"Solutions: Partners",SCR-A-021,false,false,false
+SCR-A-022,A,"Pilot overview",SCR-A-022,false,false,true
+SCR-A-023,A,"Pilot scope",SCR-A-023,false,false,false
+SCR-A-024,A,"Pilot success metrics",SCR-A-024,false,false,false
+SCR-A-025,A,"Implementation approach",SCR-A-025,false,false,false
+SCR-A-026,A,"Request pilot form",SCR-A-026,false,false,true
+SCR-A-027,A,"Pricing: Student plans",SCR-A-027,false,false,true
+SCR-A-028,A,"Pricing: Department plans",SCR-A-028,false,false,true
+SCR-A-029,A,"Pricing: Institution plans",SCR-A-029,false,false,true
+SCR-A-030,A,"Pricing: Enterprise plans",SCR-A-030,false,false,true
+SCR-A-031,A,"Feature comparison",SCR-A-031,false,false,true
+SCR-A-032,A,"AI usage policy",SCR-A-032,false,false,false
+SCR-A-033,A,"Request pricing",SCR-A-033,false,false,false
+SCR-A-034,A,"Demo request",SCR-A-034,false,false,false
+SCR-A-035,A,"Calendar booking",SCR-A-035,false,false,false
+SCR-A-036,A,"Demo confirmation",SCR-A-036,false,false,false
+SCR-A-037,A,"Qualification follow-up",SCR-A-037,false,false,false
+SCR-A-038,A,"Trust: Security overview",SCR-A-038,false,false,true
+SCR-A-039,A,"Trust: Privacy overview",SCR-A-039,false,false,true
+SCR-A-040,A,"Trust: Accessibility",SCR-A-040,false,false,true
+SCR-A-041,A,"Trust: Responsible AI",SCR-A-041,false,false,true
+SCR-A-042,A,"Trust: Data practices",SCR-A-042,false,false,false
+SCR-A-043,A,"Trust: Subprocessors",SCR-A-043,false,false,false
+SCR-A-044,A,"Trust: Compliance roadmap",SCR-A-044,false,false,false
+SCR-A-045,A,"Trust: Status/reliability",SCR-A-045,false,false,false
+SCR-A-046,A,"Security document request",SCR-A-046,false,false,false
+SCR-A-047,A,"Trust room request",SCR-A-047,false,false,false
+SCR-A-048,A,"Vulnerability disclosure",SCR-A-048,false,false,false
+SCR-A-049,A,"Guides",SCR-A-049,false,false,false
+SCR-A-050,A,"Research",SCR-A-050,false,false,false
+SCR-A-051,A,"Webinars",SCR-A-051,false,false,false
+SCR-A-052,A,"Product updates",SCR-A-052,false,false,false
+SCR-A-053,A,"Case studies",SCR-A-053,false,false,false
+SCR-A-054,A,"FAQ",SCR-A-054,false,false,false
+SCR-A-055,A,"Glossary",SCR-A-055,false,false,false
+SCR-A-056,A,"Newsletter",SCR-A-056,false,false,false
+SCR-A-057,A,"Compare: fragmented tools",SCR-A-057,false,false,false
+SCR-A-058,A,"Compare: LMS-only",SCR-A-058,false,false,false
+SCR-A-059,A,"Compare: manual advising",SCR-A-059,false,false,false
+SCR-A-060,A,"Compare: separate AI tools",SCR-A-060,false,false,false
+SCR-A-061,A,"Partners",SCR-A-061,false,false,false
+SCR-A-062,A,"Ambassador program",SCR-A-062,false,false,false
+SCR-A-063,A,"Careers",SCR-A-063,false,false,false
+SCR-A-064,A,"Mission",SCR-A-064,false,false,true
+SCR-A-065,A,"Leadership",SCR-A-065,false,false,false
+SCR-A-066,A,"Values",SCR-A-066,false,false,false
+SCR-A-067,A,"Press kit",SCR-A-067,false,false,false
+SCR-A-068,A,"Contact",SCR-A-068,false,false,true
+SCR-A-069,A,"Terms",SCR-A-069,false,false,false
+SCR-A-070,A,"Privacy",SCR-A-070,false,false,false
+SCR-A-071,A,"Acceptable use",SCR-A-071,false,false,false
+SCR-A-072,A,"DPA",SCR-A-072,false,false,false
+SCR-A-073,A,"Cookies",SCR-A-073,false,false,false
+SCR-A-074,A,"Subprocessor terms",SCR-A-074,false,false,false
+SCR-A-075,A,"Login",SCR-A-075,false,false,false
+SCR-A-076,A,"Sign up",SCR-A-076,false,false,false
+SCR-A-077,A,"Password reset",SCR-A-077,false,false,false
+SCR-A-078,A,"System status handoff",SCR-A-078,false,false,false
+SCR-A-079,A,"Help center handoff",SCR-A-079,false,false,false
+SCR-A-080,A,"404 / maintenance / outage",SCR-A-080,false,false,false
+SCR-B-001,B,"Today",SCR-B-001,false,false,true
+SCR-B-002,B,"Action Center",SCR-B-002,false,false,false
+SCR-B-003,B,"Notifications",SCR-B-003,false,false,true
+SCR-B-004,B,"Calendar",SCR-B-004,false,false,true
+SCR-B-005,B,"Schedule",SCR-B-005,false,false,false
+SCR-B-006,B,"Tasks",SCR-B-006,false,false,true
+SCR-B-007,B,"Goals",SCR-B-007,false,false,false
+SCR-B-008,B,"Path",SCR-B-008,false,false,true
+SCR-B-009,B,"Degree progress",SCR-B-009,false,false,true
+SCR-B-010,B,"Program requirements",SCR-B-010,false,false,false
+SCR-B-011,B,"Plan",SCR-B-011,false,false,true
+SCR-B-012,B,"Term planner",SCR-B-012,false,false,false
+SCR-B-013,B,"Course comparison",SCR-B-013,false,false,false
+SCR-B-014,B,"Workload planner",SCR-B-014,false,false,false
+SCR-B-015,B,"Cost planner",SCR-B-015,false,false,false
+SCR-B-016,B,"Registration readiness",SCR-B-016,false,false,true
+SCR-B-017,B,"Registration status",SCR-B-017,false,false,true
+SCR-B-018,B,"Holds",SCR-B-018,false,false,true
+SCR-B-019,B,"Course search",SCR-B-019,false,false,true
+SCR-B-020,B,"Course details",SCR-B-020,false,false,false
+SCR-B-021,B,"Section comparison",SCR-B-021,false,false,false
+SCR-B-022,B,"Seat watch",SCR-B-022,false,false,false
+SCR-B-023,B,"Graduation scenarios",SCR-B-023,false,false,false
+SCR-B-024,B,"Transfer credit view",SCR-B-024,false,false,false
+SCR-B-025,B,"Articulation view",SCR-B-025,false,false,false
+SCR-B-026,B,"Courses",SCR-B-026,false,false,true
+SCR-B-027,B,"Course Studio",SCR-B-027,false,false,false
+SCR-B-028,B,"Course schedule",SCR-B-028,false,false,false
+SCR-B-029,B,"Course assignments",SCR-B-029,false,false,false
+SCR-B-030,B,"Course resources",SCR-B-030,false,false,false
+SCR-B-031,B,"Course announcements",SCR-B-031,false,false,false
+SCR-B-032,B,"Course AI guidance",SCR-B-032,false,false,true
+SCR-B-033,B,"Study packs",SCR-B-033,false,false,true
+SCR-B-034,B,"Notes",SCR-B-034,false,false,true
+SCR-B-035,B,"Files",SCR-B-035,false,false,false
+SCR-B-036,B,"Documents",SCR-B-036,false,false,true
+SCR-B-037,B,"Project workspace",SCR-B-037,false,false,false
+SCR-B-038,B,"Group workspace",SCR-B-038,false,false,true
+SCR-B-039,B,"Focus mode",SCR-B-039,false,false,true
+SCR-B-040,B,"Study sessions",SCR-B-040,false,false,false
+SCR-B-041,B,"Search",SCR-B-041,false,false,true
+SCR-B-042,B,"AI Copilot",SCR-B-042,false,false,true
+SCR-B-043,B,"Research workspace",SCR-B-043,false,false,false
+SCR-B-044,B,"Writing workspace",SCR-B-044,false,false,true
+SCR-B-045,B,"Community",SCR-B-045,false,false,true
+SCR-B-046,B,"Organizations",SCR-B-046,false,false,true
+SCR-B-047,B,"Events",SCR-B-047,false,false,true
+SCR-B-048,B,"Dining",SCR-B-048,false,false,true
+SCR-B-049,B,"Housing",SCR-B-049,false,false,true
+SCR-B-050,B,"Campus services",SCR-B-050,false,false,true
+SCR-B-051,B,"Student account",SCR-B-051,false,false,true
+SCR-B-052,B,"Payment plan",SCR-B-052,false,false,true
+SCR-B-053,B,"Financial-support handoff",SCR-B-053,false,false,false
+SCR-B-054,B,"Support center",SCR-B-054,false,false,true
+SCR-B-055,B,"Help request",SCR-B-055,false,false,false
+SCR-B-056,B,"Advisor sharing",SCR-B-056,false,false,true
+SCR-B-057,B,"Family sharing",SCR-B-057,false,false,true
+SCR-B-058,B,"Accessibility services",SCR-B-058,false,false,false
+SCR-B-059,B,"Career",SCR-B-059,false,false,true
+SCR-B-060,B,"Skills",SCR-B-060,false,false,false
+SCR-B-061,B,"Portfolio",SCR-B-061,false,false,false
+SCR-B-062,B,"Opportunities",SCR-B-062,false,false,true
+SCR-B-063,B,"Mentors",SCR-B-063,false,false,false
+SCR-B-064,B,"Profile",SCR-B-064,false,false,true
+SCR-B-065,B,"Account settings",SCR-B-065,false,false,true
+SCR-B-066,B,"Privacy settings",SCR-B-066,false,false,true
+SCR-B-067,B,"AI settings",SCR-B-067,false,false,true
+SCR-B-068,B,"Notification settings",SCR-B-068,false,false,false
+SCR-B-069,B,"Data export",SCR-B-069,false,false,true
+SCR-B-070,B,"Account deletion request",SCR-B-070,false,false,true
+SCR-B-071,B,"Join institution",SCR-B-071,false,true,false
+SCR-B-072,B,"Confirm identity",SCR-B-072,false,true,false
+SCR-B-073,B,"Connect SSO",SCR-B-073,false,true,false
+SCR-B-074,B,"Complete onboarding",SCR-B-074,false,true,false
+SCR-B-075,B,"Import or review course context",SCR-B-075,false,true,false
+SCR-B-076,B,"User asks",SCR-B-076,false,true,false
+SCR-B-077,B,"Intent identified",SCR-B-077,false,true,false
+SCR-B-078,B,"Prompt/tool permission validated",SCR-B-078,false,true,false
+SCR-B-079,B,"Response generated",SCR-B-079,false,true,false
+SCR-B-080,B,"Human escalation offered",SCR-B-080,false,true,false
+SCR-B-081,B,"Usage/spend logged",SCR-B-081,false,true,false
+SCR-B-082,B,"Feedback/correction captured",SCR-B-082,false,true,false
+SCR-C-001,C,"Faculty dashboard",SCR-C-001,false,false,false
+SCR-C-002,C,"Course list",SCR-C-002,false,false,false
+SCR-C-003,C,"Course home",SCR-C-003,false,false,false
+SCR-C-004,C,"Course setup",SCR-C-004,false,false,false
+SCR-C-005,C,"Syllabus",SCR-C-005,false,false,false
+SCR-C-006,C,"Learning objectives",SCR-C-006,false,false,false
+SCR-C-007,C,"Course schedule",SCR-B-028,true,false,false
+SCR-C-008,C,"Course announcements",SCR-B-031,true,false,false
+SCR-C-009,C,"Course guidance",SCR-C-009,false,false,false
+SCR-C-010,C,"Course AI rules",SCR-C-010,false,false,true
+SCR-C-011,C,"Resource library",SCR-C-011,false,false,false
+SCR-C-012,C,"Approved sources",SCR-C-012,false,false,false
+SCR-C-013,C,"Assignments",SCR-C-013,false,false,false
+SCR-C-014,C,"Assessment builder",SCR-C-014,false,false,false
+SCR-C-015,C,"Question bank",SCR-C-015,false,false,false
+SCR-C-016,C,"Rubric builder",SCR-C-016,false,false,false
+SCR-C-017,C,"Gradebook",SCR-C-017,false,false,true
+SCR-C-018,C,"Grade entry",SCR-C-018,false,false,false
+SCR-C-019,C,"Grade moderation",SCR-C-019,false,false,false
+SCR-C-020,C,"Grade release",SCR-C-020,false,false,true
+SCR-C-021,C,"Regrade queue",SCR-C-021,false,false,true
+SCR-C-022,C,"Grade passback",SCR-C-022,false,false,false
+SCR-C-023,C,"Feedback workspace",SCR-C-023,false,false,false
+SCR-C-024,C,"Student progress view",SCR-C-024,false,false,false
+SCR-C-025,C,"Course activity aggregates",SCR-C-025,false,false,false
+SCR-C-026,C,"Study packs",SCR-B-033,true,false,true
+SCR-C-027,C,"Office hours",SCR-C-027,false,false,false
+SCR-C-028,C,"Discussions",SCR-C-028,false,false,false
+SCR-C-029,C,"Group management",SCR-C-029,false,false,false
+SCR-C-030,C,"TA management",SCR-C-030,false,false,false
+SCR-C-031,C,"Course accessibility review",SCR-C-031,false,false,false
+SCR-C-032,C,"Academic-integrity workflow",SCR-C-032,false,false,false
+SCR-C-033,C,"Course imports/exports",SCR-C-033,false,false,false
+SCR-C-034,C,"Course archive",SCR-C-034,false,false,false
+SCR-C-035,C,"Course version history",SCR-C-035,false,false,false
+SCR-C-036,C,"Course settings",SCR-C-036,false,false,false
+SCR-C-037,C,"Publish course AI policy",SCR-C-037,false,true,false
+SCR-C-038,C,"Manage roster",SCR-C-038,false,true,false
+SCR-C-039,C,"Communicate with class",SCR-C-039,false,true,false
+SCR-D-001,D,"Advisor dashboard",SCR-D-001,false,false,false
+SCR-D-002,D,"Caseload",SCR-D-002,false,false,true
+SCR-D-003,D,"Student profile",SCR-D-003,false,false,false
+SCR-D-004,D,"Student path",SCR-D-004,false,false,true
+SCR-D-005,D,"Academic plan",SCR-D-005,false,false,false
+SCR-D-006,D,"Action completion",SCR-D-006,false,false,false
+SCR-D-007,D,"Holds and registration status",SCR-D-007,false,false,false
+SCR-D-008,D,"Check-ins",SCR-D-008,false,false,false
+SCR-D-009,D,"Appointment schedule",SCR-D-009,false,false,false
+SCR-D-010,D,"Advising notes",SCR-D-010,false,false,false
+SCR-D-011,D,"Success plan",SCR-D-011,false,false,false
+SCR-D-012,D,"Referral workflow",SCR-D-012,false,false,false
+SCR-D-013,D,"Support request history",SCR-D-013,false,false,false
+SCR-D-014,D,"Shared student workspace",SCR-D-014,false,false,true
+SCR-D-015,D,"Student consent/grant view",SCR-D-015,false,false,true
+SCR-D-016,D,"Risk and priority signals",SCR-D-016,false,false,false
+SCR-D-017,D,"Outreach queue",SCR-D-017,false,false,false
+SCR-D-018,D,"Communication composer",SCR-D-018,false,false,false
+SCR-D-019,D,"Cohort dashboard",SCR-D-019,false,false,false
+SCR-D-020,D,"Program dashboard",SCR-D-020,false,false,false
+SCR-D-021,D,"Outcome aggregates",SCR-D-021,false,false,false
+SCR-D-022,D,"Intervention tracker",SCR-D-022,false,false,false
+SCR-D-023,D,"Escalation workflow",SCR-D-023,false,false,false
+SCR-D-024,D,"Student support resources",SCR-D-024,false,false,false
+SCR-D-025,D,"Advisor settings",SCR-D-025,false,false,false
+SCR-D-026,D,"Refer to office",SCR-D-026,false,true,false
+SCR-D-027,D,"Review consented share",SCR-D-027,false,true,false
+SCR-D-028,D,"Conduct term review",SCR-D-028,false,true,false
+SCR-D-029,D,"Close or transition case",SCR-D-029,false,true,false
+SCR-E-001,E,"Registrar dashboard",SCR-E-001,false,false,false
+SCR-E-002,E,"Term management",SCR-E-002,false,false,false
+SCR-E-003,E,"Academic calendar",SCR-E-003,false,false,false
+SCR-E-004,E,"Catalog management",SCR-E-004,false,false,false
+SCR-E-005,E,"Course management",SCR-E-005,false,false,false
+SCR-E-006,E,"Section management",SCR-E-006,false,false,false
+SCR-E-007,E,"Faculty assignment",SCR-E-007,false,false,false
+SCR-E-008,E,"Room scheduling",SCR-E-008,false,false,false
+SCR-E-009,E,"Capacity management",SCR-E-009,false,false,false
+SCR-E-010,E,"Waitlist management",SCR-E-010,false,false,false
+SCR-E-011,E,"Prerequisite rules",SCR-E-011,false,false,false
+SCR-E-012,E,"Co-requisite rules",SCR-E-012,false,false,false
+SCR-E-013,E,"Registration windows",SCR-E-013,false,false,false
+SCR-E-014,E,"Time tickets",SCR-E-014,false,false,false
+SCR-E-015,E,"Holds",SCR-B-018,true,false,true
+SCR-E-016,E,"Overrides",SCR-E-016,false,false,true
+SCR-E-017,E,"Enrollment queue",SCR-E-017,false,false,true
+SCR-E-018,E,"Add/drop/withdrawal workflow",SCR-E-018,false,false,false
+SCR-E-019,E,"Registration audit",SCR-E-019,false,false,true
+SCR-E-020,E,"Academic record search",SCR-E-020,false,false,false
+SCR-E-021,E,"Record correction queue",SCR-E-021,false,false,false
+SCR-E-022,E,"Grade ledger",SCR-E-022,false,false,false
+SCR-E-023,E,"Grade change workflow",SCR-E-023,false,false,false
+SCR-E-024,E,"Regrade resolution",SCR-E-024,false,false,false
+SCR-E-025,E,"Degree audit rules",SCR-E-025,false,false,false
+SCR-E-026,E,"Program requirements",SCR-B-010,true,false,false
+SCR-E-027,E,"Transfer evaluation",SCR-E-027,false,false,false
+SCR-E-028,E,"Articulation rules",SCR-E-028,false,false,false
+SCR-E-029,E,"Graduation review",SCR-E-029,false,false,false
+SCR-E-030,E,"Credential conferral",SCR-E-030,false,false,false
+SCR-E-031,E,"Transcript/export workflow",SCR-E-031,false,false,false
+SCR-E-032,E,"SIS reconciliation",SCR-E-032,false,false,false
+SCR-E-033,E,"Migration dashboard",SCR-E-033,false,false,false
+SCR-E-034,E,"Data-quality exceptions",SCR-E-034,false,false,false
+SCR-E-035,E,"Registrar settings",SCR-E-035,false,false,false
+SCR-E-036,E,"Reconcile with SIS",SCR-E-036,false,true,false
+SCR-F-001,F,"Account summary",SCR-F-001,false,false,false
+SCR-F-002,F,"Charges",SCR-F-002,false,false,false
+SCR-F-003,F,"Credits",SCR-F-003,false,false,false
+SCR-F-004,F,"Balance",SCR-F-004,false,false,true
+SCR-F-005,F,"Payment plan",SCR-B-052,true,false,true
+SCR-F-006,F,"Installments",SCR-F-006,false,false,false
+SCR-F-007,F,"Due dates",SCR-F-007,false,false,false
+SCR-F-008,F,"Holds",SCR-B-018,true,false,true
+SCR-F-009,F,"Statements",SCR-F-009,false,false,false
+SCR-F-010,F,"Payment provider handoff",SCR-F-010,false,false,false
+SCR-F-011,F,"Refund status",SCR-F-011,false,false,false
+SCR-F-012,F,"Scholarship view",SCR-F-012,false,false,false
+SCR-F-013,F,"Financial-aid handoff",SCR-F-013,false,false,false
+SCR-F-014,F,"Budget planner",SCR-F-014,false,false,false
+SCR-F-015,F,"Cost planner",SCR-B-015,true,false,false
+SCR-F-016,F,"Emergency aid resources",SCR-F-016,false,false,false
+SCR-F-017,F,"Financial support request",SCR-F-017,false,false,false
+SCR-F-018,F,"Staff: Account queue",SCR-F-018,false,false,false
+SCR-F-019,F,"Staff: Request queue",SCR-F-019,false,false,false
+SCR-F-020,F,"Staff: Charge/credit request",SCR-F-020,false,false,false
+SCR-F-021,F,"Staff: Reconciliation",SCR-F-021,false,false,false
+SCR-F-022,F,"Staff: Month close",SCR-F-022,false,false,false
+SCR-F-023,F,"Staff: Payment plan review",SCR-F-023,false,false,false
+SCR-F-024,F,"Staff: Hold management",SCR-F-024,false,false,true
+SCR-F-025,F,"Staff: Refund review",SCR-F-025,false,false,false
+SCR-F-026,F,"Staff: Dunning",SCR-F-026,false,false,false
+SCR-F-027,F,"Staff: Dispute queue",SCR-F-027,false,false,false
+SCR-F-028,F,"Staff: Audit ledger",SCR-F-028,false,false,false
+SCR-F-029,F,"Staff: Reporting",SCR-F-029,false,false,false
+SCR-G-001,G,"Dining locations",SCR-G-001,false,false,true
+SCR-G-002,G,"Dining hours",SCR-G-002,false,false,false
+SCR-G-003,G,"Menus",SCR-G-003,false,false,false
+SCR-G-004,G,"Meal plan",SCR-G-004,false,false,false
+SCR-G-005,G,"Meal balance",SCR-G-005,false,false,true
+SCR-G-006,G,"Mobile order",SCR-G-006,false,false,false
+SCR-G-007,G,"Donation/pool program",SCR-G-007,false,false,false
+SCR-G-008,G,"Housing assignment",SCR-G-008,false,false,true
+SCR-G-009,G,"Housing requests",SCR-G-009,false,false,false
+SCR-G-010,G,"Maintenance",SCR-G-010,false,false,true
+SCR-G-011,G,"Roommate resources",SCR-G-011,false,false,false
+SCR-G-012,G,"Housing handoff",SCR-G-012,false,false,false
+SCR-G-013,G,"Campus calendar",SCR-G-013,false,false,false
+SCR-G-014,G,"Event detail",SCR-G-014,false,false,false
+SCR-G-015,G,"Event registration",SCR-G-015,false,false,false
+SCR-G-016,G,"Personal schedule",SCR-G-016,false,false,false
+SCR-G-017,G,"Organization directory",SCR-G-017,false,false,true
+SCR-G-018,G,"Organization profile",SCR-G-018,false,false,false
+SCR-G-019,G,"Membership",SCR-G-019,false,false,false
+SCR-G-020,G,"Organization events",SCR-G-020,false,false,false
+SCR-G-021,G,"Leadership tools",SCR-G-021,false,false,false
+SCR-G-022,G,"Study space availability",SCR-G-022,false,false,false
+SCR-G-023,G,"Study space booking",SCR-G-023,false,false,false
+SCR-G-024,G,"Location details",SCR-G-024,false,false,false
+SCR-G-025,G,"Transit and parking",SCR-G-025,false,false,false
+SCR-G-026,G,"Recreation",SCR-G-026,false,false,false
+SCR-G-027,G,"Library",SCR-G-027,false,false,false
+SCR-G-028,G,"Bookstore",SCR-G-028,false,false,false
+SCR-G-029,G,"Campus jobs",SCR-G-029,false,false,false
+SCR-G-030,G,"Volunteer opportunities",SCR-G-030,false,false,false
+SCR-G-031,G,"Local services",SCR-G-031,false,false,false
+SCR-G-032,G,"Safety resources",SCR-G-032,false,false,false
+SCR-G-033,G,"Wellness resources",SCR-G-033,false,false,false
+SCR-G-034,G,"Accessibility resources",SCR-G-034,false,false,false
+SCR-G-035,G,"Emergency official handoff",SCR-G-035,false,false,false
+SCR-G-036,G,"Request resolved",SCR-G-036,false,true,false
+SCR-G-037,G,"Request accommodation",SCR-G-037,false,true,false
+SCR-G-038,G,"Accommodation approved",SCR-G-038,false,true,false
+SCR-H-001,H,"Community directory",SCR-H-001,false,false,false
+SCR-H-002,H,"Community feed",SCR-H-002,false,false,true
+SCR-H-003,H,"Post creation",SCR-H-003,false,false,false
+SCR-H-004,H,"Comments/reactions",SCR-H-004,false,false,false
+SCR-H-005,H,"Alias/pseudonym settings",SCR-H-005,false,false,false
+SCR-H-006,H,"Community membership",SCR-H-006,false,false,false
+SCR-H-007,H,"Community events",SCR-H-007,false,false,false
+SCR-H-008,H,"Study sessions",SCR-B-040,true,false,false
+SCR-H-009,H,"Peer connections",SCR-H-009,false,false,false
+SCR-H-010,H,"Study groups",SCR-H-010,false,false,false
+SCR-H-011,H,"Peer mentor directory",SCR-H-011,false,false,false
+SCR-H-012,H,"Mentor requests",SCR-H-012,false,false,false
+SCR-H-013,H,"Organization communities",SCR-H-013,false,false,false
+SCR-H-014,H,"Community guidelines",SCR-H-014,false,false,false
+SCR-H-015,H,"Report content",SCR-H-015,false,false,true
+SCR-H-016,H,"Appeal decision",SCR-H-016,false,false,false
+SCR-H-017,H,"Community safety resources",SCR-H-017,false,false,false
+SCR-H-018,H,"Community settings",SCR-H-018,false,false,false
+SCR-H-019,H,"Mod: Reports queue",SCR-H-019,false,false,false
+SCR-H-020,H,"Mod: Cases",SCR-H-020,false,false,false
+SCR-H-021,H,"Mod: Content review",SCR-H-021,false,false,false
+SCR-H-022,H,"Mod: Escalations",SCR-H-022,false,false,false
+SCR-H-023,H,"Mod: Appeals",SCR-H-023,false,false,false
+SCR-H-024,H,"Mod: Restriction actions",SCR-H-024,false,false,false
+SCR-H-025,H,"Mod: Audit trail",SCR-H-025,false,false,false
+SCR-H-026,H,"Mod: Volunteer review tasks",SCR-H-026,false,false,false
+SCR-H-027,H,"Mod: Calibration tasks",SCR-H-027,false,false,false
+SCR-H-028,H,"Mod: Policy configuration",SCR-H-028,false,false,false
+SCR-H-029,H,"Mod: Analytics",SCR-H-029,false,false,false
+SCR-H-030,H,"Set profile visibility per field",SCR-H-030,false,true,false
+SCR-H-031,H,"Answer endorsed by TA",SCR-H-031,false,true,false
+SCR-H-032,H,"Create marketplace listing",SCR-H-032,false,true,false
+SCR-H-033,H,"Integrity filter checks listing",SCR-H-033,false,true,false
+SCR-H-034,H,"Make offer in chat",SCR-H-034,false,true,false
+SCR-H-035,H,"Arrange safe meet-up",SCR-H-035,false,true,false
+SCR-I-001,I,"Invitation acceptance",SCR-I-001,false,false,false
+SCR-I-002,I,"Relationship confirmation",SCR-I-002,false,false,false
+SCR-I-003,I,"Consent scope",SCR-I-003,false,false,true
+SCR-I-004,I,"Shared categories",SCR-I-004,false,false,false
+SCR-I-005,I,"Time-limited access",SCR-I-005,false,false,false
+SCR-I-006,I,"Shared items",SCR-I-006,false,false,true
+SCR-I-007,I,"Billing/support handoff",SCR-I-007,false,false,false
+SCR-I-008,I,"Resource center",SCR-I-008,false,false,false
+SCR-I-009,I,"Communication preferences",SCR-I-009,false,false,false
+SCR-I-010,I,"Access history",SCR-I-010,false,false,true
+SCR-I-011,I,"Revocation",SCR-I-011,false,false,true
+SCR-I-012,I,"Privacy/support information",SCR-I-012,false,false,false
+SCR-I-013,I,"Audit retained",SCR-I-013,false,true,false
+SCR-J-001,J,"Skills graph",SCR-J-001,false,false,false
+SCR-J-002,J,"Skill evidence",SCR-J-002,false,false,false
+SCR-J-003,J,"Verified skill claims",SCR-J-003,false,false,false
+SCR-J-004,J,"Credential wallet",SCR-J-004,false,false,false
+SCR-J-005,J,"Portfolio",SCR-B-061,true,false,false
+SCR-J-006,J,"Resume builder",SCR-J-006,false,false,false
+SCR-J-007,J,"Cover letter workspace",SCR-J-007,false,false,false
+SCR-J-008,J,"Interview preparation",SCR-J-008,false,false,false
+SCR-J-009,J,"Career plan",SCR-J-009,false,false,false
+SCR-J-010,J,"Opportunity search",SCR-J-010,false,false,false
+SCR-J-011,J,"Job postings",SCR-J-011,false,false,false
+SCR-J-012,J,"Internship postings",SCR-J-012,false,false,false
+SCR-J-013,J,"Employer profiles",SCR-J-013,false,false,false
+SCR-J-014,J,"Applications",SCR-J-014,false,false,true
+SCR-J-015,J,"Career appointments",SCR-J-015,false,false,false
+SCR-J-016,J,"Mentor directory",SCR-J-016,false,false,false
+SCR-J-017,J,"Alumni mentor offers",SCR-J-017,false,false,false
+SCR-J-018,J,"Networking",SCR-J-018,false,false,false
+SCR-J-019,J,"Career events",SCR-J-019,false,false,false
+SCR-J-020,J,"Continuing education",SCR-J-020,false,false,false
+SCR-J-021,J,"Microcredentials",SCR-J-021,false,false,false
+SCR-J-022,J,"Credential renewal",SCR-J-022,false,false,false
+SCR-J-023,J,"Career outcome history",SCR-J-023,false,false,false
+SCR-J-024,J,"Employer: Organization profile",SCR-J-024,false,false,false
+SCR-J-025,J,"Employer: Opportunity creation",SCR-J-025,false,false,false
+SCR-J-026,J,"Employer: Applicant criteria",SCR-J-026,false,false,false
+SCR-J-027,J,"Employer: Talent discovery",SCR-J-027,false,false,false
+SCR-J-028,J,"Employer: Consent-based profile",SCR-J-028,false,false,false
+SCR-J-029,J,"Employer: Interview scheduling",SCR-J-029,false,false,false
+SCR-J-030,J,"Employer: Hiring workflow",SCR-J-030,false,false,true
+SCR-J-031,J,"Employer: Internship management",SCR-J-031,false,false,false
+SCR-J-032,J,"Employer: Analytics",SCR-J-032,false,false,false
+SCR-J-033,J,"Employer: Partnership settings",SCR-J-033,false,false,false
+SCR-J-034,J,"Alumni: Profile",SCR-J-034,false,false,true
+SCR-J-035,J,"Alumni: Mentoring offers",SCR-J-035,false,false,true
+SCR-J-036,J,"Alumni: Opportunities",SCR-J-036,false,false,false
+SCR-J-037,J,"Alumni: Continuing education",SCR-J-037,false,false,false
+SCR-J-038,J,"Alumni: Community",SCR-J-038,false,false,false
+SCR-J-039,J,"Alumni: Donations/engagement handoff",SCR-J-039,false,false,false
+SCR-J-040,J,"Alumni: Credential history",SCR-J-040,false,false,false
+SCR-K-001,K,"Tenant overview",SCR-K-001,false,false,true
+SCR-K-002,K,"Institution profile",SCR-K-002,false,false,false
+SCR-K-003,K,"Campus hierarchy",SCR-K-003,false,false,false
+SCR-K-004,K,"School/department/program structure",SCR-K-004,false,false,false
+SCR-K-005,K,"Identity providers",SCR-K-005,false,false,false
+SCR-K-006,K,"SSO configuration",SCR-K-006,false,false,false
+SCR-K-007,K,"SCIM provisioning",SCR-K-007,false,false,false
+SCR-K-008,K,"Memberships",SCR-K-008,false,false,false
+SCR-K-009,K,"Roles",SCR-K-009,false,false,true
+SCR-K-010,K,"Capabilities",SCR-K-010,false,false,false
+SCR-K-011,K,"Role grants",SCR-K-011,false,false,true
+SCR-K-012,K,"Access reviews",SCR-K-012,false,false,false
+SCR-K-013,K,"Tenant plan",SCR-K-013,false,false,false
+SCR-K-014,K,"Entitlements",SCR-K-014,false,false,false
+SCR-K-015,K,"Feature policies",SCR-K-015,false,false,false
+SCR-K-016,K,"Feature cohorts",SCR-K-016,false,false,true
+SCR-K-017,K,"Kill switches",SCR-K-017,false,false,false
+SCR-K-018,K,"Module modes",SCR-K-018,false,false,false
+SCR-K-019,K,"Tenant rollout",SCR-K-019,false,false,false
+SCR-K-020,K,"Configuration studio",SCR-K-020,false,false,false
+SCR-K-021,K,"Workflow builder",SCR-K-021,false,false,false
+SCR-K-022,K,"Policy hierarchy",SCR-K-022,false,false,false
+SCR-K-023,K,"Governance stewards",SCR-K-023,false,false,false
+SCR-K-024,K,"Governance decisions",SCR-K-024,false,false,false
+SCR-K-025,K,"Integration control",SCR-K-025,false,false,false
+SCR-K-026,K,"Data classification",SCR-K-026,false,false,false
+SCR-K-027,K,"Consent policy",SCR-K-027,false,false,false
+SCR-K-028,K,"Retention policy",SCR-K-028,false,false,false
+SCR-K-029,K,"Legal holds",SCR-K-029,false,false,false
+SCR-K-030,K,"Privacy requests",SCR-K-030,false,false,false
+SCR-K-031,K,"AI provider policy",SCR-K-031,false,false,false
+SCR-K-032,K,"Approved sources",SCR-C-012,true,false,false
+SCR-K-033,K,"Trust Center",SCR-K-033,false,false,false
+SCR-K-034,K,"Compliance controls",SCR-K-034,false,false,false
+SCR-K-035,K,"Evidence register",SCR-K-035,false,false,true
+SCR-K-036,K,"Accessibility program",SCR-K-036,false,false,false
+SCR-K-037,K,"Incident notices",SCR-K-037,false,false,false
+SCR-K-038,K,"Risk register",SCR-K-038,false,false,true
+SCR-K-039,K,"Audit explorer",SCR-K-039,false,false,true
+SCR-K-040,K,"Offboarding",SCR-K-040,false,false,false
+SCR-K-041,K,"Data export/portability",SCR-K-041,false,false,false
+SCR-K-042,K,"Operational champion named",SCR-K-042,false,true,false
+SCR-K-043,K,"Reconciliation passed",SCR-K-043,false,true,false
+SCR-K-044,K,"Admin training",SCR-K-044,false,true,false
+SCR-K-045,K,"Student communication prepared",SCR-K-045,false,true,false
+SCR-K-046,K,"Launch readiness gate passed",SCR-K-046,false,true,false
+SCR-K-047,K,"Controlled launch",SCR-K-047,false,true,false
+SCR-K-048,K,"Adoption monitored",SCR-K-048,false,true,false
+SCR-K-049,K,"Midpoint review",SCR-K-049,false,true,false
+SCR-L-001,L,"Provider directory",SCR-L-001,false,false,false
+SCR-L-002,L,"Connection list",SCR-L-002,false,false,true
+SCR-L-003,L,"Connection setup",SCR-L-003,false,false,false
+SCR-L-004,L,"Security review",SCR-L-004,false,false,false
+SCR-L-005,L,"Scope approval",SCR-L-005,false,false,false
+SCR-L-006,L,"Credentials configuration",SCR-L-006,false,false,false
+SCR-L-007,L,"Mapping studio",SCR-L-007,false,false,false
+SCR-L-008,L,"Mapping versions",SCR-L-008,false,false,false
+SCR-L-009,L,"Field transformations",SCR-L-009,false,false,false
+SCR-L-010,L,"Sync schedule",SCR-L-010,false,false,false
+SCR-L-011,L,"Sync run history",SCR-L-011,false,false,true
+SCR-L-012,L,"Sync errors",SCR-L-012,false,false,true
+SCR-L-013,L,"Dead-letter queue",SCR-L-013,false,false,false
+SCR-L-014,L,"Replay request",SCR-L-014,false,false,false
+SCR-L-015,L,"Reconciliation dashboard",SCR-L-015,false,false,false
+SCR-L-016,L,"Schema drift dashboard",SCR-L-016,false,false,false
+SCR-L-017,L,"Duplicate resolution",SCR-L-017,false,false,false
+SCR-L-018,L,"Source owner management",SCR-L-018,false,false,false
+SCR-L-019,L,"Data freshness",SCR-L-019,false,false,false
+SCR-L-020,L,"Integration analytics",SCR-L-020,false,false,false
+SCR-L-021,L,"Webhook events",SCR-L-021,false,false,false
+SCR-L-022,L,"LTI configuration",SCR-L-022,false,false,false
+SCR-L-023,L,"OneRoster import",SCR-L-023,false,false,false
+SCR-L-024,L,"OneRoster REST sync",SCR-L-024,false,false,false
+SCR-L-025,L,"Edu-API configuration",SCR-L-025,false,false,false
+SCR-L-026,L,"Google/Microsoft integration",SCR-L-026,false,false,false
+SCR-L-027,L,"AI provider integration",SCR-L-027,false,false,false
+SCR-L-028,L,"Integration offboarding",SCR-L-028,false,false,false
+SCR-L-029,L,"Business purpose defined",SCR-L-029,false,true,false
+SCR-L-030,L,"Sandbox validated",SCR-L-030,false,true,false
+SCR-L-031,L,"Monitoring enabled",SCR-L-031,false,true,false
+SCR-L-032,L,"Write direction requested",SCR-L-032,false,true,false
+SCR-L-033,L,"Controlled write pilot",SCR-L-033,false,true,false
+SCR-L-034,L,"Rollback verified",SCR-L-034,false,true,false
+SCR-L-035,L,"Domain inventory",SCR-L-035,false,true,false
+SCR-L-036,L,"Validation",SCR-L-036,false,true,false
+SCR-L-037,L,"Dual run",SCR-L-037,false,true,false
+SCR-L-038,L,"User acceptance",SCR-L-038,false,true,false
+SCR-L-039,L,"Cutover",SCR-L-039,false,true,false
+SCR-L-040,L,"Enhanced monitoring",SCR-L-040,false,true,false
+SCR-L-041,L,"Rollback window",SCR-L-041,false,true,false
+SCR-L-042,L,"Legacy retirement",SCR-L-042,false,true,false
+SCR-L-043,L,"Post-migration review",SCR-L-043,false,true,false
+SCR-L-044,L,"Partner applies",SCR-L-044,false,true,false
+SCR-L-045,L,"Partner agreement signed",SCR-L-045,false,true,false
+SCR-L-046,L,"Sandbox tenant created",SCR-L-046,false,true,false
+SCR-L-047,L,"Register OAuth client",SCR-L-047,false,true,false
+SCR-L-048,L,"Build against SDK",SCR-L-048,false,true,false
+SCR-L-049,L,"App review",SCR-L-049,false,true,false
+SCR-L-050,L,"Listed in marketplace",SCR-L-050,false,true,false
+SCR-L-051,L,"Institution enables app",SCR-L-051,false,true,false
+SCR-L-052,L,"Metering and billing",SCR-L-052,false,true,false
+SCR-L-053,L,"App retired",SCR-L-053,false,true,false
+SCR-M-001,M,"Trust: Security overview",SCR-A-038,true,false,true
+SCR-M-002,M,"Trust: Privacy overview",SCR-A-039,true,false,true
+SCR-M-003,M,"Trust: Accessibility statement",SCR-M-003,false,false,false
+SCR-M-004,M,"Trust: Responsible AI",SCR-A-041,true,false,true
+SCR-M-005,M,"Trust: Data practices",SCR-A-042,true,false,false
+SCR-M-006,M,"Trust: Retention/deletion",SCR-M-006,false,false,false
+SCR-M-007,M,"Trust: Subprocessors",SCR-A-043,true,false,false
+SCR-M-008,M,"Trust: Status",SCR-M-008,false,false,false
+SCR-M-009,M,"Trust: Compliance roadmap",SCR-A-044,true,false,false
+SCR-M-010,M,"Trust: HECVAT readiness",SCR-M-010,false,false,false
+SCR-M-011,M,"Trust: DPA process",SCR-M-011,false,false,false
+SCR-M-012,M,"Trust: Questionnaire request",SCR-M-012,false,false,false
+SCR-M-013,M,"Trust: Trust room request",SCR-M-013,false,false,false
+SCR-M-014,M,"Trust: Vulnerability disclosure",SCR-M-014,false,false,false
+SCR-M-015,M,"Sec: Overview",SCR-M-015,false,false,false
+SCR-M-016,M,"Sec: Asset inventory",SCR-M-016,false,false,false
+SCR-M-017,M,"Sec: Access review",SCR-M-017,false,false,true
+SCR-M-018,M,"Sec: Secret inventory",SCR-M-018,false,false,false
+SCR-M-019,M,"Sec: Vulnerability management",SCR-M-019,false,false,false
+SCR-M-020,M,"Sec: Dependency findings",SCR-M-020,false,false,false
+SCR-M-021,M,"Sec: Alerts",SCR-M-021,false,false,false
+SCR-M-022,M,"Sec: Threat models",SCR-M-022,false,false,false
+SCR-M-023,M,"Sec: Incident queue",SCR-M-023,false,false,true
+SCR-M-024,M,"Sec: Incident command center",SCR-M-024,false,false,false
+SCR-M-025,M,"Sec: Controls",SCR-M-025,false,false,false
+SCR-M-026,M,"Sec: Control evidence",SCR-M-026,false,false,false
+SCR-M-027,M,"Sec: Pen-test evidence",SCR-M-027,false,false,false
+SCR-M-028,M,"Sec: Vendor risk",SCR-M-028,false,false,false
+SCR-M-029,M,"Sec: Exceptions",SCR-M-029,false,false,false
+SCR-M-030,M,"Sec: Audit log",SCR-M-030,false,false,false
+SCR-M-031,M,"Sec: Break-glass review",SCR-M-031,false,false,true
+SCR-M-032,M,"Sec: Backup/restore evidence",SCR-M-032,false,false,false
+SCR-M-033,M,"Sec: Disaster recovery",SCR-M-033,false,false,false
+SCR-M-034,M,"Sec: Reporting",SCR-M-034,false,false,false
+SCR-M-035,M,"Priv: Data inventory",SCR-M-035,false,false,false
+SCR-M-036,M,"Priv: Data map",SCR-M-036,false,false,false
+SCR-M-037,M,"Priv: Classification rules",SCR-M-037,false,false,false
+SCR-M-038,M,"Priv: Retention schedule",SCR-M-038,false,false,false
+SCR-M-039,M,"Priv: Deletion runs",SCR-M-039,false,false,false
+SCR-M-040,M,"Priv: Legal holds",SCR-M-040,false,false,false
+SCR-M-041,M,"Priv: Data subject requests",SCR-M-041,false,false,false
+SCR-M-042,M,"Priv: Export requests",SCR-M-042,false,false,false
+SCR-M-043,M,"Priv: Erasure requests",SCR-M-043,false,false,false
+SCR-M-044,M,"Priv: Consent records",SCR-M-044,false,false,false
+SCR-M-045,M,"Priv: Subprocessor records",SCR-M-045,false,false,false
+SCR-M-046,M,"Priv: Incidents",SCR-M-046,false,false,false
+SCR-M-047,M,"Priv: Impact assessments",SCR-M-047,false,false,false
+SCR-M-048,M,"Priv: Reporting",SCR-M-048,false,false,false
+SCR-N-001,N,"Executive Overview",SCR-N-001,false,false,true
+SCR-N-002,N,"Operations Inbox",SCR-N-002,false,false,false
+SCR-N-003,N,"My Work",SCR-N-003,false,false,false
+SCR-N-004,N,"Approvals",SCR-N-004,false,false,true
+SCR-N-005,N,"Approval request detail",SCR-N-005,false,false,true
+SCR-N-006,N,"Tenant Directory",SCR-N-006,false,false,false
+SCR-N-007,N,"Tenant 360",SCR-N-007,false,false,false
+SCR-N-008,N,"Customer Directory",SCR-N-008,false,false,false
+SCR-N-009,N,"Customer 360",SCR-N-009,false,false,false
+SCR-N-010,N,"GTM Pipeline",SCR-N-010,false,false,true
+SCR-N-011,N,"Accounts",SCR-N-011,false,false,false
+SCR-N-012,N,"Stakeholders",SCR-N-012,false,false,false
+SCR-N-013,N,"Decision log",SCR-N-013,false,false,false
+SCR-N-014,N,"Pilot Workspace",SCR-N-014,false,false,true
+SCR-N-015,N,"Pilot metrics",SCR-N-015,false,false,false
+SCR-N-016,N,"Pilot outcomes",SCR-N-016,false,false,false
+SCR-N-017,N,"Implementation projects",SCR-N-017,false,false,false
+SCR-N-018,N,"Implementation milestones",SCR-N-018,false,false,false
+SCR-N-019,N,"Success plans",SCR-N-019,false,false,false
+SCR-N-020,N,"QBRs",SCR-N-020,false,false,false
+SCR-N-021,N,"Renewals",SCR-N-021,false,false,false
+SCR-N-022,N,"Account health",SCR-N-022,false,false,false
+SCR-N-023,N,"Revenue operations",SCR-N-023,false,false,false
+SCR-N-024,N,"Products",SCR-N-024,false,false,false
+SCR-N-025,N,"Plans",SCR-N-025,false,false,false
+SCR-N-026,N,"Prices",SCR-N-026,false,false,false
+SCR-N-027,N,"Quotes",SCR-N-027,false,false,false
+SCR-N-028,N,"Contracts",SCR-N-028,false,false,false
+SCR-N-029,N,"Subscriptions",SCR-N-029,false,false,false
+SCR-N-030,N,"Entitlements",SCR-K-014,true,false,false
+SCR-N-031,N,"Invoices",SCR-N-031,false,false,false
+SCR-N-032,N,"Payments",SCR-N-032,false,false,false
+SCR-N-033,N,"Refunds/credits",SCR-N-033,false,false,false
+SCR-N-034,N,"Dunning",SCR-N-034,false,false,false
+SCR-N-035,N,"Cancellations",SCR-N-035,false,false,false
+SCR-N-036,N,"Support operations",SCR-N-036,false,false,false
+SCR-N-037,N,"Ticket queue",SCR-N-037,false,false,true
+SCR-N-038,N,"Ticket detail",SCR-N-038,false,false,false
+SCR-N-039,N,"Escalations",SCR-N-039,false,false,false
+SCR-N-040,N,"Support notifications",SCR-N-040,false,false,false
+SCR-N-041,N,"Product operations",SCR-N-041,false,false,false
+SCR-N-042,N,"Feature flags",SCR-N-042,false,false,false
+SCR-N-043,N,"Cohorts",SCR-N-043,false,false,false
+SCR-N-044,N,"Beta programs",SCR-N-044,false,false,false
+SCR-N-045,N,"Beta feedback",SCR-N-045,false,false,false
+SCR-N-046,N,"Known issues",SCR-N-046,false,false,false
+SCR-N-047,N,"Release evidence",SCR-N-047,false,false,true
+SCR-N-048,N,"Rollouts",SCR-N-048,false,false,false
+SCR-N-049,N,"Integrations",SCR-N-049,false,false,true
+SCR-N-050,N,"Sync health",SCR-N-050,false,false,false
+SCR-N-051,N,"Errors/dead letters",SCR-N-051,false,false,false
+SCR-N-052,N,"Trust/compliance",SCR-N-052,false,false,false
+SCR-N-053,N,"Trust artifacts",SCR-N-053,false,false,false
+SCR-N-054,N,"Trust room",SCR-N-054,false,false,false
+SCR-N-055,N,"Compliance frameworks",SCR-N-055,false,false,false
+SCR-N-056,N,"Controls",SCR-N-056,false,false,false
+SCR-N-057,N,"Evidence",SCR-N-057,false,false,false
+SCR-N-058,N,"Claims register",SCR-N-058,false,false,false
+SCR-N-059,N,"Content register",SCR-N-059,false,false,false
+SCR-N-060,N,"Privacy",SCR-A-070,true,false,false
+SCR-N-061,N,"Data requests",SCR-N-061,false,false,false
+SCR-N-062,N,"Retention",SCR-N-062,false,false,false
+SCR-N-063,N,"Legal holds",SCR-K-029,true,false,false
+SCR-N-064,N,"Security",SCR-N-064,false,false,false
+SCR-N-065,N,"Access review",SCR-N-065,false,false,false
+SCR-N-066,N,"Break-glass",SCR-N-066,false,false,false
+SCR-N-067,N,"Incidents",SCR-N-067,false,false,false
+SCR-N-068,N,"SLOs",SCR-N-068,false,false,false
+SCR-N-069,N,"Error budgets",SCR-N-069,false,false,false
+SCR-N-070,N,"Audit explorer",SCR-K-039,true,false,true
+SCR-N-071,N,"Risk register",SCR-K-038,true,false,true
+SCR-N-072,N,"Vendor management",SCR-N-072,false,false,false
+SCR-N-073,N,"Finance dashboard",SCR-N-073,false,false,false
+SCR-N-074,N,"Financial model",SCR-N-074,false,false,true
+SCR-N-075,N,"Forecast scenarios",SCR-N-075,false,false,false
+SCR-N-076,N,"Cash/runway",SCR-N-076,false,false,false
+SCR-N-077,N,"Company KPI dashboard",SCR-N-077,false,false,false
+SCR-N-078,N,"Operating review reports",SCR-N-078,false,false,false
+SCR-N-079,N,"Board/investor reports",SCR-N-079,false,false,false
+SCR-N-080,N,"People/capacity plan",SCR-N-080,false,false,true
+SCR-N-081,N,"Operator preferences",SCR-N-081,false,false,false
+SCR-N-082,N,"Minimum safe context captured",SCR-N-082,false,true,false
+SCR-N-083,N,"Categorized + severity",SCR-N-083,false,true,false
+SCR-N-084,N,"Routed to team/office",SCR-N-084,false,true,false
+SCR-N-085,N,"Owner accepts or routes",SCR-N-085,false,true,false
+SCR-N-086,N,"Resolution delivered",SCR-N-086,false,true,false
+SCR-N-087,N,"Confirm or close",SCR-N-087,false,true,false
+SCR-N-088,N,"Root cause tagged",SCR-N-088,false,true,false
+SCR-N-089,N,"SLA and satisfaction recorded",SCR-N-089,false,true,false
+SCR-N-090,N,"Triage",SCR-N-090,false,true,false
+SCR-N-091,N,"Severity declared",SCR-N-091,false,true,false
+SCR-N-092,N,"Technical lead",SCR-N-092,false,true,false
+SCR-N-093,N,"Communications lead",SCR-N-093,false,true,false
+SCR-N-094,N,"Mitigation executed",SCR-N-094,false,true,false
+SCR-N-095,N,"Internal update",SCR-N-095,false,true,false
+SCR-N-096,N,"Resolved",SCR-N-096,false,true,false
+SCR-N-097,N,"Postmortem",SCR-N-097,false,true,false
+SCR-N-098,N,"Measures sheet signed",SCR-N-098,false,true,false
+SCR-N-099,N,"Instrument events (no PII)",SCR-N-099,false,true,false
+SCR-N-100,N,"Aggregate with minimum cell size",SCR-N-100,false,true,false
+SCR-N-101,N,"Course analytics shared with faculty",SCR-N-101,false,true,false
+SCR-N-102,N,"Improvement backlog prioritized",SCR-N-102,false,true,false

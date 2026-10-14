@@ -1,0 +1,23 @@
+{
+  "function": "authorize",
+  "cases": [
+    {
+      "input": {
+        "active": true,
+        "scopes": [
+          "tasks:read"
+        ]
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "active": false,
+        "scopes": [
+          "tasks:read"
+        ]
+      },
+      "expected": false
+    }
+  ]
+}

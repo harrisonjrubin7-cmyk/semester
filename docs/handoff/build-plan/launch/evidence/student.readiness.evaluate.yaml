@@ -1,0 +1,17 @@
+capability_key: student.readiness.evaluate
+version: 0.1.0
+environment: staging
+status: pending_review
+wave: 2
+pilot_wedge: registration_readiness_v1
+gates_required: [identity, data, source, ux, ops, institution]
+artifacts:
+  migration: [proposed-schema/060_bespoke_core.sql, proposed-schema/065_readiness_wedge.sql]   # ✓
+  rls: [supabase/policies/registration_policies.sql, supabase/tests/registration_rls.test.sql]  # ✓
+  workflow: [supabase/tests/readiness_wedge.test.sql]                                          # ✓
+  policy: [policies/access.rego, policies/registration_test.rego]                              # ✓
+  ui: [readiness_e2e.spec.ts, readiness_accessibility.spec.ts]                                 # todo (repo)
+  ops: [launch/runbooks/readiness_source_stale.md]                                             # ✓
+evidence_runs: []
+approvers: [registrar_product_owner, security_owner, platform_owner, institution_registrar]
+expires_at: null

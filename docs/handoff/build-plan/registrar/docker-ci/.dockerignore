@@ -1,0 +1,5 @@
+*
+!Dockerfile
+!requirements.lock
+!registrar_schema_checks.py
+!test_registrar_schemas.py

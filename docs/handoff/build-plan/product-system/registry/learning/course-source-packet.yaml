@@ -1,0 +1,12 @@
+course_source_packet:
+  course_id: required
+  term_id: required
+  owner: course_instructor_or_authorized_staff
+  version: required          # assistance pins the packet version it used
+  sources:
+    allowed: [syllabus, instructor_uploaded_material, public_course_page, student_selected_personal_notes]
+    prohibited: [other_students_private_work, hidden_grading_material, restricted_accommodation_information, unrelated_student_records]
+  AI_policy: {status: required, rules_url: required, permitted_assistance: required, disclosure_requirements: required}
+  examples:
+    - {course_id: "ECON 1020", AI_policy: {status: limited, permitted_assistance: explain from study guide; no generated practice questions}}
+    - {course_id: "BUS 1400", AI_policy: {status: off, permitted_assistance: none}}

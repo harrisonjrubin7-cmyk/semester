@@ -1,0 +1,10 @@
+platform_layers:
+  rule: product experiences never bypass tenant context, policy, authority/freshness, workflow durability, audit or operational controls
+  experience: [role_specific_workspaces, accessibility, source_and_status_disclosure, consequence_previews, receipts_and_safe_next_steps]
+  edge_and_identity: [session_validation, tenant_resolution, membership_context, environment_and_feature_scope, request_correlation]
+  application: [API_contract_enforcement, command_validation, policy_enforcement_point, authorization_decision_binding, idempotency]
+  domain: [capability_rules, state_transitions, authority_boundaries, record_envelopes, business_invariants]
+  workflow: [durable_jobs, retries_and_deadlines, compensation, reconciliation, outbox_delivery]
+  data: [tenant_isolation, RLS, migrations, source_snapshots, audit_evidence, retention]
+  operations: [observability, incidents, releases, access_reviews, backups_and_recovery, controls_and_evidence]
+  maps_to: guidelines/arch-layers.html · AUTHZ-DECISION.md (data layer: reads via RLS, writes via definer functions)

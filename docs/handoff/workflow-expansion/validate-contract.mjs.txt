@@ -1,0 +1,33 @@
+// Semantic checks JSON Schema can't express. Run after schema validation:  node validate-contract.mjs contracts/*.json
+import { readFileSync } from "node:fs";
+const errs = [];
+for (const f of process.argv.slice(2)) {
+  const c = JSON.parse(readFileSync(f, "utf8")); const E = (m) => errs.push(f + ": " + m);
+  if (c.authority.official_record_write && ["personal", "read_only", "shadow"].includes(c.authority.mode)) E("official write not allowed in " + c.authority.mode + " mode");
+  const steps = new Map(c.steps.map((s) => [s.id, s])); const tests = new Set(c.acceptance_tests.map((t) => t.id));
+  const S = { business: new Set(c.states.business), execution: new Set(c.states.execution) };
+  if (steps.size !== c.steps.length) E("duplicate step ids");
+  for (const k of ["business", "execution"]) {
+    if (!S[k].has(c.states["initial_" + k])) E("initial_" + k + " not in states." + k);
+    for (const t of c.states["terminal_" + k]) if (!S[k].has(t)) E("terminal " + t + " not in states." + k);
+  }
+  const reach = { business: new Set([c.states.initial_business]), execution: new Set([c.states.initial_execution]) };
+  for (const t of c.transitions) {
+    if (!steps.has(t.step_id)) E(t.id + ": unknown step " + t.step_id);
+    if (!S[t.track].has(t.from) || !S[t.track].has(t.to)) E(t.id + ": state not in " + t.track);
+    if (c.states["terminal_" + t.track].includes(t.from) && t.to !== t.from) E(t.id + ": leaves terminal state " + t.from);
+  }
+  let grew = true; while (grew) { grew = false; for (const t of c.transitions) if (reach[t.track].has(t.from) && !reach[t.track].has(t.to)) { reach[t.track].add(t.to); grew = true; } }
+  for (const k of ["business", "execution"]) for (const s of S[k]) if (!reach[k].has(s)) E("unreachable " + k + " state: " + s);
+  for (const k of ["business", "execution"]) { const fin = new Set(c.states["terminal_" + k]); let g = true; while (g) { g = false; for (const t of c.transitions) if (t.track === k && fin.has(t.to) && !fin.has(t.from)) { fin.add(t.from); g = true; } } for (const s of S[k]) if (!fin.has(s)) E(k + " state cannot reach a terminal state: " + s); }
+  const codes = new Set(c.recovery_paths.map((r) => r.code));
+  for (const s of c.steps) for (const fc of s.failure_codes) if (!codes.has(fc)) E(s.id + ": failure code " + fc + " has no recovery path");
+  for (const r of c.recovery_paths) {
+    if (!S.execution.has(r.to_execution_state)) E(r.code + ": unknown execution state " + r.to_execution_state);
+    for (const id of r.acceptance_test_ids) if (!tests.has(id)) E(r.code + ": unknown test " + id);
+  }
+  const used = new Set(c.steps.flatMap((s) => s.failure_codes)); for (const r of c.recovery_paths) if (!used.has(r.code)) E(r.code + ": no step raises it");
+  const order = ["designed", "implemented", "tested", "deployed", "institution_authorized", "production_enabled"];
+  for (let i = 1; i < order.length; i++) if (c.readiness[order[i]].status === "verified" && !["verified", "not_applicable"].includes(c.readiness[order[i - 1]].status)) E(order[i] + " verified before " + order[i - 1]);
+}
+if (errs.length) { console.error(errs.join("\n")); process.exit(1); } else console.log("semantic checks passed");

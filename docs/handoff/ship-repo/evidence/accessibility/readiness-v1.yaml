@@ -1,0 +1,14 @@
+# Every check pending until the named spec runs in CI and a reviewer accepts it.
+accessibility_review:
+  screen: student_registration_readiness
+  release: readiness-v1
+  checks:
+    semantic_headings: { result: pending, evidence: tests/a11y/headings.spec.ts }
+    keyboard_navigation: { result: pending, evidence: tests/e2e/readiness-keyboard.spec.ts }
+    visible_focus: { result: pending, evidence: tests/a11y/focus.spec.ts }
+    source_status_not_color_only: { result: pending, evidence: tests/a11y/source-badges.spec.ts }
+    stale_source_announcement: { result: pending, evidence: tests/a11y/live-region.spec.ts }
+    reduced_motion: { result: pending, evidence: tests/a11y/reduced-motion.spec.ts }
+    mobile_reflow: { result: pending, evidence: tests/e2e/readiness-mobile.spec.ts }
+  reviewer: null
+  release_rule: "Pending or failed checks block production activation when they affect a required path or understanding of a consequential state."

@@ -1,0 +1,11 @@
+scope:
+  routes: ["/app/registration", "/registrar/readiness", "/registrar/readiness/:caseId"]
+  states: [ready, loading, empty, stale, blocked, needs_review, error, forbidden, offline]
+target: "WCAG 2.2 AA (engineering target); WCAG 2.1 AA is the DOJ Title II requirement for covered public entities"
+checks:
+  semantic_structure: [one_h1_per_screen, programmatic_label_for_every_control, table_headers_associated, live_region_for_async_state_changes]
+  keyboard: [no_keyboard_trap, visible_focus, logical_tab_order, sheet_focus_return]
+  visual: [text_and_nontext_contrast, state_not_by_color_alone, reduced_motion, reflow_at_320px]
+  assistive_technology: [source_label_announced, stale_warning_announced, receipt_announced, error_and_safe_next_action_announced]
+evidence: [automated_scan_output, manual_keyboard_script, screen_reader_notes (NVDA + VoiceOver), contrast_results, issue_register, remediation_signoff]
+claim_rule: "Report results as tested; never claim a certification or conformance not formally assessed."

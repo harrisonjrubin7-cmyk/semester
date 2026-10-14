@@ -1,0 +1,54 @@
+{
+  "function": "audit_ready",
+  "cases": [
+    {
+      "input": {
+        "actor": "u",
+        "tenant": "t",
+        "action": "create",
+        "target": "x",
+        "request_id": "r"
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "actor": "u",
+        "tenant": "t",
+        "action": "create",
+        "target": "x"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "actor": "",
+        "tenant": "t",
+        "action": "create",
+        "target": "x",
+        "request_id": "r"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "actor": "u",
+        "tenant": "t",
+        "action": "create",
+        "target": "x",
+        "request_id": 7
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "actor": "u",
+        "tenant": "",
+        "action": "create",
+        "target": "x",
+        "request_id": "r"
+      },
+      "expected": false
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+workflow,step,class,candidate_screen,candidate_group,match_words,confidence
+Student journey,Join institution,U,Join institution,B,join institution,likely
+Student journey,Confirm identity,H,Confirm identity,B,confirm identity,likely
+Student journey,Connect SSO,H,Connect SSO,B,connect,likely
+Student journey,Complete onboarding,U,Complete onboarding,B,onboard,likely
+Student journey,Import or review course context,H,Import or review course context,B,import context,likely
+Faculty course lifecycle,Publish course AI policy,U,Publish course AI policy,C,publish policy,likely
+Faculty course lifecycle,Manage roster,H,Manage roster,C,manag roster,likely
+Faculty course lifecycle,Communicate with class,U,Communicate with class,C,communicat clas,likely
+Advising & student success,Refer to office,U,Refer to office,D,refer offic,likely
+Advising & student success,Review consented share,H,Review consented share,D,consented shar,likely
+Advising & student success,Conduct term review,U,Conduct term review,D,conduct term,likely
+Advising & student success,Close or transition case,U,Close or transition case,D,clos transition cas,likely
+Registrar & academic operations,Reconcile with SIS,H,Reconcile with SIS,E,reconcil,likely
+Institution implementation,Controlled launch,H,Controlled launch,K,controlled launch,likely
+Institution implementation,Adoption monitored,H,Adoption monitored,K,adoption monitored,likely
+Controlled integration,Write direction requested,U,Write direction requested,L,writ direction requested,likely
+Controlled integration,Controlled write pilot,H,Controlled write pilot,L,controlled writ pilot,likely
+Governed AI request,User asks,U,User asks,B,user ask,likely
+Governed AI request,Human escalation offered,U,Human escalation offered,B,human escalation offered,likely
+Governed AI request,Feedback/correction captured,U,Feedback/correction captured,B,feedback correction captured,likely
+Support request,Minimum safe context captured,H,Minimum safe context captured,N,minimum saf context captured,likely
+Support request,Categorized + severity,H,Categorized + severity,N,categorized severity,likely
+Support request,Owner accepts or routes,U,Owner accepts or routes,N,owner accept rout,likely
+Support request,Resolution delivered,H,Resolution delivered,N,resolution delivered,likely
+Support request,Confirm or close,U,Confirm or close,N,confirm clos,likely
+Support request,Root cause tagged,U,Root cause tagged,N,root caus tagged,likely
+Support request,SLA and satisfaction recorded,H,SLA and satisfaction recorded,N,satisfaction recorded,likely
+Incident response,Mitigation executed,H,Mitigation executed,N,mitigation executed,likely
+Domain migration,Cutover,H,Cutover,L,cutover,likely
+Domain migration,Legacy retirement,H,Legacy retirement,L,legacy retirement,likely
+Campus services,Request resolved,H,Request resolved,G,resolved,likely
+Campus services,Request accommodation,U,Request accommodation,G,accommodation,likely
+Campus services,Accommodation approved,U,Request accommodation,G,accommodation,likely
+Community & moderation,Set profile visibility per field,U,Set profile visibility per field,H,profil visibility field,likely
+Community & moderation,Answer endorsed by TA,U,Answer endorsed by TA,H,answer endorsed,likely
+Community & moderation,Create marketplace listing,U,Create marketplace listing,H,marketplac list,likely
+Community & moderation,Make offer in chat,U,Make offer in chat,H,mak offer chat,likely
+Community & moderation,Arrange safe meet-up,U,Arrange safe meet-up,H,arrang saf meet,likely
+Developer platform & marketplace,Partner applies,U,Partner applies,L,partner apply,likely
+Developer platform & marketplace,Register OAuth client,H,Register OAuth client,L,register oauth client,likely
+Developer platform & marketplace,Listed in marketplace,H,Listed in marketplace,L,listed marketplac,likely
+Developer platform & marketplace,Institution enables app,H,Institution enables app,L,institution enabl,likely
+Developer platform & marketplace,Metering and billing,H,Metering and billing,L,meter bill,likely
+Developer platform & marketplace,App retired,H,App retired,L,retired,likely
+"Analytics, outcomes & reliability",Course analytics shared with faculty,H,Course analytics shared with faculty,N,analytic shared faculty,likely

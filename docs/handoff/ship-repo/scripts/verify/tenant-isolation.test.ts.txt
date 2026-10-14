@@ -1,0 +1,20 @@
+import { expect, test } from "vitest";
+import { createTestClient, seedTenant } from "../fixtures/test-client";
+test("a student cannot read another tenant's readiness case", async () => {
+  const A = await seedTenant("north-campus"), Bt = await seedTenant("south-campus");
+  const sA = await A.createStudent(), sB = await Bt.createStudent();
+  const caseA = await A.createReadinessCase({ studentId: sA.id, goal: "Register for CHEM 101" });
+  expect(await createTestClient({ tenantId: Bt.id, accountId: sB.id }).read("readiness_cases", caseA.id)).toBeNull();
+});
+test("a student cannot read another student's case in the same tenant", async () => {
+  const T = await seedTenant("pilot-campus"); const s1 = await T.createStudent(), s2 = await T.createStudent();
+  const c1 = await T.createReadinessCase({ studentId: s1.id, goal: "x" });
+  expect(await createTestClient({ tenantId: T.id, accountId: s2.id }).read("readiness_cases", c1.id)).toBeNull();
+});
+test("a staff role is scoped to its approved caseload", async () => {
+  const T = await seedTenant("pilot-campus"); const adv = await T.createAdvisor();
+  const mine = await T.createStudent({ advisorId: adv.id }), other = await T.createStudent();
+  const c = createTestClient({ tenantId: T.id, accountId: adv.id });
+  expect(await c.canReadStudent(mine.id)).toBe(true);
+  expect(await c.canReadStudent(other.id)).toBe(false);
+});

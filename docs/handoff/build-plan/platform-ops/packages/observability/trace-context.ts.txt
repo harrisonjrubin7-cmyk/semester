@@ -1,0 +1,13 @@
+export type TraceContext = {
+  correlationId: string; causationId?: string; tenantId?: string; capabilityId: string; releaseId?: string;
+  actorType: "student" | "staff" | "service" | "partner" | "system";
+  environment: "local" | "preview" | "staging" | "production";
+};
+const FORBIDDEN = /grade|hold|message|body|email|token|password|idempotency_key$/i;
+/** One structured log line. Drops forbidden keys instead of trusting callers. */
+export function logEvent(ctx: TraceContext, event: string, fields: Record<string, unknown> = {}) {
+  const safe = Object.fromEntries(Object.entries(fields).filter(([k]) => !FORBIDDEN.test(k)));
+  const dropped = Object.keys(fields).filter((k) => FORBIDDEN.test(k));
+  console.log(JSON.stringify({ ts: new Date().toISOString(), event, ...ctx, ...safe, ...(dropped.length ? { dropped_fields: dropped } : {}) }));
+}
+export const child = (ctx: TraceContext, patch: Partial<TraceContext>): TraceContext => ({ ...ctx, causationId: ctx.correlationId, correlationId: crypto.randomUUID(), ...patch });

@@ -1,0 +1,8 @@
+(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else root.PublicSiteCore=factory();})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+function resolve(route,specs){let path;try{path=decodeURIComponent(route||'/');}catch(e){return specs.find(s=>s.route==='/404');}if(!path.startsWith('/')||/[?#]/.test(path))return specs.find(s=>s.route==='/404');const exact=specs.find(s=>s.route===path);if(exact)return exact;return specs.find(s=>s.dynamic&&new RegExp('^'+s.route.split('/').map(p=>p.startsWith(':')?'[^/]+':p.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('/')+'$').test(path))||specs.find(s=>s.route==='/404');}
+function validate(values){const errors={};if(typeof values.name!=='string'||!values.name.trim()||values.name.length>120)errors.name='Enter your name, up to 120 characters.';if(typeof values.email!=='string'||values.email.length>254||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(values.email))errors.email='Enter a complete email address.';if(typeof values.message!=='string'||values.message.length>2000)errors.message='Keep the message under 2,000 characters.';return errors;}
+function localReceipt(values,route){const errors=validate(values);return Object.keys(errors).length?{kind:'invalid',errors}:{kind:'local_preview',route,notice:'Prepared locally. Nothing was sent, booked or saved to a server.'};}
+const states=['ready','loading','empty','error','forbidden','offline','unavailable'];
+return {resolve,validate,localReceipt,states};
+});

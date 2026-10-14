@@ -1,0 +1,506 @@
+{
+  "schema_version": "2.0.0",
+  "document_type": "workflow_definition",
+  "id": "registration.correct",
+  "version": 1,
+  "name": "Registrar correction of a committed enrollment",
+  "domain": "Registration",
+  "purpose": "Correct a wrong committed enrollment with the original kept and the correction approved by a second person.",
+  "trigger": "Registrar opens a correction case",
+  "scope": {
+    "kind": "institution",
+    "tenant_id": "0b7e5c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+    "subject_id": null,
+    "resource_refs": [
+      "proposed:section",
+      "proposed:enrollment"
+    ],
+    "access_basis_refs": [
+      "proposed:ferpa_school_official",
+      "proposed:membership.registrar_staff"
+    ]
+  },
+  "authority": {
+    "mode": "assist",
+    "official_write": true,
+    "system_ref": "proposed:sis.vanderbilt",
+    "registry_ref": "data/source-authority-register.yaml#enrollment",
+    "institution_scope_ref": "proposed:vanderbilt",
+    "activation_ref": "implementation/tenant-activation.yaml#registration",
+    "writer_policy": "legacy_single_writer",
+    "freshness_policy_ref": "assurance/service-objectives.yaml#SLO-SOURCE-001"
+  },
+  "controls": {
+    "risk": "consequential",
+    "human_authority_required": true,
+    "approval_policy_ref": "proposed:registrar.approval",
+    "policy_version_ref": "proposed:policy.registration_v1",
+    "idempotency_required": true,
+    "payload_binding_required": true,
+    "concurrency_policy_ref": "registrar/enrollment-engine#row-lock-seat",
+    "private_official_boundary_ref": "proposed:boundary.plan_vs_enrollment",
+    "provider_data_policy_ref": "proposed:no_ai_provider_access"
+  },
+  "completion": {
+    "receipt_schema_ref": "proposed:receipt.enrollment",
+    "projection_refs": [
+      "proposed:read_model.student_schedule",
+      "proposed:read_model.action_center"
+    ],
+    "reconciliation_ref": "assurance/reconciliation.yaml",
+    "action_center_ref": "proposed:action_center.registration"
+  },
+  "operations": {
+    "owner": "Registrar",
+    "escalation_ref": "operations/support-model.yaml#tier3",
+    "retention_ref": "privacy/data-lifecycle.yaml#registration",
+    "accessibility_test_refs": [
+      "proposed:a11y.registration.status"
+    ],
+    "monitoring_ref": "assurance/service-objectives.yaml#SLO-READINESS-001"
+  },
+  "ai_policy": {
+    "enabled": false,
+    "policy_ref": null,
+    "tool_budget_ref": null,
+    "consequential_decision_authority": false
+  },
+  "readiness": {
+    "designed": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "implemented": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "tested": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "deployed": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "institution_authorized": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "production_enabled": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    }
+  },
+  "states": {
+    "business": [
+      "case_open",
+      "correction_proposed",
+      "corrected",
+      "no_change"
+    ],
+    "execution": [
+      "received",
+      "assessing",
+      "awaiting_second_approver",
+      "dispatched",
+      "reconciling",
+      "completed",
+      "denied",
+      "failed"
+    ],
+    "initial_business": "case_open",
+    "initial_execution": "received",
+    "terminal_business": [
+      "corrected",
+      "no_change"
+    ],
+    "terminal_execution": [
+      "completed",
+      "denied",
+      "failed"
+    ]
+  },
+  "steps": [
+    {
+      "id": "c1",
+      "name": "Assess impact (policy, aid, prerequisites, grades)",
+      "kind": "operational_review",
+      "actor_role": "registrar_staff",
+      "capabilities": [
+        "registration.correct"
+      ],
+      "surface_refs": [
+        "E:Overrides"
+      ],
+      "binding_id": null,
+      "input_schema_ref": "proposed:schema.c1",
+      "output_schema_ref": "proposed:schema.c1.out",
+      "policy_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "failure_codes": [
+        "POLICY_VERSION_MISMATCH",
+        "IMPACT_UNRESOLVED"
+      ],
+      "audit_events": [
+        "registration.correct.assessed"
+      ]
+    },
+    {
+      "id": "c2",
+      "name": "Second registrar approves exact change",
+      "kind": "operational_review",
+      "actor_role": "registrar_approver",
+      "capabilities": [
+        "registration.correct.approve"
+      ],
+      "surface_refs": [
+        "E:Overrides"
+      ],
+      "binding_id": null,
+      "input_schema_ref": "proposed:schema.c2",
+      "output_schema_ref": "proposed:schema.c2.out",
+      "policy_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "failure_codes": [
+        "SELF_APPROVAL",
+        "APPROVAL_EXPIRED"
+      ],
+      "audit_events": [
+        "registration.correct.approved"
+      ]
+    },
+    {
+      "id": "c3",
+      "name": "Dispatch correction to SIS",
+      "kind": "background",
+      "actor_role": "system",
+      "capabilities": [
+        "sis.write.registration"
+      ],
+      "surface_refs": [],
+      "binding_id": "proposed:binding.outbox_sis",
+      "input_schema_ref": "proposed:schema.c3",
+      "output_schema_ref": "proposed:schema.c3.out",
+      "policy_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "failure_codes": [
+        "TIMEOUT_AFTER_DISPATCH"
+      ],
+      "audit_events": [
+        "registration.correct.dispatched"
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "e1",
+      "track": "execution",
+      "from": "received",
+      "to": "assessing",
+      "step_id": "c1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.assessing"
+    },
+    {
+      "id": "e2",
+      "track": "execution",
+      "from": "assessing",
+      "to": "awaiting_second_approver",
+      "step_id": "c1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.awaiting_second_approver"
+    },
+    {
+      "id": "e3",
+      "track": "execution",
+      "from": "assessing",
+      "to": "denied",
+      "step_id": "c1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.denied"
+    },
+    {
+      "id": "e4",
+      "track": "execution",
+      "from": "awaiting_second_approver",
+      "to": "dispatched",
+      "step_id": "c2",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.dispatched"
+    },
+    {
+      "id": "e5",
+      "track": "execution",
+      "from": "awaiting_second_approver",
+      "to": "denied",
+      "step_id": "c2",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.denied"
+    },
+    {
+      "id": "e6",
+      "track": "execution",
+      "from": "dispatched",
+      "to": "completed",
+      "step_id": "c3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.completed"
+    },
+    {
+      "id": "e7",
+      "track": "execution",
+      "from": "dispatched",
+      "to": "reconciling",
+      "step_id": "c3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.reconciling"
+    },
+    {
+      "id": "e8",
+      "track": "execution",
+      "from": "reconciling",
+      "to": "completed",
+      "step_id": "c3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.completed"
+    },
+    {
+      "id": "e9",
+      "track": "execution",
+      "from": "reconciling",
+      "to": "failed",
+      "step_id": "c3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.failed"
+    },
+    {
+      "id": "e10",
+      "track": "execution",
+      "from": "awaiting_second_approver",
+      "to": "assessing",
+      "step_id": "c2",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.assessing"
+    },
+    {
+      "id": "f1",
+      "track": "business",
+      "from": "case_open",
+      "to": "correction_proposed",
+      "step_id": "c1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.business.correction_proposed"
+    },
+    {
+      "id": "f2",
+      "track": "business",
+      "from": "case_open",
+      "to": "no_change",
+      "step_id": "c1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.business.no_change"
+    },
+    {
+      "id": "f3",
+      "track": "business",
+      "from": "correction_proposed",
+      "to": "corrected",
+      "step_id": "c3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.business.corrected"
+    },
+    {
+      "id": "f4",
+      "track": "business",
+      "from": "correction_proposed",
+      "to": "no_change",
+      "step_id": "c2",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.business.no_change"
+    }
+  ],
+  "recovery_paths": [
+    {
+      "code": "POLICY_VERSION_MISMATCH",
+      "trigger": "Correction cites a policy version that didn’t apply at the time",
+      "from_execution_states": [
+        "assessing"
+      ],
+      "to_execution_state": "denied",
+      "retry_class": "new_approved_command",
+      "fallback_ref": "proposed:fallback.policy_version_mismatch",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Registrar",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-C-POLICY"
+      ]
+    },
+    {
+      "code": "IMPACT_UNRESOLVED",
+      "trigger": "Aid, prerequisite or grade impact not assessed",
+      "from_execution_states": [
+        "assessing"
+      ],
+      "to_execution_state": "denied",
+      "retry_class": "new_approved_command",
+      "fallback_ref": "proposed:fallback.impact_unresolved",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Registrar",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-C-IMPACT"
+      ]
+    },
+    {
+      "code": "SELF_APPROVAL",
+      "trigger": "Approver is the proposer",
+      "from_execution_states": [
+        "awaiting_second_approver"
+      ],
+      "to_execution_state": "awaiting_second_approver",
+      "retry_class": "no_retry",
+      "fallback_ref": "proposed:fallback.self_approval",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Registrar",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-C-SELF"
+      ]
+    },
+    {
+      "code": "APPROVAL_EXPIRED",
+      "trigger": "Approval older than its validity window or change edited after approval",
+      "from_execution_states": [
+        "awaiting_second_approver"
+      ],
+      "to_execution_state": "assessing",
+      "retry_class": "new_approved_command",
+      "fallback_ref": "proposed:fallback.approval_expired",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Registrar/security",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-C-EXPIRED"
+      ]
+    },
+    {
+      "code": "TIMEOUT_AFTER_DISPATCH",
+      "trigger": "No SIS confirmation",
+      "from_execution_states": [
+        "dispatched"
+      ],
+      "to_execution_state": "reconciling",
+      "retry_class": "safe_same_key",
+      "fallback_ref": "proposed:fallback.timeout_after_dispatch",
+      "compensation_kind": "authorized_correction",
+      "compensation_ref": "proposed:compensation.timeout_after_dispatch",
+      "owner": "Integration/registrar",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-C-TIMEOUT"
+      ]
+    }
+  ],
+  "acceptance_tests": [
+    {
+      "id": "AT-C-HAPPY",
+      "suite": "happy_path",
+      "criterion": "Approved correction applied once; original enrollment and correction both visible in the ledger",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-C-POLICY",
+      "suite": "authority",
+      "criterion": "Correction must cite the policy version in force at the original action",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-C-IMPACT",
+      "suite": "recovery",
+      "criterion": "Unassessed impact blocks the correction",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-C-SELF",
+      "suite": "authority",
+      "criterion": "Proposer can’t approve their own correction",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-C-EXPIRED",
+      "suite": "revocation",
+      "criterion": "Editing after approval invalidates the approval",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-C-TIMEOUT",
+      "suite": "timeout",
+      "criterion": "Timeout reconciles; no duplicate correction",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-C-ISO",
+      "suite": "tenant_isolation",
+      "criterion": "Correction can’t touch another tenant’s records",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-C-ROLE",
+      "suite": "role_denial",
+      "criterion": "Students and advisors can’t open correction cases",
+      "evidence_refs": []
+    }
+  ]
+}

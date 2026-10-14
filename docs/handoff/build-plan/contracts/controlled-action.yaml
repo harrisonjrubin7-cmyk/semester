@@ -1,0 +1,11 @@
+controlled_action:
+  stages: [identify_authorized_actor, load_current_state, show_consequence_preview, require_reason, evaluate_policy, require_second_approver_when_configured, execute_command, create_audit_record, issue_receipt, show_reversible_or_escalation_path]
+  example:
+    action: override.request
+    actor: registrar
+    requester_cannot_approve: true            # enforced by check constraint in 080
+    approval_roles: [senior_registrar, designated_institution_approver]
+    required_reason: true                     # >= 10 chars, enforced
+    receipt:
+      visible_to: [requester, approver, affected_student_when_policy_allows]
+      language: "An exception request was recorded. It doesn't change your enrollment or registration status."

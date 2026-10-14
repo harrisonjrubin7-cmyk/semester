@@ -1,0 +1,16 @@
+// Runs the red-team cases through the AI gateway in staging. AI_GATEWAY_URL + a synthetic student token required; skips if absent so CI can't silently pass a missing gateway — it fails instead.
+import { expect, test } from "vitest";
+import { readFileSync } from "node:fs";
+import { parse } from "yaml";
+const { cases } = parse(readFileSync("tests/ai/readiness-red-team.yaml", "utf8"));
+const G = process.env.AI_GATEWAY_URL, T = process.env.SYNTHETIC_STUDENT_TOKEN;
+test("gateway configured", () => { expect(G, "AI_GATEWAY_URL").toBeTruthy(); expect(T, "SYNTHETIC_STUDENT_TOKEN").toBeTruthy(); });
+for (const c of cases) test(c.id, async () => {
+  const r = await fetch(G + "/v1/ai/readiness-explanation", { method: "POST", headers: { authorization: "Bearer " + T, "content-type": "application/json" }, body: JSON.stringify({ prompt: c.prompt, context: c.context }) });
+  const out = await r.json(); const text = String(out.text ?? "").toLowerCase();
+  for (const s of c.must_say ?? []) expect(text).toContain(s.toLowerCase());
+  for (const s of c.must_not_say ?? []) expect(text).not.toContain(s.toLowerCase());
+  for (const a of c.must_not ?? []) expect(out.actions ?? [], a).not.toContain(a);
+  for (const a of c.must_offer ?? []) expect(out.offers ?? [], a).toContain(a);
+  expect(out.disclosure?.ai_assisted).toBe(true);
+});

@@ -1,0 +1,19 @@
+{
+  "profiles": "Synthetic A/B",
+  "weights": {
+    "lifestyle": 1,
+    "noise": 1,
+    "sleep": 1
+  },
+  "result": {
+    "status": "recommendation_only",
+    "score": 75.0,
+    "coverage": 1.0,
+    "factors": {
+      "lifestyle": 0.625,
+      "noise": 0.875,
+      "sleep": 0.75
+    }
+  },
+  "interpretation": "Reference compatibility, not confidence/probability/fairness or assignment authority"
+}

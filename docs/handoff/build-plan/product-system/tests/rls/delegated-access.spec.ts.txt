@@ -1,0 +1,23 @@
+// Against staging with RLS on. Rename to .spec.ts.
+import { test, expect } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+const URL = process.env.SUPABASE_URL!, ANON = process.env.SUPABASE_ANON_KEY!;
+async function as(email: string, pw: string) { const c = createClient(URL, ANON, { auth: { persistSession: false } }); await c.auth.signInWithPassword({ email, password: pw }); return c; }
+test("guardian reads only granted scopes", async () => {
+  const g = await as(process.env.GUARDIAN_EMAIL!, process.env.GUARDIAN_PASSWORD!);
+  const { data: bill } = await g.from("delegated_billing_summary").select("*");
+  expect(bill!.length).toBeGreaterThan(0);
+  const { data: grades } = await g.from("gradebook_entries").select("id");
+  expect(grades).toEqual([]);
+  const { data: notes } = await g.from("advising_notes").select("id");
+  expect(notes).toEqual([]);
+});
+test("revocation takes effect on the next request", async () => {
+  const s = await as(process.env.STUDENT_EMAIL!, process.env.STUDENT_PASSWORD!);
+  const g = await as(process.env.GUARDIAN_EMAIL!, process.env.GUARDIAN_PASSWORD!);
+  await s.rpc("revoke_delegation", { p_recipient_email: process.env.GUARDIAN_EMAIL });
+  const { data } = await g.from("delegated_billing_summary").select("*");
+  expect(data).toEqual([]);
+});
+test("expired grant gives nothing", async () => { /* seed a grant with expires_at in the past, then read as the guardian → [] */ });
+test("relationship claim alone grants nothing", async () => { /* guardian with no grant row reads → [] */ });

@@ -1,0 +1,34 @@
+layer,console,design_route,priority,proposed_owner_role,runtime_route_status,named_owner
+institution,Executive Console,/app/institution/:tenantSlug/overview,P0,Institution super-admin,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+institution,Academic Operations,/app/institution/:tenantSlug/academic-operations,P1,Academic affairs,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+institution,Registrar,/app/institution/:tenantSlug/registrar,P0,Registrar,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+institution,Faculty / Teaching,/app/institution/:tenantSlug/teaching,P1,Faculty,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+institution,Student Success,/app/institution/:tenantSlug/student-success,P0,Advisor,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+institution,Student Accounts,/app/institution/:tenantSlug/student-accounts,P1,Bursar,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+institution,Campus Services,/app/institution/:tenantSlug/campus-services,P1,Campus services,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+institution,Community & Safety,/app/institution/:tenantSlug/community-safety,P1,Student affairs,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+institution,Career / Alumni / Employer,/app/institution/:tenantSlug/career,P1,Career staff,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+institution,IT / Identity,/app/institution/:tenantSlug/it-identity,P0,Institution IT,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+institution,Governance & Trust,/app/institution/:tenantSlug/governance,P1,Security/privacy,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+institution,Implementation,/app/institution/:tenantSlug/implementation,P0,Implementation,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+institution,Institution Command Center,/app/institution/:tenantSlug/command,P0,Institution super-admin,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+company,Corporate Governance,/app/ops/board,P1,Founder,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+company,Product / Engineering,/app/ops/releases,P0,Release operator,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+company,Trust / Security / Privacy / Accessibility,/app/ops/trust,P1,Security/privacy,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+company,Revenue Operations,/app/ops/customers,P1,Finance/RevOps,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+company,Implementation / Success,/app/ops/implementations,P0,Implementation,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+company,Finance,/app/ops/finance,P0,Finance,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+company,Legal / Vendor,/app/ops/vendors,P1,Founder/counsel,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+company,People,/app/ops/people,P1,People,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+company,Operations Command Center,/app/ops,P0,Operations,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+control,Tenant hierarchy,/app/institution/:tenantSlug/settings/hierarchy,P0,Architecture,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+control,Identity / SSO / SCIM,/app/institution/:tenantSlug/it-identity/sso,P0,IT,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+control,Roles / capabilities / delegation,/app/institution/:tenantSlug/it-identity/roles,P0,Security,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+control,Policy / workflow,/app/institution/:tenantSlug/governance/policies,P0,Architecture,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+control,Flags / cohorts / kills,/app/ops/feature-flags,P0,Release,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+control,Consent / retention / holds,/app/institution/:tenantSlug/governance/retention,P1,Privacy,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+control,Integration / migration,/app/ops/integrations,P0,Platform,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+control,AI governance,/app/ops/trust/ai,P1,AI governance,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+control,Audit / evidence / risk,/app/ops/audit,P0,Security,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+control,Reliability / incidents / rollback,/app/ops/reliability,P0,SRE,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED
+control,Portability / offboarding,/app/institution/:tenantSlug/governance/offboarding,P2,Institution admin,Design route; map to existing #/console or institution shell; not deployed endpoint,UNASSIGNED

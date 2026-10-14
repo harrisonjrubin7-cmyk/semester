@@ -1,0 +1,6 @@
+{
+  "attachment_sha256": "98fce65d4f5d1c4c4563d0e8ea20271ddea28b0c968a30e643421a3bf79bbab6",
+  "registry_asset": "0e66dbe5-1e1e-4f71-9120-b099261e4bc4",
+  "capabilities": 122,
+  "note": "Decoded without executing embedded source; catalog existence is not deployed DB/API proof."
+}

@@ -1,0 +1,8 @@
+# A capability stays enabled only while its controls, evidence, source conditions and owners remain current.
+assurance_model:
+  dimensions: [authority, access, source_integrity, workflow_integrity, user_understanding, accessibility, reliability, operational_response, evidence_currency]
+  review_cadence:
+    continuously: [authorization_decisions, source_freshness, workflow_failures, queue_sla, security_alerts]
+    weekly: [reconciliation_backlog, support_themes, control_exceptions, release_changes]
+    monthly: [pilot_health, access_review, risk_register, evidence_expiry, business_and_customer_review]
+    at_trigger: [source_schema_change, policy_change, incident, new_tenant, cohort_expansion, material_product_change]

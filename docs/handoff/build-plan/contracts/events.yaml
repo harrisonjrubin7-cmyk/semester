@@ -1,0 +1,62 @@
+# events.yaml — one envelope for every domain event.
+event_envelope:
+  required: [event_id, event_type, event_version, occurred_at, tenant_id, actor_account_id, correlation_id, causation_id, aggregate_type, aggregate_id, payload]
+  rules: [event_id_is_globally_unique, payload_is_schema_validated, tenant_id_required_for_tenant_events, events_are_append_only, consumers_are_idempotent, external_delivery_uses_transactional_outbox, payload_carries_ids_not_record_contents]
+events:
+  - type: readiness.evaluated
+    version: 1
+    aggregate: readiness_case
+  - type: receipt.created
+    version: 1
+    aggregate: readiness_receipt
+  - type: readiness.refresh_requested
+    version: 1
+    aggregate: readiness_case
+  - type: readiness.referral_created
+    version: 1
+    aggregate: readiness_case
+  - type: support.case_created
+    version: 1
+    aggregate: support_case
+  - type: readiness.case_assigned
+    version: 1
+    aggregate: readiness_case
+  - type: readiness.case_routed
+    version: 1
+    aggregate: readiness_case
+  - type: readiness.case_referred
+    version: 1
+    aggregate: readiness_case
+  - type: readiness.case_refreshed
+    version: 1
+    aggregate: readiness_case
+  - type: override.requested
+    version: 1
+    aggregate: override_request
+  - type: override.decided
+    version: 1
+    aggregate: override_request
+  - type: integration.refresh_triggered
+    version: 1
+    aggregate: integration
+  - type: incident.declared
+    version: 1
+    aggregate: incident
+  - type: incident.updated
+    version: 1
+    aggregate: incident
+  - type: readiness.source_stale
+    version: 1
+    aggregate: readiness_case
+example:
+  event_id: 018f0d13-0dc0-7d31-91fc-a989af7a9105
+  event_type: readiness.evaluated
+  event_version: 1
+  occurred_at: "2026-10-13T15:05:00Z"
+  tenant_id: "<tenant uuid>"
+  actor_account_id: "<account uuid>"
+  correlation_id: "<request id>"
+  causation_id: "<command id>"
+  aggregate_type: readiness_case
+  aggregate_id: "<case uuid>"
+  payload: { term_id: 2027-spring, previous_state: unknown, next_state: needs_review, freshness_state: current, reason_codes: [missing_prerequisite_evidence] }

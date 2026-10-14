@@ -1,0 +1,13 @@
+scope:   # signed by both sides BEFORE configuration — every "to_be_confirmed" blocks stage 1
+  tenant: vanderbilt (to_be_confirmed)
+  term: to_be_confirmed (Spring 2027 registration window)
+  cohort: {inclusion: [approved_student_population, active_authenticated_membership], exclusion: [outside_approved_cohort, records_without_authorized_source_context, cases_needing_decisions_outside_pilot_scope], size: to_be_confirmed}
+  roles:
+    student: [request_self_evaluation, view_own_receipts, route_self_to_approved_support]
+    advisor: [view_assigned_or_scoped_handoffs, respond_or_route]
+    registrar: [view_office_scoped_exceptions, reconcile_status_when_authorized]
+    semester_operator: [operate_technical_support, monitor_health]   # never makes institutional academic decisions
+  approved_sources: to_be_named_by_institution
+  outcome_meanings: frozen at signature — ready, blocked, needs_review, unknown, stale, failed, cancelled (same vocabulary as source-state.ts)
+  prohibited_actions: [enrollment_execution, official_record_change, institution_policy_override, unrestricted_staff_lookup, model_training_on_student_records]
+  signatures: {institution_sponsor: pending, registrar_source_owner: pending, semester_product_owner: Harrison (founder)}

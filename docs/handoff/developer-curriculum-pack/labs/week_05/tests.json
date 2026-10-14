@@ -1,0 +1,67 @@
+{
+  "function": "authorize",
+  "cases": [
+    {
+      "input": {
+        "active": true,
+        "scopes": [
+          "tasks:read"
+        ]
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "active": false,
+        "scopes": [
+          "tasks:read"
+        ]
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "active": true,
+        "scopes": []
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "active": true,
+        "scopes": [
+          "tasks:write"
+        ]
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "active": true,
+        "scopes": [
+          "tasks:read:all"
+        ]
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "active": "true",
+        "scopes": [
+          "tasks:read"
+        ]
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "active": true,
+        "scopes": [
+          "other",
+          "tasks:read"
+        ]
+      },
+      "expected": true
+    }
+  ]
+}

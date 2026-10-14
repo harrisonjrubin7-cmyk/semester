@@ -1,0 +1,48 @@
+// Campus commands: bed selection, group selection, dining redemption. Deploy into supabase/functions/live-campus-command/index.ts.
+// POST { institution_id, command, payload } with header Idempotency-Key (16–128 chars).
+// Students act only for themselves; student_affairs staff may act for a student (e.g. POS, housing desk) and are recorded as the actor.
+import { admin, Denied, handler, json, requireCapability, requireGrant, requireUser } from "../_shared/gate.ts";
+
+type Spec = { capability: string; rpc: string; args: (p: Record<string, any>, inst: string, student: string, key: string) => Record<string, unknown>; need: string[] };
+const COMMANDS: Record<string, Spec> = {
+  "housing.select_bed": { capability: "campus.housing", rpc: "cs_select_bed_once", need: ["bed_id", "seen_version", "period_start", "period_end"],
+    args: (p, inst, student, key) => ({ p_inst: inst, p_bed: p.bed_id, p_student: student, p_seen_version: p.seen_version, p_period: `[${p.period_start},${p.period_end})`, p_key: key }) },
+  "housing.select_group": { capability: "campus.housing", rpc: "cs_select_group_beds", need: ["group_id", "group_version", "bed_ids", "seen_version", "period_start", "period_end"],
+    args: (p, inst, _s, key) => ({ p_inst: inst, p_group: p.group_id, p_group_version: p.group_version, p_beds: p.bed_ids, p_seen_version: p.seen_version, p_period: `[${p.period_start},${p.period_end})`, p_key: key }) },
+  "dining.redeem": { capability: "campus.dining", rpc: "cs_redeem", need: ["entitlement_id", "qty", "order_ref"],
+    args: (p, inst, _s, key) => ({ p_inst: inst, p_ent: p.entitlement_id, p_qty: p.qty, p_key: key, p_order: p.order_ref }) },
+};
+const SQLSTATE: Record<string, [number, string, string]> = {
+  "40001": [409, "stale", "Availability changed since you looked — refresh and choose again"],
+  "23P01": [409, "taken", "That bed or period is no longer available"],
+  "23514": [409, "not_allowed", "Not allowed by the institution's rules"],
+  "22023": [409, "idempotency_conflict", "This key was already used for a different request"],
+};
+
+Deno.serve(handler(async (req) => {
+  const user = await requireUser(req);
+  const key = req.headers.get("idempotency-key") ?? "";
+  if (key.length < 16 || key.length > 128) throw new Denied(400, "idempotency_required", "Idempotency-Key header (16–128 chars) required");
+  const { institution_id, command, payload = {}, student_id } = await req.json();
+  const spec = COMMANDS[command];
+  if (!institution_id || !spec) throw new Denied(400, "bad_command", "Unknown command");
+  const missing = spec.need.filter((k) => payload[k] === undefined || payload[k] === null || payload[k] === "");
+  if (missing.length) throw new Denied(400, "invalid_payload", `Missing: ${missing.join(", ")}`);
+  if (command === "dining.redeem" && !(Number.isInteger(payload.qty) && payload.qty > 0)) throw new Denied(400, "invalid_payload", "qty must be a positive integer");
+  const ws = await requireGrant(user, institution_id, ["student", "student_affairs"]);
+  const acting = student_id ?? user.id;
+  if (acting !== user.id && ws !== "student_affairs") throw new Denied(403, "forbidden", "Students can only act for themselves");
+  if (command === "housing.select_group") {
+    const { data: m } = await admin().from("cs_roommate_memberships").select("student_id").eq("group_id", payload.group_id);
+    if (!(m ?? []).some((x) => x.student_id === acting)) throw new Denied(403, "forbidden", "You aren't in this group");
+  }
+  if (command === "dining.redeem") {
+    const { data: e } = await admin().from("cs_entitlements").select("student_id").eq("id", payload.entitlement_id).eq("institution_id", institution_id).maybeSingle();
+    if (!e || e.student_id !== acting) throw new Denied(403, "forbidden", "That entitlement isn't yours");   // also blocks cross-school ids
+  }
+  await requireCapability(institution_id, spec.capability);
+
+  const { data, error } = await admin().rpc(spec.rpc, spec.args(payload, institution_id, acting, key));
+  if (error) { const m = SQLSTATE[error.code ?? ""]; if (m) throw new Denied(m[0], m[1], m[2]); throw new Denied(500, "command_failed", "Not recorded. Nothing changed."); }
+  return json(req, { result: data, actor: user.id, on_behalf_of: acting === user.id ? null : acting });
+}));

@@ -1,0 +1,17 @@
+capability:
+  id: CAP-TODAY-001
+  title: Student action center
+  placement: native
+  maturity_level: 1
+  inputs: [student_entered_tasks, approved_calendar_connection, institution_notices, readiness_receipts, support_handoffs, course_deadlines_when_authorized]
+  outputs: [prioritized_action_list, calendar_conflict_notice, source_and_freshness_label, safe_next_step, defer_or_dismiss_choice]
+  ranking_constraints:
+    - Do not silently infer a student's priorities from restricted records.
+    - Do not suppress a required institutional notice (required notices can't be dismissed, only acknowledged).
+    - Explain why an item appears.
+    - Student-entered tasks stay private by default.
+  states: [ready, source_stale, offline, no_actions, needs_review]
+  copy:
+    stale: "Your Canvas calendar has not updated since Tuesday. Deadlines below may have moved. Reconnect it, or check the course page."
+    readiness: "Your registration check is ready to review. It can help you plan your next step. It does not confirm enrollment."
+    private_task: "You added this task. Only you can see it unless you choose to share it."

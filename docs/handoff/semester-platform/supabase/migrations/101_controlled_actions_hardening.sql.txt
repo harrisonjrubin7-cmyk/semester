@@ -1,0 +1,112 @@
+-- 101_controlled_actions_hardening.sql — remediates BIND-01, BIND-02, BIND-03 (inspected_handoff_binding_findings.csv).
+-- Additive and compatible: existing callers of api.request_action / api.execute_action keep working.
+-- PROPOSED. Not applied or run anywhere. Apply to a branch DB after 100_controlled_actions.
+
+-- BIND-01: "executed" was written before the domain worker acted. Split acceptance from the authoritative effect.
+alter table ctl.action_requests drop constraint if exists action_requests_status_check;
+alter table ctl.action_requests add constraint action_requests_status_check
+  check (status in ('pending','approved','rejected','accepted','committed','failed','result_unknown','reconciling','executed','rolled_back','expired'));
+alter table ctl.action_requests
+  add column if not exists accepted_at timestamptz,
+  add column if not exists committed_at timestamptz,
+  add column if not exists effect_proof jsonb,          -- authoritative system's reference (e.g. SIS transaction id)
+  add column if not exists payload_hash text,
+  add column if not exists actor_id uuid;
+update ctl.action_requests set actor_id = requested_by where actor_id is null;
+update ctl.action_requests set payload_hash = encode(extensions.digest(convert_to(payload::text, 'utf8'), 'sha256'), 'hex') where payload_hash is null;
+-- A committed row must carry proof; an accepted row must not claim an effect.
+alter table ctl.action_requests add constraint committed_needs_proof check (status <> 'committed' or (effect_proof is not null and committed_at is not null)) not valid;
+
+-- BIND-02: key was globally unique and looked up by key alone. Scope it and bind the payload.
+alter table ctl.action_requests drop constraint if exists action_requests_idempotency_key_key;
+create unique index if not exists action_requests_idem_scope
+  on ctl.action_requests (coalesce(tenant_id, '00000000-0000-0000-0000-000000000000'::uuid), actor_id, capability, idempotency_key);
+
+create or replace function api.request_action(p_cap text, p_tenant uuid, p_reason text, p_payload jsonb, p_idem text, p_preview jsonb)
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare r ctl.action_requests; h text := encode(extensions.digest(convert_to(p_payload::text, 'utf8'), 'sha256'), 'hex');
+begin
+  if not ctl.can(p_cap, p_tenant) then raise exception 'capability % not granted for this tenant', p_cap; end if;
+  if length(coalesce(p_idem, '')) < 16 then raise exception 'idempotency key too short'; end if;
+  insert into ctl.action_requests(capability, tenant_id, reason, payload, payload_hash, impact_preview, idempotency_key, actor_id, status)
+    values (p_cap, p_tenant, p_reason, p_payload, h, p_preview, p_idem, auth.uid(),
+      case when (select min_approvals from ctl.capabilities where key = p_cap) = 0 then 'approved' else 'pending' end)
+    on conflict do nothing
+    returning * into r;
+  if r.id is null then                                   -- concurrent or repeated request: same scope + key
+    select * into r from ctl.action_requests
+     where coalesce(tenant_id, '00000000-0000-0000-0000-000000000000'::uuid) = coalesce(p_tenant, '00000000-0000-0000-0000-000000000000'::uuid)
+       and actor_id = auth.uid() and capability = p_cap and idempotency_key = p_idem;
+    if r.payload_hash <> h then raise exception 'idempotency key reused with a different payload' using errcode = '22023'; end if;
+    return r.id;
+  end if;
+  insert into audit.events(actor, action, target, after) values (auth.uid(), 'action.requested', r.id::text, jsonb_build_object('capability', p_cap, 'tenant', p_tenant));
+  return r.id;
+end $$;
+
+-- execute_action now ACCEPTS (queues) — it no longer says "executed". Receipt says accepted, not done.
+create or replace function api.execute_action(p_request uuid) returns jsonb language plpgsql security definer set search_path = '' as $$
+declare r ctl.action_requests; rc jsonb; begin
+  select * into r from ctl.action_requests where id = p_request for update;
+  if r.status in ('accepted','committed','executed','result_unknown','reconciling') then return r.receipt; end if;
+  if r.status <> 'approved' then raise exception 'request not approved (status %)', r.status; end if;
+  if not ctl.can(r.capability, r.tenant_id) then raise exception 'capability no longer granted'; end if;
+  rc := jsonb_build_object('request', r.id, 'capability', r.capability, 'accepted_by', auth.uid(), 'at', now(),
+    'idempotency_key', r.idempotency_key, 'state', 'accepted', 'meaning', 'Queued for the authoritative system; not yet done.');
+  update ctl.action_requests set status = 'accepted', accepted_at = now(), receipt = rc where id = p_request;
+  insert into ctl.outbox(topic, tenant_id, payload) values ('action.' || r.capability, r.tenant_id,
+    jsonb_build_object('request', r.id, 'payload', r.payload, 'idempotency_key', r.idempotency_key, 'payload_hash', r.payload_hash));
+  insert into audit.events(actor, action, target, after) values (auth.uid(), 'action.accepted', r.id::text, rc);
+  return rc;
+end $$;
+
+-- Worker reports the authoritative outcome. Only the worker role may call this.
+create or replace function ctl.record_effect(p_request uuid, p_outcome text, p_proof jsonb, p_fence bigint)
+returns void language plpgsql security definer set search_path = '' as $$
+declare r ctl.action_requests; begin
+  select * into r from ctl.action_requests where id = p_request for update;
+  if p_outcome not in ('committed','failed','result_unknown') then raise exception 'bad outcome'; end if;
+  if r.status not in ('accepted','result_unknown','reconciling') then return; end if;          -- late/duplicate result: no-op
+  if not exists (select 1 from ctl.jobs j where j.request_id = p_request and j.fence = p_fence and j.lease_until > now()) then
+    raise exception 'stale lease' using errcode = '40001';                                    -- BIND-03 fencing
+  end if;
+  if p_outcome = 'committed' and p_proof is null then raise exception 'committed requires effect proof'; end if;
+  update ctl.action_requests set status = p_outcome, effect_proof = p_proof,
+    committed_at = case when p_outcome = 'committed' then now() end,
+    receipt = receipt || jsonb_build_object('state', p_outcome, 'proof', p_proof, 'at', now())
+   where id = p_request;
+  insert into audit.events(actor, action, target, after) values (null, 'action.' || p_outcome, p_request::text, p_proof);
+end $$;
+revoke all on function ctl.record_effect(uuid, text, jsonb, bigint) from public, anon, authenticated;
+
+-- BIND-03: delivery lifecycle — claimed jobs with lease + fencing, attempt history, consumer inbox.
+create table if not exists ctl.jobs(
+  request_id uuid primary key references ctl.action_requests,
+  fence bigint not null default 0,
+  lease_until timestamptz,
+  claimed_by text,
+  attempts int not null default 0,
+  last_error text,
+  dead_lettered_at timestamptz,
+  owner text not null default 'platform');
+create table if not exists ctl.consumer_inbox(consumer text not null, outbox_id bigint not null references ctl.outbox, processed_at timestamptz not null default now(), primary key (consumer, outbox_id));
+create or replace function ctl.claim_job(p_worker text, p_lease_seconds int default 60) returns ctl.jobs
+language plpgsql security definer set search_path = '' as $$
+declare j ctl.jobs; begin
+  update ctl.jobs set fence = fence + 1, lease_until = now() + make_interval(secs => p_lease_seconds), claimed_by = p_worker, attempts = attempts + 1
+   where request_id = (select request_id from ctl.jobs where dead_lettered_at is null and (lease_until is null or lease_until < now())
+                        order by request_id for update skip locked limit 1)
+  returning * into j;
+  return j;
+end $$;
+revoke all on function ctl.claim_job(text, int) from public, anon, authenticated;
+create or replace function ctl.enqueue_job() returns trigger language plpgsql security definer set search_path = '' as $$
+begin if new.status = 'accepted' and old.status is distinct from 'accepted' then insert into ctl.jobs(request_id) values (new.id) on conflict do nothing; end if; return new; end $$;
+drop trigger if exists action_requests_enqueue on ctl.action_requests;
+create trigger action_requests_enqueue after update of status on ctl.action_requests for each row execute function ctl.enqueue_job();
+alter table ctl.jobs enable row level security; alter table ctl.jobs force row level security;
+alter table ctl.consumer_inbox enable row level security; alter table ctl.consumer_inbox force row level security;
+
+-- Compatibility: old clients that read 'executed' see committed rows as executed.
+create or replace view ctl.action_requests_compat as
+  select *, case when status = 'committed' then 'executed' else status end as legacy_status from ctl.action_requests;

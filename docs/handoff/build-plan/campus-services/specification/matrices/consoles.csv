@@ -1,0 +1,23 @@
+domain,console,proposed_role,named_owner,access,status
+Housing,Inventory,Housing admin,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Housing,Applications,Housing staff,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Housing,Allocation and waitlist,Assignment staff,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Housing,Roommates,Authorized housing staff,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Housing,Contracts/occupancy,Housing and counsel,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Housing,Maintenance,Facilities,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Housing,Accommodation fulfillment,Restricted designated staff,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Housing,Finance/reconciliation,Housing/Bursar/IT,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Dining,Locations and menus,Dining operations,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Dining,Ingredient publication,Authorized food-service reviewer,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Dining,Plans and entitlements,Card office,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Dining,Order fulfillment,Dining staff,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Dining,Refunds/basic needs,Authorized finance/service staff,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Dining,POS reconciliation,Card office/IT,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Tuition,Rates/assessment,Bursar,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Tuition,Accounts/allocations,Student accounts,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Tuition,Payment/settlement,Finance,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Tuition,Payment plans,Bursar,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Tuition,Credit obligations,Bursar/Aid,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Tuition,Holds,Owning office,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Tuition,Sponsor/collections,Authorized finance,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED
+Tuition,Close/audit,Accounting/assurance,UNASSIGNED,institution/scoped capability; no company student-record access,PROPOSED

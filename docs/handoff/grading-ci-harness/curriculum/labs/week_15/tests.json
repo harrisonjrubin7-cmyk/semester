@@ -1,0 +1,25 @@
+{
+  "function": "reconcile",
+  "cases": [
+    {
+      "input": {
+        "expected": [
+          "a",
+          "b"
+        ],
+        "observed": [
+          "b",
+          "c"
+        ]
+      },
+      "expected": {
+        "missing": [
+          "a"
+        ],
+        "unexpected": [
+          "c"
+        ]
+      }
+    }
+  ]
+}

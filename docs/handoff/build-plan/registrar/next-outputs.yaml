@@ -1,0 +1,10 @@
+# Produce in order (from "Registrar system migration blueprint" PDF). Status as of 13 Oct.
+outputs:
+  - { n: 1, item: Implementation-to-spec gap register, status: started, where: capability-register.yaml (code_ref all null) }
+  - { n: 2, item: Institution source dictionaries + policy golden cases, status: template, where: requirements/golden-cases.yaml (unapproved) }
+  - { n: 3, item: Reviewed migrations + relationship constraints, status: drafted, where: proposed-schema/100, 110, 120 }
+  - { n: 4, item: Machine-readable OpenAPI, status: drafted, where: api/academic.openapi.yaml, api/curriculum-scheduling.openapi.yaml }
+  - { n: 5, item: Enrollment concurrency + grade-correction tests, status: drafted, where: tests/registrar_invariants.sql (10 pgTAP) }
+  - { n: 6, item: Repeatable import + reconciliation tooling, status: drafted, where: migration/import.mjs.txt }
+  - { n: 7, item: Hosted role-based acceptance results, status: not_started }
+  - { n: 8, item: Signed domain authority-transfer + cutover records, status: not_started, where: authority-register.yaml }

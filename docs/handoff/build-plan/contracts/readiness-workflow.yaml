@@ -1,0 +1,24 @@
+workflow:
+  key: registration_readiness
+  version: 2                     # v1 = 7 states (065); v2 = 11 states (066)
+  aggregate: readiness_case
+  states: [unknown, evaluating, ready, blocked, needs_review, referred, stale, reconciling, resolved, cancelled, failed]
+  terminal: [resolved, cancelled, failed]
+  enforced_by: proposed-schema/066_readiness_states_v2.sql
+invariants:
+  - { id: INV-RDY-001, rule: "Only a current, complete set of authoritative checks can produce ready.", enforced: "065 check ready ⇒ source current; readiness_evaluate()" }
+  - { id: INV-RDY-002, rule: "A stale or unknown authoritative source can't produce ready.", enforced: "same check constraint" }
+  - { id: INV-RDY-003, rule: "No readiness state confirms enrollment.", enforced: "no enrollment state exists; receipt statement constraint" }
+  - { id: INV-RDY-004, rule: "Every transition records an audit event and correlation id.", enforced: "066 readiness_audit trigger" }
+  - { id: INV-RDY-005, rule: "An override is an independently approved decision.", enforced: "080 check constraint + readiness.rego self_approval" }
+  - { id: INV-RDY-006, rule: "A late worker result can't revive a cancelled, revoked or superseded evaluation.", enforced: "066 generation bump + apply-worker-result.ts generation/lease checks" }
+  - { id: INV-RDY-007, rule: "Every student-visible outcome shows source, freshness and next action.", enforced: "route acceptance + verify.ts" }
+failure_matrix:
+  - { failure: sis_timeout, product: "stale/unknown, never ready", worker: "retry under lease with backoff", operator: "check provider health + watermark" }
+  - { failure: invalid_payload, product: "keep last verified projection; needs review", worker: quarantine_reference, operator: "fix mapper; replay safely" }
+  - { failure: duplicate_provider_event, product: "no duplicate receipt or case", worker: "dedupe by provider event id + checksum", operator: "watch duplicate trend" }
+  - { failure: worker_crash_after_external_call, product: "don't assume completion", worker: "recover via idempotency key + reconciliation", operator: "compare source outcome before replay" }
+  - { failure: staff_access_revoked, product: "block new action; keep history", worker: "reject result if generation changed", operator: "confirm revocation + audit" }
+  - { failure: state_changed_during_evaluation, product: "show latest valid state or re-evaluate", worker: "reject stale result; enqueue recheck", operator: "review unexpected transition" }
+  - { failure: policy_service_unavailable, product: "explain safe inability to complete", worker: "retry if retryable", operator: "platform health incident" }
+  - { failure: migration_regression, product: "disable pilot feature; keep records", worker: "stop affected jobs", operator: "forward-fix or restore per plan" }

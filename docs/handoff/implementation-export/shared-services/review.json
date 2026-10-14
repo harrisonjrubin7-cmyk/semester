@@ -1,0 +1,424 @@
+[
+  {
+    "id": "shared.identity.signin",
+    "purpose": "Authenticate through verified provider and recover access",
+    "boundary": "Identity service only; browser cannot assign actor or tenant",
+    "negative_tests": [
+      "Bad token/provider",
+      "recovery abuse",
+      "revoked session"
+    ],
+    "routes": [
+      "/auth/signin",
+      "/auth/mfa",
+      "/auth/recover"
+    ],
+    "actors": [
+      "any"
+    ],
+    "permissions": [
+      "session.create"
+    ],
+    "records": [
+      "auth.users",
+      "onboard.devices"
+    ],
+    "commands": [
+      "sign_in",
+      "verify_mfa"
+    ],
+    "events": [
+      "session.started"
+    ],
+    "status": "source-declared; live implementation not assessed"
+  },
+  {
+    "id": "shared.identity.sessions",
+    "purpose": "List, expire and revoke sessions",
+    "boundary": "Revocation enforced server-side and propagated to sensitive caches",
+    "negative_tests": [
+      "Revoked token denied",
+      "other-account session denied"
+    ],
+    "routes": [
+      "/app/settings/sessions"
+    ],
+    "actors": [
+      "any"
+    ],
+    "permissions": [
+      "session.revoke"
+    ],
+    "records": [
+      "onboard.devices",
+      "onboard.push_tokens"
+    ],
+    "commands": [
+      "api.revoke_device"
+    ],
+    "events": [
+      "device.revoked"
+    ],
+    "status": "source-declared; live implementation not assessed"
+  },
+  {
+    "id": "shared.org.memberships",
+    "purpose": "Connect institution relationships",
+    "boundary": "Membership is distinct from capabilities and roles",
+    "negative_tests": [
+      "Cross-institution membership read",
+      "expired affiliation"
+    ],
+    "routes": [
+      "/institution/members",
+      "/invite/*"
+    ],
+    "actors": [
+      "institution_admin"
+    ],
+    "permissions": [
+      "membership.invite",
+      "membership.revoke"
+    ],
+    "records": [
+      "core.profiles",
+      "iam.invitations",
+      "iam.memberships"
+    ],
+    "commands": [
+      "api.issue_invitation",
+      "api.accept_invitation",
+      "api.revoke_invitation"
+    ],
+    "events": [
+      "invitation.issued",
+      "invitation.accepted",
+      "invitation.revoked"
+    ],
+    "status": "source-declared; live implementation not assessed"
+  },
+  {
+    "id": "shared.authz.grants",
+    "purpose": "Request/review least-privilege grants",
+    "boundary": "Privileged requester and approver must differ; expiry enforced",
+    "negative_tests": [
+      "Self-approval",
+      "expired/revoked grant",
+      "object bypass"
+    ],
+    "routes": [
+      "/ops/access",
+      "/institution/access"
+    ],
+    "actors": [
+      "access_reviewer"
+    ],
+    "permissions": [
+      "grant.create",
+      "grant.revoke"
+    ],
+    "records": [
+      "ctl.capabilities",
+      "ctl.grants"
+    ],
+    "commands": [
+      "api.grant_capability",
+      "api.revoke_grant"
+    ],
+    "events": [
+      "grant.created",
+      "grant.revoked"
+    ],
+    "status": "source-declared; live implementation not assessed"
+  },
+  {
+    "id": "shared.authz.approvals",
+    "purpose": "Bind consequential approvals",
+    "boundary": "Exact payload/target/version/tenant/expiry and current authority",
+    "negative_tests": [
+      "Changed payload",
+      "concurrent version",
+      "already decided"
+    ],
+    "routes": [
+      "/app/approvals",
+      "/ops/approvals"
+    ],
+    "actors": [
+      "approver"
+    ],
+    "permissions": [
+      "action.request",
+      "action.approve"
+    ],
+    "records": [
+      "ctl.action_requests",
+      "ctl.action_approvals"
+    ],
+    "commands": [
+      "api.request_action",
+      "api.decide_action",
+      "api.execute_action"
+    ],
+    "events": [
+      "action.requested",
+      "action.approved",
+      "action.executed"
+    ],
+    "status": "source-declared; live implementation not assessed"
+  },
+  {
+    "id": "shared.delegation",
+    "purpose": "Grant scoped expiring access",
+    "boundary": "Relationship alone grants nothing; revoke promptly enforced",
+    "negative_tests": [
+      "Expired delegation",
+      "scope escalation",
+      "cache leakage"
+    ],
+    "routes": [
+      "/app/settings/sharing"
+    ],
+    "actors": [
+      "student"
+    ],
+    "permissions": [
+      "delegation.grant"
+    ],
+    "records": [
+      "core.delegations"
+    ],
+    "commands": [
+      "api.grant_delegation",
+      "api.revoke_delegation"
+    ],
+    "events": [
+      "delegation.granted",
+      "delegation.revoked"
+    ],
+    "status": "source-declared; live implementation not assessed"
+  },
+  {
+    "id": "shared.notifications",
+    "purpose": "Deliver permitted action-aware notices",
+    "boundary": "Recipient/channel permissions; no sensitive bodies in unapproved channels",
+    "negative_tests": [
+      "Duplicate delivery",
+      "recipient changed",
+      "privacy redaction"
+    ],
+    "routes": [
+      "/app/notifications",
+      "/app/settings/notifications"
+    ],
+    "actors": [
+      "any"
+    ],
+    "permissions": [
+      "notification.read",
+      "preference.edit"
+    ],
+    "records": [
+      "comms.notifications",
+      "comms.preferences"
+    ],
+    "commands": [
+      "mark_read",
+      "set_preferences"
+    ],
+    "events": [
+      "notification.delivered"
+    ],
+    "status": "source-declared; live implementation not assessed"
+  },
+  {
+    "id": "shared.search",
+    "purpose": "Search permitted current objects",
+    "boundary": "Authorize retrieval, snippets, ranking and indexed visibility",
+    "negative_tests": [
+      "Cross-tenant query",
+      "revoked object",
+      "stale index"
+    ],
+    "routes": [
+      "/app/search"
+    ],
+    "actors": [
+      "any"
+    ],
+    "permissions": [
+      "search.query"
+    ],
+    "records": [
+      "search.documents"
+    ],
+    "commands": [
+      "search"
+    ],
+    "events": [],
+    "status": "source-declared; live implementation not assessed"
+  },
+  {
+    "id": "shared.files",
+    "purpose": "Store/retrieve permitted artifacts",
+    "boundary": "Quarantine uploads, content checks, signed access, retention",
+    "negative_tests": [
+      "Unsafe upload",
+      "unauthorized download",
+      "expired URL"
+    ],
+    "routes": [
+      "/app/files"
+    ],
+    "actors": [
+      "any"
+    ],
+    "permissions": [
+      "file.upload",
+      "file.read"
+    ],
+    "records": [
+      "comms.files"
+    ],
+    "commands": [
+      "upload_file",
+      "delete_file"
+    ],
+    "events": [
+      "file.scanned"
+    ],
+    "status": "source-declared; live implementation not assessed"
+  },
+  {
+    "id": "shared.audit",
+    "purpose": "Retain accountable decisions",
+    "boundary": "Restricted append-only evidence; minimize sensitive payloads",
+    "negative_tests": [
+      "Audit tamper",
+      "sensitive logging",
+      "investigator scope"
+    ],
+    "routes": [
+      "/ops/audit",
+      "/institution/audit"
+    ],
+    "actors": [
+      "auditor"
+    ],
+    "permissions": [
+      "audit.read"
+    ],
+    "records": [
+      "audit.events"
+    ],
+    "commands": [],
+    "events": [],
+    "status": "source-declared; live implementation not assessed"
+  },
+  {
+    "id": "shared.documents",
+    "purpose": "Version and review controlled documents",
+    "boundary": "Draft/review/approved/published/executed are different states",
+    "negative_tests": [
+      "Unapproved publication",
+      "wrong reviewer",
+      "stale version"
+    ],
+    "routes": [
+      "/company/documents",
+      "/institution/documents"
+    ],
+    "actors": [
+      "document_owner",
+      "reviewer"
+    ],
+    "permissions": [
+      "document.submit",
+      "document.execute",
+      "document.archive"
+    ],
+    "records": [
+      "docs.documents",
+      "docs.document_versions",
+      "docs.version_states",
+      "docs.review_tasks",
+      "docs.transition_events",
+      "docs.contract_documents",
+      "docs.signature_requests",
+      "docs.acknowledgments"
+    ],
+    "commands": [
+      "api.transition_document",
+      "acknowledge"
+    ],
+    "events": [
+      "document.transitioned"
+    ],
+    "status": "source-declared; live implementation not assessed"
+  },
+  {
+    "id": "shared.ai.gateway",
+    "purpose": "Use approved sources and bounded AI",
+    "boundary": "Default-deny unapproved record egress; course/institution policy",
+    "negative_tests": [
+      "Prompt injection",
+      "forbidden tool",
+      "unapproved provider"
+    ],
+    "routes": [
+      "/app/assistant"
+    ],
+    "actors": [
+      "student",
+      "instructor"
+    ],
+    "permissions": [
+      "ai.use"
+    ],
+    "records": [
+      "core.ai_policy",
+      "core.course_ai_rules",
+      "core.sources",
+      "audit.ai_usage"
+    ],
+    "commands": [
+      "api.ai_policy",
+      "api.ai_context",
+      "api.ai_log"
+    ],
+    "events": [
+      "ai.answered"
+    ],
+    "status": "source-declared; live implementation not assessed"
+  },
+  {
+    "id": "shared.events.outbox",
+    "purpose": "Deliver durable events",
+    "boundary": "Atomic write/outbox, leases, dedupe, gap/replay reconciliation",
+    "negative_tests": [
+      "Lost publish",
+      "duplicate event",
+      "out-of-order event",
+      "lease expiry"
+    ],
+    "routes": [
+      "(worker)"
+    ],
+    "actors": [
+      "service_account"
+    ],
+    "permissions": [
+      "event.publish"
+    ],
+    "records": [
+      "ctl.outbox"
+    ],
+    "commands": [
+      "outbox.publish"
+    ],
+    "events": [
+      "*"
+    ],
+    "status": "source-declared; live implementation not assessed"
+  }
+]

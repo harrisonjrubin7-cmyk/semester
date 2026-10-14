@@ -1,0 +1,18 @@
+// P0 stale source — Playwright against staging. Rename to .spec.ts.
+import { test, expect } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+const URL = process.env.SUPABASE_URL!, ANON = process.env.SUPABASE_ANON_KEY!, SR = process.env.SUPABASE_SERVICE_ROLE_KEY!, A = process.env.INST_A!;
+const admin = createClient(URL, SR, { auth: { persistSession: false } });
+const fn = (n: string, t: string, b: unknown, h: Record<string, string> = {}) => fetch(`${URL}/functions/v1/${n}`, { method: "POST", headers: { authorization: `Bearer ${t}`, "content-type": "application/json", ...h }, body: JSON.stringify(b) });
+async function signIn(e: string, p: string) { const c = createClient(URL, ANON, { auth: { persistSession: false } }); const { data } = await c.auth.signInWithPassword({ email: e, password: p }); return { c, token: data.session!.access_token, id: data.user!.id }; }
+test("stale SIS data never produces a definitive readiness outcome", async ({ page }) => {
+  await admin.from("live_sis_staging").update({ observed_at: new Date(Date.now() - 7 * 864e5).toISOString() }).eq("institution_id", A);
+  await page.goto("/#/app/plan/readiness");
+  await expect(page.getByText(/may have changed|out of date|needs review/i)).toBeVisible();
+  await expect(page.getByText(/ready to register/i)).toHaveCount(0);
+});
+test("SIS unreachable → needs review, not failure", async ({ page }) => {
+  await page.route("**/functions/v1/live-sis-sync", (r) => r.abort("timedout"));
+  await page.goto("/#/app/plan/readiness");
+  await expect(page.getByText(/needs review|couldn’t check|could not check/i)).toBeVisible();
+});

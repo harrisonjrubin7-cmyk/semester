@@ -1,0 +1,26 @@
+test_block (test_roommate_match.Tests.test_block) ... ok
+test_bool_level (test_roommate_match.Tests.test_bool_level) ... ok
+test_equal (test_roommate_match.Tests.test_equal) ... ok
+test_float_time (test_roommate_match.Tests.test_float_time) ... ok
+test_identical (test_roommate_match.Tests.test_identical) ... ok
+test_ineligible (test_roommate_match.Tests.test_ineligible) ... ok
+test_invalid_level (test_roommate_match.Tests.test_invalid_level) ... ok
+test_invalid_time (test_roommate_match.Tests.test_invalid_time) ... ok
+test_missing_coverage (test_roommate_match.Tests.test_missing_coverage) ... ok
+test_nan (test_roommate_match.Tests.test_nan) ... ok
+test_negative_weight (test_roommate_match.Tests.test_negative_weight) ... ok
+test_no_opt (test_roommate_match.Tests.test_no_opt) ... ok
+test_no_overlap (test_roommate_match.Tests.test_no_overlap) ... ok
+test_no_shared (test_roommate_match.Tests.test_no_shared) ... ok
+test_noise_tolerance (test_roommate_match.Tests.test_noise_tolerance) ... ok
+test_overnight (test_roommate_match.Tests.test_overnight) ... ok
+test_symmetric (test_roommate_match.Tests.test_symmetric) ... ok
+test_unknown_weight (test_roommate_match.Tests.test_unknown_weight) ... ok
+test_wrap (test_roommate_match.Tests.test_wrap) ... ok
+test_zero_sleep (test_roommate_match.Tests.test_zero_sleep) ... ok
+test_zero_weights (test_roommate_match.Tests.test_zero_weights) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.001s
+
+OK

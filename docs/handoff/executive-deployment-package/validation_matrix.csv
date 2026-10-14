@@ -1,0 +1,321 @@
+test_id,domain,green_column,criterion,runner_binding,status,acceptance_person
+D01-G-DES-01,Identity and onboarding,Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-DES-02,Identity and onboarding,Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-IMP-01,Identity and onboarding,Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-IMP-02,Identity and onboarding,Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-IMP-03,Identity and onboarding,Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-TST-01,Identity and onboarding,Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-TST-02,Identity and onboarding,Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-TST-03,Identity and onboarding,Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-DEP-01,Identity and onboarding,Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-DEP-02,Identity and onboarding,Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-DEP-03,Identity and onboarding,Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-AUT-01,Identity and onboarding,Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-AUT-02,Identity and onboarding,Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-AUT-03,Identity and onboarding,Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-PRD-01,Identity and onboarding,Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-PRD-02,Identity and onboarding,Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-PRD-03,Identity and onboarding,Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-PRD-04,Identity and onboarding,Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-PRD-05,Identity and onboarding,Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D01-G-PRD-06,Identity and onboarding,Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED
+D02-G-DES-01,Planning and degree,Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-DES-02,Planning and degree,Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-IMP-01,Planning and degree,Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-IMP-02,Planning and degree,Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-IMP-03,Planning and degree,Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-TST-01,Planning and degree,Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-TST-02,Planning and degree,Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-TST-03,Planning and degree,Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-DEP-01,Planning and degree,Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-DEP-02,Planning and degree,Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-DEP-03,Planning and degree,Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-AUT-01,Planning and degree,Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-AUT-02,Planning and degree,Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-AUT-03,Planning and degree,Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-PRD-01,Planning and degree,Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-PRD-02,Planning and degree,Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-PRD-03,Planning and degree,Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-PRD-04,Planning and degree,Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-PRD-05,Planning and degree,Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D02-G-PRD-06,Planning and degree,Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED
+D03-G-DES-01,Registration,Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-DES-02,Registration,Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-IMP-01,Registration,Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-IMP-02,Registration,Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-IMP-03,Registration,Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-TST-01,Registration,Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-TST-02,Registration,Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-TST-03,Registration,Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-DEP-01,Registration,Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-DEP-02,Registration,Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-DEP-03,Registration,Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-AUT-01,Registration,Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-AUT-02,Registration,Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-AUT-03,Registration,Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-PRD-01,Registration,Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-PRD-02,Registration,Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-PRD-03,Registration,Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-PRD-04,Registration,Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-PRD-05,Registration,Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D03-G-PRD-06,Registration,Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED
+D04-G-DES-01,Courses and teaching,Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-DES-02,Courses and teaching,Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-IMP-01,Courses and teaching,Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-IMP-02,Courses and teaching,Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-IMP-03,Courses and teaching,Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-TST-01,Courses and teaching,Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-TST-02,Courses and teaching,Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-TST-03,Courses and teaching,Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-DEP-01,Courses and teaching,Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-DEP-02,Courses and teaching,Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-DEP-03,Courses and teaching,Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-AUT-01,Courses and teaching,Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-AUT-02,Courses and teaching,Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-AUT-03,Courses and teaching,Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-PRD-01,Courses and teaching,Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-PRD-02,Courses and teaching,Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-PRD-03,Courses and teaching,Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-PRD-04,Courses and teaching,Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-PRD-05,Courses and teaching,Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D04-G-PRD-06,Courses and teaching,Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED
+D05-G-DES-01,Assignments and work,Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-DES-02,Assignments and work,Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-IMP-01,Assignments and work,Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-IMP-02,Assignments and work,Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-IMP-03,Assignments and work,Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-TST-01,Assignments and work,Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-TST-02,Assignments and work,Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-TST-03,Assignments and work,Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-DEP-01,Assignments and work,Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-DEP-02,Assignments and work,Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-DEP-03,Assignments and work,Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-AUT-01,Assignments and work,Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-AUT-02,Assignments and work,Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-AUT-03,Assignments and work,Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-PRD-01,Assignments and work,Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-PRD-02,Assignments and work,Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-PRD-03,Assignments and work,Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-PRD-04,Assignments and work,Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-PRD-05,Assignments and work,Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D05-G-PRD-06,Assignments and work,Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED
+D06-G-DES-01,Study and tutoring,Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-DES-02,Study and tutoring,Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-IMP-01,Study and tutoring,Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-IMP-02,Study and tutoring,Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-IMP-03,Study and tutoring,Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-TST-01,Study and tutoring,Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-TST-02,Study and tutoring,Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-TST-03,Study and tutoring,Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-DEP-01,Study and tutoring,Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-DEP-02,Study and tutoring,Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-DEP-03,Study and tutoring,Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-AUT-01,Study and tutoring,Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-AUT-02,Study and tutoring,Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-AUT-03,Study and tutoring,Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-PRD-01,Study and tutoring,Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-PRD-02,Study and tutoring,Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-PRD-03,Study and tutoring,Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-PRD-04,Study and tutoring,Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-PRD-05,Study and tutoring,Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D06-G-PRD-06,Study and tutoring,Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED
+D07-G-DES-01,Grades and progress,Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-DES-02,Grades and progress,Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-IMP-01,Grades and progress,Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-IMP-02,Grades and progress,Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-IMP-03,Grades and progress,Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-TST-01,Grades and progress,Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-TST-02,Grades and progress,Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-TST-03,Grades and progress,Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-DEP-01,Grades and progress,Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-DEP-02,Grades and progress,Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-DEP-03,Grades and progress,Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-AUT-01,Grades and progress,Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-AUT-02,Grades and progress,Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-AUT-03,Grades and progress,Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-PRD-01,Grades and progress,Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-PRD-02,Grades and progress,Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-PRD-03,Grades and progress,Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-PRD-04,Grades and progress,Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-PRD-05,Grades and progress,Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D07-G-PRD-06,Grades and progress,Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED
+D08-G-DES-01,Advising and support,Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-DES-02,Advising and support,Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-IMP-01,Advising and support,Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-IMP-02,Advising and support,Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-IMP-03,Advising and support,Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-TST-01,Advising and support,Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-TST-02,Advising and support,Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-TST-03,Advising and support,Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-DEP-01,Advising and support,Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-DEP-02,Advising and support,Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-DEP-03,Advising and support,Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-AUT-01,Advising and support,Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-AUT-02,Advising and support,Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-AUT-03,Advising and support,Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-PRD-01,Advising and support,Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-PRD-02,Advising and support,Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-PRD-03,Advising and support,Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-PRD-04,Advising and support,Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-PRD-05,Advising and support,Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D08-G-PRD-06,Advising and support,Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED
+D09-G-DES-01,Career and portfolio,Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-DES-02,Career and portfolio,Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-IMP-01,Career and portfolio,Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-IMP-02,Career and portfolio,Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-IMP-03,Career and portfolio,Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-TST-01,Career and portfolio,Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-TST-02,Career and portfolio,Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-TST-03,Career and portfolio,Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-DEP-01,Career and portfolio,Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-DEP-02,Career and portfolio,Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-DEP-03,Career and portfolio,Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-AUT-01,Career and portfolio,Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-AUT-02,Career and portfolio,Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-AUT-03,Career and portfolio,Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-PRD-01,Career and portfolio,Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-PRD-02,Career and portfolio,Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-PRD-03,Career and portfolio,Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-PRD-04,Career and portfolio,Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-PRD-05,Career and portfolio,Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D09-G-PRD-06,Career and portfolio,Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED
+D10-G-DES-01,Campus and community,Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-DES-02,Campus and community,Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-IMP-01,Campus and community,Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-IMP-02,Campus and community,Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-IMP-03,Campus and community,Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-TST-01,Campus and community,Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-TST-02,Campus and community,Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-TST-03,Campus and community,Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-DEP-01,Campus and community,Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-DEP-02,Campus and community,Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-DEP-03,Campus and community,Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-AUT-01,Campus and community,Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-AUT-02,Campus and community,Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-AUT-03,Campus and community,Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-PRD-01,Campus and community,Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-PRD-02,Campus and community,Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-PRD-03,Campus and community,Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-PRD-04,Campus and community,Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-PRD-05,Campus and community,Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D10-G-PRD-06,Campus and community,Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED
+D11-G-DES-01,"Housing, dining, services",Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-DES-02,"Housing, dining, services",Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-IMP-01,"Housing, dining, services",Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-IMP-02,"Housing, dining, services",Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-IMP-03,"Housing, dining, services",Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-TST-01,"Housing, dining, services",Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-TST-02,"Housing, dining, services",Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-TST-03,"Housing, dining, services",Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-DEP-01,"Housing, dining, services",Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-DEP-02,"Housing, dining, services",Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-DEP-03,"Housing, dining, services",Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-AUT-01,"Housing, dining, services",Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-AUT-02,"Housing, dining, services",Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-AUT-03,"Housing, dining, services",Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-PRD-01,"Housing, dining, services",Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-PRD-02,"Housing, dining, services",Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-PRD-03,"Housing, dining, services",Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-PRD-04,"Housing, dining, services",Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-PRD-05,"Housing, dining, services",Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D11-G-PRD-06,"Housing, dining, services",Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED
+D12-G-DES-01,Money and finance,Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-DES-02,Money and finance,Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-IMP-01,Money and finance,Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-IMP-02,Money and finance,Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-IMP-03,Money and finance,Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-TST-01,Money and finance,Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-TST-02,Money and finance,Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-TST-03,Money and finance,Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-DEP-01,Money and finance,Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-DEP-02,Money and finance,Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-DEP-03,Money and finance,Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-AUT-01,Money and finance,Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-AUT-02,Money and finance,Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-AUT-03,Money and finance,Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-PRD-01,Money and finance,Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-PRD-02,Money and finance,Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-PRD-03,Money and finance,Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-PRD-04,Money and finance,Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-PRD-05,Money and finance,Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D12-G-PRD-06,Money and finance,Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED
+D13-G-DES-01,Institution OS,Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-DES-02,Institution OS,Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-IMP-01,Institution OS,Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-IMP-02,Institution OS,Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-IMP-03,Institution OS,Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-TST-01,Institution OS,Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-TST-02,Institution OS,Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-TST-03,Institution OS,Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-DEP-01,Institution OS,Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-DEP-02,Institution OS,Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-DEP-03,Institution OS,Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-AUT-01,Institution OS,Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-AUT-02,Institution OS,Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-AUT-03,Institution OS,Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-PRD-01,Institution OS,Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-PRD-02,Institution OS,Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-PRD-03,Institution OS,Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-PRD-04,Institution OS,Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-PRD-05,Institution OS,Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D13-G-PRD-06,Institution OS,Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED
+D14-G-DES-01,Company OS,Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-DES-02,Company OS,Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-IMP-01,Company OS,Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-IMP-02,Company OS,Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-IMP-03,Company OS,Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-TST-01,Company OS,Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-TST-02,Company OS,Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-TST-03,Company OS,Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-DEP-01,Company OS,Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-DEP-02,Company OS,Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-DEP-03,Company OS,Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-AUT-01,Company OS,Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-AUT-02,Company OS,Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-AUT-03,Company OS,Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-PRD-01,Company OS,Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-PRD-02,Company OS,Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-PRD-03,Company OS,Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-PRD-04,Company OS,Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-PRD-05,Company OS,Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D14-G-PRD-06,Company OS,Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED
+D15-G-DES-01,Developer and partner,Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-DES-02,Developer and partner,Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-IMP-01,Developer and partner,Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-IMP-02,Developer and partner,Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-IMP-03,Developer and partner,Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-TST-01,Developer and partner,Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-TST-02,Developer and partner,Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-TST-03,Developer and partner,Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-DEP-01,Developer and partner,Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-DEP-02,Developer and partner,Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-DEP-03,Developer and partner,Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-AUT-01,Developer and partner,Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-AUT-02,Developer and partner,Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-AUT-03,Developer and partner,Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-PRD-01,Developer and partner,Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-PRD-02,Developer and partner,Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-PRD-03,Developer and partner,Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-PRD-04,Developer and partner,Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-PRD-05,Developer and partner,Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D15-G-PRD-06,Developer and partner,Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED
+D16-G-DES-01,Governed AI,Designed,Journey/role/state coverage,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-DES-02,Governed AI,Designed,Accessibility and consequence specification,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-IMP-01,Governed AI,Implemented,UI-to-authorized-durable-state trace,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-IMP-02,Governed AI,Implemented,Forged identity/tenant/owner/scope denial,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-IMP-03,Governed AI,Implemented,Cross-device durability and provenance,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-TST-01,Governed AI,Tested,Executed candidate-bound blocking suite,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-TST-02,Governed AI,Tested,Qualified keyboard/AT/reflow acceptance,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-TST-03,Governed AI,Tested,Independent security blocker closure,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-DEP-01,Governed AI,Deployed,Actual build/config/schema match,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-DEP-02,Governed AI,Deployed,Allowed/denied target journeys and queues,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-DEP-03,Governed AI,Deployed,Previous-version rollback compatibility,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-AUT-01,Governed AI,Institution-authorized,Current target/cohort/operation authority,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-AUT-02,Governed AI,Institution-authorized,Withdrawn/expired approval denial,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-AUT-03,Governed AI,Institution-authorized,Customer UAT and accepted limitations,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-PRD-01,Governed AI,Production-enabled,Out-of-scope server/API/worker denial,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-PRD-02,Governed AI,Production-enabled,Measured kill propagation,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-PRD-03,Governed AI,Production-enabled,Isolated DB/object/config restore integrity,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-PRD-04,Governed AI,Production-enabled,Primary/backup alert and support drill,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-PRD-05,Governed AI,Production-enabled,Export/delete/revoke/offboard with holds,UNBOUND,NOT RUN,UNASSIGNED
+D16-G-PRD-06,Governed AI,Production-enabled,"Operated window, outcomes and stop criteria",UNBOUND,NOT RUN,UNASSIGNED

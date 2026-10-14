@@ -1,0 +1,7 @@
+# Student data requests during the pilot. Under FERPA the institution decides on access to education records.
+steps: [receive_request, identity_verification_required, classify (access | correction | deletion | restriction), route, fulfill_or_explain, receipt, audit]
+routing:
+  access: "Semester-held data (cases, receipts, support) exported by Semester; official records → Vanderbilt registrar"
+  correction: "Semester-derived → product review; institution-owned field → owning office (Semester never edits it)"
+  deletion: "Semester-owned data deleted per lifecycle unless legal hold or audit retention applies; explain what's kept and why"
+deadlines: { acknowledge: "2 business days", fulfill: "45 days or the institution's shorter term" }

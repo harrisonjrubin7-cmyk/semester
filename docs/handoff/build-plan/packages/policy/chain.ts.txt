@@ -1,0 +1,49 @@
+// packages/policy/chain.ts — the 14-step authorization chain as one ordered pipeline. Rename to .ts.
+// Every step returns pass or a specific deny reason; the first failure stops the chain. Nothing executes
+// unless all 12 checks pass, and execute + audit + receipt happen in one transaction (see live_record_command).
+import type { RequestContext } from "../auth/context";
+
+export type Resource = {
+  tenantId: string | null;
+  ownerAccountId?: string | null;
+  authority: "native" | "external_read_only" | "derived";
+  requiresConsent?: boolean;
+  sourceFreshAt?: string | null;        // ISO; null = unknown
+  freshnessBudgetSec?: number;          // max acceptable age for this action
+  version?: string;                     // for If-Match
+};
+export type Consent = { state: "active" | "revoked" | "expired"; scopes: string[] } | null;
+export type TenantPolicy = { allowedActions: string[]; capabilityEnabled: (action: string) => boolean; killSwitch: boolean };
+export type Decision = { allow: true; obligations: string[] } | { allow: false; step: string; reason: string };
+
+export const CHAIN = [
+  "authenticate", "resolve tenant", "resolve membership", "resolve workspace", "validate grant", "validate scope",
+  "validate consent", "validate authority", "validate integration freshness", "validate tenant policy",
+  "validate feature config", "attach obligations", "execute command", "emit audit + receipt",
+] as const;
+
+export function decide(ctx: RequestContext | null, action: string, res: Resource, consent: Consent, tenant: TenantPolicy | null, expectedVersion?: string): Decision {
+  const deny = (step: string, reason: string): Decision => ({ allow: false, step, reason });
+  if (!ctx) return deny(CHAIN[0], "No verified session");
+  if (res.tenantId !== ctx.tenantId) return deny(CHAIN[1], "Resource belongs to a different tenant");
+  if (res.tenantId && !ctx.membershipId) return deny(CHAIN[2], "No active membership at this institution");
+  if (res.tenantId === null && res.ownerAccountId !== ctx.accountId) return deny(CHAIN[2], "Personal resource owned by someone else");
+  if (!ctx.workspace) return deny(CHAIN[3], "No workspace selected");
+  if (!ctx.grants.includes(action)) return deny(CHAIN[4], `Missing grant ${action}`);
+  if (expectedVersion && res.version && expectedVersion !== res.version) return deny(CHAIN[5], "Resource changed since you viewed it (If-Match)");
+  if (res.requiresConsent && !(consent?.state === "active" && consent.scopes.includes(action))) return deny(CHAIN[6], "No active consent for this scope");
+  if (res.authority === "external_read_only" && !action.endsWith(".read")) return deny(CHAIN[7], "Source of record is external; Semester can only read it");
+  if (res.freshnessBudgetSec != null) {
+    if (!res.sourceFreshAt) return deny(CHAIN[8], "Source freshness unknown");
+    if ((Date.now() - Date.parse(res.sourceFreshAt)) / 1000 > res.freshnessBudgetSec) return deny(CHAIN[8], "Source data is stale for this action");
+  }
+  if (res.tenantId) {
+    if (!tenant) return deny(CHAIN[9], "Tenant policy unavailable — failing closed");
+    if (tenant.killSwitch) return deny(CHAIN[10], "Capability switched off for this institution");
+    if (!tenant.allowedActions.includes(action)) return deny(CHAIN[9], "Not allowed by institution policy");
+    if (!tenant.capabilityEnabled(action)) return deny(CHAIN[10], "Capability not enabled for this institution");
+  }
+  const obligations = ["audit:" + action, "receipt"];
+  if (res.authority === "derived") obligations.push("label:derived");
+  return { allow: true, obligations };
+}

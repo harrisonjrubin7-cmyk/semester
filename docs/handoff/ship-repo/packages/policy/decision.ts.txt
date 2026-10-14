@@ -1,0 +1,13 @@
+export type ReasonCode = "ALLOWED" | "AUTHENTICATION_REQUIRED" | "TENANT_SCOPE_MISMATCH" | "MEMBERSHIP_REQUIRED" | "ROLE_REQUIRED" | "RECORD_SCOPE_DENIED" | "CONSENT_REQUIRED" | "AUTHORITY_REQUIRED" | "FRESHNESS_BLOCKED" | "MFA_REQUIRED" | "APPROVAL_REQUIRED" | "REVOCATION_PENDING" | "POLICY_UNAVAILABLE";
+export type Obligation = "WRITE_AUDIT_EVENT" | "REQUIRE_CONFIRMATION" | "REQUIRE_SECOND_APPROVER" | "MASK_RESTRICTED_FIELDS" | "SHOW_SOURCE_LINE" | "ISSUE_RECEIPT" | "QUEUE_RECONCILIATION" | "START_REVOCATION";
+export type PolicyDecision = { decisionId: string; allowed: boolean; reasonCode: ReasonCode; obligations: Obligation[]; policyVersion: string; evaluatedAt: string; correlationId: string };
+/** Operator-facing explanation. Never includes policy internals or other people's data. */
+export const EXPLAIN: Record<ReasonCode, string> = { ALLOWED: "Allowed.", AUTHENTICATION_REQUIRED: "Sign in again.", TENANT_SCOPE_MISMATCH: "This record belongs to a different institution.", MEMBERSHIP_REQUIRED: "No active membership at this institution.", ROLE_REQUIRED: "Your role doesn't include this action.", RECORD_SCOPE_DENIED: "This record is outside your assigned scope.", CONSENT_REQUIRED: "The student hasn't shared this.", AUTHORITY_REQUIRED: "Only the owning office can do this.", FRESHNESS_BLOCKED: "The source is out of date, so this can't be decided now.", MFA_REQUIRED: "Confirm with your second factor.", APPROVAL_REQUIRED: "A second approver is needed.", REVOCATION_PENDING: "Access is being revoked.", POLICY_UNAVAILABLE: "Policy service unavailable — denied for safety." };
+/** Fail closed: any error or timeout from the PDP becomes a denial. */
+export async function decide(pdp: (input: unknown) => Promise<{ allow: boolean; reason?: ReasonCode; obligations?: Obligation[]; version: string }>, input: unknown, correlationId: string, timeoutMs = 300): Promise<PolicyDecision> {
+  const base = { decisionId: crypto.randomUUID(), evaluatedAt: new Date().toISOString(), correlationId };
+  try {
+    const r = await Promise.race([pdp(input), new Promise<never>((_, no) => setTimeout(() => no(new Error("timeout")), timeoutMs))]);
+    return { ...base, allowed: r.allow, reasonCode: r.allow ? "ALLOWED" : r.reason ?? "ROLE_REQUIRED", obligations: r.obligations ?? [], policyVersion: r.version };
+  } catch { return { ...base, allowed: false, reasonCode: "POLICY_UNAVAILABLE", obligations: [], policyVersion: "unavailable" }; }
+}

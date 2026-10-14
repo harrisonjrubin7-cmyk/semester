@@ -1,0 +1,37 @@
+# generated from ui_kits/traceability/trace-data.js — 2026-10-14
+passport:
+  identity:
+    id: "SIS-001"
+    name: "Student information system adapter"
+    type: "connector"
+  accountability:
+    business_owner: "pending"
+    technical_owner: "pending"
+    operational_owner: "pending"
+    review_cadence: "on_change"
+  boundaries:
+    authority_owner: "institution_registrar"
+    data_classification: "restricted_institutional"
+    tenant_scope: "institution_bound"
+    allowed_uses: "read into staging"
+    prohibited_uses: "write to SIS · treat staging as official"
+  dependencies:
+    upstream: "institution SIS"
+    downstream: "WF-READINESS-001 · degree planning"
+    failure_mode: "auth failure · rate limit · schema change"
+    degradation_behavior: "block definitive outcomes; show stale"
+  control_plane:
+    policy_ids: ""
+    audit_events: "sis.batch_staged"
+    required_evidence: "sandbox verification"
+    release_gate: ""
+    safe_off_path: "capability sis.read off · kill switch"
+  quality:
+    test_suites: ""
+    accessibility_requirements: "n/a"
+  lifecycle:
+    maturity_level: 1
+    current_status: "designed"
+    created_at: "2026-10-11"
+    last_reviewed_at: ""
+    retirement_plan: ""

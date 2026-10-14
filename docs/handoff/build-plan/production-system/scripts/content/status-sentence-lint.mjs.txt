@@ -1,0 +1,15 @@
+// Status-sentence linter for source/freshness/consequence copy. Each message needs what's true, what it means, what to do —
+// and must not overclaim. node status-sentence-lint.mjs strings.json  (array of {id, text, kind})
+const OVER = /\b(verified|certified|guaranteed|official|secure|always|never fails|confirmed)\b/i;
+const NEXT = /\b(refresh|reconnect|ask|contact|check|review|try again|open|call|email|go to|choose|keep working|wait)\b/i;
+const MEANS = /\b(may|might|can|could|does not|doesn't|isn't|means|so)\b/i;
+export function lint(items) {
+  return items.flatMap(({ id, text, kind, sourceIsAuthoritative }) => {
+    const out = [], sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+    if (kind !== "editorial" && sentences.length < 2) out.push("needs what's true + what it means (+ what to do)");
+    if (!MEANS.test(text)) out.push("doesn't say what it means");
+    if (!NEXT.test(text)) out.push("no next step");
+    if (OVER.test(text) && !sourceIsAuthoritative) out.push(`overclaims: “${text.match(OVER)[0]}” without an authoritative source`);
+    return out.map((m) => ({ id, problem: m }));
+  });
+}

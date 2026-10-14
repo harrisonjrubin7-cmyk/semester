@@ -1,0 +1,13 @@
+pillars:   # no domain builds its own version of these; owners all UNASSIGNED on 2026-10-14
+  - {id: identity_context, shared: tenant, institution, role, membership, session, first_cert: role/session revocation, cert: CERT-ID-001, owner: unassigned}
+  - {id: authorization, shared: policy decision, scope, obligations, denial, first_cert: RLS and PEP behaviour (AUTHZ-DECISION.md), cert: CERT-AUTHZ-001, owner: unassigned}
+  - {id: source_authority, shared: who owns a fact and what it can mean, first_cert: readiness source map, cert: CERT-SOURCE-001, owner: unassigned}
+  - {id: freshness, shared: timeliness, staleness, outage, replay, first_cert: stale-source safe state, cert: CERT-FRESH-001, owner: unassigned}
+  - {id: records, shared: schemas, envelopes, versioning, retention, first_cert: readiness receipt, cert: CERT-REC-001, owner: unassigned}
+  - {id: commands, shared: validation, idempotency, consequences, first_cert: request evaluation, cert: CERT-CMD-001, owner: unassigned}
+  - {id: events, shared: durable delivery, ordering, dedupe, outbox, first_cert: evaluation completed, cert: CERT-EVT-001, owner: unassigned}
+  - {id: workflows, shared: saga, deadlines, retries, compensation, first_cert: source-check workflow, cert: CERT-WF-001, owner: unassigned}
+  - {id: consent_delegation, shared: sharing, expiry, revocation, evidence, first_cert: family/delegation control, cert: CERT-CONSENT-001, owner: unassigned}
+  - {id: AI_governance, shared: scope, retrieval, disclosure, tools, review, first_cert: Ask Semester answer frame, cert: CERT-AI-001, owner: unassigned}
+  - {id: operations, shared: monitoring, support, incidents, reconciliation, first_cert: pilot hypercare, cert: CERT-OPS-001, owner: unassigned}
+  - {id: evidence_release, shared: tests, approvals, provenance, rollback, first_cert: pilot activation gate, cert: CERT-REL-001, owner: unassigned}

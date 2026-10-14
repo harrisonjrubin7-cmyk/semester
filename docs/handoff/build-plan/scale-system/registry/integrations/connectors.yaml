@@ -1,0 +1,55 @@
+# registry/integrations/connectors.yaml — passports. No connector is sandbox-verified, certified or active.
+lifecycle: ["proposed","evaluated","designed","sandbox_verified","pilot_certified","production_active","degraded","paused","retired"]
+required_for_pilot_certified: ["named_provider_and_owner","approved_data_minimization","source_authority_record","versioned_mapping","authentication_and_secret_management","freshness_behavior","duplicate_and_replay_handling","invalid_payload_quarantine","reconciliation_process","disablement_path","monitoring_and_alerts","incident_contacts"]
+change_triggers: ["provider schema change","authentication change","new data element","new authority use","mapping change","revised freshness window","security finding","repeated operational failure"]
+connectors:
+  - id: SIS-001
+    name: "Student information system adapter"
+    source: "Institution SIS (OneRoster 1.2 read)"
+    institution_owner: "Registrar"
+    semester_role: "Synchronized projection"
+    implementation: designed
+    health: "not observed"
+    capabilities_supported: "registration_readiness, degree_planning, advising"
+    code: "handoff/live-integration/…/live-sis-sync"
+    reliability: {dedupe: provider_event_id_or_source_version, invalid_payload: quarantine, stale: block_definitive_derived_outcomes, recovery: replay_from_safe_checkpoint}
+  - id: LMS-001
+    name: "LMS launch (LTI 1.3)"
+    source: "Institution LMS"
+    institution_owner: "Academic technology"
+    semester_role: "Launch + course context"
+    implementation: designed
+    health: "not observed"
+    capabilities_supported: "course workspace, gradebook"
+    code: "handoff/live-integration/…/live-lti"
+    reliability: {dedupe: provider_event_id_or_source_version, invalid_payload: quarantine, stale: block_definitive_derived_outcomes, recovery: replay_from_safe_checkpoint}
+  - id: PAY-001
+    name: "Payment processor"
+    source: "Stripe (proposed)"
+    institution_owner: "Bursar"
+    semester_role: "Checkout + verified webhook"
+    implementation: designed
+    health: "not observed"
+    capabilities_supported: "student payments"
+    code: "handoff/live-integration/…/live-payments"
+    reliability: {dedupe: provider_event_id_or_source_version, invalid_payload: quarantine, stale: block_definitive_derived_outcomes, recovery: replay_from_safe_checkpoint}
+  - id: MAIL-001
+    name: "Transactional email"
+    source: "Postmark (proposed)"
+    institution_owner: "Semester operations"
+    semester_role: "Delivery only"
+    implementation: designed
+    health: "not observed"
+    capabilities_supported: "messaging"
+    code: "handoff/live-integration/…/live-messaging"
+    reliability: {dedupe: provider_event_id_or_source_version, invalid_payload: quarantine, stale: block_definitive_derived_outcomes, recovery: replay_from_safe_checkpoint}
+  - id: IDP-001
+    name: "Institutional identity provider"
+    source: "Institution IdP (SSO)"
+    institution_owner: "Institution IT"
+    semester_role: "Authentication + group mapping"
+    implementation: proposed
+    health: "not observed"
+    capabilities_supported: "every workspace"
+    code: "—"
+    reliability: {dedupe: provider_event_id_or_source_version, invalid_payload: quarantine, stale: block_definitive_derived_outcomes, recovery: replay_from_safe_checkpoint}

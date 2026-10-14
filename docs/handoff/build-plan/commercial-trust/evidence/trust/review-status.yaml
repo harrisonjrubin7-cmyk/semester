@@ -1,0 +1,5 @@
+review_status:   # as of 2026-10-14 — nothing below is complete
+  security_questionnaire: {label: HECVAT (institution-required version), status: in_progress, owner: unassigned, evidence: [architecture_summary, data_flow_diagram, access_control_standard, incident_response_runbook, vendor_and_subprocessor_register], gap: finalize_reviewed_response, next_review: institution_agreed_date}
+  SSO: {label: SAML_SSO, status: in_progress, owner: unassigned, evidence: [identity_architecture, tenant_membership_model, session_and_revocation_test_plan], gap: production_configuration_and_validation, next_review: institution_agreed_date}
+  accessibility: {label: VPAT_ACR, status: in_progress, owner: unassigned, evidence: [accessibility_test_matrix, issue_register, component_and_journey_test_results], gap: formal_assessment_and_remediation_closure, next_review: institution_agreed_date}
+  insurance: {label: insurance, status: in_progress, owner: unassigned, evidence: [coverage_requirement_register], gap: bind_appropriate_coverage (risk R-01), next_review: institution_agreed_date}

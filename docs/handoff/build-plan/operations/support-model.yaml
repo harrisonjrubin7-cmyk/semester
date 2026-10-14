@@ -1,0 +1,7 @@
+tiers:
+  - { tier: 0, scope: "In-product explanation, source labels, safe next steps", owner: product }
+  - { tier: 1, scope: "Navigation, account access, standard questions", owner: "Semester support", response: "1 business day" }
+  - { tier: 2, scope: "Source freshness, routing, reconciliation", owner: "registrar or integration owner", response: "4 business hours; same day near a registration window" }
+  - { tier: 3, scope: "Access violation, privacy concern, data integrity", owner: "security on-call → incident process", response: immediate }
+  - { tier: X, scope: "Official academic decision, hold, enrollment", owner: "Vanderbilt office that owns it", response: "institution's own process — Semester routes, never decides" }
+macros: operations/support-intake.yaml

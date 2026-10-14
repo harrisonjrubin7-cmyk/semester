@@ -1,0 +1,19 @@
+{
+  "status": "PROPOSED",
+  "event_id": null,
+  "institution_id": null,
+  "source_system": null,
+  "source_entity": null,
+  "source_id": null,
+  "operation": null,
+  "mapping_version": null,
+  "schema_version": null,
+  "source_version": null,
+  "effective_at": null,
+  "observed_at": null,
+  "correlation_id": null,
+  "classification": null,
+  "payload_reference": null,
+  "payload_digest": null,
+  "tombstone_policy": null
+}

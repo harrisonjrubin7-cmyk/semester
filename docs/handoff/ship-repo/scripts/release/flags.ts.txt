@@ -1,0 +1,14 @@
+// pnpm flags:enable|disable --flag X --tenant T [--cohort C] [--reason R]. Enable refuses unless the matching release gate is approvable; disable never blocks.
+import { createClient } from "@supabase/supabase-js";
+import { execSync } from "node:child_process";
+const [cmd, ...rest] = process.argv.slice(2); const arg = (k: string) => rest[rest.indexOf("--" + k) + 1];
+const db = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+const flag = arg("flag"), tenant = arg("tenant");
+if (!flag || !tenant) throw new Error("--flag and --tenant required");
+if (cmd === "disable") {
+  const { error } = await db.from("feature_flag_overrides").upsert({ flag, tenant_id: tenant, enabled: false, reason: arg("reason") ?? "manual", changed_at: new Date().toISOString() });
+  if (error) throw error; console.log("disabled " + flag + " for " + tenant); process.exit(0);
+}
+try { execSync("pnpm -s test:release-gate", { stdio: "inherit" }); } catch { console.error("Release gate blocked — not enabling."); process.exit(1); }
+const { error } = await db.from("feature_flag_overrides").upsert({ flag, tenant_id: tenant, cohort: arg("cohort"), enabled: true, changed_at: new Date().toISOString() });
+if (error) throw error; console.log("enabled " + flag + " for " + tenant + (arg("cohort") ? " cohort " + arg("cohort") : ""));

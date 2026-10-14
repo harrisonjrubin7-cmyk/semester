@@ -1,0 +1,44 @@
+# Gated Vercel release. Exits at the gate-integration blocker until the authenticated evaluator exists.
+# Restrict dispatch to maintainers; protect the preview/production environments with required reviewers and
+# allowed deployment branches. Never pull_request_target. Pin actions and the Vercel CLI before activation.
+name: Gated Vercel release
+on:
+  workflow_dispatch:
+    inputs:
+      action: { type: choice, options: [preview, stage, promote, rollback], required: true }
+      candidate_sha: { type: string, required: true }
+      deployment: { type: string, required: false }
+permissions: { contents: read }
+concurrency: { group: semester-vercel-release, cancel-in-progress: false }
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ inputs.action == 'preview' && 'preview' || 'production' }}
+    steps:
+      - name: Candidate must be a full SHA
+        env: { SHA: ${{ inputs.candidate_sha }} }
+        run: '[[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "candidate_sha must be a 40-char commit SHA" >&2; exit 1; }'
+      - uses: actions/checkout@REPLACE_WITH_VERIFIED_FULL_COMMIT_SHA   # v4
+        with: { ref: ${{ inputs.candidate_sha }}, persist-credentials: false }
+      - uses: actions/setup-node@REPLACE_WITH_VERIFIED_FULL_COMMIT_SHA # v4
+        with: { node-version: '22' }
+      - uses: actions/setup-python@REPLACE_WITH_VERIFIED_FULL_COMMIT_SHA # v5
+        with: { python-version: '3.12' }
+      - name: Authenticated gate integration blocker
+        run: |
+          echo 'BLOCKED: implement trusted evidence retrieval and the canonical evaluator before removing this step'
+          exit 1
+      - name: Approved deployment
+        env:
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          RELEASE_SHA: ${{ inputs.candidate_sha }}
+          DEPLOYMENT_ID_OR_URL: ${{ inputs.deployment }}
+          ROLLOUT_MODE: ${{ vars.ROLLOUT_MODE }}
+          VERCEL_CLI: ${{ vars.VERCEL_CLI }}
+          RELEASE_GATE_HOOK: ${{ vars.RELEASE_GATE_HOOK }}
+          EVIDENCE_MANIFEST: ${{ vars.EVIDENCE_MANIFEST }}
+          ACTION: ${{ inputs.action }}
+        run: bash scripts/release/deploy-vercel.sh "$ACTION"

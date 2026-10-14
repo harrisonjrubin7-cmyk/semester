@@ -1,0 +1,150 @@
+TAP version 13
+# Subtest: safe catalog answer and minimal provider payload
+ok 1 - safe catalog answer and minimal provider payload
+  ---
+  duration_ms: 3.864587
+  ...
+# Subtest: identity denied before provider
+ok 2 - identity denied before provider
+  ---
+  duration_ms: 0.602056
+  ...
+# Subtest: wrong environment identity
+ok 3 - wrong environment identity
+  ---
+  duration_ms: 0.297963
+  ...
+# Subtest: assistant authorization denied
+ok 4 - assistant authorization denied
+  ---
+  duration_ms: 1.19691
+  ...
+# Subtest: student record field rejected
+ok 5 - student record field rejected
+  ---
+  duration_ms: 0.319732
+  ...
+# Subtest: free text rejected
+ok 6 - free text rejected
+  ---
+  duration_ms: 0.18256
+  ...
+# Subtest: unknown topic rejected
+ok 7 - unknown topic rejected
+  ---
+  duration_ms: 0.15767
+  ...
+# Subtest: institution AI off
+ok 8 - institution AI off
+  ---
+  duration_ms: 0.339291
+  ...
+# Subtest: consent not satisfied
+ok 9 - consent not satisfied
+  ---
+  duration_ms: 0.374318
+  ...
+# Subtest: budget unavailable
+ok 10 - budget unavailable
+  ---
+  duration_ms: 0.366559
+  ...
+# Subtest: protected source class
+ok 11 - protected source class
+  ---
+  duration_ms: 0.2823
+  ...
+# Subtest: poisoned source content
+ok 12 - poisoned source content
+  ---
+  duration_ms: 0.342156
+  ...
+# Subtest: source permission denied
+ok 13 - source permission denied
+  ---
+  duration_ms: 0.294463
+  ...
+# Subtest: revoked before dispatch
+ok 14 - revoked before dispatch
+  ---
+  duration_ms: 0.33867
+  ...
+# Subtest: provider route mismatch
+ok 15 - provider route mismatch
+  ---
+  duration_ms: 0.343959
+  ...
+# Subtest: model tools disabled
+ok 16 - model tools disabled
+  ---
+  duration_ms: 0.339066
+  ...
+# Subtest: raw provider prose rejected
+ok 17 - raw provider prose rejected
+  ---
+  duration_ms: 0.593859
+  ...
+# Subtest: wrong answer code rejected
+ok 18 - wrong answer code rejected
+  ---
+  duration_ms: 0.487176
+  ...
+# Subtest: revoked before release
+ok 19 - revoked before release
+  ---
+  duration_ms: 0.425252
+  ...
+# Subtest: provider dependency errors sanitized
+ok 20 - provider dependency errors sanitized
+  ---
+  duration_ms: 1.120797
+  ...
+# Subtest: provider timeout
+ok 21 - provider timeout
+  ---
+  duration_ms: 30.884269
+  ...
+# Subtest: audit failure prevents provider dispatch
+ok 22 - audit failure prevents provider dispatch
+  ---
+  duration_ms: 1.60636
+  ...
+# Subtest: all four environment bindings valid
+ok 23 - all four environment bindings valid
+  ---
+  duration_ms: 0.155781
+  ...
+# Subtest: production backend in preview rejected
+ok 24 - production backend in preview rejected
+  ---
+  duration_ms: 0.167963
+  ...
+# Subtest: copied production data rejected
+ok 25 - copied production data rejected
+  ---
+  duration_ms: 0.113203
+  ...
+# Subtest: raw logging rejected
+ok 26 - raw logging rejected
+  ---
+  duration_ms: 1.791005
+  ...
+# Subtest: unapproved live provider rejected
+ok 27 - unapproved live provider rejected
+  ---
+  duration_ms: 0.162329
+  ...
+# Subtest: missing adapter rejected
+ok 28 - missing adapter rejected
+  ---
+  duration_ms: 0.17968
+  ...
+1..28
+# tests 28
+# suites 0
+# pass 28
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 124.011799

@@ -1,0 +1,21 @@
+// validate-release-evidence.mjs — blocks deploy if evidence or flags are incomplete. Rename to .mjs; npm i -D yaml.
+import { readFileSync } from "node:fs"; import { parse } from "yaml";
+const r = (p) => parse(readFileSync(new URL("../" + p, import.meta.url), "utf8"));
+const errs = [];
+const gng = r("launch/go-no-go.yaml");
+for (const [area, items] of Object.entries(gng.must_pass)) for (const i of items) {
+  const e = (gng.evidence || {})[i];
+  if (!e) errs.push(`go-no-go: ${area}.${i} has no evidence`);
+  else for (const f of ["run_url", "commit_sha", "result", "reviewer", "at"]) if (!e[f]) errs.push(`go-no-go: ${i} evidence missing ${f}`);
+}
+if (gng.decision === "go" && errs.length) errs.push("decision is 'go' but evidence is incomplete");
+for (const s of gng.signoffs) if (gng.decision === "go" && s.state !== "approved") errs.push(`signoff ${s.role} is ${s.state}`);
+const today = new Date().toISOString().slice(0, 10);
+for (const f of r("governance/feature-flags.yaml").flags) {
+  if (!f.owner || !f.expires_on) errs.push(`flag ${f.key}: owner and expiry required`);
+  if (f.expires_on && String(f.expires_on) < today) errs.push(`flag ${f.key}: expired ${f.expires_on}`);
+  if (f.default !== false) errs.push(`flag ${f.key}: default must be false`);
+}
+const mode = process.argv[2] || "check";   // "check" = report; "deploy" = fail on any gap
+if (errs.length) { console[mode === "deploy" ? "error" : "log"](errs.map((e) => "✗ " + e).join("\n")); if (mode === "deploy") process.exit(1); }
+else console.log("✓ release evidence complete");

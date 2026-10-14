@@ -1,0 +1,73 @@
+// Database-level acceptance tests for AT-RDY-001…010 against STAGING. Rename to .spec.ts.
+// Env: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (CI secret), plus test users created by the seed.
+// UI assertions (rendered copy, a11y) live in readiness-ui.spec.ts once the screens exist in the repo.
+import { test, expect } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+const URL = process.env.SUPABASE_URL!, ANON = process.env.SUPABASE_ANON_KEY!, SR = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const admin = createClient(URL, SR, { auth: { persistSession: false }, db: { schema: "semester_core" } });
+const as = async (email: string) => { const c = createClient(URL, ANON, { auth: { persistSession: false }, db: { schema: "semester_core" } }); const { error } = await c.auth.signInWithPassword({ email, password: process.env.E2E_PASSWORD! }); if (error) throw error; return c; };
+const T = process.env.E2E_TENANT!, T2 = process.env.E2E_TENANT_2!, S1 = process.env.E2E_STUDENT_ID!, S_OUT = process.env.E2E_STUDENT_OUTSIDE_CASELOAD!, ACTOR = process.env.E2E_STUDENT_ACCOUNT!;
+const evaluate = (term: string, v = 1) => admin.rpc("readiness_evaluate", { p_tenant: T, p_actor: ACTOR, p_student: S1, p_term: term, p_goal: {}, p_goal_version: v, p_correlation: crypto.randomUUID() });
+
+test("AT-RDY-001 current + passing → ready, sourced, not-enrollment receipt, audit + outbox", async () => {
+  await admin.from("holds").update({ status: "released", released_at: new Date().toISOString(), release_reason: "e2e" }).eq("tenant_id", T).eq("student_id", S1).eq("status", "active");
+  await admin.from("time_tickets").update({ observed_at: new Date().toISOString() }).eq("tenant_id", T).eq("student_id", S1);
+  const { data: r, error } = await evaluate("E2E-001-" + Date.now()); expect(error).toBeNull();
+  expect(r.statement).toMatch(/not enrollment/i);
+  const { data: c } = await admin.from("readiness_cases").select("id,state").eq("id", r.case_id).single(); expect(c!.state).toBe("ready");
+  const { data: k } = await admin.from("readiness_checks").select("source_ref,source_observed_at").eq("case_id", c!.id);
+  expect(k!.every((x) => x.source_observed_at)).toBe(true);
+  const { count: a } = await admin.from("audit_events").select("id", { count: "exact", head: true }).eq("entity_id", c!.id); expect(a).toBe(1);
+});
+
+test("AT-RDY-002 stale source → stale, never ready", async () => {
+  await admin.from("time_tickets").update({ observed_at: new Date(Date.now() - 6 * 3600e3).toISOString() }).eq("tenant_id", T).eq("student_id", S1);
+  const { data: r } = await evaluate("E2E-002-" + Date.now());
+  const { data: c } = await admin.from("readiness_cases").select("state").eq("id", r.case_id).single();
+  expect(["stale", "needs_review"]).toContain(c!.state);
+});
+
+test("AT-RDY-003 advisor outside caseload sees nothing", async () => {
+  const adv = await as(process.env.E2E_ADVISOR_EMAIL!);
+  const { data } = await adv.from("readiness_cases").select("*").eq("student_id", S_OUT); expect(data).toEqual([]);
+  const { data: h } = await adv.from("holds").select("*").eq("student_id", S_OUT); expect(h).toEqual([]);
+});
+
+test("AT-RDY-004 duplicate command → one case, same receipt", async () => {
+  const term = "E2E-004-" + Date.now(); const a = await evaluate(term); const b = await evaluate(term);
+  expect(a.data.id).toBe(b.data.id);
+  const { count } = await admin.from("readiness_cases").select("id", { count: "exact", head: true }).eq("term_code", term); expect(count).toBe(1);
+});
+
+test("AT-RDY-005 revoked grant takes effect on the next read", async () => {
+  const reg = await as(process.env.E2E_REGISTRAR_EMAIL!);
+  const before = await reg.from("readiness_cases").select("id").eq("tenant_id", T).limit(1); expect(before.data!.length).toBe(1);
+  await admin.from("grants").update({ revoked_at: new Date().toISOString() }).eq("tenant_id", T).eq("capability_key", "registrar.readiness.queue.read");
+  const after = await reg.from("readiness_cases").select("id").eq("tenant_id", T); expect(after.data).toEqual([]);
+  await admin.from("grants").update({ revoked_at: null }).eq("tenant_id", T).eq("capability_key", "registrar.readiness.queue.read");
+});
+
+test("AT-RDY-007 requester can't approve own override", async () => {
+  const { data: o } = await admin.from("override_requests").select("id,requested_by_account_id").eq("tenant_id", T).eq("state", "requested").limit(1).single();
+  const { error } = await admin.from("override_requests").update({ state: "approved", decided_by_account_id: o!.requested_by_account_id, decided_at: new Date().toISOString(), decision_reason: "self" }).eq("id", o!.id);
+  expect(error?.code).toBe("23514");
+});
+
+test("AT-RDY-008 illegal transition rejected", async () => {
+  const { data: c } = await admin.from("readiness_cases").select("id").eq("tenant_id", T).eq("state", "blocked").limit(1).single();
+  const { error } = await admin.from("readiness_cases").update({ state: "resolved", resolved_at: new Date().toISOString() }).eq("id", c!.id);
+  expect(error?.code).toBe("23514");
+});
+
+test("AT-RDY-009 lower authority can't overwrite SIS", async () => {
+  const { data: h } = await admin.from("holds").select("id").eq("tenant_id", T).eq("source_type", "institution_verified").limit(1).single();
+  const { error } = await admin.from("holds").update({ source_type: "student_entered" }).eq("id", h!.id);
+  expect(error?.code).toBe("23514");
+});
+
+test("AT-RDY-010 read model never crosses tenants", async () => {
+  const st = await as(process.env.E2E_STUDENT_EMAIL!);
+  const { data } = await st.from("student_readiness_summary").select("tenant_id,student_id");
+  expect(data!.every((r) => r.tenant_id === T && r.student_id === S1)).toBe(true);
+  expect(data!.some((r) => r.tenant_id === T2)).toBe(false);
+});

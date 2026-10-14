@@ -1,0 +1,32 @@
+# Component passport — single source of truth for owner, contract, controls, health, recovery, evidence.
+component:
+  key: registration_readiness
+  version: 0.1.0
+  class: consequential_workflow
+  lifecycle: pilot
+  owner: { product: registrar_product_owner, engineering: platform_owner, operations: pilot_operations_owner, institution: named_registrar_owner }
+  purpose: >
+    Help a student and authorized staff see whether the information needed for registration planning is current
+    and complete. It does not enroll a student or replace the institution's registrar system.
+  authority:
+    decision_owner: institution
+    derived_state_owner: semester
+    official_systems: [SIS, registrar_policy_system]
+    prohibited_claims: ["Semester confirms enrollment.", "Semester is the official registrar record."]
+  interfaces:
+    routes: ["/app/registration", "/registrar/readiness", "/registrar/readiness/:caseId"]
+    commands: [readiness.evaluate, readiness.refresh, readiness.case.route, referral.create, override.request]
+    events: [readiness.evaluated, readiness.source_stale, readiness.case_referred, receipt.created]
+    reads: [student_readiness_summary, registrar_readiness_queue, ops_readiness_health]
+    schema: [proposed-schema/060_bespoke_core.sql, 065_readiness_wedge.sql, 070_readiness_read_models.sql, 075_authority_guard.sql, 080_reconciliation_and_overrides.sql]
+  dependencies:
+    hard: [identity_and_membership, policy_enforcement_point, audit_log, SIS_adapter, durable_job_runner]
+    soft: [notification_service, analytics_pipeline]
+  safety:
+    fail_mode: fail_closed_for_definitive_actions
+    safe_fallback: "Show the latest known source status, say what's uncertain, and give the institution's escalation path."
+    rollback: "kill_switch on registration_readiness_v1 -> read-only status; no data deleted"
+    retention_class: restricted
+  health: [evaluation_success_rate, sis_freshness_age, reconciliation_backlog, policy_decision_error_rate, queue_sla_breach_count]
+  evidence_required: [rls_suite, workflow_transition_suite, idempotency_suite, stale_source_drill, accessibility_review, incident_drill, pilot_owner_approval]
+  evidence_record: launch/evidence/student.readiness.evaluate.yaml

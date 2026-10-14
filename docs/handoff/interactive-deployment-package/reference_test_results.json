@@ -1,0 +1,27 @@
+{
+  "scope": "Local helper assertions only",
+  "case_count": 19,
+  "results": {
+    "valid": true,
+    "missing": true,
+    "kill": true,
+    "withdrawn": true,
+    "expired": true,
+    "future": true,
+    "unaccepted": true,
+    "failed": true,
+    "duplicate": true,
+    "empty_contract": true,
+    "no_reviewer": true,
+    "naive_time": true,
+    "unresolved": true,
+    "mismatch_sha": true,
+    "mismatch_deployment": true,
+    "mismatch_config": true,
+    "mismatch_schema": true,
+    "mismatch_scope": true,
+    "mismatch_operation": true
+  },
+  "app_tests": 0,
+  "browser_tests": 0
+}

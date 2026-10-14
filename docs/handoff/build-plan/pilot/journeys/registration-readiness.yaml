@@ -1,0 +1,13 @@
+journeys:
+  - id: JNY-RDY-001
+    name: Student checks registration readiness
+    actor: student
+    outcome: "Understands readiness, source confidence, what needs attention and the next safe step — without confusing readiness with enrollment."
+    completion_criteria: [identity_and_tenant_resolved, term_and_goal_selected, source_status_visible, freshness_visible, state_explained, no_enrollment_claim, next_action_specific, office_or_support_path_visible, permissions_enforced, receipt_on_action, audit_written, failures_preserve_safe_state, mobile_works, keyboard_works, screen_reader_announces_state_change, offline_clear, stale_blocks_false_certainty, reconciliation_path_exists]
+    acceptance_tests: [AT-RDY-001, AT-RDY-002, AT-RDY-004, AT-RDY-006, AT-RDY-010]
+  - id: JNY-RDY-002
+    name: Registrar resolves a blocked or stale case
+    actor: registrar
+    outcome: "Finds cases needing action, sees evidence per check, routes or requests an exception, never edits the SIS, leaves an audit trail."
+    completion_criteria: [scoped_queue_loads, filter_by_state_and_freshness, case_evidence_per_check, routing_requires_reason, override_request_previewed, self_approval_blocked, decision_trail_visible, stale_source_escalation_path, export_audited, keyboard_and_screen_reader_work]
+    acceptance_tests: [AT-RDY-003, AT-RDY-005, AT-RDY-007, AT-RDY-008, AT-RDY-009]

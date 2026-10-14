@@ -1,0 +1,1282 @@
+[
+  {
+    "route": "/",
+    "title": "Home",
+    "capability": "public.site.home",
+    "layout": "home",
+    "regions": [
+      "hero",
+      "source-demo",
+      "connected-jobs",
+      "status-disclosure",
+      "institution-path",
+      "trust-summary",
+      "cta"
+    ],
+    "purpose": "Education, connected. One source-aware place to understand the next safe action.",
+    "prototype_hash": "#/home",
+    "source_status": "existing design page; clean URL mapping proposed",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/about",
+    "title": "About",
+    "capability": "public.site.home",
+    "layout": "editorial",
+    "regions": [
+      "mission",
+      "operating-principles",
+      "current-status",
+      "contact-path"
+    ],
+    "purpose": "Build native, integrate responsibly, and replace by domain only with proof.",
+    "prototype_hash": "#/about",
+    "source_status": "existing design page; clean URL mapping proposed",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/team",
+    "title": "Team",
+    "capability": "public.site.home",
+    "layout": "directory",
+    "regions": [
+      "approved-biographies",
+      "role-vacancies",
+      "contact-path"
+    ],
+    "purpose": "Find the right role, resource or approved document without guessing.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/contact",
+    "title": "Contact",
+    "capability": "public.site.home",
+    "layout": "form",
+    "regions": [
+      "contact-routing",
+      "inquiry-form",
+      "privacy-notice",
+      "delivery-status"
+    ],
+    "purpose": "Prepare a scoped inquiry without disclosing student records or sensitive information.",
+    "prototype_hash": "#/contact",
+    "source_status": "existing design page; clean URL mapping proposed",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [
+      "Name",
+      "Email",
+      "Topic",
+      "Message"
+    ],
+    "primary_action": "Prepare local inquiry",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/product",
+    "title": "Product",
+    "capability": "public.product.pages",
+    "layout": "overview",
+    "regions": [
+      "os-overview",
+      "role-paths",
+      "connected-modules",
+      "authority-boundaries",
+      "cta"
+    ],
+    "purpose": "One account, Action Center, search, workspace and governed intelligence layer.",
+    "prototype_hash": "#/product",
+    "source_status": "existing design page; clean URL mapping proposed",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/product/:slug",
+    "title": "Product detail",
+    "capability": "public.product.pages",
+    "layout": "detail",
+    "regions": [
+      "module-purpose",
+      "workflow",
+      "source-boundary",
+      "maturity",
+      "related-modules"
+    ],
+    "purpose": "Understand a module through its job, workflow, source authority and availability.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": true
+  },
+  {
+    "route": "/students",
+    "title": "For students",
+    "capability": "public.solutions",
+    "layout": "solution",
+    "regions": [
+      "student-day",
+      "source-labels",
+      "privacy",
+      "first-action",
+      "faq"
+    ],
+    "purpose": "Connect role-specific work while keeping private work and official records distinct.",
+    "prototype_hash": "#/students",
+    "source_status": "existing design page; clean URL mapping proposed",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/institutions",
+    "title": "For institutions",
+    "capability": "public.solutions",
+    "layout": "solution",
+    "regions": [
+      "office-outcomes",
+      "official-boundaries",
+      "review-status",
+      "pilot-path",
+      "faq"
+    ],
+    "purpose": "Connect role-specific work while keeping private work and official records distinct.",
+    "prototype_hash": "#/institutions",
+    "source_status": "existing design page; clean URL mapping proposed",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/pilot",
+    "title": "Pilot proposal",
+    "capability": "public.solutions",
+    "layout": "pilot",
+    "regions": [
+      "proposed-scope",
+      "non-goals",
+      "baseline",
+      "activation-gates",
+      "office-responsibilities",
+      "inquiry-form"
+    ],
+    "purpose": "Scope a bounded evaluation with approved measures and explicit activation gates.",
+    "prototype_hash": "#/pilot",
+    "source_status": "existing design page; clean URL mapping proposed",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [
+      "Name",
+      "Email",
+      "Topic",
+      "Message"
+    ],
+    "primary_action": "Prepare local inquiry",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/solutions",
+    "title": "Solutions",
+    "capability": "public.solutions",
+    "layout": "directory",
+    "regions": [
+      "audience-paths",
+      "shared-foundation",
+      "contact-path"
+    ],
+    "purpose": "Find the right role, resource or approved document without guessing.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/solutions/students",
+    "title": "Student solutions",
+    "capability": "public.solutions",
+    "layout": "solution",
+    "regions": [
+      "daily-loop",
+      "learning",
+      "registration",
+      "privacy",
+      "first-action"
+    ],
+    "purpose": "Connect role-specific work while keeping private work and official records distinct.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/solutions/faculty",
+    "title": "Faculty solutions",
+    "capability": "public.solutions",
+    "layout": "solution",
+    "regions": [
+      "course-authoring",
+      "accessibility",
+      "submission",
+      "grade-release",
+      "ai-rules"
+    ],
+    "purpose": "Connect role-specific work while keeping private work and official records distinct.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/solutions/advisors",
+    "title": "Advisor solutions",
+    "capability": "public.solutions",
+    "layout": "solution",
+    "regions": [
+      "caseload-scope",
+      "student-share",
+      "office-handoff",
+      "follow-up"
+    ],
+    "purpose": "Connect role-specific work while keeping private work and official records distinct.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/solutions/registrars",
+    "title": "Registrar solutions",
+    "capability": "public.solutions",
+    "layout": "solution",
+    "regions": [
+      "cohort-readiness",
+      "holds-by-office",
+      "exceptions",
+      "reconciliation"
+    ],
+    "purpose": "Connect role-specific work while keeping private work and official records distinct.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/solutions/institutions",
+    "title": "Institution solutions",
+    "capability": "public.solutions",
+    "layout": "solution",
+    "regions": [
+      "tenant-policy",
+      "roles",
+      "integrations",
+      "assurance",
+      "rollout"
+    ],
+    "purpose": "Connect role-specific work while keeping private work and official records distinct.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/solutions/:audience",
+    "title": "Audience detail",
+    "capability": "public.solutions",
+    "layout": "solution",
+    "regions": [
+      "audience-purpose",
+      "permitted-workflows",
+      "authority",
+      "contact-path"
+    ],
+    "purpose": "Connect role-specific work while keeping private work and official records distinct.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": true
+  },
+  {
+    "route": "/pricing",
+    "title": "Pricing",
+    "capability": "public.pricing.quote",
+    "layout": "pricing",
+    "regions": [
+      "pricing-posture",
+      "scope-variables",
+      "entitlement-boundaries",
+      "quote-path"
+    ],
+    "purpose": "Pricing and commercial availability require approved scope and authority.",
+    "prototype_hash": "#/pricing",
+    "source_status": "existing design page; clean URL mapping proposed",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/pricing/quote",
+    "title": "Request a quote",
+    "capability": "public.pricing.quote",
+    "layout": "form",
+    "regions": [
+      "scope-summary",
+      "quote-form",
+      "consent-notice",
+      "delivery-status"
+    ],
+    "purpose": "Prepare a scoped inquiry without disclosing student records or sensitive information.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [
+      "Name",
+      "Email",
+      "Topic",
+      "Message"
+    ],
+    "primary_action": "Prepare local inquiry",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/demo",
+    "title": "Demonstrations",
+    "capability": "public.demo.book",
+    "layout": "form",
+    "regions": [
+      "synthetic-demo-boundary",
+      "demo-form",
+      "delivery-status"
+    ],
+    "purpose": "Prepare a scoped inquiry without disclosing student records or sensitive information.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [
+      "Name",
+      "Email",
+      "Topic",
+      "Message"
+    ],
+    "primary_action": "Prepare local inquiry",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/demo/tour",
+    "title": "Product tour",
+    "capability": "public.demo.book",
+    "layout": "tour",
+    "regions": [
+      "synthetic-today",
+      "source-details",
+      "privacy-choice",
+      "approved-action-example",
+      "contact-path"
+    ],
+    "purpose": "Illustrative product journey using synthetic information only.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/resources",
+    "title": "Resources",
+    "capability": "public.resources",
+    "layout": "directory",
+    "regions": [
+      "approved-resource-index",
+      "topic-filter",
+      "accessibility-format"
+    ],
+    "purpose": "Find the right role, resource or approved document without guessing.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/resources/:slug",
+    "title": "Resource detail",
+    "capability": "public.resources",
+    "layout": "resource",
+    "regions": [
+      "title-author",
+      "date-version",
+      "source-content",
+      "accessible-alternative",
+      "related-resources"
+    ],
+    "purpose": "Publish sourced, reviewed content with version and accessible alternatives.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": true
+  },
+  {
+    "route": "/trust",
+    "title": "Trust center",
+    "capability": "public.trust.center",
+    "layout": "trust",
+    "regions": [
+      "scope-status",
+      "privacy",
+      "security",
+      "accessibility",
+      "ai",
+      "reliability",
+      "evidence-request"
+    ],
+    "purpose": "State scope, status and evidence\u2014not certifications or guarantees we cannot prove.",
+    "prototype_hash": "#/trust",
+    "source_status": "existing design page; clean URL mapping proposed",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/trust/security",
+    "title": "Security posture",
+    "capability": "public.trust.center",
+    "layout": "trust-detail",
+    "regions": [
+      "review-status",
+      "control-scope",
+      "evidence-policy",
+      "reporting-channel"
+    ],
+    "purpose": "Inspect a specific trust boundary and the evidence required to substantiate it.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/trust/privacy",
+    "title": "Privacy posture",
+    "capability": "public.trust.center",
+    "layout": "trust-detail",
+    "regions": [
+      "data-boundaries",
+      "processing-purpose",
+      "delegation",
+      "rights",
+      "retention"
+    ],
+    "purpose": "Inspect a specific trust boundary and the evidence required to substantiate it.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/trust/accessibility",
+    "title": "Accessibility posture",
+    "capability": "public.trust.center",
+    "layout": "trust-detail",
+    "regions": [
+      "target-standard",
+      "review-status",
+      "barrier-report",
+      "accessible-alternative"
+    ],
+    "purpose": "Inspect a specific trust boundary and the evidence required to substantiate it.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/trust/ai",
+    "title": "Governed AI",
+    "capability": "public.trust.center",
+    "layout": "trust-detail",
+    "regions": [
+      "data-scope",
+      "six-check-gateway",
+      "source-labels",
+      "course-policy",
+      "human-authority"
+    ],
+    "purpose": "Inspect a specific trust boundary and the evidence required to substantiate it.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/trust/subprocessors",
+    "title": "Subprocessors",
+    "capability": "public.trust.center",
+    "layout": "register",
+    "regions": [
+      "provider-purpose",
+      "region",
+      "classification",
+      "retention",
+      "review-status"
+    ],
+    "purpose": "Show only reviewed processor records with purpose, region and version.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/legal",
+    "title": "Legal documents",
+    "capability": "public.trust.center",
+    "layout": "directory",
+    "regions": [
+      "controlled-document-index",
+      "draft-status",
+      "authority",
+      "contact-path"
+    ],
+    "purpose": "Find the right role, resource or approved document without guessing.",
+    "prototype_hash": "#/legal",
+    "source_status": "existing design page; clean URL mapping proposed",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/legal/terms",
+    "title": "Terms",
+    "capability": "public.trust.center",
+    "layout": "legal",
+    "regions": [
+      "control-header",
+      "purpose",
+      "scope",
+      "rules",
+      "exceptions",
+      "revision-history"
+    ],
+    "purpose": "Controlled document draft. Qualified legal review is required before publication.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/legal/privacy",
+    "title": "Privacy policy",
+    "capability": "public.trust.center",
+    "layout": "legal",
+    "regions": [
+      "control-header",
+      "data-purpose",
+      "sharing",
+      "rights",
+      "retention",
+      "revision-history"
+    ],
+    "purpose": "Controlled document draft. Qualified legal review is required before publication.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/legal/cookies",
+    "title": "Cookie notice",
+    "capability": "public.trust.center",
+    "layout": "legal",
+    "regions": [
+      "control-header",
+      "cookie-categories",
+      "consent",
+      "withdrawal",
+      "revision-history"
+    ],
+    "purpose": "Controlled document draft. Qualified legal review is required before publication.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/legal/community",
+    "title": "Community guidelines",
+    "capability": "public.trust.center",
+    "layout": "legal",
+    "regions": [
+      "control-header",
+      "conduct",
+      "reporting",
+      "appeal",
+      "revision-history"
+    ],
+    "purpose": "Controlled document draft. Qualified legal review is required before publication.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/legal/accessibility",
+    "title": "Accessibility statement",
+    "capability": "public.trust.center",
+    "layout": "legal",
+    "regions": [
+      "control-header",
+      "target",
+      "status",
+      "barrier-report",
+      "revision-history"
+    ],
+    "purpose": "Controlled document draft. Qualified legal review is required before publication.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/status",
+    "title": "Service status",
+    "capability": "public.trust.center",
+    "layout": "status",
+    "regions": [
+      "status-source",
+      "service-list",
+      "incident-history",
+      "unavailable-state"
+    ],
+    "purpose": "Service health is unavailable until an authorized operational feed is connected.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/auth/signup",
+    "title": "Create account",
+    "capability": "public.signup",
+    "layout": "handoff",
+    "regions": [
+      "account-purpose",
+      "terms-status",
+      "identity-service-handoff",
+      "privacy-choices"
+    ],
+    "purpose": "Continue through a verified identity or application handoff\u2014not a static-page imitation.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Continue to approved identity service",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/auth/signin",
+    "title": "Sign in",
+    "capability": "shared.identity.signin",
+    "layout": "handoff",
+    "regions": [
+      "identity-service-handoff",
+      "approved-provider",
+      "recovery",
+      "session-boundary"
+    ],
+    "purpose": "Continue through a verified identity or application handoff\u2014not a static-page imitation.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Continue to approved identity service",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/join",
+    "title": "Join institution",
+    "capability": "public.signup",
+    "layout": "handoff",
+    "regions": [
+      "invite-verification",
+      "institution-context",
+      "membership-vs-grant",
+      "identity-handoff"
+    ],
+    "purpose": "Continue through a verified identity or application handoff\u2014not a static-page imitation.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Continue to approved identity service",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/open",
+    "title": "Open Semester",
+    "capability": "public.app.handoff",
+    "layout": "handoff",
+    "regions": [
+      "transaction-validation",
+      "expiry",
+      "account-match",
+      "claim-preview",
+      "receipt"
+    ],
+    "purpose": "Continue through a verified identity or application handoff\u2014not a static-page imitation.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Continue to approved identity service",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/download",
+    "title": "Get Semester",
+    "capability": "public.app.handoff",
+    "layout": "handoff",
+    "regions": [
+      "verified-distribution",
+      "platform-options",
+      "web-fallback",
+      "availability"
+    ],
+    "purpose": "Continue through a verified identity or application handoff\u2014not a static-page imitation.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Continue to approved identity service",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/partners",
+    "title": "Partners",
+    "capability": "public.partners.careers",
+    "layout": "form",
+    "regions": [
+      "partner-types",
+      "data-boundaries",
+      "partner-form",
+      "delivery-status"
+    ],
+    "purpose": "Prepare a scoped inquiry without disclosing student records or sensitive information.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [
+      "Name",
+      "Email",
+      "Topic",
+      "Message"
+    ],
+    "primary_action": "Prepare local inquiry",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/careers",
+    "title": "Careers",
+    "capability": "public.partners.careers",
+    "layout": "directory",
+    "regions": [
+      "approved-role-index",
+      "working-principles",
+      "accessible-application"
+    ],
+    "purpose": "Find the right role, resource or approved document without guessing.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  },
+  {
+    "route": "/careers/:slug",
+    "title": "Role posting",
+    "capability": "public.partners.careers",
+    "layout": "job",
+    "regions": [
+      "role-summary",
+      "first-90-days",
+      "requirements",
+      "approved-compensation",
+      "application"
+    ],
+    "purpose": "Publish only an approved role, compensation range and accessible application path.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": true
+  },
+  {
+    "route": "/404",
+    "title": "Page not found",
+    "capability": "public.site.home",
+    "layout": "not-found",
+    "regions": [
+      "explanation",
+      "safe-navigation",
+      "search-path"
+    ],
+    "purpose": "This page is not available. Return to a known route.",
+    "prototype_hash": null,
+    "source_status": "proposed expansion of source capability route contract",
+    "implementation": "generated static preview; no production delivery/identity adapter",
+    "fields": [],
+    "primary_action": "Explore related pages",
+    "source_owner": "CMS/claim reviewer + applicable domain authority",
+    "publication_gates": [
+      "approved copy and claims",
+      "valid routes and accessible links",
+      "qualified accessibility review",
+      "reviewed legal/consent posture",
+      "actual delivery/identity/status adapters where needed"
+    ],
+    "seo": "noindex preview; canonical metadata only after route and content approval",
+    "dynamic": false
+  }
+]

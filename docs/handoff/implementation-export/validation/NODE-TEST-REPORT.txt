@@ -1,0 +1,280 @@
+TAP version 13
+# Subtest: 44 unique route patterns
+ok 1 - 44 unique route patterns
+  ---
+  duration_ms: 1.186168
+  ...
+# Subtest: resolves /
+ok 2 - resolves /
+  ---
+  duration_ms: 0.306643
+  ...
+# Subtest: resolves /about
+ok 3 - resolves /about
+  ---
+  duration_ms: 0.17717
+  ...
+# Subtest: resolves /team
+ok 4 - resolves /team
+  ---
+  duration_ms: 0.114698
+  ...
+# Subtest: resolves /contact
+ok 5 - resolves /contact
+  ---
+  duration_ms: 0.115514
+  ...
+# Subtest: resolves /product
+ok 6 - resolves /product
+  ---
+  duration_ms: 0.104239
+  ...
+# Subtest: resolves /product/:slug
+ok 7 - resolves /product/:slug
+  ---
+  duration_ms: 0.309633
+  ...
+# Subtest: resolves /students
+ok 8 - resolves /students
+  ---
+  duration_ms: 0.106617
+  ...
+# Subtest: resolves /institutions
+ok 9 - resolves /institutions
+  ---
+  duration_ms: 0.213709
+  ...
+# Subtest: resolves /pilot
+ok 10 - resolves /pilot
+  ---
+  duration_ms: 1.658748
+  ...
+# Subtest: resolves /solutions
+ok 11 - resolves /solutions
+  ---
+  duration_ms: 0.112301
+  ...
+# Subtest: resolves /solutions/students
+ok 12 - resolves /solutions/students
+  ---
+  duration_ms: 0.083794
+  ...
+# Subtest: resolves /solutions/faculty
+ok 13 - resolves /solutions/faculty
+  ---
+  duration_ms: 0.071124
+  ...
+# Subtest: resolves /solutions/advisors
+ok 14 - resolves /solutions/advisors
+  ---
+  duration_ms: 0.142479
+  ...
+# Subtest: resolves /solutions/registrars
+ok 15 - resolves /solutions/registrars
+  ---
+  duration_ms: 0.092131
+  ...
+# Subtest: resolves /solutions/institutions
+ok 16 - resolves /solutions/institutions
+  ---
+  duration_ms: 0.126033
+  ...
+# Subtest: resolves /solutions/:audience
+ok 17 - resolves /solutions/:audience
+  ---
+  duration_ms: 0.181541
+  ...
+# Subtest: resolves /pricing
+ok 18 - resolves /pricing
+  ---
+  duration_ms: 0.452102
+  ...
+# Subtest: resolves /pricing/quote
+ok 19 - resolves /pricing/quote
+  ---
+  duration_ms: 0.09626
+  ...
+# Subtest: resolves /demo
+ok 20 - resolves /demo
+  ---
+  duration_ms: 0.125223
+  ...
+# Subtest: resolves /demo/tour
+ok 21 - resolves /demo/tour
+  ---
+  duration_ms: 0.084778
+  ...
+# Subtest: resolves /resources
+ok 22 - resolves /resources
+  ---
+  duration_ms: 0.062613
+  ...
+# Subtest: resolves /resources/:slug
+ok 23 - resolves /resources/:slug
+  ---
+  duration_ms: 0.128007
+  ...
+# Subtest: resolves /trust
+ok 24 - resolves /trust
+  ---
+  duration_ms: 0.059978
+  ...
+# Subtest: resolves /trust/security
+ok 25 - resolves /trust/security
+  ---
+  duration_ms: 0.055716
+  ...
+# Subtest: resolves /trust/privacy
+ok 26 - resolves /trust/privacy
+  ---
+  duration_ms: 0.052762
+  ...
+# Subtest: resolves /trust/accessibility
+ok 27 - resolves /trust/accessibility
+  ---
+  duration_ms: 0.07281
+  ...
+# Subtest: resolves /trust/ai
+ok 28 - resolves /trust/ai
+  ---
+  duration_ms: 0.055053
+  ...
+# Subtest: resolves /trust/subprocessors
+ok 29 - resolves /trust/subprocessors
+  ---
+  duration_ms: 0.05005
+  ...
+# Subtest: resolves /legal
+ok 30 - resolves /legal
+  ---
+  duration_ms: 0.050503
+  ...
+# Subtest: resolves /legal/terms
+ok 31 - resolves /legal/terms
+  ---
+  duration_ms: 0.050472
+  ...
+# Subtest: resolves /legal/privacy
+ok 32 - resolves /legal/privacy
+  ---
+  duration_ms: 0.180844
+  ...
+# Subtest: resolves /legal/cookies
+ok 33 - resolves /legal/cookies
+  ---
+  duration_ms: 0.120299
+  ...
+# Subtest: resolves /legal/community
+ok 34 - resolves /legal/community
+  ---
+  duration_ms: 0.06758
+  ...
+# Subtest: resolves /legal/accessibility
+ok 35 - resolves /legal/accessibility
+  ---
+  duration_ms: 0.056156
+  ...
+# Subtest: resolves /status
+ok 36 - resolves /status
+  ---
+  duration_ms: 0.0567
+  ...
+# Subtest: resolves /auth/signup
+ok 37 - resolves /auth/signup
+  ---
+  duration_ms: 0.051823
+  ...
+# Subtest: resolves /auth/signin
+ok 38 - resolves /auth/signin
+  ---
+  duration_ms: 0.050749
+  ...
+# Subtest: resolves /join
+ok 39 - resolves /join
+  ---
+  duration_ms: 0.050822
+  ...
+# Subtest: resolves /open
+ok 40 - resolves /open
+  ---
+  duration_ms: 0.049286
+  ...
+# Subtest: resolves /download
+ok 41 - resolves /download
+  ---
+  duration_ms: 0.418582
+  ...
+# Subtest: resolves /partners
+ok 42 - resolves /partners
+  ---
+  duration_ms: 0.09174
+  ...
+# Subtest: resolves /careers
+ok 43 - resolves /careers
+  ---
+  duration_ms: 0.069076
+  ...
+# Subtest: resolves /careers/:slug
+ok 44 - resolves /careers/:slug
+  ---
+  duration_ms: 0.134502
+  ...
+# Subtest: resolves /404
+ok 45 - resolves /404
+  ---
+  duration_ms: 0.057297
+  ...
+# Subtest: unknown route gives 404
+ok 46 - unknown route gives 404
+  ---
+  duration_ms: 0.136348
+  ...
+# Subtest: malformed encoding gives 404
+ok 47 - malformed encoding gives 404
+  ---
+  duration_ms: 0.201399
+  ...
+# Subtest: protocol route rejected
+ok 48 - protocol route rejected
+  ---
+  duration_ms: 0.114815
+  ...
+# Subtest: extra nested dynamic segments rejected
+ok 49 - extra nested dynamic segments rejected
+  ---
+  duration_ms: 0.099833
+  ...
+# Subtest: empty form rejected
+ok 50 - empty form rejected
+  ---
+  duration_ms: 0.219136
+  ...
+# Subtest: invalid email rejected
+ok 51 - invalid email rejected
+  ---
+  duration_ms: 0.194403
+  ...
+# Subtest: oversize message rejected
+ok 52 - oversize message rejected
+  ---
+  duration_ms: 0.110759
+  ...
+# Subtest: local receipt never claims sent
+ok 53 - local receipt never claims sent
+  ---
+  duration_ms: 0.151913
+  ...
+# Subtest: seven region states
+ok 54 - seven region states
+  ---
+  duration_ms: 0.107288
+  ...
+1..54
+# tests 54
+# suites 0
+# pass 54
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 120.128605

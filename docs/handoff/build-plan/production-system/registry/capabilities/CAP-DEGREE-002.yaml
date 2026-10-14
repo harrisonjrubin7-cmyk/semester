@@ -1,0 +1,15 @@
+capability:
+  id: CAP-DEGREE-002
+  title: Advisor-shared degree scenario
+  portfolio_lane: deepen
+  maturity_level: 0          # framed — charter only
+  primary_outcome: A student can explicitly share a planning scenario with an assigned advisor, who can respond without representing it as an official audit.
+  owner: {product: unassigned, technical: unassigned, operations: unassigned, institution: advising_owner (unnamed)}
+  boundary:
+    semester_may: [store_student_entered_scenario, show_authorized_official_reference_data, enable_scoped_advisor_view, record_advisor_response, route_to_official_audit_or_registrar]
+    semester_may_not: [certify_degree_progress, approve_requirement_exception, alter_official_record, calculate_unapproved_audit_outcome]
+  risk: {sensitivity: restricted_institutional, consequence: moderate, AI_enabled: false, external_dependency: official_audit_or_degree_source}
+  release_scope: {tenant: named_institution_only, cohort: approved_student_and_advisor_group, feature_flag: degree_scenario_share_v1, safe_off: block_new_shares_keep_existing_receipts}
+  exit_criteria: [student_and_advisor_journey_verified, sharing_consent_and_revocation_verified, source_freshness_behavior_verified, caseload_scope_verified, support_and_escalation_owner_named, accessible_critical_path_verified, release_evidence_approved]
+  builds_on: [product-system DegreeScenario schema ("reviewed" must cite the official audit), delegated-access rules]
+  not_before: registration readiness renewal decision (sequencing rule)

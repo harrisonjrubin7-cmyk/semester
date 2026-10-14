@@ -1,0 +1,15 @@
+steps: [submit_intent, authenticate_and_resolve_context, read_authoritative_eligibility_and_capacity, evaluate_policy, validate_overrides_and_expected_versions, execute_enrollment_transaction, persist_receipt_and_outbox, update_access_calendar_downstream, reconcile_external_dependencies]
+outcomes: [allowed, blocked, review_required, unknown, stale, pending_external_confirmation, completed]
+rule: "A missing prerequisite record is unknown, not permission to enroll."
+transaction_requirements:
+  - idempotency key on every command
+  - explicit seat concurrency (SELECT … FOR UPDATE on the capacity pool, or a seat-count check constraint)
+  - unique active enrollment per (student, section)
+  - atomic swap where the business rule requires it — failure leaves the original enrollment
+  - credit-load check against the resulting schedule
+  - waitlist promotion rechecks current eligibility
+  - seat-offer expiry and acceptance recorded durably
+  - receipts distinguish accepted intent from confirmed enrollment
+modes:
+  external_authority: [Semester prepares and submits authorized commands, records pending outcomes, the SIS result determines official enrollment, timeouts trigger reconciliation not blind retries]
+  native_authority: [Semester commits authoritative enrollment, downstream systems consume confirmed events, integration failures affect sync not truth, users never repeat a confirmed transaction because a projection is late]

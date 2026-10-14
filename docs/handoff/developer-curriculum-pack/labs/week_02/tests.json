@@ -1,0 +1,52 @@
+{
+  "function": "validate_pr",
+  "cases": [
+    {
+      "input": {
+        "title": "Fix",
+        "test_evidence": "run-1",
+        "reviewer": "A"
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "title": "Fix",
+        "test_evidence": "",
+        "reviewer": "A"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "title": "Fix",
+        "test_evidence": "run-1",
+        "reviewer": ""
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "title": "",
+        "test_evidence": "run-1",
+        "reviewer": "A"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "title": "Fix",
+        "test_evidence": "run-1"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "title": "Fix",
+        "test_evidence": 1,
+        "reviewer": "A"
+      },
+      "expected": false
+    }
+  ]
+}

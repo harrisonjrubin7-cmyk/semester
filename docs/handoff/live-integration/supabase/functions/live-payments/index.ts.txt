@@ -1,0 +1,49 @@
+// Stripe Checkout + verified webhook. POST /checkout { institution_id, amount_cents, purpose } (auth) · POST /webhook (Stripe signature).
+// Secrets: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET. Card data never touches Semester.
+import Stripe from "npm:stripe@16";
+import { admin, Denied, handler, json, requireCapability, requireGrant, requireUser } from "../_shared/gate.ts";
+
+const stripe = () => {
+  const k = Deno.env.get("STRIPE_SECRET_KEY");
+  if (!k) throw new Denied(503, "not_configured", "Payments are not configured");
+  return new Stripe(k, { apiVersion: "2024-06-20", httpClient: Stripe.createFetchHttpClient() });
+};
+
+Deno.serve(handler(async (req) => {
+  const path = new URL(req.url).pathname.split("/").pop();
+
+  if (path === "checkout") {
+    const user = await requireUser(req);
+    const { institution_id, amount_cents, purpose } = await req.json();
+    if (!institution_id || !Number.isInteger(amount_cents) || amount_cents < 50 || amount_cents > 1_000_000 || !purpose) throw new Denied(400, "bad_request", "institution_id, amount_cents (50–1,000,000) and purpose required");
+    await requireGrant(user, institution_id, ["student", "finance"]);
+    await requireCapability(institution_id, "payments.checkout");
+    const key = req.headers.get("idempotency-key") ?? crypto.randomUUID();
+    const origin = Deno.env.get("SEMESTER_APP_ORIGIN");
+    if (!origin) throw new Denied(503, "not_configured", "SEMESTER_APP_ORIGIN not set");
+    const session = await stripe().checkout.sessions.create({
+      mode: "payment", customer_email: user.email,
+      line_items: [{ quantity: 1, price_data: { currency: "usd", unit_amount: amount_cents, product_data: { name: purpose } } }],
+      success_url: `${origin}/#/finance?paid={CHECKOUT_SESSION_ID}`, cancel_url: `${origin}/#/finance?cancelled=1`,
+      metadata: { institution_id, user_id: user.id },
+    }, { idempotencyKey: key });
+    await admin().from("live_payments").upsert({ institution_id, user_id: user.id, stripe_session: session.id, amount_cents, purpose, status: "pending" }, { onConflict: "stripe_session" });
+    return json(req, { url: session.url, session: session.id });
+  }
+
+  if (path === "webhook") {
+    const sig = req.headers.get("stripe-signature"), secret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    if (!sig || !secret) throw new Denied(400, "bad_signature", "Missing signature");
+    const ev = await stripe().webhooks.constructEventAsync(await req.text(), sig, secret, undefined, Stripe.createSubtleCryptoProvider());
+    const map: Record<string, string> = { "checkout.session.completed": "paid", "checkout.session.expired": "expired", "checkout.session.async_payment_failed": "failed" };
+    const status = map[ev.type];
+    if (status) {
+      const s = ev.data.object as Stripe.Checkout.Session;
+      // Webhooks can arrive twice or out of order: only move forward from pending.
+      await admin().from("live_payments").update({ status, updated_at: new Date().toISOString() }).eq("stripe_session", s.id).eq("status", "pending");
+      if (status === "paid") await admin().from("live_outbox").insert({ institution_id: s.metadata?.institution_id, aggregate: "payment", event: "payment.paid", payload: { session: s.id } });
+    }
+    return new Response("ok");
+  }
+  throw new Denied(404, "not_found", "Unknown payments endpoint");
+}));

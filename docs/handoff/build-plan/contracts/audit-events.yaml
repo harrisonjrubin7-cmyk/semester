@@ -1,0 +1,68 @@
+# audit-events.yaml — stable keys only; no free-form audit strings.
+audit_events:
+  - key: readiness.student_viewed
+    severity: low
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id]
+  - key: readiness.case_viewed
+    severity: low
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id]
+  - key: readiness.evaluate_requested
+    severity: moderate
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id]
+  - key: readiness.refresh_requested
+    severity: moderate
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id, source_system, prior_freshness_state]
+  - key: readiness.referral_requested
+    severity: moderate
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id]
+  - key: today.viewed
+    severity: low
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id]
+  - key: support.case_created
+    severity: moderate
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id]
+  - key: registrar.readiness_queue_viewed
+    severity: low
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id]
+  - key: readiness.case_assigned
+    severity: moderate
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id, prior_assigned_office, next_assigned_office, reason_code]
+  - key: readiness.case_routed
+    severity: moderate
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id, prior_assigned_office, next_assigned_office, reason_code]
+  - key: readiness.case_referred
+    severity: moderate
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id]
+  - key: readiness.case_refreshed
+    severity: moderate
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id, source_system, prior_freshness_state]
+  - key: override.request_created
+    severity: high
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id, target_record, requested_outcome, policy_decision_id, reason_code]
+  - key: override.decided
+    severity: high
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id, target_record, requested_outcome, policy_decision_id, reason_code]
+  - key: advisor.caseload_viewed
+    severity: low
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id]
+  - key: integration.health_viewed
+    severity: low
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id]
+  - key: integration.refresh_triggered
+    severity: high
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id, source_system, prior_freshness_state]
+  - key: audit.viewed
+    severity: high
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id]
+  - key: ops.inbox_viewed
+    severity: low
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id]
+  - key: incident.declared
+    severity: high
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id]
+  - key: access.revoked
+    severity: high
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id, subject_account_id, revoked_grant, effective_at, reason_code]
+  - key: access.denied
+    severity: high
+    required_fields: [tenant_id, actor_account_id, entity_type, entity_id, correlation_id, attempted_action, failed_step]

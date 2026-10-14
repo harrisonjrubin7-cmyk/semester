@@ -1,0 +1,20 @@
+artifact:
+  id: ART-RDY-011
+  title: Registration readiness incident runbook
+  kind: operational_runbook
+  location: operations/incidents/INC-READINESS-001.yaml
+  capability_keys: [registration_readiness]
+  owners: { accountable: platform_on_call_owner, consulted: [registrar_operations_owner, institution_technical_owner] }
+  classification: internal_restricted
+  state: draft   # PDF showed approved with no named reviewer; stays draft until one signs
+  version: 1.0.0
+  review: { cadence: quarterly_and_after_incident, next_due: null }
+  dependencies: [source-authority-register, alert-routing, support-intake]
+  release_critical: true
+artifact_status_rules:
+  draft: "Work exists but has not passed review."
+  in_review: "A named reviewer is evaluating it."
+  approved: "Current, owned and usable for its intended scope."
+  superseded: "A newer approved artifact replaces it; retain history."
+  expired: "Review or validity date passed; it cannot support a release."
+  missing: "A capability references a required artifact that does not exist."

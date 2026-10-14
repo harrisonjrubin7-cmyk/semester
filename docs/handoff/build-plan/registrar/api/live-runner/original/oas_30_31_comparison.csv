@@ -1,0 +1,13 @@
+topic,oas_3_0,oas_3_1,migration_action
+Null handling,nullable: true with explicit type,"type: [string, null] or null branch",Replace nullable; review enum and required constraints
+Dialect,OAS-specific Schema Object,OAS dialect based on Draft 2020-12; jsonSchemaDialect/$schema,Do not silently validate custom dialect as 2020-12
+Discriminator,Hint alongside composition,Hint alongside composition; does not change JSON Schema result,Assert operation tags in each branch
+Type unions,Single type field,Type arrays permitted,Revalidate code generation
+Exclusive bounds,Boolean exclusiveMinimum/exclusiveMaximum with bounds,Numeric exclusiveMinimum/exclusiveMaximum,"Convert bounds, not only version string"
+Tuples,Limited OAS array schema,prefixItems and items follow 2020-12,Review tuple consumers
+Schema references,Restricted 3.0 reference semantics,Schema $ref has JSON Schema sibling behavior,Distinguish Schema Object from Reference Object
+Unknown fields,additionalProperties at object level,unevaluatedProperties available for composed schemas,Review composition before sealing objects
+Required vs null,Presence and nullable are separate,Presence and null type remain separate,Missing is not null
+Directional fields,OAS readOnly/writeOnly semantics,OAS annotations still need direction-aware handling,Generic JSON Schema is not sufficient
+Format,Tool-dependent enforcement,2020-12 format assertion not automatic everywhere,Declare policy and use format checker
+Conditional schemas,Not standard OAS 3.0 keywords,if/then/else and dependentRequired available,Test every consequential branch

@@ -1,0 +1,44 @@
+{
+  "function": "activation_ready",
+  "cases": [
+    {
+      "input": {
+        "certified": true,
+        "institution_approved": true,
+        "reconciled": true,
+        "rollback_ready": true,
+        "support_ready": true
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "certified": true,
+        "institution_approved": false,
+        "reconciled": true,
+        "rollback_ready": true,
+        "support_ready": true
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "certified": true,
+        "institution_approved": true,
+        "reconciled": true,
+        "rollback_ready": true,
+        "support_ready": 1
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "certified": true,
+        "institution_approved": true,
+        "reconciled": true,
+        "rollback_ready": true
+      },
+      "expected": false
+    }
+  ]
+}

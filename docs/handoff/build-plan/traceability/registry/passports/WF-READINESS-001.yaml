@@ -1,0 +1,37 @@
+# generated from ui_kits/traceability/trace-data.js — 2026-10-14
+passport:
+  identity:
+    id: "WF-READINESS-001"
+    name: "Registration readiness evaluation"
+    type: "workflow"
+  accountability:
+    business_owner: "Harrison (founder)"
+    technical_owner: "Harrison (founder)"
+    operational_owner: "Harrison (founder) · backup needed"
+    review_cadence: "monthly_and_on_change"
+  boundaries:
+    authority_owner: "institution_registrar"
+    data_classification: "restricted_institutional"
+    tenant_scope: "institution_bound"
+    allowed_uses: "readiness evaluation · support handoff · reconciliation"
+    prohibited_uses: "official enrollment · record modification · policy override"
+  dependencies:
+    upstream: "SIS-001 · POL-READINESS-001 · identity membership"
+    downstream: "student screen · registrar console · support queue"
+    failure_mode: "source timeout or policy denial"
+    degradation_behavior: "safe needs-review state"
+  control_plane:
+    policy_ids: "POL-READINESS-001"
+    audit_events: "readiness.evaluation_requested · completed · needs_review"
+    required_evidence: "EVD-RLS-001 · EVD-POLICY-001 · EVD-A11Y-001 · EVD-ROLLBACK-001"
+    release_gate: "REL-READINESS-001"
+    safe_off_path: "feature_flag.registration_readiness_v1"
+  quality:
+    test_suites: "TST-RLS-003 · TST-WF-001 · TST-E2E-REG-001 · TST-A11Y-REG-001"
+    accessibility_requirements: "not colour-only · keyboard · status announcements"
+  lifecycle:
+    maturity_level: 2
+    current_status: "contracted_not_built"
+    created_at: "2026-10-14"
+    last_reviewed_at: ""
+    retirement_plan: "preserve receipts and audit records per policy"

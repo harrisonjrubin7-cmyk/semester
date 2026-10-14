@@ -1,0 +1,25 @@
+import {createHash} from 'node:crypto';
+export class Refusal extends Error {refusal=true}
+/** Runnable JS behavioral reference; not execution of previous TS patch. */
+export function createMockAssignmentsAdapter(backend,{tenant='a',approval=true,write=true}={}) {
+ let approved=approval,canWrite=write;
+ const payload=(ctx,input,key)=>({tenant:ctx.tenant,actor:ctx.actor,record:input.recordId,key,version:input.version,text:input.fields.text,fingerprint:createHash('sha256').update(JSON.stringify({record:input.recordId,version:input.version,action:input.actionId,fields:Object.fromEntries(Object.entries(input.fields).sort())})).digest('hex')});
+ async function gate(ctx,input,writing=false){
+  if(ctx.tenant!==tenant||!approved)throw new Refusal('not approved');
+  if(writing&&!canWrite)throw new Refusal('read only');
+  const a=await backend({op:'authorize',tenant:ctx.tenant,actor:ctx.actor,record:input.recordId});
+  if(!a.allowed)throw new Refusal('denied');
+ }
+ async function validate(ctx,input){
+  if(input.actionId!=='submit'||input.area!=='assignments'||Object.keys(input.fields).some(k=>k!=='text')||!input.fields.text?.trim())throw new Refusal('invalid fields/action');
+  const r=await backend({op:'get',tenant:ctx.tenant,actor:ctx.actor,record:input.recordId});
+  if(!r||r.version!==input.version)throw new Refusal('stale');
+ }
+ return {
+  setApproval:x=>{approved=x},setWrite:x=>{canWrite=x},
+  async review(ctx,input){await gate(ctx,input,true);await validate(ctx,input);return {title:'Submit synthetic work',details:[{label:'Effect',value:'One mock database submission'}]};},
+  async execute(ctx,input,key){await gate(ctx,input,true);await validate(ctx,input);if(!key)throw new Refusal('key required');
+   try{const r=await backend({op:'execute',...payload(ctx,input,key)});if(r.error)throw Error('backend result');return r;}catch{throw Error('outcome uncertain; reconcile');}},
+  async reconcile(ctx,input,key){await gate(ctx,input);const r=await backend({op:'lookup',...payload(ctx,input,key)});if(r?.error)throw Error('unresolved');return r;}
+ };
+}

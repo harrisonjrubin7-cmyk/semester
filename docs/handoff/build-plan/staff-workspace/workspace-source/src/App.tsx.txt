@@ -1,0 +1,108 @@
+import React, { useReducer, useState } from 'react';
+import './styles.css';
+
+const roles = ['Faculty','TA','Advisor','Registrar','Finance','Student Affairs'] as const;
+type Role = typeof roles[number];
+type ScreenState = 'default'|'loading'|'empty'|'error'|'forbidden'|'offline';
+type GradeState = 'draft'|'released'|'correction_requested'|'correction_approved'|'corrected';
+type Event = 'DRAFT'|'RELEASE'|'REQUEST_CORRECTION'|'APPROVE_CORRECTION'|'PUBLISH_CORRECTION'|'REFERRAL'|'ADJUSTMENT';
+type Audit = {id:number;actor:Role;event:Event;at:string;detail:string};
+type Model = {grade:string;publishedGrade:string|null;proposedGrade:string;gradeState:GradeState;version:number;referral:boolean;adjustment:'none'|'submitted';audit:Audit[]};
+type Action = {type:'COMMAND';role:Role;event:Event;value?:string;expectedVersion:number}|{type:'RESET'};
+const seed:Model = {grade:'B',publishedGrade:null,proposedGrade:'',gradeState:'draft',version:1,referral:false,adjustment:'none',audit:[]};
+export const navigation:Record<Role,string[]> = {
+ Faculty:['Overview','Courses','Roster','Grading','Release center'],
+ TA:['Overview','Assigned sections','Submissions','Questions'],
+ Advisor:['Overview','Caseload','Plans','Appointments'],
+ Registrar:['Overview','Records','Holds','Corrections','Publication'],
+ Finance:['Overview','Accounts','Adjustments','Refunds'],
+ 'Student Affairs':['Overview','Intake','My cases','Referrals','Appointments']
+};
+const scopes:Record<Role,string> = {Faculty:'Assigned sections',TA:'Delegated sections',Advisor:'Assigned advisees',Registrar:'Explicit academic-record scope',Finance:'Assigned accounts','Student Affairs':'Assigned cases'};
+const transitions:Partial<Record<GradeState,Partial<Record<Event,{role:Role;next:GradeState}>>>> = {
+ draft:{RELEASE:{role:'Faculty',next:'released'}},
+ released:{REQUEST_CORRECTION:{role:'Faculty',next:'correction_requested'}},
+ correction_requested:{APPROVE_CORRECTION:{role:'Registrar',next:'correction_approved'}},
+ correction_approved:{PUBLISH_CORRECTION:{role:'Registrar',next:'corrected'}}
+};
+export function reducer(model:Model,action:Action):Model {
+ if(action.type==='RESET') return {...seed,audit:[]};
+ if(action.expectedVersion!==model.version) throw new Error('Stale record version. Reload before retrying.');
+ const {role,event,value}=action;
+ let next={...model};
+ if(event==='DRAFT') {
+  if(!['Faculty','TA'].includes(role)||model.gradeState!=='draft') throw new Error('Draft edit denied.');
+  if(!value?.trim()) throw new Error('A draft grade is required.');
+  next.grade=value.trim();
+ } else if(event==='REFERRAL') {
+  if(role!=='Student Affairs'||model.referral) throw new Error('Referral denied or already sent.');
+  next.referral=true;
+ } else if(event==='ADJUSTMENT') {
+  if(role!=='Finance'||model.adjustment!=='none') throw new Error('Adjustment denied or already submitted.');
+  next.adjustment='submitted';
+ } else {
+  const transition=transitions[model.gradeState]?.[event];
+  if(!transition||transition.role!==role) throw new Error('Role or workflow transition denied.');
+  next.gradeState=transition.next;
+  if(event==='RELEASE') next.publishedGrade=model.grade;
+  if(event==='REQUEST_CORRECTION') {
+   if(!value?.trim()) throw new Error('A proposed correction is required.');
+   next.proposedGrade=value.trim();
+  }
+  if(event==='PUBLISH_CORRECTION') {next.grade=model.proposedGrade;next.publishedGrade=model.proposedGrade;}
+ }
+ next.version=model.version+1;
+ next.audit=[...model.audit,{id:next.version,actor:role,event,at:new Date().toISOString(),detail:value||event}];
+ return next;
+}
+export function RoleSwitcher({role,onChange}:{role:Role;onChange:(role:Role)=>void}) {
+ return <><label htmlFor="role">Acting workspace</label><select id="role" value={role} onChange={e=>onChange(e.target.value as Role)}>{roles.map(r=><option key={r}>{r}</option>)}</select><small>All roles are seeded demo grants.</small></>;
+}
+export default function App(){
+ const [model,dispatch]=useReducer(reducer,seed);
+ const [role,setRole]=useState<Role>('Student Affairs');
+ const [page,setPage]=useState('Overview');
+ const [state,setState]=useState<ScreenState>('default');
+ const [draft,setDraft]=useState(seed.grade);
+ const [proposed,setProposed]=useState('A-');
+ const [error,setError]=useState('');
+ const [escalation,setEscalation]=useState('draft');
+ const [reviewer,setReviewer]=useState('manager');
+ const [reason,setReason]=useState('Temporary assigned-record access');
+ const [evidence,setEvidence]=useState<string[]>([]);
+ const dirty=role==='Faculty'||role==='TA' ? draft!==model.grade : false;
+ function switchRole(next:Role){
+  if(dirty&&!window.confirm('Discard the unsaved grade edit and switch workspace?'))return;
+  setDraft(model.grade);setRole(next);setPage('Overview');setState('default');setError('');
+ }
+ function command(event:Event,value?:string){
+  try {const action:Action={type:'COMMAND',role,event,value,expectedVersion:model.version};reducer(model,action);dispatch(action);setError('');}
+  catch(e){setError((e as Error).message);}
+ }
+ function escalationEvent(event:string){
+  const map:Record<string,Record<string,string>>={draft:{submit:'submitted'},submitted:{route:'manager_review',withdraw:'withdrawn'},manager_review:{approve:'owner_review',deny:'denied',information:'needs_information'},owner_review:{approve:'approved',deny:'denied',information:'needs_information'},needs_information:{submit:'submitted'},approved:{activate:'active'},active:{expire:'expired',revoke:'revoked'}};
+  const required:Record<string,string>={draft:'requester',submitted:event==='withdraw'?'requester':'system',manager_review:'manager',owner_review:'data_owner',needs_information:'requester',approved:'system',active:event==='expire'?'system':'data_owner'};
+  const next=map[escalation]?.[event];
+  if(!next||reviewer!==required[escalation]||!reason.trim()){setError('Invalid event, reviewer persona, or missing reason.');return;}
+  setEvidence([...evidence,`${reviewer}: ${escalation} → ${next} (${reason})`]);setEscalation(next);setError('');
+ }
+ const academic=['Faculty','TA','Advisor','Registrar'].includes(role);
+ const messages:Record<Exclude<ScreenState,'default'>,string>={loading:'Loading authorized records…',empty:'No assigned records. Review your scope.',error:'Request failed. Select default to retry the local fixture.',forbidden:'Access unavailable. Submit a scoped request below.',offline:'Offline. All mutation controls are disabled.'};
+ return <><header><h1>Semester staff workspace</h1><p>Demo university · Demo term · Simulation only; no live records, JWTs, or database authorization.</p></header><div className="shell"><aside><RoleSwitcher role={role} onChange={switchRole}/><nav aria-label="Workspace navigation">{navigation[role].map(n=><button key={n} aria-current={page===n?'page':undefined} onClick={()=>setPage(n)}>{n}</button>)}</nav><p>Scope: {scopes[role]}</p></aside><main><h2>{role} / {page}</h2><p>Navigation entries share the workflow inspection surface in this wireframe; they are not separate implemented modules.</p><label htmlFor="state">Screen state</label><select id="state" value={state} onChange={e=>setState(e.target.value as ScreenState)}>{['default','loading','empty','error','forbidden','offline'].map(s=><option key={s}>{s}</option>)}</select>{error&&<p role="alert" className="error">{error}</p>}
+ {state!=='default'?<article role="status">{messages[state]}</article>:<article><h3>Shared demo student record</h3><p>Demo student · Scope: {scopes[role]}</p>
+ {academic&&<><p>Workflow: {model.gradeState} · Version {model.version}</p><p>Published grade: {model.publishedGrade??'Not released'}</p></>}
+ {['Faculty','TA'].includes(role)&&model.gradeState==='draft'&&<><label htmlFor="draft">Draft grade</label><input id="draft" value={draft} onChange={e=>setDraft(e.target.value)}/><button onClick={()=>command('DRAFT',draft)}>Save draft</button></>}
+ {role==='Faculty'&&model.gradeState==='draft'&&<button disabled={dirty} onClick={()=>command('RELEASE')}>Release saved grade</button>}
+ {role==='Faculty'&&model.gradeState==='released'&&<><label htmlFor="correction">Proposed corrected grade</label><input id="correction" value={proposed} onChange={e=>setProposed(e.target.value)}/><button onClick={()=>command('REQUEST_CORRECTION',proposed)}>Request Registrar correction</button></>}
+ {role==='Registrar'&&model.gradeState==='correction_requested'&&<><p>Proposed correction: {model.proposedGrade}</p><button onClick={()=>command('APPROVE_CORRECTION')}>Approve correction</button></>}
+ {role==='Registrar'&&model.gradeState==='correction_approved'&&<button onClick={()=>command('PUBLISH_CORRECTION')}>Publish approved correction</button>}
+ {role==='Advisor'&&<p>Released academic information only; draft values and correction proposal are omitted from this view.</p>}
+ {role==='Finance'&&<><p>Account fixture: balance $250 · Adjustment: {model.adjustment}</p><button disabled={model.adjustment!=='none'} onClick={()=>command('ADJUSTMENT')}>Submit demo adjustment</button></>}
+ {role==='Student Affairs'&&<><p>Assigned support case · Referral: {model.referral?'Sent':'Not sent'}</p><button disabled={model.referral} onClick={()=>command('REFERRAL')}>Send scoped demo referral</button></>}
+ </article>}
+ <article><h3>Student-visible academic projection</h3><p>Released grade: {model.publishedGrade??'No released grade'}</p><small>This panel demonstrates the connected result; it is not a student authentication context.</small></article>
+ <article><h3>Permission matrix</h3><div className="scroll"><table><thead><tr><th>Role</th><th>Scope</th><th>Grade action</th><th>Other action</th></tr></thead><tbody>{roles.map(r=><tr key={r}><td>{r}</td><td>{scopes[r]}</td><td>{r==='Faculty'?'Draft, release, request correction':r==='TA'?'Delegated draft only':r==='Advisor'?'Released, assigned only':r==='Registrar'?'Approve and publish scoped correction':'No grade access'}</td><td>{r==='Finance'?'Submit account adjustment':r==='Student Affairs'?'Send assigned-case referral':'No cross-domain authority'}</td></tr>)}</tbody></table></div></article>
+ <article><h3>Access escalation simulator</h3><p>Status: {escalation}</p><label htmlFor="reviewer">Separate reviewer persona</label><select id="reviewer" value={reviewer} onChange={e=>setReviewer(e.target.value)}>{['requester','manager','data_owner','system'].map(x=><option key={x}>{x}</option>)}</select><label htmlFor="reason">Reason</label><input id="reason" value={reason} onChange={e=>setReason(e.target.value)}/><div>{['submit','route','approve','information','deny','withdraw','activate','expire','revoke'].map(e=><button key={e} onClick={()=>escalationEvent(e)}>{e}</button>)}</div><small>Persona selection is demonstration only. Production reviewers require independently verified identity and scope. Activation does not alter demo permissions.</small><ul>{evidence.map((e,i)=><li key={i}>{e}</li>)}</ul></article>
+ <article><h3>Workflow event inspector</h3><p>Developer-only full demo ledger; not a production cross-role audit view.</p><ol>{model.audit.map(a=><li key={a.id}>{a.actor}: {a.event} · {a.detail} · {a.at}</li>)}</ol><button onClick={()=>{dispatch({type:'RESET'});setDraft(seed.grade);setError('');setEscalation('draft');setEvidence([]);}}>Reset simulation</button></article>
+ </main></div></>;
+}

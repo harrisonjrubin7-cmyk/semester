@@ -1,0 +1,60 @@
+{
+  "function": "validate_task",
+  "cases": [
+    {
+      "input": {
+        "id": "a",
+        "title": "Task",
+        "status": "open"
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "id": 1,
+        "title": "Task",
+        "status": "open"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "id": "a",
+        "title": "",
+        "status": "bad"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "id": "a",
+        "title": "Task",
+        "status": "completed"
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "id": "a",
+        "title": "Task",
+        "status": "bad"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "id": "",
+        "title": "Task",
+        "status": "open"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "id": "a",
+        "title": "Task"
+      },
+      "expected": false
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+developer_platform:
+  stage_0_internal_only: [internal_contract_lab, synthetic_sandbox, API_schema_validation, internal_event_catalog]      # current stage
+  stage_1_design_partners: [named_partner_agreement, scoped_sandbox_credential, approved_use_case, manual_access_review, audit_and_rate_limit_controls]
+  stage_2_limited_external: [self_service_documentation, scoped_application_registration, test_tenant, versioned_API, webhook_verification, revocation_and_support_process]
+  forbidden_before_stage_2: [production_self_service_keys, unrestricted_event_subscriptions, access_to_restricted_student_data, unreviewed_partner_apps]
+  example_application: {id: APP-PARTNER-001, partner_id: PARTNER-001, tenant_scope: [tenant-a], scopes: [readiness.receipt.read, support.handoff.create], prohibited_scopes: [student.record.read.all, institution.policy.write, delegation.manage, payment.execute], controls: [credential_rotation, rate_limit, webhook_signature, audit_log, revocation_test, expiry_date]}

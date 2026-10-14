@@ -1,0 +1,79 @@
+// Shared gate for every Semester live edge function. Fails closed.
+import { createClient, type SupabaseClient, type User } from "jsr:@supabase/supabase-js@2";
+
+const ORIGINS = (Deno.env.get("SEMESTER_ALLOWED_ORIGINS") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+
+export function cors(req: Request): Record<string, string> {
+  const o = req.headers.get("origin") ?? "";
+  return {
+    "Access-Control-Allow-Origin": ORIGINS.includes(o) ? o : "null",
+    "Access-Control-Allow-Headers": "authorization, content-type, idempotency-key, x-client-info, apikey",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
+
+export class Denied extends Error {
+  constructor(public status: number, public code: string, message: string) { super(message); }
+}
+
+export function json(req: Request, body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status, headers: { ...cors(req), "content-type": "application/json" } });
+}
+
+export function admin(): SupabaseClient {
+  const url = Deno.env.get("SUPABASE_URL"), key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) throw new Denied(503, "not_configured", "Server credentials are not configured");
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+export async function requireUser(req: Request): Promise<User> {
+  const auth = req.headers.get("authorization") ?? "";
+  if (!auth.startsWith("Bearer ")) throw new Denied(401, "unauthenticated", "Sign in first");
+  const { data, error } = await admin().auth.getUser(auth.slice(7));
+  if (error || !data.user) throw new Denied(401, "unauthenticated", "Session is invalid or expired");
+  return data.user;
+}
+
+export async function requireGrant(user: User, institution: string, workspaces: string[]): Promise<string> {
+  const { data, error } = await admin().from("live_workspace_grants").select("workspace,valid_until")
+    .eq("user_id", user.id).eq("institution_id", institution).in("workspace", workspaces);
+  if (error) throw new Denied(503, "grant_lookup_failed", "Could not verify access");
+  const ok = (data ?? []).find((g) => !g.valid_until || new Date(g.valid_until) > new Date());
+  if (!ok) throw new Denied(403, "forbidden", "No live grant for this workspace at this institution");
+  return ok.workspace;
+}
+
+export async function requireCapability(institution: string, capability: string): Promise<{ approval_ref: string }> {
+  const { data, error } = await admin().from("live_tenant_capabilities").select("enabled,kill_switch,approval_ref")
+    .eq("institution_id", institution).eq("capability", capability).maybeSingle();
+  if (error) throw new Denied(503, "capability_lookup_failed", "Could not verify activation");
+  if (!data || !data.enabled) throw new Denied(423, "not_enabled", `${capability} is not enabled for this institution`);
+  if (data.kill_switch) throw new Denied(423, "kill_switch", `${capability} is switched off`);
+  return { approval_ref: data.approval_ref };
+}
+
+export async function connection(institution: string, kind: string) {
+  const { data } = await admin().from("live_integration_connections").select("*").eq("institution_id", institution).eq("kind", kind).maybeSingle();
+  if (!data || !["sandbox", "active"].includes(data.status)) throw new Denied(423, "no_connection", `${kind} connection is not active`);
+  const secret = data.secret_ref ? Deno.env.get(data.secret_ref) : undefined;
+  if (data.secret_ref && !secret) throw new Denied(503, "secret_missing", `Secret ${data.secret_ref} is not set`);
+  return { ...data, secret } as { id: string; config: Record<string, string>; status: string; secret?: string };
+}
+
+export async function sha256(s: string): Promise<string> {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+export function handler(fn: (req: Request) => Promise<Response>) {
+  return async (req: Request) => {
+    if (req.method === "OPTIONS") return new Response(null, { headers: cors(req) });
+    try { return await fn(req); }
+    catch (e) {
+      if (e instanceof Denied) return json(req, { error: e.code, message: e.message }, e.status);
+      console.error(JSON.stringify({ fn: new URL(req.url).pathname, err: String(e) })); // no payloads in logs
+      return json(req, { error: "internal", message: "Something went wrong. Nothing was changed." }, 500);
+    }
+  };
+}

@@ -1,0 +1,7 @@
+external_audiences:
+  applicant: {may: [manage_own_application_journey, receive_public_or_application_authorized_information], may_not: [access_current_student_records_without_separate_identity_and_authorization]}
+  guardian_or_family: {may: [access_only_student_delegated_information, manage_own_identity_and_notification_preferences], may_not: [inherit_student_access_by_relationship_claim]}
+  alumni: {may: [manage_opt_in_profile_and_community_preferences], may_not: [access_active_student_records]}
+  employer: {may: [manage_verified_opportunities_and_approved_engagement], may_not: [search_or_receive_student_records_without_explicit_opt_in_or_approved_basis]}
+  partner_or_developer: {may: [use_scoped_sandbox_or_production_access_after_approval], may_not: [access_unapproved_data_or_retain_data_beyond_agreement]}
+  identity_rule: each audience is its own identity and consent model, never a mode of a student account

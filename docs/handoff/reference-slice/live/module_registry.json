@@ -33,7 +33,7 @@
     "screens": "/app/courses; /institution/catalog",
     "tables": "courses,course_versions,terms,sections,enrollments",
     "workflow": "Catalog \u2192 offer \u2192 enroll \u2192 teach \u2192 complete",
-    "access": "Enrollment or teaching role"
+    "access": "Enrollment/teaching scope"
   },
   {
     "module": "Learning content",

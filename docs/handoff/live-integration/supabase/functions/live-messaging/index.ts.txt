@@ -1,0 +1,41 @@
+// Send a message between two members of the same institution. In-app always; email via Postmark when enabled.
+// POST { institution_id, recipient, subject, body, email?: boolean }. Secrets: POSTMARK_SERVER_TOKEN, SEMESTER_MAIL_FROM.
+import { admin, Denied, handler, json, requireCapability, requireGrant, requireUser } from "../_shared/gate.ts";
+
+const PER_MINUTE = 10;
+
+Deno.serve(handler(async (req) => {
+  const user = await requireUser(req);
+  const { institution_id, recipient, subject, body, email } = await req.json();
+  if (!institution_id || !recipient || !subject?.trim() || !body?.trim() || body.length > 20000) throw new Denied(400, "bad_request", "institution_id, recipient, subject and body (≤20,000 chars) required");
+  await requireGrant(user, institution_id, ["student", "faculty", "advisor", "registrar", "student_affairs", "institution"]);
+  await requireCapability(institution_id, "messaging.send");
+  const db = admin();
+
+  const { data: shared } = await db.from("live_workspace_grants").select("workspace").eq("user_id", recipient).eq("institution_id", institution_id).limit(1);
+  if (!shared?.length) throw new Denied(403, "recipient_not_member", "Recipient isn't a member of this institution");
+
+  const since = new Date(Date.now() - 60_000).toISOString();
+  const { count } = await db.from("live_messages").select("id", { count: "exact", head: true }).eq("sender", user.id).gte("created_at", since);
+  if ((count ?? 0) >= PER_MINUTE) throw new Denied(429, "rate_limited", "Too many messages — wait a minute");
+
+  const { data: msg, error } = await db.from("live_messages").insert({ institution_id, sender: user.id, recipient, channel: email ? "email" : "in_app", subject, body, status: email ? "queued" : "sent" }).select().single();
+  if (error) throw new Denied(500, "store_failed", "Message not saved");
+
+  if (email) {
+    const token = Deno.env.get("POSTMARK_SERVER_TOKEN"), from = Deno.env.get("SEMESTER_MAIL_FROM");
+    const { data: to } = await db.auth.admin.getUserById(recipient);
+    if (!token || !from || !to?.user?.email) {
+      await db.from("live_messages").update({ status: "failed" }).eq("id", msg.id);
+      return json(req, { id: msg.id, status: "failed", message: "Saved in-app; email isn't configured" }, 202);
+    }
+    const r = await fetch("https://api.postmarkapp.com/email", {
+      method: "POST", headers: { "X-Postmark-Server-Token": token, accept: "application/json", "content-type": "application/json" },
+      body: JSON.stringify({ From: from, To: to.user.email, Subject: subject, TextBody: body, MessageStream: "outbound", Metadata: { message_id: msg.id } }),
+    });
+    const out = await r.json().catch(() => ({}));
+    await db.from("live_messages").update({ status: r.ok ? "sent" : "failed", provider_id: out.MessageID ?? null }).eq("id", msg.id);
+    return json(req, { id: msg.id, status: r.ok ? "sent" : "failed" }, r.ok ? 200 : 502);
+  }
+  return json(req, { id: msg.id, status: "sent" });
+}));

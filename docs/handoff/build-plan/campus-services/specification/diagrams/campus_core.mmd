@@ -1,0 +1,17 @@
+flowchart TD
+ Student[Housing / Dining / Account portals] --> Gate[Shared identity / eligibility / controlled actions]
+ Staff[Institution domain consoles] --> Gate
+ Gate --> Housing[Allocation / occupancy / contracts]
+ Gate --> Dining[Plans / lots / order fulfillment]
+ Gate --> Accounts[Assessment / ledger / credit obligations]
+ Housing --> Accounts
+ Dining --> Accounts
+ Housing --> Maintenance[Work orders / facilities]
+ Accounts --> Rail[Approved payment adapter]
+ Housing --> Legacy[Transitional legacy adapters]
+ Dining --> Legacy
+ Rail --> Reconcile[Receipts and reconciliation]
+ Legacy --> Reconcile
+ Reconcile --> Outbox[Canonical audit / outbox / projections]
+ Outbox --> Student
+ Outbox --> Staff

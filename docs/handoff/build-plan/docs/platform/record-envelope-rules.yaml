@@ -1,0 +1,14 @@
+record_envelope_rules:
+  - "Every restricted record has a tenant identifier before persistence."
+  - "Every source-backed record has authority and freshness metadata."
+  - "Every update increments version; access or workflow revocation increments generation."
+  - "Derived records keep references to the source records and rules used."
+  - "AI-assisted content is stored only with its scope, prompt class, source list and disclosure."
+  - "A record does not become institution_verified merely because it was copied into Semester."
+event_rules:
+  - "An event is created only after its business state commits (outbox, same transaction)."
+  - "Consumers tolerate duplicate delivery."
+  - "Events carry references and approved summaries, not unrestricted copies of sensitive data."
+  - "Schema changes need a new version or a documented compatible evolution."
+  - "A consumer may not infer authority beyond the producer's declared scope."
+  - "Failed delivery is visible through outbox and dead-letter operations, never silent."

@@ -1,0 +1,10 @@
+implementation:   # build from the Vanderbilt pilot as it happens, not from assumptions
+  phase_0_discovery: [institutional_owner_map, use_case_scope, authority_boundary, source_and_connector_inventory, data_element_inventory, success_plan, risk_and_dependency_register]
+  phase_1_configuration: [tenant_configuration, SSO_or_identity_configuration, role_and_membership_setup, source_mapping, policy_parameters, accessibility_and_content_review, support_routing]
+  phase_2_validation: [acceptance_test_results, institution_walkthrough, source_freshness_validation, reconciliation_test, rollback_drill, staff_training_completion, launch_approval]
+  phase_3_limited_activation: [cohort_definition, communication_plan, hypercare_roster, daily_health_review, incident_path, student_feedback_path]
+  phase_4_measurement: [adoption_evidence, safe_completion_evidence, support_and_reconciliation_analysis, trust_and_accessibility_findings, renewal_or_remediation_recommendation]
+  vanderbilt_now: phase_0 (owner map and connector inventory not confirmed)
+responsibilities:
+  institution: [name_executive_and_operational_owners, provide_authorized_source_access, approve_scope_and_student_cohort, confirm_policy_and_copy, supply_official_support_contacts, validate_institutional_workflows, participate_in_launch_and_issue_review]
+  semester: [configure_approved_scope, implement_and_document_controls, provide_training_and_support_materials, monitor_service_and_connector_health, maintain_incident_and_reconciliation_processes, report_confirmed_pilot_evidence, operate_change_control]

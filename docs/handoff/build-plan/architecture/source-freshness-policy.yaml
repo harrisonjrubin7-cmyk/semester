@@ -1,0 +1,15 @@
+# source-freshness-policy.yaml — freshness is product behaviour, not just an integration metric.
+freshness_classes:
+  real_time: { maximum_age: "5 minutes", examples: [access_revocations, active_holds_near_deadline] }
+  operational: { maximum_age: "4 hours", examples: [readiness_inputs, registration_status] }   # readiness_evaluate() default budget
+  daily: { maximum_age: "30 hours", examples: [degree_audit_projection, campus_service_data] }
+  reference: { maximum_age: "30 days", examples: [catalog_descriptions, institutional_contacts] }
+display_rules:
+  current: "Current as of {observed_at}."
+  updating: "Updating from {source_system}. Some details may change."
+  stale: "{source_system} hasn't updated since {observed_at}. Don't rely on this for a final decision."
+  failed: "We couldn't refresh this source. Your existing record hasn't changed."
+  unknown: "We can't tell how current this is. Check with {responsible_office}."
+action_rules:
+  readiness_evaluation: { current: allow, updating: allow_with_notice, stale: allow_with_review_result_only, failed: block_definitive_result, unknown: block_definitive_result }
+  registration_request: { current: allow, updating: block, stale: block, failed: block, unknown: block }

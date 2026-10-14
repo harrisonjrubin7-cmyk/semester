@@ -1,0 +1,14 @@
+# Identity belongs to the institution's identity process; access is calculated per request from current grants.
+sources_of_identity: { primary: "Vanderbilt SAML SSO", provisioning: "SCIM or nightly roster from YES", fallback: "approved magic-link for named test accounts only" }
+role_mapping:
+  - { institution_attribute: "eduPersonAffiliation=student + pilot cohort list", semester_role: student, grants: [student.readiness.read, student.readiness.evaluate, student.readiness.refresh, student.readiness.request_referral] }
+  - { institution_attribute: "registrar staff group", semester_role: registrar, grants: [registrar.readiness.queue.read, registrar.readiness.case.read, registrar.readiness.case.route, registrar.readiness.override.request], approval: registrar_business_owner }
+  - { institution_attribute: "senior registrar group", semester_role: senior_registrar, grants: [registrar.readiness.override.decide], approval: registrar_business_owner }
+  - { institution_attribute: "advisor of record (from YES)", semester_role: advisor, grants: ["advisor.caseload.read scoped to each assigned student"], approval: automatic_from_source }
+lifecycle_events:
+  - { event: identity_created, action: "create account + membership in 'invited'" }
+  - { event: role_changed, action: "recompute grants; old grants revoked in the same transaction" }
+  - { event: identity_disabled, action: "membership 'ended', all grants revoked, all sessions revoked — effective on the next request" }
+  - { event: advisor_reassigned, action: "scoped grant moves; previous advisor loses access immediately" }
+reviews: { privileged_roles: monthly, all_roles: per_term, evidence_type: access_review }
+tested_by: [AT-RDY-003, AT-RDY-005, registration_rls.test.sql #8-9]

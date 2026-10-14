@@ -1,0 +1,10 @@
+public_trust_center:
+  sections: [data_handling_overview, AI_boundary, accessibility_status, security_and_privacy_status, service_status, subprocessor_status, contact_and_reporting]
+  required_language: [State what is currently available., Name what is in progress., Do not claim certification that has not been achieved., Explain how an institution can request review materials.]
+  data_room_only: [detailed_architecture, penetration_testing_material_when_available, detailed_security_questionnaire, insurance_certificate, complete_DPA, detailed_subprocessor_terms, incident_response_details]
+  copy:
+    data_handling: Semester uses approved institutional and student-provided information only for the scoped service described in the applicable agreement and configuration.
+    ai: Ask Semester is labeled AI-assisted. It operates within declared data and tool boundaries; student records are never in a request to an AI provider.
+    accessibility: Accessibility review and remediation work are ongoing. Current status and available review materials are provided on request.
+    security_privacy: Semester is completing institution-requested review materials, including security and privacy documentation. Current status is available on request.
+  prototype: ui_kits/every-screen (M group Trust pages read control evidence)

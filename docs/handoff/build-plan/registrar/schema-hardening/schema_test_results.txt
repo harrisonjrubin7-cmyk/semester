@@ -1,0 +1,27 @@
+test_boolean_version (__main__.EnrollmentTests.test_boolean_version) ... ok
+test_duplicate (__main__.EnrollmentTests.test_duplicate) ... ok
+test_empty (__main__.EnrollmentTests.test_empty) ... ok
+test_extra (__main__.EnrollmentTests.test_extra) ... ok
+test_irrelevant_array (__main__.EnrollmentTests.test_irrelevant_array) ... ok
+test_negative_version (__main__.EnrollmentTests.test_negative_version) ... ok
+test_swap_source (__main__.EnrollmentTests.test_swap_source) ... ok
+test_term (__main__.EnrollmentTests.test_term) ... ok
+test_uuid (__main__.EnrollmentTests.test_uuid) ... ok
+test_valid_operations (__main__.EnrollmentTests.test_valid_operations) ... ok
+test_direction (__main__.MigrationTests.test_direction) ... ok
+test_discriminator (__main__.MigrationTests.test_discriminator) ... ok
+test_enum_excludes_null (__main__.MigrationTests.test_enum_excludes_null) ... ok
+test_enum_includes_null (__main__.MigrationTests.test_enum_includes_null) ... ok
+test_exclusive (__main__.MigrationTests.test_exclusive) ... ok
+test_inclusive (__main__.MigrationTests.test_inclusive) ... ok
+test_no_type (__main__.MigrationTests.test_no_type) ... ok
+test_null_union (__main__.MigrationTests.test_null_union) ... ok
+test_ref (__main__.MigrationTests.test_ref) ... ok
+test_required_null (__main__.MigrationTests.test_required_null) ... ok
+test_required_presence (__main__.MigrationTests.test_required_presence) ... ok
+test_union_input (__main__.MigrationTests.test_union_input) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.123s
+
+OK

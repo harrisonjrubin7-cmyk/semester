@@ -1,0 +1,8 @@
+admissions:
+  purpose: Give applicants a clear, accessible path to manage their own authorized application experience and next steps.
+  identity: separate applicant identity; becomes a student identity only via an institution-confirmed transition (lifecycle rule)
+  semester_may: [show_application_status_when_authorized, collect_applicant_owned_profile_information, present_institution_approved_checklists, route_questions, support_identity_and_account_recovery, provide_student_selected_planning_tools]
+  institution_retains: [admissions_decision, application_evaluation, scholarship_award_decision, official_document_verification, enrollment_status]
+  required_states: [account_created, identity_verified, application_in_progress, submitted, institution_reviewing, decision_available, next_step_required, transitioned_or_closed]
+  copy: "Your application was received on [date]. The institution will determine your application status. Semester can show the next approved step when the institution makes it available."
+  never: show a decision before the institution releases it; predict an outcome

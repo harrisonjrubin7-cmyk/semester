@@ -1,0 +1,14 @@
+pilot_command_center:
+  queues: [support_handoffs, readiness_needs_review, reconciliation_cases, connector_failures, security_and_access_alerts, release_and_configuration_changes]
+  every_item_requires: [item_type, tenant, capability, priority, owner, created_at, due_at_when_applicable, source_or_trigger, current_state, permitted_actions, audit_history, escalation_path]
+  prohibited: [unscoped_global_student_search, silent_manual_status_change, self_approval_for_sensitive_change, operator_action_without_reason]
+  receipt: "OperatorActionReceipt = { id, itemId, tenantId, actor{id, role}, action, reason, policyDecisionId, before, after, correlationId, occurredAt }"
+  prototype: ui_kits/ops-inbox (reduce to these six queues for the pilot)
+  maps_to_repo_console_workspaces:   # app/src/lib/console/workspaces.ts @ fb51d66 (company-os-registers)
+    support_handoffs: support
+    readiness_needs_review: command
+    reconciliation_cases: evidence
+    connector_failures: integration-health
+    security_and_access_alerts: [breakglass, audit]
+    release_and_configuration_changes: releases
+  rule: add the six queues as views inside these existing workspaces — no new console

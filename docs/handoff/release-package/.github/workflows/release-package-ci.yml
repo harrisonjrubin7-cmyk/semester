@@ -1,0 +1,28 @@
+# Supplemental release CI. Adds to existing required jobs — never replaces them.
+# Pin every action to a full commit SHA before activation (handoff/grading-ci-harness/tools/pin_actions.sh resolves tags).
+name: Supplemental release CI
+on: [pull_request, workflow_dispatch]
+permissions: { contents: read }
+concurrency:
+  group: release-check-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@REPLACE_WITH_VERIFIED_FULL_COMMIT_SHA   # v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@REPLACE_WITH_VERIFIED_FULL_COMMIT_SHA # v4
+        with: { node-version: '22', cache: npm }
+      - uses: actions/setup-python@REPLACE_WITH_VERIFIED_FULL_COMMIT_SHA # v5
+        with: { python-version: '3.12' }
+      - run: npm ci
+      - run: python -m unittest discover -s scripts/release -p 'test_evidence_bundle.py' -v
+      - run: bash -n scripts/release/deploy-vercel.sh
+      - run: npm run lint --workspace app
+      - run: npm test --workspace app
+      - run: npm run build --workspace app
+      - run: npm run check:university --workspace app
+      - run: npm run platform-control:test
+      - run: npm run registry:validate

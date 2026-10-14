@@ -1,0 +1,11 @@
+capability:
+  id: CAP-FACULTY-001
+  title: Course Studio
+  placement: native_with_institutional_connections
+  maturity_level: 1
+  roles: [instructor, teaching_assistant, course_designer, department_reviewer]
+  authority_boundary:
+    semester_may: [author_course_material, manage_rubrics, collect_workflow_drafts, support_feedback, stage_grade_release, synchronize_approved_results]
+    institution_or_instructor_retains: [final_grade_authority, academic_integrity_decisions, accommodation_decisions, official_record_posting, course_policy_approval]
+  grade_states: [draft, reviewed, approved_for_release, submitted_for_sync, synchronized, sync_needs_review]
+  transitions: {draft: [reviewed], reviewed: [approved_for_release, draft], approved_for_release: [submitted_for_sync, reviewed], submitted_for_sync: [synchronized, sync_needs_review], sync_needs_review: [submitted_for_sync, reviewed], synchronized: []}

@@ -1,0 +1,14 @@
+# Semester projection conflicts with, lags, or can't be confirmed against the institution's source.
+case_states: [detected, triaged, awaiting_source, awaiting_institution, repair_proposed, repair_approved, repaired, reverified, closed, escalated]
+discrepancy_classes: [stale_source, missing_authoritative_record, mapping_error, schema_change, duplicate_delivery, ordering_conflict, policy_version_mismatch, institution_override, unknown]
+safe_repairs:
+  stale_source: [refresh_source_snapshot, rerun_derived_evaluation, retain_prior_receipt_with_supersession_link]
+  mapping_error: [quarantine_invalid_payload, correct_versioned_mapping, replay_from_known_safe_checkpoint, reverify_affected_records]
+  institution_override: [preserve_institution_record, mark_semester_projection_superseded, notify_affected_workflow_owner]
+prohibited_repairs: ["Overwrite an authoritative institutional record", "Backdate an audit event", "Delete a discrepancy to improve a dashboard", "Re-run a consequential command without idempotency and policy checks"]
+close_requires: [source_refresh_verified, affected_scope_rechecked, audit_linked, student_outcome_recomputed_or_reviewed, case_owner_closed]
+example:
+  { id: REC-2026-001, tenant: vanderbilt, capability: registration_readiness, class: stale_source, severity: high, detected_by: source_freshness_monitor,
+    affected: { cohort: approved_pilot_cohort, record_count: unknown_until_scoped, definitive_outcomes_blocked: true },
+    student_display: "A source needed for this check isn't current enough to show a final readiness result. Your official registration record hasn't changed.",
+    staff_display: "Source freshness exceeded its approved window. Review the connection, then rerun the affected readiness evaluations." }

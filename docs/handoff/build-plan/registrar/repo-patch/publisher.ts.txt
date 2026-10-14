@@ -1,0 +1,76 @@
+/**
+ * The outbox publisher, run on a schedule. Rename to server/events/publisher.ts.
+ *
+ *   drainOutbox(PostgresOutbox) → for each claimed event, every registered consumer runs through processOnce with a
+ *   PostgresReceiptLedger → the row is marked published only when no consumer *failed* (refused and duplicate are fine).
+ *
+ * A consumer that throws leaves the row unpublished, so it is offered again; processOnce's receipts stop consumers
+ * that already succeeded from repeating their side effects. After maxAttempts the row is dead-lettered.
+ *
+ * Start: `node --import tsx server/events/publisher.ts` from a cron (every minute) or a long-running worker with
+ * SEMESTER_PUBLISHER_INTERVAL_MS. Needs SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY; never run it in a browser.
+ */
+import { drainOutbox, processOnce, type ReceiptLedger, type ReceiptOutcome, type SemesterEvent } from '../../packages/institution/src/events.ts';
+import { PostgresOutbox, type RpcClient } from '../../packages/institution/src/postgres-outbox.ts';
+
+export class PostgresReceiptLedger implements ReceiptLedger {
+  constructor(private readonly db: RpcClient) {}
+  async seen(consumer: string, eventId: string): Promise<ReceiptOutcome | null> {
+    const { data, error } = await this.db.rpc('event_receipt_seen', { want_consumer: consumer, want_event: eventId });
+    if (error) throw new Error(`receipt lookup failed: ${error.message}`);
+    return (data as ReceiptOutcome | null) ?? null;
+  }
+  async record(consumer: string, eventId: string, outcome: ReceiptOutcome, err?: string): Promise<void> {
+    const { error } = await this.db.rpc('event_receipt_record', { want_consumer: consumer, want_event: eventId, want_outcome: outcome, want_error: err ?? null });
+    if (error) throw new Error(`receipt record failed: ${error.message}`);
+  }
+}
+
+export interface Consumer {
+  name: string;
+  /** Event types this consumer wants; others are skipped without a receipt. */
+  accepts: (type: string) => boolean;
+  handle: (event: SemesterEvent, db: RpcClient) => Promise<void>;
+}
+
+/** First consumer: counts events per day, tenant and type. Reads no payload. */
+export const eventVolume: Consumer = {
+  name: 'event-volume',
+  accepts: () => true,
+  async handle(event, db) {
+    const { error } = await db.rpc('event_volume_count', { want_day: event.occurredAt.slice(0, 10), want_tenant: event.tenantId ?? null, want_type: event.eventType });
+    if (error) throw new Error(`event-volume: ${error.message}`);
+  },
+};
+
+export interface RunReport { published: number; failed: number; deadLettered: number; consumerFailures: Record<string, number> }
+
+export async function runOnce(db: RpcClient, consumers: Consumer[] = [eventVolume], opts: { maxAttempts?: number; batch?: number } = {}): Promise<RunReport> {
+  const ledger = new PostgresReceiptLedger(db);
+  const consumerFailures: Record<string, number> = {};
+  const report = await drainOutbox(new PostgresOutbox(db), async (event) => {
+    const failed: string[] = [];
+    for (const c of consumers) {
+      if (!c.accepts(event.eventType)) continue;
+      const r = await processOnce(ledger, c.name, event, (e) => c.handle(e, db));
+      if (r.outcome === 'failed') { failed.push(c.name); consumerFailures[c.name] = (consumerFailures[c.name] ?? 0) + 1; }
+    }
+    if (failed.length) throw new Error(`consumer failed: ${failed.join(', ')}`); // message only; never the payload
+  }, { maxAttempts: opts.maxAttempts ?? 5, batch: opts.batch ?? 100 });
+  return { ...report, consumerFailures };
+}
+
+// CLI
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const { createClient } = await import('@supabase/supabase-js');
+  const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) { console.error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required'); process.exit(2); }
+  const client = createClient(url, key, { auth: { persistSession: false } });
+  const db: RpcClient = { rpc: (fn, args) => client.rpc(fn, args) as never };
+  const every = Number(process.env.SEMESTER_PUBLISHER_INTERVAL_MS ?? 0);
+  do {
+    const r = await runOnce(db);
+    console.log(JSON.stringify({ at: new Date().toISOString(), ...r }));
+    if (every > 0) await new Promise((res) => setTimeout(res, every));
+  } while (every > 0);
+}

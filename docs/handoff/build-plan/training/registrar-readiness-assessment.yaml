@@ -1,0 +1,6 @@
+# Pass = all three correct. Attendance alone isn't an attestation.
+questions:
+  - { id: TRN-RDY-001, prompt: "A student's SIS prerequisite source is stale. Can you tell them they're ready to register?", expected: "No. Say the source is out of date, avoid a definitive claim, use refresh or review." }
+  - { id: TRN-RDY-002, prompt: "You requested an exception. Can you approve it?", expected: "No. Route it to an authorized approver; the reason and audit trail stay." }
+  - { id: TRN-RDY-003, prompt: "A student's status differs from the registrar system. First action?", expected: "Record the discrepancy, confirm the authoritative source and freshness, open or attach a reconciliation case. Don't edit the readiness result informally." }
+attestation: { evidence_type: training_attestation, record: [staff_account_id, answers, score, assessed_at, assessor] }

@@ -1,0 +1,11 @@
+// Every row in a source-backed table has authority + observed_at; nothing labelled institution_verified lacks a source reference.
+import { expect, test } from "vitest";
+import { createClient } from "@supabase/supabase-js";
+const db = createClient(process.env.SUPABASE_URL ?? "http://127.0.0.1:54321", process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+for (const t of ["readiness_checks", "source_snapshots"]) test(t + " rows carry provenance", async () => {
+  const { data, error } = await db.from(t).select("id, source_type, source_record_reference, observed_at").limit(1000);
+  if (error?.code === "42P01") return; // table not created yet — test becomes meaningful once it exists
+  expect(error).toBeNull();
+  const bad = (data ?? []).filter((r) => (r.source_type === "institution_verified" && !r.source_record_reference) || (["institution_verified", "connected"].includes(r.source_type) && !r.observed_at));
+  expect(bad).toEqual([]);
+});

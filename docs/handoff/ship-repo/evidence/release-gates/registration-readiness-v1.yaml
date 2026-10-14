@@ -1,0 +1,24 @@
+release:
+  id: REL-READINESS-001
+  capability: registration_readiness
+  environment: production
+  tenant_scope: { mode: named_cohort, tenant_ids: [vanderbilt-pilot-tenant-id], cohort: approved-pilot-cohort }
+  version: { application: 0.1.0, migration: "241", policy_bundle: 0.1.0, design_system: 1.0.0, commit: null }
+  # All pending: none of these runs exist yet. Each becomes accepted only with a run link + hash + reviewer.
+  required_evidence:
+    - { type: source_authority_register, artifact: registry/integrations/SIS-001.yaml, status: pending }
+    - { type: rls_test_result, artifact: evidence/test-runs/rls.json, status: pending }
+    - { type: tenant_isolation_result, artifact: evidence/test-runs/tenant-isolation.json, status: pending }
+    - { type: policy_test_result, artifact: evidence/test-runs/policy.json, status: pending }
+    - { type: workflow_test_result, artifact: evidence/test-runs/workflow.json, status: pending }
+    - { type: ai_boundary_result, artifact: evidence/test-runs/ai-boundaries.json, status: pending }
+    - { type: accessibility_review, artifact: evidence/accessibility/readiness-v1.yaml, status: pending }
+    - { type: rollback_drill, artifact: evidence/drills/rollback-readiness-v1.md, status: pending }
+    - { type: institution_approval, artifact: evidence/institution-approvals/pilot-go-no-go.pdf, status: pending }
+  blockers:
+    - "Any required artifact is missing, expired, rejected, or materially changed."
+    - "A critical tenant-isolation, access-control or source-authority test fails."
+    - "A student-facing state can imply enrollment or conceal a stale source."
+  approvals: { product_owner: pending, security_owner: pending, institution_business_owner: pending, institution_technical_owner: pending }
+  open_critical_findings: 0
+  release_state: not_approved

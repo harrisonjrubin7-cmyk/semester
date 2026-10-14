@@ -1,0 +1,17 @@
+export type ReadinessWorkflowState = "RECEIVED" | "AUTHORIZED" | "SOURCE_CHECKING" | "EVALUATING" | "RECONCILING" | "RECEIPTING" | "COMPLETED" | "NEEDS_REVIEW" | "FAILED" | "CANCELLED";
+export const allowedTransitions: Record<ReadinessWorkflowState, ReadinessWorkflowState[]> = {
+  RECEIVED: ["AUTHORIZED", "CANCELLED"], AUTHORIZED: ["SOURCE_CHECKING", "NEEDS_REVIEW", "CANCELLED"], SOURCE_CHECKING: ["EVALUATING", "NEEDS_REVIEW", "FAILED"],
+  EVALUATING: ["RECONCILING", "FAILED"], RECONCILING: ["RECEIPTING", "NEEDS_REVIEW", "FAILED"], RECEIPTING: ["COMPLETED", "FAILED"],
+  COMPLETED: [], NEEDS_REVIEW: [], FAILED: [], CANCELLED: [],
+};
+export const TERMINAL = new Set<ReadinessWorkflowState>(["COMPLETED", "NEEDS_REVIEW", "FAILED", "CANCELLED"]);
+export function transition(current: ReadinessWorkflowState, next: ReadinessWorkflowState): ReadinessWorkflowState {
+  if (!allowedTransitions[current].includes(next)) throw new Error(`Illegal workflow transition: ${current} -> ${next}`);
+  return next;
+}
+export const FAILURE_RULES = {
+  source_timeout: { to: "NEEDS_REVIEW", studentMessage: "A source needed for this check didn't respond. Your registration record hasn't changed." },
+  duplicate_command: { to: "existing", behavior: "return existing receipt or pending status" },
+  authority_conflict: { to: "NEEDS_REVIEW", behavior: "queue reconciliation" },
+} as const;
+export const NON_COMPENSABLE = ["audit_event_written", "institution_source_snapshot_received", "receipt_issued"] as const;

@@ -1,0 +1,89 @@
+{
+  "function": "paginate",
+  "cases": [
+    {
+      "input": {
+        "items": [
+          1,
+          2,
+          3
+        ],
+        "offset": 1,
+        "limit": 1
+      },
+      "expected": [
+        2
+      ]
+    },
+    {
+      "input": {
+        "items": [],
+        "offset": 0,
+        "limit": 10
+      },
+      "expected": []
+    },
+    {
+      "input": {
+        "items": [
+          1
+        ],
+        "offset": 0,
+        "limit": 0
+      },
+      "expected": "!ValueError"
+    },
+    {
+      "input": {
+        "items": [
+          1,
+          2,
+          3
+        ],
+        "offset": -1,
+        "limit": 1
+      },
+      "expected": "!ValueError"
+    },
+    {
+      "input": {
+        "items": [
+          1,
+          2,
+          3
+        ],
+        "offset": 0,
+        "limit": 101
+      },
+      "expected": "!ValueError"
+    },
+    {
+      "input": {
+        "items": [
+          1,
+          2,
+          3
+        ],
+        "offset": 0,
+        "limit": 100
+      },
+      "expected": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "input": {
+        "items": [
+          1,
+          2,
+          3
+        ],
+        "offset": 5,
+        "limit": 2
+      },
+      "expected": []
+    }
+  ]
+}

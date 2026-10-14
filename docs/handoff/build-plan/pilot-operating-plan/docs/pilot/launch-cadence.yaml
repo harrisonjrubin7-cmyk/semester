@@ -1,0 +1,7 @@
+launch_cadence:   # dates set jointly with Vanderbilt; a stage ends on evidence, not a date
+  stage_1_align: {exit: [signed_scope_record, named_institution_owners, named_semester_owners, approved_cohort, source_authority_map, success_plan, escalation_contacts], status: open — Semester owners named except contractor + security advisor (to engage); Vanderbilt owners not named}
+  stage_2_configure: {exit: [tenant_and_role_setup, identity_or_SSO_validation, source_mapping, policy_configuration, support_routing, feature_flag_scope, student_and_staff_copy_review]}
+  stage_3_prove: {exit: [acceptance_tests_pass, RLS_tests_pass, source_freshness_tests_pass, drill_program_complete, accessibility_critical_path_complete, training_complete, release_evidence_current]}
+  stage_4_activate: {exit: [limited_cohort_enabled, command_center_staffed, hypercare_started, daily_health_review_started, student_feedback_channel_live]}
+  stage_5_decide: {exit: [pilot_results_report, sponsor_readout, decision (renew_and_deepen | repeat | remediate | conclude_safely), evidence_archive_and_follow_up_backlog]}
+first_two_weeks: [confirm the 8 owners, freeze cohort/term/goal/source fields/outcome meanings, build control-plane v4, run automated tenant/role/policy/freshness/idempotency/duplicate/revocation/safe-off tests, keyboard + screen-reader + mobile + zoom + contrast + content-state checks on both critical paths, tabletop drill (outage, stale, bad mapping, escalation, access issue, rollback), train staff → limited cohort → daily health record from day one, hold scope]

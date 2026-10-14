@@ -1,0 +1,85 @@
+TAP version 13
+# Subtest: review writes nothing
+ok 1 - review writes nothing
+  ---
+  duration_ms: 43.338127
+  ...
+# Subtest: commit creates one submission
+ok 2 - commit creates one submission
+  ---
+  duration_ms: 32.705087
+  ...
+# Subtest: same key same payload returns same receipt
+ok 3 - same key same payload returns same receipt
+  ---
+  duration_ms: 28.40924
+  ...
+# Subtest: conflicting key does not mutate
+ok 4 - conflicting key does not mutate
+  ---
+  duration_ms: 27.593899
+  ...
+# Subtest: cross tenant denied
+ok 5 - cross tenant denied
+  ---
+  duration_ms: 29.544942
+  ...
+# Subtest: wrong actor denied
+ok 6 - wrong actor denied
+  ---
+  duration_ms: 26.864345
+  ...
+# Subtest: revocation after review blocks commit
+ok 7 - revocation after review blocks commit
+  ---
+  duration_ms: 27.358829
+  ...
+# Subtest: stale version denied before write
+ok 8 - stale version denied before write
+  ---
+  duration_ms: 26.323002
+  ...
+# Subtest: invalid fields rejected
+ok 9 - invalid fields rejected
+  ---
+  duration_ms: 27.699703
+  ...
+# Subtest: unknown action rejected
+ok 10 - unknown action rejected
+  ---
+  duration_ms: 27.641562
+  ...
+# Subtest: approval revoke blocks
+ok 11 - approval revoke blocks
+  ---
+  duration_ms: 25.44995
+  ...
+# Subtest: read-only blocks write but permits lookup
+ok 12 - read-only blocks write but permits lookup
+  ---
+  duration_ms: 27.012062
+  ...
+# Subtest: timeout after durable commit reconciles without duplicate
+ok 13 - timeout after durable commit reconciles without duplicate
+  ---
+  duration_ms: 26.567255
+  ...
+# Subtest: unknown operation remains unresolved
+ok 14 - unknown operation remains unresolved
+  ---
+  duration_ms: 25.427131
+  ...
+# Subtest: concurrent duplicate commands create one row
+ok 15 - concurrent duplicate commands create one row
+  ---
+  duration_ms: 28.64556
+  ...
+1..15
+# tests 15
+# suites 0
+# pass 15
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 486.116466

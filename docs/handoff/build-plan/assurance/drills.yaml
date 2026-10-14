@@ -1,0 +1,15 @@
+# Run before activation. Each record: objective, safe boundary, observed result, evidence, corrective action, retest date.
+drills:
+  - { id: DRILL-ISOLATION-001, scenario: "Cross-tenant read and command attempts", evidence: "RLS + policy test record", impact: "critical failure blocks release" }
+  - { id: DRILL-REVOCATION-001, scenario: "Membership removed mid-session with an in-flight case", evidence: "session invalidated, access generation bumped, command rejected, audit", impact: "critical failure blocks release" }
+  - { id: DRILL-STALE-001, scenario: "SIS update delayed past threshold", evidence: "stale state, queue alert, definitive result blocked", impact: "blocks affected feature path" }
+  - { id: DRILL-DUPLICATE-001, scenario: "Same source event redelivered", evidence: "one logical outcome; dedupe record", impact: "blocks connector certification" }
+  - { id: DRILL-ORDER-001, scenario: "Older version after newer", evidence: "version guard + reconciliation case", impact: "blocks connector certification" }
+  - { id: DRILL-TIMEOUT-001, scenario: "Dependency unavailable mid-workflow", evidence: "safe review/quarantine + staff handoff", impact: "blocks workflow release" }
+  - { id: DRILL-ROLLBACK-001, scenario: "Capability disabled during an active cohort", evidence: "safe-off, receipts preserved, monitoring", impact: "blocks activation" }
+  - { id: DRILL-A11Y-001, scenario: "Focus, semantics or status disclosure broken", evidence: "automated failure then repaired validation", impact: "blocks affected interface" }
+  - { id: DRILL-AI-001, scenario: "AI asked to infer, disclose or override", evidence: "refusal, disclosure, safe handoff", impact: "blocks AI-enabled path" }
+record_template:
+  { id: DRILL-REVOCATION-001, date: pending, environment: staging, owner: security_owner,
+    expected: [active_session_invalidated, access_generation_incremented, in_flight_command_rejected_or_safely_terminated, new_record_reads_denied, audit_events_written, affected_workflow_preserved_for_review],
+    observed: { result: pending, evidence: [] }, decision: { status: pending, corrective_actions: [], retest_due: pending } }

@@ -1,0 +1,165 @@
+openapi: 3.1.0
+info: { title: Semester academic records API (proposed), version: 0.1.0, description: "Proposals to reconcile against the repository — not verified endpoints. Server derives actor and institution; never trusts client-supplied role or tenant." }
+components:
+  parameters:
+    IdempotencyKey: { in: header, name: Idempotency-Key, required: true, schema: { type: string, minLength: 16 } }
+  schemas:
+    Outcome: { type: string, enum: [blocked, review_required, unknown, pending, confirmed, reconcile_required] }
+    Operation: { type: object, required: [operation_id, outcome], properties: { operation_id: { type: string }, outcome: { $ref: "#/components/schemas/Outcome" }, receipt_id: { type: string }, policy_version: { type: string }, schedule_version: { type: integer }, projection_status: { type: string, enum: [current, updating] }, reasons: { type: array, items: { type: string } } } }
+    RegistrationRequest:
+      description: "One branch per operation; irrelevant fields rejected."
+      discriminator: { propertyName: operation }
+      oneOf:
+        - { type: object, additionalProperties: false, required: [command_id, student_program_id, term_id, operation, expected_schedule_version, to_section_ids], properties: { command_id: { type: string }, student_program_id: { type: string }, term_id: { type: string }, operation: { const: add }, to_section_ids: { type: array, minItems: 1, maxItems: 8, uniqueItems: true, items: { type: string, format: uuid } }, expected_schedule_version: { type: integer, minimum: 0 }, override_references: { type: array, maxItems: 5, uniqueItems: true }, reviewed_consequence_reference: { type: string } } }
+        - { type: object, additionalProperties: false, required: [command_id, student_program_id, term_id, operation, expected_schedule_version, from_enrollment_id], properties: { command_id: { type: string }, student_program_id: { type: string }, term_id: { type: string }, operation: { const: drop }, from_enrollment_id: { type: string, format: uuid }, expected_schedule_version: { type: integer, minimum: 0 }, reviewed_consequence_reference: { type: string } } }
+        - { type: object, additionalProperties: false, required: [command_id, student_program_id, term_id, operation, expected_schedule_version, from_enrollment_id, to_section_ids], properties: { command_id: { type: string }, student_program_id: { type: string }, term_id: { type: string }, operation: { const: swap }, from_enrollment_id: { type: string, format: uuid }, to_section_ids: { type: array, minItems: 1, maxItems: 8, uniqueItems: true, items: { type: string, format: uuid } }, expected_schedule_version: { type: integer, minimum: 0 }, override_references: { type: array, maxItems: 5, uniqueItems: true }, reviewed_consequence_reference: { type: string } } }
+    GradeSubmission: { type: object, required: [section_id, grades], properties: { section_id: { type: string }, grades: { type: array, items: { type: object, required: [course_attempt_id, grade], properties: { course_attempt_id: { type: string }, grade: { type: string }, grade_mode: { type: string } } } } } }
+    GradePosting: { type: object, required: [submission_id, approval_reference], properties: { submission_id: { type: string }, approval_reference: { type: string } } }
+    RecordCorrection: { type: object, required: [ledger_entry_id, proposed, reason, evidence_reference], properties: { ledger_entry_id: { type: string }, proposed: { type: object }, reason: { type: string, minLength: 20 }, evidence_reference: { type: string } } }
+    Override: { type: object, required: [student_program_id, rule_key, reason], properties: { student_program_id: { type: string }, rule_key: { type: string }, section_id: { type: string }, reason: { type: string } } }
+    Decision: { type: object, required: [decision, expected_version], properties: { decision: { enum: [approved, denied] }, expected_version: { type: integer }, note: { type: string } } }
+    Generic: { type: object, additionalProperties: true }
+  responses:
+    Operation: { description: "Durable acceptance, not completion. Poll Location.", headers: { Location: { schema: { type: string } }, Retry-After: { schema: { type: integer } } }, content: { application/json: { schema: { $ref: "#/components/schemas/Operation" } } } }
+    Error: { description: "code, message, correlation_id" }
+idempotency: "Same key + same payload → same operation. Same key + different payload → 409. Retry after uncertain execution inspects the original operation."
+paths:
+  /v1/academic/terms:
+    get:
+      operationId: listTerms
+      summary: "Authorized term discovery"
+      parameters: [{ in: query, name: cursor, schema: { type: string } }]
+      responses: { "200": { description: "Scoped result with provenance + freshness per record" }, "403": { $ref: "#/components/responses/Error" } }
+  /v1/academic/catalog-versions/{id}:
+    get:
+      operationId: getCatalogVersion
+      summary: "Published catalog version"
+      parameters: [{ in: query, name: cursor, schema: { type: string } }]
+      responses: { "200": { description: "Scoped result with provenance + freshness per record" }, "403": { $ref: "#/components/responses/Error" } }
+  /v1/academic/sections:
+    get:
+      operationId: searchSections
+      summary: "Filtered schedule search"
+      parameters: [{ in: query, name: cursor, schema: { type: string } }]
+      responses: { "200": { description: "Scoped result with provenance + freshness per record" }, "403": { $ref: "#/components/responses/Error" } }
+  /v1/academic/students/{id}/enrollments:
+    get:
+      operationId: getEnrollments
+      summary: "Scoped enrollment view"
+      parameters: [{ in: query, name: cursor, schema: { type: string } }]
+      responses: { "200": { description: "Scoped result with provenance + freshness per record" }, "403": { $ref: "#/components/responses/Error" } }
+  /v1/academic/students/{id}/history:
+    get:
+      operationId: getHistory
+      summary: "Permitted academic history"
+      parameters: [{ in: query, name: cursor, schema: { type: string } }]
+      responses: { "200": { description: "Scoped result with provenance + freshness per record" }, "403": { $ref: "#/components/responses/Error" } }
+  /v1/academic/degree-audits/{id}:
+    get:
+      operationId: getDegreeAudit
+      summary: "Audit result + exact curriculum/policy versions"
+      parameters: [{ in: query, name: cursor, schema: { type: string } }]
+      responses: { "200": { description: "Scoped result with provenance + freshness per record" }, "403": { $ref: "#/components/responses/Error" } }
+  /v1/academic/operations/{id}:
+    get:
+      operationId: getOperation
+      summary: "Durable operation status"
+      parameters: [{ in: query, name: cursor, schema: { type: string } }]
+      responses: { "200": { description: "Scoped result with provenance + freshness per record" }, "403": { $ref: "#/components/responses/Error" } }
+  /v1/academic/receipts/{id}:
+    get:
+      operationId: getReceipt
+      summary: "Authorized execution receipt"
+      parameters: [{ in: query, name: cursor, schema: { type: string } }]
+      responses: { "200": { description: "Scoped result with provenance + freshness per record" }, "403": { $ref: "#/components/responses/Error" } }
+  /v1/academic/curriculum-publications:
+    post:
+      operationId: publishCurriculum
+      summary: "Publish approved curriculum version"
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Generic" } } } }
+      responses: { "202": { $ref: "#/components/responses/Operation" }, "401": { $ref: "#/components/responses/Error" }, "403": { $ref: "#/components/responses/Error" }, "409": { $ref: "#/components/responses/Error" }, "422": { $ref: "#/components/responses/Error" }, "423": { $ref: "#/components/responses/Error" } }
+  /v1/academic/schedule-publications:
+    post:
+      operationId: publishSchedule
+      summary: "Publish reviewed schedule snapshot"
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Generic" } } } }
+      responses: { "202": { $ref: "#/components/responses/Operation" }, "401": { $ref: "#/components/responses/Error" }, "403": { $ref: "#/components/responses/Error" }, "409": { $ref: "#/components/responses/Error" }, "422": { $ref: "#/components/responses/Error" }, "423": { $ref: "#/components/responses/Error" } }
+  /v1/academic/eligibility-evaluations:
+    post:
+      operationId: evaluateEligibility
+      summary: "Readiness — never guarantees a seat"
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Generic" } } } }
+      responses: { "202": { $ref: "#/components/responses/Operation" }, "401": { $ref: "#/components/responses/Error" }, "403": { $ref: "#/components/responses/Error" }, "409": { $ref: "#/components/responses/Error" }, "422": { $ref: "#/components/responses/Error" }, "423": { $ref: "#/components/responses/Error" } }
+  /v1/academic/registration-requests:
+    post:
+      operationId: requestRegistration
+      summary: "Add/drop/swap intent"
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/RegistrationRequest" } } } }
+      responses: { "202": { $ref: "#/components/responses/Operation" }, "401": { $ref: "#/components/responses/Error" }, "403": { $ref: "#/components/responses/Error" }, "409": { $ref: "#/components/responses/Error" }, "422": { $ref: "#/components/responses/Error" }, "423": { $ref: "#/components/responses/Error" } }
+  /v1/academic/overrides:
+    post:
+      operationId: requestOverride
+      summary: "Request policy exception"
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Override" } } } }
+      responses: { "202": { $ref: "#/components/responses/Operation" }, "401": { $ref: "#/components/responses/Error" }, "403": { $ref: "#/components/responses/Error" }, "409": { $ref: "#/components/responses/Error" }, "422": { $ref: "#/components/responses/Error" }, "423": { $ref: "#/components/responses/Error" } }
+  /v1/academic/overrides/{id}/decisions:
+    post:
+      operationId: decideOverride
+      summary: "Approve/deny within approver scope; requester ≠ approver"
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Decision" } } } }
+      responses: { "202": { $ref: "#/components/responses/Operation" }, "401": { $ref: "#/components/responses/Error" }, "403": { $ref: "#/components/responses/Error" }, "409": { $ref: "#/components/responses/Error" }, "422": { $ref: "#/components/responses/Error" }, "423": { $ref: "#/components/responses/Error" } }
+  /v1/academic/waitlist-offers/{id}/acceptances:
+    post:
+      operationId: acceptWaitlistOffer
+      summary: "Accept a current, unexpired offer"
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Generic" } } } }
+      responses: { "202": { $ref: "#/components/responses/Operation" }, "401": { $ref: "#/components/responses/Error" }, "403": { $ref: "#/components/responses/Error" }, "409": { $ref: "#/components/responses/Error" }, "422": { $ref: "#/components/responses/Error" }, "423": { $ref: "#/components/responses/Error" } }
+  /v1/academic/grade-submissions:
+    post:
+      operationId: submitGrades
+      summary: "Submit working final grades for a section"
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/GradeSubmission" } } } }
+      responses: { "202": { $ref: "#/components/responses/Operation" }, "401": { $ref: "#/components/responses/Error" }, "403": { $ref: "#/components/responses/Error" }, "409": { $ref: "#/components/responses/Error" }, "422": { $ref: "#/components/responses/Error" }, "423": { $ref: "#/components/responses/Error" } }
+  /v1/academic/grade-postings:
+    post:
+      operationId: postGrades
+      summary: "Post official grades (approval required)"
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/GradePosting" } } } }
+      responses: { "202": { $ref: "#/components/responses/Operation" }, "401": { $ref: "#/components/responses/Error" }, "403": { $ref: "#/components/responses/Error" }, "409": { $ref: "#/components/responses/Error" }, "422": { $ref: "#/components/responses/Error" }, "423": { $ref: "#/components/responses/Error" } }
+  /v1/academic/record-corrections:
+    post:
+      operationId: requestCorrection
+      summary: "Controlled correction — supersedes, never overwrites"
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/RecordCorrection" } } } }
+      responses: { "202": { $ref: "#/components/responses/Operation" }, "401": { $ref: "#/components/responses/Error" }, "403": { $ref: "#/components/responses/Error" }, "409": { $ref: "#/components/responses/Error" }, "422": { $ref: "#/components/responses/Error" }, "423": { $ref: "#/components/responses/Error" } }
+  /v1/academic/degree-audit-runs:
+    post:
+      operationId: runDegreeAudit
+      summary: "Evaluate requirements against assigned catalog"
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Generic" } } } }
+      responses: { "202": { $ref: "#/components/responses/Operation" }, "401": { $ref: "#/components/responses/Error" }, "403": { $ref: "#/components/responses/Error" }, "409": { $ref: "#/components/responses/Error" }, "422": { $ref: "#/components/responses/Error" }, "423": { $ref: "#/components/responses/Error" } }
+  /v1/academic/conferral-decisions:
+    post:
+      operationId: decideConferral
+      summary: "Authorize credential award — institutional decision only"
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Decision" } } } }
+      responses: { "202": { $ref: "#/components/responses/Operation" }, "401": { $ref: "#/components/responses/Error" }, "403": { $ref: "#/components/responses/Error" }, "409": { $ref: "#/components/responses/Error" }, "422": { $ref: "#/components/responses/Error" }, "423": { $ref: "#/components/responses/Error" } }
+  /v1/academic/transcript-requests:
+    post:
+      operationId: requestTranscript
+      summary: "Request record service from a stable snapshot"
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Generic" } } } }
+      responses: { "202": { $ref: "#/components/responses/Operation" }, "401": { $ref: "#/components/responses/Error" }, "403": { $ref: "#/components/responses/Error" }, "409": { $ref: "#/components/responses/Error" }, "422": { $ref: "#/components/responses/Error" }, "423": { $ref: "#/components/responses/Error" } }
