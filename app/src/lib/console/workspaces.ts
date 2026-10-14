@@ -15,6 +15,7 @@ export type ConsoleWorkspaceId =
   | 'customers'
   | 'figures'
   | 'finance'
+  | 'ecosystem'
   | 'releases'
   | 'launch'
   | 'controls'
@@ -97,6 +98,7 @@ export const CONSOLE_WORKSPACES: readonly ConsoleWorkspace[] = [
   shell('customers', 'Customers'),
   shell('figures', 'Figures'),
   shell('finance', 'Finance model'),
+  shell('ecosystem', 'Connected ecosystem'),
   shell('releases', 'Releases and flags'),
   shell('launch', 'Launch readiness'),
   shell('controls', 'Trust controls'),

@@ -146,6 +146,7 @@ const answer = (patch: Record<string, unknown> = {}) => ({
 });
 
 beforeEach(() => {
+  Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
   vi.resetAllMocks();
   mock.configured = true;
   mock.user = 'stu-1';
@@ -196,6 +197,13 @@ async function press(label: string) {
 }
 
 describe('when the school has not turned it on', () => {
+  it('names the offline state before attempting account or registration reads', async () => {
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
+    await render();
+    expect(host.querySelector('[role="status"]')?.textContent).toMatch(/offline/i);
+    expect(mock.terms).not.toHaveBeenCalled();
+  });
+
   it('says so in one sentence, reads nothing, and offers the plan', async () => {
     mock.flag = 'off';
     await render();

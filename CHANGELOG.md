@@ -40,6 +40,26 @@ On **Term plan**, the courses you typed used to disappear as soon as you importe
 
 **Calendar** now has a fifth segment, **Agenda**, beside Day, Week, Month and Semester. It lists the next 14 days in order, one day under the next, and leaves out days with nothing on them. Class meetings, standing commitments, deadlines, your own actions, campus events, appointments and entries from connected calendars appear exactly as they do on the day view, under the same source chips. Tap a day's heading to open that day. Nothing to do: your data is unchanged.
 
+### Operators can inspect Semester as one connected ecosystem
+
+For operators holding the console grant, **Semester Operations** now has a read-only **Connected ecosystem** tab after **Finance model**. It maps the supplied Personal Education OS, Institution Operating OS and Semester Company OS into one platform view, and lets an operator inspect all 26 workspace, 281 screen and 122 capability contracts. The view labels the handoff as specification evidence and does not claim that a provider, institution, data connection or privileged operation is authorized or enabled. Students and school administrators will notice nothing.
+
+### Volunteer post-removal votes show their consequence before submission
+
+Student volunteer moderators now see the reported post, their selected reason and the possible outcome before submitting **Remove it**. Because practice cases stay deliberately hidden among real reports, the preview distinguishes their effects: onboarding answers help decide whether the volunteer advances to active status and starts receiving real cases, while recent post-onboarding practice accuracy can move standing among active, probation and paused, including pausing queue access. For a real report, a second independent removal vote can remove the post immediately, a first vote waits and a disagreement goes to a professional reviewer. Cancel submits nothing. It also says the answer cannot be withdrawn or edited, while the author’s account, other posts and retained review evidence stay unchanged by a real-report vote. Keeping a post or adding a label still follows the existing review flow.
+
+### Housing keeps track of repairs you reported
+
+**Housing** now has a **Repairs you reported** section on the **My housing** tab. After you report something to housing (their portal, front desk or phone line), choose **Record a repair** and note what is wrong, where, how urgent it is, how you reported it and the reference number housing gave you. Pick when to check back: Semester suggests a time, or use the one housing gave you. When that time passes, the repair appears on **Today** as something to follow up. Update it with **Visit scheduled**, **It is fixed**, **Still not fixed** or **No longer needed**; **Remove** can be undone. Choosing **Emergency** first tells you to call housing or campus safety. Semester does not send anything to housing, and nothing you need to do changes.
+
+### Revoking volunteer access shows the consequences first
+
+Senior Trust & Safety reviewers now see a preview before revoking a student volunteer. It names the volunteer, says their moderation access ends immediately, identifies the unanswered review actions that will leave their queue, shows the reason that will be kept in programme history, and says the action cannot be undone by sending them back to calibration. The reviewer must type the volunteer handle before **Revoke access** is available. Cancel changes nothing; other volunteers, moderation cases, completed reviews and school settings are unchanged.
+
+### Workspace links now open the connected tools that already exist
+
+The app directory now has **Your workspaces** with direct links to Teaching and University services while preserving the current account and university. Server-reported grants add **Semester Operations** only for platform operators and **External listings** only for the current university. Permission checks show loading, empty, failed and retry states separately; changing accounts discards old capability and course-policy results. Company, investor and developer workflows remain explicitly unavailable rather than appearing as placeholder workspaces.
+
 ### Toolkit work can travel in a device workspace backup
 
 Device workspace backups now include the signed-in account's Toolkit work: assignment workspaces, Research Studio projects, AI-use declarations and the separate Data Studio projects with their original imported data. Restoring checks the entire backup before writing anything and restores those records into the account doing the restore, not the account name from the old device. Research Studio's source, claim and project removal previews now say to create a device workspace backup first if you may need to restore the removed work; without one, it must still be re-entered from the originals.

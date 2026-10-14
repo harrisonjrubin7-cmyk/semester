@@ -12,6 +12,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 PRODUCTION_RUNTIME_POLICY = "private-course-data-no-provider-egress-v1"
 DEVELOPMENT_JWT_SECRETS = {
     "development-only-change-me",
+    "development-only-change-me-before-production",
     "replace-with-at-least-32-random-characters",
 }
 
@@ -89,7 +90,7 @@ class Settings(BaseSettings):
     runtime_environment: str = "development"
     runtime_policy: str = ""
     database_url: str = "sqlite:///./course_engine.db"
-    jwt_secret: str = "development-only-change-me"
+    jwt_secret: str = "development-only-change-me-before-production"
     access_token_minutes: int = 1440
     cors_origins: str = "http://localhost:3000"
     storage_backend: str = "local"

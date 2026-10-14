@@ -1550,6 +1550,25 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
     '--app-hero': hero,
     '--app-raise': raise,
 
+    /*
+     * The shared workspace shell, inspired by Semester's institutional frame.
+     *
+     * These are primitives rather than component literals so the rail, the
+     * workspace sidebar and their compact destination list cannot drift. The
+     * canvas yields to the chosen dark ground; the rail remains the stable
+     * wayfinding landmark. Orange is a surface, paired with audited dark ink
+     * rather than white text (which is below 4.5:1 on this orange).
+     */
+    '--workspace-rail': '#090a0e',
+    '--workspace-rail-raised': '#12141a',
+    '--workspace-rail-text': '#f4f3ee',
+    '--workspace-rail-muted': moreContrast ? '#f4f3ee' : fade('#f4f3ee', 0.72),
+    '--workspace-rail-border': moreContrast ? fade('#f4f3ee', 0.38) : fade('#f4f3ee', 0.16),
+    '--workspace-canvas': g.light ? '#f4f3ee' : bg,
+    '--workspace-action': '#e87441',
+    '--workspace-action-strong': '#d9612e',
+    '--workspace-action-ink': '#0b2022',
+
     '--app-fg': g.fg,
     '--app-dim': fade(g.fg, moreContrast ? Math.max(g.dimAlpha, LOUD.dim) : g.dimAlpha),
     '--app-faint': fade(g.fg, moreContrast ? Math.max(g.faintAlpha, LOUD.faint) : g.faintAlpha),

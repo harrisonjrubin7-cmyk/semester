@@ -1,0 +1,103 @@
+-- 100_controlled_actions.sql — capability grants with scope + expiry, one permission-decision function,
+-- and the controlled-action pattern (request → validate → preview → approve → idempotent execute → audit → outbox → receipt).
+-- RECONCILE FIRST with existing role/capability tables in the repo. Extend, never duplicate.
+create schema if not exists ctl;
+
+create table if not exists ctl.capabilities(key text primary key, description text not null, high_impact boolean not null default false,
+  required_approver_caps text[] not null default '{}', min_approvals int not null default 0);
+insert into ctl.capabilities(key, description, high_impact, required_approver_caps, min_approvals) values
+ ('tenant.module.enable','Enable a module for an institution',true,'{tenant.module.approve}',1),
+ ('support.access.elevate','Grant elevated support access to one case',true,'{support.access.approve}',1),
+ ('academic.requirement.change','Change a degree requirement rule',true,'{academic.requirement.approve}',1),
+ ('course.grades.release','Release grades for a section',true,'{}',0),
+ ('finance.refund.issue','Issue a large credit or refund',true,'{finance.refund.approve}',2),
+ ('integration.mode.authoritative','Switch an integration to authoritative',true,'{integration.cutover.approve}',2),
+ ('ai.tools.activate','Activate AI tools for a course or institution',true,'{ai.tools.approve}',1),
+ ('records.migrate','Migrate academic records',true,'{records.migrate.approve}',2),
+ ('governance.retention.change','Change a retention policy',true,'{governance.retention.approve}',1),
+ ('release.cohort.deploy','Deploy a feature cohort',true,'{}',0),
+ ('incident.declare','Declare or resolve an incident',true,'{}',0)
+on conflict do nothing;
+
+-- A grant = role context + tenant scope + org-unit scope + optional resource + expiry. No global "admin".
+create table if not exists ctl.grants(
+  id uuid primary key default gen_random_uuid(), person_id uuid not null references auth.users,
+  capability text not null references ctl.capabilities, tenant_id uuid,          -- null only for Semester company capabilities
+  org_unit_id uuid, resource_type text, resource_id text,
+  granted_by uuid not null default auth.uid(), reason text not null, expires_at timestamptz,
+  break_glass boolean not null default false, revoked_at timestamptz, created_at timestamptz not null default now(),
+  check (not break_glass or (expires_at is not null and expires_at <= created_at + interval '4 hours')));
+create index if not exists grants_lookup on ctl.grants(person_id, capability) where revoked_at is null;
+
+-- One decision function, used by every RPC, policy and export. Deny by default.
+create or replace function ctl.can(p_cap text, p_tenant uuid, p_org uuid default null, p_resource_type text default null, p_resource_id text default null)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from ctl.grants g
+    where g.person_id = auth.uid() and g.capability = p_cap and g.revoked_at is null
+      and (g.expires_at is null or g.expires_at > now())
+      and g.tenant_id is not distinct from p_tenant
+      and (g.org_unit_id is null or g.org_unit_id = p_org)
+      and (g.resource_type is null or (g.resource_type = p_resource_type and g.resource_id = p_resource_id)))
+$$;
+
+create table if not exists ctl.action_requests(
+  id uuid primary key default gen_random_uuid(), capability text not null references ctl.capabilities,
+  tenant_id uuid, requested_by uuid not null default auth.uid(), reason text not null check (length(trim(reason)) >= 8),
+  payload jsonb not null, impact_preview jsonb, idempotency_key text not null unique,
+  status text not null default 'pending' check (status in ('pending','approved','rejected','executed','rolled_back','expired')),
+  created_at timestamptz not null default now(), executed_at timestamptz, receipt jsonb, rollback_of uuid references ctl.action_requests);
+create table if not exists ctl.action_approvals(request_id uuid references ctl.action_requests, approver uuid not null default auth.uid(),
+  decision text not null check (decision in ('approve','reject')), note text, at timestamptz not null default now(), primary key (request_id, approver));
+create table if not exists ctl.outbox(id bigserial primary key, topic text not null, tenant_id uuid, payload jsonb not null, created_at timestamptz not null default now(), published_at timestamptz);
+
+create or replace function api.request_action(p_cap text, p_tenant uuid, p_reason text, p_payload jsonb, p_idem text, p_preview jsonb)
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare r uuid; begin
+  if not ctl.can(p_cap, p_tenant) then raise exception 'capability % not granted for this tenant', p_cap; end if;
+  select id into r from ctl.action_requests where idempotency_key = p_idem; if r is not null then return r; end if;
+  insert into ctl.action_requests(capability, tenant_id, reason, payload, impact_preview, idempotency_key,
+    status) values (p_cap, p_tenant, p_reason, p_payload, p_preview, p_idem,
+    case when (select min_approvals from ctl.capabilities where key = p_cap) = 0 then 'approved' else 'pending' end) returning id into r;
+  insert into audit.events(actor, action, target, after) values (auth.uid(), 'action.requested', r::text, jsonb_build_object('capability', p_cap, 'tenant', p_tenant, 'reason', p_reason));
+  return r; end $$;
+
+create or replace function api.decide_action(p_request uuid, p_decision text, p_note text default null)
+returns text language plpgsql security definer set search_path = '' as $$
+declare r ctl.action_requests; c ctl.capabilities; n int; ok boolean := false; cap text; begin
+  select * into r from ctl.action_requests where id = p_request for update;
+  if r.status <> 'pending' then raise exception 'request is %', r.status; end if;
+  if r.requested_by = auth.uid() then raise exception 'requester cannot approve their own request'; end if;
+  select * into c from ctl.capabilities where key = r.capability;
+  foreach cap in array c.required_approver_caps loop if ctl.can(cap, r.tenant_id) then ok := true; end if; end loop;
+  if not ok then raise exception 'not an approver for %', r.capability; end if;
+  insert into ctl.action_approvals(request_id, decision, note) values (p_request, p_decision, p_note);
+  if p_decision = 'reject' then update ctl.action_requests set status = 'rejected' where id = p_request;
+  else select count(*) into n from ctl.action_approvals where request_id = p_request and decision = 'approve';
+    if n >= c.min_approvals then update ctl.action_requests set status = 'approved' where id = p_request; end if; end if;
+  insert into audit.events(actor, action, target, after) values (auth.uid(), 'action.' || p_decision, p_request::text, jsonb_build_object('note', p_note));
+  return (select status from ctl.action_requests where id = p_request); end $$;
+
+-- Execution marks the request executed, writes audit + outbox + receipt. The domain handler (worker) consumes the outbox
+-- topic and performs the change idempotently using idempotency_key; it records rollback data in the receipt.
+create or replace function api.execute_action(p_request uuid) returns jsonb language plpgsql security definer set search_path = '' as $$
+declare r ctl.action_requests; rc jsonb; begin
+  select * into r from ctl.action_requests where id = p_request for update;
+  if r.status = 'executed' then return r.receipt; end if;                                      -- idempotent
+  if r.status <> 'approved' then raise exception 'request not approved (status %)', r.status; end if;
+  if not ctl.can(r.capability, r.tenant_id) then raise exception 'capability no longer granted'; end if;
+  rc := jsonb_build_object('request', r.id, 'capability', r.capability, 'executed_by', auth.uid(), 'at', now(), 'idempotency_key', r.idempotency_key, 'preview', r.impact_preview);
+  update ctl.action_requests set status = 'executed', executed_at = now(), receipt = rc where id = p_request;
+  insert into ctl.outbox(topic, tenant_id, payload) values ('action.' || r.capability, r.tenant_id, jsonb_build_object('request', r.id, 'payload', r.payload, 'idempotency_key', r.idempotency_key));
+  insert into audit.events(actor, action, target, after) values (auth.uid(), 'action.executed', r.id::text, rc);
+  return rc; end $$;
+
+alter table ctl.capabilities enable row level security; alter table ctl.grants enable row level security;
+alter table ctl.action_requests enable row level security; alter table ctl.action_approvals enable row level security; alter table ctl.outbox enable row level security;
+create policy cap_read on ctl.capabilities for select using (auth.uid() is not null);
+create policy grant_self on ctl.grants for select using (person_id = auth.uid());
+create policy req_read on ctl.action_requests for select using (requested_by = auth.uid() or exists (select 1 from ctl.capabilities c, unnest(c.required_approver_caps) a where c.key = capability and ctl.can(a, tenant_id)));
+create policy appr_read on ctl.action_approvals for select using (exists (select 1 from ctl.action_requests r where r.id = request_id));
+-- outbox: service role only (no policy). All writes via api.* functions.
+revoke insert, update, delete on all tables in schema ctl from anon, authenticated;
+grant usage on schema ctl to authenticated; grant select on ctl.capabilities, ctl.grants, ctl.action_requests, ctl.action_approvals to authenticated;
+grant execute on function api.request_action(text,uuid,text,jsonb,text,jsonb), api.decide_action(uuid,text,text), api.execute_action(uuid) to authenticated;
