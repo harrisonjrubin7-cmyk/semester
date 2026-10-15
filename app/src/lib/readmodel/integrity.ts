@@ -54,5 +54,7 @@ export function canUseProjectionForOutcome(input: OutcomeCheck): boolean {
 
   if (input.freshnessState !== 'current') return false;
   if (!Number.isFinite(input.projectionLagSeconds) || input.projectionLagSeconds < 0) return false;
+  // An infinite or negative bound would let any lag through, so a bad bound fails closed too.
+  if (!Number.isFinite(input.maximumLagSeconds) || input.maximumLagSeconds < 0) return false;
   return input.projectionLagSeconds <= input.maximumLagSeconds;
 }

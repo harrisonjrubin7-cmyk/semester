@@ -96,4 +96,28 @@ describe('transitionHealthEvent', () => {
     const closed = { ...base, state: 'closed' as const, evidenceReferences: ['e1'] };
     expect(transitionHealthEvent(closed, 'open', '2026-10-03T10:00:00.000Z').ok).toBe(false);
   });
+
+  it('refuses an unknown current state without throwing', () => {
+    const result = transitionHealthEvent({ ...base, state: 'archived' as HealthEvent['state'] }, 'acknowledged', '2026-10-01T10:00:00.000Z');
+    expect(result).toEqual({ ok: false, reason: 'unknown state: archived' });
+  });
+
+  it('refuses a transition timestamped before the last update', () => {
+    const result = transitionHealthEvent({ ...base, updatedAt: '2026-10-01T11:00:00.000Z' }, 'acknowledged', '2026-10-01T10:00:00.000Z');
+    expect(result).toEqual({ ok: false, reason: 'transition time precedes the last update' });
+  });
+});
+
+describe('timestamps and evidence', () => {
+  it('does not count blank evidence references as evidence', () => {
+    expect(healthEventProblems({ ...base, state: 'closed', evidenceReferences: ['', '   '] })).toContain(
+      'a closed event needs evidenceReferences',
+    );
+  });
+
+  it('requires ISO 8601, not a locale date that Date.parse would also accept', () => {
+    expect(healthEventProblems({ ...base, createdAt: '10/01/2026', updatedAt: '10/01/2026' })).toEqual(
+      expect.arrayContaining(['createdAt must be an ISO timestamp', 'updatedAt must be an ISO timestamp']),
+    );
+  });
 });
