@@ -44,6 +44,9 @@ export function validateActivationGates(snapshot: RegistrySnapshot): ValidationI
       continue;
     }
     const path = `activationGates.${gate.key}`;
+    if (gate.key !== 'activation.registration.readiness') {
+      issues.push({ code: 'gate_key_unexpected', path: `${path}.key`, message: `The registration-readiness gate must be keyed activation.registration.readiness, not ${JSON.stringify(gate.key)}.` });
+    }
     if (gate.capability !== 'registration.readiness') {
       issues.push({ code: 'gate_capability_unsupported', path: `${path}.capability`, message: `This checklist validates registration.readiness only; ${gate.capability} needs its own checklist.` });
     }

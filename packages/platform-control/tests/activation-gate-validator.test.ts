@@ -159,8 +159,14 @@ test('an activation gate must name an owner', () => {
   assert.ok(codes(snapshot([gate({ owner: '  ' })])).includes('gate_owner_missing'));
 });
 
+test('the gate must carry the declared activation key', () => {
+  assert.ok(codes(snapshot([gate({ key: '' })])).includes('gate_key_unexpected'));
+  assert.ok(codes(snapshot([gate({ key: 'activation.invented' })])).includes('gate_key_unexpected'));
+  assert.deepEqual(codes(snapshot([gate()])), []);
+});
+
 test('one activation gate per capability', () => {
-  assert.deepEqual(codes(snapshot([gate(), gate({ key: 'activation.second' })])), ['duplicate_activation_gate']);
+  assert.ok(codes(snapshot([gate(), gate({ key: 'activation.second' })])).includes('duplicate_activation_gate'));
 });
 
 test('every unverified or failed item states its gap', () => {
