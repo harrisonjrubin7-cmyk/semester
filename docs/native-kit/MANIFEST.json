@@ -1,0 +1,138 @@
+{
+  "package": "Semester consolidated native execution kit",
+  "reconstructed": true,
+  "scope": "Immediately preceding delivery",
+  "files": [
+    {
+      "path": "MASTER_BLUEPRINT.md",
+      "bytes": 16447,
+      "sha256": "003ca634af77d39c0d0cf41960188d8d9b44313ef67d374ac9d87118ece0f8f9"
+    },
+    {
+      "path": "README.md",
+      "bytes": 970,
+      "sha256": "036b6d45dc872af94a6bc3f83ada7091b4d32fa73fbb0a9d4ebe805b4e1584d0"
+    },
+    {
+      "path": "SOURCE_AND_STATUS.md",
+      "bytes": 1254,
+      "sha256": "ff798afb81aab3a41689bac8e1e9466c3989e12a74127c76fc9aeee9b832c169"
+    },
+    {
+      "path": "diagrams/native_os.mmd",
+      "bytes": 797,
+      "sha256": "f346e94c5deb07e1c0a12dfdc96d968e06476ec41c99578347cdc0239fa747f9"
+    },
+    {
+      "path": "matrices/agents_12_proposed.csv",
+      "bytes": 1609,
+      "sha256": "a51035a6da8fb9a1d5137c6822e7f41ac644a68b17069a785d36c822bc21cdb2"
+    },
+    {
+      "path": "matrices/authorization_14_proposed.csv",
+      "bytes": 926,
+      "sha256": "a72787dd47d23696b53fe60a8b5ce53cf2b879bf7b6c4d8afae3aa2b3844c21f"
+    },
+    {
+      "path": "matrices/company_functions_15.csv",
+      "bytes": 1469,
+      "sha256": "8d7acaee1cd4a8d8f553f200ef0ef707ffcfd074daab84e6fe8a004aee742225"
+    },
+    {
+      "path": "matrices/company_layers_10.csv",
+      "bytes": 617,
+      "sha256": "42fa7dc34de2c0d57b12a5862ce8bc459c2e7ea4403cbb2fba90d7859946b17e"
+    },
+    {
+      "path": "matrices/component_delivery.csv",
+      "bytes": 2570,
+      "sha256": "69a941a7de30df10c3de383a22aeb2821955b602cacdc51855b92e2d439e9e70"
+    },
+    {
+      "path": "matrices/consoles_33.csv",
+      "bytes": 4984,
+      "sha256": "2a02716c9e8d53efb2934c084a037addf4af5082cf8aa5ec95c8dff7186c03a7"
+    },
+    {
+      "path": "matrices/proposed_branches.csv",
+      "bytes": 1525,
+      "sha256": "66f4a639bc683a42d8ccab106e22a7b134d8e30a798eedfd9d05011f892a1060"
+    },
+    {
+      "path": "matrices/roadmap_90days.csv",
+      "bytes": 870,
+      "sha256": "7b5ecd71e08e8b31500a15c7e042ce273c222ced520b66620fe5029351431f7d"
+    },
+    {
+      "path": "media/demo_storyboard_30s.md",
+      "bytes": 639,
+      "sha256": "0204dd0dcab38b777a68cb1f8d5b26b82cd70a09b5cffe3ea7070293fa78aa07"
+    },
+    {
+      "path": "reference/TEST_RESULTS.txt",
+      "bytes": 1470,
+      "sha256": "404969577df3609b424f53782e0003886acafceb0fb235217b90f83943668ef3"
+    },
+    {
+      "path": "reference/native_controls.py",
+      "bytes": 2305,
+      "sha256": "66344992cbbd027bad703d6dcc0ffe9f109584b9945f51b3f577d3d042b2e499"
+    },
+    {
+      "path": "reference/test_native_controls.py",
+      "bytes": 2752,
+      "sha256": "ff9b62ce71f0f3a44a773a885d34e2f06428b11883dec571d17f3b6d5be203a3"
+    },
+    {
+      "path": "specs/agent_operations.md",
+      "bytes": 1282,
+      "sha256": "e78829665db90125d9e05b7a4f134198a3d6d226db38e2fd8f30415012c3d33e"
+    },
+    {
+      "path": "specs/company_workspace_workflows.md",
+      "bytes": 2152,
+      "sha256": "55ecb555a49f84fc4b9b80c6c27c1d5a9e74939276608b5ad89eadedeba244b9"
+    },
+    {
+      "path": "specs/investor_portal.md",
+      "bytes": 1484,
+      "sha256": "fef08f00de39b962bc99da785cfe87579b6476d95cc5c419fe3196a7f940821b"
+    },
+    {
+      "path": "specs/native_finance.md",
+      "bytes": 3218,
+      "sha256": "b8e1d8fd04885e7033b2e5e02c7ad6d2a2870c1013cff0f494461f7f785cccc0"
+    },
+    {
+      "path": "specs/operations_workflows_inbox.md",
+      "bytes": 2504,
+      "sha256": "5dd72149eb9884d749c329666debea86586fbeed7bdaf8f762b70102a6ee4e12"
+    },
+    {
+      "path": "specs/platform_explorer_master_control.md",
+      "bytes": 1615,
+      "sha256": "40375aed05619c9892e6eec04d5dc2bda67206b4afba46763ce463a3a309b403"
+    },
+    {
+      "path": "templates/action_contract.json",
+      "bytes": 413,
+      "sha256": "de3b18605c1a3c4db15da77797947486d5233137ef6276564245132f053a1ade"
+    },
+    {
+      "path": "templates/agent_task.json",
+      "bytes": 454,
+      "sha256": "3050d044aad5e31e7891e5c4e357b5dfab0b5225a4a95c440e400222249a331a"
+    },
+    {
+      "path": "templates/screen_contract.json",
+      "bytes": 777,
+      "sha256": "49b26c46051056ecace6ac9c17b3ee9865e628868bf933b910593b12d810426a"
+    }
+  ],
+  "excluded_uncreated": [
+    "Rendered video",
+    "Full unverified 692-screen inventory",
+    "Production implementation/deployment",
+    "Executed agreements"
+  ]
+}
