@@ -17,6 +17,9 @@ class MigrationTests(unittest.TestCase):
     def test_direction(self):self.blocked({'type':'string','readOnly':True})
     def test_discriminator(self):self.blocked({'type':'object','discriminator':{'propertyName':'kind'}})
     def test_union_input(self):self.blocked({'type':['string','null']})
+    def test_array_without_items(self):self.blocked({'type':'array'})
+    def test_example_becomes_examples(self):
+        s=migrate_subset({'type':'string','example':'A'});self.assertNotIn('example',s);self.assertEqual(s['examples'],['A'])
 class EnrollmentTests(unittest.TestCase):
     def body(self,op='add'):
         b={'studentId':U,'termCode':'2026FA','expectedScheduleVersion':1,'operation':op}
@@ -60,6 +63,10 @@ class EnrollmentTests(unittest.TestCase):
     def test_nodes_are_independent(self):
         s=enrollment_schema();s['oneOf'][0]['properties']['sectionIds']['maxItems']=2
         self.assertEqual(s['oneOf'][1]['properties']['fromEnrollmentIds']['maxItems'],12)
+    def test_nested_error_names_the_field(self):
+        b=self.body();b['studentId']='bad'
+        self.assertIn('/studentId',[e['instance_path'] for e in validate(enrollment_schema(),b)])
+        self.assertNotIn('oneOf',[e['keyword'] for e in validate(enrollment_schema(),b)])
     def test_artifact_matches_builder(self):
         import json,os
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'enrollment_commands.schema.json')) as f:artifact=json.load(f)

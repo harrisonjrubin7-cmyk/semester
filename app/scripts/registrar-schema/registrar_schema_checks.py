@@ -7,6 +7,8 @@ def migrate_subset(schema):
     allowed={'type','properties','required','additionalProperties','items','allOf','anyOf','oneOf','not','enum','nullable','minimum','maximum','exclusiveMinimum','exclusiveMaximum','minLength','maxLength','pattern','minItems','maxItems','uniqueItems','minProperties','maxProperties','format','description','title','default','example','deprecated','readOnly','writeOnly','discriminator','multipleOf'}
     if set(s)-allowed:raise ValueError('Unsupported keyword')
     if isinstance(s.get('type'),list) or s.get('type')=='null':raise ValueError('Not 3.0 type')
+    if s.get('type')=='array' and 'items' not in s:raise ValueError('items required for array')
+    if 'example' in s:s['examples']=[s.pop('example')]
     n=s.pop('nullable',False)
     if not isinstance(n,bool):raise ValueError('Invalid nullable')
     if n:
@@ -32,9 +34,18 @@ def pointer(parts):
     # RFC 6901: the root is the empty string, and ~ and / inside a token are escaped
     return ''.join('/'+str(p).replace('~','~0').replace('/','~1') for p in parts)
 
+def leaf_errors(e):
+    # A oneOf/anyOf error hides its reasons in context. Descend into the branch with the fewest errors,
+    # which for an enrollment command is the branch its operation selects.
+    if e.validator not in ('oneOf','anyOf') or not e.context:return [e]
+    branches={}
+    for c in e.context:branches.setdefault(c.relative_schema_path[0],[]).append(c)
+    return [leaf for c in min(branches.values(),key=len) for leaf in leaf_errors(c)]
+
 def validate(schema,payload):
     Draft202012Validator.check_schema(schema)
-    return [{'keyword':e.validator,'instance_path':pointer(e.absolute_path),'schema_path':pointer(e.absolute_schema_path)} for e in Draft202012Validator(schema,format_checker=FormatChecker()).iter_errors(payload)]
+    errors=Draft202012Validator(schema,format_checker=FormatChecker()).iter_errors(payload)
+    return [{'keyword':e.validator,'instance_path':pointer(e.absolute_path),'schema_path':pointer(e.absolute_schema_path)} for top in errors for e in leaf_errors(top)]
 
 # Length bounds sit beside each pattern: Python's $ also matches before a trailing newline.
 # The UUID pattern is lowercase-only so one identifier has one spelling and uniqueItems can see duplicates.
