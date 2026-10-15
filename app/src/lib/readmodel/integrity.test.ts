@@ -19,6 +19,11 @@ describe('canUseProjectionForOutcome', () => {
     expect(canUseProjectionForOutcome(check({ projectionLagSeconds: 60 }))).toBe(true);
   });
 
+  it('refuses a lag bound that is not a finite non-negative number', () => {
+    expect(canUseProjectionForOutcome(check({ maximumLagSeconds: Number.POSITIVE_INFINITY }))).toBe(false);
+    expect(canUseProjectionForOutcome(check({ maximumLagSeconds: -1 }))).toBe(false);
+  });
+
   it('blocks a consequential outcome when the projection is not current', () => {
     for (const freshnessState of ['updating', 'stale', 'unknown', 'failed'] as const) {
       expect(canUseProjectionForOutcome(check({ freshnessState }))).toBe(false);

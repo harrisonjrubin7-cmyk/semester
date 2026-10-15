@@ -55,6 +55,11 @@ export const RESOLUTION_REQUIRED: readonly string[] = [
   'case_owner_closed',
 ];
 
+/**
+ * escalated -> reverified is the route for a class with no safe repair: the institution
+ * resolves or accepts the discrepancy, staff re-verify it, and closing still needs every
+ * key in RESOLUTION_REQUIRED.
+ */
 const TRANSITIONS: Record<CaseState, readonly CaseState[]> = {
   detected: ['triaged'],
   triaged: ['awaiting_source', 'awaiting_institution', 'repair_proposed', 'escalated'],
@@ -64,7 +69,7 @@ const TRANSITIONS: Record<CaseState, readonly CaseState[]> = {
   repair_approved: ['repaired'],
   repaired: ['reverified'],
   reverified: ['closed', 'triaged'],
-  escalated: ['triaged'],
+  escalated: ['triaged', 'reverified'],
   closed: [],
 };
 
@@ -83,6 +88,10 @@ export interface ReconciliationCase {
   severity: 'critical' | 'high' | 'medium' | 'low';
   state: CaseState;
   ownerId: string;
+  /** When the discrepancy was detected; the basis for case age. The caller passes ISO 8601. */
+  detectedAt: string;
+  sourceSystem: string;
+  cohortId: string;
   proposedRepair?: string;
   proposedBy?: string;
   approvedBy?: string;
@@ -107,6 +116,18 @@ export function isRepairAllowed(discrepancy: DiscrepancyClass, repair: string): 
   return SAFE_REPAIRS[discrepancy]?.includes(repair) ?? false;
 }
 
+/** Actors are compared as people, not strings: "Ana" and " ana " are the same proposer. */
+const actorKey = (actor: string): string => actor.trim().toLowerCase();
+
+/** A failed re-verification starts a new repair cycle: earlier evidence and approvals do not carry over. */
+function startNewCycle(c: ReconciliationCase): ReconciliationCase {
+  const next: ReconciliationCase = { ...c, resolution: [] };
+  delete next.proposedRepair;
+  delete next.proposedBy;
+  delete next.approvedBy;
+  return next;
+}
+
 export function openCase(input: {
   id: string;
   tenantId: string;
@@ -114,6 +135,9 @@ export function openCase(input: {
   discrepancy: DiscrepancyClass;
   severity: ReconciliationCase['severity'];
   ownerId: string;
+  detectedAt: string;
+  sourceSystem: string;
+  cohortId: string;
 }): ReconciliationCase {
   return { ...input, state: 'detected', resolution: [], history: [] };
 }
@@ -132,6 +156,8 @@ export function moveCase(current: ReconciliationCase, to: CaseState, options: Mo
     history: [...current.history, { from: current.state, to, at: options.at, by: options.by }],
   };
 
+  if (current.state === 'reverified' && to === 'triaged') next = startNewCycle(next);
+
   if (to === 'repair_proposed') {
     const repair = options.repair ?? '';
     if (PROHIBITED_REPAIRS.includes(repair)) return { ok: false, reason: `prohibited repair: ${repair}` };
@@ -142,7 +168,7 @@ export function moveCase(current: ReconciliationCase, to: CaseState, options: Mo
   }
 
   if (to === 'repair_approved') {
-    if (options.by === current.proposedBy) {
+    if (current.proposedBy !== undefined && actorKey(options.by) === actorKey(current.proposedBy)) {
       return { ok: false, reason: 'the proposer cannot approve their own repair' };
     }
     next = { ...next, approvedBy: options.by };

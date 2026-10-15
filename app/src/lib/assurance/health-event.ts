@@ -1,6 +1,8 @@
 // Operator health events. Every alert names an accountable owner, the affected scope,
 // a known-safe action and a durable case. Contract: docs/assurance/assurance-model.yaml.
 
+import { isIsoTimestamp } from './timestamps';
+
 export const HEALTH_CATEGORIES = [
   'source_freshness',
   'authorization',
@@ -77,15 +79,15 @@ export function healthEventProblems(event: HealthEvent): string[] {
   if ((event.severity === 'critical' || event.severity === 'high') && !present(event.safeImmediateAction)) {
     problems.push('critical and high events need a safeImmediateAction');
   }
-  if (event.state === 'closed' && event.evidenceReferences.length === 0) {
+  if (event.state === 'closed' && !event.evidenceReferences.some((ref) => present(ref))) {
     problems.push('a closed event needs evidenceReferences');
   }
-  const created = Date.parse(event.createdAt);
-  const updated = Date.parse(event.updatedAt);
-  if (Number.isNaN(created)) problems.push('createdAt must be an ISO timestamp');
-  if (Number.isNaN(updated)) problems.push('updatedAt must be an ISO timestamp');
-  else if (!Number.isNaN(created) && updated < created) problems.push('updatedAt is before createdAt');
-  if (event.dueAt !== undefined && Number.isNaN(Date.parse(event.dueAt))) problems.push('dueAt must be an ISO timestamp');
+  if (!isIsoTimestamp(event.createdAt)) problems.push('createdAt must be an ISO timestamp');
+  if (!isIsoTimestamp(event.updatedAt)) problems.push('updatedAt must be an ISO timestamp');
+  else if (isIsoTimestamp(event.createdAt) && Date.parse(event.updatedAt) < Date.parse(event.createdAt)) {
+    problems.push('updatedAt is before createdAt');
+  }
+  if (event.dueAt !== undefined && !isIsoTimestamp(event.dueAt)) problems.push('dueAt must be an ISO timestamp');
   return problems;
 }
 
@@ -93,8 +95,15 @@ export type HealthTransition = { ok: true; event: HealthEvent } | { ok: false; r
 
 /** Moves an event along the allowed state path. Closing requires evidence; the result is re-validated. */
 export function transitionHealthEvent(event: HealthEvent, to: HealthState, at: string): HealthTransition {
+  if (!(HEALTH_STATES as readonly string[]).includes(event.state)) {
+    return { ok: false, reason: `unknown state: ${event.state}` };
+  }
   if (!TRANSITIONS[event.state].includes(to)) {
     return { ok: false, reason: `cannot move from ${event.state} to ${to}` };
+  }
+  if (!isIsoTimestamp(at)) return { ok: false, reason: 'at must be an ISO timestamp' };
+  if (isIsoTimestamp(event.updatedAt) && Date.parse(at) < Date.parse(event.updatedAt)) {
+    return { ok: false, reason: 'transition time precedes the last update' };
   }
   const next: HealthEvent = { ...event, state: to, updatedAt: at };
   const problems = healthEventProblems(next);

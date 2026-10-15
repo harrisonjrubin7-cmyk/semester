@@ -8,6 +8,8 @@ import {
   type ReconciliationCase,
 } from './case';
 
+const AT = '2026-10-01T09:00:00.000Z';
+
 const opened = (): ReconciliationCase =>
   openCase({
     id: 'REC-2026-001',
@@ -16,9 +18,10 @@ const opened = (): ReconciliationCase =>
     discrepancy: 'stale_source',
     severity: 'high',
     ownerId: 'registrar_owner',
+    detectedAt: '2026-10-01T08:00:00.000Z',
+    sourceSystem: 'SIS',
+    cohortId: 'approved_pilot_cohort',
   });
-
-const AT = '2026-10-01T09:00:00.000Z';
 
 describe('isRepairAllowed', () => {
   it('allows only the repairs the contract names for a class', () => {
@@ -118,5 +121,59 @@ describe('moveCase', () => {
       ok: false,
       reason: 'a named actor is required',
     });
+  });
+
+  it('treats actor names that differ only in case or spacing as one person', () => {
+    const triaged = moveCase(opened(), 'triaged', { by: 'x', at: AT });
+    if (!triaged.ok) throw new Error('setup');
+    const proposed = moveCase(triaged.case, 'repair_proposed', { by: 'Ana', at: AT, repair: 'refresh_source_snapshot' });
+    if (!proposed.ok) throw new Error('setup');
+    expect(moveCase(proposed.case, 'repair_approved', { by: ' ana ', at: AT })).toEqual({
+      ok: false,
+      reason: 'the proposer cannot approve their own repair',
+    });
+  });
+
+  it('starts a new repair cycle after a failed re-verification', () => {
+    const failed: ReconciliationCase = {
+      ...opened(),
+      state: 'reverified',
+      resolution: [...RESOLUTION_REQUIRED],
+      proposedRepair: 'refresh_source_snapshot',
+      proposedBy: 'integration_owner',
+      approvedBy: 'registrar_owner',
+    };
+    const back = moveCase(failed, 'triaged', { by: 'registrar_owner', at: AT });
+    expect(back.ok).toBe(true);
+    if (!back.ok) return;
+    expect(back.case.resolution).toEqual([]);
+    expect(back.case.proposedBy).toBeUndefined();
+    expect(back.case.approvedBy).toBeUndefined();
+
+    const closeWithoutNewEvidence = moveCase(
+      { ...back.case, state: 'reverified' },
+      'closed',
+      { by: 'registrar_owner', at: AT },
+    );
+    expect(closeWithoutNewEvidence.ok).toBe(false);
+  });
+
+  it('lets an escalated case with no safe repair be re-verified and closed on evidence', () => {
+    const escalated: ReconciliationCase = { ...opened(), discrepancy: 'schema_change', state: 'escalated' };
+    const reverified = moveCase(escalated, 'reverified', {
+      by: 'registrar_owner',
+      at: AT,
+      evidence: [...RESOLUTION_REQUIRED],
+    });
+    expect(reverified.ok).toBe(true);
+    if (!reverified.ok) return;
+    expect(moveCase(reverified.case, 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(true);
+  });
+
+  it('records when the discrepancy was detected, and where', () => {
+    const c = opened();
+    expect(c.detectedAt).toBe('2026-10-01T08:00:00.000Z');
+    expect(c.sourceSystem).toBe('SIS');
+    expect(c.cohortId).toBe('approved_pilot_cohort');
   });
 });

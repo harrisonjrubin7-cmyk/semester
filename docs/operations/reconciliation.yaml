@@ -50,8 +50,11 @@ reconciliation:
     - "Delete a discrepancy to improve a dashboard."
     - "Re-run a consequential command without idempotency and policy checks."
 
-  # Implemented rules beyond the narrative: the proposer cannot approve their own repair,
-  # re-verification failure returns the case to triage, and closing needs every key below.
+  # Implemented rules beyond the narrative: the proposer cannot approve their own repair
+  # (actor names compared without case or surrounding spaces), re-verification failure
+  # returns the case to triage with its repair evidence cleared, escalated cases with no
+  # safe repair may move to reverified, and closing needs every key below. Each case records
+  # detectedAt, sourceSystem and cohortId when it opens.
   resolution_required:
     - source_refresh_verified
     - affected_scope_rechecked
