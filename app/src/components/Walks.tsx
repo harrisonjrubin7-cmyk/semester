@@ -65,6 +65,7 @@ export function Walks({ date }: { date?: Date }) {
           }}
         >
           <span
+            aria-hidden="true"
             style={{
               flex: 'none',
               width: 16,

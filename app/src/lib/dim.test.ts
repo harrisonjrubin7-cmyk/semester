@@ -296,7 +296,7 @@ describe('the faint rung, on a glyph too small to carry it', () => {
    * the wrong one. Only the size of the thing wearing it decides, and that is
    * what this reads.
    */
-  const SEPARATORS = '·—–•×';
+  const SEPARATORS = '·—–•×→';
   /** `src/`, from this file's own location, so the walk cannot miss a folder. */
   const SRC = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -448,11 +448,13 @@ describe('the faint rung, on a glyph too small to carry it', () => {
     expect(hit(`<span style={{ color: d.due > 0 ? 'var(--app-dim)' : 'var(--app-faint)' }}>{d.due > 0 ? d.due : '·'}</span>`)).toBe(1);
     expect(hit(`<span style={faintLine()}>· {u.cards.length}</span>`)).toBe(1);
     expect(hit(`<button style={{ width: 20, ...faintLine() }}>\n  ×\n</button>`)).toBe(1);
+    expect(hit(`<span style={{ color: 'var(--app-faint)' }}>→</span>`)).toBe(1);
 
     // Fixed, in each of the same three shapes.
     expect(hit(`<span style={{ color: 'var(--app-dim)' }}>{d.due > 0 ? d.due : '·'}</span>`)).toBe(0);
     expect(hit(`<span style={secondLine()}>· {u.cards.length}</span>`)).toBe(0);
     expect(hit(`<button style={{ width: 20, ...secondLine() }}>\n  ×\n</button>`)).toBe(0);
+    expect(hit(`<span aria-hidden="true" style={{ color: 'var(--app-faint)' }}>→</span>`)).toBe(0);
 
     // Prose at the faint rung is a different finding and not this one's to raise.
     expect(hit(`<div style={{ color: 'var(--app-faint)' }}>Deadlines, courses — and the app’s own screens.</div>`)).toBe(0);
