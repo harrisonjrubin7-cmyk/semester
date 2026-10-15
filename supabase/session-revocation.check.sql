@@ -103,8 +103,11 @@ declare
   event_row private.domain_outbox_events%rowtype;
   projected jsonb;
   malformed uuid;
+  unbound uuid;
   account_hash text;
   target_hash text;
+  conflicted boolean := false;
+  conflict_message text;
 begin
   insert into auth.sessions
     (id, user_id, created_at, updated_at, refreshed_at, user_agent, ip)
@@ -211,8 +214,14 @@ begin
 
   -- A request key is bound to one target. Reusing it cannot move a second
   -- session, and does not append another audit/event under that key.
-  answer := pg_temp.revoke_as(sam, here, tablet, revoke_key);
-  if answer ->> 'outcome' <> 'refused'
+  begin
+    answer := pg_temp.revoke_as(sam, here, tablet, revoke_key);
+  exception when unique_violation then
+    get stacked diagnostics conflict_message = message_text;
+    conflicted := true;
+  end;
+  if not conflicted
+     or conflict_message <> 'A request key cannot be reused for a different session.'
      or not exists (select 1 from auth.sessions where id = tablet and user_id = sam)
      or (select count(*) from public.audit_event
           where correlation_id = 'session-revoke:' || revoke_key::text) <> 1
@@ -220,7 +229,7 @@ begin
           where idempotency_key = 'session-revoke:' || revoke_key::text) <> 1 then
     raise exception 'FAILED: one request key moved a second target (%)', answer;
   end if;
-  raise notice 'ok  a request key is bound to one target';
+  raise notice 'ok  a request key is bound to one target and conflicting reuse is rejected';
 
   -- Missing and another account's session are deliberately the same answer.
   answer := pg_temp.revoke_as(sam, here, missing, missing_key);
@@ -291,6 +300,31 @@ begin
     raise exception 'FAILED: a settled event was projected twice';
   end if;
   raise notice 'ok  the first consumer projects and receipts the event once';
+
+  -- Shape alone is not authority. A forged but well-formed event cannot
+  -- create another account's projection without the source command receipt.
+  unbound := private.emit_domain_event(
+    'auth_session', repeat('b', 64), 'identity.session_revoked', 1,
+    null, 'account_sessions', 'session-revoke-unbound',
+    'session-revoke-unbound',
+    jsonb_build_object('accountRef', repeat('c', 64), 'outcome', 'revoked',
+      'changedFields', jsonb_build_array('refresh_session')),
+    'internal', 'audit'
+  );
+  projected := pg_temp.run_projector();
+  if projected ->> 'deadLettered' <> '1'
+     or exists (
+       select 1 from private.account_session_security_projection
+        where source_event_id = unbound or account_sha256 = repeat('c', 64)
+     )
+     or not exists (
+       select 1 from private.domain_outbox_events
+        where id = unbound and dead_lettered_at is not null
+          and last_error = 'invalid identity.session_revoked version 1 event'
+     ) then
+    raise exception 'FAILED: an event without its command receipt changed the projection (%)', projected;
+  end if;
+  raise notice 'ok  a valid-shaped event without its command receipt is rejected';
 
   -- Malformed input is isolated with fixed text; no payload or provider text
   -- is copied into the failure record.

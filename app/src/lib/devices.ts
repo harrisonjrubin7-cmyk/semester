@@ -66,6 +66,38 @@ export function orderSessions(rows: SessionRow[]): SessionRow[] {
 
 export type RawSession = { id: string; created_at: string; last_active: string; user_agent: string | null; is_current: boolean };
 
+/**
+ * A Postgres `timestamptz` in the unambiguous ISO shape PostgREST returns.
+ *
+ * `Date.parse` alone accepts browser-specific prose and normalizes impossible
+ * dates such as 30 February. Neither belongs in a receipt or source label.
+ */
+function isSessionTimestamp(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,6})?(Z|[+-]\d{2}:\d{2})$/.exec(value);
+  if (!match) return false;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6]);
+  if (year < 1 || month < 1 || month > 12 || hour > 23 || minute > 59 || second > 59) return false;
+
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (day < 1 || day > days[month - 1]) return false;
+
+  const zone = match[7];
+  if (zone !== 'Z') {
+    const zoneHour = Number(zone.slice(1, 3));
+    const zoneMinute = Number(zone.slice(4, 6));
+    if (zoneHour > 23 || zoneMinute > 59) return false;
+  }
+  return !Number.isNaN(Date.parse(value));
+}
+
 /** What `my_sessions()` returned, as rows the screen uses, in the order it shows them. */
 export function sessionRows(raw: RawSession[] | null): SessionRow[] {
   return orderSessions(
@@ -88,15 +120,14 @@ export function sessionRevocationReceipt(raw: unknown): SessionRevocationReceipt
   const outcome = row.outcome;
   const occurredAt = row.occurred_at;
   if (outcome !== 'revoked' && outcome !== 'already_ended' && outcome !== 'refused') return null;
-  if (typeof occurredAt !== 'string' || !occurredAt || Number.isNaN(Date.parse(occurredAt))) return null;
+  if (!isSessionTimestamp(occurredAt)) return null;
   return { outcome, occurredAt };
 }
 
 /** A session timestamp never gets to take down the remaining account list. */
 export function formatSessionTime(value: string | null | undefined): string {
-  if (!value) return 'Time unavailable';
+  if (!isSessionTimestamp(value)) return 'Time unavailable';
   const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return 'Time unavailable';
   try {
     return dateFormatter({ dateStyle: 'medium', timeStyle: 'short' }).format(parsed);
   } catch {

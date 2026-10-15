@@ -152,6 +152,7 @@ describe('SignedInDevices', () => {
     expect(pending.textContent).toContain('Signing out');
     expect(pending.closest('[aria-busy="true"]')).not.toBeNull();
     expect(host.textContent).toContain('Checking whether Safari on iPhone signed out');
+    expect(host.ownerDocument.activeElement?.textContent).toContain('Checking whether Safari on iPhone signed out');
     await act(async () => { settle(receipt('revoked')); await Promise.resolve(); });
   });
 
@@ -186,6 +187,7 @@ describe('SignedInDevices', () => {
     act(() => confirmButton().click());
     await flush();
     expect(host.querySelector('[role="alert"]')?.textContent).toContain('was not signed out');
+    expect(host.ownerDocument.activeElement).toBe(host.querySelector('[role="alert"]'));
     expect(host.textContent).not.toContain('phone');
     expect(host.textContent).not.toContain('is signed out');
   });
@@ -208,6 +210,7 @@ describe('SignedInDevices', () => {
     expect(host.textContent).not.toContain(raw);
     expect(host.textContent).not.toContain('account-123');
     expect(host.textContent).not.toContain('cursor-456');
+    expect(host.ownerDocument.activeElement).toBe(host.querySelector('[role="alert"]'));
     act(() => button('Check again').click());
     await flush();
     expect(end).toHaveBeenNthCalledWith(1, 'phone', 'request-key-1');

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ConfirmDialog } from './ConfirmDialog';
 import { ErrorState, LoadingState } from './unity/States';
 import { ActionPreview } from './unity/ActionPreview';
@@ -55,6 +55,15 @@ export function SignedInDevices({
   const [confirm, setConfirm] = useState<DeviceSession | null>(null);
   const [note, setNote] = useState('');
   const [operations, setOperations] = useState<Record<string, Operation>>({});
+  const operationFocus = useRef<Record<string, HTMLElement | null>>({});
+  const focusAfterRender = useRef<string | null>(null);
+
+  useEffect(() => {
+    const id = focusAfterRender.current;
+    if (!id) return;
+    operationFocus.current[id]?.focus({ preventScroll: true });
+    focusAfterRender.current = null;
+  });
 
   useEffect(() => {
     let live = true;
@@ -82,6 +91,7 @@ export function SignedInDevices({
 
   const ending = async (row: DeviceSession, retainedKey?: string) => {
     const key = retainedKey ?? requestKey();
+    focusAfterRender.current = row.id;
     setConfirm(null);
     setNote('');
     setOperation(row.id, { status: 'pending', requestKey: key });
@@ -96,9 +106,11 @@ export function SignedInDevices({
         setNote(`${deviceLabel(row.userAgent)} had already signed out.`);
         retry();
       } else {
+        focusAfterRender.current = row.id;
         setOperation(row.id, { status: 'refused', requestKey: key });
       }
     } catch {
+      focusAfterRender.current = row.id;
       setOperation(row.id, { status: 'unknown', requestKey: key });
     }
   };
@@ -136,13 +148,24 @@ export function SignedInDevices({
                       signOutLabel={`Sign out ${label}, signed in ${formatSessionTime(row.startedAt)}`}
                     />
                     {operation?.status === 'pending' ? (
-                      <p role="status" aria-live="polite" style={{ ...LINE, marginBlock: 'var(--sp-3) 0' }}>
+                      <p
+                        ref={(element) => { operationFocus.current[row.id] = element; }}
+                        role="status"
+                        aria-live="polite"
+                        tabIndex={-1}
+                        style={{ ...LINE, marginBlock: 'var(--sp-3) 0' }}
+                      >
                         Checking whether {label} signed out…
                       </p>
                     ) : null}
                     {operation?.status === 'refused' ? (
                       <div style={{ ...LINE, marginBlock: 'var(--sp-3) 0' }}>
-                        <p role="alert" style={{ margin: 0 }}>
+                        <p
+                          ref={(element) => { operationFocus.current[row.id] = element; }}
+                          role="alert"
+                          tabIndex={-1}
+                          style={{ margin: 0 }}
+                        >
                           That device was not signed out. Refresh the list before trying again.
                         </p>
                         <button
@@ -157,7 +180,12 @@ export function SignedInDevices({
                     ) : null}
                     {operation?.status === 'unknown' ? (
                       <div style={{ ...LINE, marginBlock: 'var(--sp-3) 0' }}>
-                        <p role="alert" style={{ margin: 0 }}>
+                        <p
+                          ref={(element) => { operationFocus.current[row.id] = element; }}
+                          role="alert"
+                          tabIndex={-1}
+                          style={{ margin: 0 }}
+                        >
                           We couldn&apos;t confirm the result. That device may or may not have signed out.
                         </p>
                         <button

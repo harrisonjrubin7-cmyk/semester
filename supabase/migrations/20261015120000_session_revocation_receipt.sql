@@ -84,10 +84,9 @@ begin
      and r.request_key = revoke_my_session.request_key;
   if found then
     if receipt_row.target_sha256 <> target_hash then
-      return query select 'refused'::text, receipt_row.occurred_at;
-    else
-      return query select receipt_row.outcome, receipt_row.occurred_at;
+      raise exception 'A request key cannot be reused for a different session.' using errcode = '23505';
     end if;
+    return query select receipt_row.outcome, receipt_row.occurred_at;
     return;
   end if;
 
@@ -256,6 +255,20 @@ begin
         where key.name not in ('accountRef', 'outcome', 'changedFields')
      ) then
     raise exception 'The event does not match identity.session_revoked version 1.' using errcode = '22023';
+  end if;
+
+  -- Shape is necessary but not authority. Only the event made and retained by
+  -- the caller-bound command may change this projection; another producer
+  -- cannot forge a plausible accountRef/target pair into account security.
+  if not exists (
+    select 1
+      from private.session_revocation_command_receipt r
+     where r.event_id = event_row.id
+       and r.account_sha256 = event_row.payload ->> 'accountRef'
+       and r.target_sha256 = event_row.aggregate_id
+       and r.outcome = 'revoked'
+  ) then
+    raise exception 'The event is not bound to its session-revocation receipt.' using errcode = '22023';
   end if;
 
   insert into private.account_session_security_projection (

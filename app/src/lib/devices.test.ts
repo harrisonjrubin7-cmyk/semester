@@ -115,6 +115,8 @@ describe('sessionRevocationReceipt', () => {
     ])).toBeNull();
     expect(sessionRevocationReceipt([{ outcome: 'maybe', occurred_at: '2026-10-15T12:34:56.000Z' }])).toBeNull();
     expect(sessionRevocationReceipt([{ outcome: 'revoked', occurred_at: 'not-a-date' }])).toBeNull();
+    expect(sessionRevocationReceipt([{ outcome: 'revoked', occurred_at: '2026-02-30T12:34:56.000Z' }])).toBeNull();
+    expect(sessionRevocationReceipt([{ outcome: 'revoked', occurred_at: '10/15/2026 12:34' }])).toBeNull();
   });
 });
 
@@ -124,6 +126,8 @@ describe('formatSessionTime', () => {
     expect(formatSessionTime('')).toBe('Time unavailable');
     expect(formatSessionTime(null)).toBe('Time unavailable');
     expect(formatSessionTime(undefined)).toBe('Time unavailable');
+    expect(formatSessionTime('2026-02-30T12:34:56.000Z')).toBe('Time unavailable');
+    expect(formatSessionTime('10/15/2026 12:34')).toBe('Time unavailable');
   });
 
   it('formats a valid timestamp', () => {
