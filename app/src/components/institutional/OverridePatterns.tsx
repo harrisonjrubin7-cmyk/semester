@@ -169,11 +169,15 @@ function PatternRow({ row }: { row: OverridePattern }) {
     <li className="override-review-row">
       <details>
         <summary>
-          <span>
-            <strong>{ruleLabel(row.ruleRef)}</strong>
-            <small>{DOMAIN_LABELS[row.domain]}</small>
+          <span className="override-review-summary-body">
+            <span className="override-review-summary-copy">
+              <strong className="override-review-rule">{ruleLabel(row.ruleRef)}</strong>
+              <small>{DOMAIN_LABELS[row.domain]}</small>
+            </span>
+            <span className="override-review-summary-status">
+              {row.recurring ? 'Recurring — review the rule' : 'Not currently recurring'}
+            </span>
           </span>
-          <span>{row.recurring ? 'Recurring — review the rule' : 'Not currently recurring'}</span>
         </summary>
         <dl className="override-review-facts">
           <div><dt>Logged overrides</dt><dd>{row.overrides}</dd></div>

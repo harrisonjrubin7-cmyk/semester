@@ -75,6 +75,15 @@ describe('OverridePatterns', () => {
     expect(document.activeElement).toBe(summary);
   });
 
+  it('keeps the native disclosure summary and contains a maximum-length rule label', async () => {
+    const ruleRef = 'x'.repeat(80);
+    await render(<OverridePatterns tenantId="northstar" canReview load={async () => [pattern({ ruleRef })]} />);
+
+    const summary = host.querySelector('summary');
+    expect(summary?.querySelector('.override-review-summary-body')).toBeTruthy();
+    expect(summary?.querySelector('.override-review-rule')?.textContent).toBe(ruleRef[0].toUpperCase() + ruleRef.slice(1));
+  });
+
   it('filters by domain and recurrence with native keyboard controls', async () => {
     await render(<OverridePatterns tenantId="northstar" canReview load={async () => [
       pattern({ ruleRef: 'grade' }),

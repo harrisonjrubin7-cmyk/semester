@@ -10745,20 +10745,30 @@ button.adband-bar {
 }
 
 .override-review-row summary {
+  cursor: pointer;
+}
+
+.override-review-summary-body {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: var(--sp-3);
-  cursor: pointer;
+  min-width: 0;
 }
 
-.override-review-row summary > span:first-child {
+.override-review-summary-copy {
   display: grid;
   gap: var(--sp-2);
+  min-width: 0;
 }
 
-.override-review-row summary small,
-.override-review-row summary > span:last-child,
+.override-review-rule {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.override-review-summary-copy small,
+.override-review-summary-status,
 .override-review-facts dt {
   color: var(--app-dim);
   font-size: var(--type-sm);
