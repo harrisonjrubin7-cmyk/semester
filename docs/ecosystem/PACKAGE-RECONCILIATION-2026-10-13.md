@@ -1,6 +1,8 @@
 # Semester ecosystem: package reconciliation (2026-10-13)
 
-Source: `Semester-entire-implementation-package.zip` (refreshed export, 2026-10-13), read from `implementation/registry.json`, `implementation/CATALOG-RECONCILIATION.csv`, `implementation/MATURITY-REGISTER.csv` and `implementation/EXECUTION-HANDOFF.md`. Repository side: `app/src/data/ecosystem/capabilities.json` (generated 2026-10-06 from `ui_kits/capability-registry/registry.js`).
+Source: `Semester-entire-implementation-package.zip` (refreshed export, 2026-10-13, SHA-256 `636242fead2dbe74cbb94503453b6f9ae53b056d078e9a9a5237f8df5b0b67b4`), read from `implementation/registry.json`, `implementation/CATALOG-RECONCILIATION.csv`, `implementation/MATURITY-REGISTER.csv` and `implementation/EXECUTION-HANDOFF.md`. The ZIP itself is not committed; the hash identifies the export. Repository side: `app/src/data/ecosystem/capabilities.json` (generated 2026-10-06 from `ui_kits/capability-registry/registry.js`).
+
+**Status columns are archive-only.** The `archive_*` columns in the CSV copy the package's own boolean flags. They describe the archive model, not this repository. The current-evidence reconciliation, [`docs/design-system/REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md`](../design-system/REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md), is the source for repository status. In the CSV, `backend` is `unknown` where the source is `null`, not `false`.
 
 Per-capability matrix: [`capability-coverage-2026-10-13.csv`](capability-coverage-2026-10-13.csv) (122 rows).
 
@@ -13,11 +15,11 @@ Per-capability matrix: [`capability-coverage-2026-10-13.csv`](capability-coverag
 
 - All 122 entries differ in schema. The package adds acceptance criteria, `activation`, and a six-fact `maturity` block. The repository uses `status`, `perms` and `ws`, and marks commands and records with `exists`.
 - Package `maturity`: 732 of 732 facts (122 × six) are `unknown; current evidence required`. Every capability has `activation: disabled`.
-- Repository `status` flags: designed 122, data 122, backend 55, **implemented 0, tested 0, deployed 0**.
+- Archive `status` flags in `capabilities.json`: designed 122, data 122, backend 55 true, 15 null, 52 false; implemented, tested and deployed are false for every row. These are archive-only flags. They are not a statement about the repository's implementation state. See the reference reconciliation for row-level repository status.
 - Commands: 92 of 151 are marked present in the repository; 51 capabilities have at least one missing command.
 - Records: 307 of 307 are marked present (table names only; this does not prove schema or policy).
 
-Both sides therefore say the same thing in different words: the ecosystem is specified and partly modelled, and nothing is verified as implemented or deployed.
+Both sides describe the ecosystem as specified and partly modelled. Neither package nor archive flags can verify implementation or deployment; use the current-evidence reconciliation for that.
 
 ## Per workspace (capabilities)
 
