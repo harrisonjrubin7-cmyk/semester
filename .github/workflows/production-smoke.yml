@@ -1,6 +1,8 @@
 # Hourly synthetic checks for the systems students actually reach.
 #
-# The public check requires the configured Vercel origin. A separate Pages
+# The public check uses the configured Vercel origin or the verified Semester
+# production alias below. The script still requires an explicit HTTPS origin.
+# A separate Pages
 # check preserves monitoring of the deployed Pages bundle. The status history
 # remains explicitly Pages-scoped, so existing availability is not relabeled.
 # The institutional check activates only when both production URLs
@@ -40,7 +42,7 @@ jobs:
         working-directory: app
         env:
           SEMESTER_PUBLIC_APP_TARGET: vercel
-          SEMESTER_PUBLIC_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}
+          SEMESTER_PUBLIC_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL || 'https://semester-rose.vercel.app' }}
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
         run: node scripts/public-production-smoke.mjs
