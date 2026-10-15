@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { loadRegistry } from '../scripts/registry-io.ts';
-import { validateEvidence } from '../scripts/validation.ts';
+import { validateEvidence, validateSnapshot } from '../scripts/validation.ts';
 import type { ActivationGate, ActivationGateItem, CapabilityRecord, RegistrySnapshot } from '../types.ts';
 import { GATE_APPROVERS, REQUIRED_GATE_ITEMS, validateActivationGates } from '../validators/activation-gate-validator.ts';
 
@@ -68,7 +68,7 @@ test('tenant activation requires a ready gate for that capability', () => {
 
 test('rejects approver drift and gates that reference unknown capabilities', () => {
   assert.deepEqual(codes(snapshot([gate({ decision: { record: null, approvers: ['product'] } })])), ['gate_approvers_drift']);
-  assert.deepEqual(codes(snapshot([gate({ capability: 'not.a.capability' })])), ['gate_unknown_capability']);
+  assert.deepEqual(codes(snapshot([gate({ capability: 'not.a.capability' })])), ['gate_capability_unsupported', 'gate_unknown_capability']);
 });
 
 test('gate evidence paths must exist in the repository', async () => {
@@ -99,6 +99,35 @@ test('evidence must be a repository-relative path that stays inside the reposito
     const bad = gate({ required: items({ 'trust.student_copy_approved': { status: 'passed', evidence: [reference] } }) });
     assert.ok(codes(snapshot([bad])).includes('gate_evidence_path_invalid'), `expected ${JSON.stringify(reference)} to be rejected`);
   }
+});
+
+test('gate evidence must name a file, not a directory', async () => {
+  for (const reference of ['.', 'packages']) {
+    const bad = gate({ required: items({ 'trust.student_copy_approved': { status: 'passed', evidence: [reference] } }) });
+    const issues = await validateEvidence(snapshot([bad]));
+    assert.ok(issues.some(({ code }) => code === 'gate_evidence_not_file'), `expected ${reference} to be rejected as a directory`);
+  }
+});
+
+test('decision records must be repository-contained paths', () => {
+  const outside = gate({ status: 'ready', required: allPassed(), decision: { record: '/etc/passwd', approvers: [...GATE_APPROVERS] } });
+  assert.ok(codes(snapshot([outside])).includes('gate_decision_path_invalid'));
+});
+
+test('malformed gates are reported by full snapshot validation, not thrown', async () => {
+  const noList = { ...gate(), required: null } as unknown as ActivationGate;
+  const issues = await validateSnapshot(snapshot([noList]));
+  assert.ok(issues.some(({ code }) => code === 'malformed_activation_gate'));
+});
+
+test('a gate may only validate the registration-readiness checklist', () => {
+  const other = gate({ key: 'activation.other', capability: 'other.capability', required: allPassed() });
+  const issues = codes(snapshot([other], [capability(), capability({ key: 'other.capability' })]));
+  assert.ok(issues.includes('gate_capability_unsupported'));
+});
+
+test('an activation gate must name an owner', () => {
+  assert.ok(codes(snapshot([gate({ owner: '  ' })])).includes('gate_owner_missing'));
 });
 
 test('one activation gate per capability', () => {

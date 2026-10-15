@@ -23,7 +23,7 @@ function sameMembers(actual: readonly string[], expected: readonly string[]): bo
 }
 
 // Repository-relative, non-empty, and never escaping the repository root.
-function isRepositoryPath(path: unknown): path is string {
+export function isRepositoryPath(path: unknown): path is string {
   return typeof path === 'string' && path.trim() !== '' && !path.startsWith('/') && !/^[A-Za-z]:/.test(path)
     && !path.split(/[\\/]/).includes('..');
 }
@@ -36,6 +36,12 @@ export function validateActivationGates(snapshot: RegistrySnapshot): ValidationI
 
   for (const gate of gates) {
     const path = `activationGates.${gate.key}`;
+    if (gate.capability !== 'registration.readiness') {
+      issues.push({ code: 'gate_capability_unsupported', path: `${path}.capability`, message: `This checklist validates registration.readiness only; ${gate.capability} needs its own checklist.` });
+    }
+    if (typeof gate.owner !== 'string' || gate.owner.trim() === '') {
+      issues.push({ code: 'gate_owner_missing', path: `${path}.owner`, message: 'An activation gate must name an accountable owner.' });
+    }
     if (!capabilityKeys.has(gate.capability)) {
       issues.push({ code: 'gate_unknown_capability', path: `${path}.capability`, message: `Gate references unknown capability ${gate.capability}.` });
     }
@@ -86,7 +92,11 @@ export function validateActivationGates(snapshot: RegistrySnapshot): ValidationI
     // Status is derived, never hand-set: ready needs every item passed and a decision record.
     const allPassed = gate.required.length > 0 && gate.required.every(({ status }) => status === 'passed');
     const decision: Partial<ActivationGate['decision']> | null | undefined = gate.decision;
-    const hasDecision = typeof decision?.record === 'string' && decision.record.trim().length > 0;
+    const record: unknown = decision?.record;
+    const hasDecision = isRepositoryPath(record);
+    if (typeof record === 'string' && record.trim() !== '' && !hasDecision) {
+      issues.push({ code: 'gate_decision_path_invalid', path: `${path}.decision.record`, message: `Decision record must be a repository-relative path, not ${JSON.stringify(record)}.` });
+    }
     const expected = allPassed && hasDecision ? 'ready' : 'not_ready';
     if (gate.status !== expected) {
       issues.push({ code: 'gate_status_mismatch', path: `${path}.status`, message: `Gate must be ${expected} from its items and decision record; it is recorded as ${String(gate.status)}.` });
