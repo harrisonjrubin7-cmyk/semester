@@ -9,7 +9,19 @@ const mock = vi.hoisted(() => ({
   state: { role: 'student' },
   dispatch: vi.fn(),
   rpc: vi.fn(),
+  teaching: true,
 }));
+
+// Only the course-studio flag is switched; every other module flag keeps its real value.
+vi.mock('../lib/experience-flags', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/experience-flags')>();
+  return {
+    ...actual,
+    MODULE_FLAGS: { ...actual.MODULE_FLAGS, course_studio: 'course-studio-test' },
+    moduleOn: (state: unknown) =>
+      state === 'course-studio-test' ? mock.teaching : actual.moduleOn(state as Parameters<typeof actual.moduleOn>[0]),
+  };
+});
 
 vi.mock('../state/store', () => ({
   useStore: () => ({ account: mock.account, school: mock.school, state: mock.state, dispatch: mock.dispatch }),
@@ -40,6 +52,7 @@ beforeEach(() => {
   mock.account = { id: 'account-a' };
   mock.school = { id: 'school-a' };
   mock.state = { role: 'student' };
+  mock.teaching = true;
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -100,6 +113,17 @@ describe('connected workspace visibility', () => {
     act(() => teaching.click());
     expect(onNavigate).toHaveBeenCalledOnce();
     expect(mock.dispatch).toHaveBeenCalledWith({ type: 'openWorkspace', screen: 'account', view: 'course-studio' });
+  });
+
+  it('offers no Teaching destination while the course studio module is off', async () => {
+    if (!WorkspaceEntry) return;
+    mock.teaching = false;
+    mock.rpc.mockResolvedValue({ data: [], error: null });
+
+    await act(async () => root.render(<WorkspaceEntry placement="navigation" />));
+
+    expect(buttons()).not.toContain('Teaching');
+    expect(buttons()).toContain('University services');
   });
 
   it('does not broaden a school-scoped console grant or another school’s listing grant', async () => {
