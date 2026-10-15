@@ -39,6 +39,10 @@ export function validateActivationGates(snapshot: RegistrySnapshot): ValidationI
   }
 
   for (const gate of gates) {
+    if (typeof gate !== 'object' || gate === null) {
+      issues.push({ code: 'malformed_activation_gate', path: 'activationGates', message: 'Each activation gate must be an object.' });
+      continue;
+    }
     const path = `activationGates.${gate.key}`;
     if (gate.capability !== 'registration.readiness') {
       issues.push({ code: 'gate_capability_unsupported', path: `${path}.capability`, message: `This checklist validates registration.readiness only; ${gate.capability} needs its own checklist.` });
@@ -114,7 +118,7 @@ export function validateActivationGates(snapshot: RegistrySnapshot): ValidationI
 
   for (const capability of snapshot.capabilities) {
     if (!capability.maturity.tenant_activated) continue;
-    const ready = gates.some((gate) => gate.capability === capability.key && gate.status === 'ready');
+    const ready = gates.some((gate) => gate?.capability === capability.key && gate?.status === 'ready');
     if (!ready) {
       issues.push({ code: 'activation_without_gate', path: `capabilities.${capability.key}.maturity.tenant_activated`, message: 'Tenant activation requires a ready activation gate.' });
     }

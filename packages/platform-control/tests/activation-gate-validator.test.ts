@@ -77,6 +77,11 @@ test('a null checklist item is reported, not thrown', () => {
   assert.deepEqual(codes(snapshot([nullItem])), ['malformed_activation_gate']);
 });
 
+test('a null gate entry is reported through full snapshot validation, not thrown', async () => {
+  const issues = await validateSnapshot(snapshot([null as unknown as ActivationGate]));
+  assert.ok(issues.some(({ code }) => code === 'malformed_activation_gate'));
+});
+
 test('gate evidence that is a symlink to a file outside the repository is rejected', async () => {
   const link = 'packages/platform-control/tests/.outside-link-fixture';
   await symlink('/etc/passwd', resolve(repositoryRoot, link));

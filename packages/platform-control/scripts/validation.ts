@@ -24,6 +24,7 @@ export async function validateEvidence(snapshot: RegistrySnapshot): Promise<Vali
   for (const item of snapshot.backlog) for (const path of item.evidence) paths.add(path);
   const gatePaths = new Set<string>();
   for (const gate of snapshot.activationGates ?? []) {
+    if (typeof gate !== 'object' || gate === null) continue;
     // Registry JSON is not validated on load: skip malformed shapes here; the activation-gate validator reports them.
     for (const item of Array.isArray(gate.required) ? gate.required : []) {
       if (!Array.isArray(item?.evidence)) continue;
