@@ -28,15 +28,15 @@ the directory on exit.
 
 The public [developer-tools topic](https://github.com/topics/developer-tools)
 is volatile, so coverage is recorded against a dated snapshot rather than
-implied to be permanent. On 2026-10-12, a refreshed review of the first ten
-topic pages displayed 200 repository cards covering 200 unique repositories.
+implied to be permanent. On 2026-10-15, a refreshed review of the first eleven
+topic pages displayed 220 repository cards covering 220 unique repositories.
 The ranking changed during the review: 21 repositories not present in the
 earlier three-page snapshot were reviewed in the page-four increment, followed
 by 20 repositories on page five, 20 on page six, 20 on page seven, 20 on page
-eight, 20 on page nine and 20 on page ten. Every repository in the refreshed
-ten-page snapshot is accounted for. ShellCheck closed the standalone-script
-lint gap; the other repositories did not supply a new Semester product or CI
-requirement.
+eight, 20 on page nine, 20 on page ten and 20 on page eleven. Every repository
+in the refreshed eleven-page snapshot is accounted for. ShellCheck closed the
+standalone-script lint gap; the other repositories did not supply a new
+Semester product or CI requirement.
 
 ## Evaluated but not installed
 
@@ -162,6 +162,22 @@ requirement.
 | [claude-tap](https://github.com/liaohch3/claude-tap) | Intercepting coding-agent API traffic can expose prompts, source, credentials and provider metadata. Semester has no debugging requirement that justifies this additional local proxy and trace-retention boundary. |
 | [DBLab](https://github.com/danvergara/dblab) | An interactive database client is a personal workstation utility. It must not replace reviewed migrations, policy checks or least-privilege operational paths, and it adds no deterministic CI evidence. |
 | [Phone Harness](https://github.com/ShawnPana/phone-harness) | Semester has no native mobile application or device-control test path. Agent control of a personal phone would create a broad device, account and data boundary without a product or CI requirement. |
+| [Zeron](https://github.com/zeronsh/zeron), [LSP-AI](https://github.com/SilasMarvin/lsp-ai), [J-Space Cognition Suite](https://github.com/Tiger3807861189/J-Space-Cognition-Suite) and [Codex Autoresearch](https://github.com/leo-lilinxiao/codex-autoresearch) | Agent control planes, AI language servers, inference-time control suites and autonomous iteration skills overlap Semester's reviewed development environment. They would expand model, repository-data, credential or execution boundaries without a measured product or CI requirement. |
+| [Portr](https://github.com/amalshaji/portr) | Exposing local HTTP, TCP or WebSocket services to the public internet would widen the development attack surface and bypass the repository's governed preview and deployment paths. Semester has no tunnel requirement that justifies this network boundary. |
+| [MiniSim](https://github.com/okwasniewski/MiniSim) | A menu-bar launcher for native iOS and Android emulators is a workstation convenience. Semester is currently a web application and has no native mobile build or device-test path for it to serve. |
+| [Sepia](https://github.com/Nanako0129/sepia) | A prose-rewriting agent skill is a user-level writing preference rather than a deterministic repository dependency. Product and academic content must retain reviewed authorship, source and integrity controls. |
+| [Harness Books](https://github.com/wquguru/harness-books) and [Vibe Coding Prompt Template](https://github.com/KhazP/vibe-coding-prompt-template) | Books, prompts and planning templates are reference material, not auditable application or CI dependencies. Each proposed workflow must be reviewed against current repository instructions; Harness Books had no detected repository licence when evaluated. |
+| [Graph Node](https://github.com/graphprotocol/graph-node) | A blockchain indexer and GraphQL service does not match Semester's governed Supabase/PostgreSQL data architecture or any current product requirement. |
+| [Oh My Mermaid](https://github.com/oh-my-mermaid/oh-my-mermaid) | AI-generated codebase diagrams duplicate the repository's existing Mermaid and repository-native documentation paths while adding model processing and generated-artifact provenance concerns. |
+| [Dnote](https://github.com/dnote/dnote) | A personal command-line notebook is a workstation choice, not a repository, product or release dependency. Semester's durable engineering knowledge remains in reviewed repository documentation and tracked decisions. |
+| [PromptTools](https://github.com/hegelai/prompttools) | An LLM and vector-database experimentation framework should follow an owned model-evaluation contract, fixtures, providers and data-handling policy. Semester has no measured prompt-evaluation gap that justifies adding this Python and external-service surface. |
+| [migra](https://github.com/djrobstep/migra) | The project identifies itself as deprecated. Semester already governs PostgreSQL changes through reviewed migrations, policy checks and restore evidence, so adding a deprecated parallel schema-diff path would weaken rather than improve that contract. |
+| [Puppeteer Examples](https://github.com/checkly/puppeteer-examples) | Archived example scripts for Puppeteer duplicate Semester's maintained Playwright browser checks and do not constitute an owned test or release gate. |
+| [opensrc](https://github.com/vercel-labs/opensrc) | Fetching dependency source into the workspace for agent context would create additional derived, potentially untracked code copies. Existing lockfiles, package metadata and authoritative upstream repositories cover the current review need without this retention boundary. |
+| [README-AI](https://github.com/eli64s/readme-ai) | AI-generated README content can drift from implemented behavior and source authority. Semester's documentation is reviewed with the code it describes; adding a generator would not provide correctness or freshness evidence. |
+| [modd](https://github.com/cortesi/modd) | Another filesystem watcher and process runner would duplicate Vite's development server and the repository's explicit scripts without adding deterministic build or CI evidence. |
+| [API Dash](https://github.com/foss42/apidash) | Like HTTPie, Bruno, Hoppscotch and Posting, another API client does not create the stable, owned and published API contract Semester needs first. Its generated integration code would still require independent review. |
+| [Qwen Audio Agent](https://github.com/QwenAudio/qwen-audio-agent) | A real-time voice-agent runtime would introduce audio capture, model/provider, latency, consent, retention and deployment boundaries. Semester has no approved voice-product requirement or operating path that justifies installing it. |
 
 Revisit a deferred tool only when a concrete product or engineering requirement
 exists, and repeat the ownership, licence, provenance, permissions, maintenance,
