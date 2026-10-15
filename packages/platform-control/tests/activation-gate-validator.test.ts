@@ -86,3 +86,33 @@ test('a recorded activation decision must resolve to repository evidence', async
   const issues = await validateEvidence(snapshot([bad]));
   assert.deepEqual(issues.map(({ code, path }) => [code, path]), [['missing_evidence_path', 'docs/decisions/does-not-exist.md']]);
 });
+
+test('malformed registry records are reported, not thrown', () => {
+  const noList = { ...gate(), required: null } as unknown as ActivationGate;
+  assert.deepEqual(codes(snapshot([noList])), ['malformed_activation_gate']);
+  const noDecision = { ...gate(), decision: undefined } as unknown as ActivationGate;
+  assert.ok(codes(snapshot([noDecision])).includes('gate_approvers_drift'));
+});
+
+test('evidence must be a repository-relative path that stays inside the repository', () => {
+  for (const reference of ['', '   ', '/etc/passwd', '../outside.md', 'packages/../../outside.md']) {
+    const bad = gate({ required: items({ 'trust.student_copy_approved': { status: 'passed', evidence: [reference] } }) });
+    assert.ok(codes(snapshot([bad])).includes('gate_evidence_path_invalid'), `expected ${JSON.stringify(reference)} to be rejected`);
+  }
+});
+
+test('one activation gate per capability', () => {
+  assert.deepEqual(codes(snapshot([gate(), gate({ key: 'activation.second' })])), ['duplicate_activation_gate']);
+});
+
+test('every unverified or failed item states its gap', () => {
+  const noGap = items({ 'product.receipt_tested': { gap: '   ' } });
+  assert.deepEqual(codes(snapshot([gate({ required: noGap })])), ['gate_item_missing_gap']);
+});
+
+test('approvers compare as a multiset, so a join cannot fabricate a role', () => {
+  const joined = ['Semester_product_owner|Semester_security_or_operations_owner', 'institution_operational_owner'];
+  assert.deepEqual(codes(snapshot([gate({ decision: { record: null, approvers: joined } })])), ['gate_approvers_drift']);
+  const duplicated = [GATE_APPROVERS[0], GATE_APPROVERS[0], GATE_APPROVERS[1]];
+  assert.deepEqual(codes(snapshot([gate({ decision: { record: null, approvers: duplicated } })])), ['gate_approvers_drift']);
+});

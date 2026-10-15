@@ -1,4 +1,4 @@
-import { GATE_ITEM_STATUSES, type RegistrySnapshot, type ValidationIssue } from '../types.ts';
+import { GATE_ITEM_STATUSES, type ActivationGate, type RegistrySnapshot, type ValidationIssue } from '../types.ts';
 
 /** The registration-readiness activation gate, exactly as the pilot brief requires it. Drift in either direction fails. */
 export const REQUIRED_GATE_ITEMS = [
@@ -15,19 +15,39 @@ export const REQUIRED_GATE_ITEMS = [
 
 export const GATE_APPROVERS = ['institution_operational_owner', 'Semester_product_owner', 'Semester_security_or_operations_owner'] as const;
 
+// Compares as multisets: equal length and equal sorted members, so duplicates and joins cannot collide.
 function sameMembers(actual: readonly string[], expected: readonly string[]): boolean {
-  return [...actual].sort().join('|') === [...expected].sort().join('|');
+  const left = [...actual].sort();
+  const right = [...expected].sort();
+  return left.length === right.length && left.every((member, index) => member === right[index]);
+}
+
+// Repository-relative, non-empty, and never escaping the repository root.
+function isRepositoryPath(path: unknown): path is string {
+  return typeof path === 'string' && path.trim() !== '' && !path.startsWith('/') && !/^[A-Za-z]:/.test(path)
+    && !path.split(/[\\/]/).includes('..');
 }
 
 export function validateActivationGates(snapshot: RegistrySnapshot): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const gates = snapshot.activationGates ?? [];
   const capabilityKeys = new Set(snapshot.capabilities.map(({ key }) => key));
+  const gatedCapabilities = new Set<string>();
 
   for (const gate of gates) {
     const path = `activationGates.${gate.key}`;
     if (!capabilityKeys.has(gate.capability)) {
       issues.push({ code: 'gate_unknown_capability', path: `${path}.capability`, message: `Gate references unknown capability ${gate.capability}.` });
+    }
+    if (gatedCapabilities.has(gate.capability)) {
+      issues.push({ code: 'duplicate_activation_gate', path, message: `More than one activation gate targets ${gate.capability}.` });
+    }
+    gatedCapabilities.add(gate.capability);
+
+    // Registry JSON is cast, not validated on load: report malformed shapes instead of throwing.
+    if (!Array.isArray(gate.required)) {
+      issues.push({ code: 'malformed_activation_gate', path: `${path}.required`, message: 'Gate items must be a list.' });
+      continue;
     }
 
     const ids = gate.required.map(({ id }) => id);
@@ -45,19 +65,35 @@ export function validateActivationGates(snapshot: RegistrySnapshot): ValidationI
       if (!(GATE_ITEM_STATUSES as readonly string[]).includes(item.status)) {
         issues.push({ code: 'invalid_gate_item_status', path: `${path}.required.${item.id}.status`, message: `Unknown gate item status ${String(item.status)}.` });
       }
-      if (item.status === 'passed' && item.evidence.length === 0) {
-        issues.push({ code: 'gate_item_passed_without_evidence', path: `${path}.required.${item.id}`, message: 'A passed gate item must cite repository evidence.' });
+      const evidence: unknown = item.evidence;
+      if (!Array.isArray(evidence)) {
+        issues.push({ code: 'malformed_gate_evidence', path: `${path}.required.${item.id}.evidence`, message: 'Gate item evidence must be a list of paths.' });
+      } else {
+        if (item.status === 'passed' && evidence.length === 0) {
+          issues.push({ code: 'gate_item_passed_without_evidence', path: `${path}.required.${item.id}`, message: 'A passed gate item must cite repository evidence.' });
+        }
+        for (const reference of evidence) {
+          if (!isRepositoryPath(reference)) {
+            issues.push({ code: 'gate_evidence_path_invalid', path: `${path}.required.${item.id}.evidence`, message: `Evidence must be a repository-relative path, not ${JSON.stringify(reference)}.` });
+          }
+        }
+      }
+      if (item.status !== 'passed' && (typeof item.gap !== 'string' || item.gap.trim() === '')) {
+        issues.push({ code: 'gate_item_missing_gap', path: `${path}.required.${item.id}.gap`, message: 'An unverified or failed gate item must state the gap.' });
       }
     }
 
     // Status is derived, never hand-set: ready needs every item passed and a decision record.
     const allPassed = gate.required.length > 0 && gate.required.every(({ status }) => status === 'passed');
-    const hasDecision = typeof gate.decision.record === 'string' && gate.decision.record.trim().length > 0;
+    const decision: Partial<ActivationGate['decision']> | null | undefined = gate.decision;
+    const hasDecision = typeof decision?.record === 'string' && decision.record.trim().length > 0;
     const expected = allPassed && hasDecision ? 'ready' : 'not_ready';
     if (gate.status !== expected) {
       issues.push({ code: 'gate_status_mismatch', path: `${path}.status`, message: `Gate must be ${expected} from its items and decision record; it is recorded as ${String(gate.status)}.` });
     }
-    if (!sameMembers(gate.decision.approvers, GATE_APPROVERS)) {
+    // Approvers are checked as a multiset of strings, so a missing or fabricated role cannot hide behind a join.
+    const approvers: unknown = decision?.approvers;
+    if (!Array.isArray(approvers) || !approvers.every((name): name is string => typeof name === 'string') || !sameMembers(approvers, GATE_APPROVERS)) {
       issues.push({ code: 'gate_approvers_drift', path: `${path}.decision.approvers`, message: 'Gate approvers must be the three roles named in the pilot brief.' });
     }
   }
