@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
+import { symlink, unlink } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import test from 'node:test';
-import { loadRegistry } from '../scripts/registry-io.ts';
+import { loadRegistry, repositoryRoot } from '../scripts/registry-io.ts';
 import { validateEvidence, validateSnapshot } from '../scripts/validation.ts';
 import type { ActivationGate, ActivationGateItem, CapabilityRecord, RegistrySnapshot } from '../types.ts';
 import { GATE_APPROVERS, REQUIRED_GATE_ITEMS, validateActivationGates } from '../validators/activation-gate-validator.ts';
@@ -63,12 +65,34 @@ test('rejects unknown item statuses and passed items that cite no evidence', () 
 test('tenant activation requires a ready gate for that capability', () => {
   const activated = [capability({ maturity: { ...maturity, tenant_activated: true } })];
   assert.deepEqual(codes(snapshot([gate()], activated)), ['activation_without_gate']);
-  assert.deepEqual(codes(snapshot([], activated)), ['activation_without_gate']);
+  assert.ok(codes(snapshot([], activated)).includes('activation_without_gate'));
+});
+
+test('the registration-readiness gate must exist even before activation', () => {
+  assert.ok(codes(snapshot([])).includes('activation_gate_missing'));
+});
+
+test('a null checklist item is reported, not thrown', () => {
+  const nullItem = { ...gate(), required: [null] } as unknown as ActivationGate;
+  assert.deepEqual(codes(snapshot([nullItem])), ['malformed_activation_gate']);
+});
+
+test('gate evidence that is a symlink to a file outside the repository is rejected', async () => {
+  const link = 'packages/platform-control/tests/.outside-link-fixture';
+  await symlink('/etc/passwd', resolve(repositoryRoot, link));
+  try {
+    const bad = gate({ required: items({ 'trust.student_copy_approved': { status: 'passed', evidence: [link] } }) });
+    const issues = await validateEvidence(snapshot([bad]));
+    assert.ok(issues.some(({ code }) => code === 'gate_evidence_outside_repository'));
+  } finally {
+    await unlink(resolve(repositoryRoot, link));
+  }
 });
 
 test('rejects approver drift and gates that reference unknown capabilities', () => {
   assert.deepEqual(codes(snapshot([gate({ decision: { record: null, approvers: ['product'] } })])), ['gate_approvers_drift']);
-  assert.deepEqual(codes(snapshot([gate({ capability: 'not.a.capability' })])), ['gate_capability_unsupported', 'gate_unknown_capability']);
+  const unknown = codes(snapshot([gate({ capability: 'not.a.capability' })]));
+  assert.ok(unknown.includes('gate_capability_unsupported') && unknown.includes('gate_unknown_capability'));
 });
 
 test('gate evidence paths must exist in the repository', async () => {

@@ -1,5 +1,5 @@
-import { access, stat } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { access, realpath, stat } from 'node:fs/promises';
+import { resolve, sep } from 'node:path';
 import type { RegistrySnapshot, ValidationIssue } from '../types.ts';
 import { validateActivationGates } from '../validators/activation-gate-validator.ts';
 import { validateCapabilities } from '../validators/capability-validator.ts';
@@ -35,7 +35,13 @@ export async function validateEvidence(snapshot: RegistrySnapshot): Promise<Vali
   for (const path of [...paths].sort()) {
     try { await access(resolve(repositoryRoot, path)); }
     catch { issues.push({ code: 'missing_evidence_path', path, message: 'Evidence path does not exist in the repository.' }); continue; }
-    if (gatePaths.has(path) && !(await stat(resolve(repositoryRoot, path))).isFile()) {
+    if (!gatePaths.has(path)) continue;
+    // Resolve symlinks: a repository-relative name must not reach a file outside the repository.
+    const target = await realpath(resolve(repositoryRoot, path));
+    const root = await realpath(repositoryRoot);
+    if (target !== root && !target.startsWith(root + sep)) {
+      issues.push({ code: 'gate_evidence_outside_repository', path, message: 'Gate evidence resolves outside the repository.' });
+    } else if (!(await stat(target)).isFile()) {
       issues.push({ code: 'gate_evidence_not_file', path, message: 'Gate evidence must name a file, not a directory.' });
     }
   }

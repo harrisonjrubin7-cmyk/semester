@@ -33,6 +33,10 @@ export function validateActivationGates(snapshot: RegistrySnapshot): ValidationI
   const gates = snapshot.activationGates ?? [];
   const capabilityKeys = new Set(snapshot.capabilities.map(({ key }) => key));
   const gatedCapabilities = new Set<string>();
+  // The registration-readiness control must exist in the registry before any tenant can be activated.
+  if (snapshot.capabilities.some(({ key }) => key === 'registration.readiness') && !gates.some((gate) => gate?.capability === 'registration.readiness')) {
+    issues.push({ code: 'activation_gate_missing', path: 'activationGates', message: 'registration.readiness has no activation gate.' });
+  }
 
   for (const gate of gates) {
     const path = `activationGates.${gate.key}`;
@@ -51,8 +55,8 @@ export function validateActivationGates(snapshot: RegistrySnapshot): ValidationI
     gatedCapabilities.add(gate.capability);
 
     // Registry JSON is cast, not validated on load: report malformed shapes instead of throwing.
-    if (!Array.isArray(gate.required)) {
-      issues.push({ code: 'malformed_activation_gate', path: `${path}.required`, message: 'Gate items must be a list.' });
+    if (!Array.isArray(gate.required) || gate.required.some((item) => typeof item !== 'object' || item === null)) {
+      issues.push({ code: 'malformed_activation_gate', path: `${path}.required`, message: 'Gate items must be a list of objects.' });
       continue;
     }
 
