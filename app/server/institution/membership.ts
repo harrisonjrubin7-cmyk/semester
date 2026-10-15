@@ -89,6 +89,11 @@ export interface MembershipDirectory {
   ): Promise<MembershipRecord[]>;
 }
 
+/** Server-only access to every institutional membership bound to one auth account. */
+export interface ContextMembershipDirectory {
+  membershipsForUser(userId: string): Promise<MembershipRecord[]>;
+}
+
 export interface AuthorizationAuditRecord {
   userId: string;
   providerIdentifier: string;
@@ -176,7 +181,10 @@ export function createMembershipResolver(
 }
 
 /** A service-role directory. The key is server-only and must never use a VITE_ name. */
-export function supabaseMembershipDirectory(url: string, serviceKey: string): MembershipDirectory {
+export function supabaseMembershipDirectory(
+  url: string,
+  serviceKey: string,
+): MembershipDirectory & ContextMembershipDirectory {
   const client = createClient(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
@@ -219,6 +227,23 @@ export function supabaseMembershipDirectory(url: string, serviceKey: string): Me
         if (claimed === true) data = await memberships(userId, tenantId, providerId);
       }
       return data.map((row) => ({
+        id: row.id as string,
+        userId: row.auth_user_id as string,
+        tenantId: row.tenant_id as string,
+        providerId: row.identity_provider_id as string,
+        status: row.status as MembershipRecord['status'],
+        roles: Array.isArray(row.roles) ? row.roles as string[] : [],
+      }));
+    },
+    membershipsForUser: async (userId) => {
+      const { data, error } = await client
+        .from('institution_membership')
+        .select('id, auth_user_id, tenant_id, identity_provider_id, status, roles')
+        .eq('auth_user_id', userId)
+        .limit(101);
+      if (error) throw new Error('Institution context directory lookup failed.');
+      if ((data ?? []).length > 100) throw new Error('Institution context directory is too large.');
+      return (data ?? []).map((row) => ({
         id: row.id as string,
         userId: row.auth_user_id as string,
         tenantId: row.tenant_id as string,
