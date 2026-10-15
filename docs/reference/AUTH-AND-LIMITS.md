@@ -88,12 +88,18 @@ server has already verified. It refuses a directory whose person or institution 
 from the authenticated identity, and a conflicting `X-Tenant-Id` remains a
 `tenant_mismatch`. The selected membership becomes the request context's membership and
 its expiry caps the request's role grants. Authentication supplies the verified
-membership id and session expiry. `contextDirectoryForVerifiedIdentity` can now assemble
+membership id and session expiry. `contextDirectoryForVerifiedIdentity` can assemble
 the one active membership that production authentication actually proved and authorize
 only its role-derived workspace set: student, staff, institution, or external. No current
-membership role can manufacture company, operations, or developer access. This is not yet
-a multi-membership directory: there is no loader for additional memberships, and no route
-calls the adapter. It is not a live workspace-switching API or a client contract.
+membership role can manufacture company, operations, or developer access.
+`createContextDirectoryLoader` is the additive server-side expansion: it queries
+`institution_membership` only by the remotely verified auth user id, caps the result at
+100 rows, omits inactive rows, and refuses the whole directory unless the membership used
+for authentication is still active with the same tenant and roles. Every included row
+must have valid server ids, belong to that account, and contain only known institution
+roles. No route calls this loader, and `contextForVerifiedSelection` still builds only the
+currently authenticated institution's single-membership directory. This is therefore not
+a live cross-institution request context, workspace-switching API, UI, or client contract.
 
 Both entry points re-run the token check at the moment of a commit (and of an intelligence confirm) and require the same user and institution as before. If the answer changed, the commit is `403 forbidden` ("Your current university access does not permit this action.").
 
