@@ -140,6 +140,8 @@ describe('the error drill-down at narrow widths', () => {
   };
 
   it('wraps filters, keeps disclosures finger-sized, and stacks detail terms', () => {
+    expect(rule('.integration-error-nav .btn')).toMatch(/width:\s*auto/);
+    expect(rule('.integration-error-nav .btn')).toMatch(/margin-top:\s*0/);
     expect(rule('.integration-error-filters')).toMatch(/grid-template-columns:\s*repeat\(auto-fit/);
     expect(rule('.integration-error-filters label')).toMatch(/min-width:\s*0/);
     expect(rule('.integration-error-filters select')).toMatch(/min-height:\s*var\(--target-primary\)/);

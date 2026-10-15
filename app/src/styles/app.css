@@ -11014,6 +11014,11 @@ button.adband-bar {
   gap: var(--sp-2);
 }
 
+.integration-error-nav .btn {
+  width: auto;
+  margin-top: 0;
+}
+
 .integration-conflict-note,
 .integration-error-window {
   margin-block: var(--sp-3);
