@@ -1,0 +1,12 @@
+discovery:
+  id: DISC-001
+  title: Advisor-visible degree scenario sharing
+  problem:
+    student: Students can't easily bring a current planning scenario to an advisor without rebuilding it in the meeting.
+    institution: Advisors need a scoped, understandable planning artifact that isn't treated as an official audit result.
+  audience: {primary: [student, assigned_advisor], secondary: [registrar_when_escalated]}
+  evidence: {qualitative: pilot_interview_or_support_pattern (none yet), quantitative: baseline_to_be_defined, confidence: discovery_only}
+  authority: {institution_authoritative_for: [degree_requirements, official_audit, substitutions, degree_clearance], semester_role: [student_owned_scenario, controlled_advisor_sharing, safe_official_handoff]}
+  non_goals: [official_degree_certification, automated_advisor_recommendation, cross_student_comparison]
+  decision_needed: [approve_discovery, defer]
+  intake_score: ui_kits/scale-system Domain intake → "Advisor collaboration" preset → approve discovery (Tier-1 foundations open)

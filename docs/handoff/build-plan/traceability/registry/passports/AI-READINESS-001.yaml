@@ -1,0 +1,37 @@
+# generated from ui_kits/traceability/trace-data.js — 2026-10-14
+passport:
+  identity:
+    id: "AI-READINESS-001"
+    name: "Ask Semester — readiness explanation"
+    type: "capability"
+  accountability:
+    business_owner: "pending"
+    technical_owner: "pending"
+    operational_owner: "pending"
+    review_cadence: "on_change"
+  boundaries:
+    authority_owner: "institution_registrar"
+    data_classification: "restricted_institutional"
+    tenant_scope: "institution_bound"
+    allowed_uses: "explain visible terms · summarise approved context · suggest approved next steps · draft questions"
+    prohibited_uses: "determine enrollment · override policy · infer missing records · act without confirmation · train on records"
+  dependencies:
+    upstream: "AI gateway · WF-READINESS-001"
+    downstream: "student screen"
+    failure_mode: "gateway refusal"
+    degradation_behavior: "non-AI explanation"
+  control_plane:
+    policy_ids: ""
+    audit_events: "ai.request · ai.refusal"
+    required_evidence: "prompt-injection · data-scope · prohibited-claim · a11y · human-confirmation · retention review"
+    release_gate: ""
+    safe_off_path: "AI kill switch"
+  quality:
+    test_suites: ""
+    accessibility_requirements: "AI label · source statement"
+  lifecycle:
+    maturity_level: 0
+    current_status: "framed"
+    created_at: "2026-10-14"
+    last_reviewed_at: ""
+    retirement_plan: ""

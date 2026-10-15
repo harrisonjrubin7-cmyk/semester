@@ -1,0 +1,53 @@
+// packages/auth/context.ts — request context. Rename to .ts.
+// Corrections vs. the plan PDF: (1) the JWT is VERIFIED against the issuer's JWKS, never just decoded;
+// (2) roles/grants are loaded from the database on every request, never trusted from token claims
+//     (claims go stale the moment a grant is revoked); (3) tenant comes from an active membership the
+//     account actually holds, not from a client-supplied header.
+import { createRemoteJWKSet, jwtVerify } from "jose";
+
+export type RequestContext = {
+  accountId: string;
+  tenantId: string | null;      // null = personal workspace
+  membershipId: string | null;
+  workspace: string | null;
+  grants: string[];             // capability keys, from DB
+  sessionId: string;
+  correlationId: string;
+};
+
+export type GrantStore = {
+  // Must read with a server credential and filter by account + tenant + valid_until > now().
+  activeMembership(accountId: string, tenantId: string): Promise<{ id: string } | null>;
+  activeGrants(accountId: string, tenantId: string | null, workspace: string | null): Promise<string[]>;
+};
+
+const jwks = (issuer: string) => createRemoteJWKSet(new URL(`${issuer.replace(/\/$/, "")}/.well-known/jwks.json`));
+
+export class AuthError extends Error {
+  constructor(public status: 401 | 403, public code: string) { super(code); }
+}
+
+export async function buildRequestContext(opts: {
+  token: string | undefined;
+  issuer: string;               // e.g. https://<ref>.supabase.co/auth/v1
+  audience: string;             // "authenticated"
+  requestedTenant: string | null;
+  requestedWorkspace: string | null;
+  store: GrantStore;
+}): Promise<RequestContext> {
+  if (!opts.token) throw new AuthError(401, "unauthenticated");
+  const { payload } = await jwtVerify(opts.token, jwks(opts.issuer), { issuer: opts.issuer, audience: opts.audience })
+    .catch(() => { throw new AuthError(401, "invalid_session"); });
+  const accountId = String(payload.sub);
+  let membershipId: string | null = null;
+  if (opts.requestedTenant) {
+    const m = await opts.store.activeMembership(accountId, opts.requestedTenant);
+    if (!m) throw new AuthError(403, "no_membership");
+    membershipId = m.id;
+  }
+  const grants = await opts.store.activeGrants(accountId, opts.requestedTenant, opts.requestedWorkspace);
+  return {
+    accountId, tenantId: opts.requestedTenant, membershipId, workspace: opts.requestedWorkspace, grants,
+    sessionId: String(payload.session_id ?? payload.jti ?? ""), correlationId: crypto.randomUUID(),
+  };
+}

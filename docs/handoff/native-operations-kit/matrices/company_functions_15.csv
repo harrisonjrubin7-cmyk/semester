@@ -1,0 +1,16 @@
+function,proposed_owner,workflow,metric_spec,controls
+Corporate governance,Founder/counsel,Entity/resolutions/authority,Accepted authority; obligation completion,Signing and disclosure gates
+Strategy/product,Product,Roadmap/requirements,Evidence-accepted capability completion,Scope/change control
+Engineering/release,Engineering,Build/ship/recover,Change failure; lead time with definitions,CI/release/rollback
+Security/privacy/accessibility,Trust,Assess/remediate/respond,Blocker age; review completion,Least privilege; qualified review
+Sales/RevOps,RevOps,Account/deal/procurement,Stage-qualified conversion,Price/signing/claim control
+Marketing/social,Marketing,Draft/review/publish,Qualified demand; consented delivery,Consent; protected surfaces; claim review
+Implementation,Implementation,Configure/migrate/activate,Accepted milestone and reconciliation,Customer UAT/cutover authority
+Customer success,Success,Health/QBR/renewal,Accepted outcomes; retention denominators,Transparent inputs; no hidden student risk
+Support,Support,Triage/resolve/escalate,Acknowledgement/resolution by severity,Minimum context; coverage
+Trust & Safety,T&S,Report/action/appeal,Policy response/appeal outcomes,Human authority; identity protection
+Finance,Finance/CPA,Bill/reconcile/close,Reconciled cash; receivables; costs,Balanced ledger; approval; statutory advice
+Legal/vendor,Counsel/Founder,Contract/review/renew,Obligation and review completion,Versioned paper; subprocessor controls
+People,People,Hire/onboard/offboard,Hiring stages; access closure,Employment/comp review; revocation
+Data/research,Data/research,Define/measure/review,Definition coverage; data quality,Purpose/aggregation/research approval
+Partners/developer,Platform/Partners,Review/integrate/certify,Approved integrations; compatibility,Scopes; sandbox; revocation

@@ -1,0 +1,82 @@
+// Student readiness screen. Copy to app/src/features/readiness/ReadinessScreen.tsx.
+// Uses design-system tokens (var(--…)) only; works at 320 px; every state has visible text, not colour alone.
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ApiError, isDefinitive, STATE_COPY, type ReadinessClient, type ReadinessSummary, type Receipt } from "./api";
+
+const GLYPH = { ok: "✓", warn: "!", bad: "✕", neutral: "•" };
+const TONE = { ok: "var(--status-success)", warn: "var(--status-pending)", bad: "var(--status-danger)", neutral: "var(--border-subtle)" };
+const SRC: Record<string, string> = { institution_verified: "From your school", connected: "Connected source", student_entered: "You entered this", estimated: "Estimate", ai_assisted: "AI-assisted", needs_review: "Needs review" };
+
+export function ReadinessScreen({ client, termId, termLabel, institution }: { client: ReadinessClient; termId: string; termLabel: string; institution: string }) {
+  const [online, setOnline] = useState(typeof navigator === "undefined" ? true : navigator.onLine);
+  useEffect(() => { const on = () => setOnline(true), off = () => setOnline(false); addEventListener("online", on); addEventListener("offline", off); return () => { removeEventListener("online", on); removeEventListener("offline", off); }; }, []);
+  const [history, setHistory] = useState<Receipt[]>([]);
+  const [s, setS] = useState<ReadinessSummary | null>(null);
+  const [err, setErr] = useState<ApiError | null>(null);
+  const [busy, setBusy] = useState<"load" | "check" | "refresh" | "refer" | null>("load");
+  const [receipt, setReceiptOnly] = useState<Receipt | null>(null);
+  const setReceipt = (r: Receipt) => { setReceiptOnly(r); setHistory((h) => [r, ...h.filter((x) => x.id !== r.id)].slice(0, 10)); };
+  const keys = useRef<Record<string, string>>({}); // one idempotency key per intent, reused on retry
+  const key = (k: string) => (keys.current[k] ??= crypto.randomUUID());
+  const done = (k: string) => delete keys.current[k];
+  const live = useRef<HTMLDivElement>(null);
+
+  const run = useCallback(async <T,>(kind: NonNullable<typeof busy>, fn: () => Promise<T>, after?: (t: T) => void) => {
+    setBusy(kind); setErr(null);
+    try { const t = await fn(); after?.(t); } catch (e) { setErr(e instanceof ApiError ? e : new ApiError(0, "network", "Network error")); } finally { setBusy(null); live.current?.focus(); }
+  }, []);
+
+  useEffect(() => { run("load", () => client.context(termId), setS); }, [client, termId, run]);
+
+  const check = () => run("check", () => client.evaluate(termId, { term: termId }, key("check")), (r) => { setS(r.summary); setReceipt(r.receipt); done("check"); });
+  const refresh = () => run("refresh", () => client.refresh(termId, key("refresh")), (r) => { setReceipt(r); done("refresh"); });
+  const refer = (office: string) => run("refer", () => client.refer(termId, office, "", key("refer:" + office)), (r) => { setReceipt(r); done("refer:" + office); });
+
+  const copy = s ? STATE_COPY[s.state] : STATE_COPY.unknown;
+  const definitive = s ? isDefinitive(s) : false;
+  return (
+    <main style={{ maxWidth: 720, margin: "0 auto", padding: 16, display: "grid", gap: 16 }}>
+      <header><p style={{ margin: 0, fontSize: 12, textTransform: "uppercase", letterSpacing: ".08em", color: "var(--text-secondary)" }}>{institution} · Registration readiness · {termLabel}</p><h1 style={{ margin: "4px 0 0", fontSize: 24 }}>Can I register?</h1></header>
+
+      {!online && <p role="status" style={{ margin: 0, padding: "8px 10px", borderLeft: `4px solid ${TONE.warn}`, background: "var(--surface-raised)" }}><span aria-hidden="true">{GLYPH.warn} </span>You're offline. Showing the last result saved on this device; checking and referrals are paused.</p>}
+      <div ref={live} tabIndex={-1} aria-live="polite" style={{ outline: "none" }}>
+        {busy === "load" ? <p>Loading what your school's records show…</p> : err ? (
+          <div role="alert" style={{ borderLeft: `4px solid ${err.status === 503 ? TONE.warn : TONE.bad}`, padding: "10px 12px", background: "var(--surface-raised)" }}>
+            <strong>{err.status === 503 ? "Can't confirm right now" : "That didn't work"}</strong><p style={{ margin: "4px 0 0" }}>{err.userMessage}</p>
+            {err.correlationId && <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--text-secondary)" }}>Reference {err.correlationId.slice(0, 8)}</p>}
+          </div>
+        ) : s && (
+          <section aria-labelledby="rd-state" style={{ border: "1px solid var(--border-subtle)", borderLeft: `4px solid ${TONE[copy.tone]}`, borderRadius: 8, padding: 16, background: "var(--surface-base)", display: "grid", gap: 6 }}>
+            <h2 id="rd-state" style={{ margin: 0, fontSize: 20 }}><span aria-hidden="true">{GLYPH[copy.tone]} </span>{copy.title}</h2>
+            <p style={{ margin: 0 }}>{copy.body}</p>
+            {!definitive && s.state === "ready" && <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: 14 }}>Some information isn't from your school or isn't current, so treat this as provisional.</p>}
+            <p style={{ margin: 0, fontSize: 12, color: "var(--text-secondary)" }}>Checked {s.evaluatedAt ? new Date(s.evaluatedAt).toLocaleString() : "—"} · This is not enrollment.</p>
+          </section>
+        )}
+      </div>
+
+      {s && s.checks.length > 0 && (
+        <section aria-labelledby="rd-checks"><h2 id="rd-checks" style={{ fontSize: 16, margin: "0 0 8px" }}>What we checked</h2>
+          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 8 }}>
+            {s.checks.map((c) => { const cc = STATE_COPY[c.state]; return (
+              <li key={c.key} style={{ border: "1px solid var(--border-subtle)", borderRadius: 8, padding: 12, display: "grid", gap: 4, background: "var(--surface-base)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}><strong>{c.label}</strong><span style={{ fontSize: 13, border: `1px solid ${TONE[cc.tone]}`, borderRadius: 10, padding: "1px 8px" }}><span aria-hidden="true">{GLYPH[cc.tone]} </span>{cc.title}</span></div>
+                <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{SRC[c.sourceType]}{c.freshness !== "current" ? " · not current" : ""}{c.observedAt ? " · " + new Date(c.observedAt).toLocaleString() : ""}</span>
+                {c.nextStep && <span style={{ fontSize: 14 }}>{c.nextStep}</span>}
+                {c.office && (c.state === "blocked" || c.state === "needs_review") && <button type="button" onClick={() => refer(c.office!)} disabled={busy !== null || !online} style={btn}>Ask {c.office} to review</button>}
+              </li>); })}
+          </ul>
+        </section>
+      )}
+
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button type="button" onClick={check} disabled={busy !== null || !online} style={{ ...btn, background: "var(--action-primary)", color: "var(--text-on-action, #fff)", borderColor: "var(--action-primary)" }}>{busy === "check" ? "Checking…" : "Check my readiness"}</button>
+        {(s?.freshness === "stale" || err?.status === 503) && <button type="button" onClick={refresh} disabled={busy !== null || !online} style={btn}>{busy === "refresh" ? "Requesting…" : "Ask for a refresh"}</button>}
+      </div>
+
+      {history.length > 0 && <section aria-labelledby="rd-hist"><h2 id="rd-hist" style={{ fontSize: 16, margin: "0 0 6px" }}>Receipts</h2><ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>{history.map((h) => <li key={h.id}>{new Date(h.issuedAt).toLocaleString()} · {h.statement} · <span style={{ fontFamily: "var(--font-mono)" }}>{h.id.slice(0, 8)}</span></li>)}</ul></section>}
+      {receipt && <p role="status" style={{ margin: 0, fontSize: 13, padding: "8px 10px", background: "var(--surface-raised)", borderRadius: 6 }}><strong>{receipt.status === "completed" ? "Done" : "Received"}</strong> · {receipt.statement} · Receipt {receipt.id.slice(0, 8)}</p>}
+    </main>
+  );
+}
+const btn: React.CSSProperties = { font: "inherit", fontSize: 14, minHeight: 44, padding: "0 16px", borderRadius: 6, border: "1px solid var(--border-subtle)", background: "var(--surface-base)", color: "var(--text-primary)", cursor: "pointer", justifySelf: "start" };

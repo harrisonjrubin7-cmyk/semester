@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "termCode": {
+          "type": "string",
+          "pattern": "^(19|20)[0-9]{2}(FA|SP|SU)$"
+        },
+        "expectedScheduleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "operation": {
+          "const": "add"
+        },
+        "sectionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 12,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "studentId",
+        "termCode",
+        "expectedScheduleVersion",
+        "operation",
+        "sectionIds"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "termCode": {
+          "type": "string",
+          "pattern": "^(19|20)[0-9]{2}(FA|SP|SU)$"
+        },
+        "expectedScheduleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "operation": {
+          "const": "drop"
+        },
+        "fromEnrollmentIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 12,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "studentId",
+        "termCode",
+        "expectedScheduleVersion",
+        "operation",
+        "fromEnrollmentIds"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "termCode": {
+          "type": "string",
+          "pattern": "^(19|20)[0-9]{2}(FA|SP|SU)$"
+        },
+        "expectedScheduleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "operation": {
+          "const": "swap"
+        },
+        "sectionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true
+        },
+        "fromEnrollmentIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "studentId",
+        "termCode",
+        "expectedScheduleVersion",
+        "operation",
+        "sectionIds",
+        "fromEnrollmentIds"
+      ],
+      "additionalProperties": false,
+      "description": "One-for-one swap, matching registration_swap(from, to): the drop and add commit together or not at all."
+    },
+    {
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "termCode": {
+          "type": "string",
+          "pattern": "^(19|20)[0-9]{2}(FA|SP|SU)$"
+        },
+        "expectedScheduleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "operation": {
+          "const": "withdraw"
+        },
+        "fromEnrollmentIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 12,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "studentId",
+        "termCode",
+        "expectedScheduleVersion",
+        "operation",
+        "fromEnrollmentIds"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "$id": "semester:registrar/enrollment-commands/v2",
+  "description": "Enrollment command body. The idempotency key travels in the Idempotency-Key header (16–128 chars), never in the body. studentId must equal the authenticated student unless registrar staff act under a scoped grant — enforced by the command handler, not this schema."
+}

@@ -1,0 +1,6 @@
+AI_review_packet:
+  purpose: [explain_permitted_AI_functions, explain_data_boundaries, demonstrate_human_control, document_testing_and_incident_paths]
+  contents: [system_scope_and_non_scope, model_and_provider_register, data_flow_diagram, retrieval_and_source_policy, prompt_and_tool_governance, student_record_boundary, course_policy_boundary, action_confirmation_rules, logging_and_retention_statement, evaluation_and_red_team_plan, incident_and_disablement_process, change_management_process]
+  sources_in_project: [guidelines/arch-ai-gateway.html (six checks), handoff/build-plan/product-system/docs/ai/gateway-flow.yaml, traceability AI-READINESS-001 passport, course-source-packet.yaml]
+  mandatory_product_behaviors: [response_is_labeled_AI_assisted, source_or_limitation_is_visible, uncertainty_is_disclosed_when_material, action_is_previewed_before_confirmation, unsafe_or_unavailable_requests_get_safe_handoff]
+  known_gap: repo has one real gateway + ~38 bypass sites; the packet can't be submitted until every AI call routes through the gateway

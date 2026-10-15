@@ -1,0 +1,15 @@
+# authority-model.yaml — who owns it, who decides it, what outranks it.
+authority_precedence: [institution_verified, connected, student_entered, estimated, ai_assisted, needs_review]   # highest first
+rules:
+  - { id: AUTH-001, rule: "A lower-authority source cannot overwrite a higher-authority record.", enforced_by: proposed-schema/075_authority_guard.sql }
+  - { id: AUTH-002, rule: "A stale authoritative source is shown as stale, never silently replaced by a lower source.", enforced_by: "065 check: ready requires current source" }
+  - { id: AUTH-003, rule: "Student-entered information may supplement but cannot amend an institutional record.", enforced_by: "075 trigger + no client writes on institution tables" }
+  - { id: AUTH-004, rule: "AI-generated content is a draft; it cannot become authoritative without an accountable human and an approved source.", enforced_by: "source_type ai_assisted cannot be promoted by the guard; ai_boundary.md" }
+  - { id: AUTH-005, rule: "An unresolved authority conflict becomes needs_review and writes an audit event.", enforced_by: "075 trigger raises; adapter records reconciliation_items" }
+  - { id: AUTH-006, rule: "Every source-backed claim shown to a student carries a source label and freshness copy.", enforced_by: "route acceptance: source_label_on_each_check" }
+record_authorities:
+  grade_entry: { authoritative_owner: institution, authoritative_system: SIS, semester_role: draft_and_workflow_layer, write_rule: "Faculty may draft; registrar-approved release and SIS acceptance make it official." }
+  registration_request: { authoritative_owner: institution, authoritative_system: registrar_SIS, semester_role: governed_request_and_receipt_layer, write_rule: "Semester records a request; it never states enrollment until the SIS confirms." }
+  readiness_case: { authoritative_owner: semester, authoritative_inputs: [SIS_holds, time_ticket_system, prerequisite_record, institutional_policy], write_rule: "Semester derives a reviewable state and keeps the source evidence per check." }
+  hold: { authoritative_owner: institution, authoritative_system: SIS, semester_role: read_only_projection }
+  time_ticket: { authoritative_owner: institution, authoritative_system: SIS, semester_role: read_only_projection }

@@ -1,0 +1,13 @@
+capability:
+  id: CAP-HELP-001
+  title: Help handoff
+  placement: native
+  maturity_level: 1
+  student_can: [explain_what_they_need, select_a_preferred_contact_method, attach_student_selected_context, see_handoff_status, withdraw_a_request_when_allowed]
+  staff_can: [receive_authorized_context, route_to_approved_office, request_missing_information, record_resolution_category, return_a_safe_next_step]
+  protections: [minimum_necessary_context, student_preview_before_share, consent_or_policy_basis_recorded, office_scope_enforced, access_audited, no_sensitive_inference_from_free_text]
+  handoff:
+    id: HND-001
+    student_visible_status: [draft, submitted, received, more_information_needed, routed, resolved, closed]
+    required_receipt: [request_summary, destination_office, shared_information_summary, submission_time, expected_next_step, withdrawal_or_correction_path]
+  not_a_case_system: Semester routes; the receiving office's case system stays authoritative.

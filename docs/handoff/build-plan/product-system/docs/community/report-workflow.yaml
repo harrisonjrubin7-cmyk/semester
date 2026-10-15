@@ -1,0 +1,7 @@
+report_workflow:
+  states: [received, triaged, information_requested, actioned, appealed, closed]
+  reporter_visibility: [received, under_review, action_taken_when_appropriate, closed]
+  moderation_actions: [content_removal, listing_pause, account_restriction, account_suspension, emergency_escalation, no_action_with_reason]
+  requirements: [reason_for_action, scoped_staff_access, appeal_path, immutable_audit_record, no_use_of_restricted_institutional_records]
+  appeal: {reviewer: different_from_original_moderator}
+  prototype: ui_kits/network (trust & safety queue)

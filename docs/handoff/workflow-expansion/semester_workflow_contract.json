@@ -1,0 +1,67 @@
+{
+  "artifact_status": "Proposed specification, not runtime implementation",
+  "workflow_identity": [
+    "stable_id",
+    "version",
+    "supersedes",
+    "existing_catalog_links"
+  ],
+  "scope": [
+    "tenant_id",
+    "domain",
+    "actor",
+    "role_grant",
+    "purpose"
+  ],
+  "definition": [
+    "trigger",
+    "preconditions",
+    "inputs",
+    "outputs",
+    "states",
+    "transitions",
+    "exception_paths"
+  ],
+  "authority": [
+    "mode",
+    "authoritative_system",
+    "effective_from",
+    "effective_until",
+    "approval_scope"
+  ],
+  "controls": [
+    "classification",
+    "consent_or_other_access_basis",
+    "policy_version",
+    "idempotency_key",
+    "expected_record_version",
+    "audit_events"
+  ],
+  "completion": [
+    "receipt",
+    "projection_updates",
+    "reconciliation",
+    "recovery_or_compensation",
+    "support_owner"
+  ],
+  "readiness": [
+    "design_evidence",
+    "code_evidence",
+    "test_evidence",
+    "deployment_evidence",
+    "institution_authorization",
+    "production_activation"
+  ],
+  "acceptance_suites": [
+    "happy_path",
+    "tenant_isolation",
+    "role_denial",
+    "concurrency",
+    "replay",
+    "revocation",
+    "stale_sources",
+    "provider_timeout",
+    "accessibility",
+    "restore_or_compensation"
+  ]
+}

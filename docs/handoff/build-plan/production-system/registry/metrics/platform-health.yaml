@@ -1,0 +1,12 @@
+platform_health:
+  reporting_rule: Every operational or commercial metric shows numerator, denominator, date range, exclusions, data source, owner and known limitations.
+  scorecard:
+    - {dimension: Capability health, leading: active capabilities with current owner and evidence, lagging: incidents or blocked releases from missing controls, today: "0 / 0 activated (20 tracked, 1 with an owner — registration readiness)"}
+    - {dimension: Authority clarity, leading: source-backed capabilities with an authority map, lagging: source-related confusion or reconciliation cases, today: "8 / 8 have an authoritative holder named; 3 / 8 have a freshness policy drafted"}
+    - {dimension: Reliability, leading: required drill/test pass rate, lagging: production workflow, connector or outage impact, today: no runs}
+    - {dimension: Accessibility, leading: critical paths verified on the current release, lagging: issues affecting task completion, today: no formal verification}
+    - {dimension: Operational readiness, leading: runbooks, on-call owner, safe-off coverage, lagging: time to detect/contain/recover, today: runbooks drafted; owner Harrison, backup not named}
+    - {dimension: Trust readiness, leading: current data, AI, privacy and claim registers, lagging: review delays, contract blockers, today: registers drafted 2026-10-14; claims lint run, 2 fixes}
+    - {dimension: Implementation repeatability, leading: reusable connector/configuration artifacts, lagging: time to activate the next tenant, today: none reusable}
+    - {dimension: Student clarity, leading: safe-next-step completion in pilot scope, lagging: repeated confusion or misrouted support, today: no pilot data}
+    - {dimension: Commercial health, leading: qualified scope and renewal evidence, lagging: renewal, expansion, reference outcome, today: one signed pilot (founder-reported), not activated}

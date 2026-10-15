@@ -1,0 +1,26 @@
+openapi: 3.1.0
+info: { title: Semester curriculum + scheduling API (proposed), version: 0.1.0 }
+x-common-contract: common-rest-contract.yaml
+paths:
+  /v1/academic/courses: { get: { operationId: searchCourses, x-authority: catalog_visibility_policy }, post: { operationId: createCourse, x-authority: curriculum_author, x-idempotent: true } }
+  /v1/academic/courses/{id}/versions: { get: { operationId: listCourseVersions, x-authority: scoped_historical_visibility }, post: { operationId: createCourseDraft, x-authority: curriculum_author, x-idempotent: true } }
+  /v1/academic/course-versions/{id}: { patch: { operationId: editCourseDraft, x-authority: scoped_author, x-precondition: If-Match } }
+  /v1/academic/course-versions/{id}/review-requests: { post: { operationId: submitCourseForReview, x-authority: authorized_submitter, x-idempotent: true } }
+  /v1/academic/curriculum-review-requests/{id}/decisions: { post: { operationId: decideCurriculumReview, x-authority: academic_approver, x-precondition: expected_record_version, x-rule: "approver ≠ submitter" } }
+  /v1/academic/curriculum-publications: { post: { operationId: publishCurriculum, x-authority: curriculum_publication, x-rule: "Rechecks approval; approval of one version never publishes a later edit" } }
+  /v1/academic/program-versions/{id}/requirements: { get: { operationId: getRequirementGraph } }
+  /v1/academic/requirement-validations: { post: { operationId: validateRequirementGraph, x-impl: requirements/requirement-graph.ts#validate } }
+  /v1/academic/offerings: { get: { operationId: listOfferings }, post: { operationId: createOffering, x-rule: "From an approved course version only" } }
+  /v1/academic/offerings/{id}/sections: { post: { operationId: createSection } }
+  /v1/academic/sections/{id}: { patch: { operationId: editSectionDraft, x-precondition: If-Match } }
+  /v1/academic/sections/{id}/meeting-patterns: { post: { operationId: defineMeetingPattern, x-rule: "Local institutional time (IANA tz); DST, holidays and exceptions expanded to occurrences" } }
+  /v1/academic/sections/{id}/meeting-exceptions: { post: { operationId: defineMeetingException } }
+  /v1/academic/teaching-assignments: { post: { operationId: assignTeachingStaff } }
+  /v1/academic/capacity-pools: { post: { operationId: defineCapacityPool, x-impl: proposed-schema/110_capacity_pools.sql } }
+  /v1/academic/schedule-validations: { post: { operationId: validateSchedule, x-response: "{ validation_id, schedule_version, outcome, findings[{ code, severity, record_references }] } — findings filtered by caller's access" } }
+  /v1/academic/schedule-publications: { post: { operationId: publishSchedule, x-rule: "Human review required" } }
+  /v1/academic/section-change-requests: { post: { operationId: requestSectionChange, x-rule: "Impact workflow: affected students, authority, effective date, resolution actions, permitted notifications, reconciliation" } }
+examples:
+  course_version_draft: { course_id: "<stable-course-id>", title: "<approved-title>", credits: { minimum: "3.000", maximum: "3.000" }, effective_from_term_id: "<term-id>", prerequisite_rule_id: "<rule-id>", corequisite_rule_id: null, grading_policy_id: "<policy-version-id>" }
+  publication: { course_version_id: "<approved-version-id>", approval_reference: "<review-id>", expected_record_version: 6, effective_from_term_id: "<term-id>", impact_review_reference: "<review-id>" }
+  meeting_pattern: { section_id: "<id>", timezone: America/Chicago, days_of_week: [MO, WE], local_start_time: "13:25:00", local_end_time: "14:40:00", date_range: { start: "2026-10-14", end: "2026-12-07" }, location_id: "<Kissam C216>", instructional_mode: in_person }

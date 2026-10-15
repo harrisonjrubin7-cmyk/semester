@@ -1,0 +1,20 @@
+# A rise in usage never compensates for a failure in scope control, source honesty or recovery.
+measures:
+  adoption: [eligible_students_invited, students_opened_readiness, completed_first_evaluation, staff_trained_and_passed]
+  usability: [time_to_first_meaningful_result, support_contacts_per_journey, referral_completion_rate, abandonment_by_state]
+  reliability: [evaluation_success_rate, freshness_distribution, worker_retry_rate, dead_letter_volume, reconciliation_case_age]
+  integrity: [duplicate_command_rate, source_projection_mismatch_rate, unauthorized_access_success_count, receipt_audit_match_rate]
+  trust: [stale_disclosure_rate, source_detail_open_rate, student_understanding_check, staff_correct_response_rate, readiness_vs_enrollment_confusion_reports]
+cadence:
+  - { when: "daily, launch week", who: "pilot lead, platform, integration, support", output: "health, freshness, queues, risk changes" }
+  - { when: "twice weekly", who: "product, registrar owner, support, engineering", output: "workflow defects, usability, prioritized fixes" }
+  - { when: weekly, who: "Vanderbilt business + technical owners", output: "dashboard, incidents, decisions, upcoming changes" }
+  - { when: biweekly, who: "security/privacy + platform", output: "access review, evidence expiry, policy changes" }
+  - { when: "end of pilot", who: "all accountable owners", output: "results report; continue / scope-change / pause / end decision" }
+review_template: pilot/pilot-review-template.md
+
+# Added 14 Oct: measure understanding, not clicks.
+understanding:
+  student: [short_in_product_comprehension_check, support_ticket_theme_review, moderated_feedback_where_approved]
+  trust: [confusion_about_enrollment, privacy_or_access_concerns, source_label_comprehension]
+  staff: [queue_volume, acknowledgement_time, resolution_route, repeat_case_categories]

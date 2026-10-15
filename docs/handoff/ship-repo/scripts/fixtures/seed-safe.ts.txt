@@ -1,0 +1,5 @@
+// Seeds two synthetic tenants for local/CI. Never real names, never real student data.
+import { seedTenant } from "./test-client";
+const a = await seedTenant("north-campus"), b = await seedTenant("south-campus");
+const adv = await a.createAdvisor(); await a.createStudent({ advisorId: adv.id }); await a.createStudent(); await b.createStudent();
+console.log(JSON.stringify({ tenants: [a.id, b.id] }));

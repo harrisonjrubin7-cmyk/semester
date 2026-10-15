@@ -1,0 +1,16 @@
+release_acceptance:
+  release: REL-READINESS-001
+  status: not_run            # every test below: pending until a run link + reviewer exist
+  required_tests:
+    P0: [tenant_isolation, access_revocation, stale_source_behavior, idempotency, policy_unavailability, safe_off]
+    P1: [connector_schema_change, out_of_order_event, workflow_deadline, accessibility_critical_path]
+    P2: [dashboard_degradation]
+  rule: >
+    A failed P0 test blocks all activation. A failed P1 test blocks the affected connector, workflow or interface.
+    P2 defects need explicit triage and must not obscure source, status, access or consequence. A test that hasn't
+    run counts as failed.
+  runners:
+    tenant_isolation: handoff/live-integration/e2e/connected-journeys.spec (cross-tenant)
+    access_revocation: tests/operations/access-revocation.spec.ts
+    stale_source_behavior: tests/operations/source-outage.spec.ts
+    safe_off: tests/operations/rollback.spec.ts

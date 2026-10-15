@@ -1,0 +1,321 @@
+test_id,domain,column,procedure,expected,runner,status
+D01-G-DES-01,Identity and onboarding,Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D01-G-DES-02,Identity and onboarding,Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D01-G-IMP-01,Identity and onboarding,Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D01-G-IMP-02,Identity and onboarding,Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D01-G-IMP-03,Identity and onboarding,Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D01-G-TST-01,Identity and onboarding,Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D01-G-TST-02,Identity and onboarding,Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D01-G-TST-03,Identity and onboarding,Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D01-G-DEP-01,Identity and onboarding,Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D01-G-DEP-02,Identity and onboarding,Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D01-G-DEP-03,Identity and onboarding,Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D01-G-AUT-01,Identity and onboarding,Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D01-G-AUT-02,Identity and onboarding,Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D01-G-AUT-03,Identity and onboarding,Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D01-G-PRD-01,Identity and onboarding,Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D01-G-PRD-02,Identity and onboarding,Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D01-G-PRD-03,Identity and onboarding,Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D01-G-PRD-04,Identity and onboarding,Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D01-G-PRD-05,Identity and onboarding,Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D01-G-PRD-06,Identity and onboarding,Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN
+D02-G-DES-01,Planning and degree,Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D02-G-DES-02,Planning and degree,Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D02-G-IMP-01,Planning and degree,Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D02-G-IMP-02,Planning and degree,Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D02-G-IMP-03,Planning and degree,Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D02-G-TST-01,Planning and degree,Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D02-G-TST-02,Planning and degree,Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D02-G-TST-03,Planning and degree,Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D02-G-DEP-01,Planning and degree,Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D02-G-DEP-02,Planning and degree,Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D02-G-DEP-03,Planning and degree,Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D02-G-AUT-01,Planning and degree,Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D02-G-AUT-02,Planning and degree,Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D02-G-AUT-03,Planning and degree,Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D02-G-PRD-01,Planning and degree,Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D02-G-PRD-02,Planning and degree,Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D02-G-PRD-03,Planning and degree,Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D02-G-PRD-04,Planning and degree,Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D02-G-PRD-05,Planning and degree,Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D02-G-PRD-06,Planning and degree,Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN
+D03-G-DES-01,Registration,Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D03-G-DES-02,Registration,Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D03-G-IMP-01,Registration,Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D03-G-IMP-02,Registration,Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D03-G-IMP-03,Registration,Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D03-G-TST-01,Registration,Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D03-G-TST-02,Registration,Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D03-G-TST-03,Registration,Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D03-G-DEP-01,Registration,Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D03-G-DEP-02,Registration,Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D03-G-DEP-03,Registration,Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D03-G-AUT-01,Registration,Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D03-G-AUT-02,Registration,Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D03-G-AUT-03,Registration,Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D03-G-PRD-01,Registration,Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D03-G-PRD-02,Registration,Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D03-G-PRD-03,Registration,Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D03-G-PRD-04,Registration,Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D03-G-PRD-05,Registration,Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D03-G-PRD-06,Registration,Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN
+D04-G-DES-01,Courses and teaching,Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D04-G-DES-02,Courses and teaching,Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D04-G-IMP-01,Courses and teaching,Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D04-G-IMP-02,Courses and teaching,Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D04-G-IMP-03,Courses and teaching,Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D04-G-TST-01,Courses and teaching,Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D04-G-TST-02,Courses and teaching,Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D04-G-TST-03,Courses and teaching,Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D04-G-DEP-01,Courses and teaching,Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D04-G-DEP-02,Courses and teaching,Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D04-G-DEP-03,Courses and teaching,Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D04-G-AUT-01,Courses and teaching,Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D04-G-AUT-02,Courses and teaching,Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D04-G-AUT-03,Courses and teaching,Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D04-G-PRD-01,Courses and teaching,Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D04-G-PRD-02,Courses and teaching,Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D04-G-PRD-03,Courses and teaching,Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D04-G-PRD-04,Courses and teaching,Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D04-G-PRD-05,Courses and teaching,Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D04-G-PRD-06,Courses and teaching,Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN
+D05-G-DES-01,Assignments and work,Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D05-G-DES-02,Assignments and work,Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D05-G-IMP-01,Assignments and work,Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D05-G-IMP-02,Assignments and work,Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D05-G-IMP-03,Assignments and work,Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D05-G-TST-01,Assignments and work,Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D05-G-TST-02,Assignments and work,Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D05-G-TST-03,Assignments and work,Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D05-G-DEP-01,Assignments and work,Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D05-G-DEP-02,Assignments and work,Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D05-G-DEP-03,Assignments and work,Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D05-G-AUT-01,Assignments and work,Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D05-G-AUT-02,Assignments and work,Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D05-G-AUT-03,Assignments and work,Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D05-G-PRD-01,Assignments and work,Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D05-G-PRD-02,Assignments and work,Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D05-G-PRD-03,Assignments and work,Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D05-G-PRD-04,Assignments and work,Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D05-G-PRD-05,Assignments and work,Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D05-G-PRD-06,Assignments and work,Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN
+D06-G-DES-01,Study and tutoring,Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D06-G-DES-02,Study and tutoring,Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D06-G-IMP-01,Study and tutoring,Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D06-G-IMP-02,Study and tutoring,Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D06-G-IMP-03,Study and tutoring,Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D06-G-TST-01,Study and tutoring,Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D06-G-TST-02,Study and tutoring,Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D06-G-TST-03,Study and tutoring,Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D06-G-DEP-01,Study and tutoring,Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D06-G-DEP-02,Study and tutoring,Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D06-G-DEP-03,Study and tutoring,Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D06-G-AUT-01,Study and tutoring,Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D06-G-AUT-02,Study and tutoring,Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D06-G-AUT-03,Study and tutoring,Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D06-G-PRD-01,Study and tutoring,Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D06-G-PRD-02,Study and tutoring,Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D06-G-PRD-03,Study and tutoring,Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D06-G-PRD-04,Study and tutoring,Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D06-G-PRD-05,Study and tutoring,Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D06-G-PRD-06,Study and tutoring,Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN
+D07-G-DES-01,Grades and progress,Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D07-G-DES-02,Grades and progress,Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D07-G-IMP-01,Grades and progress,Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D07-G-IMP-02,Grades and progress,Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D07-G-IMP-03,Grades and progress,Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D07-G-TST-01,Grades and progress,Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D07-G-TST-02,Grades and progress,Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D07-G-TST-03,Grades and progress,Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D07-G-DEP-01,Grades and progress,Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D07-G-DEP-02,Grades and progress,Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D07-G-DEP-03,Grades and progress,Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D07-G-AUT-01,Grades and progress,Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D07-G-AUT-02,Grades and progress,Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D07-G-AUT-03,Grades and progress,Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D07-G-PRD-01,Grades and progress,Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D07-G-PRD-02,Grades and progress,Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D07-G-PRD-03,Grades and progress,Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D07-G-PRD-04,Grades and progress,Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D07-G-PRD-05,Grades and progress,Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D07-G-PRD-06,Grades and progress,Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN
+D08-G-DES-01,Advising and support,Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D08-G-DES-02,Advising and support,Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D08-G-IMP-01,Advising and support,Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D08-G-IMP-02,Advising and support,Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D08-G-IMP-03,Advising and support,Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D08-G-TST-01,Advising and support,Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D08-G-TST-02,Advising and support,Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D08-G-TST-03,Advising and support,Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D08-G-DEP-01,Advising and support,Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D08-G-DEP-02,Advising and support,Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D08-G-DEP-03,Advising and support,Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D08-G-AUT-01,Advising and support,Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D08-G-AUT-02,Advising and support,Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D08-G-AUT-03,Advising and support,Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D08-G-PRD-01,Advising and support,Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D08-G-PRD-02,Advising and support,Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D08-G-PRD-03,Advising and support,Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D08-G-PRD-04,Advising and support,Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D08-G-PRD-05,Advising and support,Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D08-G-PRD-06,Advising and support,Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN
+D09-G-DES-01,Career and portfolio,Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D09-G-DES-02,Career and portfolio,Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D09-G-IMP-01,Career and portfolio,Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D09-G-IMP-02,Career and portfolio,Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D09-G-IMP-03,Career and portfolio,Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D09-G-TST-01,Career and portfolio,Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D09-G-TST-02,Career and portfolio,Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D09-G-TST-03,Career and portfolio,Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D09-G-DEP-01,Career and portfolio,Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D09-G-DEP-02,Career and portfolio,Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D09-G-DEP-03,Career and portfolio,Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D09-G-AUT-01,Career and portfolio,Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D09-G-AUT-02,Career and portfolio,Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D09-G-AUT-03,Career and portfolio,Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D09-G-PRD-01,Career and portfolio,Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D09-G-PRD-02,Career and portfolio,Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D09-G-PRD-03,Career and portfolio,Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D09-G-PRD-04,Career and portfolio,Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D09-G-PRD-05,Career and portfolio,Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D09-G-PRD-06,Career and portfolio,Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN
+D10-G-DES-01,Campus and community,Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D10-G-DES-02,Campus and community,Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D10-G-IMP-01,Campus and community,Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D10-G-IMP-02,Campus and community,Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D10-G-IMP-03,Campus and community,Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D10-G-TST-01,Campus and community,Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D10-G-TST-02,Campus and community,Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D10-G-TST-03,Campus and community,Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D10-G-DEP-01,Campus and community,Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D10-G-DEP-02,Campus and community,Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D10-G-DEP-03,Campus and community,Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D10-G-AUT-01,Campus and community,Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D10-G-AUT-02,Campus and community,Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D10-G-AUT-03,Campus and community,Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D10-G-PRD-01,Campus and community,Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D10-G-PRD-02,Campus and community,Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D10-G-PRD-03,Campus and community,Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D10-G-PRD-04,Campus and community,Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D10-G-PRD-05,Campus and community,Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D10-G-PRD-06,Campus and community,Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN
+D11-G-DES-01,"Housing, dining, services",Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D11-G-DES-02,"Housing, dining, services",Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D11-G-IMP-01,"Housing, dining, services",Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D11-G-IMP-02,"Housing, dining, services",Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D11-G-IMP-03,"Housing, dining, services",Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D11-G-TST-01,"Housing, dining, services",Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D11-G-TST-02,"Housing, dining, services",Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D11-G-TST-03,"Housing, dining, services",Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D11-G-DEP-01,"Housing, dining, services",Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D11-G-DEP-02,"Housing, dining, services",Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D11-G-DEP-03,"Housing, dining, services",Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D11-G-AUT-01,"Housing, dining, services",Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D11-G-AUT-02,"Housing, dining, services",Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D11-G-AUT-03,"Housing, dining, services",Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D11-G-PRD-01,"Housing, dining, services",Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D11-G-PRD-02,"Housing, dining, services",Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D11-G-PRD-03,"Housing, dining, services",Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D11-G-PRD-04,"Housing, dining, services",Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D11-G-PRD-05,"Housing, dining, services",Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D11-G-PRD-06,"Housing, dining, services",Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN
+D12-G-DES-01,Money and finance,Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D12-G-DES-02,Money and finance,Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D12-G-IMP-01,Money and finance,Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D12-G-IMP-02,Money and finance,Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D12-G-IMP-03,Money and finance,Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D12-G-TST-01,Money and finance,Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D12-G-TST-02,Money and finance,Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D12-G-TST-03,Money and finance,Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D12-G-DEP-01,Money and finance,Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D12-G-DEP-02,Money and finance,Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D12-G-DEP-03,Money and finance,Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D12-G-AUT-01,Money and finance,Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D12-G-AUT-02,Money and finance,Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D12-G-AUT-03,Money and finance,Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D12-G-PRD-01,Money and finance,Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D12-G-PRD-02,Money and finance,Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D12-G-PRD-03,Money and finance,Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D12-G-PRD-04,Money and finance,Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D12-G-PRD-05,Money and finance,Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D12-G-PRD-06,Money and finance,Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN
+D13-G-DES-01,Institution OS,Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D13-G-DES-02,Institution OS,Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D13-G-IMP-01,Institution OS,Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D13-G-IMP-02,Institution OS,Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D13-G-IMP-03,Institution OS,Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D13-G-TST-01,Institution OS,Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D13-G-TST-02,Institution OS,Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D13-G-TST-03,Institution OS,Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D13-G-DEP-01,Institution OS,Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D13-G-DEP-02,Institution OS,Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D13-G-DEP-03,Institution OS,Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D13-G-AUT-01,Institution OS,Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D13-G-AUT-02,Institution OS,Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D13-G-AUT-03,Institution OS,Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D13-G-PRD-01,Institution OS,Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D13-G-PRD-02,Institution OS,Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D13-G-PRD-03,Institution OS,Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D13-G-PRD-04,Institution OS,Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D13-G-PRD-05,Institution OS,Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D13-G-PRD-06,Institution OS,Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN
+D14-G-DES-01,Company OS,Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D14-G-DES-02,Company OS,Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D14-G-IMP-01,Company OS,Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D14-G-IMP-02,Company OS,Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D14-G-IMP-03,Company OS,Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D14-G-TST-01,Company OS,Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D14-G-TST-02,Company OS,Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D14-G-TST-03,Company OS,Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D14-G-DEP-01,Company OS,Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D14-G-DEP-02,Company OS,Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D14-G-DEP-03,Company OS,Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D14-G-AUT-01,Company OS,Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D14-G-AUT-02,Company OS,Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D14-G-AUT-03,Company OS,Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D14-G-PRD-01,Company OS,Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D14-G-PRD-02,Company OS,Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D14-G-PRD-03,Company OS,Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D14-G-PRD-04,Company OS,Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D14-G-PRD-05,Company OS,Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D14-G-PRD-06,Company OS,Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN
+D15-G-DES-01,Developer and partner,Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D15-G-DES-02,Developer and partner,Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D15-G-IMP-01,Developer and partner,Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D15-G-IMP-02,Developer and partner,Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D15-G-IMP-03,Developer and partner,Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D15-G-TST-01,Developer and partner,Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D15-G-TST-02,Developer and partner,Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D15-G-TST-03,Developer and partner,Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D15-G-DEP-01,Developer and partner,Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D15-G-DEP-02,Developer and partner,Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D15-G-DEP-03,Developer and partner,Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D15-G-AUT-01,Developer and partner,Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D15-G-AUT-02,Developer and partner,Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D15-G-AUT-03,Developer and partner,Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D15-G-PRD-01,Developer and partner,Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D15-G-PRD-02,Developer and partner,Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D15-G-PRD-03,Developer and partner,Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D15-G-PRD-04,Developer and partner,Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D15-G-PRD-05,Developer and partner,Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D15-G-PRD-06,Developer and partner,Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN
+D16-G-DES-01,Governed AI,Designed,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.,UNBOUND,NOT RUN
+D16-G-DES-02,Governed AI,Designed,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.,UNBOUND,NOT RUN
+D16-G-IMP-01,Governed AI,Implemented,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.,UNBOUND,NOT RUN
+D16-G-IMP-02,Governed AI,Implemented,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.,UNBOUND,NOT RUN
+D16-G-IMP-03,Governed AI,Implemented,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.,UNBOUND,NOT RUN
+D16-G-TST-01,Governed AI,Tested,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.,UNBOUND,NOT RUN
+D16-G-TST-02,Governed AI,Tested,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.,UNBOUND,NOT RUN
+D16-G-TST-03,Governed AI,Tested,Assess candidate and rescan blockers.,No open launch-blocking finding.,UNBOUND,NOT RUN
+D16-G-DEP-01,Governed AI,Deployed,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.,UNBOUND,NOT RUN
+D16-G-DEP-02,Governed AI,Deployed,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.,UNBOUND,NOT RUN
+D16-G-DEP-03,Governed AI,Deployed,Test prior/new apps/functions with expanded database.,Planned rollback compatible.,UNBOUND,NOT RUN
+D16-G-AUT-01,Governed AI,Institution-authorized,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.,UNBOUND,NOT RUN
+D16-G-AUT-02,Governed AI,Institution-authorized,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.,UNBOUND,NOT RUN
+D16-G-AUT-03,Governed AI,Institution-authorized,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.,UNBOUND,NOT RUN
+D16-G-PRD-01,Governed AI,Production-enabled,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.,UNBOUND,NOT RUN
+D16-G-PRD-02,Governed AI,Production-enabled,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.,UNBOUND,NOT RUN
+D16-G-PRD-03,Governed AI,Production-enabled,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.,UNBOUND,NOT RUN
+D16-G-PRD-04,Governed AI,Production-enabled,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.,UNBOUND,NOT RUN
+D16-G-PRD-05,Governed AI,Production-enabled,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.,UNBOUND,NOT RUN
+D16-G-PRD-06,Governed AI,Production-enabled,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.,UNBOUND,NOT RUN

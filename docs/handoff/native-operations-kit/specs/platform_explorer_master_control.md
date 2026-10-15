@@ -1,0 +1,8 @@
+# Platform explorer and Master Control
+Older native-platform README: 24 domains/659 screens. Newer native-data.js excerpt adds H1 Native Financial Platform with 33 modules, consistent with 25/692. This kit does NOT invent unretrieved screen rows or assert deployed routes. Recompute from full canonical source and pin source hash; classify module specification vs actual route/component before claiming coverage.
+
+Registry contract: domain/screen/capability/workflow/role/source/branch/owner/evidence IDs; scope/authority/classification; existing component/route refs only after verification; design-route separate; states/accessibility/tests/dependencies/phase/status. Stable IDs and duplicate alias map. Generate counts and docs from same registry; CI rejects dangling step routes, capabilities, undocumented high-impact actions and unaccepted authority.
+
+Master Control links product, existing console/API, business workspace, company site and design system through manifests and evidence; no iframe bypass or shared admin wildcard. Environment/scope indicators persistent. Search permission-filtered, no restricted titles. A change shows dependent workflow, route, permission, schema, policy, test and disclosure impact.
+
+Native authority retained: parity, data authority, accessibility, security, privacy, isolation, audit, migration, reconciliation, dual run, institution approval, support, rollback, portability, commercial readiness, outcomes. Broader modules remain in scope; implementation sequence is not scope removal. Native HR/payroll/procurement/aid/academic systems need explicit contracts and professional/institution acceptance where applicable.

@@ -1,0 +1,22 @@
+claims:
+  allowed_now:
+    - Source-aware student action platform
+    - Designed to work alongside institutional systems
+    - Shows source, freshness and status context where available
+    - Supports scoped pilot workflows
+    - AI-assisted responses are labeled and bounded
+    - Institutional authority remains with the institution
+  allowed_only_with_current_evidence:   # evidence id + date required; otherwise the claim is removed
+    SAML SSO available: evidence/trust/review-status.yaml#SSO (in_progress)
+    WCAG 2.2 accessibility support: #accessibility (in_progress)
+    HECVAT response available: #security_questionnaire (in_progress)
+    Security review materials available: data room
+    Insurance coverage available: #insurance (in_progress)
+    Production integration available: connector passport at production_active (none)
+    Institution-specific data handling statement: executed DPA
+  prohibited_without_specific_proof: [FERPA compliant, Certified, Secure, Private, Guaranteed, Official system of record, "Replaces your SIS, LMS, registrar, or financial system", AI-powered student success, all-in-one]
+  linter: scripts/claims-lint.mjs.txt (run 2026-10-14 over the design project → evidence/claims-lint-report.md)
+  approved_public_copy: >
+    Semester gives students a clear, source-aware place to understand what is next. It works alongside your
+    institution's systems. Your institution remains authoritative for records, enrollment, grades and policy
+    decisions. Semester shows what information is available, where it came from, and what a student can safely do next.

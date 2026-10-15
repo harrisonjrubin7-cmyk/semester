@@ -1,0 +1,5 @@
+observability:
+  every_request: [timestamp, environment, tenant_id_when_present, actor_type, actor_scope_not_raw_sensitive_identity, capability_id, route_or_command, policy_decision_id, correlation_id, release_id, result_code, latency_bucket]
+  every_workflow: [workflow_id, state, attempt, idempotency_key_hash, source_or_connector_id, deadline, compensation_state, reconciliation_case_id_if_any]
+  never_logged: [payload bodies, grades, holds, messages, raw idempotency keys, tokens, email addresses]
+  dashboards: [release_health, tenant_and_connector_health, source_freshness, workflow_backlog, authorization_denials, support_and_handoff_queue, audit_and_evidence_currency, security_and_privacy_events]

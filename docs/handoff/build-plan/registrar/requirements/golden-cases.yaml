@@ -1,0 +1,35 @@
+# Golden cases: representative students with expected results, approved by academic-policy owners. Every engine change reruns these.
+# TEMPLATE — Vanderbilt's real policies and cases are not supplied. Cases below are illustrative and marked unapproved.
+policy: { version: illustrative-2026, scale: { A: 4.0, A-: 3.7, B+: 3.3, B: 3.0, B-: 2.7, C+: 2.3, C: 2.0, C-: 1.7, D: 1.0, F: 0 }, passing: D, repeat: latest }
+approved_by: null
+cases:
+  - id: GC-01
+    description: Principles met with C; repeated course uses latest attempt
+    attempts: [{ course: ECON 1010, credits: 3, grade: D, status: completed, institution: home, term: 2025F }, { course: ECON 1010, credits: 3, grade: B, status: completed, institution: home, term: 2026S, repeatOf: ECON 1010 }]
+    node: { kind: course, id: n1, course: ECON 1010, minGrade: C }
+    expect: met
+  - id: GC-02
+    description: Transfer pending never counts
+    attempts: [{ course: MATH 1130, credits: 3, status: transfer_pending, institution: transfer, term: 2025F }]
+    node: { kind: course, id: n2, course: MATH 1200, equivalents: [MATH 1130] }
+    expect: unknown
+  - id: GC-03
+    description: Planned course never counts
+    attempts: [{ course: ECON 2010, credits: 3, status: planned, institution: home, term: 2027S }]
+    node: { kind: course, id: n3, course: ECON 2010 }
+    expect: not_met
+  - id: GC-04
+    description: Residency counts only home completed credits
+    attempts: [{ course: BUS 1400, credits: 3, grade: A, status: completed, institution: home, term: 2026F }, { course: ENGL 1010, credits: 3, grade: A, status: transfer_awarded, institution: transfer, term: 2025F }]
+    node: { kind: residency, id: n4, minHomeCredits: 6 }
+    expect: not_met
+  - id: GC-05
+    description: Boundary — program GPA exactly at minimum passes (rounding to 3 dp, approval needed)
+    attempts: [{ course: ECON 1010, credits: 3, grade: B, status: completed, institution: home, term: 2026S }, { course: ECON 2010, credits: 3, grade: C, status: completed, institution: home, term: 2026F }]
+    node: { kind: program_gpa, id: n5, min: 2.5, from: [ECON] }
+    expect: met
+  - id: GC-06
+    description: Double-counting — one course can't satisfy two requirements
+    attempts: [{ course: PSY 1200, credits: 3, grade: A-, status: completed, institution: home, term: 2026S }]
+    node: { kind: all, id: n6, children: [{ kind: course, id: n6a, course: PSY 1200 }, { kind: course, id: n6b, course: PSY 1200 }] }
+    expect: not_met

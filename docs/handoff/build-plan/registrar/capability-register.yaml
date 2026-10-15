@@ -1,0 +1,141 @@
+# Registrar capability register. Six independent facts per capability. Only "designed" is true for anything today; readiness pieces are in_build in handoff/build-plan/app.
+facts: [designed, implemented, tested, deployed, institution_authorized, production_enabled]
+domains:
+  - id: A
+    name: Academic structure and policy
+    acceptance: "Reproduces the approved interpretation of a record under the correct historical policy."
+    package: R02
+    capabilities:
+      - { id: A01, name: "Institutions, campuses, schools, departments, careers", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: A02, name: "Terms, sessions, parts of term, academic years", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: A03, name: "Credit/contact-hour definitions", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: A04, name: "Grading scales and grade modes", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: A05, name: "Repeat, forgiveness, withdrawal, incomplete, progression policies", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: A06, name: "Residency and transfer-credit rules", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: A07, name: "Catalog-year assignment", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: A08, name: "Effective-dated policy publication", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: A09, name: "Policy-change review and impact analysis", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+  - id: B
+    name: Curriculum and catalog
+    acceptance: "A future catalog change never alters an older student’s requirements without an authorized transition."
+    package: R02
+    capabilities:
+      - { id: B01, name: "Course identities and versioned descriptions", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: B02, name: "Credits, prerequisites, corequisites, restrictions", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: B03, name: "Cross-listing and equivalencies", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: B04, name: "Programs, majors, minors, concentrations, certificates", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: B05, name: "Requirement groups and substitutions", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: B06, name: "Curriculum proposal and approval", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: B07, name: "Catalog publication and archival snapshots", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: B08, name: "Effective-term activation", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+  - id: C
+    name: Course scheduling
+    acceptance: "Capacity and conflicts agree across registration, rosters, calendars and student views."
+    package: R04
+    capabilities:
+      - { id: C01, name: "Offerings and sections", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: C02, name: "Lecture/lab/discussion bundles", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: C03, name: "Meeting patterns and date exceptions", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: C04, name: "Rooms, modes, locations", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: C05, name: "Instructor assignments", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: C06, name: "Capacity, reserved seats, limits", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: C07, name: "Cross-listed capacity sharing", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: C08, name: "Schedule publication", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: C09, name: "Cancellation and rescheduling", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: C10, name: "Student-impact notification queue", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+  - id: D
+    name: Registration and enrollment
+    acceptance: "Concurrent registration never allocates the last seat twice; a failed swap never drops the original enrollment."
+    package: R05
+    capabilities:
+      - { id: D01, name: "Registration windows and time tickets", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: D02, name: "Eligibility evaluation", designed: true, implemented: in_build, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: D03, name: "Holds with responsible offices", designed: true, implemented: in_build, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: D04, name: "Prerequisite/corequisite checks", designed: true, implemented: in_build, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: D05, name: "Credit-load and repeat restrictions", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: D06, name: "Program/cohort restrictions", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: D07, name: "Permission numbers and overrides", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: D08, name: "Registration carts", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: D09, name: "Transactional add/drop/swap", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: D10, name: "Waitlists and seat offers", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: D11, name: "Late registration", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: D12, name: "Leave, withdrawal, reinstatement", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: D13, name: "Enrollment receipts and reconciliation", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+  - id: E
+    name: Grades and academic history
+    acceptance: "Every official grade traces to its authority, policy, posting event and later corrections."
+    package: R06
+    capabilities:
+      - { id: E01, name: "Enrollment-linked course attempts", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: E02, name: "Instructor grade submission", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: E03, name: "Working vs official grade separation", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: E04, name: "Grade approval and posting", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: E05, name: "Incomplete contracts", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: E06, name: "Grade-change requests", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: E07, name: "Repeat and GPA treatment", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: E08, name: "Credit calculation", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: E09, name: "Academic standing", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: E10, name: "Historical corrections", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: E11, name: "Annotated supersession", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+  - id: F
+    name: Transfer and credit evaluation
+    acceptance: "Every award cites its source document, rule or evaluator, and applicability."
+    package: R07
+    capabilities:
+      - { id: F01, name: "External institutions and credentials", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: F02, name: "Incoming transcript intake", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: F03, name: "Course-equivalency rules", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: F04, name: "Articulation agreements", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: F05, name: "Prior learning and exam credit", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: F06, name: "Manual evaluation queue", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: F07, name: "Awarded credit and applicability", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: F08, name: "Re-evaluation and appeal", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: F09, name: "Source-document provenance", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+  - id: G
+    name: Degree audit and graduation
+    acceptance: "Planning can’t confer a credential; conferral needs an authorized institutional decision."
+    package: R08
+    capabilities:
+      - { id: G01, name: "Catalog-bound requirement evaluation", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: G02, name: "What-if scenarios (separate from official)", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: G03, name: "Program changes", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: G04, name: "Substitutions and waivers", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: G05, name: "Residency, GPA, credit, completion checks", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: G06, name: "Graduation applications", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: G07, name: "Department and registrar clearance", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: G08, name: "Pending and awarded credentials", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: G09, name: "Conferral dates", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: G10, name: "Honors and distinctions", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: G11, name: "Rescission/correction", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+  - id: H
+    name: Transcripts and record services
+    acceptance: "An issued transcript identifies a stable record snapshot."
+    package: R09
+    capabilities:
+      - { id: H01, name: "Unofficial student transcript", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: H02, name: "Official transcript generation", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: H03, name: "Record freeze/snapshot", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: H04, name: "Recipient-specific requests", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: H05, name: "Identity and disclosure checks", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: H06, name: "Electronic and print fulfillment", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: H07, name: "Verification requests", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: H08, name: "Delivery receipts", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: H09, name: "Correction, reissue, revocation", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: H10, name: "Seal/signature and authenticity (PESC College Transcript; confirm partner version)", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+  - id: I
+    name: Registrar operations
+    acceptance: "Every operation is owned, traceable and recoverable."
+    package: R10
+    capabilities:
+      - { id: I01, name: "Unified work queue", designed: true, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: I02, name: "Office and person ownership", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: I03, name: "Service targets", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: I04, name: "Approvals and delegated authority", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: I05, name: "Reconciliation workbench", designed: true, implemented: in_build, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: I06, name: "Policy exceptions", designed: true, implemented: in_build, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: I07, name: "Data correction workbench", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: I08, name: "Student communication with disclosure controls", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: I09, name: "Reporting definitions", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: I10, name: "Audit and evidence", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: I11, name: "Term open and close", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }
+      - { id: I12, name: "Year-end and archival", designed: false, implemented: false, tested: false, deployed: false, institution_authorized: false, production_enabled: false, code_ref: null }

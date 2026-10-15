@@ -1,0 +1,13 @@
+plan_90_day:
+  days_1_30:
+    outcome: production-ready pilot foundation
+    objectives: [prove_environment_and_secret_separation, implement_release_evidence_and_safe_off, certify_first_connector, validate_RLS_policy_and_workflow_controls, complete_staff_and_incident_runbooks]
+    first_blocker: name the production Supabase project
+  days_31_60:
+    outcome: operable student and staff wedge
+    objectives: [activate_bounded_pilot_cohort, operate_daily_hypercare, launch_student_action_center, deliver_advisor_and_registrar_operational_views, collect_source_and_support_evidence]
+    entry_gate: every P0 in evidence/acceptance/REL-READINESS-001.yaml passed with run links
+  days_61_90:
+    outcome: repeatability evidence
+    objectives: [close_pilot_measurement_cycle, run_repeatability_simulation, decide_renewal_expansion_or_remediation, package_implementation_kit, charter_next_adjacent_domain]
+  rule: a period starts when the previous period's outcome is evidenced, not on a date

@@ -1,0 +1,16 @@
+asyncapi: 3.0.0
+info: { title: Semester pilot events, version: 0.1.0, description: "Delivered from live_outbox. Envelope in events.yaml. Payloads carry ids and states, never record contents." }
+channels:
+  readiness: { address: semester.readiness, messages: { evaluated: { $ref: "#/components/messages/ReadinessEvaluated" }, sourceStale: { $ref: "#/components/messages/ReadinessSourceStale" }, referralCreated: { $ref: "#/components/messages/ReferralCreated" } } }
+operations:
+  publishReadiness: { action: send, channel: { $ref: "#/channels/readiness" } }
+components:
+  schemas:
+    Envelope:
+      type: object
+      required: [event_id, event_type, event_version, occurred_at, tenant_id, actor_account_id, correlation_id, causation_id, aggregate_type, aggregate_id, payload]
+      properties: { event_id: { type: string, format: uuid }, event_type: { type: string }, event_version: { type: integer }, occurred_at: { type: string, format: date-time }, tenant_id: { type: string, format: uuid }, actor_account_id: { type: string, format: uuid }, correlation_id: { type: string }, causation_id: { type: string }, aggregate_type: { type: string }, aggregate_id: { type: string }, payload: { type: object } }
+  messages:
+    ReadinessEvaluated: { name: readiness.evaluated, payload: { allOf: [{ $ref: "#/components/schemas/Envelope" }, { properties: { payload: { type: object, required: [term_id, previous_state, next_state, freshness_state], properties: { term_id: { type: string }, previous_state: { type: string }, next_state: { type: string }, freshness_state: { type: string }, reason_codes: { type: array, items: { type: string } } } } } }] } }
+    ReadinessSourceStale: { name: readiness.source_stale, payload: { allOf: [{ $ref: "#/components/schemas/Envelope" }, { properties: { payload: { type: object, required: [source_system, observed_at], properties: { source_system: { type: string }, observed_at: { type: string, format: date-time }, affected_cases: { type: integer } } } } }] } }
+    ReferralCreated: { name: readiness.referral_created, payload: { allOf: [{ $ref: "#/components/schemas/Envelope" }, { properties: { payload: { type: object, required: [office], properties: { office: { type: string } } } } }] } }

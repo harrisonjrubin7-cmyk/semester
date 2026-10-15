@@ -1,0 +1,16 @@
+connector_certification:
+  maps_to_lifecycle: {sandbox: sandbox_verified, validated: sandbox_verified+, pilot_approved: pilot_certified, reusable: "pilot_certified at ≥2 institutions"}
+  levels:
+    sandbox: {allowed: [synthetic_data, contract_validation, manual_mapping_review], prohibited: [production_student_data, production_commands]}
+    validated: {required: [schema_contract_test, field_mapping_review, authorization_scope_test, stale_source_behavior, duplicate_and_out_of_order_test, error_and_quarantine_behavior]}
+    pilot_approved: {required: [tenant_approval, production_credential_scope, monitoring, reconciliation_owner, incident_runbook, safe_off_test, activation_evidence]}
+    reusable: {required: [multiple_successful_implementations, documented_variation_model, implementation_playbook, regression_suite, support_pattern]}
+  connectors:
+    - id: SIS-READINESS-001   # same connector as SIS-001 in scale-system; the readiness-specific authority contract
+      level: none (designed — not sandbox-run)
+      authoritative_for: [approved_readiness_inputs, term_context, official_blocker_context_when_available]
+      not_authoritative_for: [enrollment_confirmation_by_Semester, institution_policy_override]
+      idempotency: source_record_version_and_event_identity
+      stale: show stale, prevent definitive readiness outcome, offer refresh or staff review
+      safe_off: disable_evaluation_and_preserve_receipts
+      owners: {business: institution_registrar_owner, technical: unassigned, operational: unassigned}

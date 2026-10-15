@@ -2,6 +2,7 @@ import { formatDate } from '../lib/locale';
 import { useState } from 'react';
 import { payloadLines, type SharePayload } from '../lib/advisor-meeting';
 import { openShare, sharedWithMe, type SharedWithMe } from '../lib/advisor-shares';
+import { AdvisorCheckInForm } from './AdvisorCheckIns';
 
 const day = (iso: string) => formatDate(new Date(iso), { month: 'short', day: 'numeric', year: 'numeric' });
 
@@ -59,6 +60,7 @@ export function AdvisorSharedView({ signedIn }: { signedIn: boolean }) {
               <ul>{s.items.map((i) => <li key={i}>{i}</li>)}</ul>
             </section>
           ))}
+          <AdvisorCheckInForm shareId={open.row.id} sharedAs={open.row.shared_as} />
           <button type="button" className="balance-button" onClick={() => setOpen(null)}>
             Back to the list
           </button>

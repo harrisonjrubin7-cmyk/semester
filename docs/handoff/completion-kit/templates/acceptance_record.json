@@ -1,0 +1,79 @@
+{
+  "domain_id": "",
+  "capability_keys": [],
+  "scope": {
+    "institution_id": null,
+    "cohort_id": null,
+    "data_mode": "",
+    "environment": "",
+    "candidate_commit": "",
+    "deployment_reference": "",
+    "configuration_digest": ""
+  },
+  "facts": {
+    "Designed": {
+      "status": "held",
+      "evidence": [],
+      "reviewer": null,
+      "decision_at": null,
+      "valid_until": null,
+      "not_applicable_rationale": null,
+      "not_applicable_approver": null
+    },
+    "Implemented": {
+      "status": "held",
+      "evidence": [],
+      "reviewer": null,
+      "decision_at": null,
+      "valid_until": null,
+      "not_applicable_rationale": null,
+      "not_applicable_approver": null
+    },
+    "Tested": {
+      "status": "held",
+      "evidence": [],
+      "reviewer": null,
+      "decision_at": null,
+      "valid_until": null,
+      "not_applicable_rationale": null,
+      "not_applicable_approver": null
+    },
+    "Deployed": {
+      "status": "held",
+      "evidence": [],
+      "reviewer": null,
+      "decision_at": null,
+      "valid_until": null,
+      "not_applicable_rationale": null,
+      "not_applicable_approver": null
+    },
+    "Institution-authorized": {
+      "status": "held",
+      "evidence": [],
+      "reviewer": null,
+      "decision_at": null,
+      "valid_until": null,
+      "not_applicable_rationale": null,
+      "not_applicable_approver": null
+    },
+    "Production-enabled": {
+      "status": "held",
+      "evidence": [],
+      "reviewer": null,
+      "decision_at": null,
+      "valid_until": null,
+      "not_applicable_rationale": null,
+      "not_applicable_approver": null
+    }
+  },
+  "foundations": {
+    "definition_status": "A-G labels proposed until original definitions are verified",
+    "accepted": false
+  },
+  "release_blockers": [],
+  "activation": {
+    "approved": false,
+    "approvers": [],
+    "stop_criteria": []
+  }
+}

@@ -1,0 +1,21 @@
+// Registry verifier — run in CI: npx tsx scripts/verify/registry.ts (rename from .ts.txt)
+// Fails on: incomplete passports, level/status disagreement, unknown id prefix, proposed trace links claimed as evidence, documents without owner or link.
+import { readFileSync, readdirSync } from "node:fs";
+import { parse } from "yaml";
+const PREFIX = /^(CAP|SCR|API|EVT|WF|POL|DBM|CTL|TST|EVD|REL|INC|REC|RSK|DEC|AI|DOC|CHG|SIS|LMS|PAY|MAIL|IDP|SLO)-[A-Z0-9-]+$/;
+const errors: string[] = [];
+for (const f of readdirSync("registry/passports")) {
+  const p = parse(readFileSync(`registry/passports/${f}`, "utf8")).passport;
+  for (const [group, fields] of Object.entries(p)) for (const [k, v] of Object.entries(fields as Record<string, unknown>))
+    if (v === "" || v === "pending" || v == null) errors.push(`${f}: ${group}.${k} missing`);
+  if (!PREFIX.test(p.identity.id)) errors.push(`${f}: id ${p.identity.id} has no registered prefix`);
+  if (p.lifecycle.maturity_level >= 4 && !/verified|operated|repeatable|scalable/.test(p.lifecycle.current_status)) errors.push(`${f}: level ${p.lifecycle.maturity_level} but status ${p.lifecycle.current_status}`);
+}
+const trace = parse(readFileSync("registry/trace/CAP-REG-001.yaml", "utf8"));
+for (const l of trace.chain) if (l.state === "proposed" && /^(EVD|TST|REL)-/.test(l.id)) errors.push(`trace: ${l.id} is only proposed — can't count as release evidence`);
+try {
+  const m = parse(readFileSync("docs/document-manifest.yaml", "utf8"));
+  for (const d of m.documents) { if (!d.owner) errors.push(`${d.id} has no owner`); if (!d.applies_to?.length) errors.push(`${d.id} isn't linked to a capability or workflow`); }
+} catch { errors.push("docs/document-manifest.yaml missing"); }
+if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
+console.log("registry ok");

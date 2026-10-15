@@ -1,0 +1,12 @@
+intake_fields: [case_id, role, tenant, term, feature_area, reported_state, source_label_seen, timestamp, correlation_id, screenshot_optional, urgency, consent_to_contact]
+never_collect: [passwords, screenshots_of_other_students_data, full_record_exports]
+triage:
+  stale_source: { owner: integration_on_call, priority: "high if a registration window opens within 48 h" }
+  readiness_blocker: { owner: institution_registrar_queue, priority: normal }
+  source_discrepancy: { owner: reconciliation_queue, priority: high }
+  access_denied: { owner: access_administration, priority: normal }
+  suspected_privacy_or_security_event: { owner: security_on_call, priority: critical }
+macros:
+  readiness_not_enrollment: "Semester can show whether the information needed for registration planning is available and current. It doesn't confirm that you're enrolled. Vanderbilt's registration system remains the official record."
+  source_out_of_date: "One source used for this view may be out of date. We haven't changed your official record. We can route this to the right office or request a refresh."
+  no_access: "This workspace limits access to records assigned to your role. If you need access for your work, contact your institution's access administrator."

@@ -40,6 +40,8 @@ import { comparisonText } from '../lib/scenario-compare';
 import { useNow, useStore } from '../state/store';
 import { AdvisorSharedView } from './AdvisorSharedView';
 import { ConfirmDialog } from './ConfirmDialog';
+import { ShareCheckIns } from './AdvisorCheckIns';
+import { deleteCheckIn, myCheckIns, type CheckIn } from '../lib/advisor-checkins';
 import { ActionPreview } from './unity/ActionPreview';
 
 const day = (iso: string) => formatDate(new Date(iso), { month: 'short', day: 'numeric', year: 'numeric' });
@@ -475,22 +477,44 @@ function LineList({
 }
 
 function SharingPanel({ refresh, onSaid }: { refresh: number; onSaid: (s: string) => void }) {
-  const [data, setData] = useState<{ shares: ShareRow[]; events: ShareEvent[] } | null>(null);
+  const { state, dispatch } = useStore();
+  const [data, setData] = useState<{ shares: ShareRow[]; events: ShareEvent[]; checkIns: CheckIn[] | null } | null>(null);
   const [error, setError] = useState('');
   const [confirm, setConfirm] = useState<{ row: ShareRow; what: 'revoke' | 'delete' } | null>(null);
+  const [dropping, setDropping] = useState<CheckIn | null>(null);
   const [managementError, setManagementError] = useState('');
   const [busy, setBusy] = useState(false);
   const acting = useRef(false);
   const [now] = useState(() => Date.now());
   const load = useCallback(() => {
-    myShares().then(
-      (d) => {
-        setData(d);
+    // Check-ins load beside the shares, not in front of them: a failure there
+    // says so under the list instead of hiding the shares and their revoke.
+    Promise.all([myShares(), myCheckIns().catch(() => null)]).then(
+      ([d, checkIns]) => {
+        setData({ ...d, checkIns });
         setError('');
       },
       (e: unknown) => setError(e instanceof Error ? e.message : 'Your shares could not be loaded.'),
     );
   }, []);
+  // A next step is "in your actions" while an open action has its exact title.
+  const added = useMemo(() => new Set(state.tasks.filter((t) => !t.done).map((t) => t.title)), [state.tasks]);
+  const addStep = (step: string) => {
+    dispatch({ type: 'addTask', task: { title: step, date: null, time: '', courseId: null, note: 'A next step from an advisor check-in.' } });
+    onSaid(`“${step}” is in your actions.`);
+  };
+  const dropCheckIn = async () => {
+    if (!dropping) return;
+    const c = dropping;
+    setDropping(null);
+    try {
+      await deleteCheckIn(c.id);
+      onSaid('The check-in is deleted.');
+      load();
+    } catch (e) {
+      onSaid(e instanceof Error ? e.message : 'That did not work.');
+    }
+  };
   useEffect(load, [load, refresh]);
 
   const act = async () => {
@@ -503,7 +527,7 @@ function SharingPanel({ refresh, onSaid }: { refresh: number; onSaid: (s: string
       if (what === 'revoke') await revokeShare(row.id);
       else await deleteShare(row.id);
       setConfirm(null);
-      onSaid(what === 'revoke' ? `“${row.title}” is revoked. Your advisor can no longer open it.` : `“${row.title}” and its access log are deleted.`);
+      onSaid(what === 'revoke' ? `“${row.title}” is revoked. Your advisor can no longer open it.` : `“${row.title}”, its access log and its check-ins are deleted.`);
       load();
     } catch (e) {
       const message = e instanceof Error ? e.message : 'That did not work.';
@@ -548,11 +572,25 @@ function SharingPanel({ refresh, onSaid }: { refresh: number; onSaid: (s: string
                     Delete…
                   </button>
                 </span>
+                <ShareCheckIns
+                  checkIns={(data.checkIns ?? []).filter((c) => c.share_id === row.id)}
+                  added={added}
+                  onAdd={addStep}
+                  onDelete={setDropping}
+                />
               </li>
             );
           })}
         </ul>
       )}
+      {data && data.shares.length > 0 && !data.checkIns ? (
+        <p className="portal-muted">
+          Your advisor’s check-ins could not be loaded.{' '}
+          <button type="button" onClick={load}>
+            Try again
+          </button>
+        </p>
+      ) : null}
       {confirm ? (
         <ConfirmDialog
           title={confirm.what === 'revoke' ? 'Revoke this share?' : 'Delete this share?'}
@@ -571,7 +609,7 @@ function SharingPanel({ refresh, onSaid }: { refresh: number; onSaid: (s: string
               <>
                 <ActionPreview
                   subject={confirm.row.title}
-                  says="Deletes this advisor share and its access log from your account. If the share is still open, your advisor loses access too."
+                  says="Deletes this advisor share, its access log and your advisor’s check-ins on it from your account. If the share is still open, your advisor loses access too."
                   doesNotChange="Your meeting preparation on this device, other shares and official advising records stay unchanged."
                   recovery={{ kind: 'none' }}
                 />
@@ -582,6 +620,15 @@ function SharingPanel({ refresh, onSaid }: { refresh: number; onSaid: (s: string
           confirmLabel={busy ? (confirm.what === 'revoke' ? 'Revoking…' : 'Deleting…') : (confirm.what === 'revoke' ? 'Revoke' : 'Delete')}
           onConfirm={() => void act()}
           onCancel={() => { if (!acting.current) setConfirm(null); }}
+        />
+      ) : null}
+      {dropping ? (
+        <ConfirmDialog
+          title="Delete this check-in?"
+          preview={<p>Your advisor’s note from {day(dropping.created_at)} and its next steps are deleted. Actions you already added stay.</p>}
+          confirmLabel="Delete"
+          onConfirm={() => void dropCheckIn()}
+          onCancel={() => setDropping(null)}
         />
       ) : null}
     </section>

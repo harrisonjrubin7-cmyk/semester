@@ -1,0 +1,276 @@
+{
+  "date": "2026-10-13",
+  "maturity": "local synthetic implementation/test evidence only",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2848,
+      "sha256": "92b62d6b9b4fcf3b87b253ff397138a297c9a32883f0af976f78be2e9baaf133"
+    },
+    {
+      "path": "decks/GRANT-RUN-OF-SHOW.md",
+      "bytes": 142,
+      "sha256": "8e7a4dca153fc101284cf52fb6d5663a2668f1756ada133767956b0aff48b62a"
+    },
+    {
+      "path": "decks/board-update.md",
+      "bytes": 2807,
+      "sha256": "e2651ce85dbdc0a299e760e4295cff07227b4c4928bf05e5ce7fc661ec74e518"
+    },
+    {
+      "path": "decks/board-update.pptx",
+      "bytes": 37392,
+      "sha256": "9da12d6f191435cb9885cf46a128cd50817b599463d82c01815fc2a5504daffe"
+    },
+    {
+      "path": "decks/company-execution.md",
+      "bytes": 4582,
+      "sha256": "bf53a7c692073edb3fd96726bf98e31661787d82754471c5ed9db19c69ccf346"
+    },
+    {
+      "path": "decks/company-execution.pptx",
+      "bytes": 42610,
+      "sha256": "6e94ee4f0872fbf29e9384d37786905925c0917fbfcd2077f5d96dd4cad97835"
+    },
+    {
+      "path": "decks/company-overview.md",
+      "bytes": 5451,
+      "sha256": "348e9384c992dac5f53d4fb6210e2424216b8868576ac063e37291a6db5bf220"
+    },
+    {
+      "path": "decks/company-overview.pptx",
+      "bytes": 45279,
+      "sha256": "24652428612a1432e2d2a4aeec6f9404140104ae19cfc3e6b420574226af0d04"
+    },
+    {
+      "path": "decks/institution.md",
+      "bytes": 8608,
+      "sha256": "6db358ef7975c8c17e0663b4ee57f25fcafff2c45f64515acffd661fd1eac0fe"
+    },
+    {
+      "path": "decks/institution.pptx",
+      "bytes": 55471,
+      "sha256": "509b633dc87127ff3168c3ce703d59bb9a827810a451ee64a11dbf9327ce1093"
+    },
+    {
+      "path": "decks/internal-plan.md",
+      "bytes": 2979,
+      "sha256": "97c926588bdd3e4f397afee273f01a77a3aed41160606fc446da96df74a51eae"
+    },
+    {
+      "path": "decks/internal-plan.pptx",
+      "bytes": 37519,
+      "sha256": "35e7fd9c854768b189695f7413308606a9a9e0cf04026cc41d4715a432bf9945"
+    },
+    {
+      "path": "decks/investor.md",
+      "bytes": 8715,
+      "sha256": "15fbbe2d360bcfc263eaca1528049a144643e648a513b8928c8968204aabcec1"
+    },
+    {
+      "path": "decks/investor.pptx",
+      "bytes": 56636,
+      "sha256": "5e1df11dd6c38758cf2774efaebefa54f90e4493a64aea623a5a1d8a9fb93158"
+    },
+    {
+      "path": "decks/launch-grant.md",
+      "bytes": 4217,
+      "sha256": "a739f9554525dc27ab00936b2eeb5dd65374d1664cbf411be39f6db4864f75bf"
+    },
+    {
+      "path": "decks/launch-grant.pptx",
+      "bytes": 41376,
+      "sha256": "e311bdba6b7bd7ed9b2d08c34d76f69ae457237ebfa066f63ff895330ddcb998"
+    },
+    {
+      "path": "decks/pilot-results.md",
+      "bytes": 2416,
+      "sha256": "8957db5f0bada9f1e6b18609eedf96515c4de86f872f48ec75f0ce214e516ba9"
+    },
+    {
+      "path": "decks/pilot-results.pptx",
+      "bytes": 36087,
+      "sha256": "aa74ed81c0f1f27ac1ba4fb007fe961d40fe38f28bcefcee968e2b692e104c94"
+    },
+    {
+      "path": "decks/product-overview.md",
+      "bytes": 3999,
+      "sha256": "211ce1e28a55b838daca34750f3f75f815152f99df35f806e0dde28a5dfaddef"
+    },
+    {
+      "path": "decks/product-overview.pptx",
+      "bytes": 40193,
+      "sha256": "025d7ee30f773a9dbd9a94d0acc81987822088b797af11634f123dfda846f091"
+    },
+    {
+      "path": "decks/staff-training.md",
+      "bytes": 3400,
+      "sha256": "27b0327a6953e17bd664b1a9557a75e90e66b6079828a9004ebb1e16fb5f88a2"
+    },
+    {
+      "path": "decks/staff-training.pptx",
+      "bytes": 38773,
+      "sha256": "57a68caf0a2d2fac50cd54c9def8e13b15ab7607edf3444cd54970b152690d49"
+    },
+    {
+      "path": "decks/vision.md",
+      "bytes": 3286,
+      "sha256": "bc021b9fe54dfa245d600b67a3b45c0d01503fbf5fb5556681d8b652588d4ac4"
+    },
+    {
+      "path": "decks/vision.pptx",
+      "bytes": 37677,
+      "sha256": "ccf45b7e092988e98928fec5a4895698a6f2804aa4dfd88973a19deb20fa6bdd"
+    },
+    {
+      "path": "documents/Printable-operating-pack.pdf",
+      "bytes": 10564,
+      "sha256": "83dd586f8ae81e4e766eb4b63956bb1c66505cfb533a5d89a86952c919222a43"
+    },
+    {
+      "path": "documents/case-study.md",
+      "bytes": 677,
+      "sha256": "cfbd6d8eb6480097f8eb905a3e93ddc703c86ec79bf757805fffa41b936d572f"
+    },
+    {
+      "path": "documents/job-description.md",
+      "bytes": 838,
+      "sha256": "049b9eaa558f4c8272046325575f1de98452ca2ee634643f58e53460586760e1"
+    },
+    {
+      "path": "documents/pilot-results.md",
+      "bytes": 687,
+      "sha256": "435acda29bf9cf71214a2c329dd0a2d41242b4cd4c1b685dd774b8ad2908a2e6"
+    },
+    {
+      "path": "documents/policy.md",
+      "bytes": 802,
+      "sha256": "498f814f73351b4a4638f868efe0391e1e6848a1d7dae1f761f09cb08fcaf1ef"
+    },
+    {
+      "path": "documents/release-notes.md",
+      "bytes": 841,
+      "sha256": "e55433597618e135ffd9ee9b5b0a8727518b3a80b06a48897989d86a0e3f0dec"
+    },
+    {
+      "path": "documents/runbook.md",
+      "bytes": 1121,
+      "sha256": "fb13eff4b82312ffa2c8844493bc4b7af931dc4e353b6f8d7d15259827e6bc22"
+    },
+    {
+      "path": "documents/sales-one-pager.md",
+      "bytes": 744,
+      "sha256": "fb152012e7b893b6ae3d9b65935c5380a771a8331dc66d548c6406351637aa9b"
+    },
+    {
+      "path": "documents/student-quick-start.md",
+      "bytes": 623,
+      "sha256": "05f2d7a517b831ec25d2aca3b9883c429a5d7ecdda16fe4d24d8b7a4e315f776"
+    },
+    {
+      "path": "lab/README.md",
+      "bytes": 1287,
+      "sha256": "06c679994a6da68e83ea6f67549f48650c7801cd1cc168b99fee589e87fd655d"
+    },
+    {
+      "path": "lab/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "lab/core.py",
+      "bytes": 11921,
+      "sha256": "5c998a47504c1e662d2a7176b3efc106a2487312a7c783b4a85cdbe0ba4b9f75"
+    },
+    {
+      "path": "lab/index.html",
+      "bytes": 5587,
+      "sha256": "bd6f5b951cf8f639225ee4b7d31e49d1a21ba7a1118f91b7ce492265fa4a633a"
+    },
+    {
+      "path": "lab/server.py",
+      "bytes": 1807,
+      "sha256": "9206adfc63da96d677236f37d612eb5d1677bce902f0469e700589c01424aa3f"
+    },
+    {
+      "path": "media/30-SECOND-STORYBOARDS.md",
+      "bytes": 418,
+      "sha256": "0bf81ab7ea53f8553da473ebcc4489912efc3e4740c3e6da5c77858e46244da5"
+    },
+    {
+      "path": "media/90-SECOND-WALKTHROUGH.md",
+      "bytes": 947,
+      "sha256": "2d544455d1937eb7935eba80818a846fb85868743b9cdd919dbdfa5cb85b5e8b"
+    },
+    {
+      "path": "media/launch-poster.svg",
+      "bytes": 957,
+      "sha256": "5ea285cd5383ffab65d1e30c563fce447560be3bb83baf45fc7e850633284a88"
+    },
+    {
+      "path": "registers/16-WEEK-PLAN.csv",
+      "bytes": 3521,
+      "sha256": "95dcd6166c7629bd7d8d0e595b1d4148f5be692e94ce38a92115c07266dab424"
+    },
+    {
+      "path": "registers/DOMAIN-GATES.csv",
+      "bytes": 22823,
+      "sha256": "b8651716627c9be82ca77e1ec62f7274e70318dee2e31f24f179e2b5df86d955"
+    },
+    {
+      "path": "registers/FINISH-LINE.csv",
+      "bytes": 1720,
+      "sha256": "274b1e2862d656eceb52addffe5987eab19aa3fdb3390d7bf05b7d1e73530c63"
+    },
+    {
+      "path": "registers/WORKSPACE-ACTIVATION.csv",
+      "bytes": 49155,
+      "sha256": "f9ee5ac85ec3220bd52c00d7ba2fe4eb9d2f7e3b2c0e62936747a35fbc394f74"
+    },
+    {
+      "path": "research/RESEARCH-BRIEF.md",
+      "bytes": 1933,
+      "sha256": "ea068e03d16b6d4c1584c401c7e1e49cbd2bf569afacaab1621c0554c6af361f"
+    },
+    {
+      "path": "specifications/AI-ENVIRONMENTS-AND-CONTRACTS.md",
+      "bytes": 1520,
+      "sha256": "ea80c6379fa1767f84fd0c5839a936914879d5b248644c8d3c088a2d0f2f49aa"
+    },
+    {
+      "path": "specifications/MASTER-OPERATING-MAP.md",
+      "bytes": 1013,
+      "sha256": "1ebcc11ce0e482f3bfdcf468cf115e32450148c4f763fd89199a90e891507c9f"
+    },
+    {
+      "path": "specifications/SCREENS-AND-COMPONENTS.md",
+      "bytes": 2236,
+      "sha256": "c4384eb4f89035d0caf851a7a81252c75e3bcba8002dd30927356f09f1226cb2"
+    },
+    {
+      "path": "specifications/TRACEABILITY-AND-SHIP.md",
+      "bytes": 2097,
+      "sha256": "ecc56d4b7634cf568e16ed8e7070fa46205dfc027ace3ee960480f3adde7990d"
+    },
+    {
+      "path": "tests/test_lab.py",
+      "bytes": 8125,
+      "sha256": "409ff6d89dfe520ecc88aa8afa4cdbb0f7e8a4aa0538ddb20f8a13e7626bf111"
+    },
+    {
+      "path": "validation/BROWSER-REPORT.json",
+      "bytes": 159,
+      "sha256": "2dc38e3b57d30c393c438a8ab4025450bc1d5817701e63b8c75a4f5f58113565"
+    },
+    {
+      "path": "validation/EVIDENCE-BOUNDARIES.md",
+      "bytes": 834,
+      "sha256": "449986bb42392c7a68c2eeaafcaf6be32ca19eb813c070a3aa1989a08188ae41"
+    },
+    {
+      "path": "validation/UNIT-REPORT.txt",
+      "bytes": 2505,
+      "sha256": "94fc2ce592d15fb35c4bd6a3312e7230f7a42e18e69fae85e81dd40a746dd595"
+    }
+  ]
+}

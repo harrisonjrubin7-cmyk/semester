@@ -1,0 +1,9 @@
+# Integration, migration and failure-recovery runbook
+No endpoints or legacy vendor contracts assumed. Discover actual documented APIs, SSO, rate limits, account boundaries, schemas and permitted read/write scopes. Use service identity/secrets vault and least privilege. Every mapping pins source IDs, canonical IDs, version, authority direction, watermark and reconciliation. Device/card/payment data remain separately governed.
+
+Field-authority matrix: shadow reads accepted source; assist handles drafts/requests with legacy writes; controlled writes specific approved transactions; native-authoritative only after exact signed cutover. Never allow two authoritative writers for one field/domain. Offline/replicated record copies not extra authority.
+Migration: counts and temporal IDs; occupancy/reservations/contracts; entitlement lots and consumption; charges/payments/allocations/obligations; open tickets/files; permissions/retention/holds. Dry run -> reconciliation -> parallel observation -> customer UAT -> freeze/checkpoint -> cutover -> enhanced monitoring -> accepted retirement. Explain every discrepancy. No fabricated 100% result.
+
+Recovery: hold affected operation -> checkpoint queued/in-flight work -> reconcile external outcomes -> idempotent replay only of known-safe commands -> forward repair or isolated DB+object restore -> reconcile post-backup changes and revocations -> accepted smoke/negative tests -> fresh scoped resume. Do not delete receipts, wipe drafts, reissue unknown payments or switch to stale legacy authority. Database backup alone not file bytes.
+
+Stop triggers: tenant leak/identity disclosure, unauthorized assignment/money/hold, corrupt reconciliation, expired authority, missing operator/alert, accepted threshold breach. Refund/cancellation remediation may require separately authorized route rather than blanket blocked repair. Quantitative SLA/RTO/RPO and offline exposure unresolved; blank values block activation.

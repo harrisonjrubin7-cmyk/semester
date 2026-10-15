@@ -1,0 +1,53 @@
+{
+  "function": "deduplicate",
+  "cases": [
+    {
+      "input": {
+        "ids": [
+          "a",
+          "b",
+          "a",
+          "c"
+        ]
+      },
+      "expected": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "input": {
+        "ids": []
+      },
+      "expected": []
+    },
+    {
+      "input": {
+        "ids": [
+          "a",
+          "a",
+          "a"
+        ]
+      },
+      "expected": [
+        "a"
+      ]
+    },
+    {
+      "input": {
+        "ids": [
+          "c",
+          "b",
+          "a",
+          "b"
+        ]
+      },
+      "expected": [
+        "c",
+        "b",
+        "a"
+      ]
+    }
+  ]
+}

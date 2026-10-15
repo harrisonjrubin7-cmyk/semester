@@ -1,0 +1,11 @@
+# Template states, not customer status. Each domain has exactly one writer of record. No uncontrolled dual-write.
+domains:
+  - { domain: "Curriculum and catalog", current_authority: "Vanderbilt legacy SIS (named source)", candidate_authority: Semester, mode: external_authority, acceptance: pending, cutover: not_scheduled, accepted_by: null }
+  - { domain: "Scheduling", current_authority: "Vanderbilt legacy SIS (named source)", candidate_authority: Semester, mode: external_authority, acceptance: pending, cutover: not_scheduled, accepted_by: null }
+  - { domain: "Enrollment", current_authority: "Vanderbilt legacy SIS (named source)", candidate_authority: Semester, mode: external_authority, acceptance: pending, cutover: not_scheduled, accepted_by: null }
+  - { domain: "Grades and academic history", current_authority: "Vanderbilt legacy SIS (named source)", candidate_authority: Semester, mode: external_authority, acceptance: pending, cutover: not_scheduled, accepted_by: null }
+  - { domain: "Transfer credit", current_authority: "Vanderbilt legacy SIS (named source)", candidate_authority: Semester, mode: external_authority, acceptance: pending, cutover: not_scheduled, accepted_by: null }
+  - { domain: "Degree audit", current_authority: "Vanderbilt legacy SIS (named source)", candidate_authority: Semester, mode: external_authority, acceptance: pending, cutover: not_scheduled, accepted_by: null }
+  - { domain: "Graduation and conferral", current_authority: "Vanderbilt legacy SIS (named source)", candidate_authority: Semester, mode: external_authority, acceptance: pending, cutover: not_scheduled, accepted_by: null }
+  - { domain: "Transcript services", current_authority: "Vanderbilt legacy SIS (named source)", candidate_authority: Semester, mode: external_authority, acceptance: pending, cutover: not_scheduled, accepted_by: null }
+transfer_requires: [reconciliation_signed, registrar_acceptance_of_historical_and_exceptional_cases, recovery_rehearsal, reporting_continuity, institution_authorization]

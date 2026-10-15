@@ -1,0 +1,11 @@
+drills:   # staging before activation, then periodically; all pending_execution
+  - {id: DRILL-OUTAGE-001, trigger: connector can't retrieve authoritative input, expected: student sees review/stale; staff queue gets a case}
+  - {id: DRILL-SCHEMA-001, trigger: required source field malformed or absent, expected: payload quarantined; no unsupported result}
+  - {id: DRILL-DUP-001, trigger: same evaluation result arrives twice, expected: one receipt, one logical status transition}
+  - {id: DRILL-ORDER-001, trigger: older source update arrives after newer, expected: newer version stays; reconciliation if needed}
+  - {id: DRILL-REVOCATION-001, trigger: membership ends while work runs, setup: [create_student_request, start_source_evaluation, revoke_membership_before_result, deliver_late_success_event], expected: [reject_late_result_for_access_restoration, preserve_operational_audit, never_expose_result_to_revoked_actor, route_cleanup_to_operator, record_correlation_and_decision_ids]}
+  - {id: DRILL-POLICY-001, trigger: policy evaluator can't decide, expected: deny or safe review; never fail-open}
+  - {id: DRILL-CRASH-001, trigger: worker stops after partial execution, expected: resume safely or compensate; no duplicate command}
+  - {id: DRILL-CONFIG-001, trigger: wrong tenant policy/config staged, expected: validation blocks activation or safe-off}
+  - {id: DRILL-ROLLBACK-001, trigger: release causes a critical defect, expected: capability safely unavailable; records and audit intact}
+  record_template: production-system release evidence; status pending_execution until a run link exists

@@ -1,0 +1,105 @@
+# Inactive template. Resolve verified SHA pins before activation.
+name: Curriculum feedback
+on:
+  pull_request:
+    paths: ['submissions/**']
+  workflow_dispatch:
+    inputs:
+      candidate_sha: { description: 'Submission commit to grade', required: true }
+permissions:
+  contents: read
+concurrency:
+  group: curriculum-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        week: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    steps:
+      - name: Checkout trusted harness
+        uses: actions/checkout@REPLACE_WITH_VERIFIED_FULL_COMMIT_SHA
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted
+          persist-credentials: false
+      - name: Checkout candidate as data
+        uses: actions/checkout@REPLACE_WITH_VERIFIED_FULL_COMMIT_SHA
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Install gVisor (runsc)
+        run: |
+          # Pin the release you reviewed; verify its sha512 before use.
+          URL=https://storage.googleapis.com/gvisor/releases/release/${{ vars.GVISOR_RELEASE }}/x86_64
+          curl -fsSLO "$URL/runsc" -O "$URL/runsc.sha512"
+          sha512sum -c runsc.sha512
+          sudo install -m 0755 runsc /usr/local/bin/runsc
+          sudo /usr/local/bin/runsc install && sudo systemctl restart docker
+      - name: Pull reviewed image
+        env:
+          GRADER_IMAGE: ${{ vars.GRADER_IMAGE }}
+        run: |
+          python -c 'import os,re; assert re.fullmatch(r"[^\s]+@sha256:[0-9a-f]{64}",os.environ["GRADER_IMAGE"])'
+          docker pull "$GRADER_IMAGE"
+      - name: Grade visible cases
+        env:
+          GRADER_IMAGE: ${{ vars.GRADER_IMAGE }}
+          WEEK: ${{ matrix.week }}
+        run: |
+          mkdir -p reports
+          python trusted/docker_grade.py --runtime runsc --lab "$WEEK" --submission "candidate/submissions/week_${WEEK}/starter.py" --report "reports/week_${WEEK}.json"
+      - name: Store advisory feedback
+        if: always()
+        uses: actions/upload-artifact@REPLACE_WITH_VERIFIED_FULL_COMMIT_SHA
+        with:
+          name: week-${{ matrix.week }}-feedback
+          path: reports/*.json
+          retention-days: 7
+
+  # Hidden-case grading: never on pull_request (no secrets there, and forks must not reach hidden tests).
+  # Runs only when an instructor dispatches it; the 'grading' environment requires an instructor reviewer.
+  hidden:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: grading
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        week: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    steps:
+      - uses: actions/checkout@REPLACE_WITH_VERIFIED_FULL_COMMIT_SHA
+        with: { ref: ${{ github.sha }}, path: trusted, persist-credentials: false }
+      - uses: actions/checkout@REPLACE_WITH_VERIFIED_FULL_COMMIT_SHA
+        with: { ref: ${{ inputs.candidate_sha || github.sha }}, path: candidate, persist-credentials: false }
+      - name: Fetch hidden tests (read-only deploy key, separate private repo)
+        env: { HIDDEN_KEY: ${{ secrets.HIDDEN_TESTS_DEPLOY_KEY }} }
+        run: |
+          install -m 600 /dev/null ~/.hk && printf '%s' "$HIDDEN_KEY" > ~/.hk
+          GIT_SSH_COMMAND="ssh -i ~/.hk -o IdentitiesOnly=yes" git clone --depth 1 "${{ vars.HIDDEN_TESTS_REPO }}" hidden
+          rm -f ~/.hk
+      - name: Install gVisor (runsc)
+        run: |
+          # Pin the release you reviewed; verify its sha512 before use.
+          URL=https://storage.googleapis.com/gvisor/releases/release/${{ vars.GVISOR_RELEASE }}/x86_64
+          curl -fsSLO "$URL/runsc" -O "$URL/runsc.sha512"
+          sha512sum -c runsc.sha512
+          sudo install -m 0755 runsc /usr/local/bin/runsc
+          sudo /usr/local/bin/runsc install && sudo systemctl restart docker
+      - name: Grade visible + hidden
+        env: { GRADER_IMAGE: ${{ vars.GRADER_IMAGE }}, WEEK: ${{ matrix.week }} }
+        run: |
+          docker pull "$GRADER_IMAGE"
+          mkdir -p reports
+          python trusted/docker_grade.py --runtime runsc --hidden hidden --lab "$WEEK" --submission "candidate/submissions/week_${WEEK}/starter.py" --report "reports/week_${WEEK}.json"
+          rm -rf hidden
+      - uses: actions/upload-artifact@REPLACE_WITH_VERIFIED_FULL_COMMIT_SHA
+        if: always()
+        with: { name: week-${{ matrix.week }}-graded, path: reports/, retention-days: 30 }

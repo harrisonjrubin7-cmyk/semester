@@ -1,0 +1,20 @@
+correlation:
+  headers: [x-request-id, x-correlation-id]
+  propagate_through: [browser_request, edge_function, policy_decision, audit_event, outbox_event, worker_job, provider_adapter, receipt]
+logs:
+  mandatory: [timestamp, level, environment, service, tenant_id, correlation_id, event_or_command, actor_type, outcome]
+  prohibited: [access_tokens, session_tokens, passwords, restricted_record_payloads, prompt_text_with_student_data]
+traces: { normal: "10%", errors: "100%", consequential_commands: "100%" }
+alerts:
+  - { name: readiness_source_stale, trigger: "freshness_age > 4h (operational class)", severity: SEV-3, owner: integration_on_call, runbook: launch/runbooks/readiness_source_stale.md }
+  - { name: policy_decision_failures, trigger: "error_rate > agreed threshold", severity: SEV-2, owner: platform_on_call }
+  - { name: unauthorized_access_attempt_spike, trigger: "deny-rate anomaly", severity: SEV-2, owner: security_on_call }
+  - { name: readiness_reconciliation_backlog, trigger: "oldest open case > agreed SLA", severity: SEV-3, owner: registrar_operations }
+  - { name: authority_conflict_blocked, trigger: "any authority.conflict_blocked", severity: SEV-3, owner: integration_on_call }
+dashboards:
+  integration_health: { panels: [last_success, watermark_lag, provider_errors, retries, dead_letters, reconciliation_backlog], user: integration_owner }
+  security_health: { panels: [denials, role_grant_changes, session_revocations, break_glass_use, suspicious_patterns], user: security_owner }
+  student_trust: { panels: [stale_disclosures, review_outcomes, support_contact_rate, receipt_delivery, source_detail_views], user: product_owner }
+  registrar_operations: { panels: [cases_by_state, aging, referrals, override_requests, office_workload, sla_breaches], user: registrar_owner }
+  release_health: { panels: [version, deploy_time, flags, error_trend, rollback_readiness, evidence_status], user: release_manager }
+design_system_components: [MetricTile, HealthBadge, SourceBadge, ErrorSummary, DataTable]

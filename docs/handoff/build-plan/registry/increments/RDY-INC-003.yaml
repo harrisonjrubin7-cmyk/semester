@@ -1,0 +1,18 @@
+increment:
+  id: RDY-INC-003
+  capability_key: registration_readiness
+  title: Source freshness and stale-state guard
+  impact: high
+  sensitivity: restricted
+  release_train: foundation
+  state: shaped
+  outcome:
+    user: "A student can see when a required registration source is out of date and is not given a misleading definitive result."
+    institution: "Registrar staff can identify stale-source cases and route them without editing authoritative records."
+  authority: { official_decision_owner: institution, semester_role: source-aware derived planning state, prohibited_claim: "Readiness confirms enrollment." }
+  scope:
+    includes: [freshness_calculation, SourceBadge_and_SourceLine, stale_readiness_state, source_detail_sheet, registrar_stale_case_queue, stale_source_alert]
+    excludes: [direct_SIS_correction, enrollment_command, automatic_hold_override]
+  acceptance: [AT-RDY-002, AT-RDY-006, DRL-001, ACC-RDY-003, SEC-RDY-002]
+  dependencies: { hard: [identity_context, source_authority_register, SIS_adapter, readiness_case_workflow, audit_event_store, alerting], soft: [student_notification_service] }
+  release: { feature_flag: registration_readiness_v1, safe_off: "Read-only guidance and institution support handoff.", rollback: "Disable flag; retain audit and reconciliation history." }

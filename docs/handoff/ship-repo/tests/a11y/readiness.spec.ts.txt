@@ -1,0 +1,11 @@
+// Playwright accessibility project. One file covers the seven checks above; split if preferred. npm i -D @axe-core/playwright
+import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+const URL = process.env.READINESS_URL ?? "http://localhost:5173/#/app/registration/readiness";
+test("semantic headings: exactly one h1", async ({ page }) => { await page.goto(URL); await expect(page.locator("h1")).toHaveCount(1); });
+test("no axe violations (wcag2a, wcag2aa, wcag22aa)", async ({ page }) => { await page.goto(URL); const r = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze(); expect(r.violations).toEqual([]); });
+test("keyboard: primary action reachable and focus visible", async ({ page }) => { await page.goto(URL); for (let i = 0; i < 15; i++) { await page.keyboard.press("Tab"); if ((await page.evaluate(() => document.activeElement?.textContent)) ?.includes("Check my readiness")) break; } const outline = await page.evaluate(() => getComputedStyle(document.activeElement!).outlineStyle); expect(outline).not.toBe("none"); });
+test("status not colour-only: every status chip has text", async ({ page }) => { await page.goto(URL); for (const chip of await page.locator("[data-status]").all()) expect((await chip.innerText()).trim().length).toBeGreaterThan(0); });
+test("stale source is announced", async ({ page }) => { await page.route("**/v1/readiness/context*", (r) => r.fulfill({ status: 503, body: JSON.stringify({ code: "stale", message: "x", correlationId: "c" }) })); await page.goto(URL); await expect(page.getByRole("alert")).toContainText(/can't confirm/i); });
+test("reduced motion respected", async ({ browser }) => { const ctx = await browser.newContext({ reducedMotion: "reduce" }); const p = await ctx.newPage(); await p.goto(URL); const d = await p.evaluate(() => [...document.querySelectorAll("*")].map((e) => parseFloat(getComputedStyle(e).transitionDuration)).filter((x) => x > 0.01).length); expect(d).toBe(0); });
+test("reflow at 320 px: no horizontal scroll", async ({ page }) => { await page.setViewportSize({ width: 320, height: 800 }); await page.goto(URL); expect(await page.evaluate(() => document.documentElement.scrollWidth <= 320)).toBe(true); });

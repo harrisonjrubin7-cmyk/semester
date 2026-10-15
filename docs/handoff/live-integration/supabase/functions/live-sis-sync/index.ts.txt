@@ -1,0 +1,49 @@
+// OneRoster 1.2 read sync → live_sis_staging. Read-only toward the SIS. Requires: institution grant + sis.read enabled + active oneroster connection.
+// POST { institution_id } → { batch_id, counts }
+import { admin, connection, Denied, handler, json, requireCapability, requireGrant, requireUser } from "../_shared/gate.ts";
+
+const OBJECTS: [string, string][] = [["academicSessions", "academicSessions"], ["classes", "classes"], ["users", "users"], ["enrollments", "enrollments"]];
+const PAGE = 500, MAX_PAGES = 200;
+
+async function token(cfg: Record<string, string>, secret: string): Promise<string> {
+  const r = await fetch(cfg.token_url, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded", authorization: "Basic " + btoa(`${cfg.client_id}:${secret}`) },
+    body: new URLSearchParams({ grant_type: "client_credentials", scope: cfg.scope ?? "https://purl.imsglobal.org/spec/or/v1p2/scope/roster-core.readonly" }),
+  });
+  if (!r.ok) throw new Denied(502, "sis_auth_failed", `SIS token request failed (${r.status})`);
+  return (await r.json()).access_token;
+}
+
+Deno.serve(handler(async (req) => {
+  const user = await requireUser(req);
+  const { institution_id } = await req.json();
+  if (!institution_id) throw new Denied(400, "bad_request", "institution_id required");
+  await requireGrant(user, institution_id, ["institution", "registrar"]);
+  await requireCapability(institution_id, "sis.read");
+  const c = await connection(institution_id, "oneroster");
+  const bearer = await token(c.config, c.secret!);
+  const db = admin(), batch_id = crypto.randomUUID(), counts: Record<string, number> = {};
+
+  for (const [path, key] of OBJECTS) {
+    counts[key] = 0;
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const u = new URL(`${c.config.base_url.replace(/\/$/, "")}/ims/oneroster/rostering/v1p2/${path}`);
+      u.searchParams.set("limit", String(PAGE)); u.searchParams.set("offset", String(page * PAGE));
+      const r = await fetch(u, { headers: { authorization: `Bearer ${bearer}`, accept: "application/json" } });
+      if (r.status === 429) throw new Denied(503, "sis_rate_limited", "SIS rate limit — retry later; partial batch kept as staging only");
+      if (!r.ok) throw new Denied(502, "sis_read_failed", `${path} read failed (${r.status})`);
+      const rows: Array<Record<string, unknown>> = (await r.json())[key] ?? [];
+      if (!rows.length) break;
+      const { error } = await db.from("live_sis_staging").upsert(rows.map((x) => ({
+        institution_id, object_type: key, source_key: String(x.sourcedId), source_version: String(x.dateLastModified ?? ""),
+        payload: x, observed_at: new Date().toISOString(), batch_id,
+      })), { onConflict: "institution_id,object_type,source_key" });
+      if (error) throw new Denied(500, "staging_write_failed", "Could not stage records");
+      counts[key] += rows.length;
+      if (rows.length < PAGE) break;
+    }
+  }
+  await db.from("live_outbox").insert({ institution_id, aggregate: "sis", event: "sis.batch_staged", payload: { batch_id, counts } });
+  return json(req, { batch_id, counts, note: "Staged only. Reconciliation maps staging → official records after data-owner acceptance." });
+}));

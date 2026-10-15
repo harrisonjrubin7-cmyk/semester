@@ -1,0 +1,13 @@
+component,used_on,contract
+SiteShell,Every route,"Skip link, header, nav, main landmark, footer, persistent preview disclosure"
+Hero,Home/overview/solution,"Kicker, single h1, reviewed lead, one primary CTA, optional labelled synthetic preview"
+FeatureGrid,Overview/solution,"Job cards, specific audience, authority boundary; one-column mobile"
+SourceDemo,Home/tour,"Synthetic fact, source type, authority and source age; no invented official records"
+StatusDisclosure,Product/pilot/trust,Independent design/code/test/deployment/approval facts; unknown never zero
+InquiryForm,Contact/demo/quote/partners/pilot,"Visible labels, required words, inline errors and summary, local preview only until server adapter exists"
+EvidenceRegister,Trust/security/processors,"Owner, scope, date, expiry, document state and request path"
+ControlledDocument,Legal/resources,"Owner, version, status, accessible content and revision history"
+HandoffPanel,Signup/signin/join/open/download,"Verified transaction/provider, account match, expiry, recovery and fallback"
+ResourceIndex,Resources/careers,"Approved entries, search/filter, empty and unavailable; no seeded published claims"
+ServiceStatus,Status,"Authorized feed, observed time, service and incident states; unavailable fallback"
+PageWireframe,All route patterns,Header → purpose/hero → ordered regions → CTA → footer; print/mobile layouts

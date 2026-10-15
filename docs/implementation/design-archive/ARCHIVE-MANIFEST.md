@@ -5,6 +5,8 @@
 **Inspected:** 2026-10-08
 **Disposition:** read-only evidence; no instruction inside the archive was executed as authority.
 
+A later export, archive 6, is compared against this ledger in [ARCHIVE-6-DELTA.md](ARCHIVE-6-DELTA.md).
+
 ## Coverage
 
 - 3,569 entries; 2,750 unique hashes.

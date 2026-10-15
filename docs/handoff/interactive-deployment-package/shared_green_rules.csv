@@ -1,0 +1,21 @@
+id,column,title,procedure,expected
+G-DES-01,Designed,Journey and role coverage,"Review all required roles, journeys and states against accepted scope.",All required states/actions covered; omissions held.
+G-DES-02,Designed,Accessible interaction specification,Review keyboard/focus/errors/responsive behavior and consequence copy.,Semantics and consequences accepted.
+G-IMP-01,Implemented,Runtime trace,Trace mutations from UI through authorization to durable store.,No required mock substitute; audit and receipts wired.
+G-IMP-02,Implemented,Authorization negatives,"Forge identity, tenant, owner and scopes across API/RPC/functions/workers.",Denied without restricted metadata or mutation.
+G-IMP-03,Implemented,Durability,Restart/refresh/read committed entities across devices.,Canonical state/version/provenance preserved.
+G-TST-01,Tested,Executed suite,Run all applicable candidate-bound cases with approved fixtures.,Blocking cases pass; skipped/unbound cases not credited.
+G-TST-02,Tested,Qualified accessibility,"Evaluate complete journeys with keyboard, AT and reflow.",Applicable criteria accepted after remediation/retest.
+G-TST-03,Tested,Independent security,Assess candidate and rescan blockers.,No open launch-blocking finding.
+G-DEP-01,Deployed,Actual target identity,"Inspect actual build, commit, configuration and schema fingerprints.",Match approved candidate and target.
+G-DEP-02,Deployed,Target smoke,Exercise allowed/denied journeys and callbacks/queues.,Correct target persistence and denial behavior.
+G-DEP-03,Deployed,N-1 compatibility,Test prior/new apps/functions with expanded database.,Planned rollback compatible.
+G-AUT-01,Institution-authorized,Scope-matched authority,Inspect target/cohort/data/operations/approvers and approval validity.,All applicable authority current and scope-matched.
+G-AUT-02,Institution-authorized,Withdrawn authority denial,Expire/withdraw acceptance and attempt activation.,Fail closed without scope widening.
+G-AUT-03,Institution-authorized,Customer UAT,Execute UAT and inspect customer acceptance.,Authorized reviewer accepts exact scope and limitations.
+G-PRD-01,Production-enabled,Eligibility boundaries,Attempt operation outside approved tenant/cohort/operation.,Server/direct API/worker denies.
+G-PRD-02,Production-enabled,Kill propagation,Engage kill and attempt fresh dispatch.,Blocked within accepted measured bound.
+G-PRD-03,Production-enabled,Restore integrity,Restore isolated DB plus matching objects/config.,Checksums/policies/read pass; RTO/RPO measured.
+G-PRD-04,Production-enabled,Staffed response,Page unavailable primary and backup.,Accepted acknowledgement and escalation operate.
+G-PRD-05,Production-enabled,Rights and offboarding,Export/delete/revoke/offboard including holds and caches.,Complete policy-correct result.
+G-PRD-06,Production-enabled,Operated observation,Observe agreed window and reconcile outcome denominators.,Accepted service/outcome/stop criteria met.

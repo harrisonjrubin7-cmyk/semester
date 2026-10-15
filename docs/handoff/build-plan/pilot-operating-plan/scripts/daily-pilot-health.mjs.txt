@@ -1,0 +1,14 @@
+// Build the daily pilot health record and derive activation status from rules, not opinion.
+// node daily-pilot-health.mjs input.json → record.yaml-ready JSON. Thresholds are proposals; agree them with Vanderbilt.
+export function dailyHealth(i, t = { reviewShareLimit: 0.25, minRequestsForShare: 20 }) {
+  const w = i.workflow, total = Object.values(w).reduce((a, b) => a + b, 0);
+  const unsafe = w.stale + w.unknown + w.failed;
+  const reasons = [];
+  let status = "active";
+  if (i.operations.P0 > 0) { status = "safe_off"; reasons.push("open P0 → safe-off the affected capability"); }
+  else if (["source_connector", "policy_service"].some((k) => i.service[k] !== "green")) { status = "limited"; reasons.push("source or policy service not green → definitive results paused, review path only"); }
+  else if (i.operations.P1 > 0) { status = "limited"; reasons.push("open P1 → manual/safe-review path active"); }
+  else if (total >= t.minRequestsForShare && unsafe / total > t.reviewShareLimit) { status = "limited"; reasons.push(`${Math.round((100 * unsafe) / total)}% stale/unknown/failed (> ${t.reviewShareLimit * 100}%) → investigate source before more volume`); }
+  if (!i.notes || !i.notes.trim()) reasons.push("notes are required");
+  return { date: i.date, tenant: i.tenant, release: "REL-READINESS-001", service: i.service, workflow: { requests: total, ...w }, operations: i.operations, decision: { activation_status: status, reasons, notes: i.notes || "" } };
+}

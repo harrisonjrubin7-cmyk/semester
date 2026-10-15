@@ -1,0 +1,21 @@
+# Acceptance-test library. Each scenario id is referenced by e2e/readiness-acceptance.spec.ts.txt and by evidence records.
+scenarios:
+  - { id: AT-RDY-001, title: "Student sees a current ready result", given: [active_student_membership, current_sources, all_checks_pass], when: [student_requests_evaluation], then: [state_is_ready, every_check_has_source_and_observed_time, receipt_states_not_enrollment, audit_event_exists, outbox_event_exists] }
+  - { id: AT-RDY-002, title: "Stale SIS input prevents a definitive ready", given: [sis_snapshot_older_than_threshold], when: [student_requests_evaluation], then: [state_is_stale_or_needs_review, no_ready_claim_rendered, refresh_or_support_path_present] }
+  - { id: AT-RDY-003, title: "Advisor can't see a student outside caseload", given: [advisor_membership, student_outside_scope], when: [advisor_requests_case], then: [empty_or_403, no_sensitive_fields, denial_logged] }
+  - { id: AT-RDY-004, title: "Duplicate submission creates one evaluation", given: [same_idempotency_key], when: [command_sent_twice], then: [one_case_version, one_receipt, second_response_returns_existing, one_outbox_effect] }
+  - { id: AT-RDY-005, title: "Revoked staff access blocks a late action", given: [registrar_starts_route, grant_revoked_before_commit], when: [command_reaches_policy_gate], then: [denied, state_unchanged, denial_audit_event, safe_error] }
+  - { id: AT-RDY-006, title: "Active hold blocks and names the office", given: [active_registration_hold], when: [student_requests_evaluation], then: [state_is_blocked, assigned_office_shown, office_contact_path_present] }
+  - { id: AT-RDY-007, title: "Requester can't approve their own override", given: [registrar_requested_override], when: [same_registrar_decides], then: [rejected_by_constraint, request_unchanged] }
+  - { id: AT-RDY-008, title: "Illegal state jump is rejected", given: [case_blocked], when: [set_state_resolved], then: [error_23514, state_unchanged] }
+  - { id: AT-RDY-009, title: "Lower-authority source can't overwrite SIS", given: [hold_institution_verified], when: [update_source_type_student_entered], then: [error_23514, authority_conflict_reconciliation_item] }
+  - { id: AT-RDY-010, title: "Read model never leaks across tenants", given: [two_tenants_with_cases], when: [student_reads_student_readiness_summary], then: [only_own_rows] }
+coverage_matrix:
+  data: [constraints, foreign_keys, tenant_keys, source_timestamps, immutability]
+  access: [authentication, membership, rls, grants, caseload_scope, revocation]
+  workflow: [legal_transitions, idempotency, retries, duplicate_delivery, compensation]
+  ui: [ready, loading, empty, stale, blocked, needs_review, error, forbidden, offline]
+  operations: [alerts, queue_routing, reconciliation, dead_letters, recovery]
+  trust: [source_labels, authority_boundary, receipt_language, ai_disclosures]
+  accessibility: [keyboard_path, focus_recovery, announcements, contrast, responsive]
+  institution: [escalation_contacts, source_confirmation, role_training, pilot_signoff]

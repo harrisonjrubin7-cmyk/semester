@@ -1,0 +1,28 @@
+// pnpm test:release-gate — exits 1 unless every evidence item is accepted (with a run link, unchanged hash, unexpired), all approvals approved, no critical findings.
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { parse } from "yaml";
+type EvidenceStatus = "accepted" | "pending" | "rejected" | "expired";
+type Item = { type: string; artifact: string; status: EvidenceStatus; sha256?: string; expires?: string; run_url?: string };
+export function canApproveRelease(i: { evidence: Item[]; requiredApprovals: Record<string, "approved" | "pending" | "rejected">; openCriticalFindings: number; now?: Date }) {
+  const failures: string[] = [], now = i.now ?? new Date();
+  for (const e of i.evidence) {
+    if (e.status !== "accepted") { failures.push(`${e.type} is ${e.status}`); continue; }
+    if (!e.run_url) failures.push(`${e.type} accepted without a run link`);
+    if (e.expires && new Date(e.expires) < now) failures.push(`${e.type} expired ${e.expires}`);
+    if (!existsSync(e.artifact)) failures.push(`${e.type}: artifact ${e.artifact} missing`);
+    else if (e.sha256 && createHash("sha256").update(readFileSync(e.artifact)).digest("hex") !== e.sha256) failures.push(`${e.type}: artifact changed since acceptance`);
+  }
+  for (const [o, s] of Object.entries(i.requiredApprovals)) if (s !== "approved") failures.push(`${o} approval is ${s}`);
+  if (i.openCriticalFindings > 0) failures.push("Critical findings remain open");
+  return { allowed: failures.length === 0, failures };
+}
+if (import.meta.url === `file://${process.argv[1]}`) {
+  let blocked = 0;
+  for (const f of readdirSync("evidence/release-gates").filter((f) => f.endsWith(".yaml"))) {
+    const { release: r } = parse(readFileSync("evidence/release-gates/" + f, "utf8"));
+    const res = canApproveRelease({ evidence: r.required_evidence, requiredApprovals: r.approvals, openCriticalFindings: r.open_critical_findings ?? 0 });
+    console.log(`${r.id}: ${res.allowed ? "APPROVABLE" : "BLOCKED"}`); res.failures.forEach((x) => console.log("  - " + x)); if (!res.allowed) blocked++;
+  }
+  process.exit(blocked ? 1 : 0);
+}

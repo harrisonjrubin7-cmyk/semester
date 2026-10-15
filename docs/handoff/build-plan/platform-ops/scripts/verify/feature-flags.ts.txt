@@ -1,0 +1,13 @@
+// Fails CI on: missing metadata, expired review date, active flag for an unverified capability, global production enablement.
+import { readFileSync } from "node:fs"; import { parse } from "yaml";
+const REQ = ["flag_key","capability_id","owner","tenant_scope","cohort_scope","environment_scope","created_at","expiry_or_review_date","safe_off_effect","release_id","monitoring_query","rollback_runbook"];
+const std = parse(readFileSync("registry/flags/feature-flag-standard.yaml", "utf8")).feature_flags;
+const levels: Record<string, number> = JSON.parse(readFileSync("registry/capability-levels.json", "utf8"));  // CAP id → maturity level
+const errors: string[] = [], warns: string[] = []; const today = new Date().toISOString().slice(0, 10);
+for (const f of std.example ?? []) {
+  for (const k of REQ) if (f[k] == null || f[k] === "" || f[k] === "pending" || (Array.isArray(f[k]) && (!f[k].length || f[k].includes("pending")))) (f.state === "active" ? errors : warns).push(`${f.flag_key}: ${k} missing`);
+  if (f.expiry_or_review_date < today) warns.push(`${f.flag_key}: review date passed`);
+  if (f.state === "active" && (levels[f.capability_id] ?? 0) < 4) errors.push(`${f.flag_key}: active but ${f.capability_id} is below Level 4 (verified)`);
+  if (f.state === "active" && f.environment_scope.includes("production") && (!f.tenant_scope?.length || f.tenant_scope.includes("*"))) errors.push(`${f.flag_key}: global production enablement`);
+}
+warns.forEach((w) => console.warn("WARN", w)); if (errors.length) { console.error(errors.join("\n")); process.exit(1); } console.log("flags ok");

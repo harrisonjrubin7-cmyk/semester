@@ -1,0 +1,77 @@
+{
+  "created": "2026-10-13",
+  "source_attachment_sha256": "98fce65d4f5d1c4c4563d0e8ea20271ddea28b0c968a30e643421a3bf79bbab6",
+  "status": "local tested; deployment pending approval",
+  "files": [
+    {
+      "path": "FULL-PLATFORM-SITE-ARCHITECTURE.md",
+      "bytes": 6805,
+      "sha256": "23dc266326d4fee5db255ba57762ad1cec8c9ea09d4af01ba68d21c3b4195129"
+    },
+    {
+      "path": "PUBLIC-PAGE-WIREFRAMES.md",
+      "bytes": 17913,
+      "sha256": "eed033b91c9b5c04064457206aed54b4792fb4b6a2e955d8c78a0a33c8c9264f"
+    },
+    {
+      "path": "README.md",
+      "bytes": 973,
+      "sha256": "7b2a95dc9bcb82f24160019d8b8763d8a0040aedcd46d62b50ebde252677fe65"
+    },
+    {
+      "path": "Semester-complete-platform-site-architecture.pdf",
+      "bytes": 47042,
+      "sha256": "2be5cd62515d2c663ff87fd8b8e4afb6624db8a2504af724f5a67d55d56a9a54"
+    },
+    {
+      "path": "dashboard/index.html",
+      "bytes": 10372,
+      "sha256": "d6a41fb2b3cbb0b60278a22baa98e7355cebd0f4eba9b54bdcca147d7507fd3a"
+    },
+    {
+      "path": "dashboard/vercel.json",
+      "bytes": 372,
+      "sha256": "4453fd771e6ec0adb795b01290d67d3308c90676e9eb4df910298dce292cb34f"
+    },
+    {
+      "path": "deployment/EXACT-DEPLOYMENT-REQUEST.json",
+      "bytes": 11695,
+      "sha256": "0a7f416031ecc9c533b02d024d94ba371af65eff0f9fb3bacba150e81475a894"
+    },
+    {
+      "path": "platform-route-contracts.json",
+      "bytes": 73813,
+      "sha256": "8384c6a6df59991e57d3a3b0bce96fe6cfb3d3f6c8079b0d3e8707eefc4f2887"
+    },
+    {
+      "path": "public-route-contracts.json",
+      "bytes": 22347,
+      "sha256": "9bb029455bcaf08bbd21d2e2c7f6f2f53844c48c4bcc97c659a0702db8ca11b5"
+    },
+    {
+      "path": "reviews/SHARED-AND-STUDENT-CODE.md",
+      "bytes": 4428,
+      "sha256": "064c2d20d51d9ebe04b4b86b9551b523c77a1ee2d3b72d8f0c9ccdf19744619b"
+    },
+    {
+      "path": "reviews/capabilities.excerpt.ts",
+      "bytes": 335,
+      "sha256": "1fa2bfd2905415393da6c56937ac7e19940f75a08bcf1abd23b8c8c3d7d63263"
+    },
+    {
+      "path": "reviews/registration-actions.excerpt.ts",
+      "bytes": 515,
+      "sha256": "1aaa4a7ec3ae9b949115da90cbbdf97af6441bfa41e1f37179f5178d69b58108"
+    },
+    {
+      "path": "source-registry.js",
+      "bytes": 33305,
+      "sha256": "7fd7b6e10c88c0b5e0717d9e1a09b9b2e41047bd9fab42fd47353a4aad6ea1af"
+    },
+    {
+      "path": "validation/dashboard-browser-report.json",
+      "bytes": 173,
+      "sha256": "635c7df6885be1bd1d51f162c98ba04763cb4661ffbfb403d4c09d7f6c0aa135"
+    }
+  ]
+}

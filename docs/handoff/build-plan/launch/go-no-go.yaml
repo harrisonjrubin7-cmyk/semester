@@ -1,0 +1,12 @@
+# go-no-go.yaml — expanded release gate for registration_readiness_v1. Every item needs an evidence link.
+capability: registration_readiness_v1
+decision: no_go            # changes to go only when every must_pass item below has evidence
+must_pass:
+  product: [all_role_variants_rendered, all_state_variants_rendered, source_and_freshness_labels_present, official_status_boundary_copy_approved]
+  security: [cross_tenant_isolation_verified, student_own_record_only_verified, advisor_caseload_scope_verified, registrar_action_scope_verified, revoked_session_denied]
+  data: [migration_reset_passes, constraints_tested, reconciliation_flow_tested, stale_source_behavior_tested, authority_guard_tested]
+  workflow: [idempotency_tested, duplicate_event_handled, outbox_delivery_tested, dead_letter_runbook_tested]
+  operations: [dashboards_live, alerts_routed, incident_drill_completed, support_owners_confirmed]
+  institution: [pilot_scope_signed_off, data_sources_confirmed, escalation_contacts_named, student_staff_communications_approved]
+evidence: {}               # item -> { run_url, commit_sha, deployment_id, result, reviewer, at }
+signoffs: [{ role: product_owner, state: pending }, { role: security_owner, state: pending }, { role: platform_owner, state: pending }, { role: institution_owner, state: pending }]

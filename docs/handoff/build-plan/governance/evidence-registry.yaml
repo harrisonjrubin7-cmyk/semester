@@ -1,0 +1,21 @@
+# evidence-registry.yaml — every release claim points here. "Document exists" ≠ "control is operating".
+required_fields: [id, title, capability_key, control_id, evidence_type, owner, environment, created_at, expires_at, status, storage_uri, content_hash, reviewed_by, review_date, invalidated_by]
+evidence_types: [automated_test_result, manual_test_script, accessibility_review, architecture_decision, migration_rehearsal, policy_test_result, rls_test_result, incident_drill_record, reconciliation_record, institution_signoff, training_attestation, production_observation, security_review, release_decision]
+statuses: [draft, submitted, accepted, expired, superseded, invalidated]
+rules:
+  - "status becomes accepted only with a real run (storage_uri + content_hash computed from the stored artifact) and a reviewer who isn't the owner"
+  - "expired or invalidated evidence can't satisfy a gate"
+evidence:
+  # Seeded as DRAFT: these suites exist in this pack but have not been run. The PDF's example showed one as
+  # "accepted" with a placeholder hash — that would let an un-run test pass the release gate.
+  - { id: EVD-RDY-SEC-001, title: "Cross-tenant + scope RLS suite (registration)", capability_key: student.readiness.read, control_id: CTRL-ACCESS-001, evidence_type: rls_test_result, owner: platform_owner, environment: staging, created_at: null, expires_at: null, status: draft, storage_uri: null, content_hash: null, reviewed_by: null, review_date: null, source: supabase/tests/registration_rls.test.sql, invalidated_by: [readiness_schema_change, rls_policy_change, authorization_package_change] }
+  - { id: EVD-RDY-WRK-001, title: "Readiness state machine + idempotency suite", capability_key: student.readiness.evaluate, control_id: CTRL-WORKFLOW-003, evidence_type: automated_test_result, owner: platform_owner, environment: staging, status: draft, source: supabase/tests/readiness_wedge.test.sql, invalidated_by: [readiness_schema_change, workflow_change] }
+  - { id: EVD-RDY-POL-001, title: "Access + registration policy tests", capability_key: student.readiness.evaluate, control_id: CTRL-ACCESS-001, evidence_type: policy_test_result, owner: security_owner, environment: ci, status: draft, source: "policies/*_test.rego", invalidated_by: [policy_bundle_change] }
+  - { id: EVD-RDY-SRC-001, title: "Stale-source drill", capability_key: student.readiness.evaluate, control_id: CTRL-SOURCE-002, evidence_type: incident_drill_record, owner: integration_owner, environment: staging, status: draft, source: operations/incidents/INC-READINESS-001.yaml, invalidated_by: [adapter_or_provider_contract_change] }
+  - { id: EVD-RDY-ACC-001, title: "Readiness accessibility review", capability_key: student.readiness.read, control_id: CTRL-UX-004, evidence_type: accessibility_review, owner: design_owner, environment: staging, status: draft, source: accessibility/readiness-evidence.yaml, invalidated_by: [screen_copy_or_interaction_change] }
+  - { id: EVD-RDY-INS-001, title: "Vanderbilt pilot scope sign-off", capability_key: student.readiness.read, control_id: CTRL-INST-005, evidence_type: institution_signoff, owner: founder, environment: production, status: draft, source: launch/pilot-scope.md, invalidated_by: [scope_change] }
+invalidation_rules:
+  - { trigger: "migration touches a referenced table or policy", invalidates: [rls_test_result, migration_rehearsal, reconciliation_record] }
+  - { trigger: "policy bundle version changes", invalidates: [policy_test_result, controlled_action_approval_test] }
+  - { trigger: "screen copy or interaction changes", invalidates: [accessibility_review, source_status_copy_review, training_attestation] }
+  - { trigger: "integration adapter or provider contract changes", invalidates: [source_freshness_drill, reconciliation_record, provider_sandbox_verification] }

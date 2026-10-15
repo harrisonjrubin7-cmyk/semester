@@ -1,0 +1,8 @@
+// Fails if a non-production build can reach production data or secrets.
+const env = process.env.SEMESTER_ENV ?? "local";
+const url = process.env.VITE_SUPABASE_URL ?? "", prodRef = process.env.SEMESTER_PROD_PROJECT_REF ?? "";
+const errors: string[] = [];
+if (env !== "production" && prodRef && url.includes(prodRef)) errors.push(`${env} points at the production Supabase project`);
+for (const [k, v] of Object.entries(process.env)) if (/^VITE_/.test(k) && /service_role|sk_live|POSTMARK|SECRET/i.test(String(v) + k)) errors.push(`${k} would ship a secret in the client bundle`);
+if (env !== "production" && /sk_live_/.test(process.env.STRIPE_SECRET_KEY ?? "")) errors.push("live Stripe key outside production");
+if (errors.length) { console.error(errors.join("\n")); process.exit(1); } console.log(`${env} boundaries ok`);

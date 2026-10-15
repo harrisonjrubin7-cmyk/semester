@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semester:registrar/enrollment-commands/generated",
+  "$comment": "Generated from enrollment.openapi.json — do not edit by hand",
+  "description": "One branch per operation. Irrelevant fields are rejected (additionalProperties:false). Idempotency key is the Idempotency-Key header, never a body field. studentId must equal the authenticated student unless registrar staff act under a scoped grant (handler check).",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "studentId",
+        "termId",
+        "operation",
+        "expectedScheduleVersion",
+        "sectionIds"
+      ],
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "termId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedScheduleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "overrideIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maxItems": 5,
+          "uniqueItems": true
+        },
+        "operation": {
+          "const": "add"
+        },
+        "sectionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "studentId",
+        "termId",
+        "operation",
+        "expectedScheduleVersion",
+        "fromEnrollmentIds"
+      ],
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "termId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedScheduleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "overrideIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maxItems": 5,
+          "uniqueItems": true
+        },
+        "operation": {
+          "const": "drop"
+        },
+        "fromEnrollmentIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "studentId",
+        "termId",
+        "operation",
+        "expectedScheduleVersion",
+        "fromEnrollmentIds",
+        "sectionIds"
+      ],
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "termId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedScheduleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "overrideIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maxItems": 5,
+          "uniqueItems": true
+        },
+        "operation": {
+          "const": "swap"
+        },
+        "fromEnrollmentIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true
+        },
+        "sectionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "description": "One-for-one swap, matching registration_swap(from, to): drop and add commit together or not at all."
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "studentId",
+        "termId",
+        "operation",
+        "expectedScheduleVersion",
+        "fromEnrollmentIds",
+        "withdrawalReasonCode"
+      ],
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "termId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedScheduleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "overrideIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maxItems": 5,
+          "uniqueItems": true
+        },
+        "operation": {
+          "const": "withdraw"
+        },
+        "fromEnrollmentIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true
+        },
+        "withdrawalReasonCode": {
+          "type": "string",
+          "maxLength": 40
+        }
+      }
+    }
+  ]
+}

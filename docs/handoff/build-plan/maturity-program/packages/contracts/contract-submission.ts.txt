@@ -1,0 +1,11 @@
+import { z } from "zod";
+export const ContractSubmission = z.object({
+  capabilityId: z.string().regex(/^CAP-[A-Z0-9-]+$/), owner: z.string().min(1).refine((o) => o !== "pending", "owner must be a named person or role holder"),
+  authority: z.object({ sourceOwner: z.string().min(1), semesterRole: z.enum(["view", "plan", "route", "draft", "execute_scoped"]), institutionRole: z.string().min(1) }),
+  data: z.object({ recordTypes: z.array(z.string()).min(1), classification: z.enum(["public", "internal", "restricted_institutional"]), retentionRule: z.string().min(1) }),
+  operations: z.object({ idempotencyRequired: z.boolean(), compensationRequired: z.boolean(), safeOffPlan: z.string().min(1), auditEvents: z.array(z.string()).min(1) }),
+}).superRefine((s, ctx) => {
+  if (s.authority.semesterRole === "execute_scoped" && !s.operations.idempotencyRequired) ctx.addIssue({ code: "custom", message: "execute_scoped commands must be idempotent" });
+  if (s.authority.semesterRole === "execute_scoped" && !s.operations.compensationRequired) ctx.addIssue({ code: "custom", message: "execute_scoped commands need a compensation plan" });
+  if (s.data.classification === "restricted_institutional" && s.authority.semesterRole !== "view" && s.operations.auditEvents.length < 2) ctx.addIssue({ code: "custom", message: "restricted writes need request + outcome audit events" });
+});

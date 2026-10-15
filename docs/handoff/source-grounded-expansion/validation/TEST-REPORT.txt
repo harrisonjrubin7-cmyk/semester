@@ -1,0 +1,14 @@
+test_auth_record_not_implicitly_present (test_extractor.SourceTests.test_auth_record_not_implicitly_present) ... ok
+test_dotted_command_not_inferred (test_extractor.SourceTests.test_dotted_command_not_inferred) ... ok
+test_duplicate_rejected (test_extractor.SourceTests.test_duplicate_rejected) ... ok
+test_exact_function_match (test_extractor.SourceTests.test_exact_function_match) ... ok
+test_full_source (test_extractor.SourceTests.test_full_source) ... ok
+test_literal_payload_not_executed (test_extractor.SourceTests.test_literal_payload_not_executed) ... ok
+test_malformed_rejected (test_extractor.SourceTests.test_malformed_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.183s
+
+OK
+
+Only static source extraction and reconciliation helpers tested. No browser, repository or backend tests performed.

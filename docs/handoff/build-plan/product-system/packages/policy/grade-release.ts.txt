@@ -1,0 +1,19 @@
+// Grade-release guard (TypeScript twin of course-grading.rego). Correction to the PDF version:
+// the registrar can't release a merely "reviewed" draft — only "approved_for_release" — and nobody releases
+// a grade whose AI contribution wasn't reviewed by the instructor.
+export type GradeStatus = "draft" | "reviewed" | "approved_for_release" | "submitted_for_sync" | "synchronized" | "sync_needs_review";
+export type GradeEntry = { id: string; studentId: string; assessmentId: string; score?: number; feedback?: string; status: GradeStatus;
+  AIContribution?: { used: boolean; outputReference?: string; reviewedByInstructor: boolean; reviewedAt?: string };
+  accommodationVisibility: "not_applicable" | "shown_to_authorized_grader_only" | "withheld"; officialRecordReference?: string; };
+export type Actor = { role: "instructor" | "teaching_assistant" | "registrar"; assignedToCourse: boolean };
+export function canReleaseGrade(e: GradeEntry, a: Actor): { ok: boolean; reason?: string } {
+  if (!a.assignedToCourse) return { ok: false, reason: "not assigned to this course" };
+  if (a.role === "teaching_assistant") return { ok: false, reason: "TAs can't release grades" };
+  if (e.score == null) return { ok: false, reason: "no score" };
+  if (e.AIContribution?.used && !e.AIContribution.reviewedByInstructor) return { ok: false, reason: "AI contribution not reviewed by the instructor" };
+  if (a.role === "instructor" && (e.status === "reviewed" || e.status === "approved_for_release")) return { ok: true };
+  if (a.role === "registrar" && e.status === "approved_for_release") return { ok: true };
+  return { ok: false, reason: `status ${e.status} can't be released by ${a.role}` };
+}
+export type PaymentState = "created" | "awaiting_customer_action" | "authorized" | "settling" | "settled" | "failed" | "refunding" | "refunded" | "disputed" | "cancelled";
+export const canIssueRefund = (s: PaymentState) => s === "settled";

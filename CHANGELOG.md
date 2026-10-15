@@ -24,6 +24,22 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Semester tells you when a registration hold is cleared
+
+When your school's system clears a hold that was stopping you adding courses, **Registration** now says which office cleared it and when, and whether another hold is still on. Press **Got it** to dismiss it. If you have reminders switched on, you also get a notification that opens Registration. Semester never shows why a hold was placed, and it cannot clear a hold itself. Nothing to do: your data is unchanged.
+
+### Your advisor can record a check-in on a plan you shared
+
+When you share a plan with your advisor, they can now write back on it: what you talked about and up to five next steps. You see each check-in under **Sharing** with an **Add to my actions** button beside every step; a step you already added says **In your actions**. You can delete any check-in, and revoking or letting the share expire stops new ones. Your advisor sees nothing new about you: check-ins exist only on plans you chose to share. Nothing to do: your data is unchanged.
+
+### Courses you named stay on the term plan after you import a catalog
+
+On **Term plan**, the courses you typed used to disappear as soon as you imported a course catalog. They now stay listed under **Courses you named**. A course with sections in the file shows how many there are and a **Show sections** button that finds them; one the file does not list says **Unmatched: no section with this code in this file**. The import message also says how many of your courses the file does not list. Nothing is added to your cart, and an unmatched course is not given a section or a seat. Nothing to do: your data is unchanged.
+
+### The calendar has an Agenda view
+
+**Calendar** now has a fifth segment, **Agenda**, beside Day, Week, Month and Semester. It lists the next 14 days in order, one day under the next, and leaves out days with nothing on them. Class meetings, standing commitments, deadlines, your own actions, campus events, appointments and entries from connected calendars appear exactly as they do on the day view, under the same source chips. Tap a day's heading to open that day. Nothing to do: your data is unchanged.
+
 ### Operators can inspect Semester as one connected ecosystem
 
 For operators holding the console grant, **Semester Operations** now has a read-only **Connected ecosystem** tab after **Finance model**. It maps the supplied Personal Education OS, Institution Operating OS and Semester Company OS into one platform view, and lets an operator inspect all 26 workspace, 281 screen and 122 capability contracts. The view labels the handoff as specification evidence and does not claim that a provider, institution, data connection or privileged operation is authorized or enabled. Students and school administrators will notice nothing.

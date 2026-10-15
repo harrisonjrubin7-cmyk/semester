@@ -1,0 +1,19 @@
+import { describe, it, expect } from "vitest";
+import { canReleaseGrade, canIssueRefund, type GradeEntry } from "../../packages/policy/grade-release";
+const e = (p: Partial<GradeEntry> = {}): GradeEntry => ({ id: "g", studentId: "s", assessmentId: "a", score: 90, status: "reviewed", accommodationVisibility: "not_applicable", ...p });
+const I = { role: "instructor" as const, assignedToCourse: true }, R = { role: "registrar" as const, assignedToCourse: true }, TA = { role: "teaching_assistant" as const, assignedToCourse: true };
+describe("grade release", () => {
+  it("instructor releases a reviewed grade", () => expect(canReleaseGrade(e(), I).ok).toBe(true));
+  it("TA never releases", () => expect(canReleaseGrade(e({ status: "approved_for_release" }), TA).ok).toBe(false));
+  it("draft can't be released", () => expect(canReleaseGrade(e({ status: "draft" }), I).ok).toBe(false));
+  it("registrar can't release a merely reviewed grade", () => expect(canReleaseGrade(e(), R).ok).toBe(false));
+  it("registrar releases approved_for_release", () => expect(canReleaseGrade(e({ status: "approved_for_release" }), R).ok).toBe(true));
+  it("unreviewed AI contribution blocks release", () => expect(canReleaseGrade(e({ AIContribution: { used: true, reviewedByInstructor: false } }), I).ok).toBe(false));
+  it("reviewed AI contribution allows release", () => expect(canReleaseGrade(e({ AIContribution: { used: true, reviewedByInstructor: true } }), I).ok).toBe(true));
+  it("unassigned instructor blocked", () => expect(canReleaseGrade(e(), { role: "instructor", assignedToCourse: false }).ok).toBe(false));
+  it("no score blocked", () => expect(canReleaseGrade(e({ score: undefined }), I).ok).toBe(false));
+  it("already synchronized can't be released again", () => expect(canReleaseGrade(e({ status: "synchronized" }), I).ok).toBe(false));
+});
+describe("refunds", () => {
+  it("only settled", () => { for (const s of ["created","authorized","settling","failed","refunding","refunded","disputed","cancelled"] as const) expect(canIssueRefund(s)).toBe(false); expect(canIssueRefund("settled")).toBe(true); });
+});

@@ -1,0 +1,126 @@
+import {createHash} from 'node:crypto';
+
+export class Denied extends Error {
+  constructor(check, reason) { super(reason); this.check=check; this.reason=reason; }
+}
+const fail=(check,reason)=>{throw new Denied(check,reason)};
+const exactKeys=(value,keys)=>value && typeof value==='object' && !Array.isArray(value) && Object.keys(value).length===keys.length && keys.every(k=>Object.hasOwn(value,k));
+export const TOPICS=Object.freeze({
+  cqrs:Object.freeze({prompt:'Explain the separation of commands and read models using fictional examples only.',sourceId:'public-cqrs',text:'CQRS separates commands that change authoritative records from queries against read models.'}),
+  outbox:Object.freeze({prompt:'Explain transactional outbox and duplicate-safe consumers using fictional examples only.',sourceId:'public-outbox',text:'An outbox commits an event with the record change. Consumers must handle duplicate delivery.'})
+});
+export const sha=value=>createHash('sha256').update(value).digest('hex');
+
+// No environment other than production may point at a production resource — local included.
+export function validateManifest(manifest) {
+  const prod=manifest?.production;
+  if(!prod)fail(0,'MISSING_ENVIRONMENT_MANIFEST');
+  for(const [name,m] of Object.entries(manifest))
+    if(name!=='production' && ['deploymentProject','supabaseProject','issuer','audience','queueNamespace','storageNamespace'].some(k=>m[k]===prod[k]))fail(0,'CROSS_ENVIRONMENT_RESOURCE');
+}
+
+export function validateEnvironment(config,manifest) {
+  const env=config.environment;
+  if(!['local','preview','staging','production'].includes(env))fail(0,'UNKNOWN_ENVIRONMENT');
+  validateManifest(manifest);
+  const expected=manifest[env];
+  if(!expected)fail(0,'MISSING_ENVIRONMENT_MANIFEST');
+  for(const key of ['deploymentProject','supabaseProject','issuer','audience','queueNamespace','storageNamespace'])
+    if(config[key]!==expected[key])fail(0,'ENVIRONMENT_BINDING_MISMATCH');
+  if(env!=='production') {
+    if(config.dataMode!=='synthetic' || config.productionDataIncluded!==false)fail(0,'NONPRODUCTION_DATA_POLICY');
+    const prod=manifest.production;
+    if(env!=='local' && ['deploymentProject','supabaseProject','queueNamespace','storageNamespace'].some(k=>config[k]===prod[k]))fail(0,'CROSS_ENVIRONMENT_RESOURCE');
+  }
+  if(config.rawContentLogging!==false || config.sharedProviderCache!==false || config.studentRecordEgress!==false)fail(0,'UNSAFE_PRIVACY_CONFIGURATION');
+  if(config.providerMode==='live' && config.liveProviderApproval!==true)fail(0,'LIVE_PROVIDER_NOT_APPROVED');
+  if(!['mock','live'].includes(config.providerMode))fail(0,'UNKNOWN_PROVIDER_MODE');
+  if(!Number.isInteger(config.timeoutMs)||config.timeoutMs<1||config.timeoutMs>30000)fail(0,'INVALID_TIMEOUT');
+  return Object.freeze({...config});
+}
+
+// Check 1: token and context are resolved by trusted server adapters, never request flags.
+export async function check1Identity(request,config,deps) {
+  const ctx=await deps.verifyIdentity(request.token,{issuer:config.issuer,audience:config.audience});
+  if(!ctx || ctx.active!==true || ctx.environment!==config.environment || !ctx.actorId || !ctx.schoolScopeId)fail(1,'IDENTITY_OR_CONTEXT');
+  if(await deps.authorizeAssistant(ctx)!==true)fail(1,'ASSISTANT_ACCESS_DENIED');
+  return Object.freeze({...ctx});
+}
+
+// Check 2: the current reference accepts catalog requests only. Free text/attachments are rejected.
+export function check2Classification(request) {
+  if(!exactKeys(request,['token','topicId']) || typeof request.topicId!=='string' || !Object.hasOwn(TOPICS,request.topicId))fail(2,'UNAPPROVED_REQUEST_SHAPE');
+  return Object.freeze({topicId:request.topicId});
+}
+
+// Check 3: institutional/course policy, consent, version and atomically reserved budget.
+export async function check3Policy(ctx,task,config,deps) {
+  const policy=await deps.loadPolicy(ctx,task);
+  if(!policy || policy.enabled!==true || policy.consentSatisfied!==true || !policy.version || !policy.allowedTopics.includes(task.topicId))fail(3,'POLICY_DENIED');
+  if(config.providerMode==='live' && policy.liveProviderAllowed!==true)fail(3,'POLICY_PROVIDER_DENIED');
+  const reservation=await deps.reserveBudget(ctx,policy.version);
+  if(!reservation)fail(3,'BUDGET_DENIED');
+  return Object.freeze({version:policy.version,reservation});
+}
+
+// Check 4: exact reviewed source digest and source-level permission, then minimal payload.
+export async function check4RetrievalAndEgress(ctx,task,deps) {
+  const topic=TOPICS[task.topicId];
+  const source=await deps.loadSource(topic.sourceId);
+  if(!source || source.dataClass!=='public_approved' || source.id!==topic.sourceId || source.sha256!==sha(topic.text) || source.text!==topic.text)fail(4,'SOURCE_NOT_APPROVED');
+  if(await deps.canReadSource(ctx,source)!==true)fail(4,'SOURCE_PERMISSION_DENIED');
+  // No token, identity, tenant, source body, record, user text, or conversation is sent.
+  return Object.freeze({payload:Object.freeze({prompt:topic.prompt,allowedAnswerCode:task.topicId}),sourceId:source.id});
+}
+
+// Check 5: this reference routes generation only; model-proposed tools are disabled.
+export async function check5RouteAndTools(ctx,task,policy,config,deps) {
+  if(await deps.revalidate(ctx,policy.version)!==true)fail(5,'AUTHORIZATION_CHANGED');
+  const route=await deps.resolveProvider(config.environment,config.providerMode);
+  if(!route || route.approved!==true || route.environment!==config.environment || route.mode!==config.providerMode)fail(5,'PROVIDER_ROUTE_DENIED');
+  if(route.toolsEnabled!==false)fail(5,'TOOLS_NOT_ENABLED_IN_REFERENCE');
+  return route;
+}
+
+// Check 6: never render raw provider prose. Accept a catalog code and render reviewed text.
+export async function check6Response(ctx,task,policy,source,response,deps) {
+  if(!exactKeys(response,['answerCode']) || response.answerCode!==task.topicId)fail(6,'INVALID_PROVIDER_OUTPUT');
+  if(await deps.revalidate(ctx,policy.version)!==true)fail(6,'AUTHORIZATION_CHANGED');
+  if(await deps.canReadSource(ctx,{id:source.sourceId})!==true)fail(6,'SOURCE_ACCESS_CHANGED');
+  return Object.freeze({label:'AI-assisted catalog selection',answer:TOPICS[task.topicId].text,
+    citations:[source.sourceId],policyVersion:policy.version,uncertainty:'No individualized advice or record interpretation.'});
+}
+
+const bounded=(promise,ms)=>new Promise((resolve,reject)=>{
+  const timer=setTimeout(()=>reject(new Denied(5,'PROVIDER_TIMEOUT')),ms);
+  Promise.resolve(promise).then(x=>{clearTimeout(timer);resolve(x)},e=>{clearTimeout(timer);reject(e)});
+});
+export async function runGateway(request,config,manifest,deps) {
+  const checked=validateEnvironment(config,manifest);
+  const required=['verifyIdentity','authorizeAssistant','loadPolicy','reserveBudget','loadSource','canReadSource','revalidate','resolveProvider','generate','audit','settleBudget'];
+  if(required.some(k=>typeof deps[k]!=='function'))fail(0,'MISSING_TRUSTED_ADAPTER');
+  let policy, dispatched=false;
+  try {
+    const ctx=await check1Identity(request,checked,deps);
+    const task=check2Classification(request);
+    policy=await check3Policy(ctx,task,checked,deps);
+    const source=await check4RetrievalAndEgress(ctx,task,deps);
+    const route=await check5RouteAndTools(ctx,task,policy,checked,deps);
+    await deps.audit({outcome:'dispatch_authorized',policyVersion:policy.version,environment:checked.environment});
+    dispatched=true;
+    const controller=new AbortController();
+    let response;
+    try {response=await bounded(deps.generate(route,source.payload,controller.signal),checked.timeoutMs)}
+    finally {controller.abort()}
+    const answer=await check6Response(ctx,task,policy,source,response,deps);
+    await deps.audit({outcome:'answered',policyVersion:policy.version,environment:checked.environment});
+    return answer;
+  } catch(error) {
+    const denial=error instanceof Denied?error:new Denied(0,'DEPENDENCY_FAILED');
+    try {await deps.audit({outcome:'blocked',check:denial.check,reason:denial.reason,environment:checked.environment})}
+    catch {denial.auditFailed=true}  // surface to the caller/alerting; never mask the denial
+    throw denial;
+  } finally {
+    if(policy)await deps.settleBudget(policy.reservation,dispatched?'charge':'release');
+  }
+}

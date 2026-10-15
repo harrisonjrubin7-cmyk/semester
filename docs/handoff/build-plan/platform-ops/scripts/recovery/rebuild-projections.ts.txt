@@ -1,0 +1,7 @@
+// Rebuild read models from the record + event history for one tenant. Never touches source records.
+const target = process.argv.find((a) => a.startsWith("--target="))?.split("=")[1] ?? "";
+if (!/recovery|drill|isolated|local/.test(target) || /prod/.test(target)) { console.error("Refused: recovery scripts only run against an isolated recovery/drill target, never production."); process.exit(2); }
+const apply = process.argv.includes("--apply");   // default is a dry run
+const tenant = process.argv.find((a) => a.startsWith("--tenant="))?.split("=")[1];
+if (!tenant) { console.error("--tenant required"); process.exit(2); }
+console.log(apply ? "RUN" : "PLAN", `truncate projections for ${tenant} in ${target}; replay events in order by aggregate version; compare row counts + checksums with pre-restore snapshot`);

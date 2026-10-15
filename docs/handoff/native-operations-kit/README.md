@@ -1,0 +1,4 @@
+# Native Semester execution kit
+33 source-catalogued consoles; proposed fourteen-check action contract; twelve proposed observe-agent roles; fifteen proposed company functions; ten proposed company layers; 90-day milestone plan; six specifications; schemas/contracts; source/status ledger; demo storyboard; local reference code/tests.
+19 local unittest methods passed, including 14 per-check negative subcases. This is not database/concurrency/runtime proof. Reference auth booleans must be populated from trusted policy, not request input. Agent counters/dedupe need durable atomic production enforcement. Ledger validator is not posted-journal storage or an accounting certification.
+No external state modified. Full 692-screen inventory still needs extraction and reconciliation; no screens invented to satisfy counts. Existing source console/routes/governance extended only after review/confirmation. Branches proposed, not created. Demo is storyboard, not a rendered video.

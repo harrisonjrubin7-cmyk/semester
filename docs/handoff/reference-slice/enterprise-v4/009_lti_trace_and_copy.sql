@@ -63,11 +63,11 @@ ALTER TABLE sx.assignments ADD CONSTRAINT activity_needs_template CHECK (activit
 ALTER TABLE sx_private.ags_lineitems ADD COLUMN activity_key text;
 CREATE UNIQUE INDEX one_lineitem_per_activity_tag ON sx_private.ags_lineitems(context_id, activity_key, tag) WHERE activity_key IS NOT NULL;
 -- Never write to a column outside the launch's own context: refuse at enqueue, not by hoping the LMS rejects it.
-CREATE FUNCTION sx_private.assert_same_context(p_lineitem uuid, p_context uuid) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $
+CREATE FUNCTION sx_private.assert_same_context(p_lineitem uuid, p_context uuid) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM sx_private.ags_lineitems WHERE id = p_lineitem AND context_id = p_context) THEN
     RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'WRONG_CONTEXT_DESTINATION'; END IF;
-END $;
+END $$;
 REVOKE ALL ON FUNCTION sx_private.assert_same_context(uuid, uuid) FROM PUBLIC, anon, authenticated;
 
 ALTER TABLE sx_private.lti_launch_traces ENABLE ROW LEVEL SECURITY;

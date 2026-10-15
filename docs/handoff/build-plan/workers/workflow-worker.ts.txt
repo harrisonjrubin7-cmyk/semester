@@ -1,0 +1,66 @@
+// workers/workflow-worker/src/index.ts — rename to .ts. Lease loop over semester_core.jobs / job_leases / dead_letters.
+// Corrections vs. the starter PDF: leases expire (a crashed worker no longer strands a job forever), attempts are
+// counted with backoff, exhausted jobs go to dead_letters, completion is acknowledged with the lease token so a
+// worker whose lease was reclaimed can't overwrite the new holder, and shutdown is graceful.
+// Assumes columns added to jobs: kind text, payload jsonb, run_after timestamptz, attempts int, max_attempts int,
+// lease_token uuid, lease_expires_at timestamptz, last_error text.
+import pg from "pg";
+
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
+const LEASE_SEC = 60, IDLE_MS = 1000, WORKER = `${process.env.HOSTNAME ?? "worker"}-${process.pid}`;
+type Job = { id: string; tenant_id: string; kind: string; payload: unknown; attempts: number; max_attempts: number; lease_token: string };
+const handlers: Record<string, (job: Job) => Promise<void>> = {
+  // "sis.deliver_command": async (job) => { ... call adapter with job.payload; must be idempotent ... },
+};
+
+async function lease(): Promise<Job | null> {
+  const { rows } = await pool.query<Job>(`
+    update semester_core.jobs j set status = 'leased', lease_token = gen_random_uuid(),
+      lease_expires_at = now() + make_interval(secs => $1), attempts = j.attempts + 1, updated_at = now()
+    where j.id = (
+      select id from semester_core.jobs
+      where (status = 'ready' and coalesce(run_after, now()) <= now())
+         or (status = 'leased' and lease_expires_at < now())          -- reclaim expired leases
+      order by coalesce(run_after, created_at) for update skip locked limit 1)
+    returning j.id, j.tenant_id, j.kind, j.payload, j.attempts, j.max_attempts, j.lease_token`, [LEASE_SEC]);
+  return rows[0] ?? null;
+}
+
+async function finish(job: Job, ok: boolean, err?: string) {
+  const c = await pool.connect();
+  try {
+    await c.query("begin");
+    if (ok) {
+      await c.query(`update semester_core.jobs set status='done', lease_token=null, updated_at=now() where id=$1 and lease_token=$2`, [job.id, job.lease_token]);
+    } else if (job.attempts >= job.max_attempts) {
+      await c.query(`update semester_core.jobs set status='dead', lease_token=null, last_error=$3, updated_at=now() where id=$1 and lease_token=$2`, [job.id, job.lease_token, err]);
+      await c.query(`insert into semester_core.dead_letters (tenant_id, metadata) values ($1, jsonb_build_object('job_id',$2::text,'kind',$3::text,'error',$4::text))`, [job.tenant_id, job.id, job.kind, err]);
+    } else {
+      const backoff = Math.min(3600, 2 ** job.attempts * 15);
+      await c.query(`update semester_core.jobs set status='ready', lease_token=null, last_error=$3, run_after=now()+make_interval(secs=>$4), updated_at=now() where id=$1 and lease_token=$2`, [job.id, job.lease_token, err, backoff]);
+    }
+    await c.query("commit");
+  } catch (e) { await c.query("rollback"); throw e; } finally { c.release(); }
+}
+
+let stopping = false;
+process.on("SIGTERM", () => { stopping = true; });
+process.on("SIGINT", () => { stopping = true; });
+
+async function main() {
+  console.log(JSON.stringify({ msg: "worker started", worker: WORKER }));
+  while (!stopping) {
+    const job = await lease().catch((e) => { console.error(JSON.stringify({ msg: "lease failed", err: String(e) })); return null; });
+    if (!job) { await new Promise((r) => setTimeout(r, IDLE_MS)); continue; }
+    const h = handlers[job.kind];
+    try {
+      if (!h) throw new Error(`no handler for ${job.kind}`);
+      await h(job);
+      await finish(job, true);
+    } catch (e) {
+      await finish(job, false, String(e).slice(0, 2000)); // never log payloads
+    }
+  }
+  await pool.end();
+}
+main().catch((e) => { console.error(e); process.exit(1); });

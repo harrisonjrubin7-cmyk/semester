@@ -32,6 +32,8 @@ const mock = vi.hoisted(() => ({
   sections: vi.fn(),
   mine: vi.fn(),
   hold: vi.fn(),
+  releases: vi.fn(),
+  markRead: vi.fn(),
   enroll: vi.fn(),
   drop: vi.fn(),
   withdraw: vi.fn(),
@@ -74,6 +76,8 @@ vi.mock('../lib/enrollment/client', async (orig) => ({
   loadSections: mock.sections,
   loadMyRegistration: mock.mine,
   loadMyHold: mock.hold,
+  loadHoldReleases: mock.releases,
+  markHoldReleaseRead: mock.markRead,
   enroll: mock.enroll,
   drop: mock.drop,
   withdraw: mock.withdraw,
@@ -155,6 +159,8 @@ beforeEach(() => {
   mock.sections.mockResolvedValue(SECTIONS);
   mock.mine.mockResolvedValue(MINE);
   mock.hold.mockResolvedValue({ held: false, office: '', link: '' });
+  mock.releases.mockResolvedValue([]);
+  mock.markRead.mockReset();
   mock.enroll.mockResolvedValue(answer());
   mock.pending.mockResolvedValue([]);
   host = document.createElement('div');
@@ -320,6 +326,47 @@ describe('a student’s term', () => {
     expect(link?.getAttribute('href')).toBe('https://accounts.example.edu');
     expect(link?.getAttribute('target')).toBe('_blank');
     expect(link?.textContent).toMatch(/opens outside Semester/);
+  });
+
+  it('says a cleared hold was cleared, by whom, and that courses can be added again', async () => {
+    mock.releases.mockResolvedValue([{ id: 'n-1', office: 'Student Accounts', link: '', releasedAt: new Date(now - DAY).toISOString() }]);
+    mock.markRead.mockResolvedValue(undefined);
+    await render();
+    expect(text()).toMatch(/Student Accounts cleared a hold on your account on .+\. You can add courses again\./);
+    await act(async () => {
+      must('Got it').click();
+    });
+    await flush();
+    expect(mock.markRead).toHaveBeenCalledWith('n-1');
+    expect(text()).not.toContain('cleared a hold');
+  });
+
+  it('says another hold is still on when one is', async () => {
+    mock.hold.mockResolvedValue({ held: true, office: 'Advising', link: '' });
+    mock.releases.mockResolvedValue([{ id: 'n-1', office: 'Student Accounts', link: '', releasedAt: new Date(now - DAY).toISOString() }]);
+    await render();
+    expect(text()).toContain('Student Accounts cleared a hold on your account');
+    expect(text()).toContain('Another hold still stops you adding courses.');
+    expect(text()).not.toContain('You can add courses again');
+  });
+
+  it('keeps the notice and offers a retry when marking it read fails', async () => {
+    mock.releases.mockResolvedValue([{ id: 'n-1', office: 'Student Accounts', link: '', releasedAt: new Date(now - DAY).toISOString() }]);
+    mock.markRead.mockRejectedValueOnce(new Error('Could not mark that notice read.')).mockResolvedValueOnce(undefined);
+    await render();
+    await act(async () => {
+      must('Got it').click();
+    });
+    await flush();
+    expect(text()).toContain('Could not mark that notice read.');
+    expect(text()).toContain('Student Accounts cleared a hold');
+  });
+
+  it('says nothing about cleared holds when they cannot be read', async () => {
+    mock.releases.mockRejectedValue(new Error('down'));
+    await render();
+    expect(text()).not.toContain('cleared a hold');
+    expect(text()).toContain('ECON 1020');
   });
 
   it('says so when there is nothing yet', async () => {

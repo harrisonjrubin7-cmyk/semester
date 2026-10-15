@@ -1,0 +1,10 @@
+// Exact excerpt: app/src/lib/capabilities.ts, inspected 2026-10-13.
+export function forSchool(grants: readonly Grant[], school: string): string[] {
+  return [
+    ...new Set(
+      grants
+        .filter((g) => g.scopeKind === 'school' && g.scopeId === school && school !== '')
+        .map((g) => g.capability),
+    ),
+  ].sort();
+}

@@ -1,0 +1,8 @@
+evidence_validity:
+  invalidation_rules:
+    policy_test: ["policy change","relevant role change","tenant scope change"]
+    RLS_test: ["migration change","role or membership change","query path change"]
+    accessibility_review: ["interface change","component change","content pattern change","reader-ground change"]
+    source_connector_test: ["provider schema change","mapping change","authentication change","data element change"]
+    workflow_drill: ["transition change","retry change","compensation change","worker or queue change"]
+  review_windows: {high_risk_control: institution_agreed, active_connector: institution_agreed, release_evidence: release_specific, policy_exception: short_lived_and_explicit}

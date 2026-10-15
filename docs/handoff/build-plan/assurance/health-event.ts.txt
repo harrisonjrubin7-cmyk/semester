@@ -1,0 +1,19 @@
+// Every operator alert names an accountable owner, affected scope, a known-safe action and a durable case.
+export type HealthEvent = {
+  id: string; tenantId?: string;
+  category: "source_freshness" | "authorization" | "workflow" | "integration" | "accessibility" | "security" | "privacy" | "support" | "release" | "evidence";
+  severity: "critical" | "high" | "medium" | "low";
+  state: "open" | "acknowledged" | "investigating" | "mitigated" | "closed";
+  summary: string;               // ids and counts only — no student data
+  affectedCapability: string;
+  affectedScope: { tenantId?: string; cohortId?: string; sourceSystem?: string; workflowId?: string; releaseId?: string };
+  safeImmediateAction?: string;
+  accountableOwner: string;      // a named person, not a team alias
+  escalationOwner?: string; dueAt?: string;
+  correlationId: string; evidenceReferences: string[]; createdAt: string; updatedAt: string;
+};
+export function canAcknowledge(e: HealthEvent): { ok: boolean; reason?: string } {
+  if (!e.accountableOwner.trim()) return { ok: false, reason: "no accountable owner" };
+  if (e.severity === "critical" && (!e.safeImmediateAction || !e.escalationOwner)) return { ok: false, reason: "critical needs safe action + escalation owner" };
+  return { ok: true };
+}

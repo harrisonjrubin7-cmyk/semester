@@ -1,0 +1,21 @@
+# trace chain — state: exists-here | drafted | proposed (PDF path, not found)
+capability: CAP-REG-001
+chain:
+  - {stage: "Strategy", id: DEC-PLATFORM-004, artifact: "Readiness stays planning + handoff", state: drafted, where: "registry/decisions/DEC-PLATFORM-004.yaml"}
+  - {stage: "Capability", id: CAP-REG-001, artifact: "Registration readiness", state: drafted, where: "ui_kits/scale-system (Level 2)"}
+  - {stage: "Policy", id: POL-READINESS-001, artifact: "Readiness evaluation policy", state: drafted, where: "handoff/ship-repo access rules"}
+  - {stage: "Contract", id: API-READINESS-POST-001, artifact: "POST /v1/readiness/evaluations", state: drafted, where: "handoff/build-plan/wave-1 + scale-system route check"}
+  - {stage: "Contract", id: EVT-READINESS-001, artifact: "readiness.* events (6)", state: proposed, where: "contracts/asyncapi/readiness-events.v1.yaml — not written"}
+  - {stage: "Data", id: DBM-241, artifact: "Readiness migration", state: proposed, where: "db/migrations/241_readiness.sql — not in repo; repo uses supabase/migrations"}
+  - {stage: "Workflow", id: WF-READINESS-001, artifact: "Readiness evaluation workflow", state: drafted, where: "handoff/workflow-expansion registration contract"}
+  - {stage: "Screen", id: SCR-STU-REG-001, artifact: "Student readiness screen", state: exists-here, where: "ui_kits/readiness-pilot"}
+  - {stage: "Screen", id: SCR-REG-001, artifact: "Registrar readiness console", state: exists-here, where: "ui_kits/registrar-console"}
+  - {stage: "Test", id: TST-RLS-003, artifact: "Readiness RLS tests", state: drafted, where: "handoff/ship-repo tests — not run"}
+  - {stage: "Test", id: TST-WF-001, artifact: "Workflow transition tests", state: drafted, where: "handoff/workflow-expansion validator — logic run here, not in CI"}
+  - {stage: "Test", id: TST-E2E-REG-001, artifact: "Student journey e2e", state: drafted, where: "handoff/build-plan/wave-1 acceptance — not run"}
+  - {stage: "Test", id: TST-A11Y-REG-001, artifact: "Readiness accessibility", state: proposed, where: "no run"}
+  - {stage: "Evidence", id: EVD-RLS-001, artifact: "RLS run record", state: proposed, where: "pending — no run"}
+  - {stage: "Release", id: REL-READINESS-001, artifact: "Release gate", state: drafted, where: "handoff/build-plan/assurance release check"}
+  - {stage: "Operation", id: SLO-READINESS-001, artifact: "Service objective", state: drafted, where: "handoff/build-plan/assurance service targets"}
+  - {stage: "Operation", id: DOC-OPS-001, artifact: "Readiness runbook", state: drafted, where: "handoff/build-plan/wave-1 operating files"}
+  - {stage: "Retirement", id: DOC-OFF-001, artifact: "Tenant offboarding", state: drafted, where: "traceability/offboarding.yaml"}

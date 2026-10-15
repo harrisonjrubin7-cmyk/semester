@@ -1,0 +1,362 @@
+[
+  {
+    "step": 1,
+    "action": "Create account",
+    "proposed_registry_crosswalk": "public.signup",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 2,
+    "action": "Join institution",
+    "proposed_registry_crosswalk": "shared.org.memberships",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 3,
+    "action": "Confirm identity",
+    "proposed_registry_crosswalk": "shared.identity.signin",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 4,
+    "action": "Connect SSO",
+    "proposed_registry_crosswalk": "shared.identity.signin",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 5,
+    "action": "Complete onboarding",
+    "proposed_registry_crosswalk": "edu.profile",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 6,
+    "action": "Select program/path",
+    "proposed_registry_crosswalk": "edu.degree",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 7,
+    "action": "Import or review course context",
+    "proposed_registry_crosswalk": "edu.courses",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 8,
+    "action": "Review Today",
+    "proposed_registry_crosswalk": "edu.today",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 9,
+    "action": "Create action/task",
+    "proposed_registry_crosswalk": "edu.tasks",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 10,
+    "action": "Complete first meaningful action",
+    "proposed_registry_crosswalk": "edu.tasks",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 11,
+    "action": "Build term plan",
+    "proposed_registry_crosswalk": "edu.degree",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 12,
+    "action": "Compare courses/sections",
+    "proposed_registry_crosswalk": "edu.registration",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "owning institution/source",
+    "guardrail": "source-owned decision; readiness is not enrollment",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 13,
+    "action": "Review registration readiness",
+    "proposed_registry_crosswalk": "edu.registration",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "owning institution/source",
+    "guardrail": "source-owned decision; readiness is not enrollment",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 14,
+    "action": "Resolve hold through official handoff",
+    "proposed_registry_crosswalk": "inst.handoffs",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "owning institution/source",
+    "guardrail": "source-owned decision; readiness is not enrollment",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 15,
+    "action": "Enroll or request registration",
+    "proposed_registry_crosswalk": "inst.registrar",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "owning institution/source",
+    "guardrail": "source-owned decision; readiness is not enrollment",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 16,
+    "action": "Build study plan",
+    "proposed_registry_crosswalk": "edu.tasks",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 17,
+    "action": "Join course workspace",
+    "proposed_registry_crosswalk": "edu.courses",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 18,
+    "action": "Read course guidance",
+    "proposed_registry_crosswalk": "edu.content",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 19,
+    "action": "Follow course AI rules",
+    "proposed_registry_crosswalk": "shared.ai.gateway",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 20,
+    "action": "Use AI copilot",
+    "proposed_registry_crosswalk": "edu.assistant",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 21,
+    "action": "Search approved sources",
+    "proposed_registry_crosswalk": "shared.search",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 22,
+    "action": "Create notes",
+    "proposed_registry_crosswalk": "edu.content",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 23,
+    "action": "Organize files",
+    "proposed_registry_crosswalk": "shared.files",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 24,
+    "action": "Join study group",
+    "proposed_registry_crosswalk": "edu.groups",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 25,
+    "action": "Request peer mentor",
+    "proposed_registry_crosswalk": "edu.careers",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 26,
+    "action": "Request advisor support",
+    "proposed_registry_crosswalk": "edu.advising",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 27,
+    "action": "Share with advisor",
+    "proposed_registry_crosswalk": "shared.delegation",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "explicit sharing scope and expiry",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 28,
+    "action": "Share with family",
+    "proposed_registry_crosswalk": "edu.family",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "explicit sharing scope and expiry",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 29,
+    "action": "Review student account",
+    "proposed_registry_crosswalk": "edu.student_account",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "owning institution/source",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 30,
+    "action": "Request payment plan",
+    "proposed_registry_crosswalk": "edu.student_account",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "owning institution/source",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 31,
+    "action": "Find campus resource",
+    "proposed_registry_crosswalk": "edu.services",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 32,
+    "action": "Order dining",
+    "proposed_registry_crosswalk": "edu.services",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 33,
+    "action": "Join organization/event",
+    "proposed_registry_crosswalk": "edu.groups",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 34,
+    "action": "Build portfolio",
+    "proposed_registry_crosswalk": "edu.careers",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 35,
+    "action": "Search opportunity",
+    "proposed_registry_crosswalk": "edu.careers",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 36,
+    "action": "Apply for opportunity",
+    "proposed_registry_crosswalk": "edu.careers",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 37,
+    "action": "Export personal data",
+    "proposed_registry_crosswalk": "edu.privacy",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 38,
+    "action": "Adjust privacy/AI settings",
+    "proposed_registry_crosswalk": "edu.privacy",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 39,
+    "action": "Request deletion/correction",
+    "proposed_registry_crosswalk": "edu.privacy",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  },
+  {
+    "step": 40,
+    "action": "Transition to alumni",
+    "proposed_registry_crosswalk": "edu.profile",
+    "crosswalk_status": "proposed mapping from separate workflow catalog namespace",
+    "authority": "student and permitted Semester/domain authority",
+    "guardrail": "permitted purpose, privacy and current object access",
+    "source_status": "design-level catalogued workflow; not verified end to end"
+  }
+]

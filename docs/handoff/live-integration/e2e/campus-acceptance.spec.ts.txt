@@ -1,0 +1,74 @@
+// Campus acceptance tests bound to staging (AT001, AT002, AT003, AT008, AT012, AT030). Rename to .spec.ts.
+// Env as connected-journeys.spec.ts, plus STUDENT2_EMAIL/STUDENT2_PASSWORD. Uses the service key only for setup.
+import { test, expect } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+
+const URL = process.env.SUPABASE_URL!, ANON = process.env.SUPABASE_ANON_KEY!, SR = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const A = process.env.INST_A!, B = process.env.INST_B!;
+const admin = createClient(URL, SR, { auth: { persistSession: false } });
+const key = () => "e2e-" + crypto.randomUUID();
+const cmd = (token: string, body: unknown, k = key()) =>
+  fetch(`${URL}/functions/v1/live-campus-command`, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json", "idempotency-key": k }, body: JSON.stringify(body) });
+async function signIn(e: string, p: string) { const c = createClient(URL, ANON, { auth: { persistSession: false } }); const { data, error } = await c.auth.signInWithPassword({ email: e, password: p }); if (error) throw error; return { token: data.session!.access_token, id: data.user!.id }; }
+const period = { period_start: "2027-08-20", period_end: "2027-12-18" };
+
+let s1: Awaited<ReturnType<typeof signIn>>, s2: Awaited<ReturnType<typeof signIn>>, bed: string;
+test.beforeAll(async () => {
+  s1 = await signIn(process.env.STUDENT_EMAIL!, process.env.STUDENT_PASSWORD!);
+  s2 = await signIn(process.env.STUDENT2_EMAIL!, process.env.STUDENT2_PASSWORD!);
+  await admin.from("live_workspace_grants").upsert([{ user_id: s1.id, institution_id: A, workspace: "student" }, { user_id: s2.id, institution_id: A, workspace: "student" }]);
+  const me = (await admin.auth.admin.listUsers()).data.users[0].id;
+  for (const cap of ["campus.housing", "campus.dining"]) await admin.from("live_tenant_capabilities").upsert({ institution_id: A, capability: cap, enabled: true, approval_ref: "STAGING-E2E", enabled_by: me, enabled_at: new Date().toISOString() });
+  const { data } = await admin.from("cs_bed_spaces").insert({ institution_id: A, residence: "E2E Hall", unit: crypto.randomUUID().slice(0, 6), label: "A" }).select("id").single();
+  bed = data!.id;
+});
+
+test("AT001 two students race for the last bed → exactly one wins", async () => {
+  const body = { institution_id: A, command: "housing.select_bed", payload: { bed_id: bed, seen_version: 1, ...period } };
+  const [r1, r2] = await Promise.all([cmd(s1.token, body), cmd(s2.token, body)]);
+  expect([r1.status, r2.status].sort()).toEqual([200, 409]);
+  const { count } = await admin.from("cs_occupancy_assignments").select("id", { count: "exact", head: true }).eq("bed_id", bed);
+  expect(count).toBe(1);
+});
+
+test("AT002 same key → same assignment; same key, different bed → 409", async () => {
+  const { data } = await admin.from("cs_bed_spaces").insert({ institution_id: A, residence: "E2E Hall", unit: crypto.randomUUID().slice(0, 6), label: "B" }).select("id,inventory_version").single();
+  const k = key(), body = { institution_id: A, command: "housing.select_bed", payload: { bed_id: data!.id, seen_version: data!.inventory_version, period_start: "2028-01-10", period_end: "2028-05-07" } };
+  const a = await (await cmd(s1.token, body, k)).json(), b = await (await cmd(s1.token, body, k)).json();
+  expect(a.result.id).toBe(b.result.id);
+  const other = await cmd(s1.token, { ...body, payload: { ...body.payload, bed_id: bed } }, k);
+  expect(other.status).toBe(409);
+});
+
+test("AT003 group changed after preview → refused", async () => {
+  const { data: g } = await admin.from("cs_roommate_groups").insert({ institution_id: A }).select("id").single();
+  await admin.from("cs_roommate_memberships").insert([{ group_id: g!.id, student_id: s1.id }, { group_id: g!.id, student_id: s2.id }]);
+  const { data: v } = await admin.from("cs_roommate_groups").select("version").eq("id", g!.id).single();   // bumped by each membership insert
+  const now = new Date().toISOString();
+  for (const s of [s1, s2]) await admin.from("cs_roommate_memberships").update({ accepted_at: now, accepted_by: s.id, accepted_group_version: v!.version }).eq("group_id", g!.id).eq("student_id", s.id);
+  await admin.from("cs_roommate_groups").update({ version: v!.version + 1 }).eq("id", g!.id);   // group changes after the preview
+  const r = await cmd(s1.token, { institution_id: A, command: "housing.select_group", payload: { group_id: g!.id, group_version: v!.version, bed_ids: [bed, bed], seen_version: 1, ...period } });
+  expect(r.status).toBe(409);
+});
+
+test("AT008 a student can't act for another student", async () => {
+  const r = await cmd(s1.token, { institution_id: A, command: "housing.select_bed", student_id: s2.id, payload: { bed_id: bed, seen_version: 1, ...period } });
+  expect(r.status).toBe(403);
+});
+
+test("AT012 concurrent redemption of the last meal → one succeeds, balance never negative", async () => {
+  const { data: e } = await admin.from("cs_entitlements").insert({ institution_id: A, student_id: s1.id, kind: "meal_unit", unit: "meal", granted: 1, effective: `[${new Date(Date.now() - 864e5).toISOString()},${new Date(Date.now() + 90 * 864e5).toISOString()})`, source_ref: "e2e" }).select("id").single();
+  const body = (o: string) => ({ institution_id: A, command: "dining.redeem", payload: { entitlement_id: e!.id, qty: 1, order_ref: o } });
+  const rs = await Promise.all([cmd(s1.token, body("O-1")), cmd(s1.token, body("O-2"))]);
+  expect(rs.map((r) => r.status).sort()).toEqual([200, 409]);
+  const { data } = await admin.from("cs_redemptions").select("qty").eq("entitlement_id", e!.id);
+  expect(data!.reduce((s, r) => s + r.qty, 0)).toBe(1);
+});
+
+test("AT030 cross-tenant: grant at A does nothing at B; B's entitlement id refused", async () => {
+  const r = await cmd(s1.token, { institution_id: B, command: "housing.select_bed", payload: { bed_id: bed, seen_version: 1, ...period } });
+  expect(r.status).toBe(403);
+  const { data: e } = await admin.from("cs_entitlements").insert({ institution_id: B, student_id: s1.id, kind: "meal_unit", unit: "meal", granted: 5, effective: "[2026-01-01,2030-01-01)", source_ref: "e2e" }).select("id").single();
+  const x = await cmd(s1.token, { institution_id: A, command: "dining.redeem", payload: { entitlement_id: e!.id, qty: 1, order_ref: "X" } });
+  expect(x.status).toBe(403);
+});

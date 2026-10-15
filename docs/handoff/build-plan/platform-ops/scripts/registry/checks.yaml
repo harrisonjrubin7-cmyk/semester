@@ -1,0 +1,12 @@
+checks:
+  - {id: REG-001, name: Capability has accountable owner, scope: capability, failure: blocking}
+  - {id: REG-002, name: Consequential capability has authority boundary, scope: capability, failure: blocking}
+  - {id: REG-003, name: Source-backed capability has freshness policy, scope: capability, failure: blocking}
+  - {id: REG-004, name: Role-visible screen has server-side permission contract, scope: screen, failure: blocking}
+  - {id: REG-005, name: Command has idempotency and audit event, scope: command, failure: blocking}
+  - {id: REG-006, name: Workflow has timeout, retry and compensation behaviour, scope: workflow, failure: blocking}
+  - {id: REG-007, name: Release capability has safe-off path, scope: release, failure: blocking}
+  - {id: REG-008, name: AI-enabled capability has governance packet, scope: capability, failure: blocking}
+  - {id: REG-009, name: Documentation has owner and review date, scope: document, failure: warning}
+  - {id: REG-010, name: Feature flag has expiry or review date, scope: flag, failure: warning}
+runner: scripts/registry/check.mjs.txt (implements REG-001/002/003/007/008/010 over the registry YAML)

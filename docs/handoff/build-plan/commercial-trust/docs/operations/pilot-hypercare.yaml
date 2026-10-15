@@ -1,0 +1,9 @@
+pilot_hypercare:
+  duration: institution_agreed_launch_window
+  daily_review: [source_freshness, connector_failures, workflow_backlog, reconciliation_cases, support_handoffs, access_denials, privacy_requests, student_facing_error_states, open_incidents]
+  severity:
+    S1: {definition: confirmed security issue or cross-tenant exposure, response: immediate containment and escalation}
+    S2: {definition: critical pilot path unavailable or wrong authority result, response: safe-off or scope reduction and priority recovery}
+    S3: {definition: degraded or manual workaround available, response: tracked remediation with status updates}
+    S4: {definition: low-impact defect or improvement, response: triage for planned release}
+  communication_rule: Communicate confirmed facts, what is being done, what users should do now, and when the next update comes. Do not speculate.

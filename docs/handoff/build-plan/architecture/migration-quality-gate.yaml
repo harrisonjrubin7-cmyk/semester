@@ -1,0 +1,3 @@
+# migration-quality-gate.yaml — every migration PR must include all of these.
+required: [migration_file, forward_fix_plan, primary_keys, foreign_keys_incl_composite_tenant, check_constraints, indexes_for_rls_and_common_queries, rls_enabled_and_forced, per_operation_policies, sql_tests_allow_deny_cross_tenant_anon, seed_fixture, updated_record_passport, updated_capability_mapping]
+prohibited: [unscoped_tenant_table, nullable_owner_without_documented_reason, direct_client_write_to_restricted_table, enum_free_state_machine_for_consequential_workflow, untested_cross_tenant_policy, rls_via_client_settable_setting, materialized_view_over_rls_tables]

@@ -1,0 +1,11 @@
+metric:
+  id: MET-READINESS-001
+  name: Readiness evaluation safe-completion rate
+  purpose: Understand whether approved readiness requests reach a receipt, safe review, or clearly communicated blocked state.
+  formula: (completed + safe_review + blocked_with_explanation) / received_evaluations_within_window
+  exclusions: [synthetic_test_records, cancelled_before_processing, institution_approved_maintenance_window]
+  minimum_denominator: 30        # below this, report the counts, not a rate
+  prohibited_interpretations: [enrollment_completion_rate, student_success_rate, policy_compliance_rate, institutional_outcome_claim]
+  owner: product_operations_owner
+  review_cadence: monthly
+  current_value: none — no live evaluations

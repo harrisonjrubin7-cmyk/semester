@@ -30,7 +30,7 @@
 import type { Action } from '../state/shape';
 
 /** Which grain to arrive in. `day` is what a row naming one date wants. */
-export type CalView = 'day' | 'week' | 'month' | 'semester';
+export type CalView = 'day' | 'week' | 'month' | 'semester' | 'agenda';
 
 /**
  * **`day`, `week` and `month` honour the date. `semester` does not.**

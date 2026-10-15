@@ -1,0 +1,11 @@
+platform_contracts: [identity_context, authority_and_provenance, record_envelope, permission_decision, command_contract, event_contract, evidence_and_audit]
+rule: "No domain may expose a restricted record, accept a consequential command, publish an event, or enable an integration without using the shared contract stack."
+contracts:
+  identity_context: "Who is acting, in which institution and workspace (e.g. a student acting within one tenant)."
+  authority_and_provenance: "Who owns a fact and how current it is (e.g. an SIS-verified prerequisite result)."
+  record_envelope: "Tenancy, classification, lifecycle and versioning on every stored object."
+  permission_decision: "Whether this action is allowed now (e.g. registrar may route a case)."
+  command_contract: "An intentional, validated request for a state change (e.g. readiness.evaluate). Not proof the change happened."
+  event_contract: "A durable fact about a committed change (e.g. readiness.evaluated)."
+  evidence_and_audit: "Audit event, receipt and test evidence that make the action reviewable."
+implementation: packages/contracts/envelopes.ts

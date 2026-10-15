@@ -1,0 +1,15 @@
+pilot_measurement:
+  required_before_launch: [cohort_definition, baseline_definition, metric_dictionary, owner_per_metric, data_collection_scope, review_schedule, publication_rules]
+  dimensions:
+    - {name: Adoption, measure: eligible cohort reaching the first meaningful action, guardrail: page views aren't value}
+    - {name: Clarity, measure: students who can identify the next approved action, guardrail: segment by source/freshness state}
+    - {name: Safe completion, measure: MET-READINESS-001, guardrail: never call it enrollment completion}
+    - {name: Operational quality, measure: source freshness · backlog · reconciliation rate, guardrail: show denominator and exclusions}
+    - {name: Support quality, measure: time to acknowledge and resolve handoffs, guardrail: split institution-owned vs Semester-owned delays}
+    - {name: Trust, measure: privacy/accessibility/support issues raised and resolved, guardrail: low complaint volume isn't trust}
+    - {name: Institutional value, measure: office-defined reduction in avoidable routing or confusion, guardrail: baseline and method set before launch}
+  report_sections: [scope_and_dates, cohort_and_exclusions, metric_results, qualitative_findings, support_and_reconciliation_findings, accessibility_and_trust_findings, incident_summary, limitations, recommendation]
+renewal_decision:
+  inputs: [activation_gate_evidence, pilot_measurement_report, support_and_incident_summary, source_and_reconciliation_summary, security_privacy_accessibility_status, institutional_owner_feedback, student_feedback_when_appropriate, implementation_effort_review]
+  outcomes: [renew_current_scope, renew_and_expand_cohort, remediate_then_reassess, pause_or_end_pilot]
+  decision_rules: [No expansion while unresolved P0 control failures exist., "No scope expansion without an owner, source model, policy model, support path and evidence plan.", Document limitations alongside positive outcomes.]

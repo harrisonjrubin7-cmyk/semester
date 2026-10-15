@@ -1,0 +1,10 @@
+# Names are filled per institution before production access is configured. A blank name blocks GATE-05.
+decisions:
+  - { decision: pilot_scope, recommends: product_owner, approves: institution_business_owner, consulted: [registrar, support, platform], may_stop: institution_sponsor }
+  - { decision: source_mapping, recommends: integration_owner, approves: institutional_data_owner, consulted: [registrar, security], may_stop: data_owner }
+  - { decision: rls_and_policy_change, recommends: platform_security, approves: security_owner, consulted: [product, institution_technical_owner], may_stop: security_owner }
+  - { decision: feature_flag_enablement, recommends: release_manager, approves: [product_owner, institution_owner], consulted: [support, platform], may_stop: any_named_go_no_go_approver }
+  - { decision: emergency_disable, recommends: on_call_operator, approves: not_required_to_disable, consulted: [institution_owner_notified], may_stop: platform_security_on_call }
+  - { decision: official_academic_outcome, recommends: "Semester may explain only", approves: institution_only, consulted: [relevant_office], may_stop: institution_only }
+  - { decision: pilot_expansion, recommends: product_owner, approves: institution_business_owner, consulted: [security, registrar, support], may_stop: [security_owner, institution_owner] }
+names: { vanderbilt: { institution_business_owner: null, institutional_data_owner: null, institution_sponsor: null, security_owner: null, product_owner: "Harrison Rubin (founder)", release_manager: null, on_call_operator: null } }

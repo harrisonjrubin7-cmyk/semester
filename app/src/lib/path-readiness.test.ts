@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EMPTY_MEETINGS, namedAgendaText, type Meeting } from './advisor-meeting';
 import { CHECKLIST, EMPTY_REGISTRATION_DAY } from './registration-day';
-import { namedCoursesFrom, overallReadiness, pathReadiness, readinessCount, readinessFacts, type PathReadinessInput } from './path-readiness';
+import { matchNamed, namedCoursesFrom, overallReadiness, pathReadiness, readinessCount, readinessFacts, type PathReadinessInput } from './path-readiness';
 import type { CatalogCourse } from './registration';
 
 const course = (id: string, start: number, end: number): CatalogCourse => ({
@@ -218,5 +218,28 @@ describe('overall readiness', () => {
   it('a real conflict still blocks even when another section has no times', () => {
     const noTimes: CatalogCourse = { ...course('d', 0, 0), meetings: [] };
     expect(overall({ cart: [a, b, noTimes], catalog: [a, b, noTimes] }).state).toBe('blocked');
+  });
+});
+
+describe('matchNamed', () => {
+  const section = (code: string, id = code): CatalogCourse =>
+    ({ id, code, section: '01', title: code, term: 'Fall 2026', department: '', credits: 3, instructor: '', location: '', description: '', prerequisites: '', seats: null, meetings: [] }) as CatalogCourse;
+
+  it('counts sections by code, ignoring case and spacing', () => {
+    const got = matchNamed(
+      [{ code: 'econ1020', term: 'Fall 2026' }],
+      [section('ECON 1020', 'a'), section('ECON 1020', 'b'), section('PSCI 1104')],
+    );
+    expect(got).toEqual([{ code: 'econ1020', term: 'Fall 2026', sections: 2 }]);
+  });
+
+  it('keeps a code the file does not list, as unmatched, rather than dropping it', () => {
+    const got = matchNamed([{ code: 'HIST 2200', term: null }], [section('ECON 1020')]);
+    expect(got).toEqual([{ code: 'HIST 2200', term: null, sections: 0 }]);
+  });
+
+  it('lists a code typed twice once, and skips blanks', () => {
+    const got = matchNamed([{ code: 'ECON 1020', term: null }, { code: 'econ 1020', term: null }, { code: ' ', term: null }], []);
+    expect(got.map((m) => m.code)).toEqual(['ECON 1020']);
   });
 });

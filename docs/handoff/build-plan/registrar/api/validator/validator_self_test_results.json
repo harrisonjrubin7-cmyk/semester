@@ -1,0 +1,5 @@
+{
+  "status": "not_run",
+  "note": "Not executed in the design project (no Python runtime). Run: python registrar_oas_validator.py --self-test — this file is overwritten with the real results. Expected: 16/16 cases pass, document_validation not_run.",
+  "expected_cases": 16
+}

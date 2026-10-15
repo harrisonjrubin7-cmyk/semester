@@ -1,0 +1,9 @@
+# Reserved now so later billing/ledger work is not retrofitted. Not in the readiness pilot scope.
+principles:
+  - "No financial state transition without an immutable ledger entry."
+  - "Payment-provider events are idempotent and reconciled."
+  - "Refunds, credits, write-offs and plan changes require policy checks."
+  - "No actor approves their own payment exception."
+  - "Financial dashboards distinguish pending, settled, reversed, disputed and refunded."
+minimum_artifacts: [finance_component_passport, payment_event_contract, ledger_schema, reconciliation_runbook, refund_approval_policy, month_end_close_checklist, financial_access_review]
+gate: "No payment, billing, refund or ledger workflow connects until every minimum artifact is approved."

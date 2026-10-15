@@ -1,0 +1,128 @@
+function,arguments,migration_label,status
+core.my_institution,,010_platform_core,reference catalog entry; body and runtime not verified
+core.my_role,,010_platform_core,reference catalog entry; body and runtime not verified
+core.feature_on,f text,010_platform_core,reference catalog entry; body and runtime not verified
+audit.log,"a text, t text, b jsonb, af jsonb",010_platform_core,reference catalog entry; body and runtime not verified
+market.check_bid,,030_marketplace,reference catalog entry; body and runtime not verified
+ops.my_role,,040_ops,reference catalog entry; body and runtime not verified
+core.my_institution,,050_security_hardening,reference catalog entry; body and runtime not verified
+core.my_role,,050_security_hardening,reference catalog entry; body and runtime not verified
+core.feature_on,f text,050_security_hardening,reference catalog entry; body and runtime not verified
+ops.my_role,,050_security_hardening,reference catalog entry; body and runtime not verified
+core.freeze_profile_identity,,050_security_hardening,reference catalog entry; body and runtime not verified
+community.is_member,g uuid,050_security_hardening,reference catalog entry; body and runtime not verified
+core.rate_ok,"a text, per interval, max_n int",060_command_functions,reference catalog entry; body and runtime not verified
+api.create_post,"p_group uuid, p_body text",060_command_functions,reference catalog entry; body and runtime not verified
+api.create_listing,"p_title text, p_category text, p_price_cents int",060_command_functions,reference catalog entry; body and runtime not verified
+api.make_offer,"p_listing uuid, p_amount_cents int",060_command_functions,reference catalog entry; body and runtime not verified
+api.report,"p_type text, p_target uuid, p_reason text, p_note text",060_command_functions,reference catalog entry; body and runtime not verified
+api.ai_policy,p_course uuid,070_ai_gateway,reference catalog entry; body and runtime not verified
+api.ai_log,"p_task text, p_outcome text, p_reason text, p_tokens int",070_ai_gateway,reference catalog entry; body and runtime not verified
+api.ai_context,p_ids text[],080_sources_storage_delegations,reference catalog entry; body and runtime not verified
+api.grant_delegation,"p_grantee uuid, p_scope text[], p_purpose text, p_expires timestamptz",080_sources_storage_delegations,reference catalog entry; body and runtime not verified
+api.revoke_delegation,p_id uuid,080_sources_storage_delegations,reference catalog entry; body and runtime not verified
+core.has_delegation,"p_grantor uuid, p_scope text",080_sources_storage_delegations,reference catalog entry; body and runtime not verified
+fin.assert_balanced,,090_native_finance,reference catalog entry; body and runtime not verified
+fin.deny_mutation,,090_native_finance,reference catalog entry; body and runtime not verified
+fin.journal_update_guard,,090_native_finance,reference catalog entry; body and runtime not verified
+fin.required_approvals,cents bigint,090_native_finance,reference catalog entry; body and runtime not verified
+fin.allowed_transition,"f text, t text",090_native_finance,reference catalog entry; body and runtime not verified
+fin.is_finance,,090_native_finance,reference catalog entry; body and runtime not verified
+api.post_journal,"p_memo text, p_source text, p_idem text, p_lines jsonb, p_customer text default null, p_person uuid ",090_native_finance,reference catalog entry; body and runtime not verified
+api.approve_refund,p_request uuid,090_native_finance,reference catalog entry; body and runtime not verified
+ctl.can,"p_cap text, p_tenant uuid, p_org uuid default null, p_resource_type text default null, p_resource_id",100_controlled_actions,reference catalog entry; body and runtime not verified
+api.request_action,"p_cap text, p_tenant uuid, p_reason text, p_payload jsonb, p_idem text, p_preview jsonb",100_controlled_actions,reference catalog entry; body and runtime not verified
+api.decide_action,"p_request uuid, p_decision text, p_note text default null",100_controlled_actions,reference catalog entry; body and runtime not verified
+api.execute_action,p_request uuid,100_controlled_actions,reference catalog entry; body and runtime not verified
+api.assign_journey,p_intent text,110_onboarding_growth,reference catalog entry; body and runtime not verified
+api.complete_step,"p_journey text, p_step text, p_skipped boolean default false",110_onboarding_growth,reference catalog entry; body and runtime not verified
+api.record_activation,p_definition text,110_onboarding_growth,reference catalog entry; body and runtime not verified
+api.submit_lead,"p_name text, p_email text, p_org text, p_role text, p_use text, p_consent boolean",110_onboarding_growth,reference catalog entry; body and runtime not verified
+api.create_handoff,"p_route text, p_resource text default null, p_tenant_hint text default null, p_ctx jsonb default '{}",120_handoff_preview_devices,reference catalog entry; body and runtime not verified
+api.consume_handoff,"p_id uuid, p_nonce text",120_handoff_preview_devices,reference catalog entry; body and runtime not verified
+api.claim_preview,"p_goal text, p_term text, p_items jsonb",120_handoff_preview_devices,reference catalog entry; body and runtime not verified
+api.revoke_device,p_device uuid,120_handoff_preview_devices,reference catalog entry; body and runtime not verified
+acad.advises,p_student uuid,130_academic_core,reference catalog entry; body and runtime not verified
+acad.teaches,p_section uuid,130_academic_core,reference catalog entry; body and runtime not verified
+api.book_advising,"p_slot uuid, p_idem text",130_academic_core,reference catalog entry; body and runtime not verified
+acad.advises_student,"p_advisor uuid, p_student uuid",130_academic_core,reference catalog entry; body and runtime not verified
+api.route_blocker,"p_item uuid, p_office text, p_fields text[]",130_academic_core,reference catalog entry; body and runtime not verified
+api.resolve_handoff,"p_handoff uuid, p_state text, p_resolution text",130_academic_core,reference catalog entry; body and runtime not verified
+comms.in_thread,p uuid,140_coursework_comms,reference catalog entry; body and runtime not verified
+api.send_message,"p_thread uuid, p_body text, p_idem text",140_coursework_comms,reference catalog entry; body and runtime not verified
+api.approve_support_access,"p_case uuid, p_scope text[], p_minutes int",150_operations,reference catalog entry; body and runtime not verified
+api.revoke_support_access,p_window uuid,150_operations,reference catalog entry; body and runtime not verified
+biz.staff,p_cap text,160_company,reference catalog entry; body and runtime not verified
+acad.can_teach,"p_section uuid, p_resp text[] default array['instructor_of_record','co_instructor','ta','grader','de",170_ownership_learning_docs_workflow_commerce,reference catalog entry; body and runtime not verified
+acad.enrolled,p_section uuid,170_ownership_learning_docs_workflow_commerce,reference catalog entry; body and runtime not verified
+api.submit_work,"p_assignment uuid, p_files uuid[], p_idem text",170_ownership_learning_docs_workflow_commerce,reference catalog entry; body and runtime not verified
+api.publish_module,p_module uuid,170_ownership_learning_docs_workflow_commerce,reference catalog entry; body and runtime not verified
+api.record_grade,"p_assignment uuid, p_student uuid, p_score numeric, p_reason text, p_from_ai boolean default false",170_ownership_learning_docs_workflow_commerce,reference catalog entry; body and runtime not verified
+api.submit_grades_for_approval,p_assignment uuid,170_ownership_learning_docs_workflow_commerce,reference catalog entry; body and runtime not verified
+docs.can_read,p_doc uuid,170_ownership_learning_docs_workflow_commerce,reference catalog entry; body and runtime not verified
+docs.deny_version_mutation,,170_ownership_learning_docs_workflow_commerce,reference catalog entry; body and runtime not verified
+docs.edge,"p_action text, p_from text",180_document_state_machine,reference catalog entry; body and runtime not verified
+api.transition_document,"p_version uuid, p_action text, p_expected text, p_reason text, p_idem text",180_document_state_machine,reference catalog entry; body and runtime not verified
+api.create_document_version,"p_workspace uuid, p_document uuid, p_title text, p_type text, p_storage_ref text, p_sha256 text, p_r",180_document_state_machine,reference catalog entry; body and runtime not verified
+docs.can_read,p_doc uuid,190_document_gaps,reference catalog entry; body and runtime not verified
+api.grant_document_audience,"p_doc uuid, p_person uuid, p_purpose text, p_until timestamptz",190_document_gaps,reference catalog entry; body and runtime not verified
+docs.record_signature_event,"p_provider text, p_event_id text, p_payload_sha256 text, p_request uuid, p_signed_hash text, p_provi",190_document_gaps,reference catalog entry; body and runtime not verified
+api.issue_invitation,"p_institution uuid, p_email text, p_affiliation text, p_token_hash text",200_institution_domains,reference catalog entry; body and runtime not verified
+api.accept_invitation,p_token_hash text,200_institution_domains,reference catalog entry; body and runtime not verified
+api.revoke_invitation,p_invitation uuid,200_institution_domains,reference catalog entry; body and runtime not verified
+api.accept_invitation,p_token_hash text,200_institution_domains,reference catalog entry; body and runtime not verified
+api.revoke_invitation,p_invitation uuid,200_institution_domains,reference catalog entry; body and runtime not verified
+cofin.deny_paid_edit,,210_company_ops_domains,reference catalog entry; body and runtime not verified
+biz.staff_any,p text[],210_company_ops_domains,reference catalog entry; body and runtime not verified
+opsx.enqueue_webhooks,p_event bigint,220_outbound_webhooks,reference catalog entry; body and runtime not verified
+opsx.claim_webhook,p_lease_seconds int default 60,220_outbound_webhooks,reference catalog entry; body and runtime not verified
+opsx.complete_webhook,"p_id uuid, p_lease uuid, p_outcome text, p_status int, p_next timestamptz, p_diag text",220_outbound_webhooks,reference catalog entry; body and runtime not verified
+api.replay_webhook,"p_id uuid, p_reason text",220_outbound_webhooks,reference catalog entry; body and runtime not verified
+api._emit,"p_topic text, p_tenant uuid, p_target text, p_payload jsonb",230_commands,reference catalog entry; body and runtime not verified
+api._need,"p_cap text, p_tenant uuid",230_commands,reference catalog entry; body and runtime not verified
+api.grant_capability,"p_person uuid, p_cap text, p_tenant uuid, p_reason text, p_until timestamptz, p_resource_type text d",230_commands,reference catalog entry; body and runtime not verified
+api.revoke_grant,"p_grant uuid, p_reason text",230_commands,reference catalog entry; body and runtime not verified
+api.run_access_review,"p_review uuid, p_decision text, p_reason text",230_commands,reference catalog entry; body and runtime not verified
+api.request_extension,"p_assignment uuid, p_days int, p_reason text",230_commands,reference catalog entry; body and runtime not verified
+api.start_attempt,p_assessment uuid,230_commands,reference catalog entry; body and runtime not verified
+api.submit_attempt,p_attempt uuid,230_commands,reference catalog entry; body and runtime not verified
+api.submit_request,"p_service uuid, p_summary text",230_commands,reference catalog entry; body and runtime not verified
+api.assign_request,"p_request uuid, p_assignee uuid",230_commands,reference catalog entry; body and runtime not verified
+api.resolve_request,"p_request uuid, p_note text",230_commands,reference catalog entry; body and runtime not verified
+api.request_support,p_office text,230_commands,reference catalog entry; body and runtime not verified
+api.submit_privacy_request,p_kind text,230_commands,reference catalog entry; body and runtime not verified
+api.share_credential,"p_credential uuid, p_token_hash text",230_commands,reference catalog entry; body and runtime not verified
+api.decide_accommodation,"p_case uuid, p_instructions text, p_extra int, p_from date, p_until date",230_commands,reference catalog entry; body and runtime not verified
+api.review_application,"p_app uuid, p_decision text, p_reason text",230_commands,reference catalog entry; body and runtime not verified
+api.submit_proposal,"p_kind text, p_title text, p_document uuid",230_commands,reference catalog entry; body and runtime not verified
+api.record_vote,"p_proposal uuid, p_vote text",230_commands,reference catalog entry; body and runtime not verified
+api.open_case,"p_student uuid, p_kind text",230_commands,reference catalog entry; body and runtime not verified
+api.run_sync,p_integration uuid,230_commands,reference catalog entry; body and runtime not verified
+api.approve_rollout,"p_milestone uuid, p_evidence text",230_commands,reference catalog entry; body and runtime not verified
+api.update_opportunity,"p_opp uuid, p_stage text, p_lost_reason text default null",230_commands,reference catalog entry; body and runtime not verified
+api.create_quote,"p_opp uuid, p_price uuid, p_qty int, p_discount numeric",230_commands,reference catalog entry; body and runtime not verified
+api.record_measure,"p_measure uuid, p_result numeric, p_state text",230_commands,reference catalog entry; body and runtime not verified
+api.assign_case,"p_case uuid, p_agent uuid",230_commands,reference catalog entry; body and runtime not verified
+api.reply_case,"p_case uuid, p_body text, p_public boolean",230_commands,reference catalog entry; body and runtime not verified
+api.issue_invoice,p_invoice uuid,230_commands,reference catalog entry; body and runtime not verified
+api.submit_claim,"p_amount bigint, p_category text, p_receipt uuid",230_commands,reference catalog entry; body and runtime not verified
+api.approve_claim,"p_claim uuid, p_approve boolean",230_commands,reference catalog entry; body and runtime not verified
+api.request_purchase,"p_vendor uuid, p_amount bigint, p_purpose text",230_commands,reference catalog entry; body and runtime not verified
+api.approve_purchase,"p_po uuid, p_approve boolean",230_commands,reference catalog entry; body and runtime not verified
+api.offboard_employee,"p_employee uuid, p_end date",230_commands,reference catalog entry; body and runtime not verified
+api.request_tenant_action,"p_institution uuid, p_action text, p_reason text",230_commands,reference catalog entry; body and runtime not verified
+api.set_flag,"p_key text, p_tenant uuid, p_on boolean",230_commands,reference catalog entry; body and runtime not verified
+api.approve_deploy,p_deploy uuid,230_commands,reference catalog entry; body and runtime not verified
+api.rollback,"p_deploy uuid, p_reason text",230_commands,reference catalog entry; body and runtime not verified
+api.open_incident,"p_severity text, p_title text, p_student_data boolean, p_tenants uuid[]",230_commands,reference catalog entry; body and runtime not verified
+api.publish_update,"p_incident uuid, p_audience text, p_body text",230_commands,reference catalog entry; body and runtime not verified
+api.replay_job,"p_job uuid, p_reason text",230_commands,reference catalog entry; body and runtime not verified
+api.request_repair,"p_desc text, p_sql_ref text",230_commands,reference catalog entry; body and runtime not verified
+api.record_restore_test,"p_backup uuid, p_rto int, p_rpo int, p_passed boolean, p_report text",230_commands,reference catalog entry; body and runtime not verified
+api.open_finding,"p_source text, p_sev text, p_title text, p_due date",230_commands,reference catalog entry; body and runtime not verified
+api.fulfil_privacy_request,"p_request uuid, p_evidence text",230_commands,reference catalog entry; body and runtime not verified
+api.verify_privacy_identity,"p_request uuid, p_method text",230_commands,reference catalog entry; body and runtime not verified
+api.decide_report,"p_report uuid, p_action text",230_commands,reference catalog entry; body and runtime not verified
+api.rotate_key,"p_app uuid, p_prefix text, p_hash text",230_commands,reference catalog entry; body and runtime not verified
+api.apply_housing,"p_term uuid, p_prefs jsonb",240_housing_family,reference catalog entry; body and runtime not verified
+api.request_maintenance,"p_room uuid, p_summary text, p_urgency text",240_housing_family,reference catalog entry; body and runtime not verified

@@ -1,0 +1,18 @@
+# SIS synchronization failure handlers. Behaviour depends on authority mode.
+modes:
+  read_only_replica: { authority: legacy SIS, failure_means: "Semester data may be stale — show it" }
+  delegated_execution: { authority: legacy SIS, failure_means: "A submitted command may need outcome reconciliation" }
+  native_replacement: { authority: Semester, failure_means: "External sync can fail without invalidating Semester's committed record" }
+handlers:
+  - { failure: timeout_before_dispatch, handler: "Bounded retry while authority is still valid", avoid: "Retrying indefinitely" }
+  - { failure: timeout_after_dispatch, handler: "Mark uncertain; query by operation/source reference", avoid: "Repeating a consequential command blindly" }
+  - { failure: rate_limit, handler: "Honour provider response; back off with jitter", avoid: "Unbounded parallel retries" }
+  - { failure: revoked_credentials, handler: "Stop connector; alert owner", avoid: "Falling back to broader credentials" }
+  - { failure: malformed_source_record, handler: "Quarantine with restricted diagnostic", avoid: "Publishing a partial record as official" }
+  - { failure: missing_dependency, handler: "Defer/quarantine; resolve the relationship", avoid: "Inventing a student or course" }
+  - { failure: out_of_order_update, handler: "Compare source revision/checkpoint", avoid: "Overwriting newer state with older data" }
+  - { failure: duplicate_event, handler: "Deduplicate by approved identity", avoid: "Duplicate enrollments or grades" }
+  - { failure: conflicting_authority, handler: "Open a reconciliation case", avoid: "Last write wins across official sources" }
+  - { failure: revoked_actor_or_approval, handler: "Block queued execution", avoid: "Trusting authority checked only at submission" }
+persist: [operation_state, attempts, source_correlation, reconciliation_outcome]
+logging: "Sensitive payloads never go in ordinary logs."

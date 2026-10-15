@@ -1,0 +1,1637 @@
+table,migration_label,rls_declared,policies_declared,column,type,primary_key_declared,reference_declared,not_null_declared
+core.institutions,010_platform_core,True,inst_own_read · select,id,uuid,True,,True
+core.institutions,010_platform_core,True,inst_own_read · select,name,text,False,,True
+core.institutions,010_platform_core,True,inst_own_read · select,features,jsonb,False,,True
+core.institutions,010_platform_core,True,inst_own_read · select,created_at,timestamptz,False,,False
+core.profiles,010_platform_core,True,profiles_same_campus · select | profiles_self_update · update | profiles_self_read · select | profiles_staff_read · select,id,uuid,True,auth.users,True
+core.profiles,010_platform_core,True,profiles_same_campus · select | profiles_self_update · update | profiles_self_read · select | profiles_staff_read · select,institution_id,uuid,False,core.institutions,True
+core.profiles,010_platform_core,True,profiles_same_campus · select | profiles_self_update · update | profiles_self_read · select | profiles_staff_read · select,display_name,text,False,,True
+core.profiles,010_platform_core,True,profiles_same_campus · select | profiles_self_update · update | profiles_self_read · select | profiles_staff_read · select,role,text,False,,True
+core.profiles,010_platform_core,True,profiles_same_campus · select | profiles_self_update · update | profiles_self_read · select | profiles_staff_read · select,visibility,jsonb,False,,True
+core.profiles,010_platform_core,True,profiles_same_campus · select | profiles_self_update · update | profiles_self_read · select | profiles_staff_read · select,created_at,timestamptz,False,,False
+audit.events,010_platform_core,True,audit_admin_read · select,id,bigserial,True,,True
+audit.events,010_platform_core,True,audit_admin_read · select,at,timestamptz,False,,False
+audit.events,010_platform_core,True,audit_admin_read · select,actor,uuid,False,,False
+audit.events,010_platform_core,True,audit_admin_read · select,actor_role,text,False,,False
+audit.events,010_platform_core,True,audit_admin_read · select,institution_id,uuid,False,,False
+audit.events,010_platform_core,True,audit_admin_read · select,action,text,False,,True
+audit.events,010_platform_core,True,audit_admin_read · select,target,text,False,,False
+audit.events,010_platform_core,True,audit_admin_read · select,before,jsonb,False,,False
+audit.events,010_platform_core,True,audit_admin_read · select,after,jsonb,False,,False
+community.groups,020_community,True,g_read · select | g_create · insert,id,uuid,True,,True
+community.groups,020_community,True,g_read · select | g_create · insert,institution_id,uuid,False,,True
+community.groups,020_community,True,g_read · select | g_create · insert,name,text,False,,True
+community.groups,020_community,True,g_read · select | g_create · insert,kind,text,False,,True
+community.groups,020_community,True,g_read · select | g_create · insert,created_by,uuid,False,,True
+community.groups,020_community,True,g_read · select | g_create · insert,created_at,timestamptz,False,,False
+community.members,020_community,True,m_read · select | m_join · insert | m_read_same_group · select,group_id,uuid,True,community.groups,False
+community.members,020_community,True,m_read · select | m_join · insert | m_read_same_group · select,profile_id,uuid,True,core.profiles,False
+community.members,020_community,True,m_read · select | m_join · insert | m_read_same_group · select,role,text,False,,True
+community.posts,020_community,True,p_read · select | p_write · insert | p_moderate · update,id,uuid,True,,True
+community.posts,020_community,True,p_read · select | p_write · insert | p_moderate · update,institution_id,uuid,False,,True
+community.posts,020_community,True,p_read · select | p_write · insert | p_moderate · update,group_id,uuid,False,community.groups,False
+community.posts,020_community,True,p_read · select | p_write · insert | p_moderate · update,author,uuid,False,,True
+community.posts,020_community,True,p_read · select | p_write · insert | p_moderate · update,body,text,False,,True
+community.posts,020_community,True,p_read · select | p_write · insert | p_moderate · update,status,text,False,,True
+community.posts,020_community,True,p_read · select | p_write · insert | p_moderate · update,created_at,timestamptz,False,,False
+community.reports,020_community,True,r_create · insert | r_mod · select,id,uuid,True,,True
+community.reports,020_community,True,r_create · insert | r_mod · select,institution_id,uuid,False,,True
+community.reports,020_community,True,r_create · insert | r_mod · select,target_type,text,False,,True
+community.reports,020_community,True,r_create · insert | r_mod · select,target_id,uuid,False,,True
+community.reports,020_community,True,r_create · insert | r_mod · select,reason,text,False,,True
+community.reports,020_community,True,r_create · insert | r_mod · select,note,text,False,,False
+community.reports,020_community,True,r_create · insert | r_mod · select,reporter,uuid,False,,True
+community.reports,020_community,True,r_create · insert | r_mod · select,status,text,False,,True
+community.reports,020_community,True,r_create · insert | r_mod · select,created_at,timestamptz,False,,False
+community.events,020_community,True,e_read · select,id,uuid,True,,True
+community.events,020_community,True,e_read · select,institution_id,uuid,False,,True
+community.events,020_community,True,e_read · select,group_id,uuid,False,community.groups,False
+community.events,020_community,True,e_read · select,title,text,False,,True
+community.events,020_community,True,e_read · select,starts_at,timestamptz,False,,True
+community.events,020_community,True,e_read · select,location,text,False,,False
+community.rsvps,020_community,True,rs_self · all | rs_leader · select | rs_self_read · select | rs_self_write · insert | rs_self_delete · delete,event_id,uuid,True,community.events,False
+community.rsvps,020_community,True,rs_self · all | rs_leader · select | rs_self_read · select | rs_self_write · insert | rs_self_delete · delete,profile_id,uuid,True,core.profiles,False
+market.listings,030_marketplace,True,l_read · select | l_create · insert | l_seller_update · update | l_mod · update,id,uuid,True,,True
+market.listings,030_marketplace,True,l_read · select | l_create · insert | l_seller_update · update | l_mod · update,institution_id,uuid,False,,True
+market.listings,030_marketplace,True,l_read · select | l_create · insert | l_seller_update · update | l_mod · update,seller,uuid,False,,True
+market.listings,030_marketplace,True,l_read · select | l_create · insert | l_seller_update · update | l_mod · update,title,text,False,,True
+market.listings,030_marketplace,True,l_read · select | l_create · insert | l_seller_update · update | l_mod · update,category,text,False,,True
+market.listings,030_marketplace,True,l_read · select | l_create · insert | l_seller_update · update | l_mod · update,price_cents,int,False,,True
+market.listings,030_marketplace,True,l_read · select | l_create · insert | l_seller_update · update | l_mod · update,status,text,False,,True
+market.listings,030_marketplace,True,l_read · select | l_create · insert | l_seller_update · update | l_mod · update,integrity_score,real,False,,False
+market.listings,030_marketplace,True,l_read · select | l_create · insert | l_seller_update · update | l_mod · update,created_at,timestamptz,False,,False
+market.offers,030_marketplace,True,o_parties · select | o_create · insert,id,uuid,True,,True
+market.offers,030_marketplace,True,o_parties · select | o_create · insert,listing_id,uuid,False,market.listings,True
+market.offers,030_marketplace,True,o_parties · select | o_create · insert,buyer,uuid,False,,True
+market.offers,030_marketplace,True,o_parties · select | o_create · insert,amount_cents,int,False,,True
+market.offers,030_marketplace,True,o_parties · select | o_create · insert,status,text,False,,True
+market.offers,030_marketplace,True,o_parties · select | o_create · insert,processor_ref,text,False,,False
+market.offers,030_marketplace,True,o_parties · select | o_create · insert,created_at,timestamptz,False,,False
+market.drops,030_marketplace,True,d_read · select,id,uuid,True,,True
+market.drops,030_marketplace,True,d_read · select,institution_id,uuid,False,,True
+market.drops,030_marketplace,True,d_read · select,listing_id,uuid,False,market.listings,False
+market.drops,030_marketplace,True,d_read · select,seller_is_official,boolean,False,,True
+market.drops,030_marketplace,True,d_read · select,ends_at,timestamptz,False,,True
+market.drops,030_marketplace,True,d_read · select,approved,boolean,False,,True
+market.bids,030_marketplace,True,b_create · insert | b_read · select | b_own · select,id,bigserial,True,,True
+market.bids,030_marketplace,True,b_create · insert | b_read · select | b_own · select,drop_id,uuid,False,market.drops,False
+market.bids,030_marketplace,True,b_create · insert | b_read · select | b_own · select,bidder,uuid,False,,True
+market.bids,030_marketplace,True,b_create · insert | b_read · select | b_own · select,amount_cents,int,False,,True
+market.bids,030_marketplace,True,b_create · insert | b_read · select | b_own · select,at,timestamptz,False,,False
+ops.staff,040_ops,True,staff_self_read · select,id,uuid,True,auth.users,True
+ops.staff,040_ops,True,staff_self_read · select,role,text,False,,True
+ops.accounts,040_ops,True,acc_read · select,id,uuid,True,,True
+ops.accounts,040_ops,True,acc_read · select,institution_name,text,False,,True
+ops.accounts,040_ops,True,acc_read · select,acv_cents,bigint,False,,False
+ops.accounts,040_ops,True,acc_read · select,term_ends,date,False,,False
+ops.accounts,040_ops,True,acc_read · select,health,int,False,,False
+ops.accounts,040_ops,True,acc_read · select,csm,uuid,False,ops.staff,False
+ops.invoices,040_ops,True,inv_read · select,id,text,True,,True
+ops.invoices,040_ops,True,inv_read · select,account_id,uuid,False,ops.accounts,False
+ops.invoices,040_ops,True,inv_read · select,amount_cents,bigint,False,,True
+ops.invoices,040_ops,True,inv_read · select,due,date,False,,True
+ops.invoices,040_ops,True,inv_read · select,status,text,False,,True
+ops.social_posts,040_ops,True,sp_read · select | sp_draft · insert | sp_approve · update,id,uuid,True,,True
+ops.social_posts,040_ops,True,sp_read · select | sp_draft · insert | sp_approve · update,body,text,False,,True
+ops.social_posts,040_ops,True,sp_read · select | sp_draft · insert | sp_approve · update,channels,text[],False,,True
+ops.social_posts,040_ops,True,sp_read · select | sp_draft · insert | sp_approve · update,scheduled_at,timestamptz,False,,False
+ops.social_posts,040_ops,True,sp_read · select | sp_draft · insert | sp_approve · update,author,uuid,False,,False
+ops.social_posts,040_ops,True,sp_read · select | sp_draft · insert | sp_approve · update,status,text,False,,True
+ops.social_posts,040_ops,True,sp_read · select | sp_draft · insert | sp_approve · update,legal_review,boolean,False,,False
+ops.settings,040_ops,True,st_read · select | st_crisis · update,key,text,True,,True
+ops.settings,040_ops,True,st_read · select | st_crisis · update,value,jsonb,False,,True
+core.rate_counters,060_command_functions,True,,actor,uuid,True,,True
+core.rate_counters,060_command_functions,True,,action,text,True,,True
+core.rate_counters,060_command_functions,True,,window_start,timestamptz,True,,True
+core.rate_counters,060_command_functions,True,,n,int,False,,True
+core.ai_policy,070_ai_gateway,True,aip_admin · select,institution_id,uuid,True,core.institutions,True
+core.ai_policy,070_ai_gateway,True,aip_admin · select,ai_on,boolean,False,,True
+core.ai_policy,070_ai_gateway,True,aip_admin · select,weekly_budget,int,False,,True
+core.ai_policy,070_ai_gateway,True,aip_admin · select,student_id_pattern,text,False,,False
+core.ai_policy,070_ai_gateway,True,aip_admin · select,provider,text,False,,True
+core.ai_policy,070_ai_gateway,True,aip_admin · select,model,text,False,,True
+core.course_ai_rules,070_ai_gateway,True,car_read · select,course_id,uuid,True,,True
+core.course_ai_rules,070_ai_gateway,True,car_read · select,institution_id,uuid,False,core.institutions,True
+core.course_ai_rules,070_ai_gateway,True,car_read · select,allows,text[],False,,True
+audit.ai_usage,070_ai_gateway,True,aiu_admin · select,id,bigserial,True,,True
+audit.ai_usage,070_ai_gateway,True,aiu_admin · select,at,timestamptz,False,,False
+audit.ai_usage,070_ai_gateway,True,aiu_admin · select,actor,uuid,False,,False
+audit.ai_usage,070_ai_gateway,True,aiu_admin · select,institution_id,uuid,False,,False
+audit.ai_usage,070_ai_gateway,True,aiu_admin · select,task,text,False,,False
+audit.ai_usage,070_ai_gateway,True,aiu_admin · select,outcome,text,False,,False
+audit.ai_usage,070_ai_gateway,True,aiu_admin · select,reason,text,False,,False
+audit.ai_usage,070_ai_gateway,True,aiu_admin · select,tokens,int,False,,False
+core.sources,080_sources_storage_delegations,True,src_read · select,id,uuid,True,,True
+core.sources,080_sources_storage_delegations,True,src_read · select,institution_id,uuid,False,core.institutions,True
+core.sources,080_sources_storage_delegations,True,src_read · select,course_id,uuid,False,,False
+core.sources,080_sources_storage_delegations,True,src_read · select,kind,text,False,,True
+core.sources,080_sources_storage_delegations,True,src_read · select,title,text,False,,True
+core.sources,080_sources_storage_delegations,True,src_read · select,url,text,False,,False
+core.sources,080_sources_storage_delegations,True,src_read · select,body,text,False,,True
+core.sources,080_sources_storage_delegations,True,src_read · select,version,text,False,,False
+core.sources,080_sources_storage_delegations,True,src_read · select,updated_at,timestamptz,False,,False
+core.sources,080_sources_storage_delegations,True,src_read · select,approved,boolean,False,,True
+core.delegations,080_sources_storage_delegations,True,dl_parties · select,id,uuid,True,,True
+core.delegations,080_sources_storage_delegations,True,dl_parties · select,institution_id,uuid,False,,True
+core.delegations,080_sources_storage_delegations,True,dl_parties · select,grantor,uuid,False,,True
+core.delegations,080_sources_storage_delegations,True,dl_parties · select,grantee,uuid,False,,True
+core.delegations,080_sources_storage_delegations,True,dl_parties · select,scope,text[],False,,True
+core.delegations,080_sources_storage_delegations,True,dl_parties · select,purpose,text,False,,True
+core.delegations,080_sources_storage_delegations,True,dl_parties · select,expires_at,timestamptz,False,,True
+core.delegations,080_sources_storage_delegations,True,dl_parties · select,revoked_at,timestamptz,False,,False
+core.delegations,080_sources_storage_delegations,True,dl_parties · select,created_at,timestamptz,False,,False
+fin.ledger_accounts,090_native_finance,True,la_finance · select,code,text,True,,True
+fin.ledger_accounts,090_native_finance,True,la_finance · select,name,text,False,,True
+fin.ledger_accounts,090_native_finance,True,la_finance · select,type,text,False,,True
+fin.ledger_accounts,090_native_finance,True,la_finance · select,scope,text,False,,True
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,id,uuid,True,,True
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,memo,text,False,,True
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,source_event,text,False,,True
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,idempotency_key,text,False,,True
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,effective_date,date,False,,True
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,created_at,timestamptz,False,,True
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,created_by,uuid,False,,False
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,currency,char(3),False,,True
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,institution_id,uuid,False,,False
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,customer_ref,text,False,,False
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,person_id,uuid,False,,False
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,reversal_of,uuid,False,fin.ledger_journals,False
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,approval_ref,uuid,False,,False
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,external_payment_ref,text,False,,False
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,reconciliation_status,text,False,,True
+fin.ledger_journals,090_native_finance,True,fin_read_j · select,legal_hold,boolean,False,,True
+fin.ledger_lines,090_native_finance,True,fin_read_l · select,id,bigserial,True,,True
+fin.ledger_lines,090_native_finance,True,fin_read_l · select,journal_id,uuid,False,fin.ledger_journals,True
+fin.ledger_lines,090_native_finance,True,fin_read_l · select,account,text,False,fin.ledger_accounts,True
+fin.ledger_lines,090_native_finance,True,fin_read_l · select,debit_cents,bigint,False,,True
+fin.ledger_lines,090_native_finance,True,fin_read_l · select,credit_cents,bigint,False,,True
+fin.payment_rails,090_native_finance,True,fin_read_r · select,id,text,True,,True
+fin.payment_rails,090_native_finance,True,fin_read_r · select,kind,text,False,,True
+fin.payment_rails,090_native_finance,True,fin_read_r · select,provider,text,False,,True
+fin.payment_rails,090_native_finance,True,fin_read_r · select,status,text,False,,True
+fin.payment_rails,090_native_finance,True,fin_read_r · select,supported_currencies,text[],False,,True
+fin.payment_rails,090_native_finance,True,fin_read_r · select,capabilities,jsonb,False,,True
+fin.payment_attempts,090_native_finance,True,fin_read_a · select,id,uuid,True,,True
+fin.payment_attempts,090_native_finance,True,fin_read_a · select,rail_id,text,False,fin.payment_rails,True
+fin.payment_attempts,090_native_finance,True,fin_read_a · select,idempotency_key,text,False,,True
+fin.payment_attempts,090_native_finance,True,fin_read_a · select,amount_cents,bigint,False,,True
+fin.payment_attempts,090_native_finance,True,fin_read_a · select,currency,char(3),False,,True
+fin.payment_attempts,090_native_finance,True,fin_read_a · select,payment_method_token,text,False,,False
+fin.payment_attempts,090_native_finance,True,fin_read_a · select,status,text,False,,True
+fin.payment_attempts,090_native_finance,True,fin_read_a · select,institution_id,uuid,False,,False
+fin.payment_attempts,090_native_finance,True,fin_read_a · select,customer_ref,text,False,,False
+fin.payment_attempts,090_native_finance,True,fin_read_a · select,person_id,uuid,False,,False
+fin.payment_attempts,090_native_finance,True,fin_read_a · select,entitlement_key,text,False,,False
+fin.payment_attempts,090_native_finance,True,fin_read_a · select,created_at,timestamptz,False,,True
+fin.payment_transitions,090_native_finance,True,fin_read_t · select,id,bigserial,True,,True
+fin.payment_transitions,090_native_finance,True,fin_read_t · select,attempt_id,uuid,False,fin.payment_attempts,True
+fin.payment_transitions,090_native_finance,True,fin_read_t · select,from_status,text,False,,True
+fin.payment_transitions,090_native_finance,True,fin_read_t · select,to_status,text,False,,True
+fin.payment_transitions,090_native_finance,True,fin_read_t · select,idempotency_key,text,False,,True
+fin.payment_transitions,090_native_finance,True,fin_read_t · select,provider_event_id,text,False,,False
+fin.payment_transitions,090_native_finance,True,fin_read_t · select,journal_id,uuid,False,fin.ledger_journals,False
+fin.payment_transitions,090_native_finance,True,fin_read_t · select,entitlement_effect,text,False,,False
+fin.payment_transitions,090_native_finance,True,fin_read_t · select,notification_rule,text,False,,False
+fin.payment_transitions,090_native_finance,True,fin_read_t · select,reconciliation_status,text,False,,False
+fin.payment_transitions,090_native_finance,True,fin_read_t · select,actor,uuid,False,,False
+fin.payment_transitions,090_native_finance,True,fin_read_t · select,at,timestamptz,False,,True
+fin.provider_events,090_native_finance,True,fin_read_e · select,provider,text,True,,True
+fin.provider_events,090_native_finance,True,fin_read_e · select,provider_event_id,text,True,,True
+fin.provider_events,090_native_finance,True,fin_read_e · select,type,text,False,,True
+fin.provider_events,090_native_finance,True,fin_read_e · select,payload_hash,text,False,,True
+fin.provider_events,090_native_finance,True,fin_read_e · select,verified,boolean,False,,True
+fin.provider_events,090_native_finance,True,fin_read_e · select,received_at,timestamptz,False,,True
+fin.provider_events,090_native_finance,True,fin_read_e · select,processed_at,timestamptz,False,,False
+fin.settlement_batches,090_native_finance,True,fin_read_sb · select,id,text,True,,True
+fin.settlement_batches,090_native_finance,True,fin_read_sb · select,rail_id,text,False,fin.payment_rails,False
+fin.settlement_batches,090_native_finance,True,fin_read_sb · select,settled_on,date,False,,True
+fin.settlement_batches,090_native_finance,True,fin_read_sb · select,total_cents,bigint,False,,True
+fin.settlement_lines,090_native_finance,True,fin_read_sl · select,id,bigserial,True,,True
+fin.settlement_lines,090_native_finance,True,fin_read_sl · select,batch_id,text,False,fin.settlement_batches,False
+fin.settlement_lines,090_native_finance,True,fin_read_sl · select,attempt_id,uuid,False,fin.payment_attempts,False
+fin.settlement_lines,090_native_finance,True,fin_read_sl · select,amount_cents,bigint,False,,True
+fin.settlement_lines,090_native_finance,True,fin_read_sl · select,fee_cents,bigint,False,,True
+fin.settlement_lines,090_native_finance,True,fin_read_sl · select,matched,boolean,False,,True
+fin.refund_requests,090_native_finance,True,fin_read_rr · select,id,uuid,True,,True
+fin.refund_requests,090_native_finance,True,fin_read_rr · select,attempt_id,uuid,False,fin.payment_attempts,True
+fin.refund_requests,090_native_finance,True,fin_read_rr · select,amount_cents,bigint,False,,True
+fin.refund_requests,090_native_finance,True,fin_read_rr · select,reason,text,False,,True
+fin.refund_requests,090_native_finance,True,fin_read_rr · select,requested_by,uuid,False,,True
+fin.refund_requests,090_native_finance,True,fin_read_rr · select,required_approvals,int,False,,True
+fin.refund_requests,090_native_finance,True,fin_read_rr · select,status,text,False,,True
+fin.refund_requests,090_native_finance,True,fin_read_rr · select,created_at,timestamptz,False,,True
+fin.refund_approvals,090_native_finance,True,fin_read_ra · select,request_id,uuid,True,fin.refund_requests,False
+fin.refund_approvals,090_native_finance,True,fin_read_ra · select,approver,uuid,True,,True
+fin.refund_approvals,090_native_finance,True,fin_read_ra · select,at,timestamptz,False,,True
+ctl.capabilities,100_controlled_actions,True,cap_read · select,key,text,True,,True
+ctl.capabilities,100_controlled_actions,True,cap_read · select,description,text,False,,True
+ctl.capabilities,100_controlled_actions,True,cap_read · select,high_impact,boolean,False,,True
+ctl.capabilities,100_controlled_actions,True,cap_read · select,required_approver_caps,text[],False,,True
+ctl.capabilities,100_controlled_actions,True,cap_read · select,min_approvals,int,False,,True
+ctl.grants,100_controlled_actions,True,grant_self · select,id,uuid,True,,True
+ctl.grants,100_controlled_actions,True,grant_self · select,person_id,uuid,False,auth.users,True
+ctl.grants,100_controlled_actions,True,grant_self · select,capability,text,False,ctl.capabilities,True
+ctl.grants,100_controlled_actions,True,grant_self · select,tenant_id,uuid,False,,False
+ctl.grants,100_controlled_actions,True,grant_self · select,org_unit_id,uuid,False,,False
+ctl.grants,100_controlled_actions,True,grant_self · select,resource_type,text,False,,False
+ctl.grants,100_controlled_actions,True,grant_self · select,resource_id,text,False,,False
+ctl.grants,100_controlled_actions,True,grant_self · select,granted_by,uuid,False,,True
+ctl.grants,100_controlled_actions,True,grant_self · select,reason,text,False,,True
+ctl.grants,100_controlled_actions,True,grant_self · select,expires_at,timestamptz,False,,False
+ctl.grants,100_controlled_actions,True,grant_self · select,break_glass,boolean,False,,True
+ctl.grants,100_controlled_actions,True,grant_self · select,revoked_at,timestamptz,False,,False
+ctl.grants,100_controlled_actions,True,grant_self · select,created_at,timestamptz,False,,True
+ctl.action_requests,100_controlled_actions,True,req_read · select,id,uuid,True,,True
+ctl.action_requests,100_controlled_actions,True,req_read · select,capability,text,False,ctl.capabilities,True
+ctl.action_requests,100_controlled_actions,True,req_read · select,tenant_id,uuid,False,,False
+ctl.action_requests,100_controlled_actions,True,req_read · select,requested_by,uuid,False,,True
+ctl.action_requests,100_controlled_actions,True,req_read · select,reason,text,False,,True
+ctl.action_requests,100_controlled_actions,True,req_read · select,payload,jsonb,False,,True
+ctl.action_requests,100_controlled_actions,True,req_read · select,impact_preview,jsonb,False,,False
+ctl.action_requests,100_controlled_actions,True,req_read · select,idempotency_key,text,False,,True
+ctl.action_requests,100_controlled_actions,True,req_read · select,status,text,False,,True
+ctl.action_requests,100_controlled_actions,True,req_read · select,created_at,timestamptz,False,,True
+ctl.action_requests,100_controlled_actions,True,req_read · select,executed_at,timestamptz,False,,False
+ctl.action_requests,100_controlled_actions,True,req_read · select,receipt,jsonb,False,,False
+ctl.action_requests,100_controlled_actions,True,req_read · select,rollback_of,uuid,False,ctl.action_requests,False
+ctl.action_approvals,100_controlled_actions,True,appr_read · select,request_id,uuid,True,ctl.action_requests,False
+ctl.action_approvals,100_controlled_actions,True,appr_read · select,approver,uuid,True,,True
+ctl.action_approvals,100_controlled_actions,True,appr_read · select,decision,text,False,,True
+ctl.action_approvals,100_controlled_actions,True,appr_read · select,note,text,False,,False
+ctl.action_approvals,100_controlled_actions,True,appr_read · select,at,timestamptz,False,,True
+ctl.outbox,100_controlled_actions,True,,id,bigserial,True,,True
+ctl.outbox,100_controlled_actions,True,,topic,text,False,,True
+ctl.outbox,100_controlled_actions,True,,tenant_id,uuid,False,,False
+ctl.outbox,100_controlled_actions,True,,payload,jsonb,False,,True
+ctl.outbox,100_controlled_actions,True,,created_at,timestamptz,False,,True
+ctl.outbox,100_controlled_actions,True,,published_at,timestamptz,False,,False
+growth.entry_contexts,110_onboarding_growth,True,ctx_self · select,id,uuid,True,,True
+growth.entry_contexts,110_onboarding_growth,True,ctx_self · select,person_id,uuid,False,auth.users,False
+growth.entry_contexts,110_onboarding_growth,True,ctx_self · select,anon_id,text,False,,False
+growth.entry_contexts,110_onboarding_growth,True,ctx_self · select,source,text,False,,True
+growth.entry_contexts,110_onboarding_growth,True,ctx_self · select,campaign_id,text,False,,False
+growth.entry_contexts,110_onboarding_growth,True,ctx_self · select,content_id,text,False,,False
+growth.entry_contexts,110_onboarding_growth,True,ctx_self · select,referral_code,text,False,,False
+growth.entry_contexts,110_onboarding_growth,True,ctx_self · select,intended_role,text,False,,False
+growth.entry_contexts,110_onboarding_growth,True,ctx_self · select,tenant_hint,text,False,,False
+growth.entry_contexts,110_onboarding_growth,True,ctx_self · select,continue_to,text,False,,False
+growth.entry_contexts,110_onboarding_growth,True,ctx_self · select,created_at,timestamptz,False,,True
+growth.consent_documents,110_onboarding_growth,True,docs_read · select,id,text,True,,True
+growth.consent_documents,110_onboarding_growth,True,docs_read · select,kind,text,False,,True
+growth.consent_documents,110_onboarding_growth,True,docs_read · select,version,text,False,,True
+growth.consent_documents,110_onboarding_growth,True,docs_read · select,tenant_id,uuid,False,,False
+growth.consent_documents,110_onboarding_growth,True,docs_read · select,published_at,timestamptz,False,,True
+growth.consent_documents,110_onboarding_growth,True,docs_read · select,body_hash,text,False,,True
+growth.consent_records,110_onboarding_growth,True,consent_self_read · select | consent_self_write · insert,id,bigserial,True,,True
+growth.consent_records,110_onboarding_growth,True,consent_self_read · select | consent_self_write · insert,person_id,uuid,False,auth.users,True
+growth.consent_records,110_onboarding_growth,True,consent_self_read · select | consent_self_write · insert,document_id,text,False,growth.consent_documents,True
+growth.consent_records,110_onboarding_growth,True,consent_self_read · select | consent_self_write · insert,accepted,boolean,False,,True
+growth.consent_records,110_onboarding_growth,True,consent_self_read · select | consent_self_write · insert,at,timestamptz,False,,True
+growth.leads,110_onboarding_growth,True,leads_ops · select,id,uuid,True,,True
+growth.leads,110_onboarding_growth,True,leads_ops · select,name,text,False,,True
+growth.leads,110_onboarding_growth,True,leads_ops · select,work_email,text,False,,True
+growth.leads,110_onboarding_growth,True,leads_ops · select,organization,text,False,,True
+growth.leads,110_onboarding_growth,True,leads_ops · select,role_title,text,False,,False
+growth.leads,110_onboarding_growth,True,leads_ops · select,use_case,text,False,,False
+growth.leads,110_onboarding_growth,True,leads_ops · select,follow_up_consent,boolean,False,,True
+growth.leads,110_onboarding_growth,True,leads_ops · select,email_verified,boolean,False,,True
+growth.leads,110_onboarding_growth,True,leads_ops · select,matched_account,text,False,,False
+growth.leads,110_onboarding_growth,True,leads_ops · select,routed_to,text,False,,False
+growth.leads,110_onboarding_growth,True,leads_ops · select,sla_due,timestamptz,False,,False
+growth.leads,110_onboarding_growth,True,leads_ops · select,status,text,False,,True
+growth.leads,110_onboarding_growth,True,leads_ops · select,entry_context_id,uuid,False,growth.entry_contexts,False
+growth.leads,110_onboarding_growth,True,leads_ops · select,created_at,timestamptz,False,,True
+onboard.journeys,110_onboarding_growth,True,j_read · select,id,text,True,,True
+onboard.journeys,110_onboarding_growth,True,j_read · select,audience,text,False,,True
+onboard.journeys,110_onboarding_growth,True,j_read · select,description,text,False,,True
+onboard.journey_versions,110_onboarding_growth,True,jv_read · select,journey_id,text,True,onboard.journeys,False
+onboard.journey_versions,110_onboarding_growth,True,jv_read · select,version,text,True,,True
+onboard.journey_versions,110_onboarding_growth,True,jv_read · select,steps,jsonb,False,,True
+onboard.journey_versions,110_onboarding_growth,True,jv_read · select,activation_definition,text,False,,True
+onboard.journey_versions,110_onboarding_growth,True,jv_read · select,published_at,timestamptz,False,,False
+onboard.activation_definitions,110_onboarding_growth,True,ad_read · select,id,text,True,,True
+onboard.activation_definitions,110_onboarding_growth,True,ad_read · select,audience,text,False,,True
+onboard.activation_definitions,110_onboarding_growth,True,ad_read · select,description,text,False,,True
+onboard.activation_definitions,110_onboarding_growth,True,ad_read · select,event_names,text[],False,,True
+onboard.assignments,110_onboarding_growth,True,as_self · select,person_id,uuid,True,auth.users,True
+onboard.assignments,110_onboarding_growth,True,as_self · select,tenant_id,uuid,False,,False
+onboard.assignments,110_onboarding_growth,True,as_self · select,journey_id,text,True,onboard.journey_versions,True
+onboard.assignments,110_onboarding_growth,True,as_self · select,version,text,False,,True
+onboard.assignments,110_onboarding_growth,True,as_self · select,state,text,False,,True
+onboard.assignments,110_onboarding_growth,True,as_self · select,current_step,text,False,,False
+onboard.assignments,110_onboarding_growth,True,as_self · select,assigned_at,timestamptz,False,,True
+onboard.assignments,110_onboarding_growth,True,as_self · select,activated_at,timestamptz,False,,False
+onboard.progress,110_onboarding_growth,True,pr_self · select,person_id,uuid,True,,True
+onboard.progress,110_onboarding_growth,True,pr_self · select,journey_id,text,True,,True
+onboard.progress,110_onboarding_growth,True,pr_self · select,step_id,text,True,,True
+onboard.progress,110_onboarding_growth,True,pr_self · select,status,text,False,,True
+onboard.progress,110_onboarding_growth,True,pr_self · select,at,timestamptz,False,,True
+onboard.support_handoffs,110_onboarding_growth,True,sh_self · select | sh_insert · insert,id,uuid,True,,True
+onboard.support_handoffs,110_onboarding_growth,True,sh_self · select | sh_insert · insert,person_id,uuid,False,,True
+onboard.support_handoffs,110_onboarding_growth,True,sh_self · select | sh_insert · insert,journey_id,text,False,,False
+onboard.support_handoffs,110_onboarding_growth,True,sh_self · select | sh_insert · insert,step_id,text,False,,False
+onboard.support_handoffs,110_onboarding_growth,True,sh_self · select | sh_insert · insert,created_at,timestamptz,False,,True
+onboard.support_handoffs,110_onboarding_growth,True,sh_self · select | sh_insert · insert,status,text,False,,True
+onboard.events,110_onboarding_growth,True,ev_insert · insert,id,bigserial,True,,True
+onboard.events,110_onboarding_growth,True,ev_insert · insert,person_id,uuid,False,,False
+onboard.events,110_onboarding_growth,True,ev_insert · insert,anon_id,text,False,,False
+onboard.events,110_onboarding_growth,True,ev_insert · insert,tenant_id,uuid,False,,False
+onboard.events,110_onboarding_growth,True,ev_insert · insert,name,text,False,,True
+onboard.events,110_onboarding_growth,True,ev_insert · insert,props,jsonb,False,,True
+onboard.events,110_onboarding_growth,True,ev_insert · insert,at,timestamptz,False,,True
+onboard.activation_events,110_onboarding_growth,True,ae_self · select,person_id,uuid,True,,True
+onboard.activation_events,110_onboarding_growth,True,ae_self · select,definition_id,text,True,onboard.activation_definitions,True
+onboard.activation_events,110_onboarding_growth,True,ae_self · select,at,timestamptz,False,,True
+onboard.handoff_transactions,120_handoff_preview_devices,True,,id,uuid,True,,True
+onboard.handoff_transactions,120_handoff_preview_devices,True,,nonce,text,False,,True
+onboard.handoff_transactions,120_handoff_preview_devices,True,,route,text,False,,True
+onboard.handoff_transactions,120_handoff_preview_devices,True,,resource_id,text,False,,False
+onboard.handoff_transactions,120_handoff_preview_devices,True,,tenant_hint,text,False,,False
+onboard.handoff_transactions,120_handoff_preview_devices,True,,entry_context,jsonb,False,,True
+onboard.handoff_transactions,120_handoff_preview_devices,True,,expires_at,timestamptz,False,,True
+onboard.handoff_transactions,120_handoff_preview_devices,True,,consumed_at,timestamptz,False,,False
+onboard.handoff_transactions,120_handoff_preview_devices,True,,consumed_by,uuid,False,auth.users,False
+onboard.handoff_transactions,120_handoff_preview_devices,True,,status,text,False,,True
+onboard.handoff_transactions,120_handoff_preview_devices,True,,created_at,timestamptz,False,,True
+onboard.preview_drafts,120_handoff_preview_devices,True,pd_self · select,person_id,uuid,True,auth.users,True
+onboard.preview_drafts,120_handoff_preview_devices,True,pd_self · select,goal,text,False,,False
+onboard.preview_drafts,120_handoff_preview_devices,True,pd_self · select,term,text,False,,False
+onboard.preview_drafts,120_handoff_preview_devices,True,pd_self · select,items,jsonb,False,,True
+onboard.preview_drafts,120_handoff_preview_devices,True,pd_self · select,claimed_at,timestamptz,False,,True
+onboard.preview_drafts,120_handoff_preview_devices,True,pd_self · select,label,text,False,,True
+onboard.devices,120_handoff_preview_devices,True,dev_self · select | dev_insert · insert,id,uuid,True,,True
+onboard.devices,120_handoff_preview_devices,True,dev_self · select | dev_insert · insert,person_id,uuid,False,auth.users,True
+onboard.devices,120_handoff_preview_devices,True,dev_self · select | dev_insert · insert,kind,text,False,,True
+onboard.devices,120_handoff_preview_devices,True,dev_self · select | dev_insert · insert,label,text,False,,False
+onboard.devices,120_handoff_preview_devices,True,dev_self · select | dev_insert · insert,app_version,text,False,,False
+onboard.devices,120_handoff_preview_devices,True,dev_self · select | dev_insert · insert,created_at,timestamptz,False,,True
+onboard.devices,120_handoff_preview_devices,True,dev_self · select | dev_insert · insert,last_seen_at,timestamptz,False,,True
+onboard.devices,120_handoff_preview_devices,True,dev_self · select | dev_insert · insert,revoked_at,timestamptz,False,,False
+onboard.push_tokens,120_handoff_preview_devices,True,,device_id,uuid,True,onboard.devices,True
+onboard.push_tokens,120_handoff_preview_devices,True,,token,text,False,,True
+onboard.push_tokens,120_handoff_preview_devices,True,,channel,text,False,,True
+onboard.push_tokens,120_handoff_preview_devices,True,,permission_granted_at,timestamptz,False,,True
+onboard.push_tokens,120_handoff_preview_devices,True,,revoked_at,timestamptz,False,,False
+acad.terms,130_academic_core,True,terms_read · select,id,uuid,True,,True
+acad.terms,130_academic_core,True,terms_read · select,institution_id,uuid,False,core.institutions,True
+acad.terms,130_academic_core,True,terms_read · select,code,text,False,,True
+acad.terms,130_academic_core,True,terms_read · select,name,text,False,,True
+acad.terms,130_academic_core,True,terms_read · select,starts_on,date,False,,True
+acad.terms,130_academic_core,True,terms_read · select,ends_on,date,False,,True
+acad.terms,130_academic_core,True,terms_read · select,registration_opens_at,timestamptz,False,,False
+acad.terms,130_academic_core,True,terms_read · select,add_drop_ends_at,timestamptz,False,,False
+acad.terms,130_academic_core,True,terms_read · select,source,text,False,,True
+acad.terms,130_academic_core,True,terms_read · select,source_ref,text,False,,False
+acad.terms,130_academic_core,True,terms_read · select,synced_at,timestamptz,False,,True
+acad.courses,130_academic_core,True,courses_read · select,id,uuid,True,,True
+acad.courses,130_academic_core,True,courses_read · select,institution_id,uuid,False,core.institutions,True
+acad.courses,130_academic_core,True,courses_read · select,subject,text,False,,True
+acad.courses,130_academic_core,True,courses_read · select,number,text,False,,True
+acad.courses,130_academic_core,True,courses_read · select,title,text,False,,True
+acad.courses,130_academic_core,True,courses_read · select,credits,"numeric(4,1)",False,,True
+acad.courses,130_academic_core,True,courses_read · select,description,text,False,,False
+acad.courses,130_academic_core,True,courses_read · select,source,text,False,,True
+acad.courses,130_academic_core,True,courses_read · select,source_ref,text,False,,False
+acad.courses,130_academic_core,True,courses_read · select,synced_at,timestamptz,False,,True
+acad.sections,130_academic_core,True,sections_read · select,id,uuid,True,,True
+acad.sections,130_academic_core,True,sections_read · select,institution_id,uuid,False,core.institutions,True
+acad.sections,130_academic_core,True,sections_read · select,course_id,uuid,False,acad.courses,True
+acad.sections,130_academic_core,True,sections_read · select,term_id,uuid,False,acad.terms,True
+acad.sections,130_academic_core,True,sections_read · select,code,text,False,,True
+acad.sections,130_academic_core,True,sections_read · select,instructor_id,uuid,False,core.profiles,False
+acad.sections,130_academic_core,True,sections_read · select,meeting,jsonb,False,,True
+acad.sections,130_academic_core,True,sections_read · select,capacity,int,False,,False
+acad.sections,130_academic_core,True,sections_read · select,lms_ref,text,False,,False
+acad.sections,130_academic_core,True,sections_read · select,source,text,False,,True
+acad.sections,130_academic_core,True,sections_read · select,synced_at,timestamptz,False,,True
+acad.enrollments,130_academic_core,True,enr_self · select | enr_teach · select | enr_advise · select | enr_registrar · select,section_id,uuid,True,acad.sections,True
+acad.enrollments,130_academic_core,True,enr_self · select | enr_teach · select | enr_advise · select | enr_registrar · select,person_id,uuid,True,core.profiles,True
+acad.enrollments,130_academic_core,True,enr_self · select | enr_teach · select | enr_advise · select | enr_registrar · select,institution_id,uuid,False,core.institutions,True
+acad.enrollments,130_academic_core,True,enr_self · select | enr_teach · select | enr_advise · select | enr_registrar · select,role,text,False,,True
+acad.enrollments,130_academic_core,True,enr_self · select | enr_teach · select | enr_advise · select | enr_registrar · select,status,text,False,,True
+acad.enrollments,130_academic_core,True,enr_self · select | enr_teach · select | enr_advise · select | enr_registrar · select,source,text,False,,True
+acad.enrollments,130_academic_core,True,enr_self · select | enr_teach · select | enr_advise · select | enr_registrar · select,synced_at,timestamptz,False,,True
+acad.holds,130_academic_core,True,holds_self · select | holds_advise · select | holds_office · select,id,uuid,True,,True
+acad.holds,130_academic_core,True,holds_self · select | holds_advise · select | holds_office · select,institution_id,uuid,False,core.institutions,True
+acad.holds,130_academic_core,True,holds_self · select | holds_advise · select | holds_office · select,person_id,uuid,False,core.profiles,True
+acad.holds,130_academic_core,True,holds_self · select | holds_advise · select | holds_office · select,office,text,False,,True
+acad.holds,130_academic_core,True,holds_self · select | holds_advise · select | holds_office · select,kind,text,False,,True
+acad.holds,130_academic_core,True,holds_self · select | holds_advise · select | holds_office · select,blocks,text[],False,,True
+acad.holds,130_academic_core,True,holds_self · select | holds_advise · select | holds_office · select,reason_public,text,False,,True
+acad.holds,130_academic_core,True,holds_self · select | holds_advise · select | holds_office · select,amount_cents,int,False,,False
+acad.holds,130_academic_core,True,holds_self · select | holds_advise · select | holds_office · select,placed_at,timestamptz,False,,True
+acad.holds,130_academic_core,True,holds_self · select | holds_advise · select | holds_office · select,cleared_at,timestamptz,False,,False
+acad.holds,130_academic_core,True,holds_self · select | holds_advise · select | holds_office · select,source,text,False,,True
+acad.holds,130_academic_core,True,holds_self · select | holds_advise · select | holds_office · select,source_ref,text,False,,False
+acad.holds,130_academic_core,True,holds_self · select | holds_advise · select | holds_office · select,synced_at,timestamptz,False,,True
+acad.requirements,130_academic_core,True,reqs_read · select,id,uuid,True,,True
+acad.requirements,130_academic_core,True,reqs_read · select,institution_id,uuid,False,core.institutions,True
+acad.requirements,130_academic_core,True,reqs_read · select,course_id,uuid,False,acad.courses,True
+acad.requirements,130_academic_core,True,reqs_read · select,kind,text,False,,True
+acad.requirements,130_academic_core,True,reqs_read · select,expression,jsonb,False,,True
+acad.requirements,130_academic_core,True,reqs_read · select,source,text,False,,True
+acad.requirements,130_academic_core,True,reqs_read · select,synced_at,timestamptz,False,,True
+acad.readiness_items,130_academic_core,True,ri_self · select | ri_advise · select,id,uuid,True,,True
+acad.readiness_items,130_academic_core,True,ri_self · select | ri_advise · select,institution_id,uuid,False,core.institutions,True
+acad.readiness_items,130_academic_core,True,ri_self · select | ri_advise · select,person_id,uuid,False,core.profiles,True
+acad.readiness_items,130_academic_core,True,ri_self · select | ri_advise · select,term_id,uuid,False,acad.terms,True
+acad.readiness_items,130_academic_core,True,ri_self · select | ri_advise · select,item,text,False,,True
+acad.readiness_items,130_academic_core,True,ri_self · select | ri_advise · select,state,text,False,,True
+acad.readiness_items,130_academic_core,True,ri_self · select | ri_advise · select,freshness,acad.freshness,False,,True
+acad.readiness_items,130_academic_core,True,ri_self · select | ri_advise · select,source,text,False,,True
+acad.readiness_items,130_academic_core,True,ri_self · select | ri_advise · select,source_ref,text,False,,False
+acad.readiness_items,130_academic_core,True,ri_self · select | ri_advise · select,as_of,timestamptz,False,,False
+acad.readiness_items,130_academic_core,True,ri_self · select | ri_advise · select,owner_office,text,False,,False
+acad.readiness_items,130_academic_core,True,ri_self · select | ri_advise · select,next_action,text,False,,False
+acad.readiness_items,130_academic_core,True,ri_self · select | ri_advise · select,evidence,jsonb,False,,True
+acad.readiness_items,130_academic_core,True,ri_self · select | ri_advise · select,updated_at,timestamptz,False,,True
+acad.advising_assignments,130_academic_core,True,aa_parties · select,advisor_id,uuid,True,core.profiles,True
+acad.advising_assignments,130_academic_core,True,aa_parties · select,student_id,uuid,True,core.profiles,True
+acad.advising_assignments,130_academic_core,True,aa_parties · select,institution_id,uuid,False,core.institutions,True
+acad.advising_assignments,130_academic_core,True,aa_parties · select,kind,text,True,,True
+acad.advising_assignments,130_academic_core,True,aa_parties · select,starts_on,date,False,,True
+acad.advising_assignments,130_academic_core,True,aa_parties · select,ends_on,date,False,,False
+acad.advising_assignments,130_academic_core,True,aa_parties · select,source,text,False,,True
+acad.advising_slots,130_academic_core,True,slots_read · select,id,uuid,True,,True
+acad.advising_slots,130_academic_core,True,slots_read · select,institution_id,uuid,False,core.institutions,True
+acad.advising_slots,130_academic_core,True,slots_read · select,advisor_id,uuid,False,core.profiles,True
+acad.advising_slots,130_academic_core,True,slots_read · select,starts_at,timestamptz,False,,True
+acad.advising_slots,130_academic_core,True,slots_read · select,ends_at,timestamptz,False,,True
+acad.advising_slots,130_academic_core,True,slots_read · select,mode,text,False,,True
+acad.advising_slots,130_academic_core,True,slots_read · select,booked_by,uuid,False,core.profiles,False
+acad.advising_slots,130_academic_core,True,slots_read · select,booked_at,timestamptz,False,,False
+acad.advising_slots,130_academic_core,True,slots_read · select,receipt_code,text,False,,False
+acad.advising_notes,130_academic_core,True,notes_advisors · select | notes_student · select,id,uuid,True,,True
+acad.advising_notes,130_academic_core,True,notes_advisors · select | notes_student · select,institution_id,uuid,False,core.institutions,True
+acad.advising_notes,130_academic_core,True,notes_advisors · select | notes_student · select,student_id,uuid,False,core.profiles,True
+acad.advising_notes,130_academic_core,True,notes_advisors · select | notes_student · select,author_id,uuid,False,core.profiles,True
+acad.advising_notes,130_academic_core,True,notes_advisors · select | notes_student · select,visibility,text,False,,True
+acad.advising_notes,130_academic_core,True,notes_advisors · select | notes_student · select,body,text,False,,True
+acad.advising_notes,130_academic_core,True,notes_advisors · select | notes_student · select,created_at,timestamptz,False,,True
+acad.office_handoffs,130_academic_core,True,oh_student · select | oh_office · select,id,uuid,True,,True
+acad.office_handoffs,130_academic_core,True,oh_student · select | oh_office · select,institution_id,uuid,False,core.institutions,True
+acad.office_handoffs,130_academic_core,True,oh_student · select | oh_office · select,student_id,uuid,False,core.profiles,True
+acad.office_handoffs,130_academic_core,True,oh_student · select | oh_office · select,readiness_item_id,uuid,False,acad.readiness_items,False
+acad.office_handoffs,130_academic_core,True,oh_student · select | oh_office · select,office,text,False,,True
+acad.office_handoffs,130_academic_core,True,oh_student · select | oh_office · select,shared_fields,text[],False,,True
+acad.office_handoffs,130_academic_core,True,oh_student · select | oh_office · select,state,text,False,,True
+acad.office_handoffs,130_academic_core,True,oh_student · select | oh_office · select,assignee_id,uuid,False,core.profiles,False
+acad.office_handoffs,130_academic_core,True,oh_student · select | oh_office · select,sla_due,timestamptz,False,,False
+acad.office_handoffs,130_academic_core,True,oh_student · select | oh_office · select,resolution,text,False,,False
+acad.office_handoffs,130_academic_core,True,oh_student · select | oh_office · select,created_at,timestamptz,False,,True
+acad.office_handoffs,130_academic_core,True,oh_student · select | oh_office · select,resolved_at,timestamptz,False,,False
+work.assignments,140_coursework_comms,True,asg_enrolled · select,id,uuid,True,,True
+work.assignments,140_coursework_comms,True,asg_enrolled · select,institution_id,uuid,False,core.institutions,True
+work.assignments,140_coursework_comms,True,asg_enrolled · select,section_id,uuid,False,acad.sections,True
+work.assignments,140_coursework_comms,True,asg_enrolled · select,title,text,False,,True
+work.assignments,140_coursework_comms,True,asg_enrolled · select,due_at,timestamptz,False,,False
+work.assignments,140_coursework_comms,True,asg_enrolled · select,points,"numeric(6,2)",False,,False
+work.assignments,140_coursework_comms,True,asg_enrolled · select,ai_rule,text,False,,True
+work.assignments,140_coursework_comms,True,asg_enrolled · select,source,text,False,,True
+work.assignments,140_coursework_comms,True,asg_enrolled · select,source_ref,text,False,,False
+work.assignments,140_coursework_comms,True,asg_enrolled · select,synced_at,timestamptz,False,,True
+work.grades,140_coursework_comms,True,grades_self · select | grades_teach · select,assignment_id,uuid,True,work.assignments,True
+work.grades,140_coursework_comms,True,grades_self · select | grades_teach · select,person_id,uuid,True,core.profiles,True
+work.grades,140_coursework_comms,True,grades_self · select | grades_teach · select,institution_id,uuid,False,core.institutions,True
+work.grades,140_coursework_comms,True,grades_self · select | grades_teach · select,score,"numeric(6,2)",False,,False
+work.grades,140_coursework_comms,True,grades_self · select | grades_teach · select,letter,text,False,,False
+work.grades,140_coursework_comms,True,grades_self · select | grades_teach · select,posted_at,timestamptz,False,,False
+work.grades,140_coursework_comms,True,grades_self · select | grades_teach · select,source,text,False,,True
+work.grades,140_coursework_comms,True,grades_self · select | grades_teach · select,synced_at,timestamptz,False,,True
+work.tasks,140_coursework_comms,True,tasks_own · all,id,uuid,True,,True
+work.tasks,140_coursework_comms,True,tasks_own · all,person_id,uuid,False,core.profiles,True
+work.tasks,140_coursework_comms,True,tasks_own · all,title,text,False,,True
+work.tasks,140_coursework_comms,True,tasks_own · all,due_at,timestamptz,False,,False
+work.tasks,140_coursework_comms,True,tasks_own · all,assignment_id,uuid,False,work.assignments,False
+work.tasks,140_coursework_comms,True,tasks_own · all,done_at,timestamptz,False,,False
+work.tasks,140_coursework_comms,True,tasks_own · all,created_at,timestamptz,False,,True
+comms.threads,140_coursework_comms,True,th_member · select,id,uuid,True,,True
+comms.threads,140_coursework_comms,True,th_member · select,institution_id,uuid,False,core.institutions,True
+comms.threads,140_coursework_comms,True,th_member · select,kind,text,False,,True
+comms.threads,140_coursework_comms,True,th_member · select,section_id,uuid,False,acad.sections,False
+comms.threads,140_coursework_comms,True,th_member · select,office,text,False,,False
+comms.threads,140_coursework_comms,True,th_member · select,subject,text,False,,False
+comms.threads,140_coursework_comms,True,th_member · select,created_by,uuid,False,core.profiles,True
+comms.threads,140_coursework_comms,True,th_member · select,created_at,timestamptz,False,,True
+comms.participants,140_coursework_comms,True,pt_member · select | pt_self_update · update,thread_id,uuid,True,comms.threads,True
+comms.participants,140_coursework_comms,True,pt_member · select | pt_self_update · update,person_id,uuid,True,core.profiles,True
+comms.participants,140_coursework_comms,True,pt_member · select | pt_self_update · update,role,text,False,,True
+comms.participants,140_coursework_comms,True,pt_member · select | pt_self_update · update,last_read_at,timestamptz,False,,False
+comms.participants,140_coursework_comms,True,pt_member · select | pt_self_update · update,muted,boolean,False,,True
+comms.messages,140_coursework_comms,True,msg_member · select,id,uuid,True,,True
+comms.messages,140_coursework_comms,True,msg_member · select,thread_id,uuid,False,comms.threads,True
+comms.messages,140_coursework_comms,True,msg_member · select,author_id,uuid,False,core.profiles,True
+comms.messages,140_coursework_comms,True,msg_member · select,body,text,False,,True
+comms.messages,140_coursework_comms,True,msg_member · select,attachments,uuid[],False,,True
+comms.messages,140_coursework_comms,True,msg_member · select,created_at,timestamptz,False,,True
+comms.messages,140_coursework_comms,True,msg_member · select,edited_at,timestamptz,False,,False
+comms.messages,140_coursework_comms,True,msg_member · select,deleted_at,timestamptz,False,,False
+comms.notifications,140_coursework_comms,True,notif_self · select | notif_mark · update,id,uuid,True,,True
+comms.notifications,140_coursework_comms,True,notif_self · select | notif_mark · update,person_id,uuid,False,core.profiles,True
+comms.notifications,140_coursework_comms,True,notif_self · select | notif_mark · update,kind,text,False,,True
+comms.notifications,140_coursework_comms,True,notif_self · select | notif_mark · update,title,text,False,,True
+comms.notifications,140_coursework_comms,True,notif_self · select | notif_mark · update,body,text,False,,False
+comms.notifications,140_coursework_comms,True,notif_self · select | notif_mark · update,link,text,False,,False
+comms.notifications,140_coursework_comms,True,notif_self · select | notif_mark · update,priority,text,False,,True
+comms.notifications,140_coursework_comms,True,notif_self · select | notif_mark · update,channels,text[],False,,True
+comms.notifications,140_coursework_comms,True,notif_self · select | notif_mark · update,created_at,timestamptz,False,,True
+comms.notifications,140_coursework_comms,True,notif_self · select | notif_mark · update,read_at,timestamptz,False,,False
+comms.notifications,140_coursework_comms,True,notif_self · select | notif_mark · update,expires_at,timestamptz,False,,False
+comms.preferences,140_coursework_comms,True,pref_self · all,person_id,uuid,True,core.profiles,True
+comms.preferences,140_coursework_comms,True,pref_self · all,quiet_from,time,False,,False
+comms.preferences,140_coursework_comms,True,pref_self · all,quiet_to,time,False,,False
+comms.preferences,140_coursework_comms,True,pref_self · all,timezone,text,False,,True
+comms.preferences,140_coursework_comms,True,pref_self · all,digest,text,False,,True
+comms.preferences,140_coursework_comms,True,pref_self · all,per_kind,jsonb,False,,True
+comms.files,140_coursework_comms,True,files_owner · select,id,uuid,True,,True
+comms.files,140_coursework_comms,True,files_owner · select,institution_id,uuid,False,core.institutions,True
+comms.files,140_coursework_comms,True,files_owner · select,owner_id,uuid,False,core.profiles,True
+comms.files,140_coursework_comms,True,files_owner · select,bucket,text,False,,True
+comms.files,140_coursework_comms,True,files_owner · select,path,text,False,,True
+comms.files,140_coursework_comms,True,files_owner · select,mime,text,False,,True
+comms.files,140_coursework_comms,True,files_owner · select,bytes,bigint,False,,True
+comms.files,140_coursework_comms,True,files_owner · select,scan_state,text,False,,True
+comms.files,140_coursework_comms,True,files_owner · select,created_at,timestamptz,False,,True
+comms.files,140_coursework_comms,True,files_owner · select,deleted_at,timestamptz,False,,False
+comms.calendar_events,140_coursework_comms,True,cal_self · all,id,uuid,True,,True
+comms.calendar_events,140_coursework_comms,True,cal_self · all,person_id,uuid,False,core.profiles,True
+comms.calendar_events,140_coursework_comms,True,cal_self · all,title,text,False,,True
+comms.calendar_events,140_coursework_comms,True,cal_self · all,starts_at,timestamptz,False,,True
+comms.calendar_events,140_coursework_comms,True,cal_self · all,ends_at,timestamptz,False,,True
+comms.calendar_events,140_coursework_comms,True,cal_self · all,origin,text,False,,True
+comms.calendar_events,140_coursework_comms,True,cal_self · all,origin_ref,text,False,,False
+opsx.support_cases,150_operations,True,sc_requester · select | sc_staff · select,id,uuid,True,,True
+opsx.support_cases,150_operations,True,sc_requester · select | sc_staff · select,institution_id,uuid,False,core.institutions,False
+opsx.support_cases,150_operations,True,sc_requester · select | sc_staff · select,requester_id,uuid,False,core.profiles,False
+opsx.support_cases,150_operations,True,sc_requester · select | sc_staff · select,channel,text,False,,True
+opsx.support_cases,150_operations,True,sc_requester · select | sc_staff · select,category,text,False,,True
+opsx.support_cases,150_operations,True,sc_requester · select | sc_staff · select,priority,text,False,,True
+opsx.support_cases,150_operations,True,sc_requester · select | sc_staff · select,state,text,False,,True
+opsx.support_cases,150_operations,True,sc_requester · select | sc_staff · select,assignee_id,uuid,False,auth.users,False
+opsx.support_cases,150_operations,True,sc_requester · select | sc_staff · select,subject,text,False,,True
+opsx.support_cases,150_operations,True,sc_requester · select | sc_staff · select,sla_due,timestamptz,False,,False
+opsx.support_cases,150_operations,True,sc_requester · select | sc_staff · select,created_at,timestamptz,False,,True
+opsx.support_cases,150_operations,True,sc_requester · select | sc_staff · select,updated_at,timestamptz,False,,True
+opsx.support_cases,150_operations,True,sc_requester · select | sc_staff · select,resolved_at,timestamptz,False,,False
+opsx.case_events,150_operations,True,ce_staff · select | ce_requester · select,id,bigserial,True,,True
+opsx.case_events,150_operations,True,ce_staff · select | ce_requester · select,case_id,uuid,False,opsx.support_cases,True
+opsx.case_events,150_operations,True,ce_staff · select | ce_requester · select,actor,uuid,False,,False
+opsx.case_events,150_operations,True,ce_staff · select | ce_requester · select,kind,text,False,,True
+opsx.case_events,150_operations,True,ce_staff · select | ce_requester · select,body,text,False,,False
+opsx.case_events,150_operations,True,ce_staff · select | ce_requester · select,meta,jsonb,False,,True
+opsx.case_events,150_operations,True,ce_staff · select | ce_requester · select,at,timestamptz,False,,True
+opsx.support_access_windows,150_operations,True,saw_student · select,id,uuid,True,,True
+opsx.support_access_windows,150_operations,True,saw_student · select,case_id,uuid,False,opsx.support_cases,True
+opsx.support_access_windows,150_operations,True,saw_student · select,student_id,uuid,False,core.profiles,True
+opsx.support_access_windows,150_operations,True,saw_student · select,agent_id,uuid,False,auth.users,True
+opsx.support_access_windows,150_operations,True,saw_student · select,scope,text[],False,,True
+opsx.support_access_windows,150_operations,True,saw_student · select,approved_at,timestamptz,False,,True
+opsx.support_access_windows,150_operations,True,saw_student · select,expires_at,timestamptz,False,,True
+opsx.support_access_windows,150_operations,True,saw_student · select,revoked_at,timestamptz,False,,False
+opsx.privacy_requests,150_operations,True,pr_handler · select | pr_subject · select,id,uuid,True,,True
+opsx.privacy_requests,150_operations,True,pr_handler · select | pr_subject · select,institution_id,uuid,False,core.institutions,True
+opsx.privacy_requests,150_operations,True,pr_handler · select | pr_subject · select,subject_id,uuid,False,core.profiles,False
+opsx.privacy_requests,150_operations,True,pr_handler · select | pr_subject · select,kind,text,False,,True
+opsx.privacy_requests,150_operations,True,pr_handler · select | pr_subject · select,received_via,text,False,,True
+opsx.privacy_requests,150_operations,True,pr_handler · select | pr_subject · select,state,text,False,,True
+opsx.privacy_requests,150_operations,True,pr_handler · select | pr_subject · select,due_at,timestamptz,False,,True
+opsx.privacy_requests,150_operations,True,pr_handler · select | pr_subject · select,legal_basis,text,False,,False
+opsx.privacy_requests,150_operations,True,pr_handler · select | pr_subject · select,decided_by,uuid,False,auth.users,False
+opsx.privacy_requests,150_operations,True,pr_handler · select | pr_subject · select,evidence_ref,text,False,,False
+opsx.privacy_requests,150_operations,True,pr_handler · select | pr_subject · select,created_at,timestamptz,False,,True
+opsx.privacy_requests,150_operations,True,pr_handler · select | pr_subject · select,closed_at,timestamptz,False,,False
+opsx.integrations,150_operations,True,int_view · select,id,uuid,True,,True
+opsx.integrations,150_operations,True,int_view · select,institution_id,uuid,False,core.institutions,True
+opsx.integrations,150_operations,True,int_view · select,kind,text,False,,True
+opsx.integrations,150_operations,True,int_view · select,vendor,text,False,,True
+opsx.integrations,150_operations,True,int_view · select,direction,text,False,,True
+opsx.integrations,150_operations,True,int_view · select,state,text,False,,True
+opsx.integrations,150_operations,True,int_view · select,freshness_limit,interval,False,,True
+opsx.integrations,150_operations,True,int_view · select,secret_ref,text,False,,False
+opsx.integrations,150_operations,True,int_view · select,last_success_at,timestamptz,False,,False
+opsx.integrations,150_operations,True,int_view · select,created_at,timestamptz,False,,True
+opsx.sync_runs,150_operations,True,sr_view · select,id,bigserial,True,,True
+opsx.sync_runs,150_operations,True,sr_view · select,integration_id,uuid,False,opsx.integrations,True
+opsx.sync_runs,150_operations,True,sr_view · select,started_at,timestamptz,False,,True
+opsx.sync_runs,150_operations,True,sr_view · select,finished_at,timestamptz,False,,False
+opsx.sync_runs,150_operations,True,sr_view · select,state,text,False,,True
+opsx.sync_runs,150_operations,True,sr_view · select,records_read,int,False,,True
+opsx.sync_runs,150_operations,True,sr_view · select,records_changed,int,False,,True
+opsx.sync_runs,150_operations,True,sr_view · select,errors,jsonb,False,,True
+opsx.sync_runs,150_operations,True,sr_view · select,watermark,text,False,,False
+opsx.incidents,150_operations,True,inc_view · select,id,uuid,True,,True
+opsx.incidents,150_operations,True,inc_view · select,severity,text,False,,True
+opsx.incidents,150_operations,True,inc_view · select,title,text,False,,True
+opsx.incidents,150_operations,True,inc_view · select,state,text,False,,True
+opsx.incidents,150_operations,True,inc_view · select,affects_student_data,boolean,False,,True
+opsx.incidents,150_operations,True,inc_view · select,tenants,uuid[],False,,True
+opsx.incidents,150_operations,True,inc_view · select,commander_id,uuid,False,auth.users,False
+opsx.incidents,150_operations,True,inc_view · select,started_at,timestamptz,False,,True
+opsx.incidents,150_operations,True,inc_view · select,resolved_at,timestamptz,False,,False
+opsx.incidents,150_operations,True,inc_view · select,notice_due_at,timestamptz,False,,False
+opsx.incident_updates,150_operations,True,iu_view · select,id,bigserial,True,,True
+opsx.incident_updates,150_operations,True,iu_view · select,incident_id,uuid,False,opsx.incidents,True
+opsx.incident_updates,150_operations,True,iu_view · select,audience,text,False,,True
+opsx.incident_updates,150_operations,True,iu_view · select,body,text,False,,True
+opsx.incident_updates,150_operations,True,iu_view · select,approved_by,uuid,False,auth.users,False
+opsx.incident_updates,150_operations,True,iu_view · select,published_at,timestamptz,False,,False
+opsx.access_jobs,150_operations,True,,id,uuid,True,,True
+opsx.access_jobs,150_operations,True,,tenant_id,uuid,False,core.institutions,True
+opsx.access_jobs,150_operations,True,,subject_id,uuid,False,auth.users,True
+opsx.access_jobs,150_operations,True,,resource,text,False,,True
+opsx.access_jobs,150_operations,True,,action,text,False,,True
+opsx.access_jobs,150_operations,True,,state,text,False,,True
+opsx.access_jobs,150_operations,True,,revision,int,False,,True
+opsx.access_jobs,150_operations,True,,generation,int,False,,True
+opsx.access_jobs,150_operations,True,,decision_id,text,False,,False
+opsx.access_jobs,150_operations,True,,grant_id,text,False,,False
+opsx.access_jobs,150_operations,True,,cancellation_requested,boolean,False,,True
+opsx.access_jobs,150_operations,True,,lease_owner,text,False,,False
+opsx.access_jobs,150_operations,True,,lease_until,timestamptz,False,,False
+opsx.access_jobs,150_operations,True,,fencing_token,bigint,False,,True
+opsx.access_jobs,150_operations,True,,next_attempt_at,timestamptz,False,,True
+opsx.access_jobs,150_operations,True,,attempts,int,False,,True
+opsx.access_jobs,150_operations,True,,request_digest,text,False,,True
+opsx.access_jobs,150_operations,True,,created_at,timestamptz,False,,True
+opsx.access_jobs,150_operations,True,,updated_at,timestamptz,False,,True
+biz.accounts,160_company,True,acc_read · select,id,uuid,True,,True
+biz.accounts,160_company,True,acc_read · select,name,text,False,,True
+biz.accounts,160_company,True,acc_read · select,kind,text,False,,True
+biz.accounts,160_company,True,acc_read · select,segment,text,False,,False
+biz.accounts,160_company,True,acc_read · select,country,text,False,,True
+biz.accounts,160_company,True,acc_read · select,state_region,text,False,,False
+biz.accounts,160_company,True,acc_read · select,institution_id,uuid,False,core.institutions,False
+biz.accounts,160_company,True,acc_read · select,owner_id,uuid,False,auth.users,False
+biz.accounts,160_company,True,acc_read · select,stage,text,False,,True
+biz.accounts,160_company,True,acc_read · select,created_at,timestamptz,False,,True
+biz.contacts,160_company,True,con_read · select,id,uuid,True,,True
+biz.contacts,160_company,True,con_read · select,account_id,uuid,False,biz.accounts,True
+biz.contacts,160_company,True,con_read · select,name,text,False,,True
+biz.contacts,160_company,True,con_read · select,title,text,False,,False
+biz.contacts,160_company,True,con_read · select,email,text,False,,False
+biz.contacts,160_company,True,con_read · select,role,text,False,,False
+biz.contacts,160_company,True,con_read · select,consent_follow_up,boolean,False,,True
+biz.opportunities,160_company,True,opp_read · select,id,uuid,True,,True
+biz.opportunities,160_company,True,opp_read · select,account_id,uuid,False,biz.accounts,True
+biz.opportunities,160_company,True,opp_read · select,name,text,False,,True
+biz.opportunities,160_company,True,opp_read · select,stage,text,False,,True
+biz.opportunities,160_company,True,opp_read · select,amount_cents,bigint,False,,False
+biz.opportunities,160_company,True,opp_read · select,close_by,date,False,,False
+biz.opportunities,160_company,True,opp_read · select,lost_reason,text,False,,False
+biz.opportunities,160_company,True,opp_read · select,owner_id,uuid,False,auth.users,False
+biz.opportunities,160_company,True,opp_read · select,created_at,timestamptz,False,,True
+biz.contracts,160_company,True,ctr_read · select,id,uuid,True,,True
+biz.contracts,160_company,True,ctr_read · select,account_id,uuid,False,biz.accounts,True
+biz.contracts,160_company,True,ctr_read · select,template,text,False,,True
+biz.contracts,160_company,True,ctr_read · select,version,text,False,,True
+biz.contracts,160_company,True,ctr_read · select,state,text,False,,True
+biz.contracts,160_company,True,ctr_read · select,non_standard,jsonb,False,,True
+biz.contracts,160_company,True,ctr_read · select,signed_at,date,False,,False
+biz.contracts,160_company,True,ctr_read · select,effective_on,date,False,,False
+biz.contracts,160_company,True,ctr_read · select,ends_on,date,False,,False
+biz.contracts,160_company,True,ctr_read · select,auto_renews,boolean,False,,True
+biz.contracts,160_company,True,ctr_read · select,notice_days,int,False,,False
+biz.contracts,160_company,True,ctr_read · select,renewal_notice_on,date,False,,False
+biz.contracts,160_company,True,ctr_read · select,document_ref,text,False,,False
+biz.contracts,160_company,True,ctr_read · select,owner_id,uuid,False,auth.users,False
+biz.contracts,160_company,True,ctr_read · select,approved_by,uuid,False,auth.users,False
+biz.contracts,160_company,True,ctr_read · select,created_at,timestamptz,False,,True
+biz.pilots,160_company,True,pil_read · select,id,uuid,True,,True
+biz.pilots,160_company,True,pil_read · select,account_id,uuid,False,biz.accounts,True
+biz.pilots,160_company,True,pil_read · select,contract_id,uuid,False,biz.contracts,False
+biz.pilots,160_company,True,pil_read · select,institution_id,uuid,False,core.institutions,False
+biz.pilots,160_company,True,pil_read · select,cohort_desc,text,False,,True
+biz.pilots,160_company,True,pil_read · select,modules,text[],False,,True
+biz.pilots,160_company,True,pil_read · select,starts_on,date,False,,True
+biz.pilots,160_company,True,pil_read · select,ends_on,date,False,,True
+biz.pilots,160_company,True,pil_read · select,state,text,False,,True
+biz.pilots,160_company,True,pil_read · select,results_due,date,False,,False
+biz.pilot_measures,160_company,True,pm_read · select,id,uuid,True,,True
+biz.pilot_measures,160_company,True,pm_read · select,pilot_id,uuid,False,biz.pilots,True
+biz.pilot_measures,160_company,True,pm_read · select,name,text,False,,True
+biz.pilot_measures,160_company,True,pm_read · select,baseline,numeric,False,,False
+biz.pilot_measures,160_company,True,pm_read · select,target,numeric,False,,False
+biz.pilot_measures,160_company,True,pm_read · select,unit,text,False,,False
+biz.pilot_measures,160_company,True,pm_read · select,data_source,text,False,,True
+biz.pilot_measures,160_company,True,pm_read · select,signed_off_by,text,False,,False
+biz.pilot_measures,160_company,True,pm_read · select,result,numeric,False,,False
+biz.pilot_measures,160_company,True,pm_read · select,result_state,text,False,,True
+biz.partner_apps,160_company,True,pa_read · select,id,uuid,True,,True
+biz.partner_apps,160_company,True,pa_read · select,account_id,uuid,False,biz.accounts,True
+biz.partner_apps,160_company,True,pa_read · select,name,text,False,,True
+biz.partner_apps,160_company,True,pa_read · select,scopes,text[],False,,True
+biz.partner_apps,160_company,True,pa_read · select,state,text,False,,True
+biz.partner_apps,160_company,True,pa_read · select,reviewed_by,uuid,False,auth.users,False
+biz.partner_apps,160_company,True,pa_read · select,reviewed_at,timestamptz,False,,False
+biz.app_installs,160_company,True,ai_read · select,app_id,uuid,True,biz.partner_apps,True
+biz.app_installs,160_company,True,ai_read · select,institution_id,uuid,True,core.institutions,True
+biz.app_installs,160_company,True,ai_read · select,approved_by,uuid,False,auth.users,True
+biz.app_installs,160_company,True,ai_read · select,approved_at,timestamptz,False,,True
+biz.app_installs,160_company,True,ai_read · select,revoked_at,timestamptz,False,,False
+biz.subprocessors,160_company,True,sp_public · select,id,uuid,True,,True
+biz.subprocessors,160_company,True,sp_public · select,vendor_account_id,uuid,False,biz.accounts,False
+biz.subprocessors,160_company,True,sp_public · select,name,text,False,,True
+biz.subprocessors,160_company,True,sp_public · select,purpose,text,False,,True
+biz.subprocessors,160_company,True,sp_public · select,location,text,False,,True
+biz.subprocessors,160_company,True,sp_public · select,touches_student_data,boolean,False,,True
+biz.subprocessors,160_company,True,sp_public · select,dpa_contract_id,uuid,False,biz.contracts,False
+biz.subprocessors,160_company,True,sp_public · select,added_on,date,False,,True
+biz.subprocessors,160_company,True,sp_public · select,notice_sent_on,date,False,,False
+biz.subprocessors,160_company,True,sp_public · select,removed_on,date,False,,False
+core.workspaces,170_ownership_learning_docs_workflow_commerce,True,ws_personal · select | ws_org · select,id,uuid,True,,True
+core.workspaces,170_ownership_learning_docs_workflow_commerce,True,ws_personal · select | ws_org · select,kind,text,False,,True
+core.workspaces,170_ownership_learning_docs_workflow_commerce,True,ws_personal · select | ws_org · select,organization_id,uuid,False,core.institutions,False
+core.workspaces,170_ownership_learning_docs_workflow_commerce,True,ws_personal · select | ws_org · select,owner_user_id,uuid,False,auth.users,False
+core.workspaces,170_ownership_learning_docs_workflow_commerce,True,ws_personal · select | ws_org · select,created_at,timestamptz,False,,True
+acad.course_versions,170_ownership_learning_docs_workflow_commerce,True,cv_read · select,id,uuid,True,,True
+acad.course_versions,170_ownership_learning_docs_workflow_commerce,True,cv_read · select,course_id,uuid,False,acad.courses,True
+acad.course_versions,170_ownership_learning_docs_workflow_commerce,True,cv_read · select,title,text,False,,True
+acad.course_versions,170_ownership_learning_docs_workflow_commerce,True,cv_read · select,credits,"numeric(4,1)",False,,True
+acad.course_versions,170_ownership_learning_docs_workflow_commerce,True,cv_read · select,effective_from,date,False,,True
+acad.course_versions,170_ownership_learning_docs_workflow_commerce,True,cv_read · select,effective_until,date,False,,False
+acad.teaching_assignments,170_ownership_learning_docs_workflow_commerce,True,ta_read · select,section_id,uuid,True,acad.sections,True
+acad.teaching_assignments,170_ownership_learning_docs_workflow_commerce,True,ta_read · select,institution_id,uuid,False,,True
+acad.teaching_assignments,170_ownership_learning_docs_workflow_commerce,True,ta_read · select,person_id,uuid,True,core.profiles,True
+acad.teaching_assignments,170_ownership_learning_docs_workflow_commerce,True,ta_read · select,responsibility,text,True,,True
+acad.teaching_assignments,170_ownership_learning_docs_workflow_commerce,True,ta_read · select,starts_on,date,False,,True
+acad.teaching_assignments,170_ownership_learning_docs_workflow_commerce,True,ta_read · select,ends_on,date,False,,False
+acad.teaching_assignments,170_ownership_learning_docs_workflow_commerce,True,ta_read · select,source,text,False,,True
+learn.modules,170_ownership_learning_docs_workflow_commerce,True,mod_student · select | mod_teacher · select,id,uuid,True,,True
+learn.modules,170_ownership_learning_docs_workflow_commerce,True,mod_student · select | mod_teacher · select,section_id,uuid,False,acad.sections,True
+learn.modules,170_ownership_learning_docs_workflow_commerce,True,mod_student · select | mod_teacher · select,institution_id,uuid,False,,True
+learn.modules,170_ownership_learning_docs_workflow_commerce,True,mod_student · select | mod_teacher · select,title,text,False,,True
+learn.modules,170_ownership_learning_docs_workflow_commerce,True,mod_student · select | mod_teacher · select,position,int,False,,True
+learn.modules,170_ownership_learning_docs_workflow_commerce,True,mod_student · select | mod_teacher · select,state,text,False,,True
+learn.modules,170_ownership_learning_docs_workflow_commerce,True,mod_student · select | mod_teacher · select,publish_at,timestamptz,False,,False
+learn.content_items,170_ownership_learning_docs_workflow_commerce,True,ci_student · select | ci_teacher · select,id,uuid,True,,True
+learn.content_items,170_ownership_learning_docs_workflow_commerce,True,ci_student · select | ci_teacher · select,module_id,uuid,False,learn.modules,True
+learn.content_items,170_ownership_learning_docs_workflow_commerce,True,ci_student · select | ci_teacher · select,institution_id,uuid,False,,True
+learn.content_items,170_ownership_learning_docs_workflow_commerce,True,ci_student · select | ci_teacher · select,kind,text,False,,True
+learn.content_items,170_ownership_learning_docs_workflow_commerce,True,ci_student · select | ci_teacher · select,title,text,False,,True
+learn.content_items,170_ownership_learning_docs_workflow_commerce,True,ci_student · select | ci_teacher · select,body,text,False,,False
+learn.content_items,170_ownership_learning_docs_workflow_commerce,True,ci_student · select | ci_teacher · select,file_id,uuid,False,comms.files,False
+learn.content_items,170_ownership_learning_docs_workflow_commerce,True,ci_student · select | ci_teacher · select,url,text,False,,False
+learn.content_items,170_ownership_learning_docs_workflow_commerce,True,ci_student · select | ci_teacher · select,state,text,False,,True
+learn.content_items,170_ownership_learning_docs_workflow_commerce,True,ci_student · select | ci_teacher · select,position,int,False,,True
+learn.rubrics,170_ownership_learning_docs_workflow_commerce,True,rub_read · select,id,uuid,True,,True
+learn.rubrics,170_ownership_learning_docs_workflow_commerce,True,rub_read · select,section_id,uuid,False,acad.sections,True
+learn.rubrics,170_ownership_learning_docs_workflow_commerce,True,rub_read · select,institution_id,uuid,False,,True
+learn.rubrics,170_ownership_learning_docs_workflow_commerce,True,rub_read · select,version,int,False,,True
+learn.rubrics,170_ownership_learning_docs_workflow_commerce,True,rub_read · select,criteria,jsonb,False,,True
+learn.submissions,170_ownership_learning_docs_workflow_commerce,True,sub_self · select | sub_teacher · select,id,uuid,True,,True
+learn.submissions,170_ownership_learning_docs_workflow_commerce,True,sub_self · select | sub_teacher · select,assignment_id,uuid,False,work.assignments,True
+learn.submissions,170_ownership_learning_docs_workflow_commerce,True,sub_self · select | sub_teacher · select,institution_id,uuid,False,,True
+learn.submissions,170_ownership_learning_docs_workflow_commerce,True,sub_self · select | sub_teacher · select,student_id,uuid,False,core.profiles,True
+learn.submissions,170_ownership_learning_docs_workflow_commerce,True,sub_self · select | sub_teacher · select,attempt,int,False,,True
+learn.submissions,170_ownership_learning_docs_workflow_commerce,True,sub_self · select | sub_teacher · select,state,text,False,,True
+learn.submissions,170_ownership_learning_docs_workflow_commerce,True,sub_self · select | sub_teacher · select,submitted_at,timestamptz,False,,False
+learn.submissions,170_ownership_learning_docs_workflow_commerce,True,sub_self · select | sub_teacher · select,receipt_code,text,False,,False
+learn.submissions,170_ownership_learning_docs_workflow_commerce,True,sub_self · select | sub_teacher · select,idempotency_key,text,False,,False
+learn.submission_files,170_ownership_learning_docs_workflow_commerce,True,sf_read · select,submission_id,uuid,True,learn.submissions,True
+learn.submission_files,170_ownership_learning_docs_workflow_commerce,True,sf_read · select,file_id,uuid,True,comms.files,True
+learn.assessments,170_ownership_learning_docs_workflow_commerce,True,as_read · select,id,uuid,True,,True
+learn.assessments,170_ownership_learning_docs_workflow_commerce,True,as_read · select,section_id,uuid,False,acad.sections,True
+learn.assessments,170_ownership_learning_docs_workflow_commerce,True,as_read · select,institution_id,uuid,False,,True
+learn.assessments,170_ownership_learning_docs_workflow_commerce,True,as_read · select,title,text,False,,True
+learn.assessments,170_ownership_learning_docs_workflow_commerce,True,as_read · select,config,jsonb,False,,True
+learn.assessments,170_ownership_learning_docs_workflow_commerce,True,as_read · select,version,int,False,,True
+learn.assessments,170_ownership_learning_docs_workflow_commerce,True,as_read · select,opens_at,timestamptz,False,,False
+learn.assessments,170_ownership_learning_docs_workflow_commerce,True,as_read · select,closes_at,timestamptz,False,,False
+learn.assessment_attempts,170_ownership_learning_docs_workflow_commerce,True,at_self · select | at_teacher · select,id,uuid,True,,True
+learn.assessment_attempts,170_ownership_learning_docs_workflow_commerce,True,at_self · select | at_teacher · select,assessment_id,uuid,False,learn.assessments,True
+learn.assessment_attempts,170_ownership_learning_docs_workflow_commerce,True,at_self · select | at_teacher · select,student_id,uuid,False,core.profiles,True
+learn.assessment_attempts,170_ownership_learning_docs_workflow_commerce,True,at_self · select | at_teacher · select,state,text,False,,True
+learn.assessment_attempts,170_ownership_learning_docs_workflow_commerce,True,at_self · select | at_teacher · select,started_at,timestamptz,False,,True
+learn.assessment_attempts,170_ownership_learning_docs_workflow_commerce,True,at_self · select | at_teacher · select,submitted_at,timestamptz,False,,False
+learn.assessment_attempts,170_ownership_learning_docs_workflow_commerce,True,at_self · select | at_teacher · select,accommodation_minutes,int,False,,True
+learn.grade_entries,170_ownership_learning_docs_workflow_commerce,True,ge_self · select | ge_teacher · select,id,uuid,True,,True
+learn.grade_entries,170_ownership_learning_docs_workflow_commerce,True,ge_self · select | ge_teacher · select,assignment_id,uuid,False,work.assignments,True
+learn.grade_entries,170_ownership_learning_docs_workflow_commerce,True,ge_self · select | ge_teacher · select,student_id,uuid,False,core.profiles,True
+learn.grade_entries,170_ownership_learning_docs_workflow_commerce,True,ge_self · select | ge_teacher · select,score,"numeric(6,2)",False,,False
+learn.grade_entries,170_ownership_learning_docs_workflow_commerce,True,ge_self · select | ge_teacher · select,state,text,False,,True
+learn.grade_entries,170_ownership_learning_docs_workflow_commerce,True,ge_self · select | ge_teacher · select,ai_suggested,boolean,False,,True
+learn.grade_entries,170_ownership_learning_docs_workflow_commerce,True,ge_self · select | ge_teacher · select,reviewed_by,uuid,False,core.profiles,False
+learn.grade_entries,170_ownership_learning_docs_workflow_commerce,True,ge_self · select | ge_teacher · select,updated_at,timestamptz,False,,True
+learn.grade_revisions,170_ownership_learning_docs_workflow_commerce,True,gr_teacher · select,id,bigserial,True,,True
+learn.grade_revisions,170_ownership_learning_docs_workflow_commerce,True,gr_teacher · select,grade_entry_id,uuid,False,learn.grade_entries,True
+learn.grade_revisions,170_ownership_learning_docs_workflow_commerce,True,gr_teacher · select,prior_score,"numeric(6,2)",False,,False
+learn.grade_revisions,170_ownership_learning_docs_workflow_commerce,True,gr_teacher · select,new_score,"numeric(6,2)",False,,False
+learn.grade_revisions,170_ownership_learning_docs_workflow_commerce,True,gr_teacher · select,reason,text,False,,True
+learn.grade_revisions,170_ownership_learning_docs_workflow_commerce,True,gr_teacher · select,actor,uuid,False,,True
+learn.grade_revisions,170_ownership_learning_docs_workflow_commerce,True,gr_teacher · select,at,timestamptz,False,,True
+learn.feedback,170_ownership_learning_docs_workflow_commerce,True,fb_self · select | fb_teacher · select,id,uuid,True,,True
+learn.feedback,170_ownership_learning_docs_workflow_commerce,True,fb_self · select | fb_teacher · select,submission_id,uuid,False,learn.submissions,True
+learn.feedback,170_ownership_learning_docs_workflow_commerce,True,fb_self · select | fb_teacher · select,author_id,uuid,False,core.profiles,True
+learn.feedback,170_ownership_learning_docs_workflow_commerce,True,fb_self · select | fb_teacher · select,body,text,False,,True
+learn.feedback,170_ownership_learning_docs_workflow_commerce,True,fb_self · select | fb_teacher · select,visibility,text,False,,True
+learn.feedback,170_ownership_learning_docs_workflow_commerce,True,fb_self · select | fb_teacher · select,ai_suggested,boolean,False,,True
+learn.feedback,170_ownership_learning_docs_workflow_commerce,True,fb_self · select | fb_teacher · select,created_at,timestamptz,False,,True
+learn.announcements,170_ownership_learning_docs_workflow_commerce,True,an_student · select | an_teacher · select,id,uuid,True,,True
+learn.announcements,170_ownership_learning_docs_workflow_commerce,True,an_student · select | an_teacher · select,section_id,uuid,False,acad.sections,True
+learn.announcements,170_ownership_learning_docs_workflow_commerce,True,an_student · select | an_teacher · select,institution_id,uuid,False,,True
+learn.announcements,170_ownership_learning_docs_workflow_commerce,True,an_student · select | an_teacher · select,author_id,uuid,False,core.profiles,True
+learn.announcements,170_ownership_learning_docs_workflow_commerce,True,an_student · select | an_teacher · select,title,text,False,,True
+learn.announcements,170_ownership_learning_docs_workflow_commerce,True,an_student · select | an_teacher · select,body,text,False,,True
+learn.announcements,170_ownership_learning_docs_workflow_commerce,True,an_student · select | an_teacher · select,state,text,False,,True
+learn.announcements,170_ownership_learning_docs_workflow_commerce,True,an_student · select | an_teacher · select,publish_at,timestamptz,False,,False
+docs.documents,170_ownership_learning_docs_workflow_commerce,True,doc_read · select,id,uuid,True,,True
+docs.documents,170_ownership_learning_docs_workflow_commerce,True,doc_read · select,workspace_id,uuid,False,core.workspaces,True
+docs.documents,170_ownership_learning_docs_workflow_commerce,True,doc_read · select,title,text,False,,True
+docs.documents,170_ownership_learning_docs_workflow_commerce,True,doc_read · select,type,text,False,,True
+docs.documents,170_ownership_learning_docs_workflow_commerce,True,doc_read · select,owner_id,uuid,False,auth.users,True
+docs.documents,170_ownership_learning_docs_workflow_commerce,True,doc_read · select,department,text,False,,False
+docs.documents,170_ownership_learning_docs_workflow_commerce,True,doc_read · select,classification,text,False,,True
+docs.documents,170_ownership_learning_docs_workflow_commerce,True,doc_read · select,status,text,False,,True
+docs.documents,170_ownership_learning_docs_workflow_commerce,True,doc_read · select,effective_on,date,False,,False
+docs.documents,170_ownership_learning_docs_workflow_commerce,True,doc_read · select,review_on,date,False,,False
+docs.documents,170_ownership_learning_docs_workflow_commerce,True,doc_read · select,expires_on,date,False,,False
+docs.documents,170_ownership_learning_docs_workflow_commerce,True,doc_read · select,retention_rule_id,uuid,False,,False
+docs.documents,170_ownership_learning_docs_workflow_commerce,True,doc_read · select,legal_hold,boolean,False,,True
+docs.documents,170_ownership_learning_docs_workflow_commerce,True,doc_read · select,created_at,timestamptz,False,,True
+docs.document_versions,170_ownership_learning_docs_workflow_commerce,True,dv_read · select,id,uuid,True,,True
+docs.document_versions,170_ownership_learning_docs_workflow_commerce,True,dv_read · select,document_id,uuid,False,docs.documents,True
+docs.document_versions,170_ownership_learning_docs_workflow_commerce,True,dv_read · select,version,int,False,,True
+docs.document_versions,170_ownership_learning_docs_workflow_commerce,True,dv_read · select,storage_ref,text,False,,True
+docs.document_versions,170_ownership_learning_docs_workflow_commerce,True,dv_read · select,created_by,uuid,False,,True
+docs.document_versions,170_ownership_learning_docs_workflow_commerce,True,dv_read · select,created_at,timestamptz,False,,True
+docs.templates,170_ownership_learning_docs_workflow_commerce,True,,id,uuid,True,,True
+docs.templates,170_ownership_learning_docs_workflow_commerce,True,,code,text,False,,True
+docs.templates,170_ownership_learning_docs_workflow_commerce,True,,version,int,False,,True
+docs.templates,170_ownership_learning_docs_workflow_commerce,True,,body_ref,text,False,,True
+docs.contract_documents,170_ownership_learning_docs_workflow_commerce,True,,contract_id,uuid,True,biz.contracts,True
+docs.contract_documents,170_ownership_learning_docs_workflow_commerce,True,,document_id,uuid,True,docs.documents,True
+docs.pilot_documents,170_ownership_learning_docs_workflow_commerce,True,,pilot_id,uuid,True,biz.pilots,True
+docs.pilot_documents,170_ownership_learning_docs_workflow_commerce,True,,document_id,uuid,True,docs.documents,True
+docs.case_documents,170_ownership_learning_docs_workflow_commerce,True,,case_id,uuid,True,opsx.support_cases,True
+docs.case_documents,170_ownership_learning_docs_workflow_commerce,True,,document_id,uuid,True,docs.documents,True
+docs.signature_requests,170_ownership_learning_docs_workflow_commerce,True,,id,uuid,True,,True
+docs.signature_requests,170_ownership_learning_docs_workflow_commerce,True,,document_version_id,uuid,False,docs.document_versions,True
+docs.signature_requests,170_ownership_learning_docs_workflow_commerce,True,,signer_email,text,False,,True
+docs.signature_requests,170_ownership_learning_docs_workflow_commerce,True,,signer_name,text,False,,False
+docs.signature_requests,170_ownership_learning_docs_workflow_commerce,True,,sign_order,int,False,,True
+docs.signature_requests,170_ownership_learning_docs_workflow_commerce,True,,state,text,False,,True
+docs.signature_requests,170_ownership_learning_docs_workflow_commerce,True,,requested_by,uuid,False,,True
+docs.signature_requests,170_ownership_learning_docs_workflow_commerce,True,,requested_at,timestamptz,False,,True
+docs.signature_evidence,170_ownership_learning_docs_workflow_commerce,True,,id,uuid,True,,True
+docs.signature_evidence,170_ownership_learning_docs_workflow_commerce,True,,signature_request_id,uuid,False,docs.signature_requests,True
+docs.signature_evidence,170_ownership_learning_docs_workflow_commerce,True,,document_version_id,uuid,False,docs.document_versions,True
+docs.signature_evidence,170_ownership_learning_docs_workflow_commerce,True,,provider,text,False,,True
+docs.signature_evidence,170_ownership_learning_docs_workflow_commerce,True,,provider_ref,text,False,,True
+docs.signature_evidence,170_ownership_learning_docs_workflow_commerce,True,,signed_at,timestamptz,False,,True
+docs.signature_evidence,170_ownership_learning_docs_workflow_commerce,True,,ip_hash,text,False,,False
+docs.signature_evidence,170_ownership_learning_docs_workflow_commerce,True,,certificate_ref,text,False,,False
+docs.retention_rules,170_ownership_learning_docs_workflow_commerce,True,,id,uuid,True,,True
+docs.retention_rules,170_ownership_learning_docs_workflow_commerce,True,,code,text,False,,True
+docs.retention_rules,170_ownership_learning_docs_workflow_commerce,True,,keep_for,interval,False,,True
+docs.retention_rules,170_ownership_learning_docs_workflow_commerce,True,,basis,text,False,,True
+docs.legal_holds,170_ownership_learning_docs_workflow_commerce,True,,id,uuid,True,,True
+docs.legal_holds,170_ownership_learning_docs_workflow_commerce,True,,document_id,uuid,False,docs.documents,True
+docs.legal_holds,170_ownership_learning_docs_workflow_commerce,True,,reason,text,False,,True
+docs.legal_holds,170_ownership_learning_docs_workflow_commerce,True,,placed_by,uuid,False,,True
+docs.legal_holds,170_ownership_learning_docs_workflow_commerce,True,,placed_at,timestamptz,False,,True
+docs.legal_holds,170_ownership_learning_docs_workflow_commerce,True,,released_at,timestamptz,False,,False
+docs.acknowledgments,170_ownership_learning_docs_workflow_commerce,True,ack_self · select,document_version_id,uuid,True,docs.document_versions,True
+docs.acknowledgments,170_ownership_learning_docs_workflow_commerce,True,ack_self · select,person_id,uuid,True,auth.users,True
+docs.acknowledgments,170_ownership_learning_docs_workflow_commerce,True,ack_self · select,at,timestamptz,False,,True
+workflow.definitions,170_ownership_learning_docs_workflow_commerce,True,wd_read · select,id,uuid,True,,True
+workflow.definitions,170_ownership_learning_docs_workflow_commerce,True,wd_read · select,code,text,False,,True
+workflow.definitions,170_ownership_learning_docs_workflow_commerce,True,wd_read · select,version,int,False,,True
+workflow.definitions,170_ownership_learning_docs_workflow_commerce,True,wd_read · select,states,text[],False,,True
+workflow.definitions,170_ownership_learning_docs_workflow_commerce,True,wd_read · select,transitions,jsonb,False,,True
+workflow.definitions,170_ownership_learning_docs_workflow_commerce,True,wd_read · select,published_at,timestamptz,False,,False
+workflow.instances,170_ownership_learning_docs_workflow_commerce,True,wi_part · select,id,uuid,True,,True
+workflow.instances,170_ownership_learning_docs_workflow_commerce,True,wi_part · select,definition_id,uuid,False,workflow.definitions,True
+workflow.instances,170_ownership_learning_docs_workflow_commerce,True,wi_part · select,workspace_id,uuid,False,core.workspaces,True
+workflow.instances,170_ownership_learning_docs_workflow_commerce,True,wi_part · select,source_table,text,False,,True
+workflow.instances,170_ownership_learning_docs_workflow_commerce,True,wi_part · select,source_id,uuid,False,,True
+workflow.instances,170_ownership_learning_docs_workflow_commerce,True,wi_part · select,state,text,False,,True
+workflow.instances,170_ownership_learning_docs_workflow_commerce,True,wi_part · select,revision,int,False,,True
+workflow.instances,170_ownership_learning_docs_workflow_commerce,True,wi_part · select,started_by,uuid,False,,True
+workflow.instances,170_ownership_learning_docs_workflow_commerce,True,wi_part · select,started_at,timestamptz,False,,True
+workflow.instances,170_ownership_learning_docs_workflow_commerce,True,wi_part · select,closed_at,timestamptz,False,,False
+workflow.step_instances,170_ownership_learning_docs_workflow_commerce,True,ws_part · select,id,uuid,True,,True
+workflow.step_instances,170_ownership_learning_docs_workflow_commerce,True,ws_part · select,instance_id,uuid,False,workflow.instances,True
+workflow.step_instances,170_ownership_learning_docs_workflow_commerce,True,ws_part · select,step,text,False,,True
+workflow.step_instances,170_ownership_learning_docs_workflow_commerce,True,ws_part · select,assignee_cap,text,False,,False
+workflow.step_instances,170_ownership_learning_docs_workflow_commerce,True,ws_part · select,assignee_id,uuid,False,auth.users,False
+workflow.step_instances,170_ownership_learning_docs_workflow_commerce,True,ws_part · select,due_at,timestamptz,False,,False
+workflow.step_instances,170_ownership_learning_docs_workflow_commerce,True,ws_part · select,outcome,text,False,,False
+workflow.step_instances,170_ownership_learning_docs_workflow_commerce,True,ws_part · select,completed_at,timestamptz,False,,False
+workflow.approvals,170_ownership_learning_docs_workflow_commerce,True,,id,uuid,True,,True
+workflow.approvals,170_ownership_learning_docs_workflow_commerce,True,,step_id,uuid,False,workflow.step_instances,True
+workflow.approvals,170_ownership_learning_docs_workflow_commerce,True,,approver_id,uuid,False,,True
+workflow.approvals,170_ownership_learning_docs_workflow_commerce,True,,decision,text,False,,True
+workflow.approvals,170_ownership_learning_docs_workflow_commerce,True,,reason,text,False,,False
+workflow.approvals,170_ownership_learning_docs_workflow_commerce,True,,document_version_id,uuid,False,docs.document_versions,False
+workflow.approvals,170_ownership_learning_docs_workflow_commerce,True,,at,timestamptz,False,,True
+workflow.transition_history,170_ownership_learning_docs_workflow_commerce,True,wt_part · select,id,bigserial,True,,True
+workflow.transition_history,170_ownership_learning_docs_workflow_commerce,True,wt_part · select,instance_id,uuid,False,workflow.instances,True
+workflow.transition_history,170_ownership_learning_docs_workflow_commerce,True,wt_part · select,from_state,text,False,,False
+workflow.transition_history,170_ownership_learning_docs_workflow_commerce,True,wt_part · select,to_state,text,False,,True
+workflow.transition_history,170_ownership_learning_docs_workflow_commerce,True,wt_part · select,actor,uuid,False,,False
+workflow.transition_history,170_ownership_learning_docs_workflow_commerce,True,wt_part · select,reason,text,False,,False
+workflow.transition_history,170_ownership_learning_docs_workflow_commerce,True,wt_part · select,at,timestamptz,False,,True
+commerce.products,170_ownership_learning_docs_workflow_commerce,True,cp_read · select,id,uuid,True,,True
+commerce.products,170_ownership_learning_docs_workflow_commerce,True,cp_read · select,code,text,False,,True
+commerce.products,170_ownership_learning_docs_workflow_commerce,True,cp_read · select,name,text,False,,True
+commerce.plans,170_ownership_learning_docs_workflow_commerce,True,cpl_read · select,id,uuid,True,,True
+commerce.plans,170_ownership_learning_docs_workflow_commerce,True,cpl_read · select,product_id,uuid,False,commerce.products,True
+commerce.plans,170_ownership_learning_docs_workflow_commerce,True,cpl_read · select,code,text,False,,True
+commerce.price_versions,170_ownership_learning_docs_workflow_commerce,True,cpv_read · select,id,uuid,True,,True
+commerce.price_versions,170_ownership_learning_docs_workflow_commerce,True,cpv_read · select,plan_id,uuid,False,commerce.plans,True
+commerce.price_versions,170_ownership_learning_docs_workflow_commerce,True,cpv_read · select,unit,text,False,,True
+commerce.price_versions,170_ownership_learning_docs_workflow_commerce,True,cpv_read · select,unit_price_cents,bigint,False,,True
+commerce.price_versions,170_ownership_learning_docs_workflow_commerce,True,cpv_read · select,effective_from,date,False,,True
+commerce.price_versions,170_ownership_learning_docs_workflow_commerce,True,cpv_read · select,effective_until,date,False,,False
+commerce.account_organization_links,170_ownership_learning_docs_workflow_commerce,True,aol_read · select,account_id,uuid,True,biz.accounts,True
+commerce.account_organization_links,170_ownership_learning_docs_workflow_commerce,True,aol_read · select,institution_id,uuid,True,core.institutions,True
+commerce.account_organization_links,170_ownership_learning_docs_workflow_commerce,True,aol_read · select,relation,text,False,,True
+commerce.subscriptions,170_ownership_learning_docs_workflow_commerce,True,sub_staff · select,id,uuid,True,,True
+commerce.subscriptions,170_ownership_learning_docs_workflow_commerce,True,sub_staff · select,account_id,uuid,False,biz.accounts,True
+commerce.subscriptions,170_ownership_learning_docs_workflow_commerce,True,sub_staff · select,contract_id,uuid,False,biz.contracts,False
+commerce.subscriptions,170_ownership_learning_docs_workflow_commerce,True,sub_staff · select,state,text,False,,True
+commerce.subscriptions,170_ownership_learning_docs_workflow_commerce,True,sub_staff · select,starts_on,date,False,,True
+commerce.subscriptions,170_ownership_learning_docs_workflow_commerce,True,sub_staff · select,ends_on,date,False,,False
+commerce.subscriptions,170_ownership_learning_docs_workflow_commerce,True,sub_staff · select,activation_conditions,jsonb,False,,True
+commerce.subscriptions,170_ownership_learning_docs_workflow_commerce,True,sub_staff · select,activated_at,timestamptz,False,,False
+commerce.subscription_items,170_ownership_learning_docs_workflow_commerce,True,si_staff · select,id,uuid,True,,True
+commerce.subscription_items,170_ownership_learning_docs_workflow_commerce,True,si_staff · select,subscription_id,uuid,False,commerce.subscriptions,True
+commerce.subscription_items,170_ownership_learning_docs_workflow_commerce,True,si_staff · select,price_version_id,uuid,False,commerce.price_versions,True
+commerce.subscription_items,170_ownership_learning_docs_workflow_commerce,True,si_staff · select,quantity,int,False,,True
+commerce.entitlements,170_ownership_learning_docs_workflow_commerce,True,ent_staff · select,id,uuid,True,,True
+commerce.entitlements,170_ownership_learning_docs_workflow_commerce,True,ent_staff · select,subscription_id,uuid,False,commerce.subscriptions,True
+commerce.entitlements,170_ownership_learning_docs_workflow_commerce,True,ent_staff · select,institution_id,uuid,False,core.institutions,True
+commerce.entitlements,170_ownership_learning_docs_workflow_commerce,True,ent_staff · select,feature,text,False,,True
+commerce.entitlements,170_ownership_learning_docs_workflow_commerce,True,ent_staff · select,quota,int,False,,False
+commerce.entitlements,170_ownership_learning_docs_workflow_commerce,True,ent_staff · select,effective_from,date,False,,True
+commerce.entitlements,170_ownership_learning_docs_workflow_commerce,True,ent_staff · select,effective_until,date,False,,False
+docs.version_states,180_document_state_machine,True,vs_read · select,version_id,uuid,True,docs.document_versions,True
+docs.version_states,180_document_state_machine,True,vs_read · select,document_id,uuid,False,docs.documents,True
+docs.version_states,180_document_state_machine,True,vs_read · select,state,text,False,,True
+docs.version_states,180_document_state_machine,True,vs_read · select,revision,int,False,,True
+docs.version_states,180_document_state_machine,True,vs_read · select,requires_signature,boolean,False,,True
+docs.version_states,180_document_state_machine,True,vs_read · select,updated_at,timestamptz,False,,True
+docs.review_tasks,180_document_state_machine,True,rt_read · select,id,uuid,True,,True
+docs.review_tasks,180_document_state_machine,True,rt_read · select,version_id,uuid,False,docs.document_versions,True
+docs.review_tasks,180_document_state_machine,True,rt_read · select,reviewer_id,uuid,False,auth.users,True
+docs.review_tasks,180_document_state_machine,True,rt_read · select,required,boolean,False,,True
+docs.review_tasks,180_document_state_machine,True,rt_read · select,status,text,False,,True
+docs.review_tasks,180_document_state_machine,True,rt_read · select,due_at,timestamptz,False,,False
+docs.transition_events,180_document_state_machine,True,te_read · select,id,bigserial,True,,True
+docs.transition_events,180_document_state_machine,True,te_read · select,version_id,uuid,False,docs.document_versions,True
+docs.transition_events,180_document_state_machine,True,te_read · select,from_state,text,False,,True
+docs.transition_events,180_document_state_machine,True,te_read · select,to_state,text,False,,True
+docs.transition_events,180_document_state_machine,True,te_read · select,action,text,False,,True
+docs.transition_events,180_document_state_machine,True,te_read · select,actor,uuid,False,,True
+docs.transition_events,180_document_state_machine,True,te_read · select,reason,text,False,,False
+docs.transition_events,180_document_state_machine,True,te_read · select,idempotency_key,text,False,,True
+docs.transition_events,180_document_state_machine,True,te_read · select,occurred_at,timestamptz,False,,True
+docs.command_receipts,180_document_state_machine,True,,actor,uuid,True,,True
+docs.command_receipts,180_document_state_machine,True,,idempotency_key,text,True,,True
+docs.command_receipts,180_document_state_machine,True,,result,jsonb,False,,True
+docs.command_receipts,180_document_state_machine,True,,at,timestamptz,False,,True
+docs.audiences,190_document_gaps,True,aud_self · select,document_id,uuid,True,docs.documents,True
+docs.audiences,190_document_gaps,True,aud_self · select,person_id,uuid,True,auth.users,True
+docs.audiences,190_document_gaps,True,aud_self · select,purpose,text,False,,True
+docs.audiences,190_document_gaps,True,aud_self · select,granted_by,uuid,False,,True
+docs.audiences,190_document_gaps,True,aud_self · select,granted_at,timestamptz,False,,True
+docs.audiences,190_document_gaps,True,aud_self · select,expires_at,timestamptz,False,,False
+docs.audiences,190_document_gaps,True,aud_self · select,revoked_at,timestamptz,False,,False
+docs.external_parties,190_document_gaps,True,ep_staff · select,id,uuid,True,,True
+docs.external_parties,190_document_gaps,True,ep_staff · select,account_id,uuid,False,biz.accounts,False
+docs.external_parties,190_document_gaps,True,ep_staff · select,name,text,False,,True
+docs.external_parties,190_document_gaps,True,ep_staff · select,email,text,False,,True
+docs.external_parties,190_document_gaps,True,ep_staff · select,organization,text,False,,False
+docs.external_parties,190_document_gaps,True,ep_staff · select,verified_by,text,False,,False
+docs.external_parties,190_document_gaps,True,ep_staff · select,verified_at,timestamptz,False,,False
+docs.provider_events,190_document_gaps,True,,provider,text,True,,True
+docs.provider_events,190_document_gaps,True,,event_id,text,True,,True
+docs.provider_events,190_document_gaps,True,,received_at,timestamptz,False,,True
+docs.provider_events,190_document_gaps,True,,outcome,text,False,,True
+docs.retention_actions,190_document_gaps,True,ra_staff · select,id,bigserial,True,,True
+docs.retention_actions,190_document_gaps,True,ra_staff · select,document_id,uuid,False,docs.documents,True
+docs.retention_actions,190_document_gaps,True,ra_staff · select,due_on,date,False,,True
+docs.retention_actions,190_document_gaps,True,ra_staff · select,action,text,False,,True
+docs.retention_actions,190_document_gaps,True,ra_staff · select,state,text,False,,True
+docs.retention_actions,190_document_gaps,True,ra_staff · select,executed_at,timestamptz,False,,False
+docs.retention_actions,190_document_gaps,True,ra_staff · select,evidence_ref,text,False,,False
+iam.organization_units,200_institution_domains,True,ou_read · select,id,uuid,True,,True
+iam.organization_units,200_institution_domains,True,ou_read · select,institution_id,uuid,False,core.institutions,True
+iam.organization_units,200_institution_domains,True,ou_read · select,parent_id,uuid,False,iam.organization_units,False
+iam.organization_units,200_institution_domains,True,ou_read · select,kind,text,False,,True
+iam.organization_units,200_institution_domains,True,ou_read · select,name,text,False,,True
+iam.campuses,200_institution_domains,True,cam_read · select,id,uuid,True,,True
+iam.campuses,200_institution_domains,True,cam_read · select,institution_id,uuid,False,core.institutions,True
+iam.campuses,200_institution_domains,True,cam_read · select,name,text,False,,True
+iam.campuses,200_institution_domains,True,cam_read · select,timezone,text,False,,True
+iam.memberships,200_institution_domains,True,mem_self · select | mem_admin · select,id,uuid,True,,True
+iam.memberships,200_institution_domains,True,mem_self · select | mem_admin · select,institution_id,uuid,False,core.institutions,True
+iam.memberships,200_institution_domains,True,mem_self · select | mem_admin · select,person_id,uuid,False,auth.users,True
+iam.memberships,200_institution_domains,True,mem_self · select | mem_admin · select,affiliation,text,False,,True
+iam.memberships,200_institution_domains,True,mem_self · select | mem_admin · select,status,text,False,,True
+iam.memberships,200_institution_domains,True,mem_self · select | mem_admin · select,verified_by,text,False,,False
+iam.memberships,200_institution_domains,True,mem_self · select | mem_admin · select,effective_from,date,False,,True
+iam.memberships,200_institution_domains,True,mem_self · select | mem_admin · select,effective_until,date,False,,False
+iam.invitations,200_institution_domains,True,inv_admin · select,id,uuid,True,,True
+iam.invitations,200_institution_domains,True,inv_admin · select,institution_id,uuid,False,core.institutions,True
+iam.invitations,200_institution_domains,True,inv_admin · select,email,text,False,,True
+iam.invitations,200_institution_domains,True,inv_admin · select,affiliation,text,False,,True
+iam.invitations,200_institution_domains,True,inv_admin · select,token_hash,text,False,,True
+iam.invitations,200_institution_domains,True,inv_admin · select,invited_by,uuid,False,,True
+iam.invitations,200_institution_domains,True,inv_admin · select,expires_at,timestamptz,False,,True
+iam.invitations,200_institution_domains,True,inv_admin · select,state,text,False,,True
+iam.invitations,200_institution_domains,True,inv_admin · select,accepted_by,uuid,False,auth.users,False
+iam.invitations,200_institution_domains,True,inv_admin · select,created_at,timestamptz,False,,True
+iam.access_reviews,200_institution_domains,True,ar_reviewer · select,id,uuid,True,,True
+iam.access_reviews,200_institution_domains,True,ar_reviewer · select,institution_id,uuid,False,core.institutions,False
+iam.access_reviews,200_institution_domains,True,ar_reviewer · select,scope,text,False,,True
+iam.access_reviews,200_institution_domains,True,ar_reviewer · select,reviewer_id,uuid,False,auth.users,True
+iam.access_reviews,200_institution_domains,True,ar_reviewer · select,grant_id,uuid,False,ctl.grants,False
+iam.access_reviews,200_institution_domains,True,ar_reviewer · select,decision,text,False,,False
+iam.access_reviews,200_institution_domains,True,ar_reviewer · select,reason,text,False,,False
+iam.access_reviews,200_institution_domains,True,ar_reviewer · select,due_on,date,False,,True
+iam.access_reviews,200_institution_domains,True,ar_reviewer · select,decided_at,timestamptz,False,,False
+acad.programs,200_institution_domains,True,prog_read · select | prog_read · select,id,uuid,True,,True
+acad.programs,200_institution_domains,True,prog_read · select | prog_read · select,institution_id,uuid,False,core.institutions,True
+acad.programs,200_institution_domains,True,prog_read · select | prog_read · select,code,text,False,,True
+acad.programs,200_institution_domains,True,prog_read · select | prog_read · select,name,text,False,,True
+acad.programs,200_institution_domains,True,prog_read · select | prog_read · select,kind,text,False,,True
+acad.programs,200_institution_domains,True,prog_read · select | prog_read · select,status,text,False,,True
+acad.rooms,200_institution_domains,True,room_read · select | room_read · select,id,uuid,True,,True
+acad.rooms,200_institution_domains,True,room_read · select | room_read · select,institution_id,uuid,False,core.institutions,True
+acad.rooms,200_institution_domains,True,room_read · select | room_read · select,campus_id,uuid,False,iam.campuses,False
+acad.rooms,200_institution_domains,True,room_read · select | room_read · select,name,text,False,,True
+acad.rooms,200_institution_domains,True,room_read · select | room_read · select,capacity,int,False,,False
+acad.rooms,200_institution_domains,True,room_read · select | room_read · select,accessible,boolean,False,,True
+acad.degree_evaluations,200_institution_domains,True,de_self · select | de_advise · select | de_self · select | de_advise · select,id,uuid,True,,True
+acad.degree_evaluations,200_institution_domains,True,de_self · select | de_advise · select | de_self · select | de_advise · select,student_id,uuid,False,core.profiles,True
+acad.degree_evaluations,200_institution_domains,True,de_self · select | de_advise · select | de_self · select | de_advise · select,program_id,uuid,False,acad.programs,True
+acad.degree_evaluations,200_institution_domains,True,de_self · select | de_advise · select | de_self · select | de_advise · select,result,jsonb,False,,True
+acad.degree_evaluations,200_institution_domains,True,de_self · select | de_advise · select | de_self · select | de_advise · select,kind,text,False,,True
+acad.degree_evaluations,200_institution_domains,True,de_self · select | de_advise · select | de_self · select | de_advise · select,source,text,False,,True
+acad.degree_evaluations,200_institution_domains,True,de_self · select | de_advise · select | de_self · select | de_advise · select,evaluated_at,timestamptz,False,,True
+adm.applications,200_institution_domains,True,app_review · select | app_review · select,id,uuid,True,,True
+adm.applications,200_institution_domains,True,app_review · select | app_review · select,institution_id,uuid,False,core.institutions,True
+adm.applications,200_institution_domains,True,app_review · select | app_review · select,applicant_email,text,False,,True
+adm.applications,200_institution_domains,True,app_review · select | app_review · select,program_id,uuid,False,acad.programs,False
+adm.applications,200_institution_domains,True,app_review · select | app_review · select,term_id,uuid,False,acad.terms,False
+adm.applications,200_institution_domains,True,app_review · select | app_review · select,state,text,False,,True
+adm.applications,200_institution_domains,True,app_review · select | app_review · select,submitted_at,timestamptz,False,,True
+adm.decisions,200_institution_domains,True,dec_review · select | dec_review · select,application_id,uuid,True,adm.applications,True
+adm.decisions,200_institution_domains,True,dec_review · select | dec_review · select,decision,text,False,,True
+adm.decisions,200_institution_domains,True,dec_review · select | dec_review · select,decided_by,uuid,False,,True
+adm.decisions,200_institution_domains,True,dec_review · select | dec_review · select,reason_internal,text,False,,False
+adm.decisions,200_institution_domains,True,dec_review · select | dec_review · select,decided_at,timestamptz,False,,True
+svc.service_definitions,200_institution_domains,True,sd_read · select | sd_read · select,id,uuid,True,,True
+svc.service_definitions,200_institution_domains,True,sd_read · select | sd_read · select,institution_id,uuid,False,core.institutions,True
+svc.service_definitions,200_institution_domains,True,sd_read · select | sd_read · select,office,text,False,,True
+svc.service_definitions,200_institution_domains,True,sd_read · select | sd_read · select,name,text,False,,True
+svc.service_definitions,200_institution_domains,True,sd_read · select | sd_read · select,description,text,False,,False
+svc.service_definitions,200_institution_domains,True,sd_read · select | sd_read · select,sla,interval,False,,False
+svc.service_definitions,200_institution_domains,True,sd_read · select | sd_read · select,restricted,boolean,False,,True
+svc.service_definitions,200_institution_domains,True,sd_read · select | sd_read · select,active,boolean,False,,True
+svc.service_requests,200_institution_domains,True,sr_self · select | sr_office · select | sr_self · select | sr_office · select,id,uuid,True,,True
+svc.service_requests,200_institution_domains,True,sr_self · select | sr_office · select | sr_self · select | sr_office · select,institution_id,uuid,False,core.institutions,True
+svc.service_requests,200_institution_domains,True,sr_self · select | sr_office · select | sr_self · select | sr_office · select,service_id,uuid,False,svc.service_definitions,True
+svc.service_requests,200_institution_domains,True,sr_self · select | sr_office · select | sr_self · select | sr_office · select,requester_id,uuid,False,core.profiles,True
+svc.service_requests,200_institution_domains,True,sr_self · select | sr_office · select | sr_self · select | sr_office · select,state,text,False,,True
+svc.service_requests,200_institution_domains,True,sr_self · select | sr_office · select | sr_self · select | sr_office · select,assignee_id,uuid,False,core.profiles,False
+svc.service_requests,200_institution_domains,True,sr_self · select | sr_office · select | sr_self · select | sr_office · select,summary,text,False,,True
+svc.service_requests,200_institution_domains,True,sr_self · select | sr_office · select | sr_self · select | sr_office · select,sla_due,timestamptz,False,,False
+svc.service_requests,200_institution_domains,True,sr_self · select | sr_office · select | sr_self · select | sr_office · select,created_at,timestamptz,False,,True
+svc.service_requests,200_institution_domains,True,sr_self · select | sr_office · select | sr_self · select | sr_office · select,resolved_at,timestamptz,False,,False
+svc.cases,200_institution_domains,True,case_owner · select | case_owner · select,id,uuid,True,,True
+svc.cases,200_institution_domains,True,case_owner · select | case_owner · select,institution_id,uuid,False,core.institutions,True
+svc.cases,200_institution_domains,True,case_owner · select | case_owner · select,student_id,uuid,False,core.profiles,True
+svc.cases,200_institution_domains,True,case_owner · select | case_owner · select,owner_id,uuid,False,core.profiles,True
+svc.cases,200_institution_domains,True,case_owner · select | case_owner · select,kind,text,False,,True
+svc.cases,200_institution_domains,True,case_owner · select | case_owner · select,state,text,False,,True
+svc.cases,200_institution_domains,True,case_owner · select | case_owner · select,opened_at,timestamptz,False,,True
+svc.restricted_cases,200_institution_domains,True,rc_self · select | rc_staff · select | rc_self · select | rc_staff · select,id,uuid,True,,True
+svc.restricted_cases,200_institution_domains,True,rc_self · select | rc_staff · select | rc_self · select | rc_staff · select,institution_id,uuid,False,core.institutions,True
+svc.restricted_cases,200_institution_domains,True,rc_self · select | rc_staff · select | rc_self · select | rc_staff · select,student_id,uuid,False,core.profiles,True
+svc.restricted_cases,200_institution_domains,True,rc_self · select | rc_staff · select | rc_self · select | rc_staff · select,office,text,False,,True
+svc.restricted_cases,200_institution_domains,True,rc_self · select | rc_staff · select | rc_self · select | rc_staff · select,state,text,False,,True
+svc.restricted_cases,200_institution_domains,True,rc_self · select | rc_staff · select | rc_self · select | rc_staff · select,created_at,timestamptz,False,,True
+svc.restricted_case_staff,200_institution_domains,True,rcs_staff · select | rcs_staff · select,case_id,uuid,True,svc.restricted_cases,True
+svc.restricted_case_staff,200_institution_domains,True,rcs_staff · select | rcs_staff · select,person_id,uuid,True,core.profiles,True
+svc.restricted_case_staff,200_institution_domains,True,rcs_staff · select | rcs_staff · select,purpose,text,False,,True
+svc.restricted_case_staff,200_institution_domains,True,rcs_staff · select | rcs_staff · select,until,timestamptz,False,,False
+svc.accommodation_plans,200_institution_domains,True,ap_self · select | ap_faculty · select | ap_self · select | ap_faculty · select,id,uuid,True,,True
+svc.accommodation_plans,200_institution_domains,True,ap_self · select | ap_faculty · select | ap_self · select | ap_faculty · select,institution_id,uuid,False,core.institutions,True
+svc.accommodation_plans,200_institution_domains,True,ap_self · select | ap_faculty · select | ap_self · select | ap_faculty · select,student_id,uuid,False,core.profiles,True
+svc.accommodation_plans,200_institution_domains,True,ap_self · select | ap_faculty · select | ap_self · select | ap_faculty · select,case_id,uuid,False,svc.restricted_cases,False
+svc.accommodation_plans,200_institution_domains,True,ap_self · select | ap_faculty · select | ap_self · select | ap_faculty · select,instructions_for_faculty,text,False,,True
+svc.accommodation_plans,200_institution_domains,True,ap_self · select | ap_faculty · select | ap_self · select | ap_faculty · select,extra_time_pct,int,False,,False
+svc.accommodation_plans,200_institution_domains,True,ap_self · select | ap_faculty · select | ap_self · select | ap_faculty · select,effective_from,date,False,,True
+svc.accommodation_plans,200_institution_domains,True,ap_self · select | ap_faculty · select | ap_self · select | ap_faculty · select,effective_until,date,False,,False
+svc.accommodation_plans,200_institution_domains,True,ap_self · select | ap_faculty · select | ap_self · select | ap_faculty · select,approved_by,uuid,False,,True
+instfin.student_accounts,200_institution_domains,True,sa_self · select | sa_staff · select | sa_self · select | sa_staff · select,id,uuid,True,,True
+instfin.student_accounts,200_institution_domains,True,sa_self · select | sa_staff · select | sa_self · select | sa_staff · select,institution_id,uuid,False,core.institutions,True
+instfin.student_accounts,200_institution_domains,True,sa_self · select | sa_staff · select | sa_self · select | sa_staff · select,student_id,uuid,False,core.profiles,True
+instfin.student_accounts,200_institution_domains,True,sa_self · select | sa_staff · select | sa_self · select | sa_staff · select,balance_cents,bigint,False,,True
+instfin.student_accounts,200_institution_domains,True,sa_self · select | sa_staff · select | sa_self · select | sa_staff · select,source,text,False,,True
+instfin.student_accounts,200_institution_domains,True,sa_self · select | sa_staff · select | sa_self · select | sa_staff · select,synced_at,timestamptz,False,,True
+instfin.charges,200_institution_domains,True,ch_read · select | ch_read · select,id,uuid,True,,True
+instfin.charges,200_institution_domains,True,ch_read · select | ch_read · select,account_id,uuid,False,instfin.student_accounts,True
+instfin.charges,200_institution_domains,True,ch_read · select | ch_read · select,description,text,False,,True
+instfin.charges,200_institution_domains,True,ch_read · select | ch_read · select,amount_cents,bigint,False,,True
+instfin.charges,200_institution_domains,True,ch_read · select | ch_read · select,posted_on,date,False,,True
+instfin.charges,200_institution_domains,True,ch_read · select | ch_read · select,due_on,date,False,,False
+instfin.charges,200_institution_domains,True,ch_read · select | ch_read · select,source,text,False,,True
+instfin.charges,200_institution_domains,True,ch_read · select | ch_read · select,source_ref,text,False,,False
+instfin.awards,200_institution_domains,True,aw_read · select | aw_read · select,id,uuid,True,,True
+instfin.awards,200_institution_domains,True,aw_read · select | aw_read · select,account_id,uuid,False,instfin.student_accounts,True
+instfin.awards,200_institution_domains,True,aw_read · select | aw_read · select,term_id,uuid,False,acad.terms,False
+instfin.awards,200_institution_domains,True,aw_read · select | aw_read · select,kind,text,False,,True
+instfin.awards,200_institution_domains,True,aw_read · select | aw_read · select,amount_cents,bigint,False,,True
+instfin.awards,200_institution_domains,True,aw_read · select | aw_read · select,state,text,False,,True
+instfin.awards,200_institution_domains,True,aw_read · select | aw_read · select,source,text,False,,True
+integ.mappings,200_institution_domains,True,map_view · select | map_view · select,id,uuid,True,,True
+integ.mappings,200_institution_domains,True,map_view · select | map_view · select,integration_id,uuid,False,opsx.integrations,True
+integ.mappings,200_institution_domains,True,map_view · select | map_view · select,local_table,text,False,,True
+integ.mappings,200_institution_domains,True,map_view · select | map_view · select,local_field,text,False,,True
+integ.mappings,200_institution_domains,True,map_view · select | map_view · select,remote_field,text,False,,True
+integ.mappings,200_institution_domains,True,map_view · select | map_view · select,transform,text,False,,False
+integ.sync_errors,200_institution_domains,True,se_view · select | se_view · select,id,bigserial,True,,True
+integ.sync_errors,200_institution_domains,True,se_view · select | se_view · select,sync_run_id,bigint,False,opsx.sync_runs,True
+integ.sync_errors,200_institution_domains,True,se_view · select | se_view · select,record_ref,text,False,,False
+integ.sync_errors,200_institution_domains,True,se_view · select | se_view · select,code,text,False,,True
+integ.sync_errors,200_institution_domains,True,se_view · select | se_view · select,message,text,False,,True
+integ.sync_errors,200_institution_domains,True,se_view · select | se_view · select,resolved_at,timestamptz,False,,False
+impl.projects,200_institution_domains,True,ip_read · select | ip_read · select,id,uuid,True,,True
+impl.projects,200_institution_domains,True,ip_read · select | ip_read · select,account_id,uuid,False,biz.accounts,True
+impl.projects,200_institution_domains,True,ip_read · select | ip_read · select,institution_id,uuid,False,core.institutions,False
+impl.projects,200_institution_domains,True,ip_read · select | ip_read · select,pilot_id,uuid,False,biz.pilots,False
+impl.projects,200_institution_domains,True,ip_read · select | ip_read · select,state,text,False,,True
+impl.projects,200_institution_domains,True,ip_read · select | ip_read · select,owner_id,uuid,False,auth.users,False
+impl.projects,200_institution_domains,True,ip_read · select | ip_read · select,go_live_on,date,False,,False
+impl.milestones,200_institution_domains,True,im_read · select | im_read · select,id,uuid,True,,True
+impl.milestones,200_institution_domains,True,im_read · select | im_read · select,project_id,uuid,False,impl.projects,True
+impl.milestones,200_institution_domains,True,im_read · select | im_read · select,name,text,False,,True
+impl.milestones,200_institution_domains,True,im_read · select | im_read · select,due_on,date,False,,False
+impl.milestones,200_institution_domains,True,im_read · select | im_read · select,done_on,date,False,,False
+impl.milestones,200_institution_domains,True,im_read · select | im_read · select,evidence_ref,text,False,,False
+impl.migration_batches,200_institution_domains,True,mb_read · select | mb_read · select,id,uuid,True,,True
+impl.migration_batches,200_institution_domains,True,mb_read · select | mb_read · select,project_id,uuid,False,impl.projects,True
+impl.migration_batches,200_institution_domains,True,mb_read · select | mb_read · select,kind,text,False,,True
+impl.migration_batches,200_institution_domains,True,mb_read · select | mb_read · select,records,int,False,,True
+impl.migration_batches,200_institution_domains,True,mb_read · select | mb_read · select,failed,int,False,,True
+impl.migration_batches,200_institution_domains,True,mb_read · select | mb_read · select,state,text,False,,True
+impl.migration_batches,200_institution_domains,True,mb_read · select | mb_read · select,report_ref,text,False,,False
+impl.acceptance_records,200_institution_domains,True,ar_read · select | ar_read · select,id,uuid,True,,True
+impl.acceptance_records,200_institution_domains,True,ar_read · select | ar_read · select,project_id,uuid,False,impl.projects,True
+impl.acceptance_records,200_institution_domains,True,ar_read · select | ar_read · select,deliverable,text,False,,True
+impl.acceptance_records,200_institution_domains,True,ar_read · select | ar_read · select,accepted_by_name,text,False,,True
+impl.acceptance_records,200_institution_domains,True,ar_read · select | ar_read · select,accepted_on,date,False,,True
+impl.acceptance_records,200_institution_domains,True,ar_read · select | ar_read · select,evidence_ref,text,False,,True
+cred.credentials,200_institution_domains,True,cr_self · select | cr_self · select,id,uuid,True,,True
+cred.credentials,200_institution_domains,True,cr_self · select | cr_self · select,institution_id,uuid,False,core.institutions,True
+cred.credentials,200_institution_domains,True,cr_self · select | cr_self · select,subject_id,uuid,False,core.profiles,True
+cred.credentials,200_institution_domains,True,cr_self · select | cr_self · select,title,text,False,,True
+cred.credentials,200_institution_domains,True,cr_self · select | cr_self · select,issued_on,date,False,,True
+cred.credentials,200_institution_domains,True,cr_self · select | cr_self · select,evidence_ref,text,False,,False
+cred.credentials,200_institution_domains,True,cr_self · select | cr_self · select,revoked_at,timestamptz,False,,False
+cred.credentials,200_institution_domains,True,cr_self · select | cr_self · select,share_token_hash,text,False,,False
+cred.verification_records,200_institution_domains,True,vr_self · select | vr_self · select,id,bigserial,True,,True
+cred.verification_records,200_institution_domains,True,vr_self · select | vr_self · select,credential_id,uuid,False,cred.credentials,True
+cred.verification_records,200_institution_domains,True,vr_self · select | vr_self · select,verifier,text,False,,False
+cred.verification_records,200_institution_domains,True,vr_self · select | vr_self · select,verified_at,timestamptz,False,,True
+cred.verification_records,200_institution_domains,True,vr_self · select | vr_self · select,result,text,False,,True
+career.positions,200_institution_domains,True,pos_read · select | pos_read · select,id,uuid,True,,True
+career.positions,200_institution_domains,True,pos_read · select | pos_read · select,institution_id,uuid,False,core.institutions,True
+career.positions,200_institution_domains,True,pos_read · select | pos_read · select,employer,text,False,,True
+career.positions,200_institution_domains,True,pos_read · select | pos_read · select,title,text,False,,True
+career.positions,200_institution_domains,True,pos_read · select | pos_read · select,closes_on,date,False,,False
+career.positions,200_institution_domains,True,pos_read · select | pos_read · select,url,text,False,,False
+career.applications,200_institution_domains,True,capp_self · all | capp_self · all,id,uuid,True,,True
+career.applications,200_institution_domains,True,capp_self · all | capp_self · all,position_id,uuid,False,career.positions,True
+career.applications,200_institution_domains,True,capp_self · all | capp_self · all,student_id,uuid,False,core.profiles,True
+career.applications,200_institution_domains,True,capp_self · all | capp_self · all,state,text,False,,True
+career.artifacts,200_institution_domains,True,art_self · all | art_self · all,id,uuid,True,,True
+career.artifacts,200_institution_domains,True,art_self · all | art_self · all,owner_id,uuid,False,core.profiles,True
+career.artifacts,200_institution_domains,True,art_self · all | art_self · all,title,text,False,,True
+career.artifacts,200_institution_domains,True,art_self · all | art_self · all,file_id,uuid,False,comms.files,False
+career.artifacts,200_institution_domains,True,art_self · all | art_self · all,visibility,text,False,,True
+learn.study_artifacts,200_institution_domains,True,sa_owner · all | sa_owner · all,id,uuid,True,,True
+learn.study_artifacts,200_institution_domains,True,sa_owner · all | sa_owner · all,workspace_id,uuid,False,core.workspaces,True
+learn.study_artifacts,200_institution_domains,True,sa_owner · all | sa_owner · all,kind,text,False,,True
+learn.study_artifacts,200_institution_domains,True,sa_owner · all | sa_owner · all,title,text,False,,True
+learn.study_artifacts,200_institution_domains,True,sa_owner · all | sa_owner · all,body,jsonb,False,,True
+learn.study_artifacts,200_institution_domains,True,sa_owner · all | sa_owner · all,source_ids,uuid[],False,,True
+learn.study_artifacts,200_institution_domains,True,sa_owner · all | sa_owner · all,updated_at,timestamptz,False,,True
+gov.proposals,200_institution_domains,True,gp_read · select | gp_read · select,id,uuid,True,,True
+gov.proposals,200_institution_domains,True,gp_read · select | gp_read · select,institution_id,uuid,False,core.institutions,True
+gov.proposals,200_institution_domains,True,gp_read · select | gp_read · select,kind,text,False,,True
+gov.proposals,200_institution_domains,True,gp_read · select | gp_read · select,title,text,False,,True
+gov.proposals,200_institution_domains,True,gp_read · select | gp_read · select,state,text,False,,True
+gov.proposals,200_institution_domains,True,gp_read · select | gp_read · select,document_id,uuid,False,docs.documents,False
+gov.proposals,200_institution_domains,True,gp_read · select | gp_read · select,submitted_by,uuid,False,,True
+gov.votes,200_institution_domains,True,gv_read · select | gv_read · select,proposal_id,uuid,True,gov.proposals,True
+gov.votes,200_institution_domains,True,gv_read · select | gv_read · select,voter_id,uuid,True,core.profiles,True
+gov.votes,200_institution_domains,True,gv_read · select | gv_read · select,vote,text,False,,True
+gov.votes,200_institution_domains,True,gv_read · select | gv_read · select,at,timestamptz,False,,True
+gov.retention_policies,200_institution_domains,True,rp_read · select | rp_read · select,id,uuid,True,,True
+gov.retention_policies,200_institution_domains,True,rp_read · select | rp_read · select,institution_id,uuid,False,core.institutions,False
+gov.retention_policies,200_institution_domains,True,rp_read · select | rp_read · select,record_class,text,False,,True
+gov.retention_policies,200_institution_domains,True,rp_read · select | rp_read · select,keep_for,interval,False,,True
+gov.retention_policies,200_institution_domains,True,rp_read · select | rp_read · select,basis,text,False,,True
+gov.evidence,200_institution_domains,True,ev_public · select | ev_public · select,id,uuid,True,,True
+gov.evidence,200_institution_domains,True,ev_public · select | ev_public · select,control,text,False,,True
+gov.evidence,200_institution_domains,True,ev_public · select | ev_public · select,title,text,False,,True
+gov.evidence,200_institution_domains,True,ev_public · select | ev_public · select,document_id,uuid,False,docs.documents,False
+gov.evidence,200_institution_domains,True,ev_public · select | ev_public · select,collected_on,date,False,,True
+gov.evidence,200_institution_domains,True,ev_public · select | ev_public · select,expires_on,date,False,,False
+gov.evidence,200_institution_domains,True,ev_public · select | ev_public · select,public_summary,text,False,,False
+cofin.invoices,210_company_ops_domains,True,inv_r · select,id,uuid,True,,True
+cofin.invoices,210_company_ops_domains,True,inv_r · select,account_id,uuid,False,biz.accounts,True
+cofin.invoices,210_company_ops_domains,True,inv_r · select,subscription_id,uuid,False,commerce.subscriptions,False
+cofin.invoices,210_company_ops_domains,True,inv_r · select,number,text,False,,True
+cofin.invoices,210_company_ops_domains,True,inv_r · select,state,text,False,,True
+cofin.invoices,210_company_ops_domains,True,inv_r · select,issued_on,date,False,,False
+cofin.invoices,210_company_ops_domains,True,inv_r · select,due_on,date,False,,False
+cofin.invoices,210_company_ops_domains,True,inv_r · select,currency,text,False,,True
+cofin.invoices,210_company_ops_domains,True,inv_r · select,total_cents,bigint,False,,True
+cofin.invoices,210_company_ops_domains,True,inv_r · select,journal_id,uuid,False,,False
+cofin.invoice_lines,210_company_ops_domains,True,il_r · select,id,uuid,True,,True
+cofin.invoice_lines,210_company_ops_domains,True,il_r · select,invoice_id,uuid,False,cofin.invoices,True
+cofin.invoice_lines,210_company_ops_domains,True,il_r · select,description,text,False,,True
+cofin.invoice_lines,210_company_ops_domains,True,il_r · select,quantity,"numeric(12,2)",False,,True
+cofin.invoice_lines,210_company_ops_domains,True,il_r · select,unit_cents,bigint,False,,True
+cofin.invoice_lines,210_company_ops_domains,True,il_r · select,amount_cents,bigint,False,,False
+cofin.payments,210_company_ops_domains,True,pay_r · select,id,uuid,True,,True
+cofin.payments,210_company_ops_domains,True,pay_r · select,invoice_id,uuid,False,cofin.invoices,True
+cofin.payments,210_company_ops_domains,True,pay_r · select,amount_cents,bigint,False,,True
+cofin.payments,210_company_ops_domains,True,pay_r · select,received_on,date,False,,True
+cofin.payments,210_company_ops_domains,True,pay_r · select,method,text,False,,True
+cofin.payments,210_company_ops_domains,True,pay_r · select,provider_ref,text,False,,False
+cofin.payments,210_company_ops_domains,True,pay_r · select,journal_id,uuid,False,,False
+cofin.credits,210_company_ops_domains,True,cr_r · select,id,uuid,True,,True
+cofin.credits,210_company_ops_domains,True,cr_r · select,invoice_id,uuid,False,cofin.invoices,True
+cofin.credits,210_company_ops_domains,True,cr_r · select,amount_cents,bigint,False,,True
+cofin.credits,210_company_ops_domains,True,cr_r · select,reason,text,False,,True
+cofin.credits,210_company_ops_domains,True,cr_r · select,approved_by,uuid,False,,True
+cofin.credits,210_company_ops_domains,True,cr_r · select,journal_id,uuid,False,,False
+cofin.expense_claims,210_company_ops_domains,True,ex_self · select,id,uuid,True,,True
+cofin.expense_claims,210_company_ops_domains,True,ex_self · select,employee_id,uuid,False,auth.users,True
+cofin.expense_claims,210_company_ops_domains,True,ex_self · select,amount_cents,bigint,False,,True
+cofin.expense_claims,210_company_ops_domains,True,ex_self · select,category,text,False,,True
+cofin.expense_claims,210_company_ops_domains,True,ex_self · select,receipt_file_id,uuid,False,comms.files,False
+cofin.expense_claims,210_company_ops_domains,True,ex_self · select,state,text,False,,True
+cofin.expense_claims,210_company_ops_domains,True,ex_self · select,approver_id,uuid,False,auth.users,False
+cofin.expense_claims,210_company_ops_domains,True,ex_self · select,submitted_at,timestamptz,False,,True
+people.positions,210_company_ops_domains,True,pos_r · select,id,uuid,True,,True
+people.positions,210_company_ops_domains,True,pos_r · select,title,text,False,,True
+people.positions,210_company_ops_domains,True,pos_r · select,team,text,False,,True
+people.positions,210_company_ops_domains,True,pos_r · select,level,text,False,,False
+people.positions,210_company_ops_domains,True,pos_r · select,state,text,False,,True
+people.candidates,210_company_ops_domains,True,cand_r · select,id,uuid,True,,True
+people.candidates,210_company_ops_domains,True,cand_r · select,position_id,uuid,False,people.positions,False
+people.candidates,210_company_ops_domains,True,cand_r · select,name,text,False,,True
+people.candidates,210_company_ops_domains,True,cand_r · select,email,text,False,,True
+people.candidates,210_company_ops_domains,True,cand_r · select,stage,text,False,,True
+people.candidates,210_company_ops_domains,True,cand_r · select,consent_retain_until,date,False,,False
+people.candidates,210_company_ops_domains,True,cand_r · select,created_at,timestamptz,False,,True
+people.employees,210_company_ops_domains,True,emp_self · select,id,uuid,True,,True
+people.employees,210_company_ops_domains,True,emp_self · select,person_id,uuid,False,auth.users,False
+people.employees,210_company_ops_domains,True,emp_self · select,position_id,uuid,False,people.positions,False
+people.employees,210_company_ops_domains,True,emp_self · select,manager_id,uuid,False,people.employees,False
+people.employees,210_company_ops_domains,True,emp_self · select,start_on,date,False,,True
+people.employees,210_company_ops_domains,True,emp_self · select,end_on,date,False,,False
+people.employees,210_company_ops_domains,True,emp_self · select,classification,text,False,,True
+people.employees,210_company_ops_domains,True,emp_self · select,state,text,False,,True
+people.training_records,210_company_ops_domains,True,tr_self · select,employee_id,uuid,True,people.employees,True
+people.training_records,210_company_ops_domains,True,tr_self · select,course,text,True,,True
+people.training_records,210_company_ops_domains,True,tr_self · select,completed_on,date,True,,True
+people.training_records,210_company_ops_domains,True,tr_self · select,expires_on,date,False,,False
+people.compensation_records,210_company_ops_domains,True,comp_r · select,id,uuid,True,,True
+people.compensation_records,210_company_ops_domains,True,comp_r · select,employee_id,uuid,False,people.employees,True
+people.compensation_records,210_company_ops_domains,True,comp_r · select,effective_on,date,False,,True
+people.compensation_records,210_company_ops_domains,True,comp_r · select,base_cents,bigint,False,,True
+people.compensation_records,210_company_ops_domains,True,comp_r · select,equity_shares,bigint,False,,False
+people.compensation_records,210_company_ops_domains,True,comp_r · select,approved_by,uuid,False,,True
+people.compensation_records,210_company_ops_domains,True,comp_r · select,board_consent_document_id,uuid,False,docs.documents,False
+vend.vendors,210_company_ops_domains,True,v_r · select,id,uuid,True,,True
+vend.vendors,210_company_ops_domains,True,v_r · select,account_id,uuid,False,biz.accounts,False
+vend.vendors,210_company_ops_domains,True,v_r · select,name,text,False,,True
+vend.vendors,210_company_ops_domains,True,v_r · select,tier,int,False,,True
+vend.vendors,210_company_ops_domains,True,v_r · select,touches_student_data,boolean,False,,True
+vend.vendors,210_company_ops_domains,True,v_r · select,owner_id,uuid,False,auth.users,False
+vend.vendors,210_company_ops_domains,True,v_r · select,renews_on,date,False,,False
+vend.vendor_reviews,210_company_ops_domains,True,vr_r · select,id,uuid,True,,True
+vend.vendor_reviews,210_company_ops_domains,True,vr_r · select,vendor_id,uuid,False,vend.vendors,True
+vend.vendor_reviews,210_company_ops_domains,True,vr_r · select,reviewed_on,date,False,,True
+vend.vendor_reviews,210_company_ops_domains,True,vr_r · select,reviewer_id,uuid,False,,True
+vend.vendor_reviews,210_company_ops_domains,True,vr_r · select,findings,text,False,,False
+vend.vendor_reviews,210_company_ops_domains,True,vr_r · select,decision,text,False,,True
+vend.vendor_reviews,210_company_ops_domains,True,vr_r · select,next_review_on,date,False,,True
+vend.purchase_orders,210_company_ops_domains,True,po_r · select,id,uuid,True,,True
+vend.purchase_orders,210_company_ops_domains,True,po_r · select,vendor_id,uuid,False,vend.vendors,True
+vend.purchase_orders,210_company_ops_domains,True,po_r · select,requester_id,uuid,False,,True
+vend.purchase_orders,210_company_ops_domains,True,po_r · select,amount_cents,bigint,False,,True
+vend.purchase_orders,210_company_ops_domains,True,po_r · select,purpose,text,False,,True
+vend.purchase_orders,210_company_ops_domains,True,po_r · select,state,text,False,,True
+vend.purchase_orders,210_company_ops_domains,True,po_r · select,approver_id,uuid,False,auth.users,False
+sales.quotes,210_company_ops_domains,True,q_r · select,id,uuid,True,,True
+sales.quotes,210_company_ops_domains,True,q_r · select,opportunity_id,uuid,False,biz.opportunities,True
+sales.quotes,210_company_ops_domains,True,q_r · select,price_version_id,uuid,False,commerce.price_versions,False
+sales.quotes,210_company_ops_domains,True,q_r · select,quantity,int,False,,True
+sales.quotes,210_company_ops_domains,True,q_r · select,discount_pct,"numeric(5,2)",False,,True
+sales.quotes,210_company_ops_domains,True,q_r · select,state,text,False,,True
+sales.quotes,210_company_ops_domains,True,q_r · select,expires_on,date,False,,False
+sales.quotes,210_company_ops_domains,True,q_r · select,approval_request_id,uuid,False,ctl.action_requests,False
+sales.requirements,210_company_ops_domains,True,sq_r · select,id,uuid,True,,True
+sales.requirements,210_company_ops_domains,True,sq_r · select,opportunity_id,uuid,False,biz.opportunities,True
+sales.requirements,210_company_ops_domains,True,sq_r · select,area,text,False,,True
+sales.requirements,210_company_ops_domains,True,sq_r · select,requirement,text,False,,True
+sales.requirements,210_company_ops_domains,True,sq_r · select,fit,text,False,,False
+sales.requirements,210_company_ops_domains,True,sq_r · select,evidence,text,False,,False
+mkt.campaigns,210_company_ops_domains,True,mc_r · select,id,uuid,True,,True
+mkt.campaigns,210_company_ops_domains,True,mc_r · select,name,text,False,,True
+mkt.campaigns,210_company_ops_domains,True,mc_r · select,audience,text,False,,True
+mkt.campaigns,210_company_ops_domains,True,mc_r · select,starts_on,date,False,,False
+mkt.campaigns,210_company_ops_domains,True,mc_r · select,ends_on,date,False,,False
+mkt.campaigns,210_company_ops_domains,True,mc_r · select,budget_cents,bigint,False,,False
+mkt.campaigns,210_company_ops_domains,True,mc_r · select,state,text,False,,True
+mkt.campaigns,210_company_ops_domains,True,mc_r · select,approved_by,uuid,False,,False
+cms.approved_claims,210_company_ops_domains,True,ac_pub · select,id,uuid,True,,True
+cms.approved_claims,210_company_ops_domains,True,ac_pub · select,claim,text,False,,True
+cms.approved_claims,210_company_ops_domains,True,ac_pub · select,evidence_ref,text,False,,True
+cms.approved_claims,210_company_ops_domains,True,ac_pub · select,approved_by,uuid,False,,True
+cms.approved_claims,210_company_ops_domains,True,ac_pub · select,approved_on,date,False,,True
+cms.approved_claims,210_company_ops_domains,True,ac_pub · select,expires_on,date,False,,False
+cms.pages,210_company_ops_domains,True,pg_pub · select,id,uuid,True,,True
+cms.pages,210_company_ops_domains,True,pg_pub · select,path,text,False,,True
+cms.pages,210_company_ops_domains,True,pg_pub · select,title,text,False,,True
+cms.pages,210_company_ops_domains,True,pg_pub · select,state,text,False,,True
+cms.pages,210_company_ops_domains,True,pg_pub · select,body,jsonb,False,,True
+cms.pages,210_company_ops_domains,True,pg_pub · select,published_at,timestamptz,False,,False
+cms.pages,210_company_ops_domains,True,pg_pub · select,claim_ids,uuid[],False,,True
+exec.objectives,210_company_ops_domains,True,ob_r · select,id,uuid,True,,True
+exec.objectives,210_company_ops_domains,True,ob_r · select,period,text,False,,True
+exec.objectives,210_company_ops_domains,True,ob_r · select,title,text,False,,True
+exec.objectives,210_company_ops_domains,True,ob_r · select,owner_id,uuid,False,auth.users,False
+exec.objectives,210_company_ops_domains,True,ob_r · select,metric,text,False,,False
+exec.objectives,210_company_ops_domains,True,ob_r · select,target,numeric,False,,False
+exec.objectives,210_company_ops_domains,True,ob_r · select,actual,numeric,False,,False
+exec.objectives,210_company_ops_domains,True,ob_r · select,status,text,False,,True
+exec.decisions,210_company_ops_domains,True,dc_r · select,id,uuid,True,,True
+exec.decisions,210_company_ops_domains,True,dc_r · select,decided_on,date,False,,True
+exec.decisions,210_company_ops_domains,True,dc_r · select,title,text,False,,True
+exec.decisions,210_company_ops_domains,True,dc_r · select,context,text,False,,False
+exec.decisions,210_company_ops_domains,True,dc_r · select,decision,text,False,,True
+exec.decisions,210_company_ops_domains,True,dc_r · select,owner_id,uuid,False,auth.users,False
+exec.decisions,210_company_ops_domains,True,dc_r · select,revisit_on,date,False,,False
+legal.entities,210_company_ops_domains,True,le_r · select,id,uuid,True,,True
+legal.entities,210_company_ops_domains,True,le_r · select,name,text,False,,True
+legal.entities,210_company_ops_domains,True,le_r · select,jurisdiction,text,False,,True
+legal.entities,210_company_ops_domains,True,le_r · select,kind,text,False,,True
+legal.entities,210_company_ops_domains,True,le_r · select,formed_on,date,False,,False
+legal.entities,210_company_ops_domains,True,le_r · select,registered_agent,text,False,,False
+legal.matters,210_company_ops_domains,True,lm_r · select,id,uuid,True,,True
+legal.matters,210_company_ops_domains,True,lm_r · select,title,text,False,,True
+legal.matters,210_company_ops_domains,True,lm_r · select,kind,text,False,,True
+legal.matters,210_company_ops_domains,True,lm_r · select,state,text,False,,True
+legal.matters,210_company_ops_domains,True,lm_r · select,counsel,text,False,,False
+legal.matters,210_company_ops_domains,True,lm_r · select,privileged,boolean,False,,True
+legal.matters,210_company_ops_domains,True,lm_r · select,opened_on,date,False,,True
+product.feedback,210_company_ops_domains,True,pf_r · select,id,uuid,True,,True
+product.feedback,210_company_ops_domains,True,pf_r · select,source,text,False,,True
+product.feedback,210_company_ops_domains,True,pf_r · select,account_id,uuid,False,biz.accounts,False
+product.feedback,210_company_ops_domains,True,pf_r · select,body,text,False,,True
+product.feedback,210_company_ops_domains,True,pf_r · select,theme,text,False,,False
+product.feedback,210_company_ops_domains,True,pf_r · select,state,text,False,,True
+product.feedback,210_company_ops_domains,True,pf_r · select,created_at,timestamptz,False,,True
+product.requirements,210_company_ops_domains,True,pr_r · select,id,uuid,True,,True
+product.requirements,210_company_ops_domains,True,pr_r · select,capability_id,text,False,,True
+product.requirements,210_company_ops_domains,True,pr_r · select,title,text,False,,True
+product.requirements,210_company_ops_domains,True,pr_r · select,acceptance,text,False,,True
+product.requirements,210_company_ops_domains,True,pr_r · select,state,text,False,,True
+research.records,210_company_ops_domains,True,rr_r · select,id,uuid,True,,True
+research.records,210_company_ops_domains,True,rr_r · select,title,text,False,,True
+research.records,210_company_ops_domains,True,rr_r · select,method,text,False,,True
+research.records,210_company_ops_domains,True,rr_r · select,summary,text,False,,True
+research.records,210_company_ops_domains,True,rr_r · select,recorded_on,date,False,,True
+research.experiments,210_company_ops_domains,True,re_r · select,id,uuid,True,,True
+research.experiments,210_company_ops_domains,True,re_r · select,hypothesis,text,False,,True
+research.experiments,210_company_ops_domains,True,re_r · select,metric,text,False,,True
+research.experiments,210_company_ops_domains,True,re_r · select,starts_on,date,False,,False
+research.experiments,210_company_ops_domains,True,re_r · select,ends_on,date,False,,False
+research.experiments,210_company_ops_domains,True,re_r · select,result,text,False,,False
+research.experiments,210_company_ops_domains,True,re_r · select,decision,text,False,,False
+it.assets,210_company_ops_domains,True,as_r · select,id,uuid,True,,True
+it.assets,210_company_ops_domains,True,as_r · select,kind,text,False,,True
+it.assets,210_company_ops_domains,True,as_r · select,tag,text,False,,True
+it.assets,210_company_ops_domains,True,as_r · select,assigned_to,uuid,False,people.employees,False
+it.assets,210_company_ops_domains,True,as_r · select,encrypted,boolean,False,,True
+it.assets,210_company_ops_domains,True,as_r · select,mdm_enrolled,boolean,False,,True
+it.assets,210_company_ops_domains,True,as_r · select,retired_on,date,False,,False
+analytics.metrics,210_company_ops_domains,True,am_r · select,code,text,True,,True
+analytics.metrics,210_company_ops_domains,True,am_r · select,name,text,False,,True
+analytics.metrics,210_company_ops_domains,True,am_r · select,definition,text,False,,True
+analytics.metrics,210_company_ops_domains,True,am_r · select,owner_id,uuid,False,,False
+analytics.metrics,210_company_ops_domains,True,am_r · select,source_table,text,False,,True
+analytics.metrics,210_company_ops_domains,True,am_r · select,privacy,text,False,,True
+analytics.datasets,210_company_ops_domains,True,ad_r · select,code,text,True,,True
+analytics.datasets,210_company_ops_domains,True,ad_r · select,description,text,False,,True
+analytics.datasets,210_company_ops_domains,True,ad_r · select,tables,text[],False,,True
+analytics.datasets,210_company_ops_domains,True,ad_r · select,min_group_size,int,False,,True
+analytics.reports,210_company_ops_domains,True,ar_self · select,id,uuid,True,,True
+analytics.reports,210_company_ops_domains,True,ar_self · select,institution_id,uuid,False,core.institutions,False
+analytics.reports,210_company_ops_domains,True,ar_self · select,dataset_code,text,False,analytics.datasets,True
+analytics.reports,210_company_ops_domains,True,ar_self · select,params,jsonb,False,,True
+analytics.reports,210_company_ops_domains,True,ar_self · select,requested_by,uuid,False,,True
+analytics.reports,210_company_ops_domains,True,ar_self · select,state,text,False,,True
+analytics.reports,210_company_ops_domains,True,ar_self · select,file_id,uuid,False,comms.files,False
+analytics.reports,210_company_ops_domains,True,ar_self · select,created_at,timestamptz,False,,True
+ai.model_configs,210_company_ops_domains,True,mcfg_r · select,id,uuid,True,,True
+ai.model_configs,210_company_ops_domains,True,mcfg_r · select,name,text,False,,True
+ai.model_configs,210_company_ops_domains,True,mcfg_r · select,provider,text,False,,True
+ai.model_configs,210_company_ops_domains,True,mcfg_r · select,model,text,False,,True
+ai.model_configs,210_company_ops_domains,True,mcfg_r · select,max_tokens,int,False,,True
+ai.model_configs,210_company_ops_domains,True,mcfg_r · select,allowed_tools,text[],False,,True
+ai.model_configs,210_company_ops_domains,True,mcfg_r · select,active,boolean,False,,True
+ai.model_configs,210_company_ops_domains,True,mcfg_r · select,approved_by,uuid,False,,False
+ai.evaluations,210_company_ops_domains,True,ev_r · select,id,uuid,True,,True
+ai.evaluations,210_company_ops_domains,True,ev_r · select,model_config_id,uuid,False,ai.model_configs,True
+ai.evaluations,210_company_ops_domains,True,ev_r · select,suite,text,False,,True
+ai.evaluations,210_company_ops_domains,True,ev_r · select,passed,int,False,,True
+ai.evaluations,210_company_ops_domains,True,ev_r · select,failed,int,False,,True
+ai.evaluations,210_company_ops_domains,True,ev_r · select,run_at,timestamptz,False,,True
+ai.evaluations,210_company_ops_domains,True,ev_r · select,report_ref,text,False,,False
+ai.evaluations,210_company_ops_domains,True,ev_r · select,blocks_release,boolean,False,,False
+dev.credentials,210_company_ops_domains,True,dk_r · select,id,uuid,True,,True
+dev.credentials,210_company_ops_domains,True,dk_r · select,app_id,uuid,False,biz.partner_apps,True
+dev.credentials,210_company_ops_domains,True,dk_r · select,key_prefix,text,False,,True
+dev.credentials,210_company_ops_domains,True,dk_r · select,key_hash,text,False,,True
+dev.credentials,210_company_ops_domains,True,dk_r · select,scopes,text[],False,,True
+dev.credentials,210_company_ops_domains,True,dk_r · select,created_at,timestamptz,False,,True
+dev.credentials,210_company_ops_domains,True,dk_r · select,rotated_at,timestamptz,False,,False
+dev.credentials,210_company_ops_domains,True,dk_r · select,revoked_at,timestamptz,False,,False
+search.documents,210_company_ops_domains,True,sd_r · select,id,bigserial,True,,True
+search.documents,210_company_ops_domains,True,sd_r · select,institution_id,uuid,False,core.institutions,False
+search.documents,210_company_ops_domains,True,sd_r · select,source_table,text,False,,True
+search.documents,210_company_ops_domains,True,sd_r · select,source_id,uuid,False,,True
+search.documents,210_company_ops_domains,True,sd_r · select,title,text,False,,True
+search.documents,210_company_ops_domains,True,sd_r · select,body_tsv,tsvector,False,,True
+search.documents,210_company_ops_domains,True,sd_r · select,readers,text,False,,True
+search.documents,210_company_ops_domains,True,sd_r · select,reader_ref,text,False,,False
+sec.findings,210_company_ops_domains,True,sf_r · select,id,uuid,True,,True
+sec.findings,210_company_ops_domains,True,sf_r · select,source,text,False,,True
+sec.findings,210_company_ops_domains,True,sf_r · select,severity,text,False,,True
+sec.findings,210_company_ops_domains,True,sf_r · select,title,text,False,,True
+sec.findings,210_company_ops_domains,True,sf_r · select,state,text,False,,True
+sec.findings,210_company_ops_domains,True,sf_r · select,owner_id,uuid,False,,False
+sec.findings,210_company_ops_domains,True,sf_r · select,due_on,date,False,,False
+sec.findings,210_company_ops_domains,True,sf_r · select,fixed_on,date,False,,False
+sec.findings,210_company_ops_domains,True,sf_r · select,verified_by,uuid,False,,False
+sec.investigations,210_company_ops_domains,True,si_r · select,id,uuid,True,,True
+sec.investigations,210_company_ops_domains,True,si_r · select,title,text,False,,True
+sec.investigations,210_company_ops_domains,True,si_r · select,lead_id,uuid,False,,True
+sec.investigations,210_company_ops_domains,True,si_r · select,opened_at,timestamptz,False,,True
+sec.investigations,210_company_ops_domains,True,si_r · select,incident_id,uuid,False,opsx.incidents,False
+sec.investigations,210_company_ops_domains,True,si_r · select,privileged,boolean,False,,True
+sec.investigations,210_company_ops_domains,True,si_r · select,closed_at,timestamptz,False,,False
+ops.services,210_company_ops_domains,True,ops_read_services · select,id,uuid,True,,True
+ops.services,210_company_ops_domains,True,ops_read_services · select,name,text,False,,True
+ops.services,210_company_ops_domains,True,ops_read_services · select,owner_team,text,False,,True
+ops.services,210_company_ops_domains,True,ops_read_services · select,tier,int,False,,True
+ops.services,210_company_ops_domains,True,ops_read_services · select,runbook_ref,text,False,,False
+ops.dependencies,210_company_ops_domains,True,ops_read_deps · select,service_id,uuid,True,ops.services,True
+ops.dependencies,210_company_ops_domains,True,ops_read_deps · select,depends_on,uuid,True,ops.services,True
+ops.objectives,210_company_ops_domains,True,ops_read_obj · select,id,uuid,True,,True
+ops.objectives,210_company_ops_domains,True,ops_read_obj · select,service_id,uuid,False,ops.services,True
+ops.objectives,210_company_ops_domains,True,ops_read_obj · select,sli,text,False,,True
+ops.objectives,210_company_ops_domains,True,ops_read_obj · select,target,numeric,False,,True
+ops.objectives,210_company_ops_domains,True,ops_read_obj · select,window_days,int,False,,True
+ops.telemetry,210_company_ops_domains,True,ops_read_tel · select,id,bigserial,True,,True
+ops.telemetry,210_company_ops_domains,True,ops_read_tel · select,service_id,uuid,False,ops.services,True
+ops.telemetry,210_company_ops_domains,True,ops_read_tel · select,at,timestamptz,False,,True
+ops.telemetry,210_company_ops_domains,True,ops_read_tel · select,metric,text,False,,True
+ops.telemetry,210_company_ops_domains,True,ops_read_tel · select,value,numeric,False,,True
+ops.alerts,210_company_ops_domains,True,ops_read_alerts · select,id,bigserial,True,,True
+ops.alerts,210_company_ops_domains,True,ops_read_alerts · select,service_id,uuid,False,ops.services,False
+ops.alerts,210_company_ops_domains,True,ops_read_alerts · select,severity,text,False,,True
+ops.alerts,210_company_ops_domains,True,ops_read_alerts · select,title,text,False,,True
+ops.alerts,210_company_ops_domains,True,ops_read_alerts · select,fired_at,timestamptz,False,,True
+ops.alerts,210_company_ops_domains,True,ops_read_alerts · select,acked_by,uuid,False,,False
+ops.alerts,210_company_ops_domains,True,ops_read_alerts · select,resolved_at,timestamptz,False,,False
+ops.alerts,210_company_ops_domains,True,ops_read_alerts · select,incident_id,uuid,False,opsx.incidents,False
+ops.builds,210_company_ops_domains,True,ops_read_builds · select,id,uuid,True,,True
+ops.builds,210_company_ops_domains,True,ops_read_builds · select,commit_sha,text,False,,True
+ops.builds,210_company_ops_domains,True,ops_read_builds · select,branch,text,False,,True
+ops.builds,210_company_ops_domains,True,ops_read_builds · select,state,text,False,,True
+ops.builds,210_company_ops_domains,True,ops_read_builds · select,created_at,timestamptz,False,,True
+ops.deployments,210_company_ops_domains,True,ops_read_deploys · select,id,uuid,True,,True
+ops.deployments,210_company_ops_domains,True,ops_read_deploys · select,build_id,uuid,False,ops.builds,True
+ops.deployments,210_company_ops_domains,True,ops_read_deploys · select,environment,text,False,,True
+ops.deployments,210_company_ops_domains,True,ops_read_deploys · select,state,text,False,,True
+ops.deployments,210_company_ops_domains,True,ops_read_deploys · select,approved_by,uuid,False,,False
+ops.deployments,210_company_ops_domains,True,ops_read_deploys · select,deployed_at,timestamptz,False,,False
+ops.feature_flags,210_company_ops_domains,True,ops_read_flags · select,key,text,True,,True
+ops.feature_flags,210_company_ops_domains,True,ops_read_flags · select,description,text,False,,True
+ops.feature_flags,210_company_ops_domains,True,ops_read_flags · select,default_on,boolean,False,,True
+ops.feature_flags,210_company_ops_domains,True,ops_read_flags · select,per_tenant,jsonb,False,,True
+ops.feature_flags,210_company_ops_domains,True,ops_read_flags · select,owner,text,False,,True
+ops.feature_flags,210_company_ops_domains,True,ops_read_flags · select,expires_on,date,False,,False
+ops.jobs,210_company_ops_domains,True,ops_read_jobs · select,id,uuid,True,,True
+ops.jobs,210_company_ops_domains,True,ops_read_jobs · select,kind,text,False,,True
+ops.jobs,210_company_ops_domains,True,ops_read_jobs · select,payload,jsonb,False,,True
+ops.jobs,210_company_ops_domains,True,ops_read_jobs · select,state,text,False,,True
+ops.jobs,210_company_ops_domains,True,ops_read_jobs · select,attempts,int,False,,True
+ops.jobs,210_company_ops_domains,True,ops_read_jobs · select,next_run_at,timestamptz,False,,True
+ops.jobs,210_company_ops_domains,True,ops_read_jobs · select,dedupe_key,text,False,,False
+ops.job_attempts,210_company_ops_domains,True,ops_read_attempts · select,id,bigserial,True,,True
+ops.job_attempts,210_company_ops_domains,True,ops_read_attempts · select,job_id,uuid,False,ops.jobs,True
+ops.job_attempts,210_company_ops_domains,True,ops_read_attempts · select,started_at,timestamptz,False,,True
+ops.job_attempts,210_company_ops_domains,True,ops_read_attempts · select,finished_at,timestamptz,False,,False
+ops.job_attempts,210_company_ops_domains,True,ops_read_attempts · select,error,text,False,,False
+ops.migrations,210_company_ops_domains,True,ops_read_mig · select,version,text,True,,True
+ops.migrations,210_company_ops_domains,True,ops_read_mig · select,applied_at,timestamptz,False,,True
+ops.migrations,210_company_ops_domains,True,ops_read_mig · select,applied_by,text,False,,True
+ops.repair_requests,210_company_ops_domains,True,ops_read_repair · select,id,uuid,True,,True
+ops.repair_requests,210_company_ops_domains,True,ops_read_repair · select,description,text,False,,True
+ops.repair_requests,210_company_ops_domains,True,ops_read_repair · select,sql_ref,text,False,,True
+ops.repair_requests,210_company_ops_domains,True,ops_read_repair · select,requested_by,uuid,False,,True
+ops.repair_requests,210_company_ops_domains,True,ops_read_repair · select,approved_by,uuid,False,,False
+ops.repair_requests,210_company_ops_domains,True,ops_read_repair · select,executed_at,timestamptz,False,,False
+ops.repair_requests,210_company_ops_domains,True,ops_read_repair · select,action_request_id,uuid,False,ctl.action_requests,False
+ops.backups,210_company_ops_domains,True,ops_read_backups · select,id,uuid,True,,True
+ops.backups,210_company_ops_domains,True,ops_read_backups · select,taken_at,timestamptz,False,,True
+ops.backups,210_company_ops_domains,True,ops_read_backups · select,kind,text,False,,True
+ops.backups,210_company_ops_domains,True,ops_read_backups · select,location_ref,text,False,,True
+ops.backups,210_company_ops_domains,True,ops_read_backups · select,verified,boolean,False,,True
+ops.restore_exercises,210_company_ops_domains,True,ops_read_restore · select,id,uuid,True,,True
+ops.restore_exercises,210_company_ops_domains,True,ops_read_restore · select,backup_id,uuid,False,ops.backups,True
+ops.restore_exercises,210_company_ops_domains,True,ops_read_restore · select,performed_on,date,False,,True
+ops.restore_exercises,210_company_ops_domains,True,ops_read_restore · select,rto_minutes,int,False,,False
+ops.restore_exercises,210_company_ops_domains,True,ops_read_restore · select,rpo_minutes,int,False,,False
+ops.restore_exercises,210_company_ops_domains,True,ops_read_restore · select,passed,boolean,False,,True
+ops.restore_exercises,210_company_ops_domains,True,ops_read_restore · select,report_ref,text,False,,True
+ops.tenant_lifecycle_requests,210_company_ops_domains,True,ops_read_tlr · select,id,uuid,True,,True
+ops.tenant_lifecycle_requests,210_company_ops_domains,True,ops_read_tlr · select,institution_id,uuid,False,core.institutions,True
+ops.tenant_lifecycle_requests,210_company_ops_domains,True,ops_read_tlr · select,action,text,False,,True
+ops.tenant_lifecycle_requests,210_company_ops_domains,True,ops_read_tlr · select,reason,text,False,,True
+ops.tenant_lifecycle_requests,210_company_ops_domains,True,ops_read_tlr · select,action_request_id,uuid,False,ctl.action_requests,False
+ops.tenant_lifecycle_requests,210_company_ops_domains,True,ops_read_tlr · select,state,text,False,,True
+ops.tenant_lifecycle_requests,210_company_ops_domains,True,ops_read_tlr · select,created_at,timestamptz,False,,True
+ops.usage_records,210_company_ops_domains,True,ops_read_usage · select,id,bigserial,True,,True
+ops.usage_records,210_company_ops_domains,True,ops_read_usage · select,institution_id,uuid,False,core.institutions,False
+ops.usage_records,210_company_ops_domains,True,ops_read_usage · select,resource,text,False,,True
+ops.usage_records,210_company_ops_domains,True,ops_read_usage · select,period,date,False,,True
+ops.usage_records,210_company_ops_domains,True,ops_read_usage · select,quantity,numeric,False,,True
+ops.usage_records,210_company_ops_domains,True,ops_read_usage · select,cost_cents,bigint,False,,False
+opsx.webhook_endpoints,220_outbound_webhooks,True,whe_view · select,id,uuid,True,,True
+opsx.webhook_endpoints,220_outbound_webhooks,True,whe_view · select,institution_id,uuid,False,core.institutions,True
+opsx.webhook_endpoints,220_outbound_webhooks,True,whe_view · select,url,text,False,,True
+opsx.webhook_endpoints,220_outbound_webhooks,True,whe_view · select,allowed_host,text,False,,True
+opsx.webhook_endpoints,220_outbound_webhooks,True,whe_view · select,secret_ref,text,False,,True
+opsx.webhook_endpoints,220_outbound_webhooks,True,whe_view · select,topics,text[],False,,True
+opsx.webhook_endpoints,220_outbound_webhooks,True,whe_view · select,active,boolean,False,,True
+opsx.webhook_endpoints,220_outbound_webhooks,True,whe_view · select,created_by,uuid,False,,True
+opsx.webhook_endpoints,220_outbound_webhooks,True,whe_view · select,created_at,timestamptz,False,,True
+opsx.webhook_deliveries,220_outbound_webhooks,True,whd_view · select,id,uuid,True,,True
+opsx.webhook_deliveries,220_outbound_webhooks,True,whd_view · select,institution_id,uuid,False,core.institutions,True
+opsx.webhook_deliveries,220_outbound_webhooks,True,whd_view · select,endpoint_id,uuid,False,opsx.webhook_endpoints,True
+opsx.webhook_deliveries,220_outbound_webhooks,True,whd_view · select,event_id,bigint,False,ctl.outbox,True
+opsx.webhook_deliveries,220_outbound_webhooks,True,whd_view · select,body,text,False,,True
+opsx.webhook_deliveries,220_outbound_webhooks,True,whd_view · select,state,text,False,,True
+opsx.webhook_deliveries,220_outbound_webhooks,True,whd_view · select,attempt,int,False,,True
+opsx.webhook_deliveries,220_outbound_webhooks,True,whd_view · select,next_attempt_at,timestamptz,False,,True
+opsx.webhook_deliveries,220_outbound_webhooks,True,whd_view · select,lease_token,uuid,False,,False
+opsx.webhook_deliveries,220_outbound_webhooks,True,whd_view · select,lease_until,timestamptz,False,,False
+opsx.webhook_deliveries,220_outbound_webhooks,True,whd_view · select,last_status,int,False,,False
+opsx.webhook_deliveries,220_outbound_webhooks,True,whd_view · select,last_diagnostic,text,False,,False
+opsx.webhook_deliveries,220_outbound_webhooks,True,whd_view · select,delivered_at,timestamptz,False,,False
+housing.buildings,240_housing_family,True,hb_read · select,id,uuid,True,,True
+housing.buildings,240_housing_family,True,hb_read · select,institution_id,uuid,False,core.institutions,True
+housing.buildings,240_housing_family,True,hb_read · select,campus_id,uuid,False,iam.campuses,False
+housing.buildings,240_housing_family,True,hb_read · select,name,text,False,,True
+housing.buildings,240_housing_family,True,hb_read · select,accessible,boolean,False,,True
+housing.rooms,240_housing_family,True,hr_read · select,id,uuid,True,,True
+housing.rooms,240_housing_family,True,hr_read · select,building_id,uuid,False,housing.buildings,True
+housing.rooms,240_housing_family,True,hr_read · select,code,text,False,,True
+housing.rooms,240_housing_family,True,hr_read · select,capacity,int,False,,True
+housing.applications,240_housing_family,True,ha_self · select | ha_staff · select,id,uuid,True,,True
+housing.applications,240_housing_family,True,ha_self · select | ha_staff · select,institution_id,uuid,False,core.institutions,True
+housing.applications,240_housing_family,True,ha_self · select | ha_staff · select,student_id,uuid,False,core.profiles,True
+housing.applications,240_housing_family,True,ha_self · select | ha_staff · select,term_id,uuid,False,acad.terms,True
+housing.applications,240_housing_family,True,ha_self · select | ha_staff · select,preferences,jsonb,False,,True
+housing.applications,240_housing_family,True,ha_self · select | ha_staff · select,state,text,False,,True
+housing.applications,240_housing_family,True,ha_self · select | ha_staff · select,submitted_at,timestamptz,False,,True
+housing.assignments,240_housing_family,True,has_self · select,id,uuid,True,,True
+housing.assignments,240_housing_family,True,has_self · select,application_id,uuid,False,housing.applications,True
+housing.assignments,240_housing_family,True,has_self · select,room_id,uuid,False,housing.rooms,True
+housing.assignments,240_housing_family,True,has_self · select,assigned_by,uuid,False,,True
+housing.assignments,240_housing_family,True,has_self · select,move_in,date,False,,False
+housing.assignments,240_housing_family,True,has_self · select,source,text,False,,True
+housing.maintenance_requests,240_housing_family,True,hm_self · select,id,uuid,True,,True
+housing.maintenance_requests,240_housing_family,True,hm_self · select,room_id,uuid,False,housing.rooms,True
+housing.maintenance_requests,240_housing_family,True,hm_self · select,requester_id,uuid,False,core.profiles,True
+housing.maintenance_requests,240_housing_family,True,hm_self · select,summary,text,False,,True
+housing.maintenance_requests,240_housing_family,True,hm_self · select,urgency,text,False,,True
+housing.maintenance_requests,240_housing_family,True,hm_self · select,state,text,False,,True
+housing.maintenance_requests,240_housing_family,True,hm_self · select,created_at,timestamptz,False,,True
+core.delegation_scopes,240_housing_family,True,dsc_read · select,code,text,True,,True
+core.delegation_scopes,240_housing_family,True,dsc_read · select,description,text,False,,True
+core.delegation_scopes,240_housing_family,True,dsc_read · select,includes,text[],False,,True

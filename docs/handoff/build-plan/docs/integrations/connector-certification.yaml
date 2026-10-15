@@ -1,0 +1,8 @@
+connector_certification:
+  connector: SIS_adapter
+  version: 1.0.0
+  tenant: vanderbilt
+  must_prove: [authenticated_connection, least_data_needed, schema_mapping_review, source_authority_confirmation, source_watermark_supported_or_documented, stale_state_behavior, duplicate_delivery_handling, invalid_payload_quarantine, replay_safety, reconciliation_path, disablement_path, secret_rotation_procedure, operational_alerts, incident_contact]
+  outcome: not_certified   # certified_for_pilot | conditionally_certified | not_certified
+  blocking_conditions: [missing_authority_owner, no_safe_stale_behavior, raw_restricted_logs, no_deduplication_strategy, no_reconciliation_process, untested_disablement]
+  evidence: {}

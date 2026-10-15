@@ -1,0 +1,29 @@
+# Proposed logical entities, not verified table names.
+entity_families:
+  organization: [institution, campus, school, department, academic_career]
+  identity: [person_linkage, membership, institutional_identifier, role_grant]
+  academic_policy: [policy_version, approval, effective_period, applicability]
+  calendar: [term, session, deadline, registration_window]
+  curriculum: [course_version, program_version, requirement_group, equivalency]
+  scheduling: [offering, section, meeting, instructor_assignment, capacity_pool]
+  student_program: [academic_career_enrollment, program_enrollment, catalog_assignment, status]
+  registration: [intent, eligibility_evaluation, override, enrollment, waitlist_entry, seat_offer]
+  academic_history: [course_attempt, grade_decision, grade_posting, correction, standing]
+  transfer: [source_credential, evaluation, equivalency_decision, awarded_credit]
+  degree: [audit_run, requirement_result, exception, clearance]
+  awards: [graduation_application, conferral_decision, credential_award]
+  record_services: [transcript_snapshot, request, disclosure_basis, fulfillment]
+  governance: [approval, audit_event, source_binding, reconciliation_case, evidence]
+  operations: [work_item, communication_receipt, incident, release_scope]
+required_metadata: [institution_and_academic_context, canonical_record_id, owning_domain, source_and_authority, record_version, policy_version, effective_time, recorded_time, actor_and_delegated_authority, approval_reference, provenance, supersedes, classification, retention_policy]
+note: "Effective time and recorded time differ: a correction entered today can apply to an earlier term."
+invariants:
+  - Every institutional relationship is tenant-consistent (composite FKs).
+  - An enrollment references a valid offering and the student's academic context.
+  - A grade posting references the correct course attempt.
+  - A degree audit records the exact curriculum and policy versions used.
+  - An issued transcript references a stable record snapshot.
+  - An override can't exceed the approver's scope.
+  - Revoked authority can't execute queued commands (generation check at execution).
+  - Historical identifiers are never reused for different people.
+  - Corrections preserve the prior decision and the reason.

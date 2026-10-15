@@ -1,0 +1,34 @@
+{
+  "function": "validate_task",
+  "cases": [
+    {
+      "input": {
+        "id": "a",
+        "title": "Task",
+        "status": "open"
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "id": 1,
+        "title": "Task",
+        "status": "open"
+      },
+      "expected": false
+    },
+    {
+      "input": null,
+      "expected": false
+    },
+    {
+      "input": {
+        "id": "a",
+        "title": "Task",
+        "status": "open",
+        "tenantId": "b"
+      },
+      "expected": false
+    }
+  ]
+}

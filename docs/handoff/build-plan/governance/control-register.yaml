@@ -1,0 +1,22 @@
+# Pilot controls → where enforced → test that proves it.
+controls:
+  - { id: CTL-ISO-01, control: "Tenant isolation on every pilot table", enforced: "forced RLS + composite tenant FKs", test: "registration_rls.test.sql, readiness_wedge.test.sql" }
+  - { id: CTL-ISO-02, control: "Student sees own records only", enforced: "my_student_id() policies", test: "registration_rls.test.sql #1–2, #5" }
+  - { id: CTL-ISO-03, control: "Advisor limited to caseload; revocation immediate", enforced: "has_capability(...scope_id)", test: "registration_rls.test.sql #8–9" }
+  - { id: CTL-WRK-01, control: "Readiness transitions are legal only", enforced: "readiness_guard trigger", test: "readiness_wedge.test.sql #7–8" }
+  - { id: CTL-WRK-02, control: "Duplicate commands return the same receipt", enforced: "unique idempotency_key + readiness_evaluate()", test: "readiness_wedge.test.sql #5–6" }
+  - { id: CTL-SRC-01, control: "Stale source can't produce ready", enforced: "check constraint on readiness_cases", test: "readiness_wedge.test.sql #9" }
+  - { id: CTL-SRC-02, control: "Lower authority can't overwrite higher", enforced: "075_authority_guard.sql", test: "todo: authority_guard.test.sql" }
+  - { id: CTL-CPY-01, control: "Receipts say not enrollment", enforced: "check constraint on readiness_receipts.statement", test: "readiness_wedge.test.sql #4" }
+  - { id: CTL-AUD-01, control: "Audit events append-only", enforced: "revoke update/delete on audit_events", test: "todo" }
+  - { id: CTL-POL-01, control: "Policy deny by default; null tenants need ownership", enforced: "policies/access.rego", test: "access_test.rego (11), registration_test.rego (6)" }
+  - { id: CTL-OPS-01, control: "Kill switch per capability", enforced: "live_tenant_capabilities.kill_switch + gate.ts", test: "connected-journeys.spec.ts" }
+
+# Canonical control ids used by evidence-registry.yaml (each maps to the CTL-* rows above)
+canonical:
+  - { id: CTRL-ACCESS-001, name: "Tenant and subject isolation", maps: [CTL-ISO-01, CTL-ISO-02, CTL-ISO-03, CTL-POL-01], type: preventive, owner: security_owner, frequency: every_pr_and_release, on_failure: disable_capability_and_investigate }
+  - { id: CTRL-SOURCE-002, name: "Stale-source disclosure", maps: [CTL-SRC-01, CTL-SRC-02], type: preventive_and_detective, owner: integration_owner, frequency: every_release_and_drill, on_failure: mark_stale_pause_definitive_reconcile }
+  - { id: CTRL-WORKFLOW-003, name: "Controlled routing and overrides", maps: [CTL-WRK-01, CTL-WRK-02], type: preventive, owner: registrar_product_owner, frequency: every_release, on_failure: revoke_access_preserve_audit_escalate, implementation: [state_transition_guard, reason_required, separation_of_duties_check_constraint, immutable_decision_trail] }
+  - { id: CTRL-UX-004, name: "Honest status copy and accessible states", maps: [CTL-CPY-01], type: preventive, owner: design_owner, frequency: every_copy_change }
+  - { id: CTRL-INST-005, name: "Institution authorization before activation", maps: [CTL-OPS-01], type: preventive, owner: founder, frequency: per_activation }
+  - { id: CTRL-AUDIT-006, name: "Append-only audit", maps: [CTL-AUD-01], type: detective, owner: security_owner, frequency: every_release }

@@ -1,0 +1,10 @@
+reconciliation_case:
+  states: [detected, classified, queued, repairing, awaiting_source, awaiting_human_review, verified, closed, escalated]
+  discrepancy_types: [missing_external_record, unexpected_external_record, field_value_mismatch, authority_conflict, stale_projection, duplicate_delivery, invalid_transition, policy_decision_mismatch]
+  repair_options:
+    recheck: "Source may have changed or freshness is uncertain."
+    refresh_projection: "Source is authoritative and current."
+    preserve_and_route: "A human institutional decision is needed."
+    stop_and_escalate: "A security, authorization or integrity boundary may be crossed."
+  closure_requires: [source_reference, before_after_values_or_hashes, repair_action, verifying_actor_or_system, verified_at, linked_audit_event]
+schema: proposed-schema/080_reconciliation_and_overrides.sql

@@ -1,0 +1,7 @@
+# A material change invalidates prior release evidence for the affected capability until revalidated.
+material_change_categories:
+  access:     { examples: [rls_policy_change, new_staff_role, delegation_scope_change], revalidate: [policy_tests, rls_tests, tenant_isolation_tests, access_review] }
+  source:     { examples: [sis_schema_change, source_mapping_change, freshness_threshold_change], revalidate: [mapping_tests, source_authority_review, replay_or_backfill_test, reconciliation_review] }
+  workflow:   { examples: [new_transition, retry_or_timeout_change, changed_compensation], revalidate: [workflow_tests, idempotency_tests, failure_drill, runbook_review] }
+  experience: { examples: [outcome_copy_change, status_visual_change, new_consequential_action], revalidate: [accessibility_tests, prohibited_claim_review, comprehension_review] }
+  ai:         { examples: [new_model, expanded_data_scope, new_action_capability], revalidate: [ai_boundary_tests, privacy_review, prompt_and_response_evidence_review, human_confirmation_review] }

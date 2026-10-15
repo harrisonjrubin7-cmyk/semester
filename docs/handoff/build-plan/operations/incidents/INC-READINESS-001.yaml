@@ -1,0 +1,13 @@
+incident:
+  id: INC-READINESS-001
+  title: "Readiness results may be based on stale SIS data"
+  severity: SEV-2
+  trigger: ["SIS freshness threshold exceeded for the active pilot tenant", "A confirmed source/projection mismatch affects a readiness result"]
+  immediate_product_action: [set_results_to_stale, disable_definitive_ready, keep_receipts_and_audit, show_support_and_office_handoff]
+  first_15_minutes: [acknowledge, assign_incident_commander, identify_tenant_and_affected_records, confirm_watermark_and_last_success, notify_institution_integration_owner, post_status_message]
+  communications:
+    students: "Some readiness details may be out of date while we refresh information from Vanderbilt. Nothing in your official record has changed. Please don't rely on Semester for a final answer until this message clears."
+    staff: "Readiness results for the pilot are temporarily marked stale. Route time-sensitive cases to manual review. No SIS data has been changed."
+    institution: "Incident INC-READINESS-001 opened at {time}. Scope: {n} cases. Cause under investigation; next update by {time}."
+  close_requires: [source_current, impacted_cases_reevaluated, sample_matches_source, reconciliation_cases_closed, postmortem_scheduled]
+  runbook: launch/runbooks/readiness_source_stale.md

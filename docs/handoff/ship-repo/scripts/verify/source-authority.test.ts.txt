@@ -1,0 +1,12 @@
+import { describe, expect, it } from "vitest";
+import { verifySourceAuthority as v } from "../../packages/source-provenance/verify-source";
+const now = new Date("2026-10-13T12:00:00Z"), base = { hasAuthorityOwner: true, hasSourceReference: true, maximumAgeMinutes: 60, now };
+describe("source authority", () => {
+  it("current institution_verified supports a definitive outcome", () => expect(v({ ...base, sourceClass: "institution_verified", observedAt: new Date("2026-10-13T11:30:00Z") }).canSupportDefinitiveOutcome).toBe(true));
+  it("connected never supports a definitive outcome", () => expect(v({ ...base, sourceClass: "connected", observedAt: new Date("2026-10-13T11:30:00Z") }).canSupportDefinitiveOutcome).toBe(false));
+  it("stale blocks", () => expect(v({ ...base, sourceClass: "institution_verified", observedAt: new Date("2026-10-13T10:00:00Z") }).state).toBe("stale"));
+  it("missing owner → needs review", () => expect(v({ ...base, hasAuthorityOwner: false, sourceClass: "institution_verified", observedAt: now }).displayLabel).toBe("Needs review"));
+  it("missing observedAt → unknown", () => expect(v({ ...base, sourceClass: "institution_verified" }).state).toBe("unknown"));
+  it("future timestamp → unknown", () => expect(v({ ...base, sourceClass: "institution_verified", observedAt: new Date("2026-10-13T13:00:00Z") }).state).toBe("unknown"));
+  it("AI-assisted never definitive", () => expect(v({ ...base, sourceClass: "ai_assisted", observedAt: now }).canSupportDefinitiveOutcome).toBe(false));
+});

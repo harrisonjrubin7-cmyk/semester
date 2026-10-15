@@ -1,0 +1,17 @@
+id,domain,Designed,Implemented,Tested,Deployed,Institution-authorized,Production-enabled,proposed_roles,runtime_audit
+D01,Identity and onboarding,Prototype,Partial,Account-sync required check,Hosted PWA (signed-in sync),No,No,Identity / Security / Privacy,NOT PERFORMED
+D02,Planning and degree,Prototype,Partial,Not evidenced,Hosted PWA (seed data),No,No,Academic engineering / Registrar,NOT PERFORMED
+D03,Registration,Prototype,"Server code, not release-ready",Server tests,No tenant,No,No,Registration engineering / Registrar,NOT PERFORMED
+D04,Courses and teaching,Prototype,Partial,Not evidenced,Hosted PWA (personal courses),No,No,Learning engineering / Faculty,NOT PERFORMED
+D05,Assignments and work,Prototype,Partial (per-row tasks only),Calendar keyboard/open-calendar tests,Hosted PWA (device-first),No,No,Productivity engineering / Faculty,NOT PERFORMED
+D06,Study and tutoring,Prototype,Client-only/mock + partial,Not evidenced,Hosted PWA,No,No,Learning engineering / Tutoring operations,NOT PERFORMED
+D07,Grades and progress,Prototype,"Server code, not release-ready",Server tests,No tenant,No,No,Gradebook engineering / Faculty / Registrar,NOT PERFORMED
+D08,Advising and support,Prototype,Partial,Not evidenced,No staffed route,No,No,Advising / Support / Privacy,NOT PERFORMED
+D09,Career and portfolio,Prototype,Client-only/mock,Not evidenced,Hosted PWA (local),No,No,Career engineering / Career services,NOT PERFORMED
+D10,Campus and community,Prototype,Partial,Community.test.tsx,Hosted PWA,No,No,Community engineering / Trust and Safety,NOT PERFORMED
+D11,"Housing, dining, services",Prototype,Partial,Not evidenced,Hosted PWA,No,No,Campus services / Providers,NOT PERFORMED
+D12,Money and finance,Prototype,Partial,Billing live-acceptance evidence,Checkout held,No,No,Finance engineering / Finance / Counsel,NOT PERFORMED
+D13,Institution OS,Prototype,"Server code, not release-ready",Server tests,No tenant; gateway dependency,No,No,Institution engineering / Customer IT,NOT PERFORMED
+D14,Company OS,Prototype,Documents,Not evidenced,Not evidenced,No,No,Founder / Finance / Counsel / Operations,NOT PERFORMED
+D15,Developer and partner,Prototype,None found,Not evidenced,Not evidenced,No,No,Platform engineering / Partner operations,NOT PERFORMED
+D16,Governed AI,Prototype,Partial (ungoverned),Not gated,Hosted shared-key function,No,No,AI engineering / Security / Privacy,NOT PERFORMED

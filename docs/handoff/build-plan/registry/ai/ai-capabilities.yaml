@@ -1,0 +1,12 @@
+ai_capabilities:
+  - key: ai.readiness_explanation
+    user_value: "Explain a visible readiness state in plain language."
+    allowed_inputs: [already_authorized_readiness_summary, approved_source_labels, approved_help_content]
+    prohibited_inputs: [raw_student_record_export, hidden_staff_notes, data_from_another_tenant, records_outside_current_user_scope]
+    allowed_outputs: [explanation, source_aware_next_steps, handoff_message_draft]
+    prohibited_outputs: [enrollment_decision, policy_override, official_record_correction, undisclosed_inference]
+    human_confirmation: required_for_any_action
+    disclosure: [ai_assisted_label, data_scope_statement, source_list, uncertainty_statement]
+    evaluation: [grounding_test, privacy_boundary_test, harmful_claim_test, official_authority_test]
+    state: proposed   # not enabled; needs the evidence store and evals first
+rule: "An AI capability not in this registry can't be called by the gateway."

@@ -1,0 +1,12 @@
+# Open blockers from the full registrar blueprint (13 Oct). None resolved.
+blockers:
+  - "Live repo already has registration_*, grade_entries, academic_record_entries — need a column/constraint/function/policy/migration-history diff against them before any new schema (mock-validation audit, 13 Oct)"
+  - "JWT issuer/audience/signature/expiry/rotation/revocation not verified (mock tokens only)"
+  - Actual code/schema coverage not reconciled (capability-register.yaml code_ref all null)
+  - Proposed endpoints not validated against the live app (api/academic.openapi.yaml)
+  - Vanderbilt policies and approved golden cases not supplied (requirements/golden-cases.yaml approved_by null)
+  - Source extracts, mappings and reporting obligations unresolved
+  - Hosting and worker configuration unverified
+  - No authority transfer or deployment performed
+required_owners: [registrar_product_owner, academic_policy_approvers, database_platform_lead, enrollment_engineering_lead, records_calculation_lead, integration_migration_lead, security_privacy_accessibility_reviewers, release_operations_authority, named_institutional_acceptance_owners]
+build_tracks: [academic_policy_and_canonical_records, curriculum_and_scheduling, transactional_enrollment, gradebook_to_ledger_posting, degree_graduation_record_services, iam_operations_evidence, migration_and_authority_transfer]

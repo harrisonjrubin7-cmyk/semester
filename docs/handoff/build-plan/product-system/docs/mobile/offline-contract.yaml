@@ -1,0 +1,8 @@
+offline:
+  allowed: [view_explicitly_cached_nonrestricted_content, create_private_drafts, queue_nonconsequential_student_entered_changes, read_saved_study_material_when_permitted]
+  blocked_or_deferred: [consequential_institutional_commands, fresh_readiness_decisions, official_record_updates, delegation_changes, source_dependent_approvals]
+  required_copy:
+    offline: "You are offline. You can keep working on saved items. Changes that need a connection will sync when you are back."
+    stale: "This information may have changed. Check the named source before making a final decision."
+  sync: {requirements: [idempotency_key, conflict_detection, user_visible_status, retry_limits, safe_failure_state]}
+  note: an offline queue can't submit an official action later without a fresh authorization check

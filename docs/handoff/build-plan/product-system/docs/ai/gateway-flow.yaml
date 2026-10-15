@@ -1,0 +1,7 @@
+ai_gateway:
+  checks: [identity_and_tenant_context, user_permission_and_data_scope, allowed_capability_and_tool_check, source_retrieval_and_authority_check, policy_and_safety_check, answer_and_action_review]
+  same_as: guidelines/arch-ai-gateway.html (six checks; protected records never in a provider request)
+  response_contract:
+    required: [AI_assisted_label, answer_or_safe_refusal, source_or_limit_statement, uncertainty_statement_when_relevant, clear_next_step, action_preview_before_any_consequential_step]
+    prohibited: [unbounded_record_retrieval, cross_tenant_context, invented_source_citations, policy_override, undisclosed_personalization, automatic_consequential_action, training_on_student_records]
+  answer_frame: {label: AI-assisted, scopeStatement: string, answer: string, sources: "[{label, authority: institution|course|student|public|none, freshness}]", limitations: "string[]", confidence: high|limited|needs_review, proposedAction: "{type, preview, requiresHumanConfirmation: true}", safeHandoff: "{destination, reason}"}

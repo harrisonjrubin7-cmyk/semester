@@ -1,0 +1,6 @@
+workflow_router:
+  status: internal_evaluation_tool
+  prototype: ui_kits/workflow-lab (prototype mode labelled) · spec guidelines/tooling-workflow-router.html
+  allowed: [compare_workflow_implementation_patterns, store_synthetic_or_approved_nonstudent_examples, evaluate_adapter_reliability, export_nonrestricted_benchmark_results, identify_escalation_requirements]
+  prohibited: [route_live_student_records_to_unapproved_external_tools, use_benchmark_score_as_sole_approval_basis, present_prototype_output_as_production_automation, allow_unreviewed_tool_execution]
+  production_promotion_requires: [lint_typecheck_and_build, RLS_and_tenant_isolation_tests, contract_tests, audit_and_evidence_model, authorization_boundaries, incident_and_rollback_runbook, human_review_for_high_impact_decisions]

@@ -1,0 +1,75 @@
+// Registrar readiness console: scoped queue (ids, not names, until a case is opened), route a case, request + decide exceptions.
+// Copy to app/src/features/readiness/RegistrarConsole.tsx. Requester can't decide their own exception (server enforces; UI hides the button too).
+import { useEffect, useState } from "react";
+import { ApiError, STATE_COPY, type ExceptionRequest, type QueueRow, type ReadinessClient, type ReadinessState } from "./api";
+
+const OFFICES = ["Registrar", "Advising", "Bursar", "Financial aid", "Dean of students"];
+const REASONS = [["prereq_equivalent", "Equivalent prerequisite completed elsewhere"], ["hold_resolved_offline", "Hold cleared outside the SIS (evidence attached)"], ["data_correction", "Source record is wrong and has been corrected"], ["policy_exception", "Approved policy exception"]];
+
+export function RegistrarConsole({ client, me }: { client: ReadinessClient; me: string }) {
+  const [rows, setRows] = useState<QueueRow[]>([]); const [next, setNext] = useState<string | undefined>();
+  const [f, setF] = useState<{ state?: ReadinessState; office?: string }>({ state: "needs_review" });
+  const [sel, setSel] = useState<QueueRow | null>(null); const [msg, setMsg] = useState<{ tone: "ok" | "bad"; text: string } | null>(null);
+  const [exc, setExc] = useState<ExceptionRequest | null>(null);
+  const [route, setRoute] = useState({ office: OFFICES[0], reason: "" }); const [ex, setEx] = useState({ reason: REASONS[0][0], why: "" });
+
+  const load = async (cursor?: string) => {
+    try { const r = await client.queue({ ...f, cursor }); setRows(cursor ? [...rows, ...r.rows] : r.rows); setNext(r.next); }
+    catch (e) { setMsg({ tone: "bad", text: e instanceof ApiError ? e.userMessage : "Couldn't load the queue" }); }
+  };
+  useEffect(() => { load(); setSel(null); }, [f.state, f.office]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const act = async (fn: () => Promise<unknown>, ok: string) => {
+    setMsg(null);
+    try { await fn(); setMsg({ tone: "ok", text: ok }); await load(); }
+    catch (e) { const a = e instanceof ApiError ? e : null; setMsg({ tone: "bad", text: a?.status === 409 ? "This case changed since you opened it. The list has been reloaded." : a?.userMessage ?? "Nothing was changed." }); if (a?.status === 409) { await load(); setSel(null); } }
+  };
+
+  return (
+    <main style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(300px,380px)", gap: 16, padding: 16 }}>
+      <section aria-labelledby="q-h" style={{ minWidth: 0 }}>
+        <h1 id="q-h" style={{ fontSize: 22, margin: "0 0 8px" }}>Readiness queue</h1>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+          <label>State <select value={f.state ?? ""} onChange={(e) => setF({ ...f, state: (e.target.value || undefined) as ReadinessState })}><option value="">All</option>{Object.keys(STATE_COPY).map((k) => <option key={k} value={k}>{STATE_COPY[k as ReadinessState].title}</option>)}</select></label>
+          <label>Office <select value={f.office ?? ""} onChange={(e) => setF({ ...f, office: e.target.value || undefined })}><option value="">All</option>{OFFICES.map((o) => <option key={o}>{o}</option>)}</select></label>
+        </div>
+        <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead><tr>{["Case", "Student", "State", "Freshness", "Office", "Age"].map((h) => <th key={h} scope="col" style={th}>{h}</th>)}</tr></thead>
+          <tbody>{rows.map((r) => <tr key={r.caseId} aria-selected={sel?.caseId === r.caseId} style={{ background: sel?.caseId === r.caseId ? "var(--surface-raised)" : undefined }}>
+            <td style={td}><button type="button" onClick={() => { setSel(r); setExc(null); setMsg(null); }} style={link}>{r.caseId.slice(0, 8)}</button></td>
+            <td style={td}>{r.studentRef}</td><td style={td}>{STATE_COPY[r.state].title}</td><td style={td}>{r.freshness}</td><td style={td}>{r.office ?? "—"}</td><td style={td}>{r.ageHours} h</td></tr>)}</tbody>
+        </table></div>
+        {!rows.length && <p style={{ color: "var(--text-secondary)" }}>Nothing in this view.</p>}
+        {next && <button type="button" onClick={() => load(next)} style={btn}>Load more</button>}
+      </section>
+
+      <aside aria-label="Case" style={{ display: "grid", gap: 12, alignContent: "start" }}>
+        {msg && <p role={msg.tone === "bad" ? "alert" : "status"} style={{ margin: 0, padding: "8px 10px", borderLeft: `4px solid ${msg.tone === "ok" ? "var(--status-success)" : "var(--status-danger)"}`, background: "var(--surface-raised)" }}>{msg.text}</p>}
+        {!sel ? <p style={{ color: "var(--text-secondary)" }}>Open a case to route it or request an exception.</p> : <>
+          <section style={card}><h2 style={{ margin: 0, fontSize: 16 }}>Route case {sel.caseId.slice(0, 8)}</h2>
+            <label>Office <select value={route.office} onChange={(e) => setRoute({ ...route, office: e.target.value })}>{OFFICES.map((o) => <option key={o}>{o}</option>)}</select></label>
+            <label>Reason code <input value={route.reason} onChange={(e) => setRoute({ ...route, reason: e.target.value })} placeholder="e.g. hold_owner" /></label>
+            <button type="button" disabled={!route.reason.trim()} onClick={() => act(() => client.route(sel.caseId, sel.version, route.office, route.reason), "Routed to " + route.office)} style={btn}>Route</button>
+          </section>
+          <section style={card}><h2 style={{ margin: 0, fontSize: 16 }}>Exception</h2>
+            {exc ? <>
+              <p style={{ margin: 0, fontSize: 14 }}><strong>{exc.status}</strong> · {REASONS.find((r) => r[0] === exc.reasonCode)?.[1]} · requested by {exc.requestedBy}</p>
+              {exc.status === "pending" && (exc.requestedBy === me ? <p style={{ margin: 0, fontSize: 13, color: "var(--text-secondary)" }}>You requested this, so someone else has to decide it.</p> :
+                <div style={{ display: "flex", gap: 8 }}><button type="button" style={btn} onClick={() => act(async () => setExc(await client.decideException(exc.id, exc.version, "approved", "")), "Approved")}>Approve</button><button type="button" style={btn} onClick={() => act(async () => setExc(await client.decideException(exc.id, exc.version, "denied", "")), "Denied")}>Deny</button></div>)}
+            </> : <>
+              <label>Reason <select value={ex.reason} onChange={(e) => setEx({ ...ex, reason: e.target.value })}>{REASONS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
+              <label>Justification <textarea rows={3} value={ex.why} onChange={(e) => setEx({ ...ex, why: e.target.value })} /></label>
+              <p style={{ margin: 0, fontSize: 13, color: "var(--text-secondary)" }}>Preview: case {sel.caseId.slice(0, 8)} would show “ready (exception)” to the student, labelled as an exception, until the source record changes.</p>
+              <button type="button" disabled={ex.why.trim().length < 20} onClick={() => act(async () => setExc(await client.requestException(sel.caseId, ex.reason, ex.why)), "Exception requested — awaiting a second person")} style={btn}>Request exception</button>
+            </>}
+          </section>
+        </>}
+      </aside>
+    </main>
+  );
+}
+const th: React.CSSProperties = { textAlign: "left", fontSize: 12, padding: "6px 8px", borderBottom: "1px solid var(--border-subtle)", color: "var(--text-secondary)" };
+const td: React.CSSProperties = { fontSize: 14, padding: "6px 8px", borderBottom: "1px solid var(--border-subtle)" };
+const card: React.CSSProperties = { border: "1px solid var(--border-subtle)", borderRadius: 8, padding: 12, display: "grid", gap: 8, background: "var(--surface-base)" };
+const btn: React.CSSProperties = { font: "inherit", fontSize: 14, minHeight: 40, padding: "0 14px", borderRadius: 6, border: "1px solid var(--border-subtle)", background: "var(--surface-base)", color: "var(--text-primary)", cursor: "pointer", justifySelf: "start" };
+const link: React.CSSProperties = { all: "unset", cursor: "pointer", color: "var(--text-link)", fontFamily: "var(--font-mono)" };

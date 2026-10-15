@@ -158,6 +158,12 @@ const NOT_CONTENT = new Set([
    */
   'school_membership_requests',
   /*
+   * A notice that the SIS cleared a registration hold (D-1448). The database
+   * writes it when the hold lifts; the student only marks it read. Nothing in
+   * it is theirs to lose, and the hold itself stays with the school.
+   */
+  'hold_release_notices',
+  /*
    * `activity` is the strongest case in this list rather than the weakest, and
    * it is worth saying why in more than a word.
    *

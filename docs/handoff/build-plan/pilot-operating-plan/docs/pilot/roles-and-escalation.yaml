@@ -1,0 +1,13 @@
+decision_owners:
+  - {area: Student eligibility and cohort, institution: pilot sponsor, semester: Harrison (implementation lead), escalate_when: eligibility rule unclear}
+  - {area: Source authority and meaning, institution: registrar/source owner, semester: Harrison (connector owner until hire), escalate_when: source conflicts or is stale}
+  - {area: Policy interpretation, institution: authorized institutional owner, semester: Harrison (product), escalate_when: workflow would imply a policy decision}
+  - {area: Student support routing, institution: advising/registrar lead, semester: Harrison (support lead), escalate_when: no approved office can resolve the case}
+  - {area: Security, privacy, access, institution: IT/security owner, semester: security advisor (to engage), escalate_when: access anomaly, incident or data request}
+  - {area: Product behaviour, institution: product sponsor, semester: Harrison, escalate_when: a defect changes expected workflow}
+  - {area: Activation and safe-off, institution: executive sponsor, semester: Harrison (ops) · contractor (backup with safe-off authority), escalate_when: release gate fails or material risk emerges}
+# One severity scale. The PDF's P0–P2 here, the hypercare S1–S4 and the assurance Sev 1–4 were three names for the same thing.
+severity:
+  - {level: P0, also_called: [S1, Sev 1], definition: suspected unauthorized access, cross-tenant exposure, material data-integrity problem or unsafe consequential behaviour, immediate: [safe_off_affected_capability, preserve_evidence, notify_security_and_institution_contacts, begin_incident_runbook]}
+  - {level: P1, also_called: [S2, Sev 2], definition: pilot workflow unavailable or incorrect for a meaningful part of the cohort with no safe automated fallback, immediate: [activate_safe_review_or_manual_path, open_incident, notify_operational_owners]}
+  - {level: P2, also_called: [S3, S4, Sev 3, Sev 4], definition: non-critical defect, usability issue, or contained source-data mismatch, immediate: [create_case, assign_owner, communicate_next_step_if_student_affected]}

@@ -1,0 +1,20 @@
+incident_learning_loop:
+  inputs: [incidents, support_handoffs, reconciliation_cases, access_denials, source_freshness_failures, accessibility_findings, AI_refusals_and_escalations, customer_feedback]
+  classification: [defect, documentation_gap, training_gap, policy_gap, source_or_connector_gap, workflow_design_gap, capability_gap, institution_configuration_gap]
+  outputs: [immediate_remediation, recurring_problem_record, risk_register_update, backlog_item, runbook_update, test_case, customer_communication]
+  example: {id: PROB-SOURCE-001, trigger: readiness results shown after the freshness window passed, containment: [display_stale_state, block_definitive_result, refresh_and_staff_review_path], permanent_fix: [freshness_policy_enforcement, source_health_alert, projection_expiration_job, stale_state_regression_test], linked: [CAP-REG-001, SIS-READINESS-001, POL-READINESS-001, TST-WF-READINESS-STALE-001, RSK-SOURCE-003]}
+accessibility_operating_model:
+  discovery: [identify_access_needs_and_critical_tasks, define_assistive_technology_risks]
+  design: [shipped_contrast_safe_tokens, semantics_and_focus_order, loading_error_and_status_announcements]
+  build: [semantic_components, keyboard_behavior, accessible_names, reduced_motion]
+  verify: [automated_scans, keyboard_path, screen_reader_critical_path, zoom_and_reflow, mobile_touch_targets, contrast_validation]
+  operate: [capture_support_issues, prioritize_blocking_issues, update_VPAT_ACR_evidence_and_remediation_log]
+institution_change_control:
+  request: [change_description, affected_capability, tenant_scope, source_or_policy_impact, student_and_staff_impact, implementation_owner, rollback_plan]
+  review: [authority, data_scope, policy, accessibility, workflow, training, support, measurement]
+  activation: [validated_configuration_version, approvals, test_evidence, communication_plan_when_behavior_changes, monitoring_window]
+  close: [post_activation_check, evidence_attachment, decision_and_receipt]
+retirement:
+  applies_to: [capabilities, feature_flags, screens, connectors, AI_tools, APIs, data_elements, tenant_configurations, partner_applications]
+  required: [retirement_owner, affected_tenant_and_user_analysis, replacement_or_safe_alternative, communication_plan, access_revocation, workflow_drain_or_compensation, data_retention_and_deletion_plan, audit_and_receipt_preservation, documentation_update, post_retirement_verification]
+  rule: design retirement before activation

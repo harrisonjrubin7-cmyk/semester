@@ -1,0 +1,10 @@
+// Fails if any table in the exposed schemas lacks forced RLS, or anon can read it.
+import { expect, test } from "vitest";
+import { createClient } from "@supabase/supabase-js";
+const db = createClient(process.env.SUPABASE_URL ?? "http://127.0.0.1:54321", process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+test("every exposed table has RLS enabled + forced and no anon read", async () => {
+  const { data, error } = await db.rpc("assurance_rls_coverage"); // wraps handoff/security-assurance/assurance-registers.sql query 1
+  expect(error).toBeNull();
+  const bad = (data as Array<{ table_name: string; rls_enabled: boolean; rls_forced: boolean; anon_can_select: boolean }>).filter((r) => !r.rls_enabled || !r.rls_forced || r.anon_can_select);
+  expect(bad.map((r) => r.table_name)).toEqual([]);
+});

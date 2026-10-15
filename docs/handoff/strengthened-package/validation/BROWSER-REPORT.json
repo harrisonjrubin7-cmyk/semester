@@ -1,0 +1,7 @@
+{
+  "onboarding_and_submission": true,
+  "mobile_no_overflow": true,
+  "operator_no_student_records": true,
+  "outbox_http_worker": true,
+  "page_errors": []
+}

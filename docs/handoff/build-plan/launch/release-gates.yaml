@@ -1,0 +1,134 @@
+# docs/launch/release-gates.yaml — from "continue expanding, defining and providing material" (13 Oct 2026).
+# A gate is passed only when every required evidence item is attached to the capability's evidence record
+# (launch/evidence/<capability>.yaml) for the exact release and environment. No generalized "ready" status.
+
+definition_of_shipped:            # a capability version is shipped only when ALL are true
+  design:
+    - screen rendered for intended roles
+    - ready, loading, empty, error, forbidden, offline and stale-source states implemented
+    - accessibility checks pass
+  data:
+    - canonical table and foreign keys migrated
+    - source authority and freshness fields implemented
+    - RLS allow and deny tests pass
+  behavior:
+    - API and command contracts versioned
+    - idempotency and audit trail for consequential actions
+    - worker or reconciliation exists where external systems participate
+  governance:
+    - policy evaluated at action time
+    - consent and delegation boundaries enforced
+    - AI bounded and labeled
+  operations:
+    - metrics, logs, alerts, runbook and rollback exist
+    - release evidence attached to the capability record
+
+gates:
+  - id: identity
+    required: [sso_session_tests, tenant_isolation_tests, role_matrix]
+    blocks_if_absent: authenticated pilot access
+  - id: data
+    required: [migrations_applied, rls_allow_deny_tests, backup_restore_proof]
+    blocks_if_absent: any pilot records
+  - id: source
+    required: [system_of_record_mapping, freshness_alerts, reconciliation]
+    blocks_if_absent: any claim that data is official
+  - id: workflow
+    required: [idempotency_test, timeout_test, retry_test, compensation_test]
+    blocks_if_absent: consequential writes
+  - id: ux
+    required: [state_coverage, accessibility_check, source_labels, consequence_copy_review]
+    blocks_if_absent: user-facing release
+  - id: ops
+    required: [alerts_routed, runbook, support_queue, incident_drill]
+    blocks_if_absent: production activation
+  - id: institution
+    required: [named_institution_owner, policy_consent_review, pilot_scope_signed]
+    blocks_if_absent: institution rollout
+
+capability_waves:                 # activate in order; a wave starts only when the previous wave's gates pass
+  - wave: 0
+    scope: identity, tenancy, grants, RLS, audit, policy, worker core
+    gates: [identity, data]
+  - wave: 1
+    scope: student Today, calendar, tasks, courses, support (read-heavy, low consequence)
+    gates: [identity, data, source, ux, ops]
+  - wave: 2
+    scope: advising, degree, readiness, registration planning
+    gates: [identity, data, source, ux, ops, institution]
+  - wave: 3
+    scope: registration submission + reconciliation
+    gates: [identity, data, source, workflow, ux, ops, institution]
+  - wave: 4
+    scope: grades + faculty assessment
+    gates: [identity, data, source, workflow, ux, ops, institution]
+  - wave: 5
+    scope: billing, family sharing, career, community
+    gates: [identity, data, source, workflow, ux, ops, institution]
+  - wave: 6
+    scope: company OS, developer portal, marketplace, partner ops (only after core pilot evidence)
+    gates: [identity, data, workflow, ux, ops]
+
+pilot_launch_controls:
+  - pilot_tenant_isolated
+  - named_institution_authority_contact
+  - sso_tested
+  - consent_language_approved
+  - source_freshness_visible
+  - support_escalation_path_active
+  - data_export_and_deletion_tested
+  - incident_severity_matrix_published
+  - rollback_drill_completed
+  - launch_day_command_center_staffed
+
+tracks:
+  platform_foundation:
+    owner: platform_lead
+    priority: P0
+    deliverables: [request_context_verified_jwt, tenant_membership_resolution, grants_from_db, policy_adapter, rls_binding_via_auth_uid, structured_audit_log, ci_required_checks]
+    release_gate: [unauthenticated_rejected, cross_tenant_reads_denied, cross_tenant_writes_denied, privileged_action_requires_policy_allow, audit_event_persisted_for_sensitive_action]
+    note: keep the repo's npm workspaces + Vite app; the PDF's pnpm/Turborepo/Supabase-SSR items apply only if the app is ever split
+  data_workflows:
+    owner: data_platform_lead
+    priority: P0
+    nonnegotiable: [foreign_keys, state_machine_checks, idempotency_unique_keys, rls_on_exposed_tables, immutable_audit, outbox_for_side_effects, skip_locked_leasing, reconciliation_for_external_authorities]
+  product_surfaces:
+    owner: product_lead
+    priority: P0
+    method: vertical capability slices, never screens in isolation (first slice: registration_readiness)
+  pilot_operations:
+    owner: pilot_operations_lead
+    priority: P0
+    per_capability: [operator_owner, queue, recovery_procedure, support_path, slo, customer_facing_limits]
+
+ai_governance:
+  allowed: [explain_policy, summarize_student_visible_sources, propose_study_drafts, help_prepare_nonbinding_plans, draft_messages_for_human_review]
+  prohibited: [determine_official_grade, approve_override, submit_registration, initiate_payment, disclose_unconsented_information, access_raw_student_records]
+  required_ui: [ai_assisted_label, sources_or_source_limits, uncertainty_copy, human_confirmation_for_action, report_or_correction_path]
+
+pilot_wedge:
+  id: registration_readiness_v1
+  student_routes: [/app/registration, /app/today, /app/support]
+  staff_routes: [/registrar/readiness, /registrar/readiness/:caseId, /registrar/overrides]
+  operator_routes: [/console/integrations, /console/audit, /ops/inbox, /ops/incidents]
+  excluded: [enrollment_submission, grade_changes, payment_processing, family_data_sharing, raw_student_record_use_by_ai]
+  outcome_states: [ready, blocked, needs_review, unknown, stale, referred, resolved]
+  schema: proposed-schema/065_readiness_wedge.sql
+  tests: supabase/tests/readiness_wedge.test.sql
+  runbook: launch/runbooks/readiness_source_stale.md
+
+two_week_cadence:
+  - { days: "1-2", deliverable: "tenant, account, membership, session, grants", gate: "cross-tenant deny test passes" }
+  - { days: "3-4", deliverable: "policy decision + audit event + RLS via auth.uid()", gate: "server-side policy checks pass" }
+  - { days: "5-6", deliverable: "readiness tables, constraints, seed fixtures", gate: "migration reset + SQL integrity tests pass" }
+  - { days: "7-8", deliverable: "student readiness page + receipt", gate: "source and stale-state behaviour reviewed" }
+  - { days: "9-10", deliverable: "registrar queue + case detail", gate: "scoped caseload + audit tests pass" }
+  - { days: "11", deliverable: "worker, outbox, freshness + reconciliation", gate: "retry + stale-source drill pass" }
+  - { days: "12", deliverable: "accessibility + mobile review", gate: "critical a11y defects cleared" }
+  - { days: "13", deliverable: "incident, rollback, support handoff drills", gate: "operator signs off" }
+  - { days: "14", deliverable: "staging pilot rehearsal", gate: "all release evidence attached" }
+
+after_proof:   # reuse the same contract, in this order
+  - advising_and_referral
+  - registration_request     # only after preview, idempotency, reconciliation, compensation, escalation are proven
+  - faculty_grades           # draft vs official, accommodation-limited visibility, approval trail, SIS sync receipt

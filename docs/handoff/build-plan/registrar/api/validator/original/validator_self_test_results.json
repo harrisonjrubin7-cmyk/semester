@@ -1,0 +1,162 @@
+{
+  "document_validation": "not_run",
+  "findings": [],
+  "cases": [
+    {
+      "case": "valid add",
+      "path": "/registration",
+      "method": "post",
+      "direction": "request",
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "case": "invalid swap",
+      "path": "/registration",
+      "method": "post",
+      "direction": "request",
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "code": "PAYLOAD_SCHEMA",
+          "instance_path": "/",
+          "schema_path": "/oneOf",
+          "keyword": "oneOf"
+        }
+      ]
+    },
+    {
+      "case": "unknown operation",
+      "path": "/registration",
+      "method": "post",
+      "direction": "request",
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "code": "PAYLOAD_SCHEMA",
+          "instance_path": "/",
+          "schema_path": "/oneOf",
+          "keyword": "oneOf"
+        }
+      ]
+    },
+    {
+      "case": "invalid UUID",
+      "path": "/registration",
+      "method": "post",
+      "direction": "request",
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "code": "PAYLOAD_SCHEMA",
+          "instance_path": "/",
+          "schema_path": "/oneOf",
+          "keyword": "oneOf"
+        }
+      ]
+    },
+    {
+      "case": "extra field",
+      "path": "/registration",
+      "method": "post",
+      "direction": "request",
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "code": "PAYLOAD_SCHEMA",
+          "instance_path": "/",
+          "schema_path": "/oneOf",
+          "keyword": "oneOf"
+        }
+      ]
+    },
+    {
+      "case": "empty array",
+      "path": "/registration",
+      "method": "post",
+      "direction": "request",
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "code": "PAYLOAD_SCHEMA",
+          "instance_path": "/",
+          "schema_path": "/oneOf",
+          "keyword": "oneOf"
+        }
+      ]
+    },
+    {
+      "case": "duplicate IDs",
+      "path": "/registration",
+      "method": "post",
+      "direction": "request",
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "code": "PAYLOAD_SCHEMA",
+          "instance_path": "/",
+          "schema_path": "/oneOf",
+          "keyword": "oneOf"
+        }
+      ]
+    },
+    {
+      "case": "nullable receipt",
+      "path": "/registration",
+      "method": "post",
+      "direction": "response",
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "case": "invalid state",
+      "path": "/registration",
+      "method": "post",
+      "direction": "response",
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "code": "PAYLOAD_SCHEMA",
+          "instance_path": "/state",
+          "schema_path": "/properties/state/enum",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "case": "missing required",
+      "path": "/registration",
+      "method": "post",
+      "direction": "response",
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "code": "PAYLOAD_SCHEMA",
+          "instance_path": "/",
+          "schema_path": "/required",
+          "keyword": "required"
+        }
+      ]
+    }
+  ],
+  "passed": true,
+  "limitations": [
+    "Captured JSON bodies only; no live endpoint calls",
+    "Parameters, headers, cookies and serialization not fully covered",
+    "Required readOnly/writeOnly omission semantics require OAS-aware validator",
+    "No JWT signature or current-grant verification",
+    "No remote/custom dialect resolution; unsupported cases block",
+    "Contract validation does not prove FERPA, transactions or SIS correctness"
+  ],
+  "status": "JSON Schema self-tests only; OAS document validation not run"
+}

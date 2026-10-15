@@ -1,0 +1,3 @@
+ai_response_record:
+  required: [response_id, tenant_id, actor_scope_hash, capability_key, policy_version, allowed_data_categories, source_references, model_or_provider_identifier, prompt_template_version, output_safety_status, human_action_required, created_at]
+  prohibited_storage: [raw_restricted_prompt_content_without_approved_need, credentials, session_tokens, unredacted_sensitive_context_in_general_logs]

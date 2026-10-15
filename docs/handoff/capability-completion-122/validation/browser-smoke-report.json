@@ -1,0 +1,12 @@
+{
+  "initial_navigation": 122,
+  "registration_heading": "Registration readiness",
+  "valid_simulation": "Synthetic check passed. No external action performed.",
+  "self_approval": "Blocked in synthetic context.",
+  "note_persistence": true,
+  "unavailable_state": true,
+  "dark_theme": true,
+  "mobile_no_document_overflow": true,
+  "empty_filter": true,
+  "page_errors": []
+}

@@ -1,0 +1,36 @@
+(function(root){
+'use strict';
+function adjusted(a){
+ if(a.earned===null||a.earned===undefined)return null;
+ const p=Number(a.possible), e=Number(a.earned), d=Number(a.daysLate||0),r=Number(a.rate||0),cap=Number(a.cap??100);
+ if(!Number.isFinite(p)||p<=0||!Number.isFinite(e)||e<0||e>p||!Number.isInteger(d)||d<0||!Number.isFinite(r)||r<0||!Number.isFinite(cap)||cap<0||cap>100)throw Error('Invalid score or late rule');
+ if(a.alreadyAdjusted||a.rule==='none')return e;
+ const reduction=Math.min(d*r,cap);
+ if(a.rule==='percent_earned_daily')return Math.max(0,e*(1-reduction/100));
+ if(a.rule==='percent_possible_daily'||a.rule==='percentage_points_daily')return Math.max(0,e-p*reduction/100);
+ throw Error('Unknown penalty rule');
+}
+function contributions(course, assignments, missingZero=false){
+ const rows=assignments.filter(a=>a.course===course.name&&!['excused','dropped'].includes(a.status));
+ const weights=new Map();
+ if(course.mode==='weighted'){
+  if(!course.categories?.length||Math.abs(course.categories.reduce((s,c)=>s+c.weight,0)-100)>.001)throw Error('Category weights must total 100%');
+  for(const c of course.categories){const group=rows.filter(a=>a.category===c.name), total=group.reduce((s,a)=>s+a.possible,0);if(total<=0)throw Error('Every category needs its complete assignment inventory');for(const a of group)weights.set(a,c.weight*a.possible/total)}
+  if(rows.some(a=>!weights.has(a)))throw Error('Unknown assignment category');
+ }else if(course.mode==='points'){
+  const total=rows.reduce((s,a)=>s+a.possible,0);
+  if(!Number.isFinite(course.totalPoints)||course.totalPoints<=0||Math.abs(total-course.totalPoints)>.001)throw Error('Full assignment points must match declared course total');
+  for(const a of rows)weights.set(a,100*a.possible/total);
+ }else if(course.mode==='equal'){
+  if(!rows.length)throw Error('Enter the complete assignment inventory');for(const a of rows)weights.set(a,100/rows.length);
+ }else throw Error('Unknown grading mode');
+ let earned=0,fixedWeight=0;const pending=[];
+ for(const a of rows){let score=null;if(a.status==='graded'){score=adjusted(a);if(score===null)throw Error('Graded assignment needs a score')}else if(a.status==='missing'&&missingZero)score=0;else if(!['pending','missing'].includes(a.status))throw Error('Invalid assignment status');
+ const weight=weights.get(a);if(score===null)pending.push({assignment:a,weight});else{earned+=weight*score/a.possible;fixedWeight+=weight}}
+ const remaining=pending.reduce((s,x)=>s+x.weight,0),required=remaining>0?(course.target-earned)/remaining*100:null;
+ return {earned,fixedWeight,remaining,required,current:fixedWeight?earned/fixedWeight*100:null,pending,
+ outcome:remaining===0?(earned>=course.target?'Target met':'No remaining work; target not met'):required<=0?'Target already secured':required>100?'Requires more than 100%; not feasible under this model':'Target feasible before future late penalties'};
+}
+root.SemesterGrades={adjusted,contributions};
+if(typeof module!=='undefined')module.exports=root.SemesterGrades;
+})(typeof globalThis!=='undefined'?globalThis:this);

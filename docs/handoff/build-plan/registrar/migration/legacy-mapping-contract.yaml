@@ -1,0 +1,12 @@
+# Legacy concept → canonical destination. Never infer missing history by applying current policy to old records.
+mappings:
+  - { legacy: Student ID, canonical: person_identifiers, rule: "Preserve the original namespace and identifier" }
+  - { legacy: Career/program record, canonical: student_academic_contexts + student_program_assignments, rule: "Preserve effective dates and catalog basis" }
+  - { legacy: Course master, canonical: course identity + versions, rule: "Separate stable identity from changing description/policy" }
+  - { legacy: Class/section, canonical: offering + section, rule: "Preserve term, component, cross-listing and capacity relationships" }
+  - { legacy: Registration row, canonical: enrollments + enrollment_events, rule: "Preserve the meaning of add, drop, withdrawal, cancellation" }
+  - { legacy: Transcript course, canonical: course_attempts, rule: "Preserve credits, grade mode, historical context" }
+  - { legacy: Grade / grade change, canonical: official_grade_decisions chain, rule: "Preserve original, correction, authority and timing" }
+status_rule: "Don't encode every historical legacy status into one universal enum; map each to an institution-approved meaning, keep the raw code in source_bindings."
+identity_rule: "Reject ambiguous identity matches — never guess. Email and name are signals, not proof."
+load_order: [institutions_and_academic_structures, people_and_identifiers, terms_and_policies, curriculum_versions, offerings_and_sections, academic_contexts_and_program_assignments, enrollments_and_attempts, grade_and_credit_decisions, degree_and_credential_records]

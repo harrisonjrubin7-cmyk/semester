@@ -62,7 +62,7 @@ grant select on market.drop_bid_summary to authenticated;
 
 -- F9 community.members exposed membership of every group (including sensitive ones) campus-wide.
 -- A policy on members cannot query members itself (infinite recursion), so membership is checked in a definer function.
-create or replace function community.is_member(g uuid) returns boolean language sql stable security definer set search_path = '' as $ select exists(select 1 from community.members m where m.group_id = g and m.profile_id = auth.uid()) $;
+create or replace function community.is_member(g uuid) returns boolean language sql stable security definer set search_path = '' as $$ select exists(select 1 from community.members m where m.group_id = g and m.profile_id = auth.uid()) $$;
 revoke all on function community.is_member(uuid) from anon;
 drop policy if exists m_read on community.members;
 create policy m_read_same_group on community.members for select using (

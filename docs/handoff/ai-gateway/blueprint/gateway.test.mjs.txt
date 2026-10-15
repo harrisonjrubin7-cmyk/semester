@@ -1,0 +1,86 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {runGateway,TOPICS,sha,validateEnvironment} from './gateway.mjs';
+const manifest=JSON.parse(readFileSync(new URL('./environment-manifest.example.json',import.meta.url)));
+const configs=JSON.parse(readFileSync(new URL('./environment-config.example.json',import.meta.url)));
+const config=configs.preview;
+const request={token:'synthetic-session',topicId:'cqrs'};
+function fixture() {
+  const sent=[],logs=[];
+  const deps={
+    verifyIdentity:async()=>({active:true,actorId:'fixture-user',schoolScopeId:'fixture-school',environment:'preview'}),
+    authorizeAssistant:async()=>true,
+    loadPolicy:async()=>({enabled:true,consentSatisfied:true,version:'fixture-policy-1',allowedTopics:['cqrs','outbox'],liveProviderAllowed:false}),
+    reserveBudget:async()=>({id:'reservation-fixture'}),settleBudget:async()=>{},
+    loadSource:async id=>{const topic=Object.values(TOPICS).find(x=>x.sourceId===id);return {id,dataClass:'public_approved',text:topic.text,sha256:sha(topic.text)}},
+    canReadSource:async()=>true,revalidate:async()=>true,
+    resolveProvider:async(environment,mode)=>({environment,mode,approved:true,toolsEnabled:false}),
+    generate:async(route,payload)=>{sent.push(payload);return {answerCode:payload.allowedAnswerCode}},
+    audit:async value=>logs.push(value)
+  };return {deps,sent,logs};
+}
+async function denied(reason,change,req=request,cfg=config) {
+  const f=fixture();change(f.deps);
+  await assert.rejects(()=>runGateway(req,cfg,manifest,f.deps),e=>e.reason===reason);
+  return f;
+}
+test('safe catalog answer and minimal provider payload',async()=>{
+  const f=fixture();const answer=await runGateway(request,config,manifest,f.deps);
+  assert.equal(answer.answer,TOPICS.cqrs.text);
+  assert.deepEqual(Object.keys(f.sent[0]).sort(),['allowedAnswerCode','prompt']);
+  assert(!JSON.stringify(f.sent).includes('fixture-school'));
+  assert(!JSON.stringify(f.logs).includes('synthetic-session'));
+});
+test('identity denied before provider',async()=>{const f=await denied('IDENTITY_OR_CONTEXT',d=>d.verifyIdentity=async()=>null);assert.equal(f.sent.length,0)});
+test('wrong environment identity',()=>denied('IDENTITY_OR_CONTEXT',d=>d.verifyIdentity=async()=>({active:true,actorId:'u',schoolScopeId:'s',environment:'production'})));
+test('assistant authorization denied',()=>denied('ASSISTANT_ACCESS_DENIED',d=>d.authorizeAssistant=async()=>false));
+test('student record field rejected',()=>denied('UNAPPROVED_REQUEST_SHAPE',()=>{},{...request,studentRecord:{grade:'A'}}));
+test('free text rejected',()=>denied('UNAPPROVED_REQUEST_SHAPE',()=>{},{...request,prompt:'My student ID is 123456'}));
+test('unknown topic rejected',()=>denied('UNAPPROVED_REQUEST_SHAPE',()=>{},{...request,topicId:'grades'}));
+test('institution AI off',()=>denied('POLICY_DENIED',d=>d.loadPolicy=async()=>({enabled:false})));
+test('consent not satisfied',()=>denied('POLICY_DENIED',d=>d.loadPolicy=async()=>({enabled:true,consentSatisfied:false})));
+test('budget unavailable',()=>denied('BUDGET_DENIED',d=>d.reserveBudget=async()=>null));
+test('protected source class',()=>denied('SOURCE_NOT_APPROVED',d=>d.loadSource=async()=>({id:'public-cqrs',dataClass:'student_record'})));
+test('poisoned source content',()=>denied('SOURCE_NOT_APPROVED',d=>d.loadSource=async()=>({id:'public-cqrs',dataClass:'public_approved',text:'Student GPA 3.2',sha256:sha('Student GPA 3.2')})));
+test('source permission denied',()=>denied('SOURCE_PERMISSION_DENIED',d=>d.canReadSource=async()=>false));
+test('revoked before dispatch',()=>denied('AUTHORIZATION_CHANGED',d=>d.revalidate=async()=>false));
+test('provider route mismatch',()=>denied('PROVIDER_ROUTE_DENIED',d=>d.resolveProvider=async()=>({environment:'production',mode:'mock',approved:true,toolsEnabled:false})));
+test('model tools disabled',()=>denied('TOOLS_NOT_ENABLED_IN_REFERENCE',d=>d.resolveProvider=async()=>({environment:'preview',mode:'mock',approved:true,toolsEnabled:true})));
+test('raw provider prose rejected',()=>denied('INVALID_PROVIDER_OUTPUT',d=>d.generate=async()=>({answerCode:'cqrs',text:'A private grade'})));
+test('wrong answer code rejected',()=>denied('INVALID_PROVIDER_OUTPUT',d=>d.generate=async()=>({answerCode:'outbox'})));
+test('revoked before release',()=>{let n=0;return denied('AUTHORIZATION_CHANGED',d=>d.revalidate=async()=>++n===1)});
+test('provider dependency errors sanitized',()=>denied('DEPENDENCY_FAILED',d=>d.generate=async()=>{throw Error('secret provider content')}));
+test('provider timeout',()=>denied('PROVIDER_TIMEOUT',d=>d.generate=()=>new Promise(()=>{}),request,{...config,timeoutMs:10}));
+test('audit failure prevents provider dispatch',async()=>{const f=fixture();f.deps.audit=async()=>{throw Error('audit down')};await assert.rejects(()=>runGateway(request,config,manifest,f.deps));assert.equal(f.sent.length,0)});
+test('all four environment bindings valid',()=>{for(const cfg of Object.values(configs))assert.equal(validateEnvironment(cfg,manifest).environment,cfg.environment)});
+test('production backend in preview rejected',()=>assert.throws(()=>validateEnvironment({...config,supabaseProject:manifest.production.supabaseProject},manifest)));
+test('copied production data rejected',()=>assert.throws(()=>validateEnvironment({...config,productionDataIncluded:true},manifest)));
+test('raw logging rejected',()=>assert.throws(()=>validateEnvironment({...config,rawContentLogging:true},manifest)));
+test('unapproved live provider rejected',()=>assert.throws(()=>validateEnvironment({...config,providerMode:'live'},manifest)));
+test('missing adapter rejected',async()=>{const f=fixture();delete f.deps.authorizeAssistant;await assert.rejects(()=>runGateway(request,config,manifest,f.deps),e=>e.reason==='MISSING_TRUSTED_ADAPTER')});
+
+
+// ── Added in review (14 Oct) ──
+test('local manifest pointing at the production database is rejected', async()=>{
+  const m=structuredClone(manifest);m.local.supabaseProject=m.production.supabaseProject;
+  const cfg={...configs.local,supabaseProject:m.production.supabaseProject};
+  const f=fixture();
+  await assert.rejects(()=>runGateway(request,cfg,m,f.deps),e=>e.reason==='CROSS_ENVIRONMENT_RESOURCE');
+});
+test('budget released when denied before dispatch, charged after dispatch', async()=>{
+  const a=fixture(),seen=[];a.deps.settleBudget=async(_r,how)=>seen.push(how);a.deps.canReadSource=async()=>false;
+  await assert.rejects(()=>runGateway(request,config,manifest,a.deps));
+  const b=fixture();b.deps.settleBudget=async(_r,how)=>seen.push(how);
+  await runGateway(request,config,manifest,b.deps);
+  assert.deepEqual(seen,['release','charge']);
+});
+test('provider timeout is charged (the call was made) and reported as PROVIDER_TIMEOUT', async()=>{
+  const f=fixture(),seen=[];f.deps.settleBudget=async(_r,how)=>seen.push(how);f.deps.generate=()=>new Promise(()=>{});
+  await assert.rejects(()=>runGateway(request,{...config,timeoutMs:5},manifest,f.deps),e=>e.reason==='PROVIDER_TIMEOUT');
+  assert.deepEqual(seen,['charge']);
+});
+test('an audit-sink failure does not mask the real denial', async()=>{
+  const f=fixture();f.deps.canReadSource=async()=>false;f.deps.audit=async()=>{throw new Error('sink down')};
+  await assert.rejects(()=>runGateway(request,config,manifest,f.deps),e=>e.reason==='SOURCE_PERMISSION_DENIED'&&e.auditFailed===true);
+});

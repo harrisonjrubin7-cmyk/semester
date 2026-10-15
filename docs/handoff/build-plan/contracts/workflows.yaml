@@ -1,0 +1,85 @@
+# workflows.yaml — command contracts. Every command runs the same 14-step chain.
+authorization_chain: [parse_and_validate_input, authenticate_session, resolve_tenant_context, resolve_workspace_context, resolve_active_membership, verify_membership_status, verify_role_and_grants, load_resource_scope, apply_consent_and_delegation_rules, evaluate_policy, verify_source_freshness_requirement, enforce_state_transition_guard, persist_audit_and_outbox_in_transaction, return_receipt_or_safe_error]
+commands:
+  - name: readiness.evaluate
+    version: 1
+    actor_roles: [student, advisor, registrar]
+    idempotency: required
+    preconditions: [active_membership, policy_allow, student_scope_or_authorized_staff_scope]
+    state_guard: { allowed_from: [unknown, stale, blocked, needs_review, resolved] }
+    writes: [readiness_cases, readiness_checks, readiness_receipts, audit_events, outbox_events]
+    publishes: [readiness.evaluated, receipt.created]
+    safe_failure: [do_not_change_official_records, return_retryable_or_review_state, preserve_existing_case_history]
+  - name: readiness.refresh
+    version: 1
+    actor_roles: [student, registrar]
+    idempotency: required
+    preconditions: [active_membership, policy_allow, student_scope_or_authorized_staff_scope]
+    state_guard: { allowed_from: [stale, blocked, needs_review, ready] }
+    writes: [readiness_cases, readiness_receipts, audit_events, outbox_events]
+    publishes: [readiness.refresh_requested]
+    safe_failure: [do_not_change_official_records, return_retryable_or_review_state, preserve_existing_case_history]
+  - name: referral.create
+    version: 1
+    actor_roles: [student]
+    idempotency: required
+    preconditions: [active_membership, policy_allow, student_scope_or_authorized_staff_scope]
+    state_guard: { allowed_from: [blocked, needs_review] }
+    writes: [referrals, readiness_receipts, audit_events, outbox_events]
+    publishes: [readiness.referral_created]
+    safe_failure: [do_not_change_official_records, return_retryable_or_review_state, preserve_existing_case_history]
+  - name: readiness.case.route
+    version: 1
+    actor_roles: [registrar]
+    idempotency: required
+    preconditions: [active_membership, policy_allow, staff_scope]
+    state_guard: { allowed_from: [needs_review] }
+    writes: [readiness_cases, referrals, audit_events, outbox_events]
+    publishes: [readiness.case_routed]
+    safe_failure: [do_not_change_official_records, return_retryable_or_review_state, preserve_existing_case_history]
+  - name: override.request
+    version: 1
+    actor_roles: [registrar]
+    idempotency: required
+    preconditions: [active_membership, policy_allow, staff_scope]
+    state_guard: { allowed_from: [blocked, needs_review] }
+    writes: [override_requests, policy_decisions, audit_events, outbox_events]
+    publishes: [override.requested]
+    safe_failure: [do_not_change_official_records, return_retryable_or_review_state, preserve_existing_case_history]
+  - name: override.decide
+    version: 1
+    actor_roles: [registrar]
+    idempotency: required
+    preconditions: [active_membership, policy_allow, staff_scope]
+    state_guard: { allowed_from: [blocked, needs_review] }
+    writes: [override_requests, policy_decisions, readiness_cases, audit_events, outbox_events]
+    publishes: [override.decided]
+    safe_failure: [do_not_change_official_records, return_retryable_or_review_state, preserve_existing_case_history]
+    separation_of_duties: decider_must_differ_from_requester
+  - name: readiness.case.assign
+    version: 1
+    actor_roles: [registrar]
+    idempotency: required
+    preconditions: [active_membership, policy_allow, staff_scope]
+    state_guard: { allowed_from: [blocked, needs_review, stale, referred] }
+    writes: [readiness_cases, audit_events, outbox_events]
+    publishes: [readiness.case_assigned]
+    safe_failure: [do_not_change_official_records, return_retryable_or_review_state, preserve_existing_case_history]
+  - name: readiness.case.refer
+    version: 1
+    actor_roles: [registrar]
+    idempotency: required
+    preconditions: [active_membership, policy_allow, staff_scope]
+    state_guard: { allowed_from: [needs_review, blocked] }
+    writes: [referrals, readiness_cases, audit_events, outbox_events]
+    publishes: [readiness.case_referred]
+    safe_failure: [do_not_change_official_records, return_retryable_or_review_state, preserve_existing_case_history]
+  - name: readiness.case.refresh
+    version: 1
+    actor_roles: [registrar]
+    idempotency: required
+    preconditions: [active_membership, policy_allow, staff_scope]
+    state_guard: { allowed_from: [stale, blocked, needs_review, ready] }
+    writes: [readiness_cases, readiness_receipts, audit_events, outbox_events]
+    publishes: [readiness.case_refreshed]
+    safe_failure: [do_not_change_official_records, return_retryable_or_review_state, preserve_existing_case_history]

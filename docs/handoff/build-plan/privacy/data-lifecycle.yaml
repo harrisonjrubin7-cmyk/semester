@@ -1,0 +1,7 @@
+fields:
+  - { record: readiness_cases, purpose: "help student prepare for registration", class: confidential, authority: semester_derived, retain: "pilot + 1 year, or institution schedule if longer", delete: "on contract end after export", legal_hold: respected }
+  - { record: readiness_receipts, purpose: "proof of what was shown", class: confidential, authority: semester, retain: "same as case", delete: with_case }
+  - { record: holds, purpose: "readiness input", class: restricted, authority: institution, retain: "projection only while connection active", delete: "within 30 days of contract end" }
+  - { record: audit_events, purpose: "accountability", class: restricted, authority: semester, retain: "7 years", delete: "after retention; never on student request (legal basis: institution contract)" }
+  - { record: support_cases, purpose: "help requests", class: confidential, authority: semester, retain: "2 years", delete: on_schedule }
+principles: [collect_only_for_named_purpose, institution_records_stay_with_institution, deletion_reaches_backups_by_expiry, no_student_records_to_ai_providers]

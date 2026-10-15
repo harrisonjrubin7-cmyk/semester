@@ -1,0 +1,10 @@
+events: [CurriculumVersionPublished, SectionPublished, RegistrationWindowOpened, EnrollmentConfirmed, EnrollmentWithdrawn, WaitlistOfferIssued, GradeSubmitted, GradePosted, AcademicRecordCorrected, TransferCreditAwarded, DegreeAuditCompleted, GraduationClearanceApproved, CredentialConferred, TranscriptIssued, DisclosureRecorded]
+envelope: packages/contracts/envelopes.ts (EventEnvelope) — plus effectiveAt
+consequences:
+  EnrollmentConfirmed: [course_access, calendar, learning_workspace, approved_billing_aid_handoff]
+  EnrollmentWithdrawn: [access_transition, calendar_update, approved_downstream_recalculation]
+  GradePosted: [student_progress, degree_evaluation, authorized_standing_review]
+  TransferCreditAwarded: [degree_requirements, advising_plan_update]
+  CredentialConferred: [official_record, portfolio_eligibility, alumni_transition]
+  AcademicRecordCorrected: [recompute_affected_projections, flag_issued_document_impacts]
+rule: "Downstream updates never silently rewrite unrelated student-private work."

@@ -1,0 +1,23 @@
+import { z } from "zod";
+export const StudentAction = z.object({
+  id: z.string(), title: z.string().min(1), whyItAppears: z.string().min(1), nextStep: z.string().min(1),
+  urgency: z.enum(["attention", "soon", "when_ready"]),
+  source: z.enum(["institution_verified", "connected", "student_entered", "estimated", "ai_assisted"]),
+  sourceReference: z.string().optional(), observedAt: z.string().datetime().optional(),
+  freshness: z.enum(["current", "updating", "stale", "unknown"]),
+  visibility: z.enum(["private", "shared_with_student"]),
+  actionType: z.enum(["open", "review", "handoff", "external_link"]),
+  required: z.boolean(),
+}).strict().superRefine((a, ctx) => {
+  const sourced = a.source === "institution_verified" || a.source === "connected";
+  if (sourced && (!a.sourceReference || !a.observedAt)) ctx.addIssue({ code: "custom", message: "Source-backed actions need sourceReference and observedAt" });
+  if (a.source === "student_entered" && a.visibility !== "private") ctx.addIssue({ code: "custom", message: "Student-entered tasks are private by default" });
+  if (a.freshness === "stale" && a.urgency === "attention" && sourced && a.actionType === "open") ctx.addIssue({ code: "custom", message: "A stale source can't drive an 'attention' item without a review/handoff step" });
+});
+export type StudentAction = z.infer<typeof StudentAction>;
+/** Order: required notices first, then urgency, then current before stale. Never drops a required notice. */
+export function rank(items: StudentAction[]): StudentAction[] {
+  const u = { attention: 0, soon: 1, when_ready: 2 }, f = { current: 0, updating: 1, unknown: 2, stale: 3 };
+  return [...items].sort((a, b) => Number(b.required) - Number(a.required) || u[a.urgency] - u[b.urgency] || f[a.freshness] - f[b.freshness]);
+}
+export const canDismiss = (a: StudentAction) => !a.required;

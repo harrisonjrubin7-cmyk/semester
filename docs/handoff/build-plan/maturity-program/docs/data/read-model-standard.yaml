@@ -1,0 +1,6 @@
+read_models:
+  every_projection_has: [source_version, observed_at, freshness_state, tenant_id, correlation_id, rebuild_strategy, authority_descriptor]
+  UI_rules: {current: show available action when policy allows, updating: show updating and prevent unsafe assumption, stale: show stale and block definitive outcome, failed: show safe fallback and handoff, unknown: avoid claim and offer review or refresh}
+  rebuild: [replay_safe, idempotent, tenant_scoped, auditable, reconciliation_after_rebuild]
+  type: "SourceBackedProjection<T> = { tenantId, projectionType, entityId, payload, source: { connectorId, sourceVersion?, observedAt?, freshness }, trace: { correlationId, builtAt, projectionVersion } }"
+  rebuild_script: platform-ops/scripts/recovery/rebuild-projections.ts

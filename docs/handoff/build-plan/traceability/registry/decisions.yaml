@@ -1,0 +1,37 @@
+# decision register — 2026-10-14
+decisions:
+  - id: DEC-PLATFORM-004
+    title: "Registration readiness remains a planning and handoff capability"
+    status: "accepted (draft — needs owner + date)"
+    decision: "Semester evaluates approved source-backed conditions, shows source and freshness, issues a planning receipt and routes blockers. It never represents readiness as enrollment or alters records."
+    linked: "CAP-REG-001 · POL-READINESS-001 · API-READINESS-POST-001 · RSK-SOURCE-003 · TST-E2E-REG-001"
+  - id: DEC-AUTHZ-001
+    title: "Reads via scoped RLS policies; writes only via definer functions owned by semester_writer"
+    status: "accepted 2026-10-14"
+    decision: "No client write policies. Definer functions validate actor, tenant, grant, capability and state; execute for service_role only. Migration fails if the browser role can bypass RLS or write."
+    linked: "handoff/build-plan/AUTHZ-DECISION.md · campus_review_fixes.sql"
+  - id: DEC-ENV-001
+    title: "Production database is the Supabase project “semester”"
+    status: "accepted 2026-10-14"
+    decision: "semester = production; restore-drill = drills only; Semester2 / Semester-Platform → one staging, one paused."
+    linked: "handoff/build-plan/DECISIONS-2026-10-14.md"
+  - id: DEC-OWNER-001
+    title: "Registration readiness owners"
+    status: "accepted 2026-10-14"
+    decision: "Harrison (founder) accountable, technical and operational owner. Backup operator and an independent security/ops approver still to be named; Vanderbilt names registrar and IT designees."
+    linked: "DECISIONS-2026-10-14.md · activation-gate.yaml"
+  - id: DEC-PILOT-001
+    title: "Vanderbilt pilot wording"
+    status: "accepted 2026-10-13"
+    decision: "“Signed paid pilot with Vanderbilt — launch Spring 2027, pending institutional activation.” Founder-reported; repo go/no-go not yet updated."
+    linked: "decks · readme · investor portal"
+  - id: DEC-PLACE-001
+    title: "Capability placement register"
+    status: "proposed"
+    decision: "20 capabilities placed native / connected / embedded / external; course enrollment stays embedded; financial aid deferred."
+    linked: "ui_kits/scale-system"
+  - id: DEC-AI-001
+    title: "Protected records never in a model-provider request"
+    status: "accepted"
+    decision: "Not even redacted. AI drafts from approved sources only."
+    linked: "AI gateway card · AI-READINESS-001"

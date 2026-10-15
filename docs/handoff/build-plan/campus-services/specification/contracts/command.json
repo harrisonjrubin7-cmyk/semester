@@ -1,0 +1,15 @@
+{
+  "actor": "SERVER_DERIVED",
+  "scope": null,
+  "operation": null,
+  "target_id": null,
+  "expected_version": null,
+  "payload": {},
+  "digest": null,
+  "idempotency_key": null,
+  "preview_expires_at": null,
+  "approval_refs": [],
+  "source_preconditions": {},
+  "audit_correlation": null,
+  "compensation_policy": null
+}

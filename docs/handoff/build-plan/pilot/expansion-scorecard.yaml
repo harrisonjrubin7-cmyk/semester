@@ -1,0 +1,8 @@
+# Decision aid only; no score overrides a hard stop or a critical control failure.
+dimensions:
+  student_value: [completion_rate, support_volume, qualitative_feedback, task_understanding_check]
+  institutional_fit: [owner_feedback, workflow_alignment, office_handoff_success, training_comprehension]
+  reliability: [source_freshness, error_patterns, job_quarantine, reconciliation_age]
+  trust_and_safety: [privacy_findings, access_findings, student_confusion_reports, source_disclosure_coverage]
+  operational_capacity: [support_sla, staff_queue_age, on_call_load, runbook_effectiveness]
+hard_stops: [confirmed_unauthorized_access, unresolved_critical_accessibility_issue, inability_to_identify_authoritative_source, failure_to_safely_disable_capability, missing_institutional_decision_owner]

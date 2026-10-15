@@ -1,0 +1,17 @@
+# Flags are activation switches, never access control. Access stays in grants + RLS + policy.
+# Implemented as rows in live_tenant_capabilities (enabled requires approval_ref + approver; kill_switch overrides).
+flags:
+  - key: registration_readiness_v1
+    owner: registrar_product_owner
+    type: tenant_capability
+    tenant_scope: pilot_institution_only
+    default: false
+    safe_off: "Readiness unavailable; students get the institution's support path; no records change."
+    prerequisites: [readiness_pilot_release_approved, sis_adapter_healthy, named_institution_owner]
+    expires_on: 2027-06-30
+    removal: "Replace with a documented entitlement, or retire after the pilot decision."
+    audit_events: [feature_flag.enabled, feature_flag.disabled, feature_flag.kill_switch_used]
+rules:
+  - every flag has an owner and an expiry
+  - expired flags fail CI (validate-release-evidence.mjs)
+  - a flag never widens who can see data

@@ -1,0 +1,45 @@
+// Integration adapter contract + projection apply. Rename to .ts.
+export type EntityType = "hold" | "time_ticket" | "course" | "enrollment" | "grade";
+export type NormalizedSourceRecord = {
+  tenantId: string; providerKey: string; externalId: string; entityType: EntityType;
+  authority: "institution"; observedAt: string; sourceWatermark: string | null;
+  payload: Record<string, unknown>; checksum: string;
+};
+export type ApplyResult = { applied: number; unchanged: number; quarantined: { externalId: string; reason: string }[] };
+
+export interface Adapter {
+  authenticate(): Promise<void>;
+  pullSinceCursor(cursor: string | null): AsyncIterable<{ raw: unknown; cursor: string }>;
+  normalize(raw: unknown): NormalizedSourceRecord | { error: string; externalId?: string };
+  healthCheck(): Promise<{ ok: boolean; detail?: string }>;
+}
+
+export type ProjectionStore = {
+  lastWatermark(tenantId: string, providerKey: string): Promise<string | null>;
+  currentChecksum(tenantId: string, entityType: EntityType, externalId: string): Promise<string | null>;
+  upsert(rec: NormalizedSourceRecord): Promise<void>;                 // must set source_type='institution_verified', freshness='current'
+  reconciliationItem(tenantId: string, externalId: string | undefined, reason: string, correlationId: string): Promise<void>;
+  saveCursor(tenantId: string, providerKey: string, cursor: string, watermark: string | null): Promise<void>;
+};
+
+export async function sync(adapter: Adapter, store: ProjectionStore, tenantId: string, providerKey: string, cursor: string | null, correlationId: string): Promise<ApplyResult> {
+  await adapter.authenticate();
+  const res: ApplyResult = { applied: 0, unchanged: 0, quarantined: [] };
+  const lastWm = await store.lastWatermark(tenantId, providerKey);
+  let lastCursor = cursor, wm = lastWm;
+  for await (const { raw, cursor: c } of adapter.pullSinceCursor(cursor)) {
+    const n = adapter.normalize(raw);
+    if ("error" in n) { res.quarantined.push({ externalId: n.externalId ?? "?", reason: n.error }); await store.reconciliationItem(tenantId, n.externalId, "normalize_failed: " + n.error, correlationId); lastCursor = c; continue; }
+    if (n.tenantId !== tenantId) { res.quarantined.push({ externalId: n.externalId, reason: "tenant_mismatch" }); await store.reconciliationItem(tenantId, n.externalId, "tenant_mismatch", correlationId); lastCursor = c; continue; }
+    if (lastWm && n.sourceWatermark && n.sourceWatermark < lastWm) { res.quarantined.push({ externalId: n.externalId, reason: "watermark_regressed" }); await store.reconciliationItem(tenantId, n.externalId, "watermark_regressed", correlationId); lastCursor = c; continue; }
+    if ((await store.currentChecksum(tenantId, n.entityType, n.externalId)) === n.checksum) { res.unchanged++; lastCursor = c; continue; }
+    try { await store.upsert(n); res.applied++; }
+    catch (e) {   // 23514 from 075_authority_guard: a higher-authority record exists
+      res.quarantined.push({ externalId: n.externalId, reason: String(e) });
+      await store.reconciliationItem(tenantId, n.externalId, "authority_conflict", correlationId);
+    }
+    lastCursor = c; if (n.sourceWatermark && (!wm || n.sourceWatermark > wm)) wm = n.sourceWatermark;
+  }
+  if (lastCursor) await store.saveCursor(tenantId, providerKey, lastCursor, wm);
+  return res;
+}

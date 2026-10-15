@@ -1,0 +1,595 @@
+{
+  "schema_version": "2.0.0",
+  "document_type": "workflow_definition",
+  "id": "registration.drop",
+  "version": 1,
+  "name": "Drop or withdraw from a section",
+  "domain": "Registration",
+  "purpose": "Remove an enrollment through the SIS with academic and financial effects kept separate.",
+  "trigger": "Student or registrar requests a drop/withdrawal",
+  "scope": {
+    "kind": "institution",
+    "tenant_id": "0b7e5c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+    "subject_id": null,
+    "resource_refs": [
+      "proposed:section",
+      "proposed:enrollment"
+    ],
+    "access_basis_refs": [
+      "proposed:ferpa_school_official",
+      "proposed:membership.student"
+    ]
+  },
+  "authority": {
+    "mode": "assist",
+    "official_write": true,
+    "system_ref": "proposed:sis.vanderbilt",
+    "registry_ref": "data/source-authority-register.yaml#enrollment",
+    "institution_scope_ref": "proposed:vanderbilt",
+    "activation_ref": "implementation/tenant-activation.yaml#registration",
+    "writer_policy": "legacy_single_writer",
+    "freshness_policy_ref": "assurance/service-objectives.yaml#SLO-SOURCE-001"
+  },
+  "controls": {
+    "risk": "consequential",
+    "human_authority_required": true,
+    "approval_policy_ref": "proposed:registrar.approval",
+    "policy_version_ref": "proposed:policy.registration_v1",
+    "idempotency_required": true,
+    "payload_binding_required": true,
+    "concurrency_policy_ref": "registrar/enrollment-engine#row-lock-seat",
+    "private_official_boundary_ref": "proposed:boundary.plan_vs_enrollment",
+    "provider_data_policy_ref": "proposed:no_ai_provider_access"
+  },
+  "completion": {
+    "receipt_schema_ref": "proposed:receipt.enrollment",
+    "projection_refs": [
+      "proposed:read_model.student_schedule",
+      "proposed:read_model.action_center"
+    ],
+    "reconciliation_ref": "assurance/reconciliation.yaml",
+    "action_center_ref": "proposed:action_center.registration"
+  },
+  "operations": {
+    "owner": "Registrar",
+    "escalation_ref": "operations/support-model.yaml#tier3",
+    "retention_ref": "privacy/data-lifecycle.yaml#registration",
+    "accessibility_test_refs": [
+      "proposed:a11y.registration.status"
+    ],
+    "monitoring_ref": "assurance/service-objectives.yaml#SLO-READINESS-001"
+  },
+  "ai_policy": {
+    "enabled": false,
+    "policy_ref": null,
+    "tool_budget_ref": null,
+    "consequential_decision_authority": false
+  },
+  "readiness": {
+    "designed": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "implemented": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "tested": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "deployed": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "institution_authorized": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    },
+    "production_enabled": {
+      "status": "unverified",
+      "evidence": [],
+      "reason": "No implementation, test, deployment or institution evidence recorded."
+    }
+  },
+  "states": {
+    "business": [
+      "enrolled",
+      "drop_requested",
+      "dropped",
+      "withdrawn",
+      "kept"
+    ],
+    "execution": [
+      "received",
+      "validating",
+      "awaiting_approval",
+      "dispatched",
+      "reconciling",
+      "committed_pending_reconciliation",
+      "completed",
+      "existing_command",
+      "denied",
+      "failed"
+    ],
+    "initial_business": "enrolled",
+    "initial_execution": "received",
+    "terminal_business": [
+      "dropped",
+      "withdrawn",
+      "kept"
+    ],
+    "terminal_execution": [
+      "completed",
+      "existing_command",
+      "denied",
+      "failed",
+      "committed_pending_reconciliation"
+    ]
+  },
+  "steps": [
+    {
+      "id": "d1",
+      "name": "Check deadline, minimum load and holds",
+      "kind": "background",
+      "actor_role": "system",
+      "capabilities": [
+        "registration.read"
+      ],
+      "surface_refs": [],
+      "binding_id": "proposed:binding.policy_evaluate",
+      "input_schema_ref": "proposed:schema.d1",
+      "output_schema_ref": "proposed:schema.d1.out",
+      "policy_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "failure_codes": [
+        "DROP_AFTER_DEADLINE",
+        "MIN_LOAD_OR_AID_IMPACT",
+        "STALE_SOURCE"
+      ],
+      "audit_events": [
+        "registration.drop.validated"
+      ]
+    },
+    {
+      "id": "d2",
+      "name": "Confirm drop with consequences shown",
+      "kind": "hybrid",
+      "actor_role": "student",
+      "capabilities": [
+        "registration.submit"
+      ],
+      "surface_refs": [
+        "B:Registration readiness"
+      ],
+      "binding_id": "proposed:binding.institution_command.registration_drop",
+      "input_schema_ref": "proposed:schema.d2",
+      "output_schema_ref": "proposed:schema.d2.out",
+      "policy_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "failure_codes": [
+        "DUPLICATE_SAME_PAYLOAD",
+        "KEY_PAYLOAD_CONFLICT"
+      ],
+      "audit_events": [
+        "registration.drop.submitted"
+      ]
+    },
+    {
+      "id": "d3",
+      "name": "Dispatch to SIS and confirm",
+      "kind": "background",
+      "actor_role": "system",
+      "capabilities": [
+        "sis.write.registration"
+      ],
+      "surface_refs": [],
+      "binding_id": "proposed:binding.outbox_sis",
+      "input_schema_ref": "proposed:schema.d3",
+      "output_schema_ref": "proposed:schema.d3.out",
+      "policy_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "failure_codes": [
+        "TIMEOUT_AFTER_DISPATCH",
+        "REFUND_RECONCILIATION"
+      ],
+      "audit_events": [
+        "registration.drop.confirmed"
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "a1",
+      "track": "execution",
+      "from": "received",
+      "to": "validating",
+      "step_id": "d1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.validating"
+    },
+    {
+      "id": "a2",
+      "track": "execution",
+      "from": "validating",
+      "to": "awaiting_approval",
+      "step_id": "d1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.awaiting_approval"
+    },
+    {
+      "id": "a3",
+      "track": "execution",
+      "from": "validating",
+      "to": "denied",
+      "step_id": "d1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.denied"
+    },
+    {
+      "id": "a4",
+      "track": "execution",
+      "from": "awaiting_approval",
+      "to": "validating",
+      "step_id": "d1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.validating"
+    },
+    {
+      "id": "a5",
+      "track": "execution",
+      "from": "awaiting_approval",
+      "to": "denied",
+      "step_id": "d1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.denied"
+    },
+    {
+      "id": "a6",
+      "track": "execution",
+      "from": "validating",
+      "to": "dispatched",
+      "step_id": "d2",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.dispatched"
+    },
+    {
+      "id": "a7",
+      "track": "execution",
+      "from": "received",
+      "to": "existing_command",
+      "step_id": "d2",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.existing_command"
+    },
+    {
+      "id": "a8",
+      "track": "execution",
+      "from": "validating",
+      "to": "failed",
+      "step_id": "d2",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.failed"
+    },
+    {
+      "id": "a9",
+      "track": "execution",
+      "from": "dispatched",
+      "to": "completed",
+      "step_id": "d3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.completed"
+    },
+    {
+      "id": "a10",
+      "track": "execution",
+      "from": "dispatched",
+      "to": "reconciling",
+      "step_id": "d3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.reconciling"
+    },
+    {
+      "id": "a11",
+      "track": "execution",
+      "from": "reconciling",
+      "to": "completed",
+      "step_id": "d3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.completed"
+    },
+    {
+      "id": "a12",
+      "track": "execution",
+      "from": "reconciling",
+      "to": "committed_pending_reconciliation",
+      "step_id": "d3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.committed_pending_reconciliation"
+    },
+    {
+      "id": "a13",
+      "track": "execution",
+      "from": "reconciling",
+      "to": "failed",
+      "step_id": "d3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.execution.failed"
+    },
+    {
+      "id": "b1",
+      "track": "business",
+      "from": "enrolled",
+      "to": "drop_requested",
+      "step_id": "d2",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.business.drop_requested"
+    },
+    {
+      "id": "b2",
+      "track": "business",
+      "from": "drop_requested",
+      "to": "dropped",
+      "step_id": "d3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.business.dropped"
+    },
+    {
+      "id": "b3",
+      "track": "business",
+      "from": "drop_requested",
+      "to": "withdrawn",
+      "step_id": "d3",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.business.withdrawn"
+    },
+    {
+      "id": "b4",
+      "track": "business",
+      "from": "drop_requested",
+      "to": "kept",
+      "step_id": "d1",
+      "guard_refs": [
+        "proposed:policy.registration_v1"
+      ],
+      "audit_event": "registration.business.kept"
+    }
+  ],
+  "recovery_paths": [
+    {
+      "code": "DROP_AFTER_DEADLINE",
+      "trigger": "Add/drop deadline passed",
+      "from_execution_states": [
+        "validating"
+      ],
+      "to_execution_state": "awaiting_approval",
+      "retry_class": "new_approved_command",
+      "fallback_ref": "proposed:fallback.drop_after_deadline",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Registrar",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-D-DEADLINE"
+      ]
+    },
+    {
+      "code": "MIN_LOAD_OR_AID_IMPACT",
+      "trigger": "Drop would go below the minimum load or affect aid/visa status",
+      "from_execution_states": [
+        "validating"
+      ],
+      "to_execution_state": "awaiting_approval",
+      "retry_class": "new_approved_command",
+      "fallback_ref": "proposed:fallback.min_load_or_aid_impact",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Registrar / Financial aid",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-D-LOAD"
+      ]
+    },
+    {
+      "code": "STALE_SOURCE",
+      "trigger": "Enrollment source not current",
+      "from_execution_states": [
+        "validating"
+      ],
+      "to_execution_state": "denied",
+      "retry_class": "read_refresh",
+      "fallback_ref": "proposed:fallback.stale_source",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Registrar/integration",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-D-STALE"
+      ]
+    },
+    {
+      "code": "DUPLICATE_SAME_PAYLOAD",
+      "trigger": "Same key and payload",
+      "from_execution_states": [
+        "received"
+      ],
+      "to_execution_state": "existing_command",
+      "retry_class": "safe_same_key",
+      "fallback_ref": "proposed:fallback.duplicate_same_payload",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Platform",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-D-REPLAY"
+      ]
+    },
+    {
+      "code": "KEY_PAYLOAD_CONFLICT",
+      "trigger": "Same key, different payload",
+      "from_execution_states": [
+        "validating"
+      ],
+      "to_execution_state": "failed",
+      "retry_class": "new_approved_command",
+      "fallback_ref": "proposed:fallback.key_payload_conflict",
+      "compensation_kind": "none",
+      "compensation_ref": null,
+      "owner": "Platform",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-D-CONFLICT"
+      ]
+    },
+    {
+      "code": "TIMEOUT_AFTER_DISPATCH",
+      "trigger": "No SIS confirmation",
+      "from_execution_states": [
+        "dispatched"
+      ],
+      "to_execution_state": "reconciling",
+      "retry_class": "safe_same_key",
+      "fallback_ref": "proposed:fallback.timeout_after_dispatch",
+      "compensation_kind": "projection_repair",
+      "compensation_ref": "proposed:compensation.timeout_after_dispatch",
+      "owner": "Integration/registrar",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-D-TIMEOUT"
+      ]
+    },
+    {
+      "code": "REFUND_RECONCILIATION",
+      "trigger": "Academic drop recorded; refund differs",
+      "from_execution_states": [
+        "reconciling"
+      ],
+      "to_execution_state": "committed_pending_reconciliation",
+      "retry_class": "projection_only",
+      "fallback_ref": "proposed:fallback.refund_reconciliation",
+      "compensation_kind": "projection_repair",
+      "compensation_ref": "proposed:compensation.refund_reconciliation",
+      "owner": "Student accounts",
+      "resume_guard_refs": [
+        "proposed:guard.revalidate"
+      ],
+      "test_ids": [
+        "AT-D-REFUND"
+      ]
+    }
+  ],
+  "acceptance_tests": [
+    {
+      "id": "AT-D-HAPPY",
+      "suite": "happy_path",
+      "criterion": "Eligible drop completes once with one receipt; schedule updates",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-D-DEADLINE",
+      "suite": "authority",
+      "criterion": "After the deadline a drop needs registrar approval; nothing changes without it",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-D-LOAD",
+      "suite": "authority",
+      "criterion": "Load/aid/visa impact shown before confirm and routed for approval",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-D-STALE",
+      "suite": "stale_source",
+      "criterion": "Stale enrollment source blocks the drop",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-D-REPLAY",
+      "suite": "replay",
+      "criterion": "Same request returns the original receipt",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-D-CONFLICT",
+      "suite": "replay",
+      "criterion": "Key reuse with a different section is rejected",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-D-TIMEOUT",
+      "suite": "timeout",
+      "criterion": "Timeout reconciles before any retry",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-D-REFUND",
+      "suite": "recovery",
+      "criterion": "Academic drop and refund have separate receipts",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-D-ISO",
+      "suite": "tenant_isolation",
+      "criterion": "Another tenant’s enrollment can’t be dropped",
+      "evidence_refs": []
+    },
+    {
+      "id": "AT-D-ROLE",
+      "suite": "role_denial",
+      "criterion": "A student can’t drop another student",
+      "evidence_refs": []
+    }
+  ]
+}

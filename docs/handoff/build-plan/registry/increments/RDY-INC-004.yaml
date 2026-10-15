@@ -1,0 +1,18 @@
+increment:
+  id: RDY-INC-004
+  capability_key: registration_readiness
+  title: Referral routing to the owning office
+  impact: high
+  sensitivity: restricted
+  release_train: readiness
+  state: shaped
+  outcome:
+    user: "A blocked student can send their case to the office that owns the block and see who has it."
+    institution: "The owning office receives a scoped case with only the fields it needs."
+  authority: { official_decision_owner: institution, semester_role: source-aware derived planning state, prohibited_claim: "Readiness confirms enrollment." }
+  scope:
+    includes: [referral_command, office_routing_rules, referral_receipt, office_queue_view]
+    excludes: [office_decision_on_behalf_of_institution, free_text_to_unrelated_offices]
+  acceptance: [AT-RDY-005, AT-RDY-007]
+  dependencies: { hard: [readiness_case_workflow, policy_enforcement, audit_event_store], soft: [student_notification_service] }
+  release: { feature_flag: registration_readiness_v1, safe_off: "Read-only guidance and institution support handoff.", rollback: "Disable flag; retain audit and reconciliation history." }

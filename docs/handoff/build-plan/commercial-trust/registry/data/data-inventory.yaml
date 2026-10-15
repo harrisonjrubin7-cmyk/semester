@@ -1,0 +1,19 @@
+data_inventory:
+  classes:
+    institution_verified: {examples: [authorized_identity_attributes, enrollment_or_readiness_inputs, released_grade_information_when_authorized], owner: institution, usage: approved_scoped_service, retention: agreement_and_policy_bound}
+    connected: {examples: [authorized_calendar_connection, learning_platform_context], owner: external_or_institutional_provider, usage: approved_connection_purpose, retention: connection_and_policy_bound}
+    student_entered: {examples: [private_tasks, notes, planning_scenarios, selected_support_context], owner: student_subject_to_applicable_terms, usage: student_requested_service, retention: student_control_and_policy_bound}
+    operational: {examples: [audit_events, security_events, workflow_receipts, support_case_metadata], owner: Semester_as_service_operator, usage: service_operation_and_obligations, retention: defined_operational_schedule}
+    AI_assisted: {examples: [generated_study_aids, AI_answer_frames, suggested_drafts], owner: defined_by_service_and_institution_context, usage: bounded_assistance, retention: explicit_product_and_policy_rule}
+  same_vocabulary_as: record envelope sourceClass (traceability) · StudentAction.source (product-system)
+elements:
+  - id: DATA-READINESS-001
+    name: Registration readiness status
+    classification: restricted_institutional
+    source_class: institution_verified
+    authority_owner: institution_registrar
+    purpose: [provide_student_planning_context, route_blockers, support_reconciliation]
+    permitted_roles: [student_self, authorized_advisor, authorized_registrar, authorized_support_operator_when_needed]
+    prohibited_uses: [marketing_targeting, community_matching, training_general_AI_models, unrelated_staff_search, automated_high_impact_decision]
+    retention: {rule: institution_agreement_and_operational_need, deletion_path: governed_retention_workflow}
+    audit_events: [viewed, evaluated, shared_in_handoff, corrected, reconciled]

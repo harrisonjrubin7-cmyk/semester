@@ -1,0 +1,10 @@
+definition_of_ready:
+  product: [problem_and_actor_defined, first_meaningful_action_defined, official_vs_derived_boundary_written, success_and_failure_outcomes_written]
+  design: [all_required_states_specified, source_status_and_freshness_behavior_specified, consequence_copy_written, accessibility_behavior_specified, mobile_behavior_specified]
+  engineering: [command_and_event_contracts_defined, data_and_authority_model_defined, policy_rule_defined, test_fixture_defined, observability_fields_defined]
+  operations: [owning_queue_defined, support_handoff_defined, incident_trigger_defined, rollback_or_safe_off_behavior_defined]
+definition_of_done:
+  build: [implementation_merged, schema_and_contract_checks_pass, policies_and_rls_enforced, audit_events_recorded, idempotency_or_duplicate_behavior_proven]
+  experience: [required_states_rendered, sources_and_freshness_explained, accessibility_evidence_accepted, support_path_present, no_prohibited_claims_present]
+  operations: [dashboards_and_alerts_operational, runbook_and_recovery_steps_approved, reconciliation_path_tested, drill_completed_when_required]
+  release: [evidence_bundle_accepted, feature_flag_configured, rollout_and_rollback_plan_approved, accountable_owner_accepts_handoff]

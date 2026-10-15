@@ -1,0 +1,13 @@
+# Field-level register: owner, system, freshness, correction path, student label, allowed and blocked uses.
+sources:
+  - { record: enrollment_context, field: active_term, system: "Vanderbilt YES (SIS)", owner: registrar, semester_role: synchronized_projection, freshness: operational_4h, correction: registrar_office, label: Institution verified, allowed: [readiness_context, term_selection], blocked_when_stale: [definitive_readiness_outcome] }
+  - { record: holds, field: active_holds, system: "Vanderbilt YES", owner: "office that placed the hold", semester_role: synchronized_projection, freshness: operational_4h, correction: owning_office, label: Institution verified, allowed: [readiness_check], blocked_when_stale: [ready_state] }
+  - { record: time_tickets, field: opens_at, system: "Vanderbilt YES", owner: registrar, semester_role: synchronized_projection, freshness: operational_4h, correction: registrar_office, label: Institution verified, allowed: [readiness_check], blocked_when_stale: [ready_state] }
+  - { record: academic_progress, field: prerequisite_completion, system: "YES / degree audit", owner: registrar, semester_role: synchronized_projection, freshness: daily_30h, correction: degree_audit_or_registrar, label: Institution verified, allowed: [readiness_check], blocked_when_stale: [ready_state] }
+  - { record: readiness_case, field: selected_goal, system: semester, owner: student, semester_role: student_entered_context, freshness: immediate, correction: student_edit, label: Student entered, allowed: [planning_context, referral_routing], blocked_when_stale: [] }
+  - { record: readiness_case, field: explanatory_summary, system: semester, owner: semester_product_owner, semester_role: derived_explanation, freshness: evaluation_time, correction: support_and_product_review, label: "Derived from listed sources", allowed: [explanation_only], blocked_when_stale: [official_decision] }
+authority_rules:
+  - "Semester derives and explains readiness; it never authors official enrollment, holds or grades."
+  - "Where a Semester projection and the institution's system disagree, the institution prevails and a reconciliation case opens."
+  - "A field with no register entry can't be shown to students."
+approval: { by: [vanderbilt_registrar_owner, vanderbilt_technical_owner], required_for: TENANT-ACT-001.data.source_authority_register_approved }

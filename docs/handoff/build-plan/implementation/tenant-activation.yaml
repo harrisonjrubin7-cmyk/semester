@@ -1,0 +1,16 @@
+# Tenant activation — evidence-backed sequence, never "just flip the flag". Enforced by proposed-schema/090_tenant_activation.sql.
+tenant_activation:
+  id: TENANT-ACT-001
+  tenant: vanderbilt
+  capability: registration_readiness_v1
+  state: planned            # planned -> preparing -> rehearsed -> approved -> live -> hypercare -> steady | paused
+  prerequisites:
+    legal: [pilot_agreement_executed, data_privacy_terms_executed, authorized_signatories_recorded]
+    people: [executive_sponsor_named, registrar_business_owner_named, technical_owner_named, support_escalation_owner_named, security_contact_named]
+    identity: [sso_verified_or_approved_fallback, role_mapping_reviewed, deprovisioning_path_tested]
+    data: [source_authority_register_approved, source_mapping_verified, freshness_threshold_approved, sample_reconciliation_completed, retention_schedule_recorded]
+    delivery: [flag_safe_off_verified, production_monitoring_verified, rollback_drill_completed, support_queue_operational, institution_training_complete]
+  steps: [establish_tenant_record, configure_institution_context, configure_identity_and_roles, validate_source_connections, run_staging_journey_rehearsal, attach_required_evidence, approve_go_no_go, enable_scoped_flag, verify_first_live_journey, start_hypercare]
+  completion: [first_student_journey_verified, first_registrar_journey_verified, first_receipt_verified, first_audit_trail_verified, monitoring_and_alerts_confirmed, institution_owner_acknowledgement]
+  hypercare: { length_days: 14, cadence: daily, exit: "no open SEV-1/2, freshness within threshold, support volume at or below plan" }
+prototype: ui_kits/connected-journeys (Institution onboarding tab)

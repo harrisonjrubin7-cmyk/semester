@@ -1,0 +1,7 @@
+window,priority,deliverable,proposed_owner,acceptance
+Days 1–15,P0,Inventory reconciliation; 25/692 catalog diff; console discovery; capability and command contracts,Engineering/Product,Pinned inventory and named owners; no duplicate shell
+Days 16–30,P0,Controlled-action vertical slice; inbox/approval/audit/receipt; finance adapter sandbox,Backend/Security/Finance,Forged-scope/self-approval/retry/audit-failure negative tests
+Days 31–45,P0,Ledger/invoices/refunds/entitlements; outbox worker; reconciliation; ops observability,Finance/Platform/SRE,Balanced journals; webhook replay/order; actual alerts; held checkout remains respected
+Days 46–60,P1,Company workflows; grants-aware entry; 33 console read-model wiring,Frontend/Operations,Direct deep-link denial; scope-filtered views; accessible journeys
+Days 61–75,P1,Reporting portal; 12 observe agents; deterministic workflow runner,Reporting/AI/Security,Immutable snapshots; audience denial; bounded handoffs; no action autonomy
+Days 76–90,P1/P2 preparation,Independent reviews; candidate deployment; customer UAT; drills; controlled launch decision,Reviewers/Customer/Operations,Current target-bound authority; staffed restore/rollback; no schedule guarantee

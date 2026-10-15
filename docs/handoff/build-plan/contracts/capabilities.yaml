@@ -1,0 +1,242 @@
+# capabilities.yaml — 20 pilot capabilities for registration_readiness_v1. Validated by validate-contracts.mjs.
+capabilities:
+  - key: student.readiness.read
+    title: Read registration readiness
+    domain: registration_readiness
+    impact: moderate
+    actors: [student, advisor, registrar]
+    routes: ["/app/registration", "/registrar/readiness", "/registrar/readiness/:caseId"]
+    records: [readiness_cases, readiness_checks, readiness_receipts]
+    commands: []
+    events: [readiness.evaluated, receipt.created]
+    audits: [readiness.student_viewed, readiness.case_viewed]
+    release_requirements: [rls_test, route_authorization_test, stale_source_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: student.readiness.evaluate
+    title: Run a readiness check
+    domain: registration_readiness
+    impact: moderate
+    actors: [student, advisor, registrar]
+    routes: ["/app/registration"]
+    records: [readiness_cases, readiness_checks, readiness_receipts, holds, time_tickets]
+    commands: [readiness.evaluate]
+    events: [readiness.evaluated, receipt.created]
+    audits: [readiness.evaluate_requested]
+    release_requirements: [rls_test, route_authorization_test, policy_test, idempotency_test, stale_source_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: student.readiness.refresh
+    title: Refresh a stale check
+    domain: registration_readiness
+    impact: moderate
+    actors: [student, registrar]
+    routes: ["/app/registration", "/registrar/readiness/:caseId"]
+    records: [readiness_cases, freshness_snapshots]
+    commands: [readiness.refresh]
+    events: [readiness.refresh_requested, readiness.evaluated]
+    audits: [readiness.refresh_requested]
+    release_requirements: [rls_test, route_authorization_test, policy_test, idempotency_test, stale_source_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: student.readiness.request_referral
+    title: Ask the right office for help
+    domain: registration_readiness
+    impact: moderate
+    actors: [student]
+    routes: ["/app/registration"]
+    records: [referrals, readiness_cases]
+    commands: [referral.create]
+    events: [readiness.referral_created]
+    audits: [readiness.referral_requested]
+    release_requirements: [rls_test, route_authorization_test, policy_test, idempotency_test, stale_source_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: student.today.read
+    title: See readiness on Today
+    domain: registration_readiness
+    impact: low
+    actors: [student]
+    routes: ["/app/today"]
+    records: [readiness_cases, student_tasks]
+    commands: []
+    events: []
+    audits: [today.viewed]
+    release_requirements: [rls_test, route_authorization_test, stale_source_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: student.support.create
+    title: Open a support case
+    domain: registration_readiness
+    impact: low
+    actors: [student]
+    routes: ["/app/support"]
+    records: [support_cases]
+    commands: [support.case.create]
+    events: [support.case_created]
+    audits: [support.case_created]
+    release_requirements: [rls_test, route_authorization_test, policy_test, idempotency_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: registrar.readiness.queue.read
+    title: See the readiness queue
+    domain: registration_readiness
+    impact: high
+    actors: [registrar, advisor, institution_admin]
+    routes: ["/registrar/readiness"]
+    records: [readiness_cases, readiness_checks, holds]
+    commands: []
+    events: []
+    audits: [registrar.readiness_queue_viewed]
+    release_requirements: [rls_test, route_authorization_test, stale_source_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: registrar.readiness.case.read
+    title: Open a readiness case
+    domain: registration_readiness
+    impact: high
+    actors: [registrar, advisor]
+    routes: ["/registrar/readiness/:caseId"]
+    records: [readiness_cases, readiness_checks, readiness_receipts, referrals, policy_decisions]
+    commands: []
+    events: []
+    audits: [readiness.case_viewed]
+    release_requirements: [rls_test, route_authorization_test, stale_source_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: registrar.readiness.case.assign
+    title: Assign a case
+    domain: registration_readiness
+    impact: moderate
+    actors: [registrar]
+    routes: ["/registrar/readiness"]
+    records: [readiness_cases]
+    commands: [readiness.case.assign]
+    events: [readiness.case_assigned]
+    audits: [readiness.case_assigned]
+    release_requirements: [rls_test, route_authorization_test, policy_test, idempotency_test, stale_source_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: registrar.readiness.case.route
+    title: Route a case to an office
+    domain: registration_readiness
+    impact: moderate
+    actors: [registrar]
+    routes: ["/registrar/readiness", "/registrar/readiness/:caseId"]
+    records: [readiness_cases, referrals]
+    commands: [readiness.case.route]
+    events: [readiness.case_routed]
+    audits: [readiness.case_routed]
+    release_requirements: [rls_test, route_authorization_test, policy_test, idempotency_test, stale_source_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: registrar.readiness.case.refer
+    title: Refer a case
+    domain: registration_readiness
+    impact: moderate
+    actors: [registrar]
+    routes: ["/registrar/readiness/:caseId"]
+    records: [referrals]
+    commands: [readiness.case.refer]
+    events: [readiness.case_referred]
+    audits: [readiness.case_referred]
+    release_requirements: [rls_test, route_authorization_test, policy_test, idempotency_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: registrar.readiness.case.refresh
+    title: Refresh a case from source
+    domain: registration_readiness
+    impact: moderate
+    actors: [registrar]
+    routes: ["/registrar/readiness/:caseId"]
+    records: [readiness_cases, freshness_snapshots]
+    commands: [readiness.case.refresh]
+    events: [readiness.case_refreshed]
+    audits: [readiness.case_refreshed]
+    release_requirements: [rls_test, route_authorization_test, policy_test, idempotency_test, stale_source_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: registrar.readiness.override.request
+    title: Request an override
+    domain: registration_readiness
+    impact: high
+    actors: [registrar]
+    routes: ["/registrar/readiness/:caseId", "/registrar/overrides"]
+    records: [override_requests, policy_decisions]
+    commands: [override.request]
+    events: [override.requested]
+    audits: [override.request_created]
+    release_requirements: [rls_test, route_authorization_test, policy_test, idempotency_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: registrar.readiness.override.decide
+    title: Decide an override
+    domain: registration_readiness
+    impact: high
+    actors: [registrar]
+    routes: ["/registrar/overrides"]
+    records: [override_requests, policy_decisions]
+    commands: [override.decide]
+    events: [override.decided]
+    audits: [override.decided]
+    release_requirements: [rls_test, route_authorization_test, policy_test, idempotency_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: advisor.caseload.read
+    title: Read assigned students
+    domain: registration_readiness
+    impact: high
+    actors: [advisor]
+    routes: ["/registrar/readiness"]
+    records: [readiness_cases, students]
+    commands: []
+    events: []
+    audits: [advisor.caseload_viewed]
+    release_requirements: [rls_test, route_authorization_test, stale_source_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: institution.integrations.read
+    title: See integration health
+    domain: registration_readiness
+    impact: moderate
+    actors: [institution_admin, it_security]
+    routes: ["/console/integrations"]
+    records: [integrations, integration_sync_runs, freshness_snapshots]
+    commands: []
+    events: []
+    audits: [integration.health_viewed]
+    release_requirements: [rls_test, route_authorization_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: institution.integrations.refresh
+    title: Trigger a source sync
+    domain: registration_readiness
+    impact: high
+    actors: [it_security]
+    routes: ["/console/integrations"]
+    records: [integration_sync_runs]
+    commands: [integration.refresh]
+    events: [integration.refresh_triggered]
+    audits: [integration.refresh_triggered]
+    release_requirements: [rls_test, route_authorization_test, policy_test, idempotency_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: institution.audit.read
+    title: Browse the audit log
+    domain: registration_readiness
+    impact: high
+    actors: [institution_admin]
+    routes: ["/console/audit"]
+    records: [audit_events]
+    commands: []
+    events: []
+    audits: [audit.viewed]
+    release_requirements: [rls_test, route_authorization_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: ops.inbox.read
+    title: See operator work
+    domain: registration_readiness
+    impact: moderate
+    actors: [operations]
+    routes: ["/ops/inbox"]
+    records: [ops_queues, ops_work_items]
+    commands: []
+    events: []
+    audits: [ops.inbox_viewed]
+    release_requirements: [rls_test, route_authorization_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active
+  - key: ops.incidents.manage
+    title: Run an incident
+    domain: registration_readiness
+    impact: high
+    actors: [operations]
+    routes: ["/ops/incidents"]
+    records: [incidents, incident_updates]
+    commands: [incident.declare, incident.update]
+    events: [incident.declared, incident.updated]
+    audits: [incident.declared]
+    release_requirements: [rls_test, route_authorization_test, policy_test, idempotency_test, accessibility_test, source_copy_review, operator_runbook]
+    status: designed   # derived later from evidence, never set by hand to active

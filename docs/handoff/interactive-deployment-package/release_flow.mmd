@@ -1,0 +1,12 @@
+flowchart TD
+ Scope --> Candidate
+ Candidate --> SharedFoundation
+ SharedFoundation --> ExecutedValidation
+ ExecutedValidation --> DarkDeployment
+ DarkDeployment --> SignedScopeAuthority
+ SignedScopeAuthority --> BoundedActivation
+ BoundedActivation --> OperatedObservation
+ OperatedObservation --> AcceptedGreenCells
+ BoundedActivation -->|trigger| Held
+ Held --> ReconciliationAndCompatibleRepair
+ ReconciliationAndCompatibleRepair --> ExecutedValidation

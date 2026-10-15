@@ -1,0 +1,11 @@
+# connection-states.yaml — more than "connected/broken". Shown to students, staff and operators.
+connection_states:
+  confirmed: { meaning: "Source reachable and within its freshness window.", student: "Nothing to do.", staff: "Monitor normally." }
+  pending: { meaning: "A setup or authorization step is incomplete.", student: "Complete the step if offered.", staff: "Follow the setup workflow." }
+  updating: { meaning: "A refresh is in progress; details may change.", student: "Check again shortly.", staff: "Watch the job finish." }
+  stale: { meaning: "Last successful update is older than the freshness policy.", student: "Don't treat this as final.", staff: "Refresh or route for review." }
+  blocked: { meaning: "Authorization, policy or provider condition prevents sync.", student: "Use the office or support path shown.", staff: "Resolve the blocker; never bypass controls." }
+  degraded: { meaning: "Partly working but below a defined quality threshold.", student: "Review affected details carefully.", staff: "Open reconciliation work." }
+  reconcile: { meaning: "Two sources or projections disagree.", student: "Nothing unless contacted.", staff: "Follow the reconciliation procedure." }
+  resolved: { meaning: "Issue corrected and verified.", student: "Review the refreshed result.", staff: "Close only with verification evidence attached." }
+maps_to_freshness_state: { confirmed: current, updating: syncing, stale: stale, blocked: failed, degraded: stale, reconcile: unknown, pending: unknown, resolved: current }

@@ -1,0 +1,11 @@
+{
+  "function": "classify_record",
+  "cases": [
+    {
+      "input": {
+        "kind": "draft"
+      },
+      "expected": "private"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+environments:
+  local: {permitted_data: [synthetic_fixtures, anonymized_contract_samples], prohibited_data: [production_student_records, production_secrets, institution_export_files]}
+  preview: {permitted_data: [synthetic_fixtures, approved_masked_samples_when_necessary], requirements: [per_change_expiry, authentication_for_nonpublic_routes, no_production_connector_credentials]}
+  staging: {permitted_data: [synthetic_fixtures, approved_nonproduction_institution_test_data], requirements: [production_like_policy_and_RLS, integration_sandbox_or_test_tenant, drill_and_release_validation, controlled_access]}
+  production: {permitted_data: [tenant_authorized_operational_data], requirements: [tenant_isolation, audited_access, release_gate, secrets_management, monitoring, backup_and_recovery, controlled_break_glass_process]}
+  known_projects_2026_10_14:
+    supabase: [Semester2, semester, semester-restore-drill-2026-10-01, Semester-Platform]
+    production: semester (DEC-ENV-001, 2026-10-14)
+    drill: semester-restore-drill-2026-10-01
+    staging: Semester-Platform (DEC-ENV-002)
+    development_preview: Semester2 (DEC-ENV-002)
+  pipeline: [env:check local, db:seed:safe, test, deploy:preview, env:check preview, test:e2e, deploy:staging, release:validate staging, drills:run, deploy:production, release:verify-live]

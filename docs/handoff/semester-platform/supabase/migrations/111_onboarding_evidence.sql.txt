@@ -1,0 +1,77 @@
+-- 111_onboarding_evidence.sql — remediates ONB-01 and ONB-02 (inspected_handoff_binding_findings.csv). PROPOSED, not applied.
+-- ONB-01: api.record_activation let the client assert activation for any definition. Activation now derives from
+--         server-recorded domain events named by the assigned journey version's definition.
+-- ONB-02: api.complete_step accepted any listed step. Verified steps now need a server attestation; self-reported
+--         preference steps stay client-completable.
+
+create table if not exists onboard.domain_events(
+  person_id uuid not null references auth.users, tenant_id uuid, event_name text not null,
+  source text not null check (source in ('server','domain_worker','integration')),   -- never 'client'
+  ref text, at timestamptz not null default now());
+create index if not exists domain_events_person on onboard.domain_events(person_id, event_name);
+alter table onboard.domain_events enable row level security; alter table onboard.domain_events force row level security;
+create policy domain_events_read_own on onboard.domain_events for select to authenticated using (person_id = auth.uid());
+-- No client insert policy: only security-definer server code and workers write here.
+
+create or replace function onboard.attest(p_person uuid, p_tenant uuid, p_event text, p_source text, p_ref text)
+returns void language sql security definer set search_path = '' as $$
+  insert into onboard.domain_events(person_id, tenant_id, event_name, source, ref) values (p_person, p_tenant, p_event, p_source, p_ref);
+$$;
+revoke all on function onboard.attest(uuid, uuid, text, text, text) from public, anon, authenticated;
+
+-- Client may ask for evaluation; it can't name the definition or assert success.
+drop function if exists api.record_activation(text);
+create or replace function api.evaluate_activation(p_journey text) returns text
+language plpgsql security definer set search_path = '' as $$
+declare a onboard.assignments; def onboard.activation_definitions; begin
+  select * into a from onboard.assignments where person_id = auth.uid() and journey_id = p_journey for update;
+  if a.person_id is null then raise exception 'no assignment for journey %', p_journey; end if;
+  select d.* into def from onboard.journey_versions v join onboard.activation_definitions d on d.id = v.activation_definition
+   where v.journey_id = a.journey_id and v.version = a.version;                     -- the ASSIGNED version, not any version
+  if def.id is null then return 'no_definition'; end if;
+  if exists (select 1 from unnest(def.event_names) e
+             where not exists (select 1 from onboard.domain_events x
+                               where x.person_id = auth.uid() and x.event_name = e
+                                 and (a.tenant_id is null or x.tenant_id = a.tenant_id))) then
+    return 'not_yet';
+  end if;
+  insert into onboard.activation_events(person_id, definition_id) values (auth.uid(), def.id) on conflict do nothing;
+  update onboard.assignments set state = 'activation_achieved', activated_at = coalesce(activated_at, now())
+   where person_id = auth.uid() and journey_id = p_journey;
+  return 'activated';
+end $$;
+grant execute on function api.evaluate_activation(text) to authenticated;
+
+-- Step kinds: 'self_reported' (preference, may be client-completed) vs 'verified' (needs a server attestation named by the step).
+-- Assumes journey_versions.steps is a jsonb array of {id, skippable, kind?, requires_event?, after?}. Missing kind = self_reported (current behaviour).
+create or replace function api.complete_step(p_journey text, p_step text, p_skipped boolean default false) returns text
+language plpgsql security definer set search_path = '' as $$
+declare a onboard.assignments; steps jsonb; s jsonb; prev text; begin
+  select * into a from onboard.assignments where person_id = auth.uid() and journey_id = p_journey for update;
+  if a.person_id is null then raise exception 'no assignment'; end if;
+  select v.steps into steps from onboard.journey_versions v where v.journey_id = a.journey_id and v.version = a.version and v.published_at is not null;
+  if steps is null then                                                          -- ONB-13: no published matching version
+    update onboard.assignments set state = 'support_required' where person_id = auth.uid() and journey_id = p_journey;
+    return 'support_required';
+  end if;
+  select x into s from jsonb_array_elements(steps) x where x->>'id' = p_step;
+  if s is null then return 'step_not_in_version'; end if;                       -- stale client step list: refetch, don't escalate
+  if p_skipped and not coalesce((s->>'skippable')::boolean, false) then raise exception 'step % is required', p_step; end if;
+  prev := s->>'after';
+  if prev is not null and not exists (select 1 from onboard.progress p where p.person_id = auth.uid() and p.journey_id = p_journey and p.step_id = prev and p.status = 'completed') then
+    raise exception 'step % must follow %', p_step, prev;                                            -- out-of-order
+  end if;
+  if not p_skipped and coalesce(s->>'kind', 'self_reported') = 'verified' then
+    if not exists (select 1 from onboard.domain_events x where x.person_id = auth.uid() and x.event_name = s->>'requires_event'
+                   and (a.tenant_id is null or x.tenant_id = a.tenant_id)) then
+      return 'awaiting_verification';                                                                  -- client can't forge it
+    end if;
+  end if;
+  insert into onboard.progress(person_id, journey_id, step_id, status) values (auth.uid(), p_journey, p_step, case when p_skipped then 'skipped' else 'completed' end)
+    on conflict (person_id, journey_id, step_id) do update set status = excluded.status, at = now();
+  update onboard.assignments set current_step = p_step where person_id = auth.uid() and journey_id = p_journey;
+  return 'ok';
+end $$;
+-- Uses onboard.progress and onboard.journey_versions exactly as defined in 110. The 110 state transition on
+-- current_step (paused/support_required → setup_in_progress) is kept by the existing assignments update path; re-add it here if 110's
+-- version is replaced wholesale.

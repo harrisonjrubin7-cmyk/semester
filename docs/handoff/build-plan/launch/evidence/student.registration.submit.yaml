@@ -1,0 +1,37 @@
+# launch/evidence/student.registration.submit.yaml — one record per capability version.
+# Paths point at files that exist in this pack (✓) or still have to be written in the repo (todo).
+capability_key: student.registration.submit
+version: 0.1.0
+environment: staging
+status: pending_review            # pending_review | accepted | rejected | expired
+wave: 3          # after registration_readiness_v1 (wave 2 wedge) is accepted
+gates_required: [identity, data, source, workflow, ux, ops, institution]
+artifacts:
+  migration:
+    - proposed-schema/060_bespoke_core.sql                       # ✓ registration_requests, receipts, holds, time_tickets, readiness_*
+  rls:
+    - supabase/policies/registration_policies.sql                # ✓
+    - supabase/tests/registration_rls.test.sql                   # ✓ 10 cases
+  policy:
+    - policies/access.rego                                       # ✓
+    - policies/registration_test.rego                            # ✓
+  api:
+    - registration.openapi.yaml                                  # todo (repo)
+  command:
+    - live-integration/supabase/functions/live-institution-command   # ✓ idempotent receipt + outbox
+  worker:
+    - workers/workflow-worker.ts.txt                             # ✓ lease loop; SIS adapter handler todo
+    - registration_reconcile_worker.spec.ts                      # todo (repo): timeout -> unknown -> reconciled, never duplicated
+  ui:
+    - registration_e2e.spec.ts                                   # todo (repo)
+    - registration_accessibility.spec.ts                         # todo (repo)
+    - stale_source_screen_test                                   # todo (repo): SIS stale -> submit disabled with reason
+  ops:
+    - registration_incident_runbook.md                           # todo
+evidence_runs: []                 # add { kind, run_url, commit_sha, deployment_id, result, at } per run
+approvers:
+  - registrar_product_owner
+  - security_owner
+  - platform_owner
+  - institution_registrar         # Vanderbilt counterpart, staging sign-off
+expires_at: null                  # set when accepted; evidence expires with any schema, policy or adapter change

@@ -1,0 +1,8 @@
+gates:
+  - { id: GATE-01, name: Problem and authority, blocks: design_and_build, checks: [user_outcome_defined, institution_authority_defined, prohibited_claims_defined, source_types_defined, accountable_owner_named] }
+  - { id: GATE-02, name: Data and access, blocks: integration_testing, checks: [record_classification_defined, tenant_scope_defined, rls_policy_tested, command_policy_tested, revocation_behavior_tested, audit_events_defined] }
+  - { id: GATE-03, name: Workflow safety, blocks: production_release, checks: [legal_transitions_tested, idempotency_tested, retry_and_quarantine_defined, reconciliation_defined, safe_failure_states_designed, receipt_behavior_tested] }
+  - { id: GATE-04, name: Student and staff quality, blocks: cohort_activation, checks: [ready_loading_empty_error_forbidden_offline_states, source_and_freshness_visible, accessibility_evidence_attached, support_handoff_available, training_material_reviewed] }
+  - { id: GATE-05, name: Operational readiness, blocks: launch, checks: [dashboards_available, alerts_tested, incident_drill_completed, rollback_rehearsed, on_call_confirmed, institution_escalation_confirmed] }
+  - { id: GATE-06, name: Expansion readiness, blocks: scope_increase, checks: [pilot_results_reviewed, trust_and_confusion_metrics_reviewed, open_critical_findings_zero, source_quality_acceptable, renewal_or_expansion_approval_recorded] }
+rule: "A check passes only with an evidence id from governance/evidence-registry.yaml in state accepted. A PR touching a capability declares which gate checks it moves."

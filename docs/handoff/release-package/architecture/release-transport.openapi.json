@@ -1,0 +1,106 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Semester release-transport proposed API",
+    "version": "0.1.0",
+    "description": "Internal proposed endpoint, not implemented. Integrity never authorizes a release."
+  },
+  "paths": {
+    "/internal/release-bundles/validate": {
+      "post": {
+        "operationId": "validateEvidenceTransport",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "manifest_reference",
+                  "manifest_sha256"
+                ],
+                "properties": {
+                  "manifest_reference": {
+                    "type": "string",
+                    "description": "Opaque approved-store identifier, never an arbitrary path or URL"
+                  },
+                  "manifest_sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Integrity only",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "integrity",
+                    "release_authorized"
+                  ],
+                  "properties": {
+                    "integrity": {
+                      "const": "passed"
+                    },
+                    "artifact_count": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "release_authorized": {
+                      "const": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed manifest"
+          },
+          "401": {
+            "description": "Invalid service identity"
+          },
+          "403": {
+            "description": "Target or operation forbidden"
+          },
+          "409": {
+            "description": "Target or digest conflict"
+          },
+          "413": {
+            "description": "Payload too large"
+          },
+          "422": {
+            "description": "Invalid evidence"
+          },
+          "429": {
+            "description": "Rate limited"
+          },
+          "503": {
+            "description": "Evidence store unavailable"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "serviceBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');const C=require('../public-site/site-core.js');const routes=JSON.parse(fs.readFileSync(path.join(__dirname,'../public-site/routes.json')));
+test('44 unique route patterns',()=>{assert.equal(routes.length,44);assert.equal(new Set(routes.map(s=>s.route)).size,44);});
+for(const s of routes)test('resolves '+s.route,()=>assert.equal(C.resolve(s.route.replace(/:[^/]+/,'reviewed-record'),routes).route,s.route));
+test('unknown route gives 404',()=>assert.equal(C.resolve('/not-a-page',routes).route,'/404'));
+test('malformed encoding gives 404',()=>assert.equal(C.resolve('/%zz',routes).route,'/404'));
+test('protocol route rejected',()=>assert.equal(C.resolve('https://untrusted.example',routes).route,'/404'));
+test('extra nested dynamic segments rejected',()=>assert.equal(C.resolve('/resources/a/b',routes).route,'/404'));
+test('empty form rejected',()=>assert.equal(C.localReceipt({name:'',email:'',message:''},'/demo').kind,'invalid'));
+test('invalid email rejected',()=>assert.ok(C.validate({name:'Demo',email:'bad',message:''}).email));
+test('oversize message rejected',()=>assert.ok(C.validate({name:'Demo',email:'demo@example.test',message:'a'.repeat(2001)}).message));
+test('local receipt never claims sent',()=>{const r=C.localReceipt({name:'Demo',email:'demo@example.test',message:''},'/demo');assert.equal(r.kind,'local_preview');assert.ok(r.notice.includes('Nothing was sent'));});
+test('seven region states',()=>assert.equal(C.states.length,7));

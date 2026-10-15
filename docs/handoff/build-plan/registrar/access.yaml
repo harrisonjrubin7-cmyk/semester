@@ -1,0 +1,12 @@
+role_bundles: [student, faculty, teaching_assistant, academic_advisor, department_scheduler, curriculum_approver, transfer_evaluator, registrar_specialist, registrar_supervisor, graduation_evaluator, records_service_operator, institutional_auditor, technical_operator]
+rule: "A title doesn't establish universal record access."
+decision_inputs: [actor_and_session, institutional_membership, role_grant_and_expiry, course_program_or_caseload_relationship, approved_purpose, record_classification, workflow_state, policy_version, requested_fields_and_operation, delegation_and_approval, active_restrictions]
+separation_of_duties:
+  - [create_sensitive_policy_change, approve_sensitive_policy_change]
+  - [request_exceptional_record_correction, approve_exceptional_record_correction]
+  - [configure_production_integration, activate_production_integration]
+  - [propose_degree_conferral, approve_degree_conferral]
+  - [request_privileged_access, grant_privileged_access]
+two_person_rule: "Only for institution-defined consequential operations, not every routine action."
+student_rights_workflows: [inspect_eligible_records, request_correction, institution_review_and_dispute, disclosure_authorization, disclosure_accounting, directory_information_restriction, delegation_and_revocation, retention_and_legal_hold]
+legal_note: "Counsel and the institution determine the legal basis; the software records that determination. No generic 'FERPA compliant' badge."

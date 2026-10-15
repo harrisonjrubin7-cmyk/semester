@@ -1,0 +1,10 @@
+incident:
+  id: INC-SEC-001
+  title: Suspected unauthorized access to a restricted record
+  severity: { sev_1: confirmed cross-tenant or broad restricted disclosure, sev_2: suspected unauthorized record access, sev_3: contained policy or configuration defect, sev_4: low-risk question or false positive }
+  first_15_minutes: [create_incident_record, preserve_audit_and_request_logs, suspend_implicated_feature_flag_if_safe, revoke_relevant_sessions_or_access_generation, identify_tenant_and_record_scope, notify_incident_commander, begin_fact_log_without_speculation]
+  containment: [disable_affected_connector_or_command, revoke_active_tokens_and_sessions, preserve_evidence, prevent_repeat_execution, validate_tenant_boundary_controls]
+  recovery: [correct_configuration_or_code, run_isolation_and_policy_tests, peer_security_review, document_scope_and_impact, obtain_release_reapproval, restore_gradually_with_monitoring]
+  communications: { principle: "Confirmed facts, affected scope, immediate action, next update time.", prohibited: [unsupported_cause_claims, certification_or_guaranteed_security_statements, unnecessary_student_information] }
+  closure: [root_cause_record, corrective_actions, control_update, affected_evidence_review, institution_notification_record_when_required, post_incident_review]
+  contacts: { incident_commander: null, security_owner: null, institution_security_contact: null }   # fill before launch; blank blocks GATE-05

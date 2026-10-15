@@ -1,0 +1,23 @@
+{
+  "function": "retry_allowed",
+  "cases": [
+    {
+      "input": {
+        "status": 503,
+        "attempt": 0,
+        "max_attempts": 3,
+        "method": "GET"
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "status": 503,
+        "attempt": 0,
+        "max_attempts": 3,
+        "method": "POST"
+      },
+      "expected": false
+    }
+  ]
+}

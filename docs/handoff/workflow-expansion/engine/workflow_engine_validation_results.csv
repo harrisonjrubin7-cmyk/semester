@@ -1,0 +1,56 @@
+case,expected,actual,passed
+valid-document-1-workflow_definition,accept,accept,True
+valid-document-2-execution_binding,accept,accept,True
+valid-document-3-execution_instance,accept,accept,True
+valid-document-4-execution_receipt,accept,accept,True
+valid-document-5-approval_grant,accept,accept,True
+valid-document-6-domain_event,accept,accept,True
+valid-document-7-execution_binding,accept,accept,True
+valid-document-8-execution_binding,accept,accept,True
+valid-document-9-execution_binding,accept,accept,True
+valid-document-10-execution_binding,accept,accept,True
+valid-document-11-execution_binding,accept,accept,True
+valid-document-12-execution_binding,accept,accept,True
+valid-document-13-execution_binding,accept,accept,True
+valid-document-14-execution_binding,accept,accept,True
+valid-document-15-execution_binding,accept,accept,True
+valid-document-16-execution_binding,accept,accept,True
+valid-document-17-execution_binding,accept,accept,True
+valid-document-18-execution_binding,accept,accept,True
+valid-document-19-execution_binding,accept,accept,True
+valid-document-20-execution_binding,accept,accept,True
+valid-document-21-execution_binding,accept,accept,True
+valid-document-22-execution_binding,accept,accept,True
+valid-document-23-execution_binding,accept,accept,True
+unexpected field,reject,reject,True
+institution without tenant,reject,reject,True
+consequential without human authority,reject,reject,True
+official without idempotency,reject,reject,True
+hybrid without surface,reject,reject,True
+background without binding,reject,reject,True
+verified gate without evidence,reject,reject,True
+AI consequential decision,reject,reject,True
+undefined state,reject,reject,True
+orphan state,reject,reject,True
+missing recovery,reject,reject,True
+invalid recovery test,reject,reject,True
+duplicate step,reject,reject,True
+write in shadow,reject,reject,True
+active unresolved handler,reject,reject,True
+lease invalid heartbeat,reject,reject,True
+retry invalid delay,reject,reject,True
+official provisional cleanup,reject,reject,True
+event missing event type,reject,reject,True
+running without lease,reject,reject,True
+committed without receipt,reject,reject,True
+instance invalid UUID,reject,reject,True
+instance invalid timestamp,reject,reject,True
+updated before created,reject,reject,True
+accepted receipt says enrolled,reject,reject,True
+committed receipt without proof,reject,reject,True
+corrected receipt without predecessor,reject,reject,True
+self approved,reject,reject,True
+approval expiry before issued,reject,reject,True
+bad hash,reject,reject,True
+valid six-document bundle,accept,accept,True
+approval payload mismatch across documents,reject,reject,True

@@ -1,0 +1,8 @@
+// Restore a synthetic tenant into an isolated environment. Dry run unless --apply.
+const target = process.argv.find((a) => a.startsWith("--target="))?.split("=")[1] ?? "";
+if (!/recovery|drill|isolated|local/.test(target) || /prod/.test(target)) { console.error("Refused: recovery scripts only run against an isolated recovery/drill target, never production."); process.exit(2); }
+const apply = process.argv.includes("--apply");   // default is a dry run
+const fixture = process.argv.find((a) => a.startsWith("--fixture="))?.split("=")[1];
+if (!fixture?.startsWith("tenant-synthetic-")) { console.error("Only synthetic tenant fixtures can be restored by this script."); process.exit(2); }
+const steps = ["create isolated database from latest backup", "verify restore checksum", "run test:tenant-isolation", "run test:rls", "run test:source-authority", "keep connectors disabled until reconciliation passes"];
+for (const s of steps) console.log(apply ? "RUN " : "PLAN", s);

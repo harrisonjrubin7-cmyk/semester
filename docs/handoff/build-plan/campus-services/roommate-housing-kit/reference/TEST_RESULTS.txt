@@ -1,0 +1,28 @@
+test_blocked (test_roommate_match.MatchingTests.test_blocked) ... ok
+test_bool_level (test_roommate_match.MatchingTests.test_bool_level) ... ok
+test_extra_weight (test_roommate_match.MatchingTests.test_extra_weight) ... ok
+test_float_time (test_roommate_match.MatchingTests.test_float_time) ... ok
+test_identical (test_roommate_match.MatchingTests.test_identical) ... ok
+test_ineligible (test_roommate_match.MatchingTests.test_ineligible) ... ok
+test_invalid_level (test_roommate_match.MatchingTests.test_invalid_level) ... ok
+test_invalid_minute (test_roommate_match.MatchingTests.test_invalid_minute) ... ok
+test_missing_field (test_roommate_match.MatchingTests.test_missing_field) ... ok
+test_nan (test_roommate_match.MatchingTests.test_nan) ... ok
+test_negative_weight (test_roommate_match.MatchingTests.test_negative_weight) ... ok
+test_no_sleep_overlap (test_roommate_match.MatchingTests.test_no_sleep_overlap) ... ok
+test_noise_tolerance (test_roommate_match.MatchingTests.test_noise_tolerance) ... ok
+test_not_opted_in (test_roommate_match.MatchingTests.test_not_opted_in) ... ok
+test_overnight (test_roommate_match.MatchingTests.test_overnight) ... ok
+test_partial_coverage (test_roommate_match.MatchingTests.test_partial_coverage) ... ok
+test_symmetric (test_roommate_match.MatchingTests.test_symmetric) ... ok
+test_unshared (test_roommate_match.MatchingTests.test_unshared) ... ok
+test_wrap_overlap (test_roommate_match.MatchingTests.test_wrap_overlap) ... ok
+test_zero_weights (test_roommate_match.MatchingTests.test_zero_weights) ... ok
+test_zero_window (test_roommate_match.MatchingTests.test_zero_window) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.001s
+
+OK
+
+Scope: pure Python only. Browser, SQL, concurrency, live SIS/ERP tests NOT RUN.

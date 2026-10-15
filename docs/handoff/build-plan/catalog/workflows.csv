@@ -1,0 +1,18 @@
+id,name,steps
+WF-01-STUDENT,"Student",40
+WF-02-FACULTY,"Faculty",24
+WF-03-ADVISOR-STUDENT-SUCCESS,"Advisor / student success",17
+WF-04-REGISTRAR,"Registrar",21
+WF-05-INSTITUTIONAL-IMPLEMENTATION,"Institutional implementation",22
+WF-06-CONTROLLED-INTEGRATION,"Controlled integration",20
+WF-07-AI,"AI",17
+WF-08-SUPPORT,"Support",12
+WF-09-INCIDENT,"Incident",17
+WF-10-DOMAIN-MIGRATION,"Domain migration",17
+WF-11-STUDENT-FINANCE,"Student finance",16
+WF-12-CAMPUS-SERVICES,"Campus services",15
+WF-13-COMMUNITY-MODERATION,"Community & moderation",20
+WF-14-CAREER-EMPLOYER,"Career & employer",18
+WF-15-FAMILY-CONSENT,"Family consent",13
+WF-16-DEVELOPER-PLATFORM,"Developer platform",16
+WF-17-ANALYTICS-OUTCOMES,"Analytics & outcomes",14

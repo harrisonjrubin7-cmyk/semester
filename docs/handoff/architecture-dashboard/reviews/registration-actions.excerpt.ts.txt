@@ -1,0 +1,14 @@
+// Exact excerpt: app/src/lib/registration-actions.ts, inspected 2026-10-13.
+const LIMITS = [
+  'Semester cannot see your official registration record, holds or live seats.',
+  'Nothing here registers you. You enroll in your school’s own system.',
+];
+export function registrationActions(
+  data: RegistrationDayData,
+  cart: CatalogCourse[],
+  catalog: CatalogCourse[],
+  now: Date,
+): Action[] {
+  if (!modeActive(data, now)) return [];
+  // Remaining source omitted from this excerpt; see review walkthrough.
+}

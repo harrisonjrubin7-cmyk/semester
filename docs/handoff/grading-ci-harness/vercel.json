@@ -1,0 +1,5 @@
+{
+  "buildCommand": "python3 build_portal.py",
+  "outputDirectory": "dist",
+  "framework": null
+}

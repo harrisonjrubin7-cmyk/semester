@@ -1,0 +1,19 @@
+// node scripts/check-dependencies.mjs — fails CI on unmet hard deps, unapproved release-critical artifacts, overdue reviews.
+// Rename .txt -> .mjs. Requires: npm i -D yaml
+import { readFileSync, readdirSync } from "node:fs";
+import { parse } from "yaml";
+const ORDER = ["proposed","shaped","approved_for_build","in_build","integration_ready","evidence_ready","approved_for_release","enabled","monitored","retired"];
+const at = (s) => ORDER.indexOf(s ?? "proposed");
+const status = parse(readFileSync("registry/node-status.yaml", "utf8")) ?? {};
+let bad = 0; const fail = (m) => { console.error(m); bad++; };
+for (const f of readdirSync("registry/increments").filter((f) => f.endsWith(".yaml"))) {
+  const { increment: i } = parse(readFileSync("registry/increments/" + f, "utf8"));
+  if (at(i.state) < at("in_build")) continue;
+  for (const d of i.dependencies?.hard ?? []) if (at(status[d]) < at("integration_ready")) fail(i.id + ": hard dependency " + d + " is " + (status[d] ?? "proposed"));
+}
+for (const f of readdirSync("registry/artifacts").filter((f) => f.endsWith(".yaml"))) {
+  const { artifact: a } = parse(readFileSync("registry/artifacts/" + f, "utf8"));
+  if (a.release_critical && a.state !== "approved") fail(a.id + ": release-critical artifact is " + a.state);
+  if (a.review?.next_due && new Date(a.review.next_due) < new Date()) fail(a.id + ": review overdue (expired)");
+}
+process.exit(bad ? 1 : 0);

@@ -27,7 +27,7 @@ function makeDb() {
       log.push({ table, op: name, args });
     };
     const self: Record<string, unknown> = {};
-    for (const name of ['eq', 'in', 'select', 'delete', 'insert', 'update', 'upsert', 'maybeSingle']) {
+    for (const name of ['eq', 'in', 'not', 'select', 'delete', 'insert', 'update', 'upsert', 'maybeSingle']) {
       self[name] = (...args: unknown[]) => {
         record(name, ...args);
         return self;
@@ -804,6 +804,16 @@ describe('saveQueue', () => {
     await saveQueue([reminder()]);
     expect(harness.deleted()).toEqual(['push_queue']);
     expect(harness.log.filter((l) => l.op === 'insert')).toHaveLength(1);
+  });
+
+  it('leaves the pushes the database queued for a cleared hold', async () => {
+    // `hold:` rows come from 20261012100000_hold_release_notices.sql, not from
+    // the plan, so a replace that took them would drop the notice unsent.
+    const { saveQueue } = await load();
+    await saveQueue([reminder()]);
+    expect(harness.log.filter((l) => l.table === 'push_queue' && l.op === 'not')).toEqual([
+      { table: 'push_queue', op: 'not', args: ['id', 'like', 'hold:%'] },
+    ]);
   });
 
   it('sends no insert when the queue is empty, having cleared it', async () => {

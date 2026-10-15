@@ -1,0 +1,15 @@
+// Registry checks REG-001/002/003/007/008/010 over a capability list. Node: node check.mjs registry.json
+// Each capability: {key, placement, level, owner?, authority?, source_backed?, freshness_policy?, release?, safe_off?, ai_enabled?, ai_packet?, flags?:[{key, review_by}]}
+export function check(caps, today = new Date().toISOString().slice(0, 10)) {
+  const out = [];
+  const add = (id, sev, key, msg) => out.push({ id, severity: sev, capability: key, message: msg });
+  for (const c of caps) {
+    if (!c.owner || c.owner === "pending") add("REG-001", "blocking", c.key, "no accountable owner");
+    if (c.placement !== "external" && !c.authority) add("REG-002", "blocking", c.key, "no authority boundary");
+    if (c.source_backed && !c.freshness_policy) add("REG-003", "blocking", c.key, "source-backed without a freshness policy");
+    if (c.release && !c.safe_off) add("REG-007", "blocking", c.key, "release without a safe-off path");
+    if (c.ai_enabled && !c.ai_packet) add("REG-008", "blocking", c.key, "AI-enabled without a governance packet");
+    for (const f of c.flags ?? []) if (!f.review_by || f.review_by < today) add("REG-010", "warning", c.key, `flag ${f.key} has no current review date`);
+  }
+  return { blocking: out.filter((x) => x.severity === "blocking").length, warnings: out.filter((x) => x.severity === "warning").length, findings: out };
+}

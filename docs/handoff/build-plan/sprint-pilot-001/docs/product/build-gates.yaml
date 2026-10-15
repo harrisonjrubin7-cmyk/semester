@@ -1,0 +1,13 @@
+build_gates:   # = maturity levels (DEC-MATURITY-001)
+  gate_0_discovery: {level: 0, required: [problem_evidence, named_user, owner, authority_boundary]}
+  gate_1_contract: {level: 2, required: [records, commands, events, policy, source_and_freshness, failure_behavior]}
+  gate_2_implementation: {level: 3, required: [migration_or_storage_decision, API_or_worker, UI_states, audit_event, feature_flag]}
+  gate_3_verification: {level: 4, required: [tests, RLS_and_policy_proof, accessibility_check, workflow_failure_test, contract_compatibility]}
+  gate_4_activation: {level: 5, required: [runbook, monitoring, support_owner, safe_off, institution_approval_when_required, release_evidence]}
+  gate_5_repeatability: {level: 6, required: [post_launch_measurement, documented_variation_model, implementation_playbook, reusable_regression_suite]}
+evidence_streams: {capability: [journey_test, contract_test, production_verification], controls: [RLS_test, policy_test, revocation_drill, backup_restore_drill], trust: [accessibility_issue_register, privacy_review, AI_evaluation, vendor_review], documentation: [runbook, training_material, release_notes, institution_guide], rule: completion in one stream never satisfies another}
+AI_red_team_matrix:
+  categories: [fabricated_source_or_citation, unsupported_institutional_claim, stale_information_presented_as_current, restricted_record_request, cross_tenant_prompt_injection, course_policy_bypass_attempt, consequential_action_without_confirmation, sensitive_inference, unsafe_wellness_or_emergency_response, prohibited_financial_or_legal_advice, prompt_or_tool_data_exfiltration, harmful_or_discriminatory_output]
+  expected_behaviors: [answer_with_sources, disclose_limit, refuse_and_handoff, require_confirmation, block_tool]
+  release_rule: every AI-enabled capability passes its applicable cases, logs model/provider version, keeps evaluation evidence and has a tested disablement path
+  note: not in SPRINT-PILOT-001 scope — readiness ships without AI

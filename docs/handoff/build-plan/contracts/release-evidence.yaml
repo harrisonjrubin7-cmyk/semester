@@ -1,0 +1,47 @@
+# release-evidence.yaml — signed structured decision before enabling the pilot capability.
+release_decision:
+  release_id: registration-readiness-0.1.0
+  tenant: vanderbilt
+  environment: production
+  capability_keys: [student.readiness.read, student.readiness.evaluate, student.readiness.refresh, registrar.readiness.queue.read, registrar.readiness.case.route]
+  decision: pending          # pending | approved | rejected — approved only when every evidence item has a run link
+  required_evidence:
+    schema: [migrations_applied, constraints_verified, rollback_or_forward_fix_plan]
+    security: [rls_allow_deny_suite, role_scope_suite, session_revocation_suite]
+    workflow: [state_transition_suite, idempotency_suite, upstream_timeout_suite, reconciliation_suite]
+    product: [state_coverage, source_status_copy_review, accessibility_review, mobile_review]
+    operations: [runbook_review, incident_drill, alert_delivery_test, support_handoff]
+    institution: [named_business_owner, named_technical_owner, source_system_confirmation, pilot_scope_approval]
+  approvers:
+    - { role: product_owner, state: pending }
+    - { role: platform_owner, state: pending }
+    - { role: security_owner, state: pending }
+    - { role: institution_owner, state: pending }
+  rollback:
+    feature_flag: registration_readiness_v1
+    safe_state: read_only_or_unavailable_with_support_handoff
+    data_handling: preserve_audit_and_receipt_history
+failure_drills:      # run before any pilot launch; each needs a recorded result
+  - { drill: sis_timeout, expected: "mark stale, no definitive claim, offer refresh/review" }
+  - { drill: duplicate_evaluation, expected: "same receipt, no duplicate case" }
+  - { drill: staff_role_removed_mid_session, expected: "action denied at command time, denial logged" }
+  - { drill: late_worker_success_after_revocation, expected: "rejected by generation/revocation barrier" }
+  - { drill: duplicate_outbox_delivery, expected: "consumer idempotency keeps one business effect" }
+  - { drill: rls_bypass_attempt, expected: "no unauthorized row returned" }
+  - { drill: policy_engine_unavailable, expected: "fail closed for sensitive writes, explain next step" }
+  - { drill: bad_migration, expected: "roll back app; forward-fix DB per procedure" }
+  - { drill: read_model_lag, expected: "show updating/freshness notice, never claim current" }
+  - { drill: prompt_injection_in_source_text, expected: "answer stays bounded to approved sources" }
+pilot_metrics:
+  trust:
+    - { name: stale_data_disclosure_rate, target: "100%" }
+    - { name: unauthorized_access_successes, target: "0" }
+    - { name: audit_completeness, target: "100%" }
+  reliability:
+    - { name: readiness_evaluation_success_rate, target: ">= 99% excluding classified upstream outages" }
+    - { name: reconciliation_latency, target: "agreed with institution before pilot" }
+    - { name: dead_letter_age, target: "no high-severity item past the agreed window" }
+  product:
+    - { name: first_meaningful_action, definition: "student selects a term and gets an understandable result" }
+    - { name: blocked_case_resolution_time, definition: "referral to recorded institutional outcome" }
+    - { name: support_contact_rate, definition: "support contacts per completed readiness session" }

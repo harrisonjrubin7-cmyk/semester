@@ -12,15 +12,18 @@ import {
   enroll,
   inPlan,
   landing,
+  loadHoldReleases,
   loadMyHold,
   loadMyRegistration,
   loadSections,
+  markHoldReleaseRead,
   meetsSaid,
   phase,
   sectionName,
   withdraw,
   type Answer,
   type HoldNotice,
+  type HoldRelease,
   type LiveSection,
   type MyEnrollment,
   type TermCalendar,
@@ -105,6 +108,8 @@ export function StudentRegistration({ term, calendar }: { term: string; calendar
   const [sections, setSections] = useState<Load<LiveSection[]>>(null);
   const [mine, setMine] = useState<Load<MyEnrollment[]>>(null);
   const [hold, setHold] = useState<Load<HoldNotice>>(null);
+  const [releases, setReleases] = useState<HoldRelease[]>([]);
+  const [marking, setMarking] = useState<string | null>(null);
   const [readAt, setReadAt] = useState<number | null>(null);
   const [reviewing, setReviewing] = useState<string | null>(null);
   const [leaving, setLeaving] = useState<string | null>(null);
@@ -119,6 +124,10 @@ export function StudentRegistration({ term, calendar }: { term: string; calendar
     loadSections(term).then((v) => { if (live) { setSections(v); setReadAt(Date.now()); } }, (e: unknown) => { if (live) setSections(err(e)); });
     loadMyRegistration(term).then((v) => { if (live) setMine(v); }, (e: unknown) => { if (live) setMine(err(e)); });
     loadMyHold().then((v) => { if (live) setHold(v); }, (e: unknown) => { if (live) setHold(err(e)); });
+    // A cleared hold is good news, not something to act on: if it cannot be
+    // read the screen says nothing about it, and the hold line above is still
+    // the truth about whether enrolling is blocked.
+    loadHoldReleases().then((v) => { if (live) setReleases(v); }, () => { if (live) setReleases([]); });
     return () => { live = false; };
   }, [term, reads]);
 
@@ -127,6 +136,19 @@ export function StudentRegistration({ term, calendar }: { term: string; calendar
   }, [reviewing]);
 
   const reload = () => setReads((n) => n + 1);
+
+  async function markRead(id: string): Promise<void> {
+    setMarking(id);
+    try {
+      await markHoldReleaseRead(id);
+      setReleases((rs) => rs.filter((r) => r.id !== id));
+    } catch (e) {
+      const text = e instanceof Error ? e.message : 'Could not mark that notice read.';
+      setSaid({ tone: 'unknown', text, retry: () => void markRead(id) });
+    } finally {
+      setMarking(null);
+    }
+  }
 
   /** One write: the answer, a refusal in words, or no answer and a retry with the same key. */
   async function send(what: string, run: (key: string) => Promise<Answer>): Promise<void> {
@@ -194,6 +216,16 @@ export function StudentRegistration({ term, calendar }: { term: string; calendar
           )}
         </Notice>
       ) : null}
+
+      {releases.map((r) => (
+        <Notice key={r.id}>
+          {r.office || 'An office'} cleared a hold on your account on {when(r.releasedAt)}.{' '}
+          {!failed(hold) && hold?.held ? 'Another hold still stops you adding courses.' : 'You can add courses again.'}{' '}
+          <button type="button" className="btn" disabled={marking === r.id} onClick={() => void markRead(r.id)}>
+            {marking === r.id ? 'Marking…' : 'Got it'}
+          </button>
+        </Notice>
+      ))}
 
       <p>{phaseSaid(calendar, now)}</p>
 

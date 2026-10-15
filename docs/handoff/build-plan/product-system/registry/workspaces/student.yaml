@@ -1,0 +1,16 @@
+workspace:
+  id: WS-STUDENT-001
+  title: Student workspace
+  primary_actor: student
+  areas: [Today, Plan, Learn, Help, Campus, Progress, You]
+  promise: >
+    One calm place to understand the next safe step across academic, personal, campus and career work,
+    showing what is official, connected, entered by the student, estimated or AI-assisted.
+  non_promises:
+    - It is not the institution's official system of record.
+    - It does not replace institutional offices or policy decisions.
+    - It does not represent an AI suggestion as an official result.
+  required_global_surfaces: [source_line, connection_state, safe_next_step, support_handoff, status_explanation, privacy_entry_point]
+  mobile_destinations: [Today, My Path, Search, Plan, Me]
+  prototype: ui_kits/student/ · ui_kits/semester-app/ (98 routes)
+  maturity_level: 1

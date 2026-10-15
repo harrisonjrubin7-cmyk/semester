@@ -1,0 +1,196 @@
+# records.yaml — record passports. Every pilot record needs owner, authority, sensitivity, readers, write path, source rules, retention.
+records:
+  readiness_cases:
+    domain: registration_readiness
+    owner: registrar_product
+    authority: semester
+    source_of_truth: derived_from_institution_sources
+    sensitivity: high
+    tenant_scoped: true
+    immutable: false
+    allowed_roles:
+      student: own_only
+      advisor: assigned_caseload_only
+      registrar: tenant_scope
+      institution_admin: audited_read
+      operations: no_student_content
+    write_path:
+      commands: [readiness.evaluate, readiness.case.route, readiness.case.refresh]
+      client_writes: none        # all writes via command functions
+      requires_policy: true
+      requires_audit: true
+    source_requirements: [source_type, source_ref, observed_at, freshness_state]
+    retention: { class: institution_policy_required, deletion: subject_to_legal_hold_and_contract }
+  readiness_checks:
+    domain: registration_readiness
+    owner: registrar_product
+    authority: semester
+    source_of_truth: derived_from_institution_sources
+    sensitivity: high
+    tenant_scoped: true
+    immutable: false
+    allowed_roles:
+      student: own_only
+      advisor: assigned_caseload_only
+      registrar: tenant_scope
+      operations: no_student_content
+    write_path:
+      commands: [readiness.evaluate, readiness.case.refresh]
+      client_writes: none        # all writes via command functions
+      requires_policy: true
+      requires_audit: true
+    source_requirements: [source_type, source_ref, observed_at, freshness_state]
+    retention: { class: institution_policy_required, deletion: subject_to_legal_hold_and_contract }
+  readiness_receipts:
+    domain: registration_readiness
+    owner: registrar_product
+    authority: semester
+    source_of_truth: workflow_receipt
+    sensitivity: high
+    tenant_scoped: true
+    immutable: true
+    allowed_roles:
+      student: own_only
+      registrar: tenant_scope
+      operations: no_student_content
+    write_path:
+      commands: [readiness.evaluate, readiness.refresh, referral.create]
+      client_writes: none        # all writes via command functions
+      requires_policy: true
+      requires_audit: true
+    source_requirements: []
+    retention: { class: institution_policy_required, deletion: subject_to_legal_hold_and_contract }
+    required_copy:
+      - "This receipt records your readiness check."
+      - "It is not confirmation that you are enrolled."
+  holds:
+    domain: registration_readiness
+    owner: registrar_product
+    authority: institution
+    source_of_truth: sis
+    sensitivity: high
+    tenant_scoped: true
+    immutable: false
+    allowed_roles:
+      student: own_only
+      advisor: assigned_caseload_only
+      registrar: tenant_scope
+      operations: no_student_content
+    write_path:
+      commands: [sis.sync]
+      client_writes: none        # all writes via command functions
+      requires_policy: true
+      requires_audit: true
+    source_requirements: [source_type, source_ref, observed_at, freshness_state]
+    retention: { class: institution_policy_required, deletion: subject_to_legal_hold_and_contract }
+  time_tickets:
+    domain: registration_readiness
+    owner: registrar_product
+    authority: institution
+    source_of_truth: sis
+    sensitivity: moderate
+    tenant_scoped: true
+    immutable: false
+    allowed_roles:
+      student: own_only
+      registrar: tenant_scope
+    write_path:
+      commands: [sis.sync]
+      client_writes: none        # all writes via command functions
+      requires_policy: true
+      requires_audit: true
+    source_requirements: [source_type, source_ref, observed_at, freshness_state]
+    retention: { class: institution_policy_required, deletion: subject_to_legal_hold_and_contract }
+  students:
+    domain: registration_readiness
+    owner: registrar_product
+    authority: institution
+    source_of_truth: sis
+    sensitivity: high
+    tenant_scoped: true
+    immutable: false
+    allowed_roles:
+      student: own_only
+      advisor: assigned_caseload_only
+      registrar: tenant_scope
+    write_path:
+      commands: [sis.sync]
+      client_writes: none        # all writes via command functions
+      requires_policy: true
+      requires_audit: true
+    source_requirements: [source_type, source_ref, observed_at, freshness_state]
+    retention: { class: institution_policy_required, deletion: subject_to_legal_hold_and_contract }
+  referrals:
+    domain: registration_readiness
+    owner: registrar_product
+    authority: semester
+    source_of_truth: native
+    sensitivity: high
+    tenant_scoped: true
+    immutable: false
+    allowed_roles:
+      student: own_only
+      advisor: assigned_caseload_only
+      registrar: tenant_scope
+    write_path:
+      commands: [referral.create, readiness.case.refer]
+      client_writes: none        # all writes via command functions
+      requires_policy: true
+      requires_audit: true
+    source_requirements: []
+    retention: { class: institution_policy_required, deletion: subject_to_legal_hold_and_contract }
+  override_requests:
+    domain: registration_readiness
+    owner: registrar_product
+    authority: semester
+    source_of_truth: native
+    sensitivity: high
+    tenant_scoped: true
+    immutable: false
+    allowed_roles:
+      registrar: tenant_scope
+      institution_admin: audited_read
+    write_path:
+      commands: [override.request, override.decide]
+      client_writes: none        # all writes via command functions
+      requires_policy: true
+      requires_audit: true
+    source_requirements: []
+    retention: { class: institution_policy_required, deletion: subject_to_legal_hold_and_contract }
+  audit_events:
+    domain: registration_readiness
+    owner: registrar_product
+    authority: semester
+    source_of_truth: native
+    sensitivity: high
+    tenant_scoped: true
+    immutable: true
+    allowed_roles:
+      institution_admin: tenant_scope
+      operations: metadata_only
+    write_path:
+      commands: [(every sensitive command)]
+      client_writes: none        # all writes via command functions
+      requires_policy: true
+      requires_audit: true
+    source_requirements: []
+    retention: { class: institution_policy_required, deletion: subject_to_legal_hold_and_contract }
+  freshness_snapshots:
+    domain: registration_readiness
+    owner: registrar_product
+    authority: semester
+    source_of_truth: integration_observation
+    sensitivity: low
+    tenant_scoped: true
+    immutable: true
+    allowed_roles:
+      registrar: tenant_scope
+      it_security: tenant_scope
+      operations: tenant_scope
+    write_path:
+      commands: [sis.sync, integration.refresh]
+      client_writes: none        # all writes via command functions
+      requires_policy: true
+      requires_audit: true
+    source_requirements: []
+    retention: { class: institution_policy_required, deletion: subject_to_legal_hold_and_contract }

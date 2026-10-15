@@ -1,0 +1,38 @@
+// Vitest unit tests for the readiness client + copy rules. Copy to app/src/features/readiness/readiness.test.ts.
+import { describe, expect, it, vi } from "vitest";
+import { ApiError, createReadinessClient, isDefinitive, STATE_COPY, type ReadinessSummary } from "./api";
+
+const ok = (body: unknown, status = 200) => Promise.resolve(new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } }));
+const client = (fetchImpl: typeof fetch, token: string | null = "t") => { vi.stubGlobal("fetch", fetchImpl); return createReadinessClient({ baseUrl: "https://api", getToken: async () => token }); };
+
+describe("readiness client", () => {
+  it("refuses without a session and makes no request", async () => {
+    const f = vi.fn(); await expect(client(f as never, null).context("T1")).rejects.toMatchObject({ status: 401 }); expect(f).not.toHaveBeenCalled();
+  });
+  it("sends the same idempotency key on retry", async () => {
+    const f = vi.fn().mockImplementation(() => ok({ id: "r", type: "refresh_requested", status: "accepted", statement: "s", correlationId: "c", issuedAt: "" }, 202));
+    const c = client(f as never); await c.refresh("T1", "K-1"); await c.refresh("T1", "K-1");
+    expect(f.mock.calls.map((x) => x[1].headers["idempotency-key"])).toEqual(["K-1", "K-1"]);
+  });
+  it("sends If-Match on routing", async () => {
+    const f = vi.fn().mockImplementation(() => ok({}, 202)); await client(f as never).route("c1", "v7", "Advising", "hold_owner");
+    expect(f.mock.calls[0][1].headers["if-match"]).toBe("v7");
+  });
+  it("maps 423, 409 and 503 to plain language and never shows server text for 5xx", async () => {
+    for (const [s, re] of [[423, /isn't turned on/], [409, /changed this/], [503, /can't confirm/i], [500, /Nothing was changed/]] as const) {
+      const f = vi.fn().mockImplementation(() => ok({ code: "x", message: "stack trace here" }, s));
+      const e = await client(f as never).context("T1").catch((x) => x as ApiError);
+      expect(e.userMessage).toMatch(re); expect(e.userMessage).not.toMatch(/stack trace/);
+    }
+  });
+});
+
+describe("readiness copy", () => {
+  it("never claims enrollment", () => { for (const c of Object.values(STATE_COPY)) expect(`${c.title} ${c.body}`).not.toMatch(/\benrolled\b|you're registered/i); });
+  it("is definitive only when every check is current and institution-verified", () => {
+    const base: ReadinessSummary = { termId: "T1", state: "ready", freshness: "current", checks: [{ key: "hold", label: "Holds", state: "ready", sourceType: "institution_verified", freshness: "current" }] };
+    expect(isDefinitive(base)).toBe(true);
+    expect(isDefinitive({ ...base, checks: [{ ...base.checks[0], freshness: "stale" }] })).toBe(false);
+    expect(isDefinitive({ ...base, checks: [{ ...base.checks[0], sourceType: "student_entered" }] })).toBe(false);
+  });
+});

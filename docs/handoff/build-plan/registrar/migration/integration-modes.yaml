@@ -1,0 +1,13 @@
+# From cutover_boundary_policy.md (draft for institution acceptance).
+modes:
+  connect_read: { official_writer: legacy, semester: "Permitted projections only; no official native writes" }
+  connect_delegated: { official_writer: legacy, semester: "Scoped server commands may execute in legacy; only legacy confirmation is official; timeout after dispatch → reconcile_required" }
+  shadow: { official_writer: legacy, semester: "Compute and compare; the comparison workflow writes nothing official anywhere" }
+  core_native: { official_writer: semester, semester: "Owns the accepted domain after evidence-bound approval; old writer fenced; downstream failures don't reverse native truth" }
+  held: { official_writer: none_new, semester: "No consequential commands; authorized reads and recovery only" }
+transition_guard: [exact_approved_scope, current_membership_and_grants, allowlisted_operation_and_fields, source_freshness, idempotency, expected_version, actual_writer_fencing]
+rules:
+  - "Recheck queued jobs on every mode change."
+  - "An API mode flag alone is not fencing — the old writer must actually be unable to write."
+  - "Existing integration scope exclusions stay. Registrar replacement gets separately reviewed academic contracts and gateways."
+  - "No student records to AI; no company access by default."

@@ -1,0 +1,65 @@
+name: Verify
+on: { pull_request: {}, push: { branches: [main] } }
+jobs:
+  repository:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm registry:validate
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test:unit
+      - run: pnpm test:contracts
+      - uses: open-policy-agent/setup-opa@v2
+      - run: pnpm test:policy
+      - run: pnpm test:workflow
+      - run: pnpm build
+  database-and-isolation:
+    runs-on: ubuntu-latest
+    needs: repository
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - uses: supabase/setup-cli@v1
+      - run: pnpm install --frozen-lockfile
+      - run: supabase start
+      - run: pnpm db:reset && pnpm db:seed:safe
+        env: { SEMESTER_FIXTURES: synthetic-only }
+      - run: pnpm test:rls && pnpm test:tenant-isolation && pnpm test:source-authority && pnpm test:provenance
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: isolation-results, path: evidence/test-runs/ }
+  experience-and-ai:
+    runs-on: ubuntu-latest
+    needs: repository
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps
+      - run: pnpm test:e2e && pnpm test:a11y && pnpm test:ai-boundaries
+  release-gate:
+    runs-on: ubuntu-latest
+    needs: [repository, database-and-isolation, experience-and-ai]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with: { name: isolation-results, path: evidence/test-runs/ }
+      - run: pnpm evidence:collect
+      - run: pnpm test:release-gate

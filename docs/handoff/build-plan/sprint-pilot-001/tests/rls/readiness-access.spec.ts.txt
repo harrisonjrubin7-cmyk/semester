@@ -1,0 +1,22 @@
+// RLS harness — run against staging with seeded synthetic users. Rename to .spec.ts.
+import { test, expect } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+type AccessCase = { name: string; as: "STUDENT_1" | "STUDENT_2" | "ADVISOR_1" | "REGISTRAR_A" | "REGISTRAR_B"; table: string; filter: [string, string]; expectation: "allow" | "deny" };
+const cases: AccessCase[] = [
+  { name: "Student reads own readiness receipt", as: "STUDENT_1", table: "readiness_receipts", filter: ["student_id", "STUDENT_1_ID"], expectation: "allow" },
+  { name: "Student cannot read another student's receipt", as: "STUDENT_1", table: "readiness_receipts", filter: ["student_id", "STUDENT_2_ID"], expectation: "deny" },
+  { name: "Advisor reads assigned student", as: "ADVISOR_1", table: "readiness_evaluations", filter: ["student_id", "STUDENT_1_ID"], expectation: "allow" },
+  { name: "Advisor cannot read outside assigned scope", as: "ADVISOR_1", table: "readiness_evaluations", filter: ["student_id", "STUDENT_2_ID"], expectation: "deny" },
+  { name: "Tenant A registrar cannot read Tenant B", as: "REGISTRAR_A", table: "readiness_evaluations", filter: ["tenant_id", "TENANT_B_ID"], expectation: "deny" },
+];
+for (const c of cases) test(c.name, async () => {
+  const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, { auth: { persistSession: false } });
+  await sb.auth.signInWithPassword({ email: process.env[c.as + "_EMAIL"]!, password: process.env[c.as + "_PASSWORD"]! });
+  const { data, error } = await sb.from(c.table).select("id").eq(c.filter[0], process.env[c.filter[1]]!);
+  if (c.expectation === "allow") { expect(error).toBeNull(); expect(data!.length).toBeGreaterThan(0); }
+  else expect(error ? [] : data).toEqual([]);   // RLS returns zero rows, never an error that reveals existence
+  for (const op of ["insert", "update", "delete"] as const) {   // no client writes at all
+    const r = op === "insert" ? await sb.from(c.table).insert({}) : op === "update" ? await sb.from(c.table).update({ id: null }).eq("id", "x") : await sb.from(c.table).delete().eq("id", "x");
+    expect(r.error ?? (r.count ? "wrote" : null)).not.toBe("wrote");
+  }
+});

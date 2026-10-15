@@ -1,0 +1,7 @@
+workspace:
+  id: WS-INSTITUTION-001
+  title: Institution console
+  modules: [overview, activation_and_release_status, access_and_roles, approvals, integrations, source_authority, support_and_handoffs, reconciliation, security_operations, privacy_requests, audit_log, reports]
+  non_negotiable_rules: [tenant_context_is_visible, sensitive_actions_require_reason, self_approval_is_blocked_when_separation_is_required, every_action_creates_an_audit_event, scoped_access_is_enforced_server_side, source_and_freshness_are_visible_for_source_backed_decisions]
+  prototype: ui_kits/console
+  maturity_level: 1

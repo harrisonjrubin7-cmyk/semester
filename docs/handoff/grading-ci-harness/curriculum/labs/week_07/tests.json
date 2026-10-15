@@ -1,0 +1,15 @@
+{
+  "function": "audit_ready",
+  "cases": [
+    {
+      "input": {
+        "actor": "u",
+        "tenant": "t",
+        "action": "create",
+        "target": "x",
+        "request_id": "r"
+      },
+      "expected": true
+    }
+  ]
+}

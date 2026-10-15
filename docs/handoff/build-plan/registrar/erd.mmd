@@ -1,0 +1,23 @@
+erDiagram
+  INSTITUTION ||--o{ MEMBERSHIP : contains
+  INSTITUTION ||--o{ TERM : defines
+  COURSE ||--o{ COURSE_VERSION : versions
+  PROGRAM ||--o{ PROGRAM_VERSION : versions
+  PROGRAM_VERSION ||--o{ REQUIREMENT_NODE : contains
+  COURSE_VERSION ||--o{ OFFERING : offered_as
+  TERM ||--o{ OFFERING : schedules
+  OFFERING ||--o{ SECTION : contains
+  SECTION ||--o{ MEETING_OCCURRENCE : meets
+  SECTION ||--o{ TEACHING_ASSIGNMENT : staffed_by
+  SECTION }o--o{ CAPACITY_POOL : consumes
+  MEMBERSHIP ||--o{ STUDENT_PROGRAM : holds
+  STUDENT_PROGRAM }o--|| PROGRAM_VERSION : governed_by
+  MEMBERSHIP ||--o{ ENROLLMENT : participates
+  SECTION ||--o{ ENROLLMENT : contains
+  ENROLLMENT ||--o| COURSE_ATTEMPT : creates
+  COURSE_ATTEMPT ||--o{ GRADE_POSTING : records
+  COURSE_ATTEMPT ||--o{ RECORD_CORRECTION : corrected_by
+  STUDENT_PROGRAM ||--o{ DEGREE_AUDIT_RUN : evaluated
+  DEGREE_AUDIT_RUN ||--o{ REQUIREMENT_RESULT : produces
+  STUDENT_PROGRAM ||--o{ CREDENTIAL_AWARD : earns
+  MEMBERSHIP ||--o{ TRANSCRIPT_SNAPSHOT : represented_in

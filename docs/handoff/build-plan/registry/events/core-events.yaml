@@ -1,0 +1,8 @@
+events:
+  - { type: identity.membership_changed, version: 1, producer: identity_access, consumers: [authorization, session_manager, notification_service, audit_log], classification: sensitive, consequences: [invalidate_permission_cache, recheck_active_delegations, revoke_if_membership_removed] }
+  - { type: source.snapshot_received, version: 1, producer: integration_adapter, consumers: [source_projection, freshness_monitor, reconciliation], classification: restricted, guarantees: [provider_event_dedupe, source_timestamp_required_when_available] }
+  - { type: readiness.evaluated, version: 1, producer: registration_readiness, consumers: [student_read_model, registrar_queue, receipt_service, pilot_metrics], classification: restricted, guarantees: [no_enrollment_implication, source_summary_required] }
+  - { type: consent.withdrawn, version: 1, producer: consent_service, consumers: [delegated_access, sharing_projection, session_manager, audit_log], classification: sensitive, guarantees: [revocation_generation_increment, downstream_revocation_job_created] }
+  - { type: reconciliation.case_opened, version: 1, producer: reconciliation_service, consumers: [operations_inbox, registrar_queue, alerting], classification: restricted, guarantees: [authority_conflict_classification, assigned_owner_or_escalation_rule] }
+replay: "Consumers key on (eventType, aggregateId, aggregateVersion). Replaying an older version is a no-op."
+telemetry: [published_at, delivered_at, attempts, dead_lettered, consumer_lag_seconds]

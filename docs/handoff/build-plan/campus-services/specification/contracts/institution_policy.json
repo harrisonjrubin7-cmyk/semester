@@ -1,0 +1,49 @@
+{
+  "status": "PROPOSED_UNAPPROVED",
+  "housing": {
+    "allocation_method": null,
+    "eligibility_policy_version": null,
+    "cohort_priorities": [],
+    "lottery_draw_procedure": null,
+    "reservation_duration_seconds": null,
+    "group_partial_split_allowed": false,
+    "accommodation_requirement_reference_only": true
+  },
+  "dining": {
+    "plan_version": null,
+    "price_version": null,
+    "entitlement_types": [
+      "meal",
+      "guest_pass",
+      "currency",
+      "promotion",
+      "basic_needs"
+    ],
+    "rollover": {
+      "eligibility": null,
+      "cap": null,
+      "destination_expiry": null,
+      "reserved_order_treatment": null,
+      "policy_version": null
+    },
+    "offline_exposure_limit": null
+  },
+  "tuition": {
+    "rate_version": null,
+    "currency": null,
+    "rounding": null,
+    "payment_allocation_policy": null,
+    "aid_rule_version": null,
+    "credit_balance_reviewer": null,
+    "payment_plan_terms_version": null
+  },
+  "activation": {
+    "institution": null,
+    "candidate_sha": null,
+    "target": null,
+    "approvers": [],
+    "primary": null,
+    "backup": null,
+    "status": "HELD"
+  }
+}

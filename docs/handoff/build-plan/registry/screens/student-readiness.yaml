@@ -1,0 +1,20 @@
+screen:
+  key: student_registration_readiness
+  route: /app/registration/readiness
+  capability_key: registration_readiness
+  primary_role: student
+  implementation: app/src/features/readiness/ReadinessScreen.tsx
+  states: [default, loading, empty, error, forbidden, offline, stale, needs_review]
+  required_regions: [page_heading, institution_context, source_status, freshness_status, readiness_explanation, next_safe_action, support_handoff, receipt_history]
+  accessibility:
+    heading_structure: one_h1
+    keyboard: [logical_tab_order, visible_focus, source_details_sheet_returns_focus]
+    announcements: [async_status_change, stale_source_warning, action_receipt]
+    color_rule: "Every status includes text and glyph in addition to visual tone."
+    motion: respects_reduced_motion
+  prohibited:
+    - "A ready visual that implies official enrollment."
+    - "A stale source shown without warning."
+    - "An AI answer shown without disclosure."
+  gaps_in_current_implementation: []   # closed 13 Oct: institution context, offline banner + disabled actions, receipt history (last 10), status glyphs
+rule: "No new route enters the screen atlas without one of these files."

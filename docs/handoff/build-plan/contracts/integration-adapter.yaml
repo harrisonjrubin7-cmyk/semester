@@ -1,0 +1,12 @@
+# integration-adapter.yaml — no downstream system writes product tables directly.
+adapter:
+  required_methods: [authenticate, pull_since_cursor, normalize, validate, apply_projection, reconcile, health_check]
+  required_metadata: [provider_key, tenant_id, cursor, source_watermark, observed_at, correlation_id, idempotency_key]
+  safety_rules:
+    - "Raw provider payloads are stored only under the approved retention and classification."
+    - "External IDs are unique within provider and tenant."
+    - "Projection updates are idempotent (same checksum = no-op)."
+    - "A lower-authority adapter cannot overwrite a higher-authority projection (075_authority_guard.sql)."
+    - "Failed normalization creates a reconciliation item, never a silent drop."
+    - "A watermark that moves backwards is rejected and quarantined."
+reference_implementation: packages/integrations/adapter.ts.txt

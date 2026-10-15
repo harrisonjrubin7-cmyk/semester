@@ -1,0 +1,14 @@
+# Frontend-only target — NOT the multi-service Vercel platform (/api and /lab return 503).
+# Pin both images by digest before use: docker buildx imagetools inspect <image>
+ARG NODE_IMAGE=node:22-bookworm-slim@sha256:REPLACE_WITH_REVIEWED_DIGEST
+ARG NGINX_IMAGE=nginxinc/nginx-unprivileged:stable-alpine@sha256:REPLACE_WITH_REVIEWED_DIGEST
+FROM ${NODE_IMAGE} AS build
+WORKDIR /repo
+COPY . .
+RUN npm ci && npm run build --workspace app
+FROM ${NGINX_IMAGE}
+COPY --from=build /repo/app/dist /usr/share/nginx/html
+COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+USER 101
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s CMD wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1

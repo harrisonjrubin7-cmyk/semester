@@ -342,7 +342,7 @@ describe('sharing with an advisor', () => {
     await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
 
     await act(async () => button(/^Delete…$/).click());
-    expect(text(dialog())).toContain('Deletes this advisor share and its access log from your account.');
+    expect(text(dialog())).toContain('Deletes this advisor share, its access log and your advisor’s check-ins on it from your account.');
     expect(text(dialog())).toContain('Your meeting preparation on this device');
     expect(text(dialog())).toContain('This can’t be undone.');
     expect(document.activeElement?.textContent).toBe('Cancel');
@@ -360,7 +360,7 @@ describe('sharing with an advisor', () => {
     await act(async () => button(/^Delete$/).click());
     expect(deleted).toEqual(['s-live']);
     expect(host.querySelector('[role="dialog"]')).toBeNull();
-    expect(text()).toContain('“Spring planning” and its access log are deleted.');
+    expect(text()).toContain('“Spring planning”, its access log and its check-ins are deleted.');
   });
 });
 

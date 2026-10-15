@@ -1,0 +1,6 @@
+training:
+  students: {topics: [source_labels_and_freshness, readiness_not_enrollment, privacy_and_sharing, support_handoff, AI_assisted_label_and_limits], completion: self_guided_quick_start}
+  advisors_and_registrars: {topics: [scope_and_authority, work_queues, routing_and_resolution, reconciliation, student_visible_copy, escalation], completion: scenario_walkthrough_and_attestation}
+  institution_administrators: {topics: [roles_and_membership, approvals, integration_health, audit_and_reporting, change_management], completion: administrator_validation_session}
+  semester_operators: {topics: [incident_response, support_triage, privacy_requests, safe_off_and_rollback, evidence_management], completion: drill_and_runbook_validation}
+  launch_gate: 90% of each staff group trained (ui_kits/every-screen launch sequence)

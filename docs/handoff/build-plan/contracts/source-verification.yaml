@@ -1,0 +1,8 @@
+# source-verification.yaml — every claim on a consequential screen is traceable.
+rules:
+  - "A claim without source metadata renders as Needs review."
+  - "A stale claim can't be used to derive a definitive readiness result."
+  - "AI-assisted claims need a visible label, a data-scope statement and a source list."
+  - "Institution verified requires a named institutional system and an observation time."
+  - "The source detail panel shows source, observed time, freshness and authority."
+reference_implementation: packages/source-authority/verify.ts.txt

@@ -1,0 +1,11 @@
+layer,name,scope
+1,Identity and authority,Existing grants/capabilities; tenant-business isolation
+2,Canonical business graph,"Customers/deals/contracts/tasks/evidence, stable IDs"
+3,Document and obligation lifecycle,"Versioned approval, signature, effective dates, obligations"
+4,Controlled workflow engine,14-check proposed contract; durable state and handoffs
+5,Commercial and finance,Catalog/invoice/ledger/rail/reconciliation
+6,Delivery and customer lifecycle,Implementation/support/success/renewal
+7,People/vendor/partner operations,Hiring/procurement/risk/offboarding
+8,Reliability/security/privacy,Incidents/access reviews/restore/rights
+9,Analytics/reporting/governance,Versioned metric snapshots and controlled portal
+10,Master Control and agent oversight,"Registry links, bounded assistants, audit and evidence"

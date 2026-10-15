@@ -1,0 +1,14 @@
+# Maturity tracked per dimension — never one "done" flag.
+capability: registration_readiness_v1
+dimensions:
+  designed: { state: done, evidence: "ui_kits/connected-journeys, ui_kits/readiness-pilot" }
+  data_model: { state: proposed, evidence: "060, 065, 066, 070, 075, 080, 085, 090 (not applied)" }
+  access_control: { state: proposed, evidence: "registration_policies.sql + tests (not run)" }
+  workflow: { state: proposed, evidence: "readiness_evaluate(), state machine, worker guard (not run)" }
+  integration: { state: not_started, evidence: "adapter contract only; no Vanderbilt sandbox" }
+  ui_implemented: { state: not_started, evidence: "screens not in repo" }
+  tested: { state: not_started, evidence: "suites written, none executed" }
+  deployed: { state: not_started }
+  institution_authorized: { state: not_started, evidence: "TENANT-ACT-001 planned" }
+  live: { state: not_started }
+rule: "live requires every other dimension at done with accepted evidence"

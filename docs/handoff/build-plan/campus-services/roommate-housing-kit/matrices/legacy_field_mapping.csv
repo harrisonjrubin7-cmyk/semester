@@ -1,0 +1,14 @@
+system,source_field,canonical_destination,authority,transform,failure_state
+SIS,person_id,canonical_subject_reference,SIS identity,Institution-scoped immutable mapping; no email as key,Missing identity quarantined
+SIS,term_id/start/end,housing.period,SIS term/calendar,Period policy mapping; retain actual occupancy differences,Hold new selection if essential rules stale
+SIS,enrollment_status,eligibility reference,SIS,Normalize with effective date/version,Do not guess eligibility from stale snapshot
+Housing legacy,building/room/bed ID,bed/unit references,Legacy until cutover,Stable IDs; retired inventory tracked,Hold selection on availability uncertainty
+Housing legacy,occupancy start/end,bed_claim period,Legacy until cutover,Half-open boundaries; timezone/calendar validated,"Quarantine overlap, never last-write-wins"
+Housing legacy,assignment ID/status,bed_claim,Field authority by cutover,State map; explicit cancelled/superseded,Do not reactivate stale legacy assignment
+Housing legacy,contract/version/signature,contract_version,Signed source document,Document digest and object-byte verification,Hold confirmation if terms unavailable
+Housing legacy,roommate group/membership,roommate_group/group_member,Consented source group,Do not fabricate reciprocal consent,Require reacceptance if evidence absent
+Accommodation office,approved operational requirement,restricted eligibility/constraint reference,Designated office,No diagnosis or document body in allocator,Staff review; no automatic denial
+ERP,housing charge/credit reference,existing account/ledger reference,ERP until accepted native cutover,Minor units/currency/rate/source transaction,Quarantine financial difference
+Payment rail,attempt/payment outcome,existing finance payment reference,Rail payment outcome,Provider/business idempotency; reconcile uncertainty,No double charge or automatic bed release
+Facilities,ticket/asset/status,existing work-order reference,Assigned authority,Scope/minimum access; attachment checksums,"Queue pending dispatch, no fake completion"
+Access control,credential/grant status,access request/receipt reference,Physical-security authority,No raw access secret or uncontrolled override,Safe approved hardware policy; no app unlock fallback

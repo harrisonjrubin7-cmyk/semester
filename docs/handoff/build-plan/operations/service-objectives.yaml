@@ -1,0 +1,6 @@
+# Conservative targets. Don't present unmeasured thresholds to the institution as commitments.
+services:
+  readiness_api: { indicator: successful_evaluation_response_rate, target: "baseline during pilot; publish after observation", on_budget_burn: "disable definitive evaluation; keep read-only status and support handoff" }
+  source_freshness: { indicator: pct_active_cases_with_current_sources, target: "institution-specific, approved before activation", on_budget_burn: "mark stale; stop definitive outcomes; reconcile" }
+  reconciliation: { indicator: age_of_oldest_open_high_severity_discrepancy, target: "institution-specific window", on_budget_burn: escalate_to_named_institution_owner }
+  authorization: { indicator: confirmed_unauthorized_reads_or_writes, target: "0", on_budget_burn: "kill switch + security response" }

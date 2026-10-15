@@ -1,0 +1,22 @@
+name: Curriculum portal checks
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['curriculum-portal/**', '.github/workflows/curriculum-portal.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify trusted synthetic harness fixtures
+        working-directory: curriculum-portal
+        run: python3 test_runner.py
+      - name: Build static preview
+        working-directory: curriculum-portal
+        run: node build.mjs
+# Learner-submission grading is intentionally not enabled in product CI.

@@ -1,0 +1,9 @@
+capability_intake:
+  required_questions: [which_user_or_operator_has_the_problem, what_is_the_first_meaningful_action, what_stays_external_or_institution_authoritative, what_record_is_created_or_changed, what_source_or_authority_is_required, what_is_the_failure_safe_state, who_supports_it, how_is_success_measured, which_existing_pillar_does_it_reuse, what_capability_will_not_be_built_if_this_is_prioritized]
+  rejection_conditions: [no_named_owner, no_authority_boundary, no_support_path, no_safe_failure_behavior, duplicate_of_existing_capability, requires_unavailable_control_plane_maturity]
+lanes: {activate: registration readiness, deepen: action center and advisor handoff, repeat: connector and implementation standards, explore: future academic, campus and career domains (prototype, don't promise), park: high-risk authority domains}
+domain_entry:
+  prerequisites: [strategic_problem_statement, named_customer_or_user_need, authority_and_system_of_record_map, initial_tenant_or_design_partner, accountable_product_owner, operational_owner, data_classification, source_and_connector_feasibility, accessibility_requirements, policy_and_legal_review_need, safe_failure_and_support_model, commercial_hypothesis, measurable_success_definition]
+  scoring: {higher_is_better: [student_or_institution_value, implementation_reuse, commercial_evidence], higher_is_riskier: [authority_complexity, data_sensitivity, connector_dependency, operations_burden], scale: 1_to_5}
+  outcomes: [approve_discovery, approve_bounded_build, prototype_only, defer, reject]
+  scorer: ui_kits/scale-system (Domain intake tab) — rule in README

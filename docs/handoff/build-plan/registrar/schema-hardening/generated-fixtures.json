@@ -1,0 +1,248 @@
+[
+  {
+    "name": "add one section",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termId": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+      "expectedScheduleVersion": 3,
+      "operation": "add",
+      "sectionIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ]
+    },
+    "expect": "valid"
+  },
+  {
+    "name": "add with an approved override",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termId": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+      "expectedScheduleVersion": 3,
+      "operation": "add",
+      "sectionIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ],
+      "overrideIds": [
+        "4f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ]
+    },
+    "expect": "valid"
+  },
+  {
+    "name": "add 8 sections (max)",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termId": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+      "expectedScheduleVersion": 3,
+      "operation": "add",
+      "sectionIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e00",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e01",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e02",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e03",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e04",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e05",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e06",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e07"
+      ]
+    },
+    "expect": "valid"
+  },
+  {
+    "name": "add 9 sections rejected",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termId": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+      "expectedScheduleVersion": 3,
+      "operation": "add",
+      "sectionIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e00",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e01",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e02",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e03",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e04",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e05",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e06",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e07",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e08"
+      ]
+    },
+    "expect": "invalid"
+  },
+  {
+    "name": "swap one-for-one",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termId": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+      "expectedScheduleVersion": 3,
+      "operation": "swap",
+      "fromEnrollmentIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ],
+      "sectionIds": [
+        "4f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ]
+    },
+    "expect": "valid"
+  },
+  {
+    "name": "swap 1→2 rejected",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termId": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+      "expectedScheduleVersion": 3,
+      "operation": "swap",
+      "fromEnrollmentIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ],
+      "sectionIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+        "4f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ]
+    },
+    "expect": "invalid"
+  },
+  {
+    "name": "drop ok",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termId": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+      "expectedScheduleVersion": 3,
+      "operation": "drop",
+      "fromEnrollmentIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ]
+    },
+    "expect": "valid"
+  },
+  {
+    "name": "drop with sectionIds rejected",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termId": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+      "expectedScheduleVersion": 3,
+      "operation": "drop",
+      "fromEnrollmentIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ],
+      "sectionIds": [
+        "4f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ]
+    },
+    "expect": "invalid"
+  },
+  {
+    "name": "withdraw ok",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termId": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+      "expectedScheduleVersion": 3,
+      "operation": "withdraw",
+      "fromEnrollmentIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ],
+      "withdrawalReasonCode": "personal"
+    },
+    "expect": "valid"
+  },
+  {
+    "name": "withdraw without reason rejected",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termId": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+      "expectedScheduleVersion": 3,
+      "operation": "withdraw",
+      "fromEnrollmentIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ]
+    },
+    "expect": "invalid"
+  },
+  {
+    "name": "termCode instead of termId rejected",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termCode": "2027SP",
+      "expectedScheduleVersion": 3,
+      "operation": "add",
+      "sectionIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ]
+    },
+    "expect": "invalid"
+  },
+  {
+    "name": "term not a uuid rejected",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termId": "2027SP",
+      "expectedScheduleVersion": 3,
+      "operation": "add",
+      "sectionIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ]
+    },
+    "expect": "invalid"
+  },
+  {
+    "name": "idempotency key in body rejected",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termId": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+      "expectedScheduleVersion": 3,
+      "operation": "add",
+      "sectionIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ],
+      "idempotencyKey": "kkkkkkkkkkkkkkkkkkkk"
+    },
+    "expect": "invalid"
+  },
+  {
+    "name": "6 overrides rejected",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termId": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+      "expectedScheduleVersion": 3,
+      "operation": "add",
+      "sectionIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ],
+      "overrideIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e00",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e01",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e02",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e03",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e04",
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e05"
+      ]
+    },
+    "expect": "invalid"
+  },
+  {
+    "name": "unknown operation rejected",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termId": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+      "expectedScheduleVersion": 3,
+      "operation": "audit",
+      "sectionIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ]
+    },
+    "expect": "invalid"
+  },
+  {
+    "name": "negative version rejected",
+    "payload": {
+      "studentId": "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f",
+      "termId": "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d",
+      "expectedScheduleVersion": -1,
+      "operation": "add",
+      "sectionIds": [
+        "3f2b8c1e-6a0f-4f3e-9d6a-1c2b3a4d5e6f"
+      ]
+    },
+    "expect": "invalid"
+  }
+]

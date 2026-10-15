@@ -1,0 +1,19 @@
+// One vocabulary for UI, staff console, API, workflow engine and reconciliation.
+export const CONNECTION = ["confirmed", "pending", "updating", "stale", "blocked", "degraded", "reconcile", "resolved"] as const;
+export const FRESHNESS = ["current", "updating", "stale", "unknown", "failed"] as const;
+export const EVALUATION = ["ready", "blocked", "needs_review", "unknown", "stale", "failed", "cancelled"] as const;
+export type SourceState = { evaluation: (typeof EVALUATION)[number]; freshness: (typeof FRESHNESS)[number]; connection: (typeof CONNECTION)[number]; nextStep?: string; reconciliationDecisionId?: string };
+/** A definitive result only when ready + current + confirmed. */
+export const mayShowDefinitiveReadiness = (r: SourceState) => r.evaluation === "ready" && r.freshness === "current" && r.connection === "confirmed";
+/** What the student sees. A failure is never a negative outcome. */
+export function studentOutcome(r: SourceState): "ready" | "blocked" | "needs_review" {
+  if (mayShowDefinitiveReadiness(r)) return "ready";
+  if (r.evaluation === "blocked" && r.freshness === "current" && r.connection === "confirmed") return "blocked";
+  return "needs_review";
+}
+export function validate(r: SourceState): string[] {
+  const e: string[] = [];
+  if (r.evaluation === "blocked" && !r.nextStep) e.push("a blocked evaluation names the approved next step");
+  if (r.connection === "resolved" && !r.reconciliationDecisionId) e.push("resolved requires an auditable reconciliation decision");
+  return e;
+}

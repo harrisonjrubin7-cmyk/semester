@@ -1,0 +1,9 @@
+id,title,action
+LEAK,Tenant leak / restricted disclosure,Hold affected operations; preserve safe evidence; incident escalation.
+WRITE,Unauthorized official or financial write,Hold fresh writes; checkpoint queues; reconcile committed outcomes.
+CORRUPTION,Data corruption / failed reconciliation,Hold writes; isolate repair/restore; reconcile object bytes and external records.
+AUTHORITY,Withdrawn / expired authority,Hold affected scope; fresh authority required before resume.
+AI,AI gateway/policy bypass,Hold AI dispatch across entry points; settle budgets and investigate.
+IDENTITY,Pseudonymous identity disclosure,"Hold affected surface; privacy-safe review, never reveal names as fallback."
+COVERAGE,Missing support / alerts / backup,Hold activation or expansion; restore operated coverage.
+THRESHOLD,Accepted service threshold breached,Hold affected feature; diagnose against populated accepted threshold.

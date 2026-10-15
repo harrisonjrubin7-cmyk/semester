@@ -1,0 +1,61 @@
+// Rename to server/events/publisher.test.ts. vitest.
+import { describe, expect, it } from 'vitest';
+import { runOnce, type Consumer } from './publisher.ts';
+import type { RpcClient } from '../../packages/institution/src/postgres-outbox.ts';
+
+const env = (n: number) => ({
+  eventId: `00000000-0000-4000-8000-00000000000${n}`, eventType: 'task.created', eventVersion: 1,
+  occurredAt: '2026-10-14T12:00:00.000Z', producer: 'test', environment: 'production', tenantId: 't-a',
+  correlationId: 'corr-test-0001', dataClassification: 'student_private', retentionClass: 'student_record', payload: { taskId: 't' },
+});
+
+function fakeDb(n: number) {
+  const rows = Array.from({ length: n }, (_, i) => ({ id: env(i + 1).eventId, envelope: env(i + 1), attempts: 0, state: 'pending', claim: null as string | null }));
+  const receipts = new Map<string, string>(); const volume = new Map<string, number>(); let c = 0;
+  const db: RpcClient = { async rpc(fn, a) {
+    if (fn === 'outbox_claim') { const id = `c${++c}`; const p = rows.filter((r) => r.state === 'pending' && !r.claim).slice(0, a.want_batch as number); p.forEach((r) => (r.claim = id)); return { data: p.map((r) => ({ id: r.id, claim_id: id, publish_attempts: r.attempts, envelope: r.envelope })), error: null }; }
+    if (fn === 'outbox_mark') { const r = rows.find((x) => x.id === a.want_id && x.claim === a.want_claim); if (!r) return { data: false, error: null }; r.claim = null; if (a.want_outcome === 'published') r.state = 'published'; else { r.attempts++; if (a.want_outcome === 'dead_lettered') r.state = 'dead'; } return { data: true, error: null }; }
+    if (fn === 'event_receipt_seen') return { data: receipts.get(`${a.want_consumer}|${a.want_event}`) ?? null, error: null };
+    if (fn === 'event_receipt_record') { const k = `${a.want_consumer}|${a.want_event}`; if (receipts.get(k) !== 'processed' && receipts.get(k) !== 'skipped') receipts.set(k, a.want_outcome as string); return { data: receipts.get(k), error: null }; }
+    if (fn === 'event_volume_count') { const k = `${a.want_day}|${a.want_tenant}|${a.want_type}`; volume.set(k, (volume.get(k) ?? 0) + 1); return { data: null, error: null }; }
+    return { data: null, error: { message: 'unknown ' + fn } };
+  } };
+  return { db, rows, receipts, volume };
+}
+
+describe('publisher.runOnce', () => {
+  it('delivers each event to the event-volume consumer once and publishes it', async () => {
+    const { db, rows, volume } = fakeDb(3);
+    expect(await runOnce(db)).toMatchObject({ published: 3, failed: 0 });
+    expect(volume.get('2026-10-14|t-a|task.created')).toBe(3);
+    expect(rows.every((r) => r.state === 'published')).toBe(true);
+  });
+
+  it('a failing consumer leaves the row unpublished; the succeeding consumer does not repeat on retry', async () => {
+    const { db, rows } = fakeDb(1); let good = 0, badCalls = 0;
+    const consumers: Consumer[] = [
+      { name: 'good', accepts: () => true, handle: async () => { good++; } },
+      { name: 'bad', accepts: () => true, handle: async () => { badCalls++; if (badCalls < 2) throw new Error('down'); } },
+    ];
+    expect(await runOnce(db, consumers)).toMatchObject({ published: 0, failed: 1, consumerFailures: { bad: 1 } });
+    expect(rows[0].state).toBe('pending');
+    expect(await runOnce(db, consumers)).toMatchObject({ published: 1 });
+    expect(good).toBe(1);      // receipt stopped the second delivery
+    expect(badCalls).toBe(2);
+  });
+
+  it('dead-letters after maxAttempts when a consumer keeps failing', async () => {
+    const { db, rows } = fakeDb(1);
+    const c: Consumer[] = [{ name: 'bad', accepts: () => true, handle: async () => { throw new Error('down'); } }];
+    await runOnce(db, c, { maxAttempts: 2 });
+    expect((await runOnce(db, c, { maxAttempts: 2 })).deadLettered).toBe(1);
+    expect(rows[0].state).toBe('dead');
+  });
+
+  it('a consumer that does not accept the type is not called and leaves no receipt', async () => {
+    const { db, receipts } = fakeDb(1); let calls = 0;
+    await runOnce(db, [{ name: 'grades-only', accepts: (t) => t.startsWith('grade.'), handle: async () => { calls++; } }]);
+    expect(calls).toBe(0);
+    expect([...receipts.keys()].some((k) => k.startsWith('grades-only|'))).toBe(false);
+  });
+});

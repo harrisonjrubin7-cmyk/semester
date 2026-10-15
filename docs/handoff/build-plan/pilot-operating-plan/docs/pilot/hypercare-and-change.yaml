@@ -1,0 +1,19 @@
+hypercare:
+  duration: institution_agreed
+  daily_review: {attendees: [semester_operations_owner, semester_engineering_owner, semester_product_owner, institution_operational_owner], agenda: [availability_and_source_health, authentication_and_access_anomalies, readiness_outcome_distribution, stale_unknown_failed_cases, support_handoffs_and_SLA, reconciliation_cases, student_feedback, open_incidents_and_changes, next_24_hour_decisions], output: [daily_pilot_health_record, issue_log_updates, evidence_links, decision_log, institution_status_update_when_needed]}
+  record_generator: scripts/daily-pilot-health.mjs.txt
+pilot_change_freeze:
+  allowed_without_scope_reapproval: [security_fix, privacy_fix, accessibility_blocker_fix, correctness_fix, safe_state_or_support_improvement, emergency_safe_off]
+  requires_change_control: [new_data_element, new_source, new_role_or_permission, new_institution_policy_rule, change_to_student_consequence, AI_scope_change, expanded_cohort, new_staff_queue_or_external_system_action]
+  prohibited_during_hypercare: [new_product_domain, autonomous_decision, unrelated_UI_redesign, untested_connector, public_feature_claim_not_supported_by_evidence]
+measurement:
+  adoption: eligible cohort members reaching the first meaningful readiness action, with eligibility and authentication context
+  completion: requests reaching a student-visible outcome with a safe next step — each outcome state reported separately
+  understanding: short in-context prompt or structured feedback
+  operational_load: handoffs, support and reconciliation cases and resolution patterns by outcome state
+  reliability: connector freshness, workflow completion, safe-state activation, incidents, time to containment
+  trust: open controls, accessibility, privacy/security issues, institution feedback — as status, never one score
+  limitations_required: [cohort_definition, data_gaps, source_outages, scope_exclusions, changes_during_pilot, unvalidated_claims]
+end_of_pilot:
+  options: {renew_and_deepen: define the next bounded capability (action center + advisor-shared planning), repeat: second-institution playbook, remediate: limit scope, fix named gaps, retest, conclude_safely: safe-off, preserve evidence, retention + communication plan}
+  prohibited_conclusion: general institutional readiness, broad compliance, or product-market fit from one bounded pilot

@@ -1,0 +1,18 @@
+increment:
+  id: RDY-INC-005
+  capability_key: registration_readiness
+  title: Reconciliation queue and repair paths
+  impact: high
+  sensitivity: restricted
+  release_train: operations
+  state: shaped
+  outcome:
+    user: "Students are never shown results that disagree with the SIS."
+    institution: "Staff resolve each mismatch by taking the SIS value or escalating with both values."
+  authority: { official_decision_owner: institution, semester_role: source-aware derived planning state, prohibited_claim: "Readiness confirms enrollment." }
+  scope:
+    includes: [nightly_reconciliation_job, mismatch_queue, take_source_value, escalate_with_both_values, case_SLA_clock]
+    excludes: [writing_to_the_SIS, bulk_auto_resolve]
+  acceptance: [AT-RDY-009, DRL-002]
+  dependencies: { hard: [source_adapters, registrar_queue, audit_event_store], soft: [alerting] }
+  release: { feature_flag: registration_readiness_v1, safe_off: "Read-only guidance and institution support handoff.", rollback: "Disable flag; retain audit and reconciliation history." }

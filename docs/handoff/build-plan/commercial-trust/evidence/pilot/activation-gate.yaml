@@ -1,0 +1,10 @@
+activation_gate:
+  capability: CAP-REG-001
+  status: not_ready            # 0 of 21 items evidenced on 2026-10-14
+  required:
+    product: [student_journey_tested, staff_queue_tested, source_labels_visible, stale_and_unknown_states_tested, receipt_tested, support_handoff_tested]
+    authority_and_policy: [institution_authority_confirmed, term_and_cohort_scope_confirmed, policy_tests_passing, RLS_tests_passing, approval_and_exception_path_confirmed]
+    operations: [backup_operator_engaged (contractor — engaged 2026-10-14), source_health_monitoring_live, reconciliation_owner_named, incident_runbook_exercised, safe_off_path_tested, hypercare_roster_confirmed]
+    trust: [student_copy_approved, privacy_and_data_scope_reviewed, accessibility_critical_path_reviewed, institution_support_contacts_published]
+  decision: {approvers: {institution_operational_owner: Vanderbilt registrar designee (not yet named), Semester_product_owner: Harrison (founder), Semester_security_or_operations_owner: security advisor (engaged 2026-10-14)}, rule: three different people, decision_record: required}
+  links: [platform-ops/evidence/acceptance/REL-READINESS-001.yaml, ui_kits/pilot-launch]

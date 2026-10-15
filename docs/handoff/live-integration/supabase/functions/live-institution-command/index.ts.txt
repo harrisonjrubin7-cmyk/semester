@@ -1,0 +1,30 @@
+// Institutional write commands. Never writes to the SIS in-request: records an idempotent receipt + outbox event atomically;
+// the outbox worker delivers to the source system and reconciles. A timeout downstream leaves the receipt "unknown", not "failed".
+// POST { institution_id, command, payload } with header Idempotency-Key.
+import { admin, Denied, handler, json, requireCapability, requireGrant, requireUser, sha256 } from "../_shared/gate.ts";
+
+const COMMANDS: Record<string, { capability: string; workspaces: string[]; validate: (p: Record<string, unknown>) => string | null }> = {
+  "registration.add": { capability: "writes.registration", workspaces: ["student", "registrar"], validate: (p) => (p.section_id && p.term_id ? null : "section_id and term_id required") },
+  "registration.drop": { capability: "writes.registration", workspaces: ["student", "registrar"], validate: (p) => (p.section_id && p.term_id ? null : "section_id and term_id required") },
+  "grades.submit_final": { capability: "writes.grades", workspaces: ["faculty"], validate: (p) => (p.offering_id && Array.isArray(p.grades) && p.grades.length ? null : "offering_id and grades[] required") },
+  "records.hold_release": { capability: "writes.records", workspaces: ["registrar"], validate: (p) => (p.hold_id && p.reason ? null : "hold_id and reason required") },
+};
+
+Deno.serve(handler(async (req) => {
+  const user = await requireUser(req);
+  const key = req.headers.get("idempotency-key");
+  if (!key || key.length < 16) throw new Denied(400, "idempotency_required", "Idempotency-Key header (≥16 chars) required");
+  const { institution_id, command, payload } = await req.json();
+  const spec = COMMANDS[command];
+  if (!institution_id || !spec) throw new Denied(400, "bad_command", "Unknown command");
+  const bad = spec.validate(payload ?? {});
+  if (bad) throw new Denied(400, "invalid_payload", bad);
+  await requireGrant(user, institution_id, spec.workspaces);
+  const { approval_ref } = await requireCapability(institution_id, spec.capability);
+
+  const hash = await sha256(JSON.stringify({ command, payload }));
+  const { data, error } = await admin().rpc("live_record_command", { p_institution: institution_id, p_key: key, p_actor: user.id, p_command: command, p_hash: hash, p_payload: payload });
+  if (error?.code === "22023") throw new Denied(409, "idempotency_conflict", "This key was already used for a different request");
+  if (error) throw new Denied(500, "record_failed", "Not recorded. Nothing was sent to the institution.");
+  return json(req, { receipt: data, approval_ref, meaning: "Accepted by Semester and queued for the institution's system. Not yet confirmed by the source of record." }, 202);
+}));

@@ -1,0 +1,14 @@
+case,status,blocker
+Overlap and adjacency,NOT RUN,No local PostgreSQL; no approved isolated DB execution; connector SQL awaits confirmation
+Student duplicate occupancy,NOT RUN,No local PostgreSQL; no approved isolated DB execution; connector SQL awaits confirmation
+Blocked inventory interval,NOT RUN,No local PostgreSQL; no approved isolated DB execution; connector SQL awaits confirmation
+Cross-institution correspondence,NOT RUN,No local PostgreSQL; no approved isolated DB execution; connector SQL awaits confirmation
+Required state/expiry constraints,NOT RUN,No local PostgreSQL; no approved isolated DB execution; connector SQL awaits confirmation
+Final-bed concurrent transaction,NOT RUN,No local PostgreSQL; no approved isolated DB execution; connector SQL awaits confirmation
+Expiry/confirmation race,NOT RUN,No local PostgreSQL; no approved isolated DB execution; connector SQL awaits confirmation
+Contract/application/period/group consistency,NOT RUN,No local PostgreSQL; no approved isolated DB execution; connector SQL awaits confirmation
+Group all-or-none assignment,NOT RUN,No local PostgreSQL; no approved isolated DB execution; connector SQL awaits confirmation
+Runtime RLS/capability/privileged role,NOT RUN,No local PostgreSQL; no approved isolated DB execution; connector SQL awaits confirmation
+Audit/outbox atomicity,NOT RUN,No local PostgreSQL; no approved isolated DB execution; connector SQL awaits confirmation
+Idempotency key/digest handling,NOT RUN,No local PostgreSQL; no approved isolated DB execution; connector SQL awaits confirmation
+Restore/revocation/source mapping,NOT RUN,No local PostgreSQL; no approved isolated DB execution; connector SQL awaits confirmation

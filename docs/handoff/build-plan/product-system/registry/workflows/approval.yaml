@@ -1,0 +1,6 @@
+approval:
+  states: [draft, submitted, awaiting_review, approved, rejected, expired, cancelled]
+  terminal: [approved, rejected, expired, cancelled]
+  controls: [requester_cannot_self_approve, approver_must_have_tenant_scope, decision_requires_reason, approval_expires_when_inputs_change, decision_is_audited, consequential_execution_requires_fresh_policy_check]
+  input_digest: sha256 of the exact inputs shown to the approver; any change → expired
+  example_uses: [prerequisite_override_request, release_activation, partner_application_access, staff_role_change, source_mapping_change]

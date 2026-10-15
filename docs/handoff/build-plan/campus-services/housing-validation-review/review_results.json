@@ -1,0 +1,31 @@
+{
+  "unit_tests_passed": 21,
+  "weight_configurations": 1330,
+  "A_B_min": 62.5,
+  "A_B_max": 87.5,
+  "winner_counts": {
+    "C": 1026,
+    "B": 273,
+    "tie": 31
+  },
+  "missing_data_example": {
+    "status": "recommendation_only",
+    "score": 81.25,
+    "coverage": 0.6667,
+    "factors": {
+      "noise": 0.875,
+      "sleep": 0.75
+    }
+  },
+  "database_tests_executed": 0,
+  "database_projects_discovered": [
+    "Semester2",
+    "semester",
+    "semester-restore-drill-2026-10-01",
+    "Semester-Platform"
+  ],
+  "target_selected_for_metadata_only": "Semester-Platform",
+  "isolated_branches_on_selected_project": 0,
+  "live_schema_metadata": "NOT RETRIEVED; SQL connector confirmation required",
+  "review_scope": "Reconstructed scoring and prior schema/contract text; original generated artifacts absent in current environment"
+}

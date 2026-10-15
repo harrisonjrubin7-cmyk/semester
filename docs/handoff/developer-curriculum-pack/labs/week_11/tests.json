@@ -1,0 +1,43 @@
+{
+  "function": "redact",
+  "cases": [
+    {
+      "input": {
+        "token": "secret",
+        "request_id": "r",
+        "student_name": "X"
+      },
+      "expected": {
+        "request_id": "r"
+      }
+    },
+    {
+      "input": {
+        "status": 503
+      },
+      "expected": {
+        "status": 503
+      }
+    },
+    {
+      "input": {
+        "password": "p",
+        "submission_body": "essay",
+        "status": 200
+      },
+      "expected": {
+        "status": 200
+      }
+    },
+    {
+      "input": {
+        "Token": "x",
+        "request_id": "r"
+      },
+      "expected": {
+        "Token": "x",
+        "request_id": "r"
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+// pnpm registry:validate — every registry YAML parses; capability keys referenced by increments/screens/releases exist; no release-critical artifact is unapproved.
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { parse } from "yaml";
+const walk = (d: string): string[] => { try { return readdirSync(d).flatMap((f) => (statSync(d + "/" + f).isDirectory() ? walk(d + "/" + f) : f.endsWith(".yaml") ? [d + "/" + f] : [])); } catch { return []; } };
+const errs: string[] = []; const caps = new Set<string>(); const refs: [string, string][] = [];
+for (const f of walk("registry")) { let y: any; try { y = parse(readFileSync(f, "utf8")); } catch (e) { errs.push(f + ": " + (e as Error).message); continue; }
+  const key = y?.capability?.key ?? y?.capability_key; if (f.includes("/capabilities/") && key) caps.add(key);
+  for (const k of [y?.increment?.capability_key, y?.screen?.capability_key, ...(y?.artifact?.capability_keys ?? [])].filter(Boolean)) refs.push([f, k]);
+  if (y?.artifact?.release_critical && y.artifact.state !== "approved") console.warn("warn: " + f + " release-critical artifact is " + y.artifact.state);
+}
+if (caps.size) for (const [f, k] of refs) if (!caps.has(k)) errs.push(f + ": unknown capability " + k);
+errs.forEach((e) => console.error(e)); process.exit(errs.length ? 1 : 0);

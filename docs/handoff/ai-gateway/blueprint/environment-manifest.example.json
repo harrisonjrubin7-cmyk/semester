@@ -1,0 +1,34 @@
+{
+  "local": {
+    "deploymentProject": "local-project-placeholder",
+    "supabaseProject": "local-supabase-placeholder",
+    "issuer": "https://local.example.invalid/auth",
+    "audience": "semester-ai-local",
+    "queueNamespace": "local-ai",
+    "storageNamespace": "local-sources"
+  },
+  "preview": {
+    "deploymentProject": "preview-project-placeholder",
+    "supabaseProject": "preview-supabase-placeholder",
+    "issuer": "https://preview.example.invalid/auth",
+    "audience": "semester-ai-preview",
+    "queueNamespace": "preview-ai",
+    "storageNamespace": "preview-sources"
+  },
+  "staging": {
+    "deploymentProject": "staging-project-placeholder",
+    "supabaseProject": "staging-supabase-placeholder",
+    "issuer": "https://staging.example.invalid/auth",
+    "audience": "semester-ai-staging",
+    "queueNamespace": "staging-ai",
+    "storageNamespace": "staging-sources"
+  },
+  "production": {
+    "deploymentProject": "production-project-placeholder",
+    "supabaseProject": "production-supabase-placeholder",
+    "issuer": "https://production.example.invalid/auth",
+    "audience": "semester-ai-production",
+    "queueNamespace": "production-ai",
+    "storageNamespace": "production-sources"
+  }
+}

@@ -1,0 +1,5 @@
+monthly_operating_review:
+  inputs: [product_delivery_status, pilot_health, security_and_privacy_findings, customer_pipeline, contract_status, cash_and_commitments, hiring_plan, vendor_risk, investor_update_draft]
+  decisions: [next_month_priorities, spending_commitments, hiring_or_contracting, pilot_scope_changes, customer_escalations, material_risk_acceptance, board_or_investor_asks]
+  required_outputs: [decision_log, updated_risk_register, owner_and_due_date_for_every_commitment, changed_artifact_or_capability_status]
+  data_rule: "Sample or properly scoped business data only."

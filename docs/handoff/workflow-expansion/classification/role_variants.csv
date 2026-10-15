@@ -1,0 +1,14 @@
+role,parent_workflow,kind,note
+Prospective student,PROP-WF-016,new,new admissions flow
+Applicant,PROP-WF-016,new,new admissions flow
+Admissions staff,PROP-WF-016,new,new admissions flow (decision side)
+Online student,PROP-WF-002,variant,"variant: time zone, remote delivery, outage recovery"
+Adult learner,PROP-WF-003,variant,"variant: re-entry, prior credit, part-time load"
+Graduate student,PROP-WF-003,variant,"variant: milestones, committee, supervision"
+International student,PROP-WF-012,variant,variant: institution-approved documents and support case
+Student athlete,PROP-WF-004,variant,variant: eligibility and practice-schedule constraints
+Student worker,PROP-WF-019,variant,variant: campus employment and hours
+Student parent/caregiver,PROP-WF-002,variant,variant: constraint-aware scheduling and support
+Program director,PROP-WF-014,variant,variant: curriculum and program governance
+Library staff,PROP-WF-019,variant,"variant: resources, reservations, research support"
+Mentor,PROP-WF-011,variant,variant: scoped mentoring relationship

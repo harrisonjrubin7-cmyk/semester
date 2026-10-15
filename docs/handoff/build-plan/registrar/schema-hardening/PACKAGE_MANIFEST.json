@@ -1,0 +1,43 @@
+{
+  "scope": "Immediately preceding registrar schema-hardening work",
+  "reconstructed": true,
+  "tests": 22,
+  "result": "passed",
+  "files": [
+    {
+      "name": "registrar_schema_checks.py",
+      "sha256": "2dc0f1d7c12cbe88f20a5dfcc092e4f43b416b26c0cf4483f362a83bcd2c00ec",
+      "bytes": 2950
+    },
+    {
+      "name": "test_registrar_schemas.py",
+      "sha256": "e775ffda37846e75fcb273c8303afae75173f9f55615578cf886210db3a3a1c2",
+      "bytes": 3095
+    },
+    {
+      "name": "enrollment_commands.schema.json",
+      "sha256": "2396d99163669d2c8758640ea862fb0c32941601c9561310373c13b7e1962a7e",
+      "bytes": 3743
+    },
+    {
+      "name": "requirements.txt",
+      "sha256": "8c6a0d4bad6f0ce354f14ee9d1369ffb2ffc2551b5676089e4489feb330dfdcc",
+      "bytes": 11
+    },
+    {
+      "name": "README.md",
+      "sha256": "e5f4169a30bb69b67c8545149c27024dc50276956e9b7e063121b75f8927c747",
+      "bytes": 609
+    },
+    {
+      "name": "schema_test_results.txt",
+      "sha256": "68bbcea55188f011df9e4b411bcede5db936b1d4cce6b132f6e2020208bb7a21",
+      "bytes": 1575
+    },
+    {
+      "name": "IMPLEMENTATION_STATUS.md",
+      "sha256": "29de271207c3bda881e1788a6a4437b0edf130fff235e4935100b86d0d261938",
+      "bytes": 170
+    }
+  ]
+}

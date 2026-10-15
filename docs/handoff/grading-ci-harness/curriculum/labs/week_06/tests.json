@@ -1,0 +1,16 @@
+{
+  "function": "tenant_access",
+  "cases": [
+    {
+      "input": {
+        "principal_tenant": "a",
+        "resource_tenant": "b",
+        "active": true,
+        "scopes": [
+          "tasks:read"
+        ]
+      },
+      "expected": false
+    }
+  ]
+}

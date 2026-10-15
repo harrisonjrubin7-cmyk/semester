@@ -1,0 +1,45 @@
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.SemesterLab=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const facts=['designed','implemented','tested','deployed','institution_authorized','production_enabled'];
+const states=['ready','loading','empty','error','forbidden','offline','unavailable'];
+const canonical=v=>JSON.stringify(sort(v));
+function sort(v){if(Array.isArray(v))return v.map(sort);if(v&&typeof v==='object')return Object.fromEntries(Object.keys(v).sort().map(k=>[k,sort(v[k])]));return v;}
+const validTime=x=>typeof x==='string'&&/T.*(?:Z|[+-]\d{2}:\d{2})$/.test(x)&&Number.isFinite(Date.parse(x));
+function release(s,e,target,now=Date.now()){
+ const errors=[];
+ if(!target||!['tenant','sha','environment','cohort','dataMode'].every(k=>typeof target[k]==='string'&&target[k].trim()))errors.push('exact target missing');
+ for(const f of facts){const a=e&&e[f];if(!a||a.state!=='yes'||!a.ref||a.withdrawn!==false||canonical(a.target)!==canonical(target)||!validTime(a.at)||!validTime(a.expires)||Date.parse(a.at)>now||Date.parse(a.expires)<=now||Date.parse(a.expires)<=Date.parse(a.at))errors.push(f+': current scoped evidence missing');}
+ errors.push('local workbench has no verified server authority or professional/customer acceptance');
+ return {allowed:false,errors,capability:s.id};
+}
+function check(cap,request,ctx,now=Date.now()){
+ const checks=[];const add=(name,pass,reason)=>checks.push({name,pass:!!pass,reason:pass?'passed in synthetic context':reason});
+ const c=ctx||{},r=request||{};
+ add('identity',c.authenticated===true&&!!c.actor,'Verified actor required');
+ add('session assurance',c.sessionActive===true,'Active session required');
+ add('tenant context',!!c.tenant&&r.tenant===c.tenant,'Cross-tenant or missing context');
+ add('workspace grant',Array.isArray(c.workspaces)&&c.workspaces.includes(cap.workspace),'Workspace grant missing');
+ add('capability permission',Array.isArray(c.capabilities)&&c.capabilities.includes(cap.id),'Capability not granted');
+ add('object scope',r.objectTenant===c.tenant&&r.objectOwner===c.actor,'Object scope denied');
+ add('purpose/classification',typeof r.purpose==='string'&&!!r.purpose.trim()&&c.dataAllowed===true,'Purpose/data not allowed');
+ add('source authority',c.sourceAuthority===true,'Owning source authority unconfirmed');
+ add('freshness/version',c.fresh===true&&Number.isInteger(r.expectedVersion)&&r.expectedVersion===c.objectVersion,'Stale source or version conflict');
+ add('policy/consent',c.policyAllowed===true&&c.consentAllowed===true,'Policy or consent blocked');
+ const a=r.approval;const needs=r.mode==='consequential';
+ add('separation of duties',!needs||(a&&a.approver!==c.actor&&!!a.approver),'Self-approval forbidden');
+ add('approval binding',!needs||(a&&a.tenant===r.tenant&&a.capability===cap.id&&a.command===r.command&&a.objectId===r.objectId&&a.expectedVersion===r.expectedVersion&&a.payloadBinding===canonical(r.payload)&&a.authority==='synthetic-reviewer'&&validTime(a.expires)&&Date.parse(a.expires)>now),'Approval changed, expired or missing');
+ add('idempotency',typeof r.key==='string'&&!!r.key.trim(),'Idempotency key required');
+ add('execution recheck',c.revoked===false&&validTime(c.grantExpires)&&Date.parse(c.grantExpires)>now&&cap.commands.includes(r.command),'Grant expired/revoked or unlisted command');
+ return {allowed:checks.every(x=>x.pass),checks,scope:'synthetic simulator only; not real authorization'};
+}
+function createRunner(){const receipts=new Map();return function(cap,req,ctx,now){
+ const decision=check(cap,req,ctx,now);if(!decision.allowed)return {kind:'blocked',decision};
+ const key=canonical([req.tenant,ctx.actor,cap.id,req.key]);const fingerprint=canonical({command:req.command,objectId:req.objectId,version:req.expectedVersion,payload:req.payload});
+ if(receipts.has(key)){const old=receipts.get(key);return old.binding===fingerprint?{kind:'replayed',receipt:old.receipt}:{kind:'blocked',reason:'idempotency key reused with changed payload'};}
+ const receipt={id:'synthetic-'+(receipts.size+1),capability:cap.id,tenant:req.tenant,command:req.command,objectId:req.objectId,version:req.expectedVersion+1,label:'synthetic receipt; no external effect'};
+ receipts.set(key,{binding:fingerprint,receipt});return {kind:'simulated',receipt,decision};
+ };}
+function buildOrder(caps){const map=new Map(caps.map(c=>[c.id,c])),seen=new Set(),visiting=new Set(),out=[];
+ function visit(c){if(visiting.has(c.id))throw Error('Build dependency cycle: '+c.id);if(seen.has(c.id))return;visiting.add(c.id);for(const d of c.build_dependencies){if(!map.has(d))throw Error('Missing dependency: '+d);visit(map.get(d));}visiting.delete(c.id);seen.add(c.id);out.push(c.id);}caps.forEach(visit);return out;}
+return {facts,states,canonical,check,release,createRunner,buildOrder};
+});

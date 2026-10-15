@@ -1,0 +1,286 @@
+[
+  {
+    "case": "valid add",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "add",
+      "sectionIds": [
+        "11111111-1111-4111-8111-111111111111"
+      ]
+    },
+    "expected_valid": true
+  },
+  {
+    "case": "valid swap",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "swap",
+      "sectionIds": [
+        "11111111-1111-4111-8111-111111111111"
+      ],
+      "fromEnrollmentIds": [
+        "22222222-2222-4222-8222-222222222222"
+      ]
+    },
+    "expected_valid": true
+  },
+  {
+    "case": "valid withdraw",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "withdraw",
+      "fromEnrollmentIds": [
+        "22222222-2222-4222-8222-222222222222"
+      ]
+    },
+    "expected_valid": true
+  },
+  {
+    "case": "swap missing its from-enrollments",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "swap",
+      "sectionIds": [
+        "11111111-1111-4111-8111-111111111111"
+      ]
+    },
+    "expected_valid": false,
+    "expected_errors": [
+      {
+        "keyword": "required",
+        "instance_path": "/"
+      }
+    ]
+  },
+  {
+    "case": "unknown operation",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "magic"
+    },
+    "expected_valid": false,
+    "expected_errors": [
+      {
+        "keyword": "discriminator",
+        "instance_path": "/operation"
+      }
+    ]
+  },
+  {
+    "case": "no operation at all",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "sectionIds": [
+        "11111111-1111-4111-8111-111111111111"
+      ]
+    },
+    "expected_valid": false,
+    "expected_errors": [
+      {
+        "keyword": "required",
+        "instance_path": "/"
+      }
+    ]
+  },
+  {
+    "case": "invalid UUID",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "add",
+      "sectionIds": [
+        "bad"
+      ]
+    },
+    "expected_valid": false,
+    "expected_errors": [
+      {
+        "keyword": "format",
+        "instance_path": "/sectionIds/0"
+      }
+    ]
+  },
+  {
+    "case": "extra field",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "drop",
+      "fromEnrollmentIds": [
+        "11111111-1111-4111-8111-111111111111"
+      ],
+      "admin": true
+    },
+    "expected_valid": false,
+    "expected_errors": [
+      {
+        "keyword": "additionalProperties",
+        "instance_path": "/"
+      }
+    ]
+  },
+  {
+    "case": "empty array",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "add",
+      "sectionIds": []
+    },
+    "expected_valid": false,
+    "expected_errors": [
+      {
+        "keyword": "minItems",
+        "instance_path": "/sectionIds"
+      }
+    ]
+  },
+  {
+    "case": "duplicate IDs",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "add",
+      "sectionIds": [
+        "11111111-1111-4111-8111-111111111111",
+        "11111111-1111-4111-8111-111111111111"
+      ]
+    },
+    "expected_valid": false,
+    "expected_errors": [
+      {
+        "keyword": "uniqueItems",
+        "instance_path": "/sectionIds"
+      }
+    ]
+  },
+  {
+    "case": "client sends a server-set field",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "request",
+    "content_type": "application/json",
+    "payload": {
+      "operation": "add",
+      "sectionIds": [
+        "11111111-1111-4111-8111-111111111111"
+      ],
+      "requestedBy": "22222222-2222-4222-8222-222222222222"
+    },
+    "expected_valid": false,
+    "expected_errors": [
+      {
+        "keyword": "readOnly",
+        "instance_path": "/requestedBy"
+      }
+    ]
+  },
+  {
+    "case": "nullable receipt",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "response",
+    "status": 200,
+    "content_type": "application/json",
+    "payload": {
+      "receiptId": null,
+      "state": "pending"
+    },
+    "expected_valid": true
+  },
+  {
+    "case": "confirmed receipt",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "response",
+    "status": 200,
+    "content_type": "application/json",
+    "payload": {
+      "receiptId": "11111111-1111-4111-8111-111111111111",
+      "state": "confirmed"
+    },
+    "expected_valid": true
+  },
+  {
+    "case": "invalid state",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "response",
+    "status": 200,
+    "content_type": "application/json",
+    "payload": {
+      "receiptId": null,
+      "state": "invented"
+    },
+    "expected_valid": false,
+    "expected_errors": [
+      {
+        "keyword": "enum",
+        "instance_path": "/state"
+      }
+    ]
+  },
+  {
+    "case": "missing required",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "response",
+    "status": 200,
+    "content_type": "application/json",
+    "payload": {
+      "state": "pending"
+    },
+    "expected_valid": false,
+    "expected_errors": [
+      {
+        "keyword": "required",
+        "instance_path": "/"
+      }
+    ]
+  },
+  {
+    "case": "receipt is not a UUID",
+    "path": "/registration",
+    "method": "POST",
+    "direction": "response",
+    "status": 200,
+    "content_type": "application/json",
+    "payload": {
+      "receiptId": "r-1",
+      "state": "confirmed"
+    },
+    "expected_valid": false,
+    "expected_errors": [
+      {
+        "keyword": "format",
+        "instance_path": "/receiptId"
+      }
+    ]
+  }
+]

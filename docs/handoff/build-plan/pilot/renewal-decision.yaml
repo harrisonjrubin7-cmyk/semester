@@ -1,0 +1,11 @@
+# End-of-pilot is an evidence review, not only a sales decision.
+review_inputs: [measurement-plan results, incidents and postmortems, reconciliation history, access reviews, accessibility findings, support volume and themes, institution survey, renewal pricing proposal]
+criteria:
+  trust: { unauthorized_access_successes: 0, stale_disclosure_rate: "100%", readiness_vs_enrollment_confusion: "below agreed threshold" }
+  reliability: { evaluation_success: "met agreed baseline", reconciliation_age: "within window" }
+  value: { first_meaningful_action: "agreed share of cohort", support_contacts_per_journey: "at or below plan" }
+decisions: [renew_same_scope, renew_with_remediation, extend_observation, expand_cohort, add_source, conclude_and_offboard]
+hard_stops: [unresolved_critical_access_finding, unresolved_critical_accessibility_finding, unknown_authority_for_required_source, inability_to_operate_safe_off, repeated_student_confusion_about_enrollment]   # any one blocks renew/expand
+required_findings: [institutional_owner_feedback, student_understanding_evidence, support_and_queue_health, source_integrity, accessibility_findings, security_privacy_findings, open_risks, commercial_terms]
+signoffs: [vanderbilt_executive_sponsor, vanderbilt_registrar_owner, semester_founder, semester_security_owner]
+on_end: [export_institution_data, delete_per_lifecycle, revoke_all_grants, disable_capabilities, archive_evidence]

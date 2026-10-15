@@ -1,0 +1,6 @@
+research_governance:
+  operational: {purpose: reliability_security_and_support, uses: [incidents, queue_health, source_freshness, release_quality]}
+  product_improvement: {purpose: usability_and_feature_improvement, requirements: [documented_event_taxonomy, minimum_necessary_collection, tenant_and_student_controls_as_required, retention_limit]}
+  institution_research: {purpose: approved_study_or_evaluation, requires: [institution_approval, defined_research_question, data_scope, retention_and_access_plan, disclosure_or_consent_path_when_required, publication_review_process]}
+  public_claims: {purpose: marketing_investor_or_sales_material, requires: [evidence_source, calculation_method, owner_approval, sample_or_estimate_label_when_applicable]}
+  rule: a number moves from one category to another only with that category's requirements met

@@ -1,0 +1,19 @@
+// Record envelope check (zod) — every source-backed or derived record carries authority, provenance, freshness, tenant, version, correlation.
+import { z } from "zod";
+const authority = z.object({
+  ownerType: z.enum(["institution", "semester", "student", "partner"]), ownerReference: z.string().min(1),
+  sourceClass: z.enum(["institution_verified", "connected", "student_entered", "estimated", "ai_assisted", "needs_review"]),
+  sourceReference: z.string().min(1).optional(), observedAt: z.string().datetime().optional(),
+  freshnessState: z.enum(["current", "updating", "stale", "unknown", "failed"]),
+});
+const envelope = z.object({
+  id: z.string().uuid(), tenantId: z.string().uuid(), recordType: z.string().min(1), schemaVersion: z.number().int().positive(),
+  authority, provenance: z.object({ createdBy: z.object({ actorType: z.enum(["student", "staff", "service", "partner", "system"]), actorId: z.string().optional() }), createdAt: z.string().datetime(), correlationId: z.string().uuid(), causationId: z.string().optional() }),
+  lifecycle: z.object({ status: z.string().min(1), version: z.number().int().positive(), supersedesId: z.string().optional(), deletedAt: z.string().optional() }),
+}).superRefine((r, ctx) => {
+  const sourced = r.authority.sourceClass === "institution_verified" || r.authority.sourceClass === "connected";
+  if (sourced && !r.authority.sourceReference) ctx.addIssue({ code: "custom", message: "Source-backed records require a source reference." });
+  if (sourced && !r.authority.observedAt) ctx.addIssue({ code: "custom", message: "Source-backed records require observedAt — freshness can't be computed without it." });
+  if (r.authority.sourceClass === "ai_assisted" && r.authority.ownerType === "institution") ctx.addIssue({ code: "custom", message: "AI-assisted records can't be owned as institution-authoritative." });
+});
+export const validateRecordForRelease = (record: unknown) => envelope.parse(record);

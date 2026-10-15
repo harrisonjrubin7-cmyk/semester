@@ -1,0 +1,28 @@
+// Repeatable, idempotent legacy import. Rename .txt -> .mjs. node migration/import.mjs <extract-dir> --institution <uuid> --dry-run
+// Reads one JSONL file per object type, in load order. Writes source_bindings; quarantines anything ambiguous. Never guesses identity.
+import { createHash, randomUUID } from "node:crypto";
+import { readFileSync, readdirSync, writeFileSync } from "node:fs";
+const ORDER = ["structures", "people", "terms_policies", "curriculum", "offerings_sections", "contexts_programs", "enrollments_attempts", "grade_credit_decisions", "degree_credentials"];
+const [dir] = process.argv.slice(2); const dry = process.argv.includes("--dry-run"); const batch = randomUUID();
+const report = { batch, dry, manifest: {}, loaded: {}, quarantined: [] };
+const quarantine = (type, row, reason) => report.quarantined.push({ type, source_key: row.source_key, reason });
+const seenPeople = new Map(); // external key -> canonical
+for (const type of ORDER) {
+  const f = readdirSync(dir).find((x) => x.startsWith(type) && x.endsWith(".jsonl")); if (!f) continue;
+  const raw = readFileSync(dir + "/" + f); report.manifest[type] = createHash("sha256").update(raw).digest("hex");
+  const rows = raw.toString().split("\n").filter(Boolean).map((l) => JSON.parse(l)); let ok = 0;
+  for (const r of rows) {
+    if (!r.source_key) { quarantine(type, r, "missing source_key"); continue; }
+    if (type === "people") {
+      if ((r.candidate_matches ?? []).length > 1) { quarantine(type, r, "ambiguous identity — " + r.candidate_matches.length + " candidates"); continue; }
+      seenPeople.set(r.source_key, r.candidate_matches?.[0] ?? "new");
+    }
+    if (type === "enrollments_attempts" && !seenPeople.has(r.person_source_key)) { quarantine(type, r, "person not loaded"); continue; }
+    if (type === "grade_credit_decisions" && !r.grade_scale_code) { quarantine(type, r, "no grade scale — current policy is never applied to old records"); continue; }
+    ok++; // real implementation: upsert canonical row + source_bindings(institution, type, source_system, source_key, batch, manifest_hash)
+  }
+  report.loaded[type] = ok;
+}
+writeFileSync("migration-report-" + batch + ".json", JSON.stringify(report, null, 2));
+console.log(JSON.stringify({ batch, loaded: report.loaded, quarantined: report.quarantined.length }));
+process.exit(report.quarantined.length ? 2 : 0); // 2 = completed with quarantine; reconciliation must resolve before M5

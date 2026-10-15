@@ -1,0 +1,12 @@
+checklist:
+  - provider_identified_and_owner_named
+  - sandbox_credentials_issued (stored as Edge Function secret, referenced by secret_ref)
+  - scopes_least_privilege_read_only
+  - mapping_documented_in_source_authority_register
+  - sample_pull_normalized_and_reconciled_against_source (≥ 50 records, discrepancies explained)
+  - watermark_and_cursor_behavior_verified
+  - outage_drill (sandbox disconnected → readiness shows stale)
+  - production_credentials_issued_by_institution
+  - first_production_pull_reconciled
+  - monitoring_and_alert_routing_verified
+adapter_contract: contracts/integration-adapter.yaml

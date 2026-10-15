@@ -1,0 +1,21 @@
+// Source verification: decides what label a claim may carry. Rename to .ts.
+export type SourceType = "institution_verified" | "connected" | "student_entered" | "estimated" | "ai_assisted" | "needs_review";
+export type Freshness = "current" | "updating" | "stale" | "failed" | "unknown";
+export const RANK: Record<SourceType, number> = { institution_verified: 6, connected: 5, student_entered: 4, estimated: 3, ai_assisted: 2, needs_review: 1 };
+export type Claim = { claimId: string; fieldPath: string; sourceType?: SourceType; sourceSystem?: string | null; observedAt?: string | null; freshness?: Freshness; aiSources?: string[] };
+export type Rendered = { label: SourceType; freshness: Freshness; definitiveAllowed: boolean; warnings: string[] };
+
+export function verifyClaim(c: Claim): Rendered {
+  const w: string[] = [];
+  let label: SourceType = c.sourceType ?? "needs_review";
+  const fresh: Freshness = c.freshness ?? "unknown";
+  if (!c.sourceType) w.push("no source metadata");
+  if (label === "institution_verified" && (!c.sourceSystem || !c.observedAt)) { label = "needs_review"; w.push("institution_verified needs a named system and observation time"); }
+  if (label === "ai_assisted" && !(c.aiSources && c.aiSources.length)) w.push("AI claim without a source list — show 'no source available'");
+  const definitiveAllowed = fresh === "current" && RANK[label] >= RANK.connected;
+  if (!definitiveAllowed) w.push(fresh !== "current" ? `freshness ${fresh}: no definitive result` : "authority too low for a definitive result");
+  return { label, freshness: fresh, definitiveAllowed, warnings: w };
+}
+
+// A readiness result is definitive only if every claim it relies on allows it.
+export const definitive = (claims: Claim[]) => claims.length > 0 && claims.every((c) => verifyClaim(c).definitiveAllowed);

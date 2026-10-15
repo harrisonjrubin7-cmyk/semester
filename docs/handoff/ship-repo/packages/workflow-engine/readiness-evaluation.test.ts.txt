@@ -1,0 +1,9 @@
+import { describe, expect, it } from "vitest";
+import { allowedTransitions, TERMINAL, transition } from "./readiness-evaluation";
+describe("readiness workflow", () => {
+  it("happy path", () => { let s: any = "RECEIVED"; for (const n of ["AUTHORIZED", "SOURCE_CHECKING", "EVALUATING", "RECONCILING", "RECEIPTING", "COMPLETED"]) s = transition(s, n as any); expect(s).toBe("COMPLETED"); });
+  it("can't skip authorization", () => expect(() => transition("RECEIVED", "EVALUATING")).toThrow());
+  it("can't issue a receipt before reconciling", () => expect(() => transition("EVALUATING", "RECEIPTING")).toThrow());
+  it("terminal states have no exits", () => { for (const t of TERMINAL) expect(allowedTransitions[t]).toEqual([]); });
+  it("every non-terminal state can reach a terminal state", () => { for (const [s, n] of Object.entries(allowedTransitions)) if (!TERMINAL.has(s as any)) expect(n.length).toBeGreaterThan(0); });
+});

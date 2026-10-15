@@ -10,3 +10,9 @@
 5eb8e6eddae35d8b7d986bfc9e893c5b9bd96a7d:packages/institution/src/access-saga.test.ts:generic-api-key:821
 5eb8e6eddae35d8b7d986bfc9e893c5b9bd96a7d:packages/institution/src/policy.test.ts:generic-api-key:488
 5eb8e6eddae35d8b7d986bfc9e893c5b9bd96a7d:packages/institution/src/policy.test.ts:generic-api-key:496
+
+# docs/handoff intake (2026-10-14): the module registry text "Enrollment/teaching scope" on an
+# "access" field reads as a generic key to the entropy rule. Plain prose, not a credential.
+83cf283ae098ecbdb693ee00b1437d7422562c24:docs/handoff/reference-slice/live/module_registry.json:generic-api-key:36
+# The same line as the working-tree scan (`gitleaks dir`) names it, which carries no commit.
+docs/handoff/reference-slice/live/module_registry.json:generic-api-key:36

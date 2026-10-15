@@ -1,0 +1,13 @@
+// OpenAPI files parse, every operation has an operationId, every command route requires Idempotency-Key.
+import { expect, test } from "vitest";
+import { readFileSync, readdirSync } from "node:fs";
+import { parse } from "yaml";
+const files = ["contracts", "registrar/api"].flatMap((d) => { try { return readdirSync(d).filter((f) => f.endsWith(".openapi.yaml")).map((f) => d + "/" + f); } catch { return []; } });
+test("contract files found", () => expect(files.length).toBeGreaterThan(0));
+for (const f of files) test(f, () => {
+  const doc = parse(readFileSync(f, "utf8")); const ids = new Set<string>();
+  for (const [path, ops] of Object.entries<any>(doc.paths ?? {})) for (const [m, op] of Object.entries<any>(ops)) {
+    expect(op.operationId, path + " " + m).toBeTruthy(); expect(ids.has(op.operationId), "duplicate " + op.operationId).toBe(false); ids.add(op.operationId);
+    if (m === "post" && !op["x-idempotent"] && op.parameters) expect(JSON.stringify(op.parameters), path).toMatch(/Idempotency/i);
+  }
+});

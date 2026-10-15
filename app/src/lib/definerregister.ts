@@ -236,6 +236,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['leave_organization', 'self-service', ['auth.uid()']],
   ['leave_school', 'self-service', ['auth.uid()']],
   ['list_advisor_shares', 'sharing', ['auth.uid()']],
+  ['list_share_check_ins', 'sharing', ['private.live_share_for_advisor']],
   ['list_support_shares', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['make_family_invite', 'sharing', ['auth.uid()', 'private.verified_account']],
   ['make_family_share', 'sharing', ['auth.uid()']],
@@ -291,6 +292,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['read_support_share', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['read_support_signals', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
   ['read_tenant_projection', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['record_advisor_check_in', 'sharing', ['private.live_share_for_advisor']],
   ['record_incident_evidence', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['record_incident_evidence_custody', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['record_offboarding_export', 'admin', ['private.offboarding_operator']],
@@ -471,6 +473,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * historical snapshot.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261011170000_advisor_check_ins.sql',
+    functions: ['list_share_check_ins', 'record_advisor_check_in'],
+  },
   {
     file: '20261011000000_incident_evidence_custody.sql',
     functions: ['incident_evidence_custody', 'record_incident_evidence', 'record_incident_evidence_custody'],

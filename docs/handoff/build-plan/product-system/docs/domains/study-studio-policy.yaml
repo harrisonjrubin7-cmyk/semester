@@ -1,0 +1,14 @@
+study_studio:
+  capability: CAP-LEARN-001
+  placement: native
+  modes: [notes, cards, reading, field_guide, quiz, figures, cases, cram, listen, teach_it_back, weekly_plan]
+  privacy: {default: private_to_student, sharing_requires: explicit_student_choice}
+  ai:
+    allowed: [summarize_student_provided_material, generate_study_questions, explain_concepts_using_approved_course_sources, cite_or_link_to_available_sources, draft_private_study_aids]
+    prohibited: [submit_coursework_as_student, bypass_course_AI_policy, fabricate_source_citations, access_restricted_student_records, represent_generated_work_as_instructor_feedback]
+  course_rule_behavior:
+    - show_course_AI_policy_before_assistance
+    - restrict_tools_when_course_policy_requires      # e.g. ECON 1020: no AI-generated practice questions; BUS 1400: AI off
+    - label_every_response_AI_assisted
+    - retain_student_control_over_export_and_deletion
+  precedence: course AI policy > Study Studio defaults (a course "off" disables every AI mode for that course)

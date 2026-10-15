@@ -1,0 +1,11 @@
+// Read models are rebuildable projections, not authoritative records. Lag limits what the interface may claim.
+// Required metadata: projection_name, source_event_id, aggregate_version, projected_at, source_observed_at, freshness_state, tenant_id, schema_version.
+export type Freshness = "current" | "updating" | "stale" | "unknown" | "failed";
+export type Outcome = "informational" | "derived" | "consequential";
+export function canUseProjectionForOutcome(i: { freshnessState: Freshness; projectionLagSeconds: number; maximumLagSeconds: number; outcomeType: Outcome }): boolean {
+  if (!Number.isFinite(i.projectionLagSeconds) || i.projectionLagSeconds < 0) return false;   // unknown lag isn't fresh
+  if (i.outcomeType === "informational") return i.freshnessState !== "failed";             // shown with its freshness label
+  if (i.freshnessState !== "current") return false;
+  return i.projectionLagSeconds <= i.maximumLagSeconds;
+}
+// Recovery: pause → keep checkpoint → scope tenants/records → rebuild/replay → compare counts → re-enable after verification.
