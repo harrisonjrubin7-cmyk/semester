@@ -828,6 +828,119 @@
       }
     },
     "/v1/organizations/{organizationId}/members/{membershipId}": {
+      "get": {
+        "tags": [
+          "Memberships"
+        ],
+        "summary": "GET /v1/organizations/{organizationId}/members/{membershipId}",
+        "description": "Returns one membership and the ETag to send as If-Match on PATCH.",
+        "operationId": "get_v1_organizations_organizationId_members_membershipId",
+        "security": [
+          {
+            "oauth2": [
+              "memberships:read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "membershipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Invalid authentication",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy denial",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Absent or concealed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful authorized operation",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "ETag": {
+                "description": "Entity tag of this representation. Send it as If-Match on the next update of the same resource.",
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Membership"
+                }
+              }
+            }
+          }
+        },
+        "x-authority": "Application membership and resource policy"
+      },
       "patch": {
         "operationId": "patch_v1_organizations_organizationId_members_membershipId",
         "tags": [
@@ -877,7 +990,8 @@
             "schema": {
               "type": "string",
               "minLength": 1
-            }
+            },
+            "description": "Entity tag from the ETag header of the latest GET or successful update of this resource."
           }
         ],
         "responses": {
@@ -885,6 +999,13 @@
             "description": "Successful authorized operation",
             "headers": {
               "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "ETag": {
+                "description": "Entity tag of this representation. Send it as If-Match on the next update of the same resource.",
                 "schema": {
                   "type": "string",
                   "minLength": 1
@@ -1555,6 +1676,13 @@
                   "type": "string",
                   "minLength": 1
                 }
+              },
+              "ETag": {
+                "description": "Entity tag of this representation. Send it as If-Match on the next update of the same resource.",
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
               }
             },
             "content": {
@@ -1698,7 +1826,8 @@
             "schema": {
               "type": "string",
               "minLength": 1
-            }
+            },
+            "description": "Entity tag from the ETag header of the latest GET or successful update of this resource."
           }
         ],
         "responses": {
@@ -1706,6 +1835,13 @@
             "description": "Successful authorized operation",
             "headers": {
               "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "ETag": {
+                "description": "Entity tag of this representation. Send it as If-Match on the next update of the same resource.",
                 "schema": {
                   "type": "string",
                   "minLength": 1
@@ -5086,6 +5222,13 @@
                   "type": "string",
                   "minLength": 1
                 }
+              },
+              "ETag": {
+                "description": "Entity tag of this representation. Send it as If-Match on the next update of the same resource.",
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
               }
             },
             "content": {
@@ -5229,7 +5372,8 @@
             "schema": {
               "type": "string",
               "minLength": 1
-            }
+            },
+            "description": "Entity tag from the ETag header of the latest GET or successful update of this resource."
           }
         ],
         "responses": {
@@ -5237,6 +5381,13 @@
             "description": "Successful authorized operation",
             "headers": {
               "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "ETag": {
+                "description": "Entity tag of this representation. Send it as If-Match on the next update of the same resource.",
                 "schema": {
                   "type": "string",
                   "minLength": 1
@@ -12325,15 +12476,43 @@
             ]
           },
           "reconciliationEvidenceId": {
-            "type": "string",
-            "minLength": 1
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "description": "Set when the pilot is reconciled. Null before reconciliation."
           }
         },
         "required": [
           "id",
           "installationId",
-          "status",
-          "reconciliationEvidenceId"
+          "status"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "reconciled"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "required": [
+                "reconciliationEvidenceId"
+              ],
+              "properties": {
+                "reconciliationEvidenceId": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
         ]
       },
       "PilotCreate": {
@@ -12402,12 +12581,22 @@
           "kind": {
             "type": "string",
             "minLength": 1
+          },
+          "outputLocation": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "minLength": 1,
+            "description": "Absolute URL of the completed output, such as an export payload. Null until the job completes, and always null for kinds that produce no output."
           }
         },
         "required": [
           "id",
           "status",
-          "kind"
+          "kind",
+          "outputLocation"
         ]
       },
       "ExportCreate": {

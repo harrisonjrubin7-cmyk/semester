@@ -13,13 +13,19 @@ sys.stdout=sys.stderr
 ns={}
 exec(compile(sys.stdin.readline(),'<submission>','exec'),ns)
 spec=json.loads(sys.stdin.read())
+def same(a,b):
+    if type(a) is not type(b): return False
+    if isinstance(a,list): return len(a)==len(b) and all(same(x,y) for x,y in zip(a,b))
+    if isinstance(a,dict): return a.keys()==b.keys() and all(same(a[k],b[k]) for k in a)
+    return a==b
 results=[]
 for case in spec['cases']:
+    expects_error=case['expected']=='!ValueError'
     try:
         actual=ns[spec['function']](case['input'])
-        passed=actual==case['expected']
+        passed=(not expects_error) and same(actual,case['expected'])
     except Exception as e:
-        passed=case['expected']=='!ValueError' and type(e) is ValueError
+        passed=expects_error and type(e) is ValueError
     results.append(bool(passed))
 sys.__stdout__.write(json.dumps(results))
 """
