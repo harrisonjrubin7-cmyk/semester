@@ -500,6 +500,27 @@ jobs:
           timeout 120 bash -c "until curl -sf http://localhost:4176/ >/dev/null; do sleep 1; done"
           npm run smoke:registration-handoff
 
+      # The registration route's complete state matrix against one separately
+      # built production bundle. The configured account-service origin is a
+      # synthetic project under the already allowlisted Supabase domain, and
+      # every request is fulfilled inside Playwright, so this exercises the
+      # real client parsing and assembled UI
+      # without contacting an institution. It proves rendering and recovery
+      # for seven states; it does not prove a live SIS, tenant activation or
+      # representative student UAT.
+      - name: Walk the registration state matrix
+        working-directory: app
+        env:
+          VITE_SUPABASE_URL: https://semester-state-matrix.supabase.co
+          VITE_SUPABASE_KEY: state-matrix-fixture
+          SMOKE_PLAYWRIGHT: /tmp/smoke/node_modules/playwright
+          SMOKE_URL: http://localhost:4177/
+        run: |
+          npx vite build --outDir /tmp/registration-state-matrix-dist
+          npx vite preview --outDir /tmp/registration-state-matrix-dist --port 4177 > /tmp/registration-state-matrix-preview.log 2>&1 &
+          timeout 120 bash -c "until curl -sf http://localhost:4177/ >/dev/null; do sleep 1; done"
+          npm run smoke:registration-states
+
       # The same student with human help switched on. Step 7 of
       # docs/GOLDEN-PATH-TEST-SCRIPT.md — reach a person, and see exactly what
       # would be sent before anything is — sits behind `VITE_HUMAN_HELP`, which

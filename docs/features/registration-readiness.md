@@ -2,7 +2,7 @@
 
 <!-- Rendered from app/src/lib/featurecompletion.ts by featurecompletion.test.ts. Edit the registry, then run npm run registers from app/. -->
 
-> **Status:** not complete · 15 met · 3 partial · 0 missing · 0 not applicable
+> **Status:** not complete · 16 met · 2 partial · 0 missing · 0 not applicable
 
 This page is repository evidence, not a deployment, institution approval, live
 integration, production activation or general-availability claim.
@@ -35,7 +35,7 @@ A repository persistence adapter does not prove a deployed database migration, l
 | FC-11 | Workflow and outbox behavior exists where needed | met | `supabase/migrations/20261009160000_registration_readiness_store.sql` — One save RPC atomically commits aggregate, receipt, reconciliation work, audit evidence and outbox rows.<br>`app/server/institution/readiness-repository.test.ts` — Repository tests cover save, compare-and-swap, replay, tenant binding and fail-closed behavior. | None. |
 | FC-12 | Audit events exist | met | `supabase/migrations/20261009160000_registration_readiness_store.sql` — The transactional readiness save persists minimal audit evidence for every accepted transition. | None. |
 | FC-13 | Integration boundary documented | met | `docs/reference/registration-readiness-workflow.md` — The boundary between readiness projection, the service-only Postgres adapter, future callers and SIS authority. | None. |
-| FC-14 | Complete state matrix exists | partial | `app/src/screens/registration.test.tsx` — Registration route states and recovery behavior under test. | The design archive still lacks one end-to-end proof covering every ready, loading, empty, error, forbidden, offline and stale state. |
+| FC-14 | Complete state matrix exists | met | `app/src/screens/registration.test.tsx` — Registration route states and recovery behavior under component integration test.<br>`app/scripts/registration-state-matrix-smoke.mjs` — A production-bundle browser journey renders and verifies ready, loading, empty, error, forbidden, offline and stale states against a fully intercepted account-service fixture. | None. |
 | FC-15 | Keyboard, mobile and accessibility behavior passes | partial | `app/src/components/RegistrationReadiness.test.tsx` — Component interaction and accessible text coverage. | No representative student keyboard, mobile and assistive-technology UAT has been recorded. |
 | FC-16 | Unit and integration tests pass | met | `packages/institution/src/readiness-workflow.test.ts` — Workflow state, retry, concurrency, receipt and event tests.<br>`app/server/institution/registration.test.ts` — Server registration transaction tests. | None. |
 | FC-17 | End-to-end flow passes with seeded data | met | `app/scripts/registration-handoff-smoke.mjs` — A production-bundle browser journey seeds a complete student plan, confirms the official-system destination, records only the student-reported outcome and proves it survives reload without making an external request. | None. |
@@ -43,6 +43,5 @@ A repository persistence adapter does not prove a deployed database migration, l
 
 ## Blocking gates
 
-- FC-14: Complete state matrix exists
 - FC-15: Keyboard, mobile and accessibility behavior passes
 - FC-18: Runbook, metrics, owner and feature flag exist

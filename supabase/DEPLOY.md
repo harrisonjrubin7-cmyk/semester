@@ -18,6 +18,7 @@ reading:
     canvas            ACTIVE, v230, verify_jwt off  platform
     lti               ACTIVE, v232, verify_jwt off  platform
     integration-tick  ACTIVE, v88, verify_jwt off   platform
+    access-saga-tick  PENDING, deployed by the merge that adds it, verify_jwt off; its job `access-saga-worker` is parked until the test request below answers
     ops-projector     PENDING, dormant until its dedicated secret is provisioned; no scheduler entry
     trust-room        ACTIVE, v95, verify_jwt off   platform
     delete-account    ACTIVE, v72, verify_jwt off   platform
@@ -748,6 +749,31 @@ never applied; the other two came with the integration scheduler. Read off `cron
 **28 September: `integration-sync` unparked.** The runbook's test request, sent from the project with pg_net,
 answered 200 with `{"outcome":"ran","due":0,"ran":0,...}`; `cron.alter_job(..., active := true)` followed and
 `cron.job` reads `active = true`. `scheduler.sql` now states it active, so a re-run keeps it on.
+
+**12 October: `access-saga-worker` added, parked.** `scheduler.sql` now creates `access_saga_cron_secret` in
+Vault and the `access-saga-worker` job, which every five minutes (minutes 1, 6, 11 … 56, clear of `push` and
+`integration-sync`) posts to the `access-saga-tick` Edge Function. The function runs
+`app/server/institution/access-saga-tick.ts` over the Postgres saga store: the database lists the sagas that are due
+(`public.access_saga_due`) and the runner moves each one a step. The token check is
+`public.access_saga_tick_authorized` (20261012040000), the same shape as `integration_tick_authorized`. The job is
+**parked** in the file, and `health.sql` expects it parked, because the function is PENDING above: it deploys with
+the merge that adds it, and nothing has read it yet. No participants are registered
+(`app/server/institution/access-saga-registry.ts` holds null), so until they are every tick answers
+`{"outcome":"unregistered","due":N,...}` and claims no saga; the job can be unparked on that answer, as
+`integration-sync` was, and the count then says how much work waits for a real policy administrator and enforcement
+point. The test request, from the project with pg_net:
+
+    select net.http_post(
+      url := 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/access-saga-tick',
+      headers := jsonb_build_object('Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'access_saga_cron_secret')),
+      body := '{}'::jsonb, timeout_milliseconds := 60000);
+
+A 200 with `outcome: unregistered` and a `due` count is the function, the token check and the due list all working;
+then `select cron.alter_job((select jobid from cron.job where jobname = 'access-saga-worker'), active := true);`,
+and change the `alter_job` at the end of the job's block in `scheduler.sql` to `active := true` (with the row in
+`health.sql` to `false`) so a re-run keeps it on. A 401 is the token check refusing the Vault token; a 503 is the
+function without its service credentials or without the check.
 
 Re-running the whole file stays safe. Every statement is idempotent, and it parks `push` again (and keeps
 `integration-sync` on), so re-run it only while `push` is meant to be parked. Otherwise run the one `cron.schedule` you need. To

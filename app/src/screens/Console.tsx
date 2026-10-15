@@ -3,8 +3,9 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, TabList } from '../components/ui';
 import { cloudConfigured } from '../lib/cloud';
-import { loadMyCapabilities, type Grant } from '../lib/capabilities';
+import { useCapabilityDiscovery, type Grant } from '../lib/capabilities';
 import { environment } from '../lib/environment';
+import { ErrorState } from '../components/unity/States';
 import {
   holdsConsole,
   loadPreferences,
@@ -66,6 +67,7 @@ const Releases = lazy(() => import('../components/console/Releases').then((m) =>
 const Launch = lazy(() => import('../components/console/Launch').then((m) => ({ default: m.Launch })));
 const Controls = lazy(() => import('../components/console/Controls').then((m) => ({ default: m.Controls })));
 const FinancialModel = lazy(() => import('../finance/FinancialModel').then((m) => ({ default: m.FinancialModel })));
+const Ecosystem = lazy(() => import('../components/console/Ecosystem').then((m) => ({ default: m.Ecosystem })));
 
 const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures, release flags and evidence — for operators holding console:operate.';
 
@@ -73,27 +75,9 @@ const BLURB = 'Live operational exceptions, approvals, break-glass, the audit ch
 const PREF_TAB = 'console.tab';
 const PREF_VIEWS = 'console.views';
 
-/**
- * The caller's grants: `null` until read, so "no grant" is never shown while
- * reading, and not read at all when there is nothing to read them from.
- */
-function useGrants(enabled: boolean): Grant[] | null {
-  const [grants, setGrants] = useState<Grant[] | null>(null);
-  useEffect(() => {
-    if (!enabled) return;
-    let live = true;
-    loadMyCapabilities().then(
-      (g) => { if (live) setGrants(g); },
-      () => { if (live) setGrants([]); },
-    );
-    return () => { live = false; };
-  }, [enabled]);
-  return grants;
-}
-
 export function Console() {
   const { account } = useStore();
-  const grants = useGrants(cloudConfigured && account !== null);
+  const access = useCapabilityDiscovery(cloudConfigured ? account?.id ?? '' : '');
   if (!cloudConfigured || !account) {
     return (
       <Page blurb={BLURB}>
@@ -101,13 +85,25 @@ export function Console() {
       </Page>
     );
   }
-  if (grants === null) {
+  if (access.status === 'loading') {
     return (
       <Page blurb={BLURB}>
         <p role="status">Reading your grants…</p>
       </Page>
     );
   }
+  if (access.status === 'error') {
+    return (
+      <Page blurb={BLURB}>
+        <ErrorState
+          title="Could not read your grants"
+          body={access.error}
+          recover={{ label: 'Try again', run: access.retry }}
+        />
+      </Page>
+    );
+  }
+  const grants = access.grants;
   if (!holdsConsole(grants)) {
     return (
       <Page blurb={BLURB}>
@@ -290,6 +286,11 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
         {tab === 'finance' && (
           <Suspense fallback={<p role="status">Loading the finance model…</p>}>
             <FinancialModel />
+          </Suspense>
+        )}
+        {tab === 'ecosystem' && (
+          <Suspense fallback={<p role="status">Loading the connected ecosystem…</p>}>
+            <Ecosystem filter={filter} />
           </Suspense>
         )}
         {tab === 'releases' && (

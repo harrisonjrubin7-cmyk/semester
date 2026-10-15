@@ -15,6 +15,7 @@ import { arrayOf, assertProperty, int, record, runProperty } from '../src/lib/ve
  */
 
 const script = join(import.meta.dirname, '../../supabase/load/drift.sh');
+const diagnostics = join(import.meta.dirname, '../../supabase/load/diagnostics.sh');
 
 type Series = Record<string, number[]>;
 
@@ -223,7 +224,7 @@ describe('the runner', () => {
 
   it('records one sample per scenario per window, checks the invariants and the connections after each, and hands the samples to drift.sh', () => {
     expect(run).toContain(`printf '%s %s %s %s %s\\n' "$name" "$window" "$p95" "$budget" "$bg" >> "$windows"`);
-    expect(run).toMatch(/run_pass\n\s+run_invariants\n\s+now=\$\(clients\)/);
+    expect(run).toMatch(/run_pass\n\s+run_invariants\n\s+load_diagnostics_capture "\$window"\n\s+now=\$\(clients\)/);
     expect(run).toContain('"$here_load/drift.sh" < "$windows"');
   });
 
@@ -250,6 +251,66 @@ describe('the runner', () => {
   });
 });
 
+describe('the per-window load diagnostics', () => {
+  const diagnosticSource = readFileSync(diagnostics, 'utf8');
+  const driftSource = readFileSync(script, 'utf8');
+  const run = readFileSync(join(import.meta.dirname, '../../supabase/load/run.sh'), 'utf8');
+
+  it('parses only allowlisted aggregate relation rows into structured diagnostics', () => {
+    const fixture = [
+      'term_plan_courses|2000|50|4096|2048|1|2|3|4',
+      'profiles|2000|0|999|999|0|0|0|0',
+      'demand_consents|2000|7|1024|512|5|6|7|8',
+      'term_plan_courses|not-a-number|0|0|0|0|0|0|0',
+    ].join('\n');
+    const result = spawnSync('bash', [diagnostics, '--format-relations', '3'], {
+      input: `${fixture}\n`,
+      encoding: 'utf8',
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain(
+      'diag relation window=3 name=term_plan_courses live=2000 dead=50 table_bytes=4096 index_bytes=2048 vacuum=1 autovacuum=2 analyze=3 autoanalyze=4',
+    );
+    expect(result.stdout).toContain(
+      'diag relation window=3 name=demand_consents live=2000 dead=7 table_bytes=1024 index_bytes=512 vacuum=5 autovacuum=6 analyze=7 autoanalyze=8',
+    );
+    expect(result.stdout).not.toContain('profiles');
+    expect(result.stdout.match(/diag relation/g)).toHaveLength(2);
+  });
+
+  it('uses fixed read-only statistics, compatibility guards and no row contents', () => {
+    expect(diagnosticSource).toContain("values ('term_plan_courses'), ('demand_consents')");
+    for (const field of [
+      'n_live_tup',
+      'n_dead_tup',
+      'vacuum_count',
+      'autovacuum_count',
+      'analyze_count',
+      'autoanalyze_count',
+      'pg_relation_size',
+      'pg_indexes_size',
+      'pg_stat_io',
+      'pg_stat_checkpointer',
+      'pg_stat_bgwriter',
+      '/proc/stat',
+      'iowait',
+      'unsupported',
+    ]) expect(diagnosticSource, field).toContain(field);
+    expect(diagnosticSource).not.toMatch(/select\s+\*/i);
+    expect(diagnosticSource).not.toMatch(/public\.(profiles|state|courses|load_users)/);
+  });
+
+  it('captures diagnostics after every completed soak window without changing the verdict path', () => {
+    expect(run).toContain('source "$here_load/diagnostics.sh"');
+    expect(run).toMatch(/run_pass\n\s+run_invariants\n\s+load_diagnostics_capture "\$window"\n\s+now=\$\(clients\)/);
+    expect(run).toContain('load_diagnostics_start');
+    expect(run).toContain('soak=${LOAD_SOAK_WINDOWS:-0}');
+    expect(driftSource).toContain('ratio=${SOAK_RATIO:-2}');
+    expect(driftSource).toContain('delta=${SOAK_MIN_DELTA_MS:-5}');
+  });
+});
+
 describe('the document', () => {
   const doc = readFileSync(join(import.meta.dirname, '../../docs/LOAD-AND-SOAK.md'), 'utf8');
   const drift = readFileSync(script, 'utf8');
@@ -262,7 +323,7 @@ describe('the document', () => {
   });
 
   it('names the switch, the comparison and what it does not show', () => {
-    for (const phrase of ['LOAD_SOAK_WINDOWS', 'best** p95', 'No disk, bloat or memory reading', 'No browser soak', 'Not built']) expect(doc, phrase).toContain(phrase);
+    for (const phrase of ['LOAD_SOAK_WINDOWS', 'best** p95', 'No disk or bloat diagnosis', 'No browser soak', 'Not built']) expect(doc, phrase).toContain(phrase);
   });
 
   it('says how a budget is judged in a soak', () => {

@@ -1,0 +1,3 @@
+import * as React from 'react';
+export interface DelegationRowProps { who: string; role?: string; scope?: string[]; expires?: string; state?: "active" | "expiring" | "expired" | "revoked" | "pending"; onRevoke?: () => void; }
+export declare function DelegationRow(props: DelegationRowProps): JSX.Element;

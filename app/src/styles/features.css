@@ -306,3 +306,17 @@
 .studio-items{padding-inline-start:1.2em;display:grid;gap:var(--sp-4)}
 .study-packs ul{padding-inline-start:1.2em;margin:var(--sp-2) 0}
 .study-pack{margin-block:var(--sp-3)}
+/* Repairs reported to housing (components/MaintenanceRequests.tsx). Tokens only. */
+.maintenance-intro,.maintenance-hint{font-size:var(--type-sm);color:var(--app-dim);line-height:var(--leading-relaxed);margin-block:var(--sp-3) var(--sp-4)}
+.maintenance-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--sp-4)}
+.maintenance-row{border:1px solid var(--app-line);border-radius:var(--r-md);padding:var(--sp-5)}
+.maintenance-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--sp-3);font-size:var(--type-base)}
+.maintenance-status{font-size:var(--type-sm);color:var(--app-dim)}
+.maintenance-meta{font-size:var(--type-sm);color:var(--app-dim);margin-top:var(--sp-2);overflow-wrap:anywhere}
+.maintenance-actions{display:flex;flex-wrap:wrap;gap:var(--sp-3);margin-top:var(--sp-4)}
+.maintenance-actions .btn{min-height:var(--target-primary)}
+.btn.maintenance-add{margin-top:var(--sp-4);min-height:var(--target-primary)}
+.maintenance-form,.maintenance-visit{display:grid;gap:var(--sp-2);margin-top:var(--sp-4)}
+.maintenance-form fieldset{border:0;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:var(--sp-4)}
+.maintenance-form legend{font-size:var(--type-sm);margin-bottom:var(--sp-2)}
+.maintenance-choice{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:var(--target-primary)}
