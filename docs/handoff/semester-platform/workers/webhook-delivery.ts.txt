@@ -1,0 +1,72 @@
+// Uploaded 6 Oct (uploads/webhookDelivery.ts), verbatim. Backed by migration 220 (opsx.webhook_endpoints, opsx.webhook_deliveries + claim/complete functions).
+import { createHmac } from "node:crypto";
+
+// Server-only custom outbound webhook protocol, NOT a Stripe/provider receiver.
+// Supply durable, tenant-aware adapters. No in-memory queue is used here.
+export interface Delivery {
+ id: string; tenantId: string; eventId: string; endpointId: string;
+ body: string; attempt: number; leaseToken: string;
+}
+export interface Endpoint { url: string; secret: string; allowedHosts: readonly string[] }
+export interface DeliveryStore {
+ // Must claim a due job atomically, increment attempt, and issue a fenced lease.
+ claimDue(): Promise<Delivery | null>;
+ // Every write must match leaseToken; stale workers must not overwrite newer jobs.
+ delivered(job: Delivery, status: number): Promise<void>;
+ retry(job: Delivery, nextAttemptAt: Date, diagnostic: string): Promise<void>;
+ deadLetter(job: Delivery, diagnostic: string): Promise<void>;
+}
+export interface EndpointRegistry {
+ // Resolve from trusted tenant-owned configuration; never a caller-supplied URL.
+ resolve(tenantId: string, endpointId: string): Promise<Endpoint>;
+}
+const MAX_ATTEMPTS = 5;
+function retryAfterMs(value: string | null): number | null {
+ if (!value) return null;
+ const seconds = Number(value);
+ const ms = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(value) - Date.now();
+ return Number.isFinite(ms) && ms >= 0 ? Math.min(ms, 24 * 60 * 60 * 1000) : null;
+}
+function fullJitter(attempt: number) {
+ return Math.floor(Math.random() * Math.min(60000, 1000 * 2 ** (attempt - 1)));
+}
+class EndpointConfigurationError extends Error {}
+function validateEndpoint(e: Endpoint) {
+ let url: URL;
+ try { url = new URL(e.url); } catch { throw new EndpointConfigurationError("Invalid endpoint URL"); }
+ if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443") || !e.allowedHosts.includes(url.hostname) || !e.secret) throw new EndpointConfigurationError("Endpoint is not approved");
+ // This allowlist is NOT sufficient SSRF protection if arbitrary hosts can be registered.
+ // Enforce DNS/IP restrictions and private-network denial in the outbound egress proxy.
+}
+export async function processOne(store: DeliveryStore, registry: EndpointRegistry): Promise<boolean> {
+ const job = await store.claimDue();
+ if (!job) return false;
+ let outcome: { success: boolean; retryable: boolean; status: number; message: string; retryAfter: number | null };
+ try {
+  const endpoint = await registry.resolve(job.tenantId, job.endpointId);
+  validateEndpoint(endpoint);
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const signature = createHmac("sha256", endpoint.secret).update(`${timestamp}.${job.body}`).digest("hex");
+  const response = await fetch(endpoint.url, {
+   method: "POST", redirect: "error", signal: AbortSignal.timeout(10000),
+   headers: { "Content-Type": "application/json", "Idempotency-Key": job.eventId,
+    "X-Semester-Event-Id": job.eventId, "X-Semester-Timestamp": timestamp,
+    "X-Semester-Signature": signature },
+   body: job.body
+  });
+  outcome = { success: response.ok, retryable: response.status === 408 || response.status === 429 || response.status >= 500,
+   status: response.status, message: `HTTP ${response.status}`, retryAfter: retryAfterMs(response.headers.get("retry-after")) };
+  if (response.body) await response.body.cancel().catch(() => undefined);
+ } catch (error) {
+  const configError = error instanceof EndpointConfigurationError;
+  // Do not log secrets, raw payloads, URLs with credentials, or arbitrary response bodies.
+  outcome = { success: false, retryable: !configError, status: 0,
+   message: configError ? "Endpoint configuration rejected" : "Network, timeout, or endpoint-registry failure", retryAfter: null };
+ }
+ // Persistence failures intentionally propagate. Do not reinterpret them as delivery failures.
+ // A lease-recovery worker must reclaim abandoned jobs; receiver deduplication handles replays.
+ if (outcome.success) await store.delivered(job, outcome.status);
+ else if (!outcome.retryable || job.attempt >= MAX_ATTEMPTS) await store.deadLetter(job, outcome.message);
+ else await store.retry(job, new Date(Date.now() + Math.max(fullJitter(job.attempt), outcome.retryAfter ?? 0)), outcome.message);
+ return true;
+}

@@ -1,0 +1,59 @@
+// tests/onboarding.test.ts — return-path safety, entry-context parsing, journey assignment from membership, consent, lead intake (migration 110).
+import { describe, it, expect } from 'vitest';
+import { createClient } from '@supabase/supabase-js';
+import { safeReturn, parseEntryContext } from '../lib/auth/return-path';
+import { asUser, anon } from './helpers';
+
+describe('safe return path', () => {
+  it.each([
+    ['/app/today', '/app/today'], ['/app/course/bio-201', '/app/course/bio-201'], ['/app', '/app'],
+    ['https://evil.example/app', '/app'], ['//evil.example', '/app'], ['/app/../admin', '/app'], ['/app\\..\\x', '/app'],
+    ['javascript:alert(1)', '/app'], ['%2F%2Fevil.example', '/app'], ['/ops/finance', '/app'], ['/app/today?x=1', '/app'],
+  ])('%s → %s', (input, out) => expect(safeReturn(input)).toBe(out));
+});
+
+describe('entry context', () => {
+  it('keeps hints but never trusts them', () => {
+    const c = parseEntryContext(new URL('https://semester.com/auth/sign-up?source=youtube&role=institution_admin&tenant=campus-a&continue_to=/app/console&cta=hero'));
+    expect(c).toMatchObject({ source: 'youtube', intendedRole: 'institution_admin', tenantHint: 'campus-a', continueTo: '/app/console', contentId: 'hero' });
+  });
+  it('drops unknown values and injection attempts', () => {
+    const c = parseEntryContext(new URL('https://semester.com/x?source=hack&role=superadmin&cta=<script>&continue_to=https://evil'));
+    expect(c.source).toBe('direct'); expect(c.intendedRole).toBeUndefined(); expect(c.contentId).toBeUndefined(); expect(c.continueTo).toBe('/app');
+  });
+});
+
+describe('server-side onboarding', () => {
+  it('assigns the journey from verified membership, not from the requested intent', async () => {
+    const s = await asUser('student@campus-a.test');
+    const r = await s.schema('api').rpc('assign_journey', { p_intent: 'institution_admin' });
+    expect(r.error).toBeNull(); expect(r.data).toBe('campus_student');
+  });
+  it('refuses to skip a required step', async () => {
+    const s = await asUser('student@campus-a.test');
+    const r = await s.schema('api').rpc('complete_step', { p_journey: 'campus_student', p_step: 'official', p_skipped: true });
+    expect(r.error?.message).toMatch(/required/);
+  });
+  it('a user cannot record consent for someone else', async () => {
+    const s = await asUser('student@campus-a.test');
+    const r = await s.schema('growth').from('consent_records').insert({ person_id: '00000000-0000-0000-0000-00000000a002', document_id: 'terms-2026-10', accepted: true });
+    expect(r.error).not.toBeNull();
+  });
+  it('anonymous visitors can submit a lead but cannot read leads', async () => {
+    const a = anon();
+    const w = await a.schema('api').rpc('submit_lead', { p_name: 'Test Buyer', p_email: 'buyer@university.test', p_org: 'Test University', p_role: 'Registrar', p_use: 'registration holds', p_consent: true });
+    expect(w.error).toBeNull();
+    const r = await a.schema('growth').from('leads').select('*'); expect(r.data ?? []).toHaveLength(0);
+    const noConsent = await a.schema('api').rpc('submit_lead', { p_name: 'X', p_email: 'x@y.test', p_org: 'Y', p_role: '', p_use: '', p_consent: false });
+    expect(noConsent.error?.message).toMatch(/consent/);
+  });
+  it('analytics events reject free text and oversized props', async () => {
+    const a = anon();
+    const bad = await a.schema('onboard').from('events').insert({ name: 'Signup Started!', props: {} }); expect(bad.error).not.toBeNull();
+    const big = await a.schema('onboard').from('events').insert({ name: 'cta_clicked', props: { note: 'x'.repeat(600) } }); expect(big.error).not.toBeNull();
+  });
+  it('students cannot read the onboarding funnel view', async () => {
+    const s = await asUser('student@campus-a.test');
+    const r = await s.schema('onboard').from('funnel_daily').select('*'); expect(r.error).not.toBeNull();
+  });
+});

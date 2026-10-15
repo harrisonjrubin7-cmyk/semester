@@ -35,6 +35,15 @@ export function ModuleGateState({
       return <p role="status">Checking whether your school has {what} turned on…</p>;
     case 'off':
       return <Notice>{off}</Notice>;
+    case 'offline':
+      return (
+        <>
+          <p role="status">You are offline. {what[0]?.toUpperCase()}{what.slice(1)} needs a connection, so nothing was sent or changed.</p>
+          <button type="button" className="btn" onClick={gate.retry}>
+            Check connection again
+          </button>
+        </>
+      );
     case 'stopped':
       return (
         <Notice alert>
