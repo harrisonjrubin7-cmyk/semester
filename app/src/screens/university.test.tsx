@@ -2,8 +2,8 @@
 import { act } from 'react';
 import { createRoot,type Root } from 'react-dom/client';
 import { beforeEach,afterEach,it,expect,vi } from 'vitest';
-const mock=vi.hoisted(()=>({status:vi.fn(),records:vi.fn(),prepare:vi.fn(),commit:vi.fn(),reconcile:vi.fn(),dispatch:vi.fn(),role:'student'}));
-vi.mock('../state/store',()=>({useStore:()=>({state:{term:'2026FA',role:mock.role},account:null,school:{name:'Test school'},catalog:{courses:[]},dispatch:mock.dispatch})}));
+const mock=vi.hoisted(()=>({status:vi.fn(),records:vi.fn(),prepare:vi.fn(),commit:vi.fn(),reconcile:vi.fn(),dispatch:vi.fn(),role:'student',view:null as null|string}));
+vi.mock('../state/store',()=>({useStore:()=>({state:{term:'2026FA',role:mock.role,workspaceView:mock.view},account:null,school:{name:'Test school'},catalog:{courses:[]},dispatch:mock.dispatch})}));
 vi.mock('../lib/university',async importOriginal=>({...await importOriginal<object>(),gatewayConfigured:true,institutionStatus:mock.status,institutionRecords:mock.records,prepareInstitutionAction:mock.prepare,commitInstitutionAction:mock.commit,reconcileInstitutionAction:mock.reconcile}));
 import { University } from './University';
 (globalThis as {IS_REACT_ACT_ENVIRONMENT?:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
@@ -11,7 +11,7 @@ let root:Root;let host:HTMLDivElement;
 function button(text:string){const b=[...host.querySelectorAll('button')].find(b=>b.textContent?.trim()===text);if(!b)throw new Error(`Missing ${text}`);return b;}
 async function press(text:string){await act(async()=>button(text).click());}
 function mount(){act(()=>root.render(<University/>));}
-beforeEach(()=>{localStorage.clear();Object.values(mock).forEach(value=>{if(typeof value==='function')value.mockReset();});mock.role='student';host=document.createElement('div');document.body.append(host);root=createRoot(host);});
+beforeEach(()=>{localStorage.clear();Object.values(mock).forEach(value=>{if(typeof value==='function')value.mockReset();});mock.role='student';mock.view=null;host=document.createElement('div');document.body.append(host);root=createRoot(host);});
 afterEach(()=>{vi.restoreAllMocks();act(()=>root.unmount());host.remove();});
 it('keeps official data separate from local preparation and requires preview plus confirmation',async()=>{
  mock.status.mockResolvedValue({version:1,institutionId:'school',institutionName:'Test school',roles:['student'],connections:[{area:'courses',state:'connected',provider:'Fixture LMS',canRead:true,canWrite:true,lastSyncAt:null,permissions:[],message:''}]});
@@ -23,6 +23,19 @@ it('keeps official data separate from local preparation and requires preview plu
 });
 it('preserves malformed saved drafts instead of overwriting them with an empty file',()=>{
  const key='semester.university.drafts.v1:device:2026FA';localStorage.setItem(key,'broken but recoverable');mount();expect(localStorage.getItem(key)).toBe('broken but recoverable');expect(host.textContent).toContain('Download recovery copy');
+});
+it('opens the allowlisted University subview named by a workspace link',async()=>{
+ mock.view='drafts';mount();
+ expect(button('Drafts (0)').getAttribute('aria-pressed')).toBe('true');
+ expect(host.textContent).toContain('Saved here');
+ await press('Services');
+ expect(mock.dispatch).toHaveBeenCalledWith({type:'setWorkspaceView',view:'overview'});
+});
+it('follows a browser navigation between University subviews without remounting',()=>{
+ mock.view='overview';mount();
+ expect(button('Services').getAttribute('aria-pressed')).toBe('true');
+ mock.view='drafts';mount();
+ expect(button('Drafts (0)').getAttribute('aria-pressed')).toBe('true');
 });
 it('reports draft removal and undo only after the device write succeeds',async()=>{
  const key='semester.university.drafts.v1:device:2026FA';
