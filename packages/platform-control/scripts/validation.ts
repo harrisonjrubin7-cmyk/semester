@@ -22,7 +22,10 @@ export async function validateEvidence(snapshot: RegistrySnapshot): Promise<Vali
     for (const record of group) for (const path of record.evidence) paths.add(path);
   }
   for (const item of snapshot.backlog) for (const path of item.evidence) paths.add(path);
-  for (const gate of snapshot.activationGates ?? []) for (const item of gate.required) for (const path of item.evidence) paths.add(path);
+  for (const gate of snapshot.activationGates ?? []) {
+    for (const item of gate.required) for (const path of item.evidence) paths.add(path);
+    if (gate.decision.record) paths.add(gate.decision.record);
+  }
   for (const path of [...paths].sort()) {
     try { await access(resolve(repositoryRoot, path)); }
     catch { issues.push({ code: 'missing_evidence_path', path, message: 'Evidence path does not exist in the repository.' }); }

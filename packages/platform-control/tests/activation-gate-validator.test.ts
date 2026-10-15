@@ -76,3 +76,13 @@ test('gate evidence paths must exist in the repository', async () => {
   const issues = await validateEvidence(snapshot([bad]));
   assert.deepEqual(issues.map(({ code, path }) => [code, path]), [['missing_evidence_path', 'packages/none/does-not-exist.md']]);
 });
+
+test('a recorded activation decision must resolve to repository evidence', async () => {
+  const bad = gate({
+    status: 'ready',
+    required: allPassed(),
+    decision: { record: 'docs/decisions/does-not-exist.md', approvers: [...GATE_APPROVERS] },
+  });
+  const issues = await validateEvidence(snapshot([bad]));
+  assert.deepEqual(issues.map(({ code, path }) => [code, path]), [['missing_evidence_path', 'docs/decisions/does-not-exist.md']]);
+});
