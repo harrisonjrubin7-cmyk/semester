@@ -10,6 +10,8 @@ class RecoveryTests(unittest.TestCase):
         m = RegistrationModel()
         self.assertEqual(self.submit(m, {'identity_ok': False})['state'], 'denied')
         self.assertEqual(self.submit(m, {'permission_ok': False})['state'], 'denied')
+        self.assertEqual(m.submit('u1', 'tenant-b', 'k', {'section': 's1'},
+                                  {'grant_tenants': ['tenant-a']})['state'], 'denied')
         self.assertFalse(m.authoritative)
 
     def test_REG_02_stale_authority(self):
@@ -60,6 +62,7 @@ class RecoveryTests(unittest.TestCase):
         r = self.submit(m, fault='timeout_after')
         self.assertEqual(r['state'], 'result_unknown')
         self.assertEqual(m.reconcile(r['key'])['state'], 'committed')
+        self.assertEqual(m.trail[r['key']], ['reconciling', 'committed'])
         self.assertEqual(self.submit(m)['state'], 'committed')
         self.assertEqual(len(m.authoritative), 1)
 
@@ -85,6 +88,7 @@ class RecoveryTests(unittest.TestCase):
         failed = self.submit(m, fault='precommit')
         self.assertTrue(failed['confirmed_no_commit'])
         self.assertFalse(m.authoritative)
+        self.assertEqual(self.submit(m, payload={'section': 's2'})['state'], 'conflict')
         self.assertEqual(self.submit(m)['state'], 'committed')
 
     def test_REG_12_expiry_and_revocation(self):
@@ -166,6 +170,19 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(w.apply('e1', token), 'committed')
         self.assertEqual(w.apply('e1', token, approved=False), 'duplicate')
         self.assertEqual(w.effects, 1)
+
+    def test_fencing_is_per_job(self):
+        w = WorkerReferenceModel()
+        a = w.claim('A'); b = w.claim('B')
+        self.assertEqual(w.apply('e1', a), 'committed')
+        self.assertEqual(w.apply('e2', b), 'committed')
+        self.assertEqual(w.effects, 2)
+
+    def test_dedup_is_scoped_by_tenant(self):
+        w = WorkerReferenceModel(); token = w.claim()
+        self.assertEqual(w.apply('e1', token, tenant='tenant-a'), 'committed')
+        self.assertEqual(w.apply('e1', token, tenant='tenant-b'), 'committed')
+        self.assertEqual(w.effects, 2)
 
 if __name__ == '__main__':
     unittest.main()

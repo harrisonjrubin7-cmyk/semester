@@ -52,7 +52,7 @@ Review fixes (PR #1572, Codex review of 76865ba1), with the schema change checke
 
 The uploaded validator's semantic layer assumes every binding has `lease` and `retry`. It fails on a valid `guarded_inline` binding and is not in this repository. It needs the same transport branch before it is used as a gate.
 
-`ee79049f-workflow_engine_validation_results.csv` records 55 checks, including the 17 bindings as `accept`. Its fixtures are not in this repository, so that result has not been reproduced.
+The uploaded `ee79049f-workflow_engine_validation_results.csv` (55 checks, the 17 bindings marked `accept`) is not committed to this repository, and neither is the validator that produced it. Those results are unverified here.
 
 ## Next executable steps
 

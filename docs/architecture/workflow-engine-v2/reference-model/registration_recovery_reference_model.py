@@ -9,6 +9,7 @@ class RegistrationModel:
     commands: dict = field(default_factory=dict)
     authoritative: dict = field(default_factory=dict)
     corrections: list = field(default_factory=list)
+    trail: dict = field(default_factory=dict)
     lock: object = field(default_factory=Lock)
 
     def submit(self, actor, tenant, key, payload, context=None, fault=None):
@@ -16,6 +17,9 @@ class RegistrationModel:
         digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
         k = (tenant, actor, 'enroll', key)
         with self.lock:
+            grants = c.get('grant_tenants')
+            if grants is not None and tenant not in grants:
+                return {'state': 'denied', 'effects': 0}
             if not c.get('identity_ok', True) or not c.get('permission_ok', True):
                 return {'state': 'denied', 'effects': 0}
             if not c.get('authority_ok', True):
@@ -40,7 +44,12 @@ class RegistrationModel:
             if c.get('offer_expired', False):
                 return {'state': 'waitlisted', 'effects': 0}
             if fault == 'precommit':
-                return {'state': 'failed', 'effects': 0, 'confirmed_no_commit': True}
+                # Persist the payload binding so a same-key retry cannot change the payload.
+                cmd = {'state': 'failed', 'hash': digest, 'key': k, 'effects': 0,
+                       'projection': 'pending', 'original_payload': dict(payload),
+                       'confirmed_no_commit': True}
+                self.commands[k] = cmd
+                return dict(cmd)
             cmd = {'state': 'running', 'hash': digest, 'key': k, 'effects': 0,
                    'projection': 'pending', 'original_payload': dict(payload)}
             self.commands[k] = cmd
@@ -66,14 +75,19 @@ class RegistrationModel:
     def reconcile(self, key, definitive=True):
         with self.lock:
             cmd = self.commands[key]
+            trail = self.trail.setdefault(key, [])
             if not definitive:
                 cmd['state'] = 'result_unknown'
+                trail.append('result_unknown')
                 return dict(cmd)
+            cmd['state'] = 'reconciling'
+            trail.append('reconciling')
             result = self.authoritative.get(key)
             if result:
                 cmd.update(state='committed', effects=1, receipt=result['receipt'])
             else:
                 cmd.update(state='failed', effects=0, confirmed_no_commit=True)
+            trail.append(cmd['state'])
             return dict(cmd)
 
     def repair_projection(self, key):
@@ -103,21 +117,22 @@ class RegistrationModel:
 
 class WorkerReferenceModel:
     def __init__(self):
-        self.fence = 0
+        self.fence = {}
         self.inbox = set()
         self.effects = 0
         self.receipts = []
-    def claim(self):
-        self.fence += 1
-        return self.fence
-    def apply(self, event_id, fence, approved=True):
-        if fence != self.fence:
+    def claim(self, job='default'):
+        self.fence[job] = self.fence.get(job, 0) + 1
+        return (job, self.fence[job])
+    def apply(self, event_id, token, approved=True, tenant='default'):
+        job, fence = token
+        if fence != self.fence.get(job):
             return 'stale_lease'
-        if event_id in self.inbox:
+        if (tenant, event_id) in self.inbox:
             return 'duplicate'
         if not approved:
             return 'denied'
-        self.inbox.add(event_id)
+        self.inbox.add((tenant, event_id))
         self.effects += 1
-        self.receipts.append({'kind': 'committed', 'event': event_id})
+        self.receipts.append({'kind': 'committed', 'event': event_id, 'tenant': tenant})
         return 'committed'

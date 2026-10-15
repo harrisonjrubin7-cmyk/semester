@@ -580,7 +580,7 @@
   {
     "schema_version": "2.0.0",
     "document_type": "approval_grant",
-    "id": "00000000-0000-0000-0000-000000000004",
+    "id": "00000000-0000-0000-0000-000000000005",
     "instance_id": "00000000-0000-0000-0000-000000000003",
     "scope": {
       "kind": "institution",
@@ -594,7 +594,7 @@
       ]
     },
     "requested_by": "00000000-0000-0000-0000-000000000001",
-    "approved_by": "00000000-0000-0000-0000-000000000004",
+    "approved_by": "00000000-0000-0000-0000-000000000007",
     "decision": "approve",
     "capability": "registration.override.approve",
     "payload_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -609,7 +609,7 @@
   {
     "schema_version": "2.0.0",
     "document_type": "domain_event",
-    "id": "00000000-0000-0000-0000-000000000004",
+    "id": "00000000-0000-0000-0000-000000000006",
     "type": "proposed.registration.command.requested",
     "version": 1,
     "scope": {
