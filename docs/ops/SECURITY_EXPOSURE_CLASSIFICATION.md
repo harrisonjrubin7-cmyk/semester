@@ -82,7 +82,7 @@ only by RLS policies. Those policies were read for the operations-relevant ones:
 | `scim_group_mapping` I/U | `tenant:configure` | Same. |
 | `feature_cohort_members` I/U | `tenant:configure` | Same. |
 | `provider_registry` I/U | `platform:configure` | Low maturities and demotions stay direct. Raising a row to `incremental` or above is closed (`20261012060000`, duty `provider-maturity`, two approvers). Other columns remain directly writable; the AI model/policy side of duty `ai-provider` is not on this table. |
-| `trust_artifacts` I/U, `trust_artifact_versions` I | `trust:publish` | Direct publish. |
+| `trust_artifacts` I/U, `trust_artifact_versions` I | `trust:publish` | Direct publish, by design. **Closed for the NDA gate** (`20261012080000`): once an artifact has a published version, a client role cannot move it from `nda` to `public` (a guard, not an approval duty). Retitling, re-owning and raising to `nda` stay direct. |
 | `gtm_pilot_metrics` I/U/**D**, `gtm_accounts`, `gtm_pilots`, `gtm_decision_log` | `account:manage` platform | Direct CRUD. **Closed for pilot metrics** (`20261012070000`): once a pilot has started, its metrics cannot be deleted or reworded (a guard, not an approval duty). The other `gtm_*` tables remain directly writable. |
 | `legal_holds` I, release U | `hold:place` / `hold:release` | Two-person release is a check constraint, not an approval. |
 | `schools` ALL (role `public`) | `private.is_app_admin()` | Legacy admin gate; policy is on role `public`, effective only for the admin. |
