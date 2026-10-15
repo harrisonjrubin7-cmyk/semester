@@ -465,4 +465,10 @@ describe('the faint rung, on a glyph too small to carry it', () => {
     // A comment that merely discusses the rung is not a use of it.
     expect(hit(`/* --app-faint — the hairline strength, held to 3:1 */`)).toBe(0);
   });
+
+  it('keeps the tight-walk warning in the accessible row text when its glyph is decorative', () => {
+    const walks = readFileSync(join(SRC, 'components', 'Walks.tsx'), 'utf8');
+    expect(walks).toContain('<span className="sr-only">Tight walk: </span>');
+    expect(walks).toMatch(/h\.known && tight\(h\) \? <span className="sr-only">Tight walk: <\/span>/);
+  });
 });

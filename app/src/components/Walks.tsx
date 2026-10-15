@@ -64,6 +64,7 @@ export function Walks({ date }: { date?: Date }) {
             opacity: h.known ? 1 : DIMMED_ROW,
           }}
         >
+          {h.known && tight(h) ? <span className="sr-only">Tight walk: </span> : null}
           <span
             aria-hidden="true"
             style={{
