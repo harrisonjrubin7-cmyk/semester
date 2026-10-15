@@ -1139,7 +1139,7 @@ a:hover {
    sets `padding-inline` further down this sheet and wins at one. */
 .device.device-pane,
 .device.deskwork {
-  padding-inline-end: var(--assist-dock, 0);
+  padding-inline-end: calc(env(safe-area-inset-right, 0) + var(--assist-dock, 0));
 }
 
 /*
