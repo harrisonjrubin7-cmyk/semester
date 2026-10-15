@@ -16,6 +16,7 @@ create table if not exists public.notification_preferences (
   constraint notification_required_category check (not (category in ('safety','account_security','transactional') and not enabled))
 );
 
+create index if not exists notification_preferences_person on public.notification_preferences (person_id);
 alter table public.notification_preferences enable row level security;
 revoke all on public.notification_preferences from public, anon;
 grant select on public.notification_preferences to authenticated;
@@ -53,6 +54,7 @@ create table if not exists public.notification_inbox (
 );
 
 create index if not exists notification_inbox_recipient_created on public.notification_inbox (recipient_id, created_at desc);
+create index if not exists notification_inbox_subject on public.notification_inbox (subject_id);
 alter table public.notification_inbox enable row level security;
 revoke all on public.notification_inbox from public, anon;
 grant select on public.notification_inbox to authenticated;
@@ -87,6 +89,10 @@ create table if not exists public.notification_deliveries (
 
 create index if not exists notification_deliveries_due on public.notification_deliveries (deliver_after, created_at)
   where state in ('queued','retry');
+create index if not exists notification_deliveries_inbox_scope
+  on public.notification_deliveries (inbox_id, school_id, recipient_id);
+create index if not exists notification_deliveries_school on public.notification_deliveries (school_id);
+create index if not exists notification_deliveries_recipient on public.notification_deliveries (recipient_id);
 alter table public.notification_deliveries enable row level security;
 revoke all on public.notification_deliveries from public, anon, authenticated, service_role;
 grant select, insert, update on public.notification_deliveries to service_role;
@@ -103,6 +109,10 @@ create table if not exists public.notification_delivery_events (
 );
 
 create index if not exists notification_delivery_events_delivery on public.notification_delivery_events (delivery_id, occurred_at);
+create index if not exists notification_delivery_events_scope
+  on public.notification_delivery_events (delivery_id, school_id, recipient_id);
+create index if not exists notification_delivery_events_school on public.notification_delivery_events (school_id);
+create index if not exists notification_delivery_events_recipient on public.notification_delivery_events (recipient_id);
 alter table public.notification_delivery_events enable row level security;
 revoke all on public.notification_delivery_events from public, anon, authenticated, service_role;
 grant select, insert on public.notification_delivery_events to service_role;

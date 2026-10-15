@@ -90,25 +90,25 @@ begin
   raise notice 'ok  a user writes a preference for their pinned school';
 
   if not pg_temp.refused(student,
-    $$select public.set_notification_preference('other-notification-check','academic','push',true,null,null,'UTC')$$) then
+    $statement$select public.set_notification_preference('other-notification-check','academic','push',true,null,null,'UTC')$statement$) then
     raise exception 'FAILED: a user wrote a preference for another school';
   end if;
   raise notice 'ok  cross-school preference writes are refused';
 
   if not pg_temp.refused(student,
-    $$select public.set_notification_preference('notification-check','safety','in_app',false,null,null,'UTC')$$) then
+    $statement$select public.set_notification_preference('notification-check','safety','in_app',false,null,null,'UTC')$statement$) then
     raise exception 'FAILED: required in-app safety was disabled';
   end if;
   raise notice 'ok  required safety cannot be disabled';
 
   if not pg_temp.refused(student,
-    $$select public.set_notification_preference('notification-check','academic','email',true,'22:00',null,'UTC')$$) then
+    $statement$select public.set_notification_preference('notification-check','academic','email',true,'22:00',null,'UTC')$statement$) then
     raise exception 'FAILED: an incomplete quiet-hours pair was accepted';
   end if;
   raise notice 'ok  incomplete quiet hours are refused';
 
   if not pg_temp.refused(student,
-    $$select public.set_notification_preference('notification-check','academic','push',true,'22:00','07:00','Mars/Olympus')$$) then
+    $statement$select public.set_notification_preference('notification-check','academic','push',true,'22:00','07:00','Mars/Olympus')$statement$) then
     raise exception 'FAILED: an unknown time zone was accepted';
   end if;
   raise notice 'ok  unknown time zones are refused';
