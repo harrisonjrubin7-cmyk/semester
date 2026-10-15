@@ -7,9 +7,9 @@ the repository.
 
 ## Foundation
 
-- [ ] 1. Make capability maturity machine-readable. — `registry/maturity/capability-maturity.yaml`
+- [x] 1. Make capability maturity machine-readable. — `registry/maturity/capability-maturity.yaml`
 - [ ] 2. Establish platform-pillar ownership. — `registry/platform/pillar-owners.yaml` (6 of 12 pillars have no owner)
-- [ ] 3. Create the contract-lab submission template. — `docs/engineering/contract-lab.yaml`
+- [x] 3. Create the contract-lab submission template. — `docs/engineering/contract-lab.yaml`
 - [ ] 4. Validate all existing record-envelope schemas.
 - [ ] 5. Add tenant-isolation simulation to CI.
 - [ ] 6. Add policy-reference checks to CI.

@@ -1,5 +1,6 @@
 # Capability intake: a portfolio budget so capability count never exceeds
-# delivery and support capacity. The catalog holds 118 capabilities.
+# delivery and support capacity. The catalog holds 122 capabilities
+# (app/src/lib/ecosystem.test.ts holds that count).
 capability_intake:
   required_questions:
     - which_user_or_operator_has_the_problem

@@ -9,10 +9,14 @@ read_models:
     - every_projection_has_rebuild_strategy
     - every_projection_has_authority_descriptor
 
+  # Runtime freshness states (app/src/lib/console/client.ts): fresh, stale,
+  # failed, unknown. Any other value is read as unknown.
+  # `updating` is not a stored state: it is a UI overlay shown while a rebuild
+  # is in flight on a fresh or stale projection.
   UI_rules:
-    current:
+    fresh:
       behavior: show_available_action_when_policy_allows
-    updating:
+    updating_overlay:
       behavior: show_updating_state_and_prevent_unsafe_assumption
     stale:
       behavior: show_stale_state_and_block_definitive_outcome

@@ -1,4 +1,5 @@
-# Connector passport: institution readiness-source connector.
+# Connector passport: institution readiness-source connector. This is the
+# canonical ID for the upstream named as SIS-001 by WF-READINESS-001.
 connector:
   id: SIS-READINESS-001
   name: Institution readiness-source connector

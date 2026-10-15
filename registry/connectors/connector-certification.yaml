@@ -1,6 +1,7 @@
 # Every institutional or external connection is a product component with an
 # authority contract, a delivery contract, a failure contract, a reconciliation
-# plan, and an owner. Each level requires everything listed under it.
+# plan, and an owner. Each level requires its own list plus every list of the
+# levels in its `inherits` (inheritance is explicit, not implied by order).
 connector_certification:
   levels:
     sandbox:
@@ -13,6 +14,7 @@ connector_certification:
         - production_commands
 
     validated:
+      inherits: [sandbox]
       required:
         - schema_contract_test
         - field_mapping_review
@@ -22,6 +24,7 @@ connector_certification:
         - error_and_quarantine_behavior
 
     pilot_approved:
+      inherits: [sandbox, validated]
       required:
         - tenant_approval
         - production_credential_scope
@@ -32,6 +35,7 @@ connector_certification:
         - activation_evidence
 
     reusable:
+      inherits: [sandbox, validated, pilot_approved]
       required:
         - multiple_successful_implementations
         - documented_variation_model

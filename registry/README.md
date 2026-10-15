@@ -28,4 +28,4 @@ this change adds no dependency, so passports are JSON with the same keys.
 
 | ID | Status | Notes |
 | --- | --- | --- |
-| `WF-READINESS-001` | `proposed` | Shape from the continuation brief. Owners are the brief's role labels, not confirmed people. Upstream `SIS-001` and `POL-READINESS-001` are not in this repo yet. |
+| `WF-READINESS-001` | `proposed` | Shape from the continuation brief. Owners are the brief's role labels, not confirmed people. Upstream `SIS-READINESS-001` (passport only, not certified) and `POL-READINESS-001` (not in this repo yet). |

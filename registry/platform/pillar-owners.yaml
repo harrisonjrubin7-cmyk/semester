@@ -1,25 +1,29 @@
 # The twelve shared platform pillars. No domain builds its own version of these.
 # Owners and certifications are recorded only where the source names them.
 # A null owner is an open gap, not a decision: assign one before the pillar
-# is relied on for a pilot.
+# is relied on for a pilot. `certification` is set only when a certification
+# record exists; `certification_target` names a planned ID with no record yet.
 pillars:
   identity_context:
     shared_responsibility: Tenant, institution, role, membership, session
     first_certification_target: Role/session revocation
     owner: platform_owner
-    certification: CERT-ID-001
+    certification: null
+    certification_target: CERT-ID-001
 
   authorization:
     shared_responsibility: Policy decision, scope, obligations, denial
     first_certification_target: RLS and PEP behavior
     owner: security_owner
-    certification: CERT-AUTHZ-001
+    certification: null
+    certification_target: CERT-AUTHZ-001
 
   source_authority:
     shared_responsibility: Who owns a fact and what it can mean
     first_certification_target: Readiness source map
     owner: product_and_institution_owner
-    certification: CERT-SOURCE-001
+    certification: null
+    certification_target: CERT-SOURCE-001
 
   freshness:
     shared_responsibility: Timeliness, staleness, outage, replay
@@ -49,7 +53,8 @@ pillars:
     shared_responsibility: Saga, deadlines, retries, compensation
     first_certification_target: Source-check workflow
     owner: platform_owner
-    certification: CERT-WF-001
+    certification: null
+    certification_target: CERT-WF-001
 
   consent_and_delegation:
     shared_responsibility: Sharing, expiry, revocation, evidence
@@ -61,7 +66,8 @@ pillars:
     shared_responsibility: Scope, retrieval, disclosure, tools, review
     first_certification_target: Ask Semester answer frame
     owner: AI_governance_owner
-    certification: CERT-AI-001
+    certification: null
+    certification_target: CERT-AI-001
 
   operations:
     shared_responsibility: Monitoring, support, incidents, reconciliation
@@ -73,4 +79,5 @@ pillars:
     shared_responsibility: Tests, approvals, provenance, rollback
     first_certification_target: Pilot activation gate
     owner: operations_owner
-    certification: CERT-REL-001
+    certification: null
+    certification_target: CERT-REL-001

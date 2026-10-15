@@ -28,24 +28,33 @@ maturity:
 
   rule: >
     A capability may be demoable when designed. It may be called available
-    only when activated for an approved scope.
+    only when activated for an approved scope. The statuses are cumulative:
+    each status requires every fact before it in the order below.
+
+  order: [designed, contracted, implemented, verified, operable, activated]
 
   statuses:
     designed:
+      requires: []
       can_say: "Concept/prototype available for review"
       cannot_say: "Available to students"
     contracted:
+      requires: [designed]
       can_say: "The intended behavior and boundaries are specified"
       cannot_say: "Integrated"
     implemented:
+      requires: [designed, contracted]
       can_say: "Code exists"
       cannot_say: "Reliable in production"
     verified:
+      requires: [designed, contracted, implemented]
       can_say: "Required tests currently pass"
       cannot_say: "Activated for every institution"
     operable:
+      requires: [designed, contracted, implemented, verified]
       can_say: "Monitoring and support controls are in place"
       cannot_say: "Institution-approved"
     activated:
+      requires: [designed, contracted, implemented, verified, operable]
       can_say: "Available for the named scope"
       cannot_say: "General availability"
