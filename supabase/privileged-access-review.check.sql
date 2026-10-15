@@ -22,6 +22,7 @@ returns void language plpgsql as $$ begin if ok is not true then raise exception
 do $$
 declare
   starter uuid := gen_random_uuid(); reviewer uuid := gen_random_uuid(); signer uuid := gen_random_uuid();
+  grantor uuid := gen_random_uuid();
   target uuid := gen_random_uuid(); deleted_target uuid := gen_random_uuid();
   investigate_subject uuid := gen_random_uuid(); steward uuid := gen_random_uuid();
   outsider uuid := gen_random_uuid();
@@ -37,19 +38,20 @@ begin
     (starter, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'starter@review.example', now(), now(), now()),
     (reviewer, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'reviewer@review.example', now(), now(), now()),
     (signer, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'signer@review.example', now(), now(), now()),
+    (grantor, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'grantor@review.example', now(), now(), now()),
     (target, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'target@review.example', now(), now(), now()),
     (deleted_target, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'deleted-target@review.example', now(), now(), now()),
     (investigate_subject, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'investigate@review.example', now(), now(), now()),
     (steward, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'steward@review.example', now(), now(), now()),
     (outsider, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'outside@review.example', now(), now(), now());
-  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
-    (starter, 'trust_officer', 'platform', '', 'platform'),
-    (reviewer, 'platform_admin', 'platform', '', 'platform'),
-    (signer, 'trust_officer', 'platform', '', 'platform'),
-    (target, 'university_admin', 'platform', '', 'platform'),
-    (deleted_target, 'moderator', 'platform', '', 'platform'),
-    (investigate_subject, 'integration_admin', 'platform', '', 'platform'),
-    (steward, 'data_steward', 'platform', '', 'platform');
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance, granted_by) values
+    (starter, 'trust_officer', 'platform', '', 'platform', null),
+    (reviewer, 'platform_admin', 'platform', '', 'platform', null),
+    (signer, 'trust_officer', 'platform', '', 'platform', grantor),
+    (target, 'university_admin', 'platform', '', 'platform', null),
+    (deleted_target, 'moderator', 'platform', '', 'platform', null),
+    (investigate_subject, 'integration_admin', 'platform', '', 'platform', null),
+    (steward, 'data_steward', 'platform', '', 'platform', null);
 
   perform pg_temp.must('an unprivileged account cannot start a review', pg_temp.refused(outsider,
     $q$select public.begin_privileged_access_review('access-review-outsider',current_date-90,current_date,current_date+90)$q$));
@@ -78,11 +80,18 @@ begin
        and lower(pg_get_constraintdef(c.oid)) like '%capabilities_backfilled%'));
   perform pg_temp.must('grant-state fingerprints distinguish live from expired state',
     private.privileged_access_review_grant_state_sha256(
-      starter, 'trust_officer', 'platform', '', 'platform', now(), null, null,
+      starter, 'trust_officer', 'platform', '', 'platform', grantor, now(), null, null,
       array['access_review:manage'], true) <>
     private.privileged_access_review_grant_state_sha256(
-      starter, 'trust_officer', 'platform', '', 'platform', now(), null, null,
+      starter, 'trust_officer', 'platform', '', 'platform', grantor, now(), null, null,
       array['access_review:manage'], false));
+  perform pg_temp.must('grant-state fingerprints distinguish grantor provenance changes',
+    private.privileged_access_review_grant_state_sha256(
+      starter, 'trust_officer', 'platform', '', 'platform', grantor, now(), null, null,
+      array['access_review:manage'], true) <>
+    private.privileged_access_review_grant_state_sha256(
+      starter, 'trust_officer', 'platform', '', 'platform', null, now(), null, null,
+      array['access_review:manage'], true));
   perform pg_temp.must('signoff rejects incompatible legacy decision semantics', position(
     'legacy decision has an incompatible reason' in lower(pg_get_functiondef(
       'public.complete_privileged_access_review(text)'::regprocedure))) > 0);
@@ -257,6 +266,12 @@ begin
    where subject = signer and role = 'trust_officer';
   perform pg_temp.must('a second grant change invalidates the first resolution fingerprint', pg_temp.refused(signer,
     format('select public.complete_privileged_access_review(%L)', review_ref)));
+  perform pg_temp.become(starter);
+  perform public.resolve_privileged_access_review_post_decision_change(signer_item);
+  reset role;
+  delete from auth.users where id = grantor;
+  perform pg_temp.must('deleting a grantor invalidates the prior grant-state resolution',
+    pg_temp.refused(signer, format('select public.complete_privileged_access_review(%L)', review_ref)));
   perform pg_temp.become(starter);
   perform public.resolve_privileged_access_review_post_decision_change(signer_item);
   reset role;
