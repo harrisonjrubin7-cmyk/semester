@@ -14,6 +14,8 @@ daily_pilot_health:
   workflow:
     requests: count
     completed: count
+    ready: count
+    blocked: count
     needs_review: count
     stale: count
     unknown: count

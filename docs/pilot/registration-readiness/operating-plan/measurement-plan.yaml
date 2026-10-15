@@ -16,7 +16,7 @@ measurement:
     completion:
       definition: Requests reaching a student-visible outcome with an available safe next step. Report each outcome state separately.
       numerator: requests reaching a student-visible outcome with a safe next step, per outcome state
-      denominator: submitted evaluation requests, per outcome state
+      denominator: all submitted evaluation requests in the cohort and observation period (not partitioned by outcome)
       observation_period: TBD
       scope: approved cohort only
       source: workflow state records
@@ -45,8 +45,8 @@ measurement:
 
     reliability:
       definition: Connector freshness, workflow completion, safe-state activation, incident count, and time to containment.
-      numerator: connector refreshes within expected window; incidents contained within target
-      denominator: connector refreshes attempted; incidents opened
+      numerator: "per sub-measure: connector refreshes within expected window; workflow requests completed; safe-state activations that succeeded; incidents contained within target"
+      denominator: "per sub-measure: connector refreshes attempted; workflow requests submitted; safe-state activations attempted; incidents opened"
       observation_period: TBD
       scope: approved source only
       source: connector health records and incident log

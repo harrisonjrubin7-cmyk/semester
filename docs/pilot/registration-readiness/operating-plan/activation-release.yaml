@@ -11,6 +11,7 @@ release:
   pilot_scope_record: scope-record.yaml
   # go-no-go.yaml remains the production decision. This file adds the pilot-scope gate.
   production_decision: ../go-no-go.yaml
+  production_decision_required_state: approved   # go-no-go.yaml decision.state is pending today
 
   required_evidence:
     product:
@@ -53,4 +54,5 @@ release:
 
   activation_rule: >
     All required evidence must be current, no blocking finding may remain open,
-    scope must match approval, and safe-off must be proven.
+    scope must match approval, safe-off must be proven, and the referenced
+    production decision (go-no-go.yaml) must be approved.

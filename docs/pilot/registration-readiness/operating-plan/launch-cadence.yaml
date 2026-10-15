@@ -14,6 +14,8 @@ launch_cadence:
         - source_authority_map
         - success_plan
         - escalation_contacts
+        - escalation_response_targets_agreed   # P0/P1/P2 targets in escalation-matrix.yaml
+        - named_owner_for_every_role           # scope-record.yaml named_owners
     - id: stage_2_configure
       status: not_started
       exit_criteria:
@@ -47,5 +49,5 @@ launch_cadence:
       exit_criteria:
         - pilot_results_report
         - sponsor_readout
-        - renewal_expand_pause_or_retire_decision
+        - end_of_pilot_decision_recorded       # one of renew_and_deepen, repeat, remediate, conclude_safely (end-of-pilot-decision.yaml)
         - evidence_archive_and_follow_up_backlog

@@ -29,13 +29,13 @@ student_journey:
         (draft) We could not safely determine this result from the available information.
         Your request can be reviewed by the appropriate office.
     unknown:
-      next_step: refresh_or_request_support
+      next_step: retry_or_request_support
       copy: not_specified_in_source
     stale:
-      next_step: refresh_or_check_institution_source
+      next_step: retry_or_check_institution_source
       copy: >
         (draft) The source has not updated within its expected window.
-        Refresh the connection, or check the institution's official page.
+        Try the evaluation again later, check the institution's official page, or request support.
     failed:
       next_step: retry_or_request_support
       copy: not_specified_in_source

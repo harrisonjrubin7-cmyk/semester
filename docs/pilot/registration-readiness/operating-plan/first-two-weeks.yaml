@@ -10,7 +10,7 @@ first_two_weeks:
     owner_role: registrar_or_source_owner
     status: not_started
   - step: 3
-    action: Choose one control-plane baseline and implement it. The brief recommends v4; other versions are superseded or remain handoff concepts.
+    action: Build the control plane from docs/handoff/control-plane/baseline/ only. VERSIONS.md marks it current. v1 through v4 are superseded and must not be built in parallel.
     owner_role: semester_engineering_owner
     status: not_started
   - step: 4

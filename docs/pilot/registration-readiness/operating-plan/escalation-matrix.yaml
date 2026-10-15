@@ -1,5 +1,7 @@
 # Operating plan object 6: incident severity. Response targets are TBD and must be
 # agreed with the institution during stage 1.
+sev_to_p_mapping: TBD   # decision required. SEV-2 and SEV-3 (observability.yaml, INC-READINESS-001.yaml) have no P-level mapping yet.
+
 escalation:
   P0:
     definition: >

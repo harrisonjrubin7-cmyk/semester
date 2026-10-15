@@ -10,6 +10,18 @@ scope:
     semester_product_owner: TBD
     semester_operations_owner: TBD
 
+  named_owners:   # stage 1 exit requires a name and contact for every role
+    pilot_sponsor: TBD
+    registrar_or_source_owner: TBD
+    connector_owner: TBD
+    advising_or_registrar_lead: TBD
+    IT_or_security_owner: TBD
+    semester_implementation_lead: TBD
+    semester_support_lead: TBD
+    semester_security_owner: TBD
+    executive_sponsor: TBD
+    contacts: TBD
+
   cohort:
     inclusion:
       - approved_student_population
@@ -34,6 +46,7 @@ scope:
     - name: TBD
       owner: TBD
       note: source to be named by the institution
+      allowed_fields: TBD   # field allowlist, or reference to an immutable field-level source mapping; required before activation
 
   prohibited_actions:
     - enrollment_execution
