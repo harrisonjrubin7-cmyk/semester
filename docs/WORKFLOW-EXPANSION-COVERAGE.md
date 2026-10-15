@@ -43,8 +43,8 @@ No workflow in this file meets the contract yet.
 | PROP-WF-003 | Planning | Degree and term planning | Academic planning lead | None by filename | Unverified |
 | PROP-WF-004 | Registration | Enroll, waitlist, add, drop, withdraw | Registrar domain lead | REGISTRATION-DAY-MODE.md, SPRINT-1-REGISTRATION-PATH.md | Unverified |
 | PROP-WF-005 | Faculty | Course setup and publishing | Learning domain lead | FACULTY-COURSE-STUDIO-DESIGN.md, FACULTY-ENABLEMENT.md | Unverified |
-| PROP-WF-006 | Learning | Syllabus ingestion | Learning domain lead | None by filename | Unverified |
-| PROP-WF-007 | Learning | Study and mastery | Learning experience lead | None by filename | Unverified |
+| PROP-WF-006 | Learning | Syllabus ingestion | Learning domain lead | STUDY_REQUIREMENTS.md (syllabus intelligence), STUDY_EXPANDED_REQUIREMENTS.md (syllabus-to-study transformation) | Unverified |
+| PROP-WF-007 | Learning | Study and mastery | Learning experience lead | STUDY_REQUIREMENTS.md, STUDY_EXPANDED_REQUIREMENTS.md (personalized study paths), STUDY-READINESS-AND-SOURCE-LOCKER.md | Unverified |
 | PROP-WF-008 | Assessment | Assignment submission | Assessment lead | LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md | Unverified |
 | PROP-WF-009 | Grades | Feedback, grade release, correction | Gradebook lead | LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md | Unverified |
 | PROP-WF-010 | Advising | Advising and success plan | Advising lead | ADVISOR-MEETING-MODE.md, ADVISOR-RECONCILIATION-2026-09-30.md | Unverified |
@@ -52,7 +52,7 @@ No workflow in this file meets the contract yet.
 | PROP-WF-012 | Support | Service request and referral | Service operations lead | SUPPORT-AND-TRUST-SAFETY-OPERATING-MODEL.md, SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md, SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md | Unverified |
 | PROP-WF-013 | Accessibility | Accommodation and accessible delivery | Accessibility lead | None for accommodation (RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md covers UI testing only) | Unverified |
 | PROP-WF-014 | Registrar | Catalog sections and academic calendar | Registrar domain lead | None by filename | Unverified |
-| PROP-WF-015 | Registrar | Transfer credit, degree audit, graduation, transcript | Academic records lead | None by filename | Unverified |
+| PROP-WF-015 | Registrar | Transfer credit, degree audit, graduation, transcript | Academic records lead | TRANSFER-TRANSITION-HUB.md (transfer only; audit, graduation and transcript not matched) | Unverified |
 | PROP-WF-016 | Admissions | Prospect application and matriculation | Admissions lead | None by filename | Unverified |
 | PROP-WF-017 | Student accounts | Charges, payment plans, refunds, holds | Student accounts lead | None by filename | Unverified |
 | PROP-WF-018 | Aid | Scholarships, aid, eligibility | Financial aid lead | None by filename | Unverified |
@@ -67,7 +67,7 @@ No workflow in this file meets the contract yet.
 | PROP-WF-027 | Developer platform | Partner app certification, installation, retirement | Developer platform lead | API-PLATFORM.md, DEVELOPER-TOOLS.md, LTI-1.3-LAUNCH-RUNBOOK.md | Unverified |
 | PROP-WF-028 | Operations | Release, incident, recovery, renewal | Reliability and operations lead | RELEASE-INCIDENT-OPERATOR-RUNBOOK.md, OPERATIONAL-READINESS-PACK.md, RUNBOOKS.md, CRISIS-RESPONSE-RUNBOOK.md | Unverified |
 
-Coverage summary by filename: 18 of 28 items have at least one related spec, and 10 items have none (PROP-WF-003, 006, 007, 011, 013, 014, 015, 016, 017, 018). No item has verified coverage.
+Coverage summary by filename: 21 of 28 items have at least one related spec, and 7 items have none (PROP-WF-003, 011, 013, 014, 016, 017, 018). PROP-WF-017 and 018 also have no matched spec; `FINANCIAL-READINESS-WORKSPACE.md` exists but has not been read, so it is not counted. No item has verified coverage.
 
 ## Blockers and decisions required
 
