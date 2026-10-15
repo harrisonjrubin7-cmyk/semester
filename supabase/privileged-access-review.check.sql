@@ -96,6 +96,25 @@ begin
     private.privileged_access_review_grant_state_sha256(
       starter, 'trust_officer', 'platform', '', 'platform', null, now(), null, null,
       array['access_review:manage'], true));
+  perform pg_temp.must('grant-state fingerprints encode capability arrays without delimiter collisions',
+    private.privileged_access_review_grant_state_sha256(
+      starter, 'trust_officer', 'platform', '', 'platform', grantor, now(), null, null,
+      array['a,b'], true) <>
+    private.privileged_access_review_grant_state_sha256(
+      starter, 'trust_officer', 'platform', '', 'platform', grantor, now(), null, null,
+      array['a','b'], true));
+  perform pg_temp.must('post-lock operator checks use wall-clock authority and MFA freshness',
+    position('clock_timestamp()' in lower(pg_get_functiondef(
+      'private.assert_access_review_operator_current()'::regprocedure))) > 0
+    and position('assert_access_review_operator_current' in lower(pg_get_functiondef(
+      'public.decide_privileged_access_review_item(text,text,text)'::regprocedure))) > 0
+    and position('assert_access_review_operator_current' in lower(pg_get_functiondef(
+      'public.complete_privileged_access_review(text)'::regprocedure))) > 0);
+  perform pg_temp.must('role-grant audits use wall-clock event timestamps', coalesce((
+    select column_default ilike '%clock_timestamp%'
+      from information_schema.columns
+     where table_schema = 'public' and table_name = 'role_grant_audit_event'
+       and column_name = 'occurred_at'), false));
   perform pg_temp.must('signoff rejects incompatible legacy decision semantics', position(
     'legacy decision has an incompatible reason' in lower(pg_get_functiondef(
       'public.complete_privileged_access_review(text)'::regprocedure))) > 0);
@@ -112,6 +131,9 @@ begin
       'public.resolve_privileged_access_review_post_decision_change(text)'::regprocedure))) > 0);
   perform pg_temp.must('post-decision resolution rechecks authority after serialization', position(
     'must remain current through post-decision resolution' in lower(pg_get_functiondef(
+      'public.resolve_privileged_access_review_post_decision_change(text)'::regprocedure))) > 0);
+  perform pg_temp.must('unchanged live legacy revoke decisions cannot be resolved as changed state',
+    position('decision.decision = ''revoke'' and grant_current' in lower(pg_get_functiondef(
       'public.resolve_privileged_access_review_post_decision_change(text)'::regprocedure))) > 0);
   perform pg_temp.must('signoff evaluates grant expiry against wall-clock time after lock waits',
     position('clock_timestamp()' in lower(pg_get_functiondef(
@@ -132,6 +154,16 @@ begin
     and position('lock table public.role_grants in share mode' in lower(pg_get_functiondef(
       'public.privileged_access_review_evidence(text)'::regprocedure))) > 0
     and position('must remain current through evidence read' in lower(pg_get_functiondef(
+      'public.privileged_access_review_evidence(text)'::regprocedure))) > 0);
+  perform pg_temp.must('signed evidence readers preserve the resolution selected at signoff',
+    position('privileged_access_review_signoff_resolution' in lower(pg_get_functiondef(
+      'public.complete_privileged_access_review(text)'::regprocedure))) > 0
+    and position('privileged_access_review_signoff_resolution' in lower(pg_get_functiondef(
+      'public.privileged_access_review_evidence(text)'::regprocedure))) > 0);
+  perform pg_temp.must('signed legacy investigation evidence remains available as a fallback',
+    position('privileged_access_review_investigation_resolution legacy_x' in lower(pg_get_functiondef(
+      'public.privileged_access_review(text)'::regprocedure))) > 0
+    and position('privileged_access_review_investigation_resolution legacy_x' in lower(pg_get_functiondef(
       'public.privileged_access_review_evidence(text)'::regprocedure))) > 0);
 
   perform pg_temp.become(starter);
@@ -291,6 +323,8 @@ begin
   perform pg_temp.must('the legacy reader reports the latest state-bound investigation resolution',
     (select investigation_resolution = 'risk-accepted'
        from public.privileged_access_review(review_ref) where item_ref = investigate_item));
+  delete from public.role_capabilities
+   where role = 'data_steward' and capability = 'audit:read';
   perform pg_temp.must('a starter cannot sign the review', pg_temp.refused(starter, format(
     'select public.complete_privileged_access_review(%L)', review_ref)));
   perform pg_temp.must('an item reviewer cannot sign the review', pg_temp.refused(reviewer, format(
@@ -334,6 +368,10 @@ begin
   perform pg_temp.must('the signed ledger preserves every decision and the signoff timestamp',
     retained_n = 3 and revoked_n = 2 and investigating_n = 2
       and remediated_n = 2 and unsigned_n = 0);
+  perform pg_temp.must('signed evidence reports the investigation resolution that supported signoff',
+    (select investigation_resolution = 'remediated'
+       from public.privileged_access_review_evidence(review_ref)
+      where item_ref = investigate_item));
   select pg_get_userbyid(c.relowner) into table_owner from pg_class c
    where c.oid = 'private.privileged_access_review_decision'::regclass;
   begin

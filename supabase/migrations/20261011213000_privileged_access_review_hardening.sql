@@ -45,6 +45,11 @@ alter table private.privileged_access_review_decision
   add column if not exists remediation_applied boolean not null default false;
 alter table private.privileged_access_review_decision
   alter column remediation_applied set default false;
+
+-- Role-grant audit evidence must describe the wall-clock instant of a change,
+-- not the start time of a transaction that may have waited on review locks.
+alter table public.role_grant_audit_event
+  alter column occurred_at set default clock_timestamp();
 alter table private.privileged_access_review_decision
   drop constraint if exists privileged_access_review_decision_reason;
 alter table private.privileged_access_review_decision
@@ -104,6 +109,12 @@ create table if not exists private.privileged_access_review_investigation_state_
   unique (decision_id, observed_state_sha256)
 );
 
+create table if not exists private.privileged_access_review_signoff_resolution (
+  decision_id uuid primary key references private.privileged_access_review_decision(id) on delete restrict,
+  resolution_kind text not null check (resolution_kind in ('investigation', 'post-decision')),
+  observed_state_sha256 text not null check (observed_state_sha256 ~ '^[0-9a-f]{64}$')
+);
+
 alter table private.privileged_access_review_post_decision_resolution
   add column if not exists resolution_sequence bigint generated always as identity;
 alter table private.privileged_access_review_investigation_state_resolution
@@ -125,9 +136,11 @@ create index if not exists privileged_access_review_investigation_state_by_decis
 alter table private.privileged_access_review_remediation enable row level security;
 alter table private.privileged_access_review_post_decision_resolution enable row level security;
 alter table private.privileged_access_review_investigation_state_resolution enable row level security;
+alter table private.privileged_access_review_signoff_resolution enable row level security;
 revoke all on table private.privileged_access_review_remediation from public, anon, authenticated, service_role;
 revoke all on table private.privileged_access_review_post_decision_resolution from public, anon, authenticated, service_role;
 revoke all on table private.privileged_access_review_investigation_state_resolution from public, anon, authenticated, service_role;
+revoke all on table private.privileged_access_review_signoff_resolution from public, anon, authenticated, service_role;
 
 drop trigger if exists keep_privileged_access_review_remediation_immutable on private.privileged_access_review_remediation;
 create trigger keep_privileged_access_review_remediation_immutable
@@ -141,6 +154,10 @@ drop trigger if exists keep_privileged_access_review_investigation_state_immutab
 create trigger keep_privileged_access_review_investigation_state_immutable
   before update or delete on private.privileged_access_review_investigation_state_resolution
   for each row execute function private.refuse_privileged_access_review_change();
+drop trigger if exists keep_privileged_access_review_signoff_resolution_immutable on private.privileged_access_review_signoff_resolution;
+create trigger keep_privileged_access_review_signoff_resolution_immutable
+  before update or delete on private.privileged_access_review_signoff_resolution
+  for each row execute function private.refuse_privileged_access_review_change();
 
 create or replace function private.privileged_access_review_grant_state_sha256(
   want_subject uuid, want_role text, want_scope_kind text, want_scope_id text,
@@ -149,16 +166,46 @@ create or replace function private.privileged_access_review_grant_state_sha256(
 ) returns text language sql immutable set search_path = '' as $$
   select private.role_audit_sha256(
     case when want_subject is null then 'missing'
-      else concat_ws('|', want_subject::text, want_role, want_scope_kind, want_scope_id,
-        want_provenance, coalesce(want_granted_by::text, 'no-grantor'),
-        extract(epoch from want_granted_at)::text,
-        coalesce(extract(epoch from want_expires_at)::text, ''),
-        coalesce(extract(epoch from want_revoked_at)::text, ''),
-        array_to_string(want_capabilities, ','), want_live::text) end);
+      else jsonb_build_array(
+        want_subject::text, want_role, want_scope_kind, want_scope_id,
+        want_provenance, want_granted_by, want_granted_at, want_expires_at,
+        want_revoked_at, to_jsonb(want_capabilities), want_live)::text end);
 $$;
 revoke all on function private.privileged_access_review_grant_state_sha256(
   uuid, text, text, text, text, uuid, timestamptz, timestamptz, timestamptz, text[], boolean
 ) from public, anon, authenticated, service_role;
+
+create or replace function private.assert_access_review_operator_current()
+returns void language plpgsql volatile security definer set search_path = '' as $$
+declare claims jsonb := auth.jwt();
+begin
+  if not exists (
+    select 1
+      from public.role_grants g
+      join public.role_capabilities rc on rc.role = g.role
+     where g.subject = auth.uid()
+       and rc.capability = 'access_review:manage'
+       and g.scope_kind = 'platform' and g.scope_id = ''
+       and g.revoked_at is null
+       and (g.expires_at is null or g.expires_at > clock_timestamp())
+       and (g.role not in ('platform_admin', 'support_agent')
+         or coalesce(claims ->> 'aal' = 'aal2', false))
+  ) then
+    raise exception 'access_review:manage at platform scope must remain current.' using errcode = '42501';
+  end if;
+  if not (coalesce(claims ->> 'aal' = 'aal2', false) and exists (
+    select 1 from jsonb_array_elements(
+      case when jsonb_typeof(claims -> 'amr') = 'array' then claims -> 'amr' else '[]'::jsonb end) m
+     where m ->> 'method' in ('totp', 'webauthn', 'phone', 'mfa/totp')
+       and m ->> 'timestamp' ~ '^[0-9]+(\.[0-9]+)?$'
+       and to_timestamp((m ->> 'timestamp')::double precision)
+         >= clock_timestamp() - interval '15 minutes'
+  )) then
+    raise exception 'Fresh MFA must remain current through the access-review operation.' using errcode = '42501';
+  end if;
+end $$;
+revoke all on function private.assert_access_review_operator_current()
+  from public, anon, authenticated, service_role;
 
 -- Preserve the original privileged_access_review(text) return contract. The
 -- enriched evidence shape is published under a new name so a full migration
@@ -195,6 +242,7 @@ begin
       'next_due', want_next_due), 'access-review:' || ref);
   lock table public.role_grants in share mode;
   lock table public.role_capabilities in share mode;
+  perform private.assert_access_review_operator_current();
   if not private.has_capability('access_review:manage', 'platform', '') then
     raise exception 'access_review:manage at platform scope must remain current through review start.' using errcode = '42501';
   end if;
@@ -273,6 +321,7 @@ begin
   select g.* into grant_row from public.role_grants g where g.id = item.grant_id for update;
   grant_found := found;
   lock table public.role_capabilities in share mode;
+  perform private.assert_access_review_operator_current();
   if not private.has_capability('access_review:manage', 'platform', '') then
     raise exception 'access_review:manage at platform scope must remain current through the decision.' using errcode = '42501';
   end if;
@@ -348,6 +397,7 @@ begin
     raise exception 'A grant subject cannot resolve their own investigation.' using errcode = '42501';
   end if;
   lock table public.role_capabilities in share mode;
+  perform private.assert_access_review_operator_current();
   if not private.has_capability('access_review:manage', 'platform', '') then
     raise exception 'access_review:manage at platform scope must remain current through investigation resolution.' using errcode = '42501';
   end if;
@@ -426,6 +476,7 @@ begin
     raise exception 'A grant subject cannot resolve their own post-decision change.' using errcode = '42501';
   end if;
   lock table public.role_capabilities in share mode;
+  perform private.assert_access_review_operator_current();
   if not private.has_capability('access_review:manage', 'platform', '') then
     raise exception 'access_review:manage at platform scope must remain current through post-decision resolution.' using errcode = '42501';
   end if;
@@ -457,6 +508,10 @@ begin
     grant_found and grant_row.revoked_at is null
       and (grant_row.expires_at is null or grant_row.expires_at > clock_timestamp()));
   if (decision.decision = 'retain' and grant_current)
+     or (decision.decision = 'revoke' and grant_current and not exists (
+       select 1 from private.privileged_access_review_remediation x
+        where x.decision_id = decision.id
+     ))
      or (decision.decision = 'revoke' and exists (
        select 1 from private.privileged_access_review_remediation x
         where x.decision_id = decision.id and x.observed_state_sha256 = observed_state
@@ -519,6 +574,7 @@ begin
     jsonb_build_object('next_due', review.next_due), 'access-review:' || review.public_id);
   lock table public.role_grants in share mode;
   lock table public.role_capabilities in share mode;
+  perform private.assert_access_review_operator_current();
   if not private.has_capability('access_review:manage', 'platform', '') then
     raise exception 'access_review:manage at platform scope must remain current through signoff.' using errcode = '42501';
   end if;
@@ -611,6 +667,38 @@ begin
                    and (g.expires_at is null or g.expires_at > clock_timestamp()))))) then
     raise exception 'Every revoke decision must have an applied remediation and remain revoked at signoff.' using errcode = '23514';
   end if;
+  insert into private.privileged_access_review_signoff_resolution
+    (decision_id, resolution_kind, observed_state_sha256)
+  select d.id, 'investigation', state.observed_state
+    from private.privileged_access_review_decision d
+    join private.privileged_access_review_item i on i.id = d.item_id
+    left join public.role_grants g on g.id = i.grant_id
+    cross join lateral (select private.privileged_access_review_grant_state_sha256(
+      g.subject, g.role, g.scope_kind, g.scope_id, g.provenance, g.granted_by,
+      g.granted_at, g.expires_at, g.revoked_at,
+      array(select distinct rc.capability from public.role_capabilities rc
+        where rc.role = g.role order by rc.capability),
+      g.id is not null and g.revoked_at is null
+        and (g.expires_at is null or g.expires_at > clock_timestamp())) as observed_state) state
+   where i.review_id = review.id and d.decision = 'investigate'
+     and exists (select 1 from private.privileged_access_review_investigation_state_resolution x
+       where x.decision_id = d.id and x.observed_state_sha256 = state.observed_state);
+  insert into private.privileged_access_review_signoff_resolution
+    (decision_id, resolution_kind, observed_state_sha256)
+  select d.id, 'post-decision', state.observed_state
+    from private.privileged_access_review_decision d
+    join private.privileged_access_review_item i on i.id = d.item_id
+    left join public.role_grants g on g.id = i.grant_id
+    cross join lateral (select private.privileged_access_review_grant_state_sha256(
+      g.subject, g.role, g.scope_kind, g.scope_id, g.provenance, g.granted_by,
+      g.granted_at, g.expires_at, g.revoked_at,
+      array(select distinct rc.capability from public.role_capabilities rc
+        where rc.role = g.role order by rc.capability),
+      g.id is not null and g.revoked_at is null
+        and (g.expires_at is null or g.expires_at > clock_timestamp())) as observed_state) state
+   where i.review_id = review.id and d.decision in ('retain', 'revoke')
+     and exists (select 1 from private.privileged_access_review_post_decision_resolution z
+       where z.decision_id = d.id and z.observed_state_sha256 = state.observed_state);
   insert into private.privileged_access_review_signoff
     (review_id, signed_by_sha256, signed_at, retained, revoked, investigating)
   values (review.id, actor_hash, clock_timestamp(), keep_n, revoke_n, investigate_n);
@@ -638,21 +726,29 @@ begin
     jsonb_build_object('item_count', review.item_count), 'access-review-read:' || review.public_id);
   lock table public.role_grants in share mode;
   lock table public.role_capabilities in share mode;
+  perform private.assert_access_review_operator_current();
   if not private.has_capability('access_review:manage', 'platform', '') then
     raise exception 'access_review:manage at platform scope must remain current through review read.' using errcode = '42501';
   end if;
   return query select review.public_id, review.period_start, review.period_end, review.next_due,
     review.snapshot_at, review.started_by_sha256, i.public_id, i.subject_sha256, i.role, i.scope_kind, i.scope_id,
     i.provenance, i.granted_by_sha256, i.granted_at, i.expires_at, d.decision, d.reason_code,
-    d.decided_by_sha256, d.remediation_applied, d.decided_at, x.resolution_code,
-    x.resolved_by_sha256, x.resolved_at, s.signed_by_sha256, s.signed_at
+    d.decided_by_sha256, d.remediation_applied, d.decided_at,
+    coalesce(x.resolution_code, legacy_x.resolution_code),
+    coalesce(x.resolved_by_sha256, legacy_x.resolved_by_sha256),
+    coalesce(x.resolved_at, legacy_x.resolved_at), s.signed_by_sha256, s.signed_at
   from private.privileged_access_review_item i
   left join private.privileged_access_review_decision d on d.item_id = i.id
+  left join private.privileged_access_review_signoff s on s.review_id = i.review_id
+  left join private.privileged_access_review_signoff_resolution sr on sr.decision_id = d.id
+  left join private.privileged_access_review_investigation_resolution legacy_x on legacy_x.decision_id = d.id
   left join lateral (
     select x.* from private.privileged_access_review_investigation_state_resolution x
-     where x.decision_id = d.id order by x.resolution_sequence desc limit 1
+     where x.decision_id = d.id
+       and (s.review_id is null or (sr.resolution_kind = 'investigation'
+         and x.observed_state_sha256 = sr.observed_state_sha256))
+     order by x.resolution_sequence desc limit 1
   ) x on true
-  left join private.privileged_access_review_signoff s on s.review_id = i.review_id
   where i.review_id = review.id order by i.role, i.scope_kind, i.scope_id, i.public_id;
 end $$;
 
@@ -680,6 +776,7 @@ begin
     jsonb_build_object('item_count', review.item_count), 'access-review-read:' || review.public_id);
   lock table public.role_grants in share mode;
   lock table public.role_capabilities in share mode;
+  perform private.assert_access_review_operator_current();
   if not private.has_capability('access_review:manage', 'platform', '') then
     raise exception 'access_review:manage at platform scope must remain current through evidence read.' using errcode = '42501';
   end if;
@@ -689,20 +786,29 @@ begin
     i.provenance, i.granted_by_sha256, i.granted_at, i.expires_at, d.decision, d.reason_code,
     d.decided_by_sha256, (m.decision_id is not null), d.decided_at, m.outcome,
     m.applied_by_sha256, m.applied_at, z.resolution_code, z.resolved_by_sha256,
-    z.resolved_at, x.resolution_code,
-    x.resolved_by_sha256, x.resolved_at, s.signed_by_sha256, s.signed_at
+    z.resolved_at, coalesce(x.resolution_code, legacy_x.resolution_code),
+    coalesce(x.resolved_by_sha256, legacy_x.resolved_by_sha256),
+    coalesce(x.resolved_at, legacy_x.resolved_at), s.signed_by_sha256, s.signed_at
   from private.privileged_access_review_item i
   left join private.privileged_access_review_decision d on d.item_id = i.id
   left join private.privileged_access_review_remediation m on m.decision_id = d.id
+  left join private.privileged_access_review_signoff s on s.review_id = i.review_id
+  left join private.privileged_access_review_signoff_resolution sr on sr.decision_id = d.id
+  left join private.privileged_access_review_investigation_resolution legacy_x on legacy_x.decision_id = d.id
   left join lateral (
     select z.* from private.privileged_access_review_post_decision_resolution z
-     where z.decision_id = d.id order by z.resolution_sequence desc limit 1
+     where z.decision_id = d.id
+       and (s.review_id is null or (sr.resolution_kind = 'post-decision'
+         and z.observed_state_sha256 = sr.observed_state_sha256))
+     order by z.resolution_sequence desc limit 1
   ) z on true
   left join lateral (
     select x.* from private.privileged_access_review_investigation_state_resolution x
-     where x.decision_id = d.id order by x.resolution_sequence desc limit 1
+     where x.decision_id = d.id
+       and (s.review_id is null or (sr.resolution_kind = 'investigation'
+         and x.observed_state_sha256 = sr.observed_state_sha256))
+     order by x.resolution_sequence desc limit 1
   ) x on true
-  left join private.privileged_access_review_signoff s on s.review_id = i.review_id
   where i.review_id = review.id order by i.role, i.scope_kind, i.scope_id, i.public_id;
 end $$;
 
