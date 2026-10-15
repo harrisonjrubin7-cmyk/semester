@@ -230,6 +230,7 @@
    "private.privileged_access_review_post_decision_resolution",
    "private.privileged_access_review_remediation",
    "private.privileged_access_review_signoff",
+   "private.privileged_access_review_signoff_resolution",
    "private.ledger_chain",
    "private.ledger_chain_key",
    "private.ledger_chain_manifest",
