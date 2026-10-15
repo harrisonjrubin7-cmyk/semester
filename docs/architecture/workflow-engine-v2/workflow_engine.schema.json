@@ -768,9 +768,6 @@
             "semantics",
             "outbox_ref",
             "ack_rule",
-            "lease",
-            "retry",
-            "partition_key_ref",
             "transport"
           ],
           "allOf": [
@@ -823,7 +820,12 @@
                     "type": "string",
                     "minLength": 1
                   }
-                }
+                },
+                "required": [
+                  "lease",
+                  "retry",
+                  "partition_key_ref"
+                ]
               }
             }
           ]
@@ -1117,6 +1119,13 @@
                 "properties": {
                   "official_write": {
                     "const": true
+                  }
+                }
+              },
+              "scope": {
+                "properties": {
+                  "kind": {
+                    "const": "institution"
                   }
                 }
               },
@@ -1641,6 +1650,9 @@
             "properties": {
               "effect_status": {
                 "const": "no_effect"
+              },
+              "commit_proof_ref": {
+                "type": "null"
               }
             }
           }

@@ -42,6 +42,16 @@ The strict resolved-binding mode was not run. All bindings are still drafts, so 
 
 `commands/onboarding_command.schema.json` and `commands/registration_request.schema.json` pass Draft 2020-12 meta-validation. No instance tests exist for them yet.
 
+Review fixes (PR #1572, Codex review of 76865ba1), with the schema change checked by negative cases:
+
+- `lease`, `retry` and `partition_key_ref` are required only for `durable_queue` and `scheduled_job`. A `guarded_inline` binding validates without them.
+- A `denied` or `failed` receipt must have `commit_proof_ref: null`.
+- An `official_write` binding must have `scope.kind: institution`.
+- `workflow_engine.examples.json` gains a `waitlisted` business state, with transitions to `enrolled` and `denied`, so the state has a terminal path. The `OUTCOME_UNKNOWN` recovery path now starts from `result_unknown`.
+- Not fixed in the schema: a grant whose `approved_by` equals `requested_by`. JSON Schema cannot compare two fields' values. Activation code must reject self-approval.
+
+The uploaded validator's semantic layer assumes every binding has `lease` and `retry`. It fails on a valid `guarded_inline` binding and is not in this repository. It needs the same transport branch before it is used as a gate.
+
 `ee79049f-workflow_engine_validation_results.csv` records 55 checks, including the 17 bindings as `accept`. Its fixtures are not in this repository, so that result has not been reproduced.
 
 ## Next executable steps
@@ -52,7 +62,9 @@ The strict resolved-binding mode was not run. All bindings are still drafts, so 
 
 ## Registration recovery reference model
 
-`reference-model/` holds an in-memory model of the registration commit and recovery rules, its 22-test suite, and the 17-case REG test matrix. Run from that directory with `python3 -m unittest test_registration_recovery_reference_model`. On 2026-10-13 all 22 tests passed in a scratch copy, matching `registration_reference_test_results.csv`.
+`reference-model/` holds an in-memory model of the registration commit and recovery rules, its 24-test suite, and the 17-case REG test matrix. Run from that directory with `python3 -m unittest test_registration_recovery_reference_model`. All 24 tests pass in the repository. `registration_reference_test_results.csv` is regenerated from that run and names the committed module.
+
+The review fixes added or changed these tests first: same-key retry after confirmed no-commit, capacity scoped by tenant and section, and redelivery after revocation observing the prior result. Each failed before its model fix.
 
 Scope limits: these tests cover abstract contract behaviour only. Every matrix row is "not run" against the real authority adapter, database and row-level security, worker, provider or sandbox. Several checks are thin: the swap, withdrawal and authority-drift tests assert on constant return values, so they confirm the stub rather than the rule. The compiled `.pyc` in the upload was not loaded.
 

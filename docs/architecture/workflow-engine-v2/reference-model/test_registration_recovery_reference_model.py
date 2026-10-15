@@ -69,6 +69,8 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual(m.reconcile(r['key'], definitive=False)['state'], 'result_unknown')
         self.assertEqual(m.reconcile(r['key'], definitive=True)['state'], 'failed')
         self.assertFalse(m.authoritative)
+        self.assertEqual(self.submit(m)['state'], 'committed')
+        self.assertEqual(len(m.authoritative), 1)
 
     def test_REG_10_projection_repair(self):
         m = RegistrationModel()
@@ -126,9 +128,19 @@ class RecoveryTests(unittest.TestCase):
     def test_scoped_same_key_not_shared(self):
         m = RegistrationModel(capacity=2)
         a = m.submit('u1', 'tenant-a', 'same-key', {'section': 's1'})
-        b = m.submit('u2', 'tenant-b', 'same-key', {'section': 's1'})
+        b = m.submit('u1', 'tenant-b', 'same-key', {'section': 's1'})
+        self.assertEqual(a['state'], 'committed')
+        self.assertEqual(b['state'], 'committed')
         self.assertNotEqual(a['key'], b['key'])
         self.assertEqual(len(m.authoritative), 2)
+
+    def test_capacity_scoped_by_tenant_and_section(self):
+        m = RegistrationModel(capacity=1)
+        self.assertEqual(m.submit('u1', 'tenant-a', 'k1', {'section': 's1'})['state'], 'committed')
+        self.assertEqual(m.submit('u2', 'tenant-b', 'k2', {'section': 's1'})['state'], 'committed')
+        self.assertEqual(m.submit('u3', 'tenant-a', 'k3', {'section': 's2'})['state'], 'committed')
+        self.assertEqual(m.submit('u4', 'tenant-a', 'k4', {'section': 's1'})['state'], 'waitlisted')
+        self.assertEqual(len(m.authoritative), 3)
 
 class WorkerTests(unittest.TestCase):
     def test_duplicate_delivery_one_effect(self):
@@ -148,6 +160,12 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(w.apply('e1', token, approved=False), 'denied')
         self.assertEqual(w.effects, 0)
         self.assertFalse(w.receipts)
+
+    def test_redelivery_after_revocation_observes_prior_result(self):
+        w = WorkerReferenceModel(); token = w.claim()
+        self.assertEqual(w.apply('e1', token), 'committed')
+        self.assertEqual(w.apply('e1', token, approved=False), 'duplicate')
+        self.assertEqual(w.effects, 1)
 
 if __name__ == '__main__':
     unittest.main()

@@ -26,7 +26,9 @@ class RegistrationModel:
             if existing:
                 if existing['hash'] != digest:
                     return {'state': 'conflict', 'effects': 0}
-                return dict(existing)
+                if not existing.get('confirmed_no_commit'):
+                    return dict(existing)
+                # Authority proved no commit: a same-key retry re-enters the checks above.
             if not c.get('window_open', True) or not c.get('ticket_open', True):
                 return {'state': 'denied', 'effects': 0}
             if c.get('hold', False):
@@ -45,7 +47,10 @@ class RegistrationModel:
             if fault == 'timeout_before':
                 cmd.update(state='result_unknown')
                 return dict(cmd)
-            if len(self.authoritative) >= self.capacity:
+            scope = (tenant, payload.get('section'))
+            occupied = sum(1 for kk, rec in self.authoritative.items()
+                           if (kk[0], rec['payload'].get('section')) == scope)
+            if occupied >= self.capacity:
                 cmd.update(state='waitlisted')
                 return dict(cmd)
             self.authoritative[k] = {'receipt': 'authority:' + str(len(self.authoritative) + 1),
@@ -108,10 +113,10 @@ class WorkerReferenceModel:
     def apply(self, event_id, fence, approved=True):
         if fence != self.fence:
             return 'stale_lease'
-        if not approved:
-            return 'denied'
         if event_id in self.inbox:
             return 'duplicate'
+        if not approved:
+            return 'denied'
         self.inbox.add(event_id)
         self.effects += 1
         self.receipts.append({'kind': 'committed', 'event': event_id})

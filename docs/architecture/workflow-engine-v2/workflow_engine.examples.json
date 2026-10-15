@@ -33,7 +33,8 @@
       "business": [
         "requested",
         "enrolled",
-        "denied"
+        "denied",
+        "waitlisted"
       ],
       "execution": [
         "queued",
@@ -98,6 +99,39 @@
         "id": "business.requested.denied",
         "track": "business",
         "from": "requested",
+        "to": "denied",
+        "step_id": "commit",
+        "guard_refs": [
+          "proposed:server-transition-guard"
+        ],
+        "audit_event": "registration.denied"
+      },
+      {
+        "id": "business.requested.waitlisted",
+        "track": "business",
+        "from": "requested",
+        "to": "waitlisted",
+        "step_id": "commit",
+        "guard_refs": [
+          "proposed:server-transition-guard"
+        ],
+        "audit_event": "registration.waitlisted"
+      },
+      {
+        "id": "business.waitlisted.enrolled",
+        "track": "business",
+        "from": "waitlisted",
+        "to": "enrolled",
+        "step_id": "commit",
+        "guard_refs": [
+          "proposed:server-transition-guard"
+        ],
+        "audit_event": "registration.enrolled"
+      },
+      {
+        "id": "business.waitlisted.denied",
+        "track": "business",
+        "from": "waitlisted",
         "to": "denied",
         "step_id": "commit",
         "guard_refs": [
@@ -210,7 +244,7 @@
         "code": "OUTCOME_UNKNOWN",
         "trigger": "Dispatch timeout",
         "from_execution_states": [
-          "running"
+          "result_unknown"
         ],
         "to_execution_state": "reconciling",
         "retry_class": "safe_same_key",
