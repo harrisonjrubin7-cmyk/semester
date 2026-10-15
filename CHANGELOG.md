@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Academic-record proposals explain withdrawal before leaving the queue
+
+Staff who proposed a pending grade, enrollment or other academic-record change now see its exact student, record field, value and effective date before withdrawing it. The preview explains that the proposal leaves the independent decision queue, while the student’s current record, record history and other proposals remain unchanged. Cancel submits nothing. A withdrawn proposal cannot be reopened; seeking the same change later requires a new reasoned proposal and independent approval.
+
 ### Operators can inspect Semester as one connected ecosystem
 
 For operators holding the console grant, **Semester Operations** now has a read-only **Connected ecosystem** tab after **Finance model**. It maps the supplied Personal Education OS, Institution Operating OS and Semester Company OS into one platform view, and lets an operator inspect all 26 workspace, 281 screen and 122 capability contracts. The view labels the handoff as specification evidence and does not claim that a provider, institution, data connection or privileged operation is authorized or enabled. Students and school administrators will notice nothing.

@@ -182,13 +182,30 @@ describe('proposing', () => {
     expect(host.textContent).toContain('Your proposals waiting for a decision');
   });
 
-  it('lets the proposer withdraw their own', async () => {
+  it('previews withdrawal, writes nothing on cancel, then withdraws the exact proposal after confirmation', async () => {
     const api = fake(PROF, false);
     await mount(api, professor);
     await openRecord();
     await click(button(/^Withdraw$/));
+
+    expect(api.withdraw).not.toHaveBeenCalled();
+    let dialog = host.querySelector('[role="dialog"]')!;
+    expect(dialog.textContent).toContain('Withdraw this proposed grade change?');
+    expect(dialog.textContent).toContain('PSCI 2100 · Fall 2026');
+    expect(dialog.textContent).toContain('A-');
+    expect(dialog.textContent).toContain('The student’s current academic record, its history and other pending proposals stay unchanged');
+    expect(dialog.textContent).toContain('This proposal cannot be reopened');
+    await click(button(/^Cancel$/));
+    expect(api.withdraw).not.toHaveBeenCalled();
+    expect(host.textContent).toContain('Your proposals waiting for a decision');
+
+    await click(button(/^Withdraw$/));
+    dialog = host.querySelector('[role="dialog"]')!;
+    await click([...dialog.querySelectorAll('button')].find((candidate) => candidate.textContent?.trim() === 'Withdraw proposal'));
     expect(api.withdraw).toHaveBeenCalledTimes(1);
+    expect(api.withdraw).toHaveBeenCalledWith(expect.stringMatching(/^c/));
     expect(host.textContent).not.toContain('Your proposals waiting for a decision');
+    expect(host.textContent).toContain('Proposal withdrawn. The student’s academic record was not changed.');
   });
 });
 

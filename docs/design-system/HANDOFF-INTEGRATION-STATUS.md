@@ -1,10 +1,18 @@
 # Handoff integration status
 
-**Automation pass** 1 of 120 · **Integration slice** 91 · **Date** 2026-10-12 · **Branch** `codex/handoff-integration-slice-91` · **Slice base** `d2d1db59` · **Latest observed `origin/main`** `d2d1db59`
+**Automation pass** 1 of 120 · **Integration slice** 92 · **Date** 2026-10-15 · **Branch** `codex/handoff-integration-slice-92` · **Slice base** `2106fa1a` · **Latest observed `origin/main`** `2106fa1a`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Current Phase 2/3/4 consequence work now also provides truthful, student-confirmed Research Studio removals and validated account-scoped device-workspace recovery for both Toolkit stores alongside claimed-family, unused-code, advisor and athletic-share revocation controls and governed private-workspace removals. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 1 / integration slice 92
+
+- The clean continuation branch starts at current `origin/main` `2106fa1a`. Fresh current-code ranking found that Drive purge, device erase and Toolkit deletion paths are already governed, while an academic-record proposer’s **Withdraw** action still removed a pending change from the independent decision queue on first press.
+- Withdrawal now opens the shared `ConfirmDialog` and `ActionPreview`. It names the exact student, record kind, subject, proposed value and effective date; says the proposal leaves the decision queue; distinguishes the unchanged current academic record, record history and other proposals; and explains that a withdrawn proposal cannot be reopened but the same change can be proposed again with a fresh reason.
+- Cancel receives initial focus and performs no RPC. Only explicit **Withdraw proposal** confirmation calls the unchanged receipt-checked `RecordApi.withdraw` operation with the exact proposal id. Server ownership/RLS, independent approval, append-only record history and failure reporting remain authoritative and unchanged.
+- The behavioral guard failed against the prior first-press write. After implementation, RecordLedger, record-domain, `ActionPreview`, modal and root-unmount coverage passes 39/39; the changed component and test pass Oxlint, TypeScript passes and the diff has no whitespace errors.
+- Local HawkScan cannot start because `hawk runtime=false`, Docker is unavailable and `HAWK_API_KEY`/`HAWK_APP_HOST` are unset; no local DAST result is claimed. A hosted exact-head HawkScan remains required before merge. No route, dependency, schema, policy, server operation, provider configuration, deployment, production data or external system changed.
 
 ## Evidence locked in automation pass 1 / integration slice 91
 
