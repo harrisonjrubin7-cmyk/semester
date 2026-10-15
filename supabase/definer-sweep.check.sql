@@ -204,6 +204,7 @@ declare
     'my_moderation_access',        jsonb_build_object('answers', '^1 rows: \{"can_act": false, "can_read": false\}$', 'why', 'the caller''s own two capabilities, both false'),
     'note_activity',               jsonb_build_object('answers', '^done$', 'why', 'marks the caller''s own day'),
     'referral_standing',           jsonb_build_object('answers', '^1 rows: ', 'why', 'the caller''s own code and counts; the leak check holds it to the caller'),
+    'revoke_my_session',           jsonb_build_object('answers', '^1 rows: \{"outcome": "refused", "occurred_at": "[^"]+"\}$', 'why', 'without a current-session claim, refuses the caller''s own command with fixed metadata and changes no session'),
     'state_my_age',                jsonb_build_object('answers', '^"(already_stated|under_minimum_age)"$', 'why', 'states the caller''s own age, once; check.sh records the stranger as an adult who already said'),
     'stop_contributing',           jsonb_build_object('answers', '^done$', 'why', 'withdraws the caller''s own course plan')
   );
