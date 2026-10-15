@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Revoking volunteer access shows the consequences first
+
+Senior Trust & Safety reviewers now see a preview before revoking a student volunteer. It names the volunteer, says their moderation access ends immediately, identifies the unanswered review actions that will leave their queue, shows the reason that will be kept in programme history, and says the action cannot be undone by sending them back to calibration. The reviewer must type the volunteer handle before **Revoke access** is available. Cancel changes nothing; other volunteers, moderation cases, completed reviews and school settings are unchanged.
+
 ### Workspace links now open the connected tools that already exist
 
 The app directory now has **Your workspaces** with direct links to Teaching and University services while preserving the current account and university. Server-reported grants add **Semester Operations** only for platform operators and **External listings** only for the current university. Permission checks show loading, empty, failed and retry states separately; changing accounts discards old capability and course-policy results. Company, investor and developer workflows remain explicitly unavailable rather than appearing as placeholder workspaces.
