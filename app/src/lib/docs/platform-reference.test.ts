@@ -1258,7 +1258,7 @@ describe('EVENTS.md and its schemas (generated)', () => {
     const all = groups.flatMap((g) => g.types);
     expect(new Set(all).size).toBe(all.length);
     expect(diff(all, Object.keys(EVENT_TYPES))).toEqual(NONE);
-    expect(all.length).toBe(65);
+    expect(all.length).toBe(66);
   });
 
   it('every extracted rejection reason has a stated rule, and no rule is orphaned', () => {

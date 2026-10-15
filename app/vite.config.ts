@@ -780,6 +780,7 @@ const MOCKS_MODULES = [
   'src/components/PrivilegedMfaBoundary.test.tsx',
   'src/lib/console/client.test.ts',
   'src/lib/console/workspaces.test.ts',
+  'src/lib/devices.test.ts',
   'src/lib/support-case-client.test.ts',
   'src/screens/registration.test.tsx',
   'src/screens/me.operations.test.tsx',
