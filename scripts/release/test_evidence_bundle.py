@@ -83,6 +83,18 @@ class EvidenceTests(unittest.TestCase):
         self.b["target"]["data_mode"] = "connected"
         self.reject()
 
+    def test_tenant_id_must_be_uuid(self):
+        self.b["target"]["data_mode"] = "connected"
+        for bad in (123, "", "not-a-uuid"):
+            with self.subTest(tenant_id=bad):
+                self.b["target"]["tenant_id"] = bad
+                self.b["artifacts"][0]["target"] = copy.deepcopy(self.b["target"])
+                self.reject()
+        good = "8f14e45f-ceea-467f-a0e0-2e4b8d7f3a10"
+        self.b["target"]["tenant_id"] = good
+        self.b["artifacts"][0]["target"] = copy.deepcopy(self.b["target"])
+        self.assertEqual(validate(self.b, self.base)["integrity"], "passed")
+
     def test_scope(self):
         del self.b["target"]["cohort"]
         self.reject()

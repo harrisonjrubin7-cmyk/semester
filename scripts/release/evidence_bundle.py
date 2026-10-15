@@ -10,6 +10,9 @@ import re
 from pathlib import Path
 
 
+UUID_PATTERN = r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+
+
 class EvidenceError(ValueError):
     pass
 
@@ -30,7 +33,10 @@ def validate(bundle, base):
         raise EvidenceError("Invalid environment")
     if target["data_mode"] not in ("synthetic", "manual", "connected"):
         raise EvidenceError("Invalid data mode")
-    if target["data_mode"] != "synthetic" and not target.get("tenant_id"):
+    tenant = target.get("tenant_id")
+    if tenant is not None and not (isinstance(tenant, str) and re.fullmatch(UUID_PATTERN, tenant)):
+        raise EvidenceError("Invalid tenant ID")
+    if target["data_mode"] != "synthetic" and tenant is None:
         raise EvidenceError("Tenant required for non-synthetic data")
     artifacts = bundle.get("artifacts")
     if not isinstance(artifacts, list) or not artifacts:

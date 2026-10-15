@@ -3,6 +3,8 @@ node_modules
 **/node_modules
 **/.env
 **/.env.*
+# Public, committed production build values (VITE_* only); the build needs them.
+!app/.env.production
 .vercel
 output
 **/work

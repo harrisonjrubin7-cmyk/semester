@@ -25,13 +25,17 @@ python3 scripts/release/evidence_bundle.py "$EVIDENCE_MANIFEST"
 
 environment=production
 [[ "$action" != preview ]] || environment=preview
+if [[ "$action" == promote || "$action" == rollback ]]; then
+  : "${DEPLOYMENT_ID_OR_URL:?Deployment ID or URL required for $action}"
+fi
 request=$(mktemp); trap 'rm -f "$request"' EXIT
-python3 - "$request" "$EVIDENCE_MANIFEST" "$sha" "$environment" "$action" "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" <<'PY'
+# Explicit checks, not assert: assert is stripped under PYTHONOPTIMIZE.
+python3 - "$request" "$EVIDENCE_MANIFEST" "$sha" "$environment" "$action" "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" "${DEPLOYMENT_ID_OR_URL:-}" <<'PY'
 import json,sys
 b=json.load(open(sys.argv[2]))
-assert b['target']['commit_sha']==sys.argv[3], 'Candidate mismatch'
-assert b['target']['environment']==sys.argv[4], 'Environment mismatch'
-json.dump(dict(action=sys.argv[5],target=b['target'],org_id=sys.argv[6],project_id=sys.argv[7]),open(sys.argv[1],'w'))
+if b['target']['commit_sha']!=sys.argv[3]: sys.exit('Candidate mismatch')
+if b['target']['environment']!=sys.argv[4]: sys.exit('Environment mismatch')
+json.dump(dict(action=sys.argv[5],target=b['target'],org_id=sys.argv[6],project_id=sys.argv[7],deployment=sys.argv[8]),open(sys.argv[1],'w'))
 PY
 
 # Authenticated canonical evaluator adapter: operation, target/config, exact
@@ -46,7 +50,7 @@ case "$action" in
     : "${DEPLOYMENT_ID_OR_URL:?}" "${ROLLOUT_MODE:?}"
     case "$ROLLOUT_MODE" in
       instant) "$VERCEL_CLI" promote "$DEPLOYMENT_ID_OR_URL" --token "$VERCEL_TOKEN" ;;
-      rolling) "$VERCEL_CLI" rolling-release start --dpl="$DEPLOYMENT_ID_OR_URL" --token "$VERCEL_TOKEN" ;;
+      rolling) "$VERCEL_CLI" rolling-release start --dpl="$DEPLOYMENT_ID_OR_URL" --token "$VERCEL_TOKEN" --yes ;;
       *) exit 2 ;;
     esac ;;
   rollback)
