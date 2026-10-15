@@ -105,7 +105,9 @@ export function validateActivationGates(snapshot: RegistrySnapshot): ValidationI
     const decision: Partial<ActivationGate['decision']> | null | undefined = gate.decision;
     const record: unknown = decision?.record;
     const hasDecision = isRepositoryPath(record);
-    if (typeof record === 'string' && record.trim() !== '' && !hasDecision) {
+    // Hand-edited JSON can carry any type here: anything present that is not a repository path is reported, not skipped.
+    const hasRecordValue = record !== undefined && record !== null && !(typeof record === 'string' && record.trim() === '');
+    if (hasRecordValue && !hasDecision) {
       issues.push({ code: 'gate_decision_path_invalid', path: `${path}.decision.record`, message: `Decision record must be a repository-relative path, not ${JSON.stringify(record)}.` });
     }
     const expected = allPassed && hasDecision ? 'ready' : 'not_ready';

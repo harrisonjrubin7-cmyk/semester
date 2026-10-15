@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { symlink, unlink } from 'node:fs/promises';
+import { mkdir, rm, symlink, unlink, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import test from 'node:test';
 import { loadRegistry, repositoryRoot } from '../scripts/registry-io.ts';
@@ -141,6 +141,30 @@ test('gate evidence must name a file, not a directory', async () => {
 test('decision records must be repository-contained paths', () => {
   const outside = gate({ status: 'ready', required: allPassed(), decision: { record: '/etc/passwd', approvers: [...GATE_APPROVERS] } });
   assert.ok(codes(snapshot([outside])).includes('gate_decision_path_invalid'));
+});
+
+test('a non-string decision record is reported even on a not_ready gate', () => {
+  for (const record of [42, {}, true]) {
+    const bad = gate({ decision: { record, approvers: [...GATE_APPROVERS] } } as Partial<ActivationGate>);
+    assert.ok(codes(snapshot([bad])).includes('gate_decision_path_invalid'), `expected ${JSON.stringify(record)} to be rejected`);
+  }
+});
+
+test('gate evidence and decision records may not point into git metadata', async () => {
+  // A fixture .git file: clones have a directory and worktrees a file, so the test does not depend on which.
+  const metadata = 'packages/platform-control/tests/.git-metadata-fixture/.git';
+  await mkdir(resolve(repositoryRoot, metadata, '..'), { recursive: true });
+  await writeFile(resolve(repositoryRoot, metadata), 'gitdir: fixture\n');
+  try {
+    const bad = gate({
+      status: 'ready', required: items(Object.fromEntries(REQUIRED_GATE_ITEMS.map((id) => [id, { status: 'passed' as const, evidence: [metadata] }]))),
+      decision: { record: metadata, approvers: [...GATE_APPROVERS] },
+    });
+    const issues = await validateEvidence(snapshot([bad]));
+    assert.ok(issues.some(({ code, path }) => code === 'gate_evidence_repository_metadata' && path === metadata));
+  } finally {
+    await rm(resolve(repositoryRoot, metadata, '..'), { recursive: true, force: true });
+  }
 });
 
 test('malformed gates are reported by full snapshot validation, not thrown', async () => {

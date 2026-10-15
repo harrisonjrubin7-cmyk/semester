@@ -37,6 +37,11 @@ export async function validateEvidence(snapshot: RegistrySnapshot): Promise<Vali
     try { await access(resolve(repositoryRoot, path)); }
     catch { issues.push({ code: 'missing_evidence_path', path, message: 'Evidence path does not exist in the repository.' }); continue; }
     if (!gatePaths.has(path)) continue;
+    // Gate evidence is retained repository content: git metadata is present in every clone but is not an artifact.
+    if (path.split(/[\\/]/).includes('.git')) {
+      issues.push({ code: 'gate_evidence_repository_metadata', path, message: 'Gate evidence must be repository content, not git metadata.' });
+      continue;
+    }
     // Resolve symlinks: a repository-relative name must not reach a file outside the repository.
     const target = await realpath(resolve(repositoryRoot, path));
     const root = await realpath(repositoryRoot);
