@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 1 of 120 · **Integration slice** 92 · **Date** 2026-10-15 · **Branch** `codex/handoff-integration-slice-92` · **Slice base** `2106fa1a` · **Latest observed `origin/main`** `2106fa1a`
+**Automation pass** 1 of 120 · **Integration slice** 92 · **Date** 2026-10-15 · **Branch** `codex/handoff-integration-slice-92` · **Slice base** `2106fa1a` · **Latest observed `origin/main`** `c9723f05`
 
 ## State
 
@@ -8,10 +8,10 @@ Phase 0 reconciliation is complete for the archive populations and includes the 
 
 ## Evidence locked in automation pass 1 / integration slice 92
 
-- The clean continuation branch starts at current `origin/main` `2106fa1a`. Fresh current-code ranking found that Drive purge, device erase and Toolkit deletion paths are already governed, while an academic-record proposer’s **Withdraw** action still removed a pending change from the independent decision queue on first press.
+- The clean continuation branch started at `origin/main` `2106fa1a`. Final reconciliation merged current `origin/main` `c9723f05`; its platform-control activation gate and privileged-access review hardening do not overlap this slice. Fresh current-code ranking found that Drive purge, device erase and Toolkit deletion paths are already governed, while an academic-record proposer’s **Withdraw** action still removed a pending change from the independent decision queue on first press.
 - Withdrawal now opens the shared `ConfirmDialog` and `ActionPreview`. It names the exact student, record kind, subject, proposed value and effective date; says the proposal leaves the decision queue; distinguishes the unchanged current academic record, record history and other proposals; and explains that a withdrawn proposal cannot be reopened but the same change can be proposed again with a fresh reason.
 - Cancel receives initial focus and performs no RPC. Only explicit **Withdraw proposal** confirmation calls the unchanged receipt-checked `RecordApi.withdraw` operation with the exact proposal id. Server ownership/RLS, independent approval, append-only record history and failure reporting remain authoritative and unchanged.
-- The behavioral guard failed against the prior first-press write. After implementation, RecordLedger, record-domain, `ActionPreview`, modal and root-unmount coverage passes 39/39; the changed component and test pass Oxlint, TypeScript passes and the diff has no whitespace errors.
+- The behavioral guard failed against the prior first-press write. After final upstream reconciliation, RecordLedger, record-domain, `ActionPreview`, modal and root-unmount coverage passes 39/39; the changed component and test pass Oxlint, TypeScript passes and the diff has no whitespace errors.
 - Local HawkScan cannot start because `hawk runtime=false`, Docker is unavailable and `HAWK_API_KEY`/`HAWK_APP_HOST` are unset; no local DAST result is claimed. A hosted exact-head HawkScan remains required before merge. No route, dependency, schema, policy, server operation, provider configuration, deployment, production data or external system changed.
 
 ## Evidence locked in automation pass 1 / integration slice 91
