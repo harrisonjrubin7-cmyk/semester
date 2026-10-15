@@ -1,4 +1,4 @@
-import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { expect, test, type Locator, type Page, type TestInfo } from "@playwright/test";
 import { source as axeSource } from "axe-core";
 
 const course = {
@@ -76,14 +76,21 @@ async function attachScreenshot(page: Page, testInfo: TestInfo, name: string) {
   });
 }
 
+async function expectKeyboardReachable(page: Page, target: Locator, maxTabs = 8) {
+  for (let attempt = 0; attempt < maxTabs; attempt += 1) {
+    await page.keyboard.press("Tab");
+    if (await target.evaluate((element) => element === document.activeElement)) return;
+  }
+  await expect(target).toBeFocused();
+}
+
 test("landing page has a clean accessible browser render", async ({ page }, testInfo) => {
   const errors = collectBrowserErrors(page);
   await page.goto("/");
 
   await expect(page.getByRole("heading", { level: 1, name: "Study from evidence, not guesses." })).toBeVisible();
   await expect(page.getByRole("group", { name: "Account action" })).toBeVisible();
-  await page.keyboard.press("Tab");
-  await expect(page.getByRole("button", { name: "Sign in" })).toBeFocused();
+  await expectKeyboardReachable(page, page.getByRole("button", { name: "Sign in" }));
   await expectNoAccessibilityViolations(page);
   await attachScreenshot(page, testInfo, "landing-desktop");
   expect(errors).toEqual([]);

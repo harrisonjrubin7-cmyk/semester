@@ -137,6 +137,30 @@ export interface RegistrySnapshot {
   manifests?: PlatformManifest[];
   /** Optional while focused validator tests construct bounded snapshots. Full registry validation requires the pilot scope roster. */
   workspaces?: WorkspaceRecord[];
+  /** Optional while focused validator tests construct bounded snapshots. Full registry validation requires one gate per gated capability. */
+  activationGates?: ActivationGate[];
+}
+
+export const GATE_ITEM_STATUSES = ['passed', 'not_verified', 'failed'] as const;
+export type GateItemStatus = (typeof GATE_ITEM_STATUSES)[number];
+
+export interface ActivationGateItem {
+  id: string;
+  area: string;
+  status: GateItemStatus;
+  evidence: string[];
+  gap: string;
+}
+
+export interface ActivationGate {
+  key: string;
+  capability: string;
+  name: string;
+  owner: string;
+  /** Derived, never hand-set: `ready` only when every required item passed and a decision record exists. */
+  status: 'not_ready' | 'ready';
+  decision: { record: string | null; approvers: string[] };
+  required: ActivationGateItem[];
 }
 
 export interface ValidationIssue {
