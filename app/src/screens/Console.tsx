@@ -14,12 +14,12 @@ import {
   openSupportGrants,
   savePreference,
   sessionExpiry,
+  type ApprovalRequest,
   type MfaLevel,
   type SupportGrant,
 } from '../lib/console/client';
 import { MfaStep } from '../components/MfaStep';
 import { ContextBar } from '../components/console/ContextBar';
-import { Approvals } from '../components/console/Approvals';
 import { BreakGlass } from '../components/console/BreakGlass';
 import { Audit } from '../components/console/Audit';
 import { Customers } from '../components/console/Customers';
@@ -33,7 +33,7 @@ import { TenantOperations } from '../components/console/TenantOperations';
 import { PrivacyRequests } from '../components/console/PrivacyRequests';
 import { IntegrationHealth } from '../components/console/IntegrationHealth';
 import { ReleaseIncidents } from '../components/console/ReleaseIncidents';
-import { said, when } from '../components/console/Fields';
+import { matches, said, when } from '../components/console/Fields';
 import {
   isConsoleWorkspaceId,
   visibleConsoleWorkspaces,
@@ -67,6 +67,8 @@ const Releases = lazy(() => import('../components/console/Releases').then((m) =>
 const Launch = lazy(() => import('../components/console/Launch').then((m) => ({ default: m.Launch })));
 const Controls = lazy(() => import('../components/console/Controls').then((m) => ({ default: m.Controls })));
 const FinancialModel = lazy(() => import('../finance/FinancialModel').then((m) => ({ default: m.FinancialModel })));
+// Approval confirmation and receipt code is needed only after the operator opens this workspace.
+const Approvals = lazy(() => import('../components/console/Approvals').then((m) => ({ default: m.Approvals })));
 const Ecosystem = lazy(() => import('../components/console/Ecosystem').then((m) => ({ default: m.Ecosystem })));
 
 const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures, release flags and evidence — for operators holding console:operate.';
@@ -111,7 +113,7 @@ export function Console() {
       </Page>
     );
   }
-  return <Operations operator={account.email} grants={grants} />;
+  return <Operations key={account.id} operator={account.email} grants={grants} />;
 }
 
 function Operations({ operator, grants }: { operator: string; grants: Grant[] }) {
@@ -125,9 +127,11 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
   const [session, setSession] = useState<Date | null | string>(null);
   const [support, setSupport] = useState<SupportGrant[] | null | string>(null);
   const [status, setStatus] = useState('');
-  const [gate, setGate] = useState<{ run: () => Promise<void> } | null>(null);
+  const [gate, setGate] = useState<{ run: () => Promise<void>; onCancel?: () => void } | null>(null);
   const [gateRunning, setGateRunning] = useState(false);
   const [now, setNow] = useState(() => new Date());
+  const [approvalReviewId, setApprovalReviewId] = useState<string | null>(null);
+  const [commandRefresh, setCommandRefresh] = useState(0);
 
   const onStatus = useCallback((s: string) => setStatus(s), []);
 
@@ -189,6 +193,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
   }, [mfaKnown, workspaces]);
 
   const choose = (next: ConsoleWorkspaceId) => {
+    if (next === 'approvals') setApprovalReviewId(null);
     setTab(next);
     savePreference(PREF_TAB, next).catch((e: unknown) => setStatus(said(e, 'The last-open tab was not saved.')));
   };
@@ -201,15 +206,29 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
     );
   };
 
+  const reviewApproval = useCallback((requestId: string, tenantId: string | null) => {
+    setApprovalReviewId(requestId);
+    if (tenantId) setScope(tenantId);
+    setTab('approvals');
+    savePreference(PREF_TAB, 'approvals').catch((e: unknown) => setStatus(said(e, 'The last-open tab was not saved.')));
+  }, []);
+
+  const alignApprovalReview = useCallback((request: ApprovalRequest) => {
+    if (request.tenantId && scope !== request.tenantId) setScope(request.tenantId);
+    if (filter && !matches(filter, request.dutyId, request.ticket, request.target, request.tenantId, request.status)) {
+      setFilter('');
+    }
+  }, [filter, scope]);
+
   /** A privileged write: straight through when the second factor is fresh, otherwise behind the step. */
   const privileged = useCallback(
-    (run: () => Promise<void>) => {
+    (run: () => Promise<void>, onCancel?: () => void) => {
       const fresh = mfa !== null && typeof mfa !== 'string' && mfaFresh(mfa, new Date());
       if (fresh) {
         run().catch((e: unknown) => setStatus(said(e, 'The change was not recorded.')));
         return;
       }
-      setGate({ run });
+      setGate({ run, onCancel });
     },
     [mfa],
   );
@@ -225,6 +244,12 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
         setGate(null);
         setGateRunning(false);
       });
+  };
+
+  const cancelGate = () => {
+    const cancelled = gate;
+    setGate(null);
+    cancelled?.onCancel?.();
   };
 
   const sessionEnds = session instanceof Date ? `At session end, ${when(session.toISOString())}` : 'At session end';
@@ -253,7 +278,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       )}
       {gate && (gateRunning
         ? <p role="status">Finishing the verified change…</p>
-        : <MfaStep onVerified={verified} onCancel={() => setGate(null)} />)}
+        : <MfaStep onVerified={verified} onCancel={cancelGate} />)}
       <div
         data-console-content
         inert={gate ? true : undefined}
@@ -272,9 +297,19 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       </div>
       <TabList label="Console views" className="portal-tabs" value={tab} onChange={choose} tabs={workspaces} />
       <div style={{ marginTop: 'var(--sp-5)' }}>
-        {tab === 'command' && <CommandCenter {...viewProps} />}
+        {tab === 'command' && <CommandCenter {...viewProps} onReviewApproval={reviewApproval} refreshToken={commandRefresh} />}
         {tab === 'support' && <SupportQueue {...viewProps} />}
-        {tab === 'approvals' && <Approvals {...viewProps} />}
+        {tab === 'approvals' && (
+          <Suspense fallback={<p role="status">Loading approvals…</p>}>
+            <Approvals
+              {...viewProps}
+              reviewRequestId={approvalReviewId}
+              onExitReview={() => setApprovalReviewId(null)}
+              onReviewFound={alignApprovalReview}
+              onQueueRefresh={() => setCommandRefresh((value) => value + 1)}
+            />
+          </Suspense>
+        )}
         {tab === 'breakglass' && <BreakGlass {...viewProps} />}
         {tab === 'audit' && <Audit {...viewProps} />}
         {tab === 'tenant-operations' && <TenantOperations {...viewProps} now={now} />}

@@ -251,6 +251,14 @@ const NOT_CONTENT = new Set([
    * `OWNED_TABLES` only so Delete my account removes it.
    */
   'operator_preference',
+  /*
+   * An operations approver's immutable decision receipt
+   * (`lib/console/client.ts`, `20260929110000_console_approvals_and_break_glass.sql`).
+   * It is governance evidence recorded only through `decide_approval`, not
+   * academic work an LTI-created account could strand. It is in
+   * `OWNED_TABLES` because account deletion cascades the approver's receipts.
+   */
+  'approval_decision',
 ]);
 
 /**

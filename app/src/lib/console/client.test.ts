@@ -38,7 +38,7 @@ function chain(kind: 'rpc' | 'from', name: string, args?: unknown) {
   const self: Record<string, unknown> = {
     then: (ok: (r: Reply) => unknown, bad?: (e: unknown) => unknown) => Promise.resolve(reply()).then(ok, bad),
   };
-  for (const m of ['select', 'order', 'in', 'upsert', 'eq']) {
+  for (const m of ['select', 'order', 'in', 'upsert', 'eq', 'limit']) {
     self[m] = (...a: unknown[]) => {
       call.chain.push(`${m}(${a.map((x) => JSON.stringify(x)).join(',')})`);
       return self;
@@ -62,6 +62,7 @@ import {
   decideApproval,
   holdsConsole,
   loadApprovals,
+  loadOwnApprovalDecision,
   loadAudit,
   loadCustomers,
   loadDuties,
@@ -192,6 +193,50 @@ describe('duties and approvals', () => {
     replies.set('rpc:decide_approval', { data: 'approved' });
     expect(await decideApproval('req-9', 'approve')).toBe('approved');
     expect(last()).toMatchObject({ name: 'decide_approval', args: { want_request: 'req-9', want_decision: 'approve' } });
+  });
+
+  it('reads only the remotely verified caller\'s exact immutable decision fields', async () => {
+    replies.set('from:approval_decision', {
+      data: [{
+        request_id: '123e4567-e89b-12d3-a456-426614174000',
+        approver: 'op-1',
+        decision: 'approve',
+        as_party: 'security',
+        decided_at: '2026-10-12T14:00:00Z',
+      }],
+    });
+
+    await expect(loadOwnApprovalDecision('123e4567-e89b-12d3-a456-426614174000')).resolves.toEqual({
+      requestId: '123e4567-e89b-12d3-a456-426614174000',
+      approver: 'op-1',
+      decision: 'approve',
+      asParty: 'security',
+      decidedAt: '2026-10-12T14:00:00Z',
+    });
+    expect(auth.getUser).toHaveBeenCalledTimes(1);
+    expect(last()).toMatchObject({ kind: 'from', name: 'approval_decision' });
+    expect(last().chain).toEqual([
+      'select("request_id, approver, decision, as_party, decided_at")',
+      'eq("request_id","123e4567-e89b-12d3-a456-426614174000")',
+      'eq("approver","op-1")',
+      'limit(1)',
+    ]);
+  });
+
+  it('treats a missing, denied, signed-out, or malformed own-decision result as unavailable', async () => {
+    replies.set('from:approval_decision', { data: [] });
+    await expect(loadOwnApprovalDecision('123e4567-e89b-12d3-a456-426614174000')).rejects.toThrow('receipt is unavailable');
+
+    replies.set('from:approval_decision', { error: { message: 'row-level security denied the read' } });
+    await expect(loadOwnApprovalDecision('123e4567-e89b-12d3-a456-426614174000')).rejects.toThrow('row-level security denied the read');
+
+    auth.getUser.mockResolvedValueOnce({ data: { user: null } } as never);
+    await expect(loadOwnApprovalDecision('123e4567-e89b-12d3-a456-426614174000')).rejects.toThrow('Sign in again');
+
+    replies.set('from:approval_decision', {
+      data: [{ request_id: 'wrong', approver: 'op-1', decision: 'approve', as_party: 'security', decided_at: '2026-10-12T14:00:00Z' }],
+    });
+    await expect(loadOwnApprovalDecision('123e4567-e89b-12d3-a456-426614174000')).rejects.toThrow('receipt is unavailable');
   });
 
   it('runs the fail-closed action by request id, and a refusal is a throw, never a result', async () => {

@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Operations approval exceptions open an exact review before a decision
+
+Operators can now open a canonical `approval:<request UUID>` exception from **Command center** into the exact stored request in **Approvals**. The review shows the duty, target, tenant, stored detail, evidence, expiry and current decision counts before an explicit approve or reject confirmation. A decision still goes through the existing second-factor and database authorization checks. Afterward, Semester reads the signed-in operator's own immutable decision receipt and distinguishes a recorded first approval waiting for another person from an approved or rejected request. Losing a network response does not retry the decision: the review offers a read-only status check instead. This review records only the approval decision; it does not execute the requested change.
+
 ### Operators can inspect Semester as one connected ecosystem
 
 For operators holding the console grant, **Semester Operations** now has a read-only **Connected ecosystem** tab after **Finance model**. It maps the supplied Personal Education OS, Institution Operating OS and Semester Company OS into one platform view, and lets an operator inspect all 26 workspace, 281 screen and 122 capability contracts. The view labels the handoff as specification evidence and does not claim that a provider, institution, data connection or privileged operation is authorized or enabled. Students and school administrators will notice nothing.

@@ -1334,6 +1334,10 @@ export const OWNED_TABLES: OwnedTable[] = [
   // cascade` (`20260929100000_console_control_plane.sql`), and owner-only by
   // row-level security, so the rows go with the account.
   { table: 'operator_preference', column: 'subject' },
+  // One immutable receipt per approver and request. The browser only reads it;
+  // `decide_approval` writes it. Its `approver` foreign key is `on delete
+  // cascade`, so account erasure removes the caller's own decision receipts.
+  { table: 'approval_decision', column: 'approver' },
 
   // ── A school's dining ───────────────────────────────────────────────────
   // Your meal plan and mobile orders (`lib/dining/client.ts`). Each row names

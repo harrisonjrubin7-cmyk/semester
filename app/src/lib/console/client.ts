@@ -169,6 +169,52 @@ export async function decideApproval(requestId: string, decision: 'approve' | 'r
   return STATUSES.includes(data as ApprovalStatus) ? (data as ApprovalStatus) : 'pending';
 }
 
+export interface ApprovalDecisionReceipt {
+  requestId: string;
+  approver: string;
+  decision: 'approve' | 'reject';
+  asParty: string;
+  decidedAt: string;
+}
+
+/**
+ * Read the immutable receipt for this remotely verified caller and one exact
+ * request. Existing RLS remains the authority; the client additionally
+ * constrains both primary-key columns and caps the result at one row.
+ */
+export async function loadOwnApprovalDecision(requestId: string): Promise<ApprovalDecisionReceipt> {
+  const db = await cloud();
+  const { data: account, error: accountError } = await db.auth.getUser();
+  const approver = account.user?.id;
+  if (accountError || !approver) throw new Error(message(accountError, 'Sign in again to read the decision receipt.'));
+  const { data, error } = await db
+    .from('approval_decision')
+    .select('request_id, approver, decision, as_party, decided_at')
+    .eq('request_id', requestId)
+    .eq('approver', approver)
+    .limit(1);
+  if (error) throw new Error(message(error, 'The decision receipt is unavailable. Try again.'));
+  const r = rows(data)[0];
+  const decision = r?.decision;
+  const decidedAt = text(r?.decided_at);
+  if (!r
+      || text(r.request_id) !== requestId
+      || text(r.approver) !== approver
+      || (decision !== 'approve' && decision !== 'reject')
+      || !text(r.as_party)
+      || !decidedAt
+      || Number.isNaN(Date.parse(decidedAt))) {
+    throw new Error('The decision receipt is unavailable. Try again.');
+  }
+  return {
+    requestId,
+    approver,
+    decision,
+    asParty: text(r.as_party),
+    decidedAt,
+  };
+}
+
 export interface Acted {
   request: string;
   duty: string;
