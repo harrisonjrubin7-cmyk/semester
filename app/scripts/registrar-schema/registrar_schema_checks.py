@@ -28,17 +28,25 @@ def migrate_subset(schema):
     if s.get('readOnly') or s.get('writeOnly') or 'discriminator' in s:raise ValueError('Manual directional/composition review required')
     Draft202012Validator.check_schema(s);return s
 
+def pointer(parts):
+    # RFC 6901: the root is the empty string, and ~ and / inside a token are escaped
+    return ''.join('/'+str(p).replace('~','~0').replace('/','~1') for p in parts)
+
 def validate(schema,payload):
     Draft202012Validator.check_schema(schema)
-    return [{'keyword':e.validator,'instance_path':'/'+ '/'.join(map(str,e.absolute_path)),'schema_path':'/'+ '/'.join(map(str,e.absolute_schema_path))} for e in Draft202012Validator(schema,format_checker=FormatChecker()).iter_errors(payload)]
+    return [{'keyword':e.validator,'instance_path':pointer(e.absolute_path),'schema_path':pointer(e.absolute_schema_path)} for e in Draft202012Validator(schema,format_checker=FormatChecker()).iter_errors(payload)]
+
+# Length bounds sit beside each pattern: Python's $ also matches before a trailing newline.
+# The UUID pattern is lowercase-only so one identifier has one spelling and uniqueItems can see duplicates.
+def uuid_node():return {'type':'string','format':'uuid','pattern':'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$','minLength':36,'maxLength':36}
+def uuid_array():return {'type':'array','items':uuid_node(),'minItems':1,'maxItems':12,'uniqueItems':True}
+def term_node():return {'type':'string','pattern':'^[0-9]{4}(FA|SP|SU)$','minLength':6,'maxLength':6}
 
 def enrollment_schema():
-    uid={'type':'string','format':'uuid'};arr={'type':'array','items':uid,'minItems':1,'maxItems':12,'uniqueItems':True}
-    common={'studentId':uid,'termCode':{'type':'string','pattern':'^[0-9]{4}(FA|SP|SU)$'},'expectedScheduleVersion':{'type':'integer','minimum':0}}
     out=[]
     for op in ['add','drop','swap','withdraw']:
-        props={**common,'operation':{'const':op}};req=list(props)
-        if op in ['add','swap']:props['sectionIds']=arr;req.append('sectionIds')
-        if op in ['drop','swap','withdraw']:props['fromEnrollmentIds']=arr;req.append('fromEnrollmentIds')
+        props={'studentId':uuid_node(),'termCode':term_node(),'expectedScheduleVersion':{'type':'integer','minimum':0},'operation':{'const':op}};req=list(props)
+        if op in ['add','swap']:props['sectionIds']=uuid_array();req.append('sectionIds')
+        if op in ['drop','swap','withdraw']:props['fromEnrollmentIds']=uuid_array();req.append('fromEnrollmentIds')
         out.append({'type':'object','properties':props,'required':req,'additionalProperties':False})
     return {'oneOf':out}

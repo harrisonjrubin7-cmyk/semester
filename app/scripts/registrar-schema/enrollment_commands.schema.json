@@ -6,11 +6,16 @@
       "properties": {
         "studentId": {
           "type": "string",
-          "format": "uuid"
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
         },
         "termCode": {
           "type": "string",
-          "pattern": "^[0-9]{4}(FA|SP|SU)$"
+          "pattern": "^[0-9]{4}(FA|SP|SU)$",
+          "minLength": 6,
+          "maxLength": 6
         },
         "expectedScheduleVersion": {
           "type": "integer",
@@ -23,7 +28,10 @@
           "type": "array",
           "items": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "minLength": 36,
+            "maxLength": 36
           },
           "minItems": 1,
           "maxItems": 12,
@@ -44,11 +52,16 @@
       "properties": {
         "studentId": {
           "type": "string",
-          "format": "uuid"
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
         },
         "termCode": {
           "type": "string",
-          "pattern": "^[0-9]{4}(FA|SP|SU)$"
+          "pattern": "^[0-9]{4}(FA|SP|SU)$",
+          "minLength": 6,
+          "maxLength": 6
         },
         "expectedScheduleVersion": {
           "type": "integer",
@@ -61,7 +74,10 @@
           "type": "array",
           "items": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "minLength": 36,
+            "maxLength": 36
           },
           "minItems": 1,
           "maxItems": 12,
@@ -82,11 +98,16 @@
       "properties": {
         "studentId": {
           "type": "string",
-          "format": "uuid"
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
         },
         "termCode": {
           "type": "string",
-          "pattern": "^[0-9]{4}(FA|SP|SU)$"
+          "pattern": "^[0-9]{4}(FA|SP|SU)$",
+          "minLength": 6,
+          "maxLength": 6
         },
         "expectedScheduleVersion": {
           "type": "integer",
@@ -99,7 +120,10 @@
           "type": "array",
           "items": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "minLength": 36,
+            "maxLength": 36
           },
           "minItems": 1,
           "maxItems": 12,
@@ -109,7 +133,10 @@
           "type": "array",
           "items": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "minLength": 36,
+            "maxLength": 36
           },
           "minItems": 1,
           "maxItems": 12,
@@ -131,11 +158,16 @@
       "properties": {
         "studentId": {
           "type": "string",
-          "format": "uuid"
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
         },
         "termCode": {
           "type": "string",
-          "pattern": "^[0-9]{4}(FA|SP|SU)$"
+          "pattern": "^[0-9]{4}(FA|SP|SU)$",
+          "minLength": 6,
+          "maxLength": 6
         },
         "expectedScheduleVersion": {
           "type": "integer",
@@ -148,7 +180,10 @@
           "type": "array",
           "items": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "minLength": 36,
+            "maxLength": 36
           },
           "minItems": 1,
           "maxItems": 12,
