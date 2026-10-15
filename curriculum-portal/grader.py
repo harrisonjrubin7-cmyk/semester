@@ -2,14 +2,17 @@
 import argparse, hashlib, json, subprocess, sys, threading
 from pathlib import Path
 
-WORKER = """import importlib.util,json,sys
+WORKER = """import copy,importlib.util,json,sys
 spec=importlib.util.spec_from_file_location('learner',sys.argv[1])
 module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 suite=json.loads(sys.stdin.read());results=[]
 for case in suite['cases']:
-    try: results.append({'value':getattr(module,suite['function'])(case['input'])})
-    except ValueError: results.append({'exception':'ValueError'})
-    except BaseException: results.append({'exception':'ExecutionError'})
+    before=copy.deepcopy(case['input'])
+    try: outcome={'value':getattr(module,suite['function'])(case['input'])}
+    except ValueError: outcome={'exception':'ValueError'}
+    except BaseException: outcome={'exception':'ExecutionError'}
+    outcome['mutated']=case['input']!=before
+    results.append(outcome)
 print(json.dumps(results,allow_nan=False))
 """
 
@@ -50,6 +53,7 @@ def grade(suite, submission, timeout=5):
         for thread in threads: thread.join(timeout=1)
     if overflow.is_set(): failure = 'output_limit'
     passed = 0
+    learner_errors = 0
     if failure is None and process.returncode == 0:
         try:
             results = json.loads(buffers[0])
@@ -57,14 +61,19 @@ def grade(suite, submission, timeout=5):
                 raise ValueError('Invalid result count')
             for result, case in zip(results, suite['cases']):
                 expected = case['expected']
-                ok = isinstance(result, dict) and (
+                if not isinstance(result, dict): raise ValueError('Invalid result')
+                if result.get('exception') == 'ExecutionError': learner_errors += 1
+                # 0 == False and 1 == True in Python, so booleans must match by type too.
+                value_ok = 'value' in result and result['value'] == expected and type(result['value']) is type(expected)
+                ok = result.get('mutated') is False and (
                     (expected == '!ValueError' and result.get('exception') == 'ValueError') or
-                    (expected != '!ValueError' and 'value' in result and result['value'] == expected))
+                    (expected != '!ValueError' and value_ok))
                 passed += int(ok)
+            if learner_errors: failure = 'learner_exception'
         except (ValueError, TypeError): failure = 'invalid_output'
     elif failure is None: failure = 'execution_failed'
     total = len(suite['cases'])
-    return {'week':suite['week'],'passed':passed,'total':total,
+    return {'week':suite['week'],'passed':passed,'total':total,'learner_errors':learner_errors,
             'correctness_points':round(30*passed/total,2), 'final_grade':None,
             'failure':failure,'submission_sha256':hashlib.sha256(source).hexdigest(),
             'suite_sha256':hashlib.sha256(json.dumps(suite,sort_keys=True).encode()).hexdigest(),
