@@ -269,6 +269,7 @@ begin
   perform private.console_audit_write(me, 'authenticated', null, 'access_review.item_' || want_decision,
     item.public_id, jsonb_build_object('review', review.public_id, 'reason_code', want_reason_code),
     'access-review:' || review.public_id);
+  lock table public.role_grants in share mode;
   select g.* into grant_row from public.role_grants g where g.id = item.grant_id for update;
   grant_found := found;
   lock table public.role_capabilities in share mode;
@@ -340,6 +341,7 @@ begin
   perform private.console_audit_write(me, 'authenticated', null, 'access_review.investigation_resolved',
     item.public_id, jsonb_build_object('review', review.public_id, 'resolution_code', want_resolution_code),
     'access-review:' || review.public_id);
+  lock table public.role_grants in share mode;
   select g.* into grant_row from public.role_grants g where g.id = item.grant_id for update;
   grant_found := found;
   if grant_found and actor_hash = private.role_audit_sha256(grant_row.subject::text) then
@@ -417,6 +419,7 @@ begin
     'access_review.post_decision_change_resolved', item.public_id,
     jsonb_build_object('review', review.public_id, 'resolution_code', 'superseded-by-approved-change'),
     'access-review:' || review.public_id);
+  lock table public.role_grants in share mode;
   select g.* into grant_row from public.role_grants g where g.id = item.grant_id for update;
   grant_found := found;
   if grant_found and actor_hash = private.role_audit_sha256(grant_row.subject::text) then
@@ -633,6 +636,11 @@ begin
   if not found then raise exception 'No such access review.' using errcode = '22023'; end if;
   perform private.console_audit_write(me, 'authenticated', null, 'access_review.read', review.public_id,
     jsonb_build_object('item_count', review.item_count), 'access-review-read:' || review.public_id);
+  lock table public.role_grants in share mode;
+  lock table public.role_capabilities in share mode;
+  if not private.has_capability('access_review:manage', 'platform', '') then
+    raise exception 'access_review:manage at platform scope must remain current through review read.' using errcode = '42501';
+  end if;
   return query select review.public_id, review.period_start, review.period_end, review.next_due,
     review.snapshot_at, review.started_by_sha256, i.public_id, i.subject_sha256, i.role, i.scope_kind, i.scope_id,
     i.provenance, i.granted_by_sha256, i.granted_at, i.expires_at, d.decision, d.reason_code,
@@ -670,6 +678,11 @@ begin
   if not found then raise exception 'No such access review.' using errcode = '22023'; end if;
   perform private.console_audit_write(me, 'authenticated', null, 'access_review.read', review.public_id,
     jsonb_build_object('item_count', review.item_count), 'access-review-read:' || review.public_id);
+  lock table public.role_grants in share mode;
+  lock table public.role_capabilities in share mode;
+  if not private.has_capability('access_review:manage', 'platform', '') then
+    raise exception 'access_review:manage at platform scope must remain current through evidence read.' using errcode = '42501';
+  end if;
   return query select review.public_id, review.period_start, review.period_end, review.next_due,
     review.snapshot_at, review.started_by_sha256, i.public_id, i.subject_sha256, i.role, i.capabilities,
     i.capabilities_backfilled, i.scope_kind, i.scope_id,

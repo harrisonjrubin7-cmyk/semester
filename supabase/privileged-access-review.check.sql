@@ -65,6 +65,9 @@ begin
   perform pg_temp.must('decision writes serialize with signoff', position(
     'pg_advisory_xact_lock' in pg_get_functiondef(
       'public.decide_privileged_access_review_item(text,text,text)'::regprocedure)) > 0);
+  perform pg_temp.must('decision writers lock operator authority through the write', position(
+    'lock table public.role_grants in share mode' in lower(pg_get_functiondef(
+      'public.decide_privileged_access_review_item(text,text,text)'::regprocedure))) > 0);
   perform pg_temp.must('investigation resolutions serialize with signoff', position(
     'pg_advisory_xact_lock' in pg_get_functiondef(
       'public.resolve_privileged_access_review_investigation(text,text)'::regprocedure)) > 0);
@@ -102,6 +105,11 @@ begin
   perform pg_temp.must('investigation resolution rechecks authority after serialization', position(
     'must remain current through investigation resolution' in lower(pg_get_functiondef(
       'public.resolve_privileged_access_review_investigation(text,text)'::regprocedure))) > 0);
+  perform pg_temp.must('resolution writers lock operator authority through the write',
+    position('lock table public.role_grants in share mode' in lower(pg_get_functiondef(
+      'public.resolve_privileged_access_review_investigation(text,text)'::regprocedure))) > 0
+    and position('lock table public.role_grants in share mode' in lower(pg_get_functiondef(
+      'public.resolve_privileged_access_review_post_decision_change(text)'::regprocedure))) > 0);
   perform pg_temp.must('post-decision resolution rechecks authority after serialization', position(
     'must remain current through post-decision resolution' in lower(pg_get_functiondef(
       'public.resolve_privileged_access_review_post_decision_change(text)'::regprocedure))) > 0);
@@ -116,6 +124,15 @@ begin
   perform pg_temp.must('revoke signoff binds remediation to the exact observed grant state',
     position('x.observed_state_sha256 =' in lower(pg_get_functiondef(
       'public.complete_privileged_access_review(text)'::regprocedure))) > 0);
+  perform pg_temp.must('review readers lock and recheck operator authority before returning evidence',
+    position('lock table public.role_grants in share mode' in lower(pg_get_functiondef(
+      'public.privileged_access_review(text)'::regprocedure))) > 0
+    and position('must remain current through review read' in lower(pg_get_functiondef(
+      'public.privileged_access_review(text)'::regprocedure))) > 0
+    and position('lock table public.role_grants in share mode' in lower(pg_get_functiondef(
+      'public.privileged_access_review_evidence(text)'::regprocedure))) > 0
+    and position('must remain current through evidence read' in lower(pg_get_functiondef(
+      'public.privileged_access_review_evidence(text)'::regprocedure))) > 0);
 
   perform pg_temp.become(starter);
   review_ref := public.begin_privileged_access_review('access-review-2026q4', current_date - 90, current_date, current_date + 90);
