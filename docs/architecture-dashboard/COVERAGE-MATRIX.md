@@ -149,49 +149,49 @@ Identifier | System | Module | User role | Screen or workflow | Routes | Require
 
 ## Public entry patterns
 
-Route | Title | Regions | Prototype mapping seen | Status
---- | --- | --- | --- | ---
-/ | Home | hero, source demo, product jobs, status disclosure, trust, CTA | — | prototype mapping; clean URL proposed
-/about | About | mission, principles, status, contact | — | prototype mapping; clean URL proposed
-/team | Team | approved biographies, roles, contact | — | proposed extension
-/contact | Contact | routing, local inquiry, privacy, receipt | — | prototype mapping; clean URL proposed
-/product | Product | OS overview, role paths, modules, boundaries, CTA | — | prototype mapping; clean URL proposed
-/product/:slug | Product detail | purpose, workflow, authority, maturity, related | — | proposed extension
-/students | Students | daily loop, sources, privacy, first action, FAQ | — | prototype mapping; clean URL proposed
-/institutions | Institutions | office jobs, authority, review status, pilot, FAQ | — | prototype mapping; clean URL proposed
-/pilot | Pilot proposal | scope, non goals, baseline, gates, owners, inquiry | — | prototype mapping; clean URL proposed
-/solutions | Solutions | audiences, shared foundation, CTA | — | proposed extension
-/solutions/students | Student solutions | Today, learning, registration, privacy | — | proposed extension
-/solutions/faculty | Faculty solutions | authoring, accessibility, submission, release | — | proposed extension
-/solutions/advisors | Advisor solutions | caseload, sharing, handoff, follow up | — | proposed extension
-/solutions/registrars | Registrar solutions | readiness, holds, exceptions, reconciliation | — | proposed extension
-/solutions/institutions | Institution solutions | tenant, roles, integrations, rollout | — | proposed extension
-/solutions/:audience | Audience detail | purpose, workflow, authority, CTA | — | proposed extension
-/pricing | Pricing | posture, scope, entitlements, quote | — | prototype mapping; clean URL proposed
-/pricing/quote | Quote request | scope, local form, consent, receipt | — | proposed extension
-/demo | Demo request | synthetic boundary, local form, receipt | — | proposed extension
-/demo/tour | Tour | Today, sources, privacy, action example, CTA | — | proposed extension
-/resources | Resources | approved index, filters, accessible formats | — | proposed extension
-/resources/:slug | Resource detail | author, version, content, sources, alternatives | — | proposed extension
-/trust | Trust | status, privacy, security, accessibility, AI, reliability | — | prototype mapping; clean URL proposed
-/trust/security | Security | scope, review status, evidence, report path | — | proposed extension
-/trust/privacy | Privacy | purpose, sharing, rights, retention | — | proposed extension
-/trust/accessibility | Accessibility | target, review, barrier report, alternatives | — | proposed extension
-/trust/ai | AI governance | scope, gateway, sources, policy, human authority | — | proposed extension
-/trust/subprocessors | Subprocessors | purpose, region, classification, retention, status | — | proposed extension
-/legal | Legal index | documents, draft status, authority, contact | — | prototype mapping; clean URL proposed
-/legal/terms | Terms draft | control header, purpose, rules, exceptions, history | — | proposed extension
-/legal/privacy | Privacy draft | control header, purpose, sharing, rights, history | — | proposed extension
-/legal/cookies | Cookie draft | control header, categories, consent, withdrawal | — | proposed extension
-/legal/community | Community draft | control header, conduct, reporting, appeal | — | proposed extension
-/legal/accessibility | Accessibility draft | control header, target, status, barrier report | — | proposed extension
-/status | Status | source, services, incidents, unavailable | — | proposed extension
-/auth/signup | Signup entry | purpose, terms, identity handoff, privacy | — | proposed extension
-/auth/signin | Sign in entry | provider, recovery, session boundary | — | proposed extension
-/join | Join entry | invite, institution, membership vs grant, handoff | — | proposed extension
-/open | App handoff | transaction, expiry, account match, claim, receipt | — | proposed extension
-/download | Download entry | verified distribution, availability, web fallback | — | proposed extension
-/partners | Partners | types, data boundary, local inquiry | — | proposed extension
-/careers | Careers | approved roles, principles, accessible application | — | proposed extension
-/careers/:slug | Job detail | summary, 90 days, requirements, approved compensation | — | proposed extension
-/404 | Not found | explanation, safe navigation | — | proposed extension
+Route | Title | Regions | Status
+--- | --- | --- | ---
+/ | Home | hero, source demo, product jobs, status disclosure, trust, CTA | prototype mapping; clean URL proposed
+/about | About | mission, principles, status, contact | prototype mapping; clean URL proposed
+/team | Team | approved biographies, roles, contact | proposed extension
+/contact | Contact | routing, local inquiry, privacy, receipt | prototype mapping; clean URL proposed
+/product | Product | OS overview, role paths, modules, boundaries, CTA | prototype mapping; clean URL proposed
+/product/:slug | Product detail | purpose, workflow, authority, maturity, related | proposed extension
+/students | Students | daily loop, sources, privacy, first action, FAQ | prototype mapping; clean URL proposed
+/institutions | Institutions | office jobs, authority, review status, pilot, FAQ | prototype mapping; clean URL proposed
+/pilot | Pilot proposal | scope, non goals, baseline, gates, owners, inquiry | prototype mapping; clean URL proposed
+/solutions | Solutions | audiences, shared foundation, CTA | proposed extension
+/solutions/students | Student solutions | Today, learning, registration, privacy | proposed extension
+/solutions/faculty | Faculty solutions | authoring, accessibility, submission, release | proposed extension
+/solutions/advisors | Advisor solutions | caseload, sharing, handoff, follow up | proposed extension
+/solutions/registrars | Registrar solutions | readiness, holds, exceptions, reconciliation | proposed extension
+/solutions/institutions | Institution solutions | tenant, roles, integrations, rollout | proposed extension
+/solutions/:audience | Audience detail | purpose, workflow, authority, CTA | proposed extension
+/pricing | Pricing | posture, scope, entitlements, quote | prototype mapping; clean URL proposed
+/pricing/quote | Quote request | scope, local form, consent, receipt | proposed extension
+/demo | Demo request | synthetic boundary, local form, receipt | proposed extension
+/demo/tour | Tour | Today, sources, privacy, action example, CTA | proposed extension
+/resources | Resources | approved index, filters, accessible formats | proposed extension
+/resources/:slug | Resource detail | author, version, content, sources, alternatives | proposed extension
+/trust | Trust | status, privacy, security, accessibility, AI, reliability | prototype mapping; clean URL proposed
+/trust/security | Security | scope, review status, evidence, report path | proposed extension
+/trust/privacy | Privacy | purpose, sharing, rights, retention | proposed extension
+/trust/accessibility | Accessibility | target, review, barrier report, alternatives | proposed extension
+/trust/ai | AI governance | scope, gateway, sources, policy, human authority | proposed extension
+/trust/subprocessors | Subprocessors | purpose, region, classification, retention, status | proposed extension
+/legal | Legal index | documents, draft status, authority, contact | prototype mapping; clean URL proposed
+/legal/terms | Terms draft | control header, purpose, rules, exceptions, history | proposed extension
+/legal/privacy | Privacy draft | control header, purpose, sharing, rights, history | proposed extension
+/legal/cookies | Cookie draft | control header, categories, consent, withdrawal | proposed extension
+/legal/community | Community draft | control header, conduct, reporting, appeal | proposed extension
+/legal/accessibility | Accessibility draft | control header, target, status, barrier report | proposed extension
+/status | Status | source, services, incidents, unavailable | proposed extension
+/auth/signup | Signup entry | purpose, terms, identity handoff, privacy | proposed extension
+/auth/signin | Sign in entry | provider, recovery, session boundary | proposed extension
+/join | Join entry | invite, institution, membership vs grant, handoff | proposed extension
+/open | App handoff | transaction, expiry, account match, claim, receipt | proposed extension
+/download | Download entry | verified distribution, availability, web fallback | proposed extension
+/partners | Partners | types, data boundary, local inquiry | proposed extension
+/careers | Careers | approved roles, principles, accessible application | proposed extension
+/careers/:slug | Job detail | summary, 90 days, requirements, approved compensation | proposed extension
+/404 | Not found | explanation, safe navigation | proposed extension

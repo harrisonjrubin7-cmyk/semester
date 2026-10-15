@@ -1,6 +1,6 @@
 # Semester architecture dashboard — package and status
 
-Source: architecture package uploaded 2026-10-13 (`Semester-architecture-dashboard-and-code-review.zip`, sha256 `98fce65d…79bbab6`). `index.html` is byte-identical to the uploaded dashboard (sha256 `d6a41fb2…7507fd3a`).
+Source: architecture package uploaded 2026-10-13 (`Semester-architecture-dashboard-and-code-review.zip`, sha256 `98fce65d…79bbab6`). `index.html` is the uploaded dashboard (sha256 `d6a41fb2…7507fd3a`) with two changes made in this repository: search matches only route, title and regions, and the skip link focuses `main` without rewriting the route in `location.hash`.
 
 ## Contents
 
@@ -22,8 +22,8 @@ Source: architecture package uploaded 2026-10-13 (`Semester-architecture-dashboa
 
 ## Status (not product evidence)
 
-- Designed: yes (this package). Implemented as product: no. Tested as product: no. Deployed: see the continuation record below. Institution-authorized: no. Production-enabled: no.
-- Route and capability entries are design declarations. `status` in both contract files reads "design source; live implementation not assessed".
+- Designed: yes (this package). Implemented as product: no. Tested as product: no. Deployed: no deployment of this dashboard was made. Vercel's GitHub integration built previews of other linked projects from the branch push; none is a deliberate release of this package. Institution-authorized: no. Production-enabled: no.
+- Capability entries in `platform-route-contracts.json` read "design source; live implementation not assessed". Public entries in `public-route-contracts.json` read "prototype mapping; clean URL proposed" or "proposed extension". Both are design declarations, not evidence of a live route.
 - The package says a dashboard deployment is a design preview, not product activation.
 
 ## Open items before any release
