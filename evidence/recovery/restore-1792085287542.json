@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-15T17:28:07.542Z",
+  "operation": "restore",
+  "request": {
+    "fixture": "tenant-synthetic-a",
+    "target": "isolated-recovery-environment"
+  },
+  "allowed": false,
+  "reasons": [
+    "no isolated recovery environment is configured (set RECOVERY_TARGET_CONFIGURED=1 once one exists)"
+  ]
+}
