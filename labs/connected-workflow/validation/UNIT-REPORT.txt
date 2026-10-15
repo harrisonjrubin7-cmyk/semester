@@ -32,8 +32,17 @@ test_worker_replay (test_lab.TestLab.test_worker_replay) ... ok
 test_worker_role (test_lab.TestLab.test_worker_role) ... ok
 test_worker_tenant (test_lab.TestLab.test_worker_tenant) ... ok
 test_wrong_kind (test_lab.TestLab.test_wrong_kind) ... ok
+test_approval_reason_visible_to_reviewer (test_lab.TestReviewFindings.test_approval_reason_visible_to_reviewer) ... ok
+test_expired_approval_leaves_pending_queue (test_lab.TestReviewFindings.test_expired_approval_leaves_pending_queue) ... ok
+test_faculty_sees_submitted_work (test_lab.TestReviewFindings.test_faculty_sees_submitted_work) ... ok
+test_grade_approvals_stay_with_faculty_and_registrar_sees_no_grade (test_lab.TestReviewFindings.test_grade_approvals_stay_with_faculty_and_registrar_sees_no_grade) ... ok
+test_grade_drafted_on_superseded_submission_cannot_request_release (test_lab.TestReviewFindings.test_grade_drafted_on_superseded_submission_cannot_request_release) ... ok
+test_lapsed_demo_sessions_renew_on_reopen (test_lab.TestReviewFindings.test_lapsed_demo_sessions_renew_on_reopen) ... ok
+test_new_submission_invalidates_grade_approval (test_lab.TestReviewFindings.test_new_submission_invalidates_grade_approval) ... ok
+test_non_string_identifier_is_rejected_not_crashed (test_lab.TestReviewFindings.test_non_string_identifier_is_rejected_not_crashed) ... ok
+test_repeated_onboarding_keeps_version (test_lab.TestReviewFindings.test_repeated_onboarding_keeps_version) ... ok
 
 ----------------------------------------------------------------------
-Ran 34 tests in 0.318s
+Ran 43 tests in 0.850s
 
 OK

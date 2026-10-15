@@ -2,7 +2,7 @@
 ## What was built, not merely outlined
 A runnable loopback HTTP application with real synthetic SQLite persistence. Eight domain commands plus an outbox worker implement onboarding, submission, draft grading, independent bound release, reasoned hold approval and source-aware readiness. Student sees only released projections; operator default view contains counts, not student records.
 Run: python -m lab.server; open http://127.0.0.1:8765 locally. Test: python -m unittest discover -s tests -v
-34unit tests passed; bounded Chromium/API smoke exercised onboarding, submission, operator privacy, outbox processing and mobile layout. No existing repository CI or remote systems were run/changed.
+43 unit tests passed (regenerated 2026-10-15, see validation/UNIT-REPORT.txt); bounded Chromium/API smoke exercised onboarding, submission, operator privacy, outbox processing and mobile layout. No existing repository CI or remote systems were run/changed.
 
 ## Materials
 11editable PPTX drafts /132slides with Markdown slide notes, including institution22, investor23 and companyexecution12. Some slides are content scaffolds awaiting specific audience facts/evidence; they are not all externally ready.
@@ -18,3 +18,5 @@ Earlier confirmation contained placeholder index.html content and was not an exe
 
 ## Next integration increment
 Inspect current canonical code/diff; select next dependency-ready registration.readiness/student-faculty task; map this lab's tests to actual TypeScript/Postgres contracts. Retain exact SHA/tests/target/professional/customer/operated evidence and update handoff. No remote push, migrations, messages or consequential academic/financial writes without specific approval.
+
+BROWSER-REPORT.json was captured before the 2026-10-15 review fixes and covers that earlier revision only; the unit report is current.

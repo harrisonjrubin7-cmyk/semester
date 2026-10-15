@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS courses(id TEXT,tenant TEXT,PRIMARY KEY(tenant,id));
 CREATE TABLE IF NOT EXISTS access(tenant TEXT,course TEXT,actor TEXT,PRIMARY KEY(tenant,course,actor));
 CREATE TABLE IF NOT EXISTS students(id TEXT,tenant TEXT,onboarded INTEGER,hold INTEGER,prerequisite TEXT,source_at REAL,version INTEGER,PRIMARY KEY(tenant,id));
 CREATE TABLE IF NOT EXISTS submissions(id TEXT PRIMARY KEY,tenant TEXT,course TEXT,student TEXT,body TEXT,created REAL);
-CREATE TABLE IF NOT EXISTS grades(id TEXT PRIMARY KEY,tenant TEXT,course TEXT,student TEXT,score REAL,state TEXT,version INTEGER);
+CREATE TABLE IF NOT EXISTS grades(id TEXT PRIMARY KEY,tenant TEXT,course TEXT,student TEXT,score REAL,state TEXT,version INTEGER,submission_id TEXT);
 CREATE TABLE IF NOT EXISTS approvals(id TEXT PRIMARY KEY,tenant TEXT,kind TEXT,object_id TEXT,requester TEXT,binding TEXT,expires REAL,state TEXT,reason TEXT);
 CREATE TABLE IF NOT EXISTS receipts(id TEXT PRIMARY KEY,tenant TEXT,actor TEXT,key TEXT,fingerprint TEXT,body TEXT,UNIQUE(tenant,actor,key));
 CREATE TABLE IF NOT EXISTS outbox(seq INTEGER PRIMARY KEY AUTOINCREMENT,id TEXT UNIQUE,tenant TEXT,kind TEXT,object_id TEXT,version INTEGER,payload TEXT,projected INTEGER DEFAULT 0);
@@ -29,7 +29,9 @@ CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TE
   finally:d.close()
  def seed(self):
   with self.db() as d:
-   if d.execute('SELECT 1 FROM actors LIMIT 1').fetchone():return
+   if d.execute('SELECT 1 FROM actors LIMIT 1').fetchone():
+    # Renew synthetic sessions that lapsed since the database was first seeded; keep every other row.
+    d.execute('UPDATE actors SET expires=? WHERE expires<=?',(time.time()+86400,time.time()));return
    for tenant in ('a','b'):
     d.execute('INSERT INTO courses VALUES (?,?)',('course',tenant))
     for role in ('student','faculty','reviewer','registrar','operator'):
@@ -51,6 +53,7 @@ CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TE
   d.execute('INSERT INTO outbox(id,tenant,kind,object_id,version,payload) VALUES (?,?,?,?,?,?)',(str(uuid.uuid4()),a['tenant'],kind,oid,version,canon(payload)))
  def execute(self,token,command,p,key):
   if not isinstance(p,dict) or not isinstance(key,str) or not key.strip() or len(key)>128:raise Rejected('invalid payload/idempotency key')
+  if any(k in p and not isinstance(p[k],str) for k in ('tenant','course','student','grade','approval')):raise Rejected('identifiers must be strings')
   fp=digest({'command':command,'payload':p})
   with self.db() as d:
    d.execute('BEGIN IMMEDIATE');a=self.actor(d,token);tenant=a['tenant'];role=a['role']
@@ -84,14 +87,15 @@ CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TE
     oid=tenant+':'+course+':'+s['id'];g=d.execute('SELECT * FROM grades WHERE id=? AND tenant=?',(oid,tenant)).fetchone();version=g['version'] if g else 0
     if p.get('version')!=version:raise Rejected('grade version conflict')
     if g and g['state']=='released':raise Rejected('released grade needs separate correction workflow')
-    d.execute('INSERT INTO grades VALUES (?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET score=excluded.score,version=excluded.version',(oid,tenant,course,s['id'],score,'draft',version+1));result={'grade':oid,'version':version+1,'state':'draft'}
+    d.execute('INSERT INTO grades VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET score=excluded.score,version=excluded.version,submission_id=excluded.submission_id',(oid,tenant,course,s['id'],score,'draft',version+1,self.latest_submission(d,tenant,course,s['id'])));result={'grade':oid,'version':version+1,'state':'draft'}
    elif command in ('grade.request_release','hold.request_clear'):
     kind='grade' if command.startswith('grade') else 'hold'
     if role!=('faculty' if kind=='grade' else 'registrar'):raise Rejected('requester role denied')
     if kind=='grade':
      oid=p.get('grade','');g=d.execute('SELECT * FROM grades WHERE id=? AND tenant=? AND course=?',(oid,tenant,course)).fetchone()
      if not g or g['state']!='draft' or p.get('version')!=g['version']:raise Rejected('grade absent or stale')
-     binding=self.grade_binding(d,tenant,course,g)
+     if g['submission_id']!=self.latest_submission(d,tenant,course,g['student']):raise Rejected('grade drafted against a superseded submission; draft again')
+     binding=digest(dict(g))
     else:
      s=self.student(d,a,p.get('student',''));oid=s['id']
      if not s['onboarded'] or not s['hold'] or p.get('version')!=s['version']:raise Rejected('hold request absent or stale')
@@ -105,7 +109,7 @@ CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TE
     if not approval or approval['kind']!=kind or approval['state']!='pending' or approval['expires']<=time.time():raise Rejected('approval missing, expired or decided')
     if approval['requester']==a['id']:raise Rejected('self approval denied')
     oid=approval['object_id'];obj=d.execute('SELECT * FROM grades WHERE id=? AND tenant=? AND course=?',(oid,tenant,course)).fetchone() if kind=='grade' else self.student(d,a,oid)
-    if not obj or (self.grade_binding(d,tenant,course,obj) if kind=='grade' else digest(dict(obj)))!=approval['binding']:raise Rejected('approval binding changed; request again')
+    if not obj or digest(dict(obj))!=approval['binding'] or (kind=='grade' and obj['submission_id']!=self.latest_submission(d,tenant,course,obj['student'])):raise Rejected('approval binding changed; request again')
     version=obj['version']+1
     if kind=='grade':
      d.execute("UPDATE grades SET state='released',version=? WHERE id=? AND tenant=?",(version,oid,tenant));payload={'student':obj['student'],'course':course,'score':obj['score'],'state':'released'}
@@ -122,10 +126,9 @@ CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TE
    d.execute('INSERT INTO receipts VALUES (?,?,?,?,?,?)',(rid,tenant,a['id'],key,fp,canon(receipt)))
    d.execute('INSERT INTO audit(tenant,actor,command,object_id,receipt,created) VALUES (?,?,?,?,?,?)',(tenant,a['id'],command,oid,rid,time.time()))
    return receipt
- def grade_binding(self,d,tenant,course,g):
-  # The grade row alone does not identify the work being assessed; bind the latest submission too.
-  sub=d.execute('SELECT id FROM submissions WHERE tenant=? AND course=? AND student=? ORDER BY created DESC LIMIT 1',(tenant,course,g['student'])).fetchone()
-  return digest({'grade':dict(g),'submission':sub['id'] if sub else None})
+ def latest_submission(self,d,tenant,course,student):
+  sub=d.execute('SELECT id FROM submissions WHERE tenant=? AND course=? AND student=? ORDER BY created DESC LIMIT 1',(tenant,course,student)).fetchone()
+  return sub['id'] if sub else None
  def project(self,token):
   with self.db() as d:
    d.execute('BEGIN IMMEDIATE');a=self.actor(d,token)
@@ -148,6 +151,9 @@ CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TE
     readiness='blocked' if s['hold'] else 'unknown' if s['prerequisite']!='confirmed' else 'stale' if not fresh else 'ready_as_of'
     out.update(student=dict(s),readiness=readiness,grades=[json.loads(r['payload']) for r in d.execute("SELECT payload FROM projection WHERE tenant=? AND kind='grade'",(t,)) if json.loads(r['payload']).get('student')==a['id']]);return out
    out['grades']=[dict(r) for r in d.execute('SELECT * FROM grades WHERE tenant=? AND course=?',(t,'course'))]
-   out['approvals']=[dict(r) for r in d.execute("SELECT id,kind,object_id,requester,expires,state,reason FROM approvals WHERE tenant=? AND state='pending'",(t,))]
+   # Pending and unexpired only; faculty see grade approvals and registrars see hold approvals, reviewers see both.
+   kind={'faculty':'grade','registrar':'hold'}.get(role)
+   sql="SELECT id,kind,object_id,requester,expires,state,reason FROM approvals WHERE tenant=? AND state='pending' AND expires>?"+(" AND kind=?" if kind else '')
+   out['approvals']=[dict(r) for r in d.execute(sql,(t,time.time())+((kind,) if kind else ()))]
    if role=='faculty':out['submissions']=[dict(r) for r in d.execute('SELECT id,student,body,created FROM submissions WHERE tenant=? AND course=?',(t,'course'))]
    out['students']=[dict(r) for r in d.execute('SELECT * FROM students WHERE tenant=?',(t,))];return out

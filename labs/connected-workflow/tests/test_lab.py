@@ -135,3 +135,25 @@ class TestReviewFindings(unittest.TestCase):
   g=self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})
   self.cmd('a-faculty','grade.request_release',{'grade':g['grade'],'version':1,'reason':'Reviewed rubric'})
   self.assertEqual([a['reason'] for a in self.lab.view('demo-a-reviewer')['approvals']],['Reviewed rubric'])
+ def test_grade_drafted_on_superseded_submission_cannot_request_release(self):
+  self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'first'})
+  g=self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})
+  self.cmd('a-student','submission.create',{'body':'second'})
+  with self.assertRaises(Rejected):self.cmd('a-faculty','grade.request_release',{'grade':g['grade'],'version':1,'reason':'Reviewed rubric'})
+ def test_grade_approvals_stay_with_faculty_and_registrar_sees_no_grade(self):
+  self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'work'})
+  g=self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})
+  self.cmd('a-faculty','grade.request_release',{'grade':g['grade'],'version':1,'reason':'Reviewed rubric'})
+  self.assertEqual(self.lab.view('demo-a-registrar')['approvals'],[])
+  self.assertEqual([a['kind'] for a in self.lab.view('demo-a-faculty')['approvals']],['grade'])
+ def test_expired_approval_leaves_pending_queue(self):
+  self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'work'})
+  g=self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})
+  self.cmd('a-faculty','grade.request_release',{'grade':g['grade'],'version':1,'reason':'Reviewed rubric'})
+  import sqlite3;d=sqlite3.connect(self.lab.path);d.execute('UPDATE approvals SET expires=0');d.commit();d.close()
+  self.assertEqual(self.lab.view('demo-a-reviewer')['approvals'],[])
+ def test_non_string_identifier_is_rejected_not_crashed(self):
+  with self.assertRaises(Rejected):self.cmd('a-student','onboarding.complete',{'course':[]})
+ def test_lapsed_demo_sessions_renew_on_reopen(self):
+  import sqlite3;d=sqlite3.connect(self.lab.path);d.execute('UPDATE actors SET expires=0');d.commit();d.close()
+  Lab(self.lab.path).seed();self.assertEqual(self.lab.view('demo-a-student')['role'],'student')

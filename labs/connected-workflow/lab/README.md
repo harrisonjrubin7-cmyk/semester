@@ -12,4 +12,4 @@ No third-party runtime dependencies. SQLite database is created locally. Demo be
 
 Existing official systems are not called. No official transcript/final-grade posting, AI provider, funds movement, institution SSO or live tenant provisioning exists in this lab. Map tested invariants into canonical TypeScript/Postgres systems; do not add this SQLite model as a second production authority.
 
-Schema note: the approvals table gained a `reason` column and grade approvals now bind the latest submission. Delete an existing synthetic database before running this version; `CREATE TABLE IF NOT EXISTS` does not migrate old files.
+Schema note: the approvals table gained a `reason` column, and grades gained a `submission_id` column (drafts record the submission they assess). Delete an existing synthetic database before running this version; `CREATE TABLE IF NOT EXISTS` does not migrate old files.
