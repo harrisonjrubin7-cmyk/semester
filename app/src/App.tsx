@@ -21,6 +21,7 @@ import { Said } from './components/Said';
 import { Replaced } from './components/Replaced';
 import { SampleMark } from './components/SampleMark';
 import { MODE_ATTR } from './components/unity/modes';
+import { hasMode } from './lib/accessmode';
 import { CALM_ATTR, scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
 import { Guides, InstitutionalPreviewBar, OfflineBanner, SCREENS, Springboard } from './screens';
@@ -73,6 +74,7 @@ import { chromeFor, homeShape } from './lib/chrome';
 import { ScreenTrouble } from './components/Boundary';
 import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
+import { WorkspaceEntry } from './components/shell/WorkspaceNavigation';
 import { isCanvas } from './components/shell/exempt';
 import { ShelfNav } from './components/nav/ShelfNav';
 import { InstitutionalNavigation } from './components/nav/InstitutionalPrimaryNav';
@@ -87,9 +89,10 @@ import { Keys } from './components/Keys';
 import { Sound } from './components/Sound';
 import { Ringing } from './components/Ringing';
 import { PushTop } from './components/PushTop';
-import { QuickAdd } from './components/QuickAdd';
+import { DeferredQuickAdd as QuickAdd } from './components/DeferredQuickAdd';
 import { UnityLayer } from './components/unity/UnityLayer';
 import { LoadingState } from './components/unity/States';
+import { SystemContextBar } from './components/unity/SystemContextBar';
 import { Assistant } from './ai/Assistant';
 import { Command } from './components/Command';
 import { TabStrip, TabsFollow } from './components/Tabs';
@@ -117,6 +120,8 @@ import type { Screen } from './lib/types';
 import { InstitutionalPreviewRoot } from './components/institutional/PreviewRoot';
 import { forRole } from './lib/role';
 import { MODULE_FLAGS, moduleOn } from './lib/experience-flags';
+import { cloudConfigured } from './lib/cloud';
+import { PrivilegedMfaBoundary } from './components/PrivilegedMfaBoundary';
 
 // Offline mode (Phase M). The badge is lazy, in screens.tsx, so the flag off costs nothing.
 const OFFLINE_MODE = moduleOn(MODULE_FLAGS.offline_mode);
@@ -155,7 +160,12 @@ function Loading() {
  */
 function SkipLink() {
   return (
-    <a className="skip-link" href="#main">
+    <a className="skip-link" href="#main" onClick={(event) => {
+      const main = event.currentTarget.ownerDocument.getElementById('main');
+      if (!main) return;
+      event.preventDefault();
+      main.focus();
+    }}>
       Skip to content
     </a>
   );
@@ -227,12 +237,14 @@ function Header({
    * One fact now rather than a list: is this the workspace, whose bar carries
    * these controls. It was briefly two — the sidebar was the second, because
    * that column drew New and this header's `+` stood down for it. The column
-   * no longer draws New, so the `+` is unconditional again; `headerRow` in
-   * `lib/header.ts` has that argument. What always stays is what no other
+   * no longer draws New, so the `+` is normally present again. Search is the
+   * one exception because its field already carries the same capture action;
+   * `headerRow` in `lib/header.ts` has that argument. What always stays is what no other
    * chrome has: the way back, the screen's own name, and a running timer.
    */
   desk = false,
-}: { desk?: boolean } = {}) {
+  screenOwnsTitle = false,
+}: { desk?: boolean; screenOwnsTitle?: boolean } = {}) {
   const { state, dispatch, catalog } = useStore();
   const now = useNow();
   const { kicker, title } = useHeader();
@@ -284,7 +296,13 @@ function Header({
    * of the same control. `lib/header.ts` answers for all five now, and the
    * markup below asks rather than decides.
    */
-  const row = headerRow({ atRoot, phone, counting, desk });
+  const row = headerRow({
+    atRoot,
+    phone,
+    counting,
+    desk,
+    hasInlineAdd: desk && state.screen === 'search',
+  });
 
   /*
    * Move focus into the new screen's heading whenever the screen changes.
@@ -298,8 +316,25 @@ function Header({
   useEffect(() => {
     if (wasOn.current === state.screen) return;
     wasOn.current = state.screen;
-    heading.current?.focus({ preventScroll: true });
-  }, [state.screen]);
+
+    const focusTitle = () => {
+      const title = screenOwnsTitle
+        ? document.querySelector<HTMLHeadingElement>('h1[data-page-title]')
+        : heading.current;
+      if (!title) return false;
+      title.focus({ preventScroll: true });
+      return true;
+    };
+    if (focusTitle()) return;
+
+    const shell = document.querySelector('.device');
+    if (!shell) return;
+    const observer = new MutationObserver(() => {
+      if (focusTitle()) observer.disconnect();
+    });
+    observer.observe(shell, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [screenOwnsTitle, state.screen]);
 
   return (
     // A real <header>, and the screen's name is the page's <h1>. Both were
@@ -331,6 +366,7 @@ function Header({
       )}
 
       <div style={{ flex: 1, minWidth: 0 }}>
+        {!screenOwnsTitle && <>
         {upTo ? (
           <button
             type="button"
@@ -373,22 +409,28 @@ function Header({
         */}
         <h1
           ref={heading}
+          data-page-title
           tabIndex={-1}
           className="chrome-text"
           style={{
             outline: 'none',
             fontSize: 'var(--type-display-lg)',
             lineHeight: 'var(--leading-display)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
+            // Wraps rather than truncating: a title the reader's text spacing makes
+            // too long for one line (WCAG 1.4.12) must not lose its end. The header
+            // is a flex row with no fixed height, so it grows with the title.
+            overflowWrap: 'anywhere',
             margin: 0,
             fontWeight: 'inherit',
-            letterSpacing: 'inherit',
+            // 0, not `inherit`: the reader's letter spacing (`textSpacing`) is set on the
+            // device and would otherwise reach the display heading through the header.
+            letterSpacing: 0,
+            wordSpacing: 0,
           }}
         >
           {title}
         </h1>
+        </>}
       </div>
 
       {/*
@@ -778,6 +820,37 @@ function Workspace({
   const focusBar = useCallback(() => barBox.current?.focus(), []);
   /** The shell's own two screens, which are their own titles. See above. */
   const ownTitle = state.screen === 'search' || state.screen === 'directory';
+  const pane = useRef<HTMLDivElement>(null);
+  const wasOn = useRef(state.screen);
+
+  /*
+   * `Header` normally moves focus into a new page title. In the workspace it
+   * is deliberately absent on Search and All apps, and is unmounted while
+   * either screen is open, so its screen-change effect cannot cover the
+   * transition into or back out of those pages. Keep the route landing rule
+   * at the persistent shell level for this layout. The observer only matters
+   * when a lazy screen's chunk is still behind the Suspense fallback.
+   */
+  useEffect(() => {
+    if (wasOn.current === state.screen) return;
+    wasOn.current = state.screen;
+    const root = pane.current;
+    if (!root) return;
+
+    const focusTitle = () => {
+      const title = root.querySelector<HTMLHeadingElement>('h1[data-page-title]');
+      if (!title) return false;
+      title.focus({ preventScroll: true });
+      return true;
+    };
+    if (focusTitle()) return;
+
+    const observer = new MutationObserver(() => {
+      if (focusTitle()) observer.disconnect();
+    });
+    observer.observe(root, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [state.screen]);
 
   return (
     <SuggestingProvider value={suggesting}>
@@ -821,13 +894,15 @@ function Workspace({
         <div className={chrome.sidebar && !INSTITUTIONAL_PREVIEW ? 'deskwork-body' : 'deskwork-body deskwork-one'}>
           {chrome.sidebar && !INSTITUTIONAL_PREVIEW && <Sidebar />}
           <div
+            ref={pane}
             className={
               isCanvas(state.screen)
                 ? 'device-pane deskwork-pane has-canvas'
                 : 'device-pane deskwork-pane'
             }
           >
-            {!ownTitle && <Header desk />}
+            <Header desk screenOwnsTitle={ownTitle} />
+            <SystemContextBar />
             <Said />
             {/* The sample banner belongs over records, which is what it is
                 about. The search home says the same thing in its own foot
@@ -1006,7 +1081,7 @@ function Rail({ collapsed = false }: { collapsed?: boolean }) {
           <button
             key={id}
             type="button"
-            className="bare rail-item"
+            className={on ? 'bare rail-item is-on' : 'bare rail-item'}
             onClick={() => {
               // Tapping the tab you are already on goes to the top. That is
               // what every phone does, and it is the only way back up a long
@@ -1024,15 +1099,6 @@ function Rail({ collapsed = false }: { collapsed?: boolean }) {
             }}
             title={shut ? label : undefined}
             aria-current={on ? 'page' : undefined}
-            style={{
-              // The rail is the tab bar's wide-screen counterpart and its
-              // labels are the same words, so they take the same strength —
-              // `--app-dim`, not the hairline one. Measured at `--app-faint`:
-              // 3.64:1 on Ink, 2.98:1 on Parchment.
-              color: on ? 'var(--app-accent-bright)' : 'var(--app-dim)',
-              background: on ? 'var(--app-hero)' : 'transparent',
-              boxShadow: on ? '0 1px 0 var(--app-line-top) inset' : 'none',
-            }}
           >
             <TabGlyph screen={id} size={18} />
             <span>{label}</span>
@@ -1044,32 +1110,28 @@ function Rail({ collapsed = false }: { collapsed?: boolean }) {
         // The same treatment a tab gets, because it means the same thing: this
         // is the screen you are on. A colour shift alone lost that argument to
         // the lit pill `litTab` used to put on the tab above.
-        const on = state.screen === screen;
+        // Course Studio has its own current item in the permission-aware
+        // workspace group below. Keep Account as the fallback for every
+        // other Account view, without announcing two current pages at once.
+        const on = state.screen === screen
+          && !(screen === 'account' && state.workspaceView === 'course-studio');
         return (
           <button
             key={screen}
             type="button"
-            className="bare rail-item rail-quiet"
+            className={on ? 'bare rail-item rail-quiet is-on' : 'bare rail-item rail-quiet'}
             onClick={() => {
               if (expanded) setOpen(false);
               dispatch({ type: 'go', screen });
             }}
             title={blurb}
             aria-current={on ? 'page' : undefined}
-            style={{
-              // The rail is the tab bar's wide-screen counterpart and its
-              // labels are the same words, so they take the same strength —
-              // `--app-dim`, not the hairline one. Measured at `--app-faint`:
-              // 3.64:1 on Ink, 2.98:1 on Parchment.
-              color: on ? 'var(--app-accent-bright)' : 'var(--app-dim)',
-              background: on ? 'var(--app-hero)' : 'transparent',
-              boxShadow: on ? '0 1px 0 var(--app-line-top) inset' : 'none',
-            }}
           >
             <span>{label}</span>
           </button>
         );
       })}
+      {!shut && <WorkspaceEntry placement="navigation" onNavigate={() => expanded && setOpen(false)} />}
     </nav>
     </>
   );
@@ -1087,7 +1149,7 @@ export default function App() {
 }
 
 function AppFrame() {
-  const { state, dispatch, saveTrouble, asking, settle } = useStore();
+  const { state, dispatch, saveTrouble, asking, settle, account } = useStore();
   /*
    * Which of the three layouts this window is in — see `lib/media.ts`.
    *
@@ -1117,6 +1179,7 @@ function AppFrame() {
    * drawn together. Here there is one call and no conditions of its own.
    */
   const chrome = chromeFor(state.nav, state.screen, wide, medium);
+  const ownTitle = state.screen === 'search' || state.screen === 'directory';
 
   /**
    * The whole look, written onto the document root.
@@ -1150,7 +1213,8 @@ function AppFrame() {
   // once, so everything downstream sees a ground that names real colours. See
   // `lib/look.ts`.
   const prefersDark = usePrefersDark();
-  const moreContrast = usePrefersContrast();
+  const deviceContrast = usePrefersContrast();
+  const moreContrast = deviceContrast || hasMode(state.access, 'contrast');
   const lookKey = JSON.stringify({
     ...currentLook(state),
     ground: resolveGround(state.ground, prefersDark),
@@ -1215,6 +1279,7 @@ function AppFrame() {
     // The workspace mode rides along the same way, so the stylesheet can
     // show and hide by it without any screen having to read the store.
     root.setAttribute(MODE_ATTR, workspaceModeOf((JSON.parse(lookKey) as Look).workspaceMode));
+    root.setAttribute('data-contrast', moreContrast ? 'more' : 'device');
 
     /*
      * And the other half of the browser's chrome.
@@ -1323,7 +1388,7 @@ function AppFrame() {
     return wide || chrome.railCollapsed ? wideFrame() : phoneFrame();
   };
   return (
-    <>
+    <PrivilegedMfaBoundary subject={cloudConfigured ? account?.id ?? null : null}>
       <Sound />
       {frame()}
       {INSTITUTIONAL_PREVIEW && (
@@ -1331,7 +1396,7 @@ function AppFrame() {
           <InstitutionalPreviewBar />
         </Suspense>
       )}
-    </>
+    </PrivilegedMfaBoundary>
   );
 
   function wideFrame() {
@@ -1441,7 +1506,8 @@ function AppFrame() {
             that is 800 tall and mostly thumb.
           */}
           <TabStrip />
-          <Header />
+          <Header screenOwnsTitle={ownTitle} />
+          <SystemContextBar />
           {/* Under the header, not above it: the change strip covers the
               screen's own name otherwise, and "moved to Friday" means a
               different thing on Calendar than it does on Today. Inside the
@@ -1547,7 +1613,8 @@ function AppFrame() {
         again.
       */}
       <TabStrip />
-      <Header />
+      <Header screenOwnsTitle={ownTitle} />
+      <SystemContextBar />
       {/* Under the header. See the note at the wide layout's copy. */}
       <Said />
       <SampleMark />

@@ -1,0 +1,14 @@
+{
+  "allowed": false,
+  "issues": [
+    {
+      "code": "capability_not_production_ready",
+      "path": "capabilities.registration.readiness.maturity.production_ready",
+      "message": "registration.readiness lacks production-ready evidence."
+    }
+  ],
+  "blockedCapabilities": [
+    "registration.readiness"
+  ],
+  "registryIssues": []
+}

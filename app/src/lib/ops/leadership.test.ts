@@ -17,6 +17,7 @@ import {
   type Item, type Standing,
 } from './leadership';
 import { cell, controlLine, link, renderedFrom, table } from './render';
+import { written } from './decisionlog';
 
 /**
  * Holds the market-leadership register to the tree: every master row, ninety-day
@@ -38,7 +39,7 @@ const isCode = (p: string) => !isDoc(p);
 
 /** The numbered rules of DO-NOT-BUILD.md. */
 const doNotBuildRules = (): number[] => [...read('docs/DO-NOT-BUILD.md').matchAll(/^\| (\d+) \| \*\*/gm)].map((m) => Number(m[1]));
-const decisionWritten = (d: string): boolean => new RegExp(`^## ${d} ·`, 'm').test(read('docs/DECISION-LOG.md'));
+const decisionWritten = (d: string): boolean => written(root, d);
 
 describe('the market leadership register', () => {
   const rows = new Set(REGISTER.map((r) => r.id));
@@ -163,7 +164,7 @@ describe('the market leadership register', () => {
   it('cites, for every revenue line held, a decision that is written down', () => {
     expect(REVENUE).toHaveLength(11);
     for (const r of REVENUE) for (const d of r.decisions) expect(decisionWritten(d), `${r.line}: ${d}`).toBe(true);
-    expect(decisionWritten('D-999')).toBe(false);
+    expect(decisionWritten('D-99999')).toBe(false);
     expect(REVENUE.filter((r) => r.standing === 'held').length).toBeGreaterThanOrEqual(2);
     expect(CONFLICTS.length).toBeGreaterThanOrEqual(4);
   });

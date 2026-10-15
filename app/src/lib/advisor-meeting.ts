@@ -1,4 +1,5 @@
 import { obj, textValue } from './device-library';
+import { SOURCE_LABELS, SOURCE_TEXT, type SourceLabel } from './source';
 
 /**
  * Advisor Meeting Mode (Phase G, `advisor_meeting_mode`): a student's own
@@ -135,6 +136,70 @@ export function keepNotes(incoming: MeetingLibrary, existing: unknown): MeetingL
   return { version: 1, meetings: incoming.meetings.map((m) => ({ ...m, notes: m.notes || notes.get(m.id) || '' })) };
 }
 
+/** Agenda text for a course the student typed. The code and term are the whole line. */
+export function namedAgendaText(course: { code: string; term: string | null }): string {
+  const code = course.code.trim();
+  const term = course.term?.trim() ?? '';
+  const where = term ? `${code} (${term})` : code;
+  return `${where}. Named on this device. Not an enrollment.`.slice(0, LIMITS.text);
+}
+
+/**
+ * Puts named course codes onto the student's own meeting agenda.
+ *
+ * An empty library gets one meeting titled for that list. A library that
+ * already has a meeting gets the missing lines on the newest one, or on a
+ * new meeting when that agenda is full. Notes, questions and attachments
+ * are left as they were. Nothing here is shared.
+ */
+export function meetingWithNamedAgenda(
+  library: MeetingLibrary,
+  named: readonly { code: string; term: string | null }[],
+  now: number,
+): MeetingLibrary {
+  const wanted: string[] = [];
+  for (const course of named) {
+    if (!course.code.trim()) continue;
+    const text = namedAgendaText(course);
+    if (!wanted.includes(text)) wanted.push(text);
+  }
+  if (!wanted.length) return library;
+  const present = new Set(library.meetings.flatMap((meeting) => meeting.agenda.map((line) => line.text)));
+  const missing = wanted.filter((text) => !present.has(text));
+  if (!missing.length) return library;
+
+  const line = (text: string): Line => ({ id: crypto.randomUUID(), text });
+  if (!library.meetings.length) {
+    return {
+      version: 1,
+      meetings: [{
+        ...newMeeting(now),
+        title: 'Courses I am considering',
+        agenda: missing.slice(0, LIMITS.items).map(line),
+      }],
+    };
+  }
+
+  const newest = library.meetings.reduce((best, item) => (item.created > best.created ? item : best));
+  const room = Math.max(0, LIMITS.items - newest.agenda.length);
+  const fit = missing.slice(0, room);
+  const rest = missing.slice(room);
+  let meetings = library.meetings.map((item) =>
+    item.id === newest.id ? { ...item, agenda: [...item.agenda, ...fit.map(line)] } : item,
+  );
+  if (rest.length > 0 && meetings.length < LIMITS.meetings) {
+    meetings = [
+      {
+        ...newMeeting(now),
+        title: 'Courses I am considering',
+        agenda: rest.slice(0, LIMITS.items).map(line),
+      },
+      ...meetings,
+    ].slice(0, LIMITS.meetings);
+  }
+  return { version: 1, meetings };
+}
+
 export function newMeeting(now: number): Meeting {
   return {
     id: crypto.randomUUID(),
@@ -174,13 +239,46 @@ export interface SharePayload {
   scenario: AttachedScenario | null;
   courses: AttachedCourse[];
   followUps: string[];
+  /**
+   * Where each part came from, what it assumes, and when it was prepared.
+   * Optional on read: a share made before this existed still opens, and says
+   * nothing about its sources rather than inventing some.
+   */
+  provenance?: Provenance;
 }
+
+export interface Provenance {
+  /** The day the snapshot was prepared, `YYYY-MM-DD`. A day, not a moment, so a preview does not change under the student's finger. */
+  preparedAt: string;
+  sources: { what: string; label: SourceLabel }[];
+  assumptions: string[];
+}
+
+/** Said the same way on every share, because they are true of every share. */
+const ASSUMPTIONS = [
+  'Nothing here comes from the school’s records; the student prepared it.',
+  'Any estimate is the student’s planning arithmetic, not a degree audit or an official credit evaluation.',
+  'Semester does not know seat availability or registration eligibility.',
+] as const;
+
+const isoDay = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 export function sharePayload(
   meeting: Meeting,
   resolved: { sharedAs: string; scenario: AttachedScenario | null; courses: AttachedCourse[] },
+  now: Date = new Date(),
 ): SharePayload {
   const words = (l: Line[]) => l.map((x) => x.text.trim()).filter(Boolean);
+  const scenario = meeting.attach.scenario ? resolved.scenario : null;
+  const courses = resolved.courses.slice(0, LIMITS.courses);
+  const followUps = meeting.attach.followUps ? words(meeting.followUps) : [];
+  const sources: Provenance['sources'] = [
+    { what: 'Agenda and questions, written by the student', label: 'student_entered' },
+    ...(scenario ? [{ what: `Plan scenario “${scenario.name}”, the student’s own arithmetic over requirements they entered`, label: 'estimated' as const }] : []),
+    ...(courses.length ? [{ what: 'Courses being considered, chosen by the student from their registration plan', label: 'student_entered' as const }] : []),
+    ...(followUps.length ? [{ what: 'Follow-up actions, written by the student', label: 'student_entered' as const }] : []),
+  ];
   return {
     version: 1,
     sharedAs: resolved.sharedAs.trim().slice(0, 80),
@@ -188,9 +286,10 @@ export function sharePayload(
     date: meeting.date,
     agenda: words(meeting.agenda),
     questions: words(meeting.questions),
-    scenario: meeting.attach.scenario ? resolved.scenario : null,
-    courses: resolved.courses.slice(0, LIMITS.courses),
-    followUps: meeting.attach.followUps ? words(meeting.followUps) : [],
+    scenario,
+    courses,
+    followUps,
+    provenance: { preparedAt: isoDay(now), sources, assumptions: [...ASSUMPTIONS] },
   };
 }
 
@@ -220,6 +319,17 @@ export function readSharePayload(value: unknown): SharePayload {
     if (typeof c.credits !== 'number' || !Number.isFinite(c.credits)) throw bad();
     return { code: c.code, section: c.section, title: c.title, credits: c.credits, meets: c.meets };
   });
+  let provenance: Provenance | undefined;
+  if (value.provenance !== undefined) {
+    const v = value.provenance;
+    if (!obj(v) || !textValue(v.preparedAt, 10) || !/^\d{4}-\d{2}-\d{2}$/.test(v.preparedAt)) throw bad();
+    if (!Array.isArray(v.sources) || v.sources.length > 8) throw bad();
+    const sources = v.sources.map((x) => {
+      if (!obj(x) || !textValue(x.what, 300) || typeof x.label !== 'string' || !(SOURCE_LABELS as readonly string[]).includes(x.label)) throw bad();
+      return { what: x.what, label: x.label as SourceLabel };
+    });
+    provenance = { preparedAt: v.preparedAt, sources, assumptions: texts(v.assumptions, 6) };
+  }
   return {
     version: 1,
     sharedAs: value.sharedAs,
@@ -230,6 +340,7 @@ export function readSharePayload(value: unknown): SharePayload {
     scenario,
     courses,
     followUps: texts(value.followUps),
+    ...(provenance ? { provenance } : {}),
   };
 }
 
@@ -240,6 +351,16 @@ export function payloadLines(p: SharePayload): { heading: string; items: string[
     ...(p.scenario ? [{ heading: `Plan scenario: ${p.scenario.name}`, items: p.scenario.lines }] : []),
     ...(p.courses.length ? [{ heading: 'Courses being considered', items: p.courses.map((c) => `${c.code} · ${c.section} — ${c.title}, ${c.credits} credits, ${c.meets}`) }] : []),
     ...(p.followUps.length ? [{ heading: 'Follow-up actions', items: p.followUps }] : []),
+    ...(p.provenance
+      ? [{
+          heading: 'Where this comes from, and what it assumes',
+          items: [
+            ...p.provenance.sources.map((x) => `${SOURCE_TEXT[x.label]}: ${x.what}.`),
+            `Prepared on ${p.provenance.preparedAt}; it may have changed since.`,
+            ...p.provenance.assumptions,
+          ],
+        }]
+      : []),
   ].filter((s) => s.items.length > 0);
 }
 

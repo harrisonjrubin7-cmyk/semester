@@ -16,7 +16,7 @@ import { SourceBadge } from './SourceBadge';
 /**
  * Registration Day Mode on Today (`registration_day_mode`, Phase C).
  *
- * Shown only while the mode is active — the window opens within a week, or it
+ * Shown only while the mode is active — the window opens within 72 hours, or it
  * opened in the last day, or the student switched it on — and otherwise
  * renders nothing. It is the brief's card:
  *

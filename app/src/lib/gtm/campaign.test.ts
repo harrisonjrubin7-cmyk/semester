@@ -12,6 +12,12 @@ const LINK = campaignUrl('https://semester.app/start', {
 const FLAG_ON: FlagContext = {
   environment: 'production', tenantId: 'vu', now: new Date('2026-10-01T12:00:00Z'), killSwitches: [],
   tenantPolicy: { [CAMPAIGN_FLAG]: { state: 'production', permittedRoles: [], permittedCohorts: [] } }, capabilities: ['tenant:configure'],
+  // Synthetic gate fixture only; no campaign is activated or sent.
+  activationReceipt: {
+    decisionKey: 'activation:v1:test-campaign', requestId: 'test-campaign', tenantId: 'vu',
+    capabilityId: 'CAP-059', operation: CAMPAIGN_FLAG, policyVersion: 'test-policy', configurationVersion: 1,
+    issuedAt: '2026-10-01T12:00:00Z', expiresAt: '2026-10-01T12:15:00Z',
+  },
 };
 
 const READY: Campaign = {
@@ -51,6 +57,7 @@ describe('audience criteria', () => {
 describe('the activation gate', () => {
   it('passes a campaign that meets the release gate', () => {
     expect(activationGate(READY, 'vu', FLAG_ON)).toEqual([]);
+    expect(activationGate(READY, 'vu', { ...FLAG_ON, activationReceipt: null })).toContainEqual({ check: 'flag', step: 'activation_contract' });
   });
 
   it('refuses when the flag is off, naming the gate that refused', () => {

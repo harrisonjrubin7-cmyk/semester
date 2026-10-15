@@ -1,7 +1,8 @@
 import { useMemo, useState, type CSSProperties, type ReactNode } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { EmptyState } from './ui';
 import { Plus } from './Icons';
+import { HorizontalOverflow } from './HorizontalOverflow';
 import {
   SORTS,
   anyPersonal,
@@ -116,7 +117,7 @@ export function Gallery<T extends Filed>({
    * is: two calls either side of midnight would put a file under "Today" and
    * then date it yesterday, in the same list.
    */
-  const now = Date.now();
+  const now = useNow().getTime();
   const groups = grouped(mine, by, now);
 
   return (
@@ -124,7 +125,7 @@ export function Gallery<T extends Filed>({
       <div className="gal-head">
         <div className="gal-head-name">{startLabel}</div>
       </div>
-      <div className="gal-start">
+      <HorizontalOverflow label={startLabel} className="gal-start">
         {starters.map((s) => (
           <button
             key={s.id}
@@ -146,7 +147,7 @@ export function Gallery<T extends Filed>({
             )}
           </button>
         ))}
-      </div>
+      </HorizontalOverflow>
 
       {aside}
 

@@ -43,6 +43,7 @@ const NAMED_AS: Record<string, string> = {
   'Apple': 'Apple',
   'OpenStreetMap tile servers': 'OpenStreetMap tile servers',
   'Nominatim and Photon (address lookup)': 'Nominatim and Photon',
+  'Public institution source hosts': 'Public institution source hosts you check',
   'Calendar and Canvas hosts the student links': 'Calendar and Canvas hosts you link',
   'The student’s browser push service': 'browser\'s push service',
 };
@@ -51,7 +52,16 @@ describe('legal drafts', () => {
   // Every draft in the folder, not a list someone must remember to extend: a
   // new policy without the banner is exactly the one that gets linked by
   // mistake.
-  const DRAFTS = readdirSync(LEGAL).filter((f) => f.endsWith('.md'));
+  // The four Phase 0 program registers (underscore names) are lists of
+  // questions for counsel, not policies a user could be shown, so they are not
+  // held to the draft banner. A new policy still has to be a -DRAFT.md.
+  const PROGRAM_REGISTERS = new Set([
+    'CONTRACT_REVIEW_CHECKLIST.md',
+    'LEGAL_REVIEW_QUEUE.md',
+    'PRIVACY_REVIEW_QUEUE.md',
+    'PUBLIC_CLAIMS_APPROVAL_REGISTER.md',
+  ]);
+  const DRAFTS = readdirSync(LEGAL).filter((f) => f.endsWith('.md') && !PROGRAM_REGISTERS.has(f));
 
   it('finds every draft, including the two it began with', () => {
     expect(DRAFTS).toContain('PRIVACY-POLICY-DRAFT.md');

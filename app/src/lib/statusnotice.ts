@@ -66,7 +66,7 @@ function fromRecorded(o: Record<string, unknown>): Record<string, unknown> {
     status: typeof o.resolved === 'string' ? 'resolved' : typeof last?.status === 'string' ? last.status : 'investigating',
     kind: o.impact === 'maintenance' ? 'maintenance' : 'incident',
     from: o.started,
-    until: typeof o.resolved === 'string' ? o.resolved : null,
+    until: typeof o.resolved === 'string' ? o.resolved : typeof o.until === 'string' ? o.until : null,
     affects: typeof o.affects === 'string' ? o.affects : typeof last?.body === 'string' ? last.body : '',
   };
 }

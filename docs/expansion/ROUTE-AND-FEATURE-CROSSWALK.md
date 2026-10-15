@@ -24,7 +24,7 @@ for the thing before building it.
 
 | Brief item (§28) | Built into | Status in this branch |
 |---|---|---|
-| Registration Day Mode (§28.1) | `yes` → Search & plan → **Registration day** tab (`components/RegistrationDay.tsx`, `lib/registration-day.ts`) | **Built.** Countdown, ranked backups (≤5, other sections first, clash-free), checklist, readiness, copy/download section list. Stored on the device under `semester.registration-day.v1`, beside the existing `semester.registration.v1` whose shape is unchanged |
+| Registration Day Mode (§28.1) | `yes` → Term plan → **Registration day** tab (`components/RegistrationDay.tsx`, `lib/registration-day.ts`) | **Built.** Countdown, ranked backups (≤5, other sections first, clash-free), checklist, readiness, copy/download section list. Stored on the device under `semester.registration-day.v1`, beside the existing `semester.registration.v1` whose shape is unchanged |
 | Graduation simulator + cost of delay (§28.2) | `degree` → **Scenarios** tab (`components/GraduationSimulator.tsx`, `lib/graduation.ts`) | **Built.** Term-by-term projection, summers only when taken, six presets, editable scenarios, advisor summary. Hours finished come from the Taken tab. Stored under `semester.graduation.v1` |
 | Money planner (§28.3) | `costs` (Money) | Already covers the bill and spending. Cost-per-term from Money into Scenarios is a follow-up |
 | Transfer credit tool (§28.4) | `degree` / `pathway` | DB ready (`articulation_rules`, `transfer_evaluations`). UI is E3 |

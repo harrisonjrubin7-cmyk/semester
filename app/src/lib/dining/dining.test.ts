@@ -80,8 +80,15 @@ function world(over: Partial<DiningState> = {}): DiningState {
 }
 
 function flagCtx(over: Partial<FlagContext> = {}): FlagContext {
+  const now = over.now ?? new Date(NOON_MON);
   return {
-    environment: 'production', tenantId: 'vu', now: new Date(NOON_MON), killSwitches: [],
+    environment: 'production', tenantId: 'vu', now, killSwitches: [],
+    // Synthetic gate fixture only; this is not evidence of a live dining activation.
+    activationReceipt: {
+      decisionKey: 'activation:v1:test-dining', requestId: 'test-dining', tenantId: 'vu',
+      capabilityId: 'CAP-047', operation: 'module.dining', policyVersion: 'test-policy', configurationVersion: 1,
+      issuedAt: now.toISOString(), expiresAt: new Date(now.getTime() + 15 * 60_000).toISOString(),
+    },
     tenantPolicy: { 'module.dining': { state: 'production', permittedRoles: [], permittedCohorts: [] } }, capabilities: [], ...over,
   };
 }
@@ -123,8 +130,9 @@ describe('module.dining', () => {
     expect(requireDining(d)).toMatchObject({ ok: false, code: 'kill_switch' });
   });
 
-  it('is on for a school in production (control)', () => {
+  it('is on for a school in production with a scoped receipt (control)', () => {
     expect(diningGate(flagCtx()).allowed).toBe(true);
+    expect(diningGate(flagCtx({ activationReceipt: null }))).toMatchObject({ allowed: false, step: 'activation_contract' });
   });
 });
 

@@ -7,7 +7,7 @@ export interface Summary { bars: Bar[]; ok: number; total: number; percent: numb
 export interface Incident {
   id: string; title: string; components: string[]; impact: 'down' | 'partial' | 'maintenance';
   started: string; resolved: string | null;
-  updates: { at: string; status: 'investigating' | 'identified' | 'monitoring' | 'resolved'; body: string }[];
+  updates: { at: string; status: 'investigating' | 'identified' | 'monitoring' | 'resolved' | 'scheduled'; body: string }[];
 }
 export interface IncidentFile { updated: string; incidents: Incident[] }
 

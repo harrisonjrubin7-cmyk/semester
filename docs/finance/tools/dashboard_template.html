@@ -1,0 +1,432 @@
+<title>Semester Scenario Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a planning instrument. Scenario switch on top, the six answers beside it, charts in a two-column grid, every number also in a table. */
+:root{
+  --bg:#f3f6f8; --surface:#ffffff; --ink:#0e1c26; --ink-2:#4a5b68; --ink-3:#6b7a86; --rule:#d9e1e7; --grid:#e8eef2;
+  --accent:#17607a; --accent-ink:#ffffff; --warn-bg:#fff6dd; --warn-ink:#5a4300; --warn-rule:#e6c76a;
+  --good:#0f8a43; --bad:#b4302f;
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#eda100; --c5:#e87ba4; --c6:#8d9aa5;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace; --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c151c; --surface:#142029; --ink:#eef3f6; --ink-2:#b4c1ca; --ink-3:#8fa0ac; --rule:#26363f; --grid:#1d2c35;
+  --accent:#5db4d2; --accent-ink:#06222c; --warn-bg:#2b2410; --warn-ink:#f3dc9a; --warn-rule:#6e5a1f;
+  --good:#46c47c; --bad:#ee7473;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#8d9aa5; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c151c; --surface:#142029; --ink:#eef3f6; --ink-2:#b4c1ca; --ink-3:#8fa0ac; --rule:#26363f; --grid:#1d2c35;
+  --accent:#5db4d2; --accent-ink:#06222c; --warn-bg:#2b2410; --warn-ink:#f3dc9a; --warn-rule:#6e5a1f;
+  --good:#46c47c; --bad:#ee7473;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#8d9aa5; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;margin:0;padding-inline:max(16px,3vw);padding-block:20px 56px}
+.wrap{max-width:1180px;margin-inline:auto;display:flex;flex-direction:column;gap:18px}
+h1{font-size:clamp(22px,3.2vw,30px);line-height:1.15;margin:0;font-weight:600;text-wrap:balance}
+h2{font-size:15px;margin:0;font-weight:600}
+.sub{color:var(--ink-2);margin:4px 0 0;max-width:68ch}
+.banner{background:var(--warn-bg);color:var(--warn-ink);border:1px solid var(--warn-rule);padding:10px 14px;border-radius:6px;font-size:13px}
+.banner b{font-weight:600}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--rule)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:6px 10px;cursor:pointer;min-height:34px}
+.seg button:hover{border-color:var(--accent)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.seg button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.desc{color:var(--ink-2);font-size:13px;margin:0;max-width:90ch;min-height:2.6em}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:10px 12px;min-width:0}
+.kpi .l{font-size:12px;color:var(--ink-2)}
+.kpi .v{font-family:var(--mono);font-size:21px;font-weight:500;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .d{font-family:var(--mono);font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.kpi .d.up{color:var(--good)} .kpi .d.dn{color:var(--bad)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:14px 14px 10px;min-width:0;position:relative}
+.card .note{color:var(--ink-3);font-size:12px;margin:2px 0 8px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{font-family:var(--sans);font-size:11px;fill:var(--ink-2)}
+svg .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+svg .grid line,.gridline{stroke:var(--grid);stroke-width:1}
+svg .axis{stroke:var(--rule);stroke-width:1}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin:6px 0 0;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:10px;height:10px;border-radius:2px;display:inline-block}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 9px;border-radius:5px;z-index:20;max-width:260px;opacity:0;transition:opacity .08s;font-variant-numeric:tabular-nums}
+.tip b{font-weight:600}
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--rule);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--rule)}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--surface)}
+thead th{font-weight:600;color:var(--ink-2);font-size:12px}
+tr.sel td{background:color-mix(in srgb,var(--accent) 10%,var(--surface));font-weight:600}
+details summary{cursor:pointer;color:var(--accent);font-weight:500;padding:6px 0}
+.foot{color:var(--ink-3);font-size:12px;max-width:90ch}
+@media (prefers-reduced-motion:reduce){.tip{transition:none}}
+
+.status{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:13px;color:var(--ink-2)}
+.pill{font-size:12px;border:1px solid var(--rule);border-radius:999px;padding:2px 10px;background:var(--surface)}
+.pill.ok{color:var(--good);border-color:color-mix(in srgb,var(--good) 45%,var(--rule))}
+.pill.bad{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 55%,var(--rule));font-weight:600}
+button.btn{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:5px 10px;cursor:pointer;min-height:32px}
+button.btn:hover{border-color:var(--accent)} button.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.btn:disabled{opacity:.5;cursor:default} button.btn:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.lv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px 14px}
+.fld{display:flex;flex-direction:column;gap:3px;min-width:0}
+.fld label{font-size:12px;color:var(--ink-2);line-height:1.3;display:flex;gap:2px 6px;align-items:baseline;flex-wrap:wrap;align-content:flex-start;min-height:2.7em}
+.fld .id{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.in{display:flex;align-items:center;gap:6px}
+.in input{font:inherit;font-family:var(--mono);font-size:13px;width:100%;min-width:0;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+.in input.chg{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,var(--bg))}
+.in input.bad{border-color:var(--bad)}
+.in .u{font-size:11px;color:var(--ink-3);white-space:nowrap}
+.in .rs{font-size:12px;color:var(--accent);background:none;border:0;cursor:pointer;padding:2px 4px;visibility:hidden}
+.in .rs.on{visibility:visible}
+.def{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.chip{font-size:10.5px;letter-spacing:.04em;border:1px solid var(--rule);border-radius:4px;padding:0 5px;color:var(--ink-3);text-transform:uppercase}
+.chip.FACT{color:var(--good)} .chip.PROPOSED,.chip.HYPOTHESIS{color:var(--ink-2)} .chip.REVIEW{color:var(--bad)}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:6px 14px 12px}
+.panel>summary{font-weight:600;color:var(--ink);padding:8px 0}
+.panel h3{font-size:12.5px;margin:14px 0 6px;color:var(--accent);font-weight:600;text-transform:none}
+.rowf{display:grid;grid-template-columns:54px minmax(0,1.6fr) minmax(0,2fr) auto;gap:8px 12px;align-items:center;padding:5px 0;border-bottom:1px solid var(--grid)}
+.rowf .nm{font-size:13px;min-width:0}
+.rowf .ins{display:flex;gap:8px;flex-wrap:wrap}
+.rowf .ins .in{width:128px}
+@media (max-width:700px){.rowf{grid-template-columns:minmax(0,1fr);gap:2px}.rowf .ins .in{width:100%}}
+.search{font:inherit;width:100%;max-width:420px;padding:7px 10px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink);margin:6px 0}
+.hire td:first-child{max-width:260px;overflow:hidden;text-overflow:ellipsis}
+.hire input{width:84px;text-align:right}
+textarea.io{width:100%;min-height:96px;font-family:var(--mono);font-size:12px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink);padding:8px}
+.plans{list-style:none;margin:8px 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.plans li{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--grid);padding-bottom:6px}
+.plans .pn{flex:1;min-width:140px}
+.msg{font-size:12.5px;color:var(--ink-2);min-height:1.4em;margin:4px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Semester scenario dashboard</h1>
+    <p class="sub">The three-year financial model, running live in this page. Change any input below and every figure and chart recalculates with the workbook's own formulas.</p>
+  </header>
+  <div class="banner"><b>Hypotheses, not forecasts.</b> No company cash, revenue, price or customer is evidenced. Only the Plus price and the 26-week pilot are facts. Figures are for founder planning and for questions to an accountant, tax adviser and counsel. Workbook snapshot of <span id="stamp"></span>.</div>
+
+  <div class="bar" id="bar">
+    <div class="seg" id="seg" role="group" aria-label="Scenario"></div>
+    <p class="desc" id="desc"></p>
+    <div class="status"><span id="chg"></span><button type="button" class="btn" id="reset-all" hidden>Reset all to the workbook</button><span class="pill" id="checks"></span><span id="busy" class="def"></span></div>
+  </div>
+
+  <section class="card" id="levers"><h2>Key levers</h2><p class="note">Opening cash, financing, prices, gate months and founder pay. Blue means changed from the workbook; the arrow puts one back. Your changes are saved for you (see Saved plans below).</p><div class="lv-grid" id="lv"></div></section>
+
+  <details class="panel" id="p-all"><summary>All assumptions <span class="def" id="n-all"></span></summary><input class="search" id="q" type="search" placeholder="Filter by name or ID, for example churn, A-044, AI" aria-label="Filter assumptions"><div id="all"></div></details>
+  <details class="panel" id="p-drv"><summary>Scenario drivers for <span id="drvname"></span></summary><p class="note">The multipliers and switches that make this scenario differ from Base. Changes apply to this scenario only.</p><div id="drv"></div></details>
+  <details class="panel" id="p-hire"><summary>Hiring plan</summary><p class="note">Head count, start month (1 is Nov 2026) and base pay for every role. A flexible role also waits for its gate in the gated scenarios. Pay excludes the employer burden the model adds.</p><div class="tbl" style="margin-top:6px"><table class="hire" id="hire"></table></div></details>
+  <details class="panel" id="p-plans"><summary>Saved plans, export and import</summary>
+    <p class="note" id="where"></p>
+    <div class="row"><input class="search" id="pname" placeholder="Name this set of inputs, for example Seed at $3M" style="margin:0;flex:1" aria-label="Plan name"><button type="button" class="btn pri" id="psave">Save as a plan</button></div>
+    <ul class="plans" id="plist"></ul>
+    <div class="msg" id="pmsg" role="status"></div>
+    <div class="row" style="margin-bottom:6px"><button type="button" class="btn" id="pexp">Copy my changes</button><button type="button" class="btn" id="pimp">Apply pasted changes</button></div>
+    <textarea class="io" id="pio" aria-label="Changes as text" placeholder="Your changes appear here as text. Paste changes here and press Apply to load them."></textarea>
+  </details>
+
+  <section class="kpis" id="kpis" aria-label="Key results for the chosen scenario"></section>
+
+  <section class="grid">
+    <div class="card"><h2>ARR and revenue by quarter</h2><p class="note">Chosen scenario (solid) against Base (dashed), both with your inputs. Quarter 1 is Nov-Jan 2026-27.</p><div id="c-arr"></div><div class="legend" id="l-arr"></div></div>
+    <div class="card"><h2>Cash at quarter end</h2><p class="note">With your financing rounds. Bars below zero mean the plan is not funded.</p><div id="c-cash"></div><div class="legend" id="l-cash"></div></div>
+    <div class="card"><h2>Revenue by stream, per year</h2><p class="note">$ thousands. Stacks are the revenue streams; AI usage and alumni are grouped together, and incident service credits are netted against institutional.</p><div id="c-str"></div><div class="legend" id="l-str"></div></div>
+    <div class="card"><h2>Peak funding need, all scenarios</h2><p class="note">Cumulative operating cash outflow over 36 months, before financing. Chosen scenario highlighted.</p><div id="c-peak"></div></div>
+    <div class="card"><h2>What moves the go/no-go plan most</h2><p class="note">Change in Year-3 ARR when one input moves, against scenario 8 with your inputs. Pilot conversion and volume are tested both ways; delays and gate slips only hurt.</p><div id="c-sens"></div></div>
+    <div class="card"><h2>Cash saved by each hiring gate</h2><p class="note">36-month people cost avoided by releasing each gate's roles nine months later (scenario 8 against 9).</p><div id="c-gate"></div></div>
+  </section>
+
+  <section>
+    <h2 style="margin-bottom:8px">All scenarios, side by side</h2>
+    <div class="tbl"><table id="tbl"></table></div>
+  </section>
+  <details><summary>Quarterly numbers for the chosen scenario</summary><div class="tbl" style="margin-top:8px"><table id="tq"></table></div></details>
+  <p class="foot">Source: <code>docs/finance/semester-financial-model.xlsx</code>. This page evaluates the workbook's own formulas in the browser (<code>tools/engine.js</code>, proved against LibreOffice on every formula cell of all nine scenarios by <code>tools/engine_parity.py</code>). Your changes live in this page and its saved plans; they do not change the workbook, so to make one permanent edit the workbook. A number here is a model output under stated assumptions; the register says which are facts, proposals, hypotheses or questions for a professional.</p>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+/*ENGINE*/
+</script>
+<script>
+const D = /*DATA*/;
+const $ = (s) => document.querySelector(s);
+const SE = SheetEngine, M = new SE.Model(D.model);
+const STREAMS = ["Student subscription", "Institutional platform", "Implementation", "Marketplace", "Career / employer", "AI usage and alumni"];
+const fmtK = (v) => v == null || isNaN(v) ? "n/a" : (Math.abs(v) < 500 ? "0" : (v < 0 ? "(" : "") + Math.round(Math.abs(v) / 1e3).toLocaleString("en-US") + (v < 0 ? ")" : ""));
+const fmtM = (v, d = 1) => v == null || isNaN(v) ? "n/a" : (v < 0 ? "-" : "") + "$" + (Math.abs(v) / 1e6).toFixed(d) + "M";
+const pct = (v) => v == null || isNaN(v) ? "n/a" : Math.round(v * 100) + "%";
+const NS = "http://www.w3.org/2000/svg", tip = $("#tip");
+function showTip(e, html) { tip.innerHTML = html; tip.style.opacity = 1; const w = tip.offsetWidth; let x = e.clientX + 14; if (x + w > innerWidth - 8) x = e.clientX - w - 14; tip.style.left = Math.max(8, x) + "px"; tip.style.top = (e.clientY + 14) + "px"; }
+function hideTip() { tip.style.opacity = 0; }
+function el(n, a = {}, p, t) { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (t != null) e.textContent = t; if (p) p.appendChild(e); return e; }
+function h(tag, props = {}, ...kids) { const e = document.createElement(tag); for (const k in props) { if (k === "class") e.className = props[k]; else if (k.startsWith("on")) e.addEventListener(k.slice(2), props[k]); else if (props[k] !== false && props[k] != null) e.setAttribute(k, props[k] === true ? "" : props[k]); } kids.flat().forEach((c) => c != null && e.append(c.nodeType ? c : document.createTextNode(c))); return e; }
+function ticks(lo, hi, n = 5) { const span = hi - lo || 1, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / mag, step = (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * mag; const a = Math.floor(lo / step) * step, b = Math.ceil(hi / step) * step, out = []; for (let v = a; v <= b + step / 2; v += step) out.push(+v.toFixed(6)); return out; }
+function chart(host, w, hh, m) { host.innerHTML = ""; const s = el("svg", { viewBox: `0 0 ${w} ${hh}`, role: "img" }); host.appendChild(s); return { s, w, h: hh, m, iw: w - m.l - m.r, ih: hh - m.t - m.b }; }
+function legend(id, items) { $(id).innerHTML = items.map(([c, t, dash]) => `<span><i class="sw" style="background:${c};${dash ? "height:0;border-top:2px dashed " + c + ";background:none;border-radius:0" : ""}"></i>${t}</span>`).join(""); }
+
+/* ---------- inputs: what can change, and what the workbook says today */
+const defaults = {}; // "Sheet!A1" -> workbook value
+function reg(key) { const [sh, a] = key.split("!"); defaults[key] = M.raw_(sh, a); return key; }
+const specs = []; // every editable field: {key, unit, label, id, ...}
+D.inputs.forEach((i) => i.cells.forEach((c, n) => { reg("Assumptions!" + c); }));
+D.hires.forEach((r) => ["AO", "AP", "AS"].forEach((c) => reg("Headcount!" + c + r.row)));
+D.drivers.forEach((d) => d.vals.forEach((v, k) => reg("Scenario_Control!" + SE.colName(4 + k) + d.row)));
+let ov = {}, sel = 1, gen = 0, R = new Array(9).fill(null), X = { sens: null, gates: null };
+
+const isPct = (u) => /^%/.test(u || "");
+const unitLabel = (u) => isPct(u) ? "%" : (u || "");
+const toDisp = (u, v) => isPct(u) ? +(v * 100).toPrecision(6) : +(+v).toPrecision(9);
+const fromDisp = (u, s) => { s = String(s).replace(/[$,%\s]/g, ""); if (s === "" || isNaN(+s)) return null; const x = +s; return isPct(u) ? x / 100 : x; };
+const fmtDisp = (u, v) => toDisp(u, v).toLocaleString("en-US", { maximumFractionDigits: 6, useGrouping: Math.abs(v) >= 10000 });
+const wbVal = (u, v) => u === "$" ? "$" + fmtDisp(u, v) : fmtDisp(u, v) + (unitLabel(u) ? " " + unitLabel(u) : "");
+const nChanged = () => Object.keys(ov).length;
+
+function setCell(key, v) { if (v === defaults[key]) delete ov[key]; else ov[key] = v; }
+function applyOv() { for (const k in defaults) { const [sh, a] = k.split("!"); const want = k in ov ? ov[k] : defaults[k]; if (M.raw_(sh, a) !== want) M.set(sh, a, want, true); } M.clear(); }
+
+/* ---------- reading results from the engine */
+const num = (v) => typeof v === "number" ? v : (v == null ? 0 : NaN);
+const g = (sh, a) => num(M.get(sh, a));
+function readResults() {
+  const row = (r) => M.range("Board_Pack", `C${r}:N${r}`).map(num);
+  const stream = (c) => ({
+    "Student subscription": g("Summary", c + 8), "Institutional platform": g("Summary", c + 9) + g("Summary", c + 15), "Implementation": g("Summary", c + 10),
+    "Marketplace": g("Summary", c + 12), "Career / employer": g("Summary", c + 13), "AI usage and alumni": g("Summary", c + 11) + g("Summary", c + 14) });
+  const ys = ["C", "D", "E"].map(stream), streams = {}; STREAMS.forEach((n) => { streams[n] = ys.map((y) => y[n]); });
+  const failing = []; [...Array(18).keys()].map((i) => i + 4).concat([29, 30]).forEach((r) => { if (M.get("Checks", "C" + r) !== "PASS") failing.push(String(M.get("Checks", "A" + r))); });
+  return { rev: ["C", "D", "E"].map((c) => g("Summary", c + 16)), arr3: g("Summary", "E40"), gm3: g("Summary", "E23"), ebitda: ["C", "D", "E"].map((c) => g("Summary", c + 29)),
+    peak: g("Unit_Economics", "E64"), mincash: g("Checks", "B23"), lowmonths: g("Checks", "B24"), heads3: g("Summary", "E44"), bm3: M.get("Unit_Economics", "E61"), streams, failing,
+    q: { rev: row(8), arr: row(18), cash: row(15), ebitda: row(12), heads: row(25) }, labels: M.range("Board_Pack", "C6:N6").map(String), gateCost: M.range("Gate_Schedule", "J6:J15").map(num),
+    gates: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((r) => ({ id: M.get("Gate_Schedule", "A" + r), name: M.get("Gate_Schedule", "B" + r), fte: g("Gate_Schedule", "F" + r), base: g("Gate_Schedule", "G" + r) })) };
+}
+function run(i) { M.set("Scenario_Control", "D3", i + 1); return readResults(); }
+function sensArr3(edits) {
+  const old = edits.map(([sh, a]) => M.raw_(sh, a));
+  edits.forEach(([sh, a, v]) => M.set(sh, a, v, true));
+  M.set("Scenario_Control", "D3", 8);
+  const v = g("Summary", "E40");
+  edits.forEach(([sh, a], i) => M.set(sh, a, old[i], true)); M.clear();
+  return v;
+}
+const SENS = [["Pilot-to-annual conversion", "Assumptions", "D40", 0, 0.75, "0% convert", "75% convert"], ["Institutional logo volume", "Scenario_Control", "K10", 0.6, 1.4, "60% of planned logos", "140% of planned logos"],
+  ["Enterprise signing delay", "Scenario_Control", "K12", 6, null, "6 months later", null], ["Gate slip, all gates", "Scenario_Control", "K26", 12, null, "12 months later", null]];
+
+/* ---------- recompute: the chosen scenario first, then the rest in small steps so the page stays responsive */
+function recompute() {
+  const my = ++gen; applyOv(); R = new Array(9).fill(null); X = { sens: null, gates: null };
+  R[sel] = run(sel); renderAll(); busy("Updating the other scenarios…");
+  const order = [...Array(9).keys()].filter((i) => i !== sel); const jobs = order.map((i) => () => { R[i] = run(i); });
+  const base8 = () => R[7].arr3, rows = [];
+  SENS.forEach(([label, sh, a, lo, hi, lol, hil]) => jobs.push(() => { const r = { label, lo: sensArr3([[sh, a, lo]]) - base8(), loLabel: lol, hi: null, hiLabel: hil }; rows.push(r); }, ...(hi == null ? [] : [() => { rows[rows.length - 1].hi = sensArr3([[sh, a, hi]]) - base8(); }])));
+  let n = 0;
+  (function step() {
+    if (my !== gen) return;
+    const t0 = performance.now(); while (n < jobs.length && performance.now() - t0 < 40) jobs[n++]();
+    if (n < jobs.length) { setTimeout(step, 0); return; }
+    X.sens = rows;
+    X.gates = R[7].gates.map((g8, i) => ({ ...g8, saved: R[7].gateCost[i] - R[8].gateCost[i] })).sort((a, b) => b.saved - a.saved);
+    busy(""); renderAll();
+  })();
+}
+function busy(t) { $("#busy").textContent = t; }
+
+/* ---------- controls */
+const fields = []; // every rendered input, so changes show everywhere the same cell appears
+function field(key, unit, opt = {}) {
+  const inp = h("input", { type: "text", inputmode: "decimal", "aria-label": opt.aria || key, autocomplete: "off" });
+  const rs = h("button", { type: "button", class: "rs", title: "Put back the workbook value", "aria-label": "Reset to the workbook value" }, "↺");
+  const wrap = h("div", { class: "in" }, inp, h("span", { class: "u" }, unitLabel(unit)), rs);
+  const f = { key, unit, inp, rs, owner: opt.owner || null };
+  const show = () => { const v = key in ov ? ov[key] : defaults[key]; inp.value = fmtDisp(unit, v); const on = key in ov; inp.classList.toggle("chg", on); rs.classList.toggle("on", on); inp.classList.remove("bad"); };
+  f.show = show; fields.push(f); show();
+  inp.addEventListener("change", () => { const v = fromDisp(unit, inp.value); if (v === null) { inp.classList.add("bad"); return; } setCell(key, v); fields.filter((x) => x.key === key).forEach((x) => x.show()); changed(); });
+  rs.addEventListener("click", () => { setCell(key, defaults[key]); fields.filter((x) => x.key === key).forEach((x) => x.show()); changed(); });
+  return wrap;
+}
+const specById = {}; D.inputs.forEach((i) => { specById[i.id] = i; });
+function keyField(id) {
+  if (/^H\d+$/.test(id)) { const r = D.hires.find((x) => "H" + x.row === id); return h("div", { class: "fld" }, h("label", {}, h("span", { class: "id" }, "Pay"), r.role + " base pay"), field("Headcount!AS" + r.row, "$", { aria: r.role + " base pay" }), h("span", { class: "def" }, "workbook: " + wbVal("$", r.pay))); }
+  const s = specById[id]; return h("div", { class: "fld" }, h("label", {}, h("span", { class: "id" }, id), s.label, s.basis ? h("span", { class: "chip " + s.basis }, s.basis) : null), field("Assumptions!" + s.cells[0], s.unit, { aria: s.label }), h("span", { class: "def" }, "workbook: " + wbVal(s.unit, s.vals[0])));
+}
+function buildLevers() { const lv = $("#lv"); lv.innerHTML = ""; D.key.forEach((id) => lv.appendChild(keyField(id))); }
+function buildAll() {
+  const root = $("#all"); root.innerHTML = ""; let sec = null, box = null;
+  D.inputs.forEach((s) => {
+    if (s.section !== sec) { sec = s.section; box = h("div", { class: "sec" }, h("h3", {}, sec)); root.appendChild(box); }
+    const yrs = s.cells.length > 1 ? ["Y1", "Y2", "Y3"] : null;
+    const ins = h("div", { class: "ins" }, s.cells.map((c, n) => h("div", { class: "fld" }, yrs ? h("span", { class: "def" }, yrs[n]) : null, field("Assumptions!" + c, s.unit, { aria: s.label + (yrs ? " " + yrs[n] : "") }))));
+    box.appendChild(h("div", { class: "rowf", "data-t": (s.id + " " + s.label + " " + s.basis).toLowerCase() }, h("span", { class: "id def" }, s.id), h("span", { class: "nm" }, s.label), ins, s.basis ? h("span", { class: "chip " + s.basis }, s.basis) : h("span")));
+  });
+  $("#n-all").textContent = "(" + D.inputs.length + ")";
+}
+function filterAll() { const q = $("#q").value.trim().toLowerCase(); document.querySelectorAll("#all .sec").forEach((sec) => { let any = false; sec.querySelectorAll(".rowf").forEach((r) => { const ok = !q || r.dataset.t.includes(q); r.hidden = !ok; any = any || ok; }); sec.hidden = !any; }); }
+function buildDrivers() {
+  const root = $("#drv"); root.innerHTML = ""; fields.splice(0, fields.length, ...fields.filter((f) => f.owner !== "drv"));
+  const col = SE.colName(4 + sel); $("#drvname").textContent = (sel + 1) + ". " + D.names[sel];
+  D.drivers.forEach((d) => root.appendChild(h("div", { class: "rowf" }, h("span", { class: "id def" }, d.id), h("span", { class: "nm" }, d.label), h("div", { class: "ins" }, h("div", { class: "fld" }, field("Scenario_Control!" + col + d.row, d.unit, { aria: d.label, owner: "drv" }))), h("span", { class: "def" }, (d.unit || "")))));
+}
+function buildHires() {
+  const t = $("#hire"); t.innerHTML = ""; fields.splice(0, fields.length, ...fields.filter((f) => f.owner !== "hire"));
+  t.appendChild(h("thead", {}, h("tr", {}, ["Role", "Function", "Gate", "Flexible", "Qty", "Start month", "Base pay $"].map((x) => h("th", {}, x)))));
+  const b = h("tbody"); D.hires.forEach((r) => b.appendChild(h("tr", {}, h("td", { title: r.role }, r.role), h("td", {}, r.fn), h("td", {}, r.gate === "-" ? "" : r.gate), h("td", {}, r.flex ? "yes" : ""), h("td", {}, field("Headcount!AO" + r.row, "", { aria: r.role + " quantity", owner: "hire" })), h("td", {}, field("Headcount!AP" + r.row, "", { aria: r.role + " start month", owner: "hire" })), h("td", {}, field("Headcount!AS" + r.row, "", { aria: r.role + " base pay", owner: "hire" }))))); t.appendChild(b);
+}
+function buildSeg() { $("#seg").innerHTML = D.names.map((n, i) => `<button type="button" aria-pressed="false">${i + 1}. ${n}</button>`).join(""); document.querySelectorAll("#seg button").forEach((b, i) => b.addEventListener("click", () => { sel = i; buildDrivers(); persist(); recompute(); })); }
+
+function changed() { renderStatus(); persist(); clearTimeout(changed.t); changed.t = setTimeout(recompute, 160); }
+function renderStatus() {
+  const n = nChanged();
+  $("#chg").textContent = n ? n + (n === 1 ? " input" : " inputs") + " changed from the workbook." : "All inputs as in the workbook.";
+  $("#reset-all").hidden = !n;
+}
+
+/* ---------- saving: the browser, and the artifact's own store when this page has one */
+const LS = "sem-model-v2"; let DB = null, saving = false, dirty = false;
+const clean = (o) => { const out = {}; if (o && typeof o === "object") for (const k in o) if (k in defaults && Number.isFinite(o[k])) out[k] = o[k]; return out; };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage can be blocked */ } }
+function persist() {
+  lsSet(LS, { ov, sel }); clearTimeout(persist.t);
+  if (!DB) return; dirty = true; persist.t = setTimeout(flush, 700);
+}
+async function flush() {
+  if (saving || !dirty) return; saving = true; dirty = false;
+  try { await DB.doc("plan/current").set({ ov: JSON.stringify(ov), sel, at: Date.now() }); } catch (e) { msg("Could not save to the shared store; your changes are kept in this browser."); }
+  saving = false; if (dirty) flush();
+}
+function adopt(o, s) { ov = clean(o); if (Number.isInteger(s) && s >= 0 && s < 9) sel = s; fields.forEach((f) => f.show()); buildDrivers(); renderStatus(); recompute(); }
+function msg(t) { $("#pmsg").textContent = t; }
+async function initDb() {
+  try { if (window.claude && window.claude.use) DB = await window.claude.use("db"); } catch (e) { DB = null; }
+  $("#where").textContent = DB ? "Your changes are saved automatically in this artifact, so they are there when you come back or open it on another device. Saved plans below are shared with anyone who can edit it." : "Your changes are saved automatically in this browser. Use Copy my changes to keep a copy elsewhere.";
+  if (!DB) { loadPlans(); return; }
+  try { const s = await DB.doc("plan/current").get(); if (s.exists) { const d = s.data(); const o = JSON.parse(d.ov || "{}"); if (JSON.stringify(clean(o)) !== JSON.stringify(ov) || d.sel !== sel) adopt(o, d.sel); } } catch (e) { /* signed out or no store yet */ }
+  loadPlans();
+}
+async function loadPlans() {
+  let list = [];
+  if (DB) { try { const q = await DB.collection("plans").orderBy("at", "desc").limit(30).get(); list = q.docs.map((d) => ({ id: d.id, ...d.data() })); } catch (e) { list = []; } } else list = lsGet(LS + "-plans", []);
+  const ul = $("#plist"); ul.innerHTML = "";
+  if (!list.length) ul.appendChild(h("li", {}, h("span", { class: "def" }, "No saved plans yet.")));
+  list.forEach((p) => ul.appendChild(h("li", {}, h("span", { class: "pn" }, h("b", {}, p.name), " ", h("span", { class: "def" }, new Date(p.at).toLocaleDateString() + ", " + Object.keys(JSON.parse(p.ov || "{}")).length + " changes")),
+    h("button", { type: "button", class: "btn", onclick: () => { adopt(JSON.parse(p.ov || "{}"), p.sel); persist(); msg("Loaded " + p.name + "."); } }, "Load"),
+    h("button", { type: "button", class: "btn", onclick: async () => { if (DB) { try { await DB.doc("plans/" + p.id).delete(); } catch (e) { msg("Could not delete."); return; } } else lsSet(LS + "-plans", lsGet(LS + "-plans", []).filter((x) => x.id !== p.id)); loadPlans(); } }, "Delete"))));
+}
+async function savePlan() {
+  const name = $("#pname").value.trim(); if (!name) { msg("Give the plan a name first."); return; }
+  const rec = { name: name.slice(0, 80), ov: JSON.stringify(ov), sel, at: Date.now() };
+  try { if (DB) await DB.collection("plans").add(rec); else lsSet(LS + "-plans", [{ id: String(rec.at), ...rec }, ...lsGet(LS + "-plans", [])].slice(0, 30)); $("#pname").value = ""; msg("Saved " + rec.name + "."); loadPlans(); } catch (e) { msg("Could not save the plan."); }
+}
+async function copyOut() {
+  const t = JSON.stringify({ model: "semester-financial-model", scenario: sel + 1, changes: ov }, null, 1); $("#pio").value = t;
+  try { await navigator.clipboard.writeText(t); msg("Copied. The text is also in the box below."); } catch (e) { $("#pio").select(); msg("Select the text in the box and copy it."); }
+}
+function applyIn() { try { const o = JSON.parse($("#pio").value); const c = clean(o.changes), skipped = Object.keys(o.changes || {}).length - Object.keys(c).length; adopt(c, Number.isInteger(o.scenario) ? o.scenario - 1 : sel); persist(); msg("Applied " + Object.keys(c).length + " changes" + (skipped ? "; skipped " + skipped + " that this workbook does not have" : "") + "."); } catch (e) { msg("That text is not a set of changes this page wrote."); } }
+
+/* ---------- charts */
+function lineChart() {
+  const S = R[sel], B = R[1], q = S.labels; if (!S) return;
+  const all = [...S.q.arr, ...S.q.rev, ...(B ? [...B.q.arr, ...B.q.rev] : [])], tk = ticks(0, Math.max(1, ...all)), top = tk[tk.length - 1];
+  const c = chart($("#c-arr"), 560, 270, { l: 52, r: 18, t: 12, b: 28 }); const X = (i) => c.m.l + c.iw * i / 11, Y = (v) => c.m.t + c.ih * (1 - v / top);
+  tk.forEach((t) => { el("line", { x1: c.m.l, x2: c.w - c.m.r, y1: Y(t), y2: Y(t), class: "gridline" }, c.s); el("text", { x: c.m.l - 8, y: Y(t) + 4, "text-anchor": "end", class: "mono" }, c.s, t === 0 ? "0" : fmtK(t)); });
+  q.forEach((n, i) => { if (i % 2 === 0) el("text", { x: X(i), y: c.h - 8, "text-anchor": "middle" }, c.s, n); });
+  const path = (arr) => arr.map((v, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1)).join("");
+  if (sel !== 1 && B) { el("path", { d: path(B.q.arr), fill: "none", stroke: "var(--c1)", "stroke-width": 1.5, "stroke-dasharray": "5 4", opacity: .6 }, c.s); el("path", { d: path(B.q.rev), fill: "none", stroke: "var(--c2)", "stroke-width": 1.5, "stroke-dasharray": "5 4", opacity: .6 }, c.s); }
+  el("path", { d: path(S.q.arr), fill: "none", stroke: "var(--c1)", "stroke-width": 2, "stroke-linejoin": "round" }, c.s);
+  el("path", { d: path(S.q.rev), fill: "none", stroke: "var(--c2)", "stroke-width": 2, "stroke-linejoin": "round" }, c.s);
+  [[S.q.arr, "var(--c1)"], [S.q.rev, "var(--c2)"]].forEach(([a, col]) => el("circle", { cx: X(11), cy: Y(a[11]), r: 4, fill: col, stroke: "var(--surface)", "stroke-width": 2 }, c.s));
+  const cross = el("line", { y1: c.m.t, y2: c.m.t + c.ih, stroke: "var(--ink-3)", "stroke-width": 1, opacity: 0 }, c.s);
+  const hit = el("rect", { x: c.m.l, y: c.m.t, width: c.iw, height: c.ih, fill: "transparent" }, c.s);
+  hit.addEventListener("mousemove", (e) => { const r = c.s.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * c.w, i = Math.max(0, Math.min(11, Math.round((px - c.m.l) / c.iw * 11))); cross.setAttribute("x1", X(i)); cross.setAttribute("x2", X(i)); cross.setAttribute("opacity", 1); showTip(e, `<b>${q[i]}</b><br>ARR ${fmtM(S.q.arr[i], 2)}<br>Revenue ${fmtM(S.q.rev[i], 2)}`); });
+  hit.addEventListener("mouseleave", () => { cross.setAttribute("opacity", 0); hideTip(); });
+  legend("#l-arr", [["var(--c1)", "ARR"], ["var(--c2)", "Revenue"]].concat(sel !== 1 ? [["var(--ink-3)", "Base (dashed)", true]] : []));
+}
+function cashChart() {
+  const S = R[sel], q = S.labels, v = S.q.cash, lo = Math.min(0, ...v), hi = Math.max(1, ...v), tk = ticks(lo, hi), a = tk[0], b = tk[tk.length - 1];
+  const c = chart($("#c-cash"), 560, 270, { l: 52, r: 18, t: 12, b: 28 }); const Y = (x) => c.m.t + c.ih * (1 - (x - a) / (b - a)), bw = c.iw / 12 * .62, X = (i) => c.m.l + c.iw * (i + .5) / 12;
+  tk.forEach((t) => { el("line", { x1: c.m.l, x2: c.w - c.m.r, y1: Y(t), y2: Y(t), class: "gridline" }, c.s); el("text", { x: c.m.l - 8, y: Y(t) + 4, "text-anchor": "end", class: "mono" }, c.s, t === 0 ? "0" : fmtK(t)); });
+  v.forEach((x, i) => { const y0 = Y(0), y1 = Y(x), r = el("rect", { x: X(i) - bw / 2, y: Math.min(y0, y1), width: bw, height: Math.max(1, Math.abs(y1 - y0)), rx: 2, fill: x < 0 ? "var(--bad)" : "var(--c1)" }, c.s);
+    r.addEventListener("mousemove", (e) => showTip(e, `<b>${q[i]}</b><br>Cash ${fmtM(x, 2)}`)); r.addEventListener("mouseleave", hideTip); if (i % 2 === 0) el("text", { x: X(i), y: c.h - 8, "text-anchor": "middle" }, c.s, q[i]); });
+  el("line", { x1: c.m.l, x2: c.w - c.m.r, y1: Y(0), y2: Y(0), class: "axis" }, c.s);
+  legend("#l-cash", [["var(--c1)", "Cash in the bank"], ["var(--bad)", "Below zero: unfunded"]]);
+}
+function streamChart() {
+  const S = R[sel], names = STREAMS, cols = ["--c1", "--c2", "--c3", "--c4", "--c5", "--c6"], yrs = ["Year 1", "Year 2", "Year 3"];
+  const tot = [0, 1, 2].map((y) => names.reduce((s, n) => s + S.streams[n][y], 0)), tk = ticks(0, Math.max(1, ...tot) / 1e3), top = tk[tk.length - 1] * 1e3;
+  const c = chart($("#c-str"), 560, 270, { l: 52, r: 18, t: 12, b: 28 }); const Y = (v) => c.m.t + c.ih * (1 - v / top), bw = c.iw / 3 * .5, X = (i) => c.m.l + c.iw * (i + .5) / 3;
+  tk.forEach((t) => { el("line", { x1: c.m.l, x2: c.w - c.m.r, y1: Y(t * 1e3), y2: Y(t * 1e3), class: "gridline" }, c.s); el("text", { x: c.m.l - 8, y: Y(t * 1e3) + 4, "text-anchor": "end", class: "mono" }, c.s, t === 0 ? "0" : t.toLocaleString("en-US")); });
+  [0, 1, 2].forEach((y) => { let base = 0; names.forEach((n, k) => { const v = S.streams[n][y]; if (!(v > 0)) return; const y1 = Y(base + v), y0 = Y(base), r = el("rect", { x: X(y) - bw / 2, y: y1, width: bw, height: Math.max(0, y0 - y1 - 2), fill: `var(${cols[k]})`, rx: 2 }, c.s);
+      r.addEventListener("mousemove", (e) => showTip(e, `<b>${yrs[y]}: ${n}</b><br>$${Math.round(v / 1e3).toLocaleString("en-US")}k`)); r.addEventListener("mouseleave", hideTip); base += v; });
+    el("text", { x: X(y), y: Y(tot[y]) - 6, "text-anchor": "middle", class: "mono" }, c.s, tot[y] <= 0 ? "0" : fmtK(tot[y])); el("text", { x: X(y), y: c.h - 8, "text-anchor": "middle" }, c.s, yrs[y]); });
+  legend("#l-str", names.map((n, k) => [`var(${cols[k]})`, n]));
+}
+function peakChart() {
+  const rows = R.map((s, i) => ({ i, n: D.names[i], v: s ? s.peak : null })), max = Math.max(1, ...rows.map((r) => r.v || 0)), hh = 30 + rows.length * 26;
+  const c = chart($("#c-peak"), 560, hh, { l: 196, r: 52, t: 6, b: 6 }); const X = (v) => c.m.l + c.iw * v / max;
+  rows.forEach((r, k) => { const y = c.m.t + k * 26 + 3, on = r.i === sel; el("text", { x: c.m.l - 8, y: y + 12, "text-anchor": "end", style: on ? "fill:var(--ink);font-weight:600" : "" }, c.s, r.n);
+    if (r.v == null) { el("text", { x: c.m.l + 6, y: y + 13, class: "mono" }, c.s, "…"); return; }
+    const b = el("rect", { x: c.m.l, y, width: Math.max(1, X(Math.max(0, r.v)) - c.m.l), height: 17, rx: 3, fill: on ? "var(--accent)" : "var(--c6)", opacity: on ? 1 : .55 }, c.s); b.addEventListener("mousemove", (e) => showTip(e, `<b>${r.n}</b><br>Peak need ${fmtM(r.v, 2)}`)); b.addEventListener("mouseleave", hideTip);
+    el("text", { x: X(Math.max(0, r.v)) + 6, y: y + 13, class: "mono", style: on ? "fill:var(--ink);font-weight:600" : "" }, c.s, fmtM(r.v)); });
+}
+function sensChart() {
+  const rows = X.sens; if (!rows) { $("#c-sens").innerHTML = '<p class="def">Working it out…</p>'; return; }
+  const ext = Math.max(1, ...rows.flatMap((r) => [Math.abs(r.lo || 0), Math.abs(r.hi || 0)])), tk = ticks(-ext / 1e3, ext / 1e3, 4), a = tk[0] * 1e3, b = tk[tk.length - 1] * 1e3, hh = 36 + rows.length * 30;
+  const c = chart($("#c-sens"), 560, hh, { l: 170, r: 16, t: 8, b: 26 }); const Xs = (v) => c.m.l + c.iw * (v - a) / (b - a);
+  tk.forEach((t) => { el("line", { x1: Xs(t * 1e3), x2: Xs(t * 1e3), y1: c.m.t, y2: c.h - c.m.b, class: "gridline" }, c.s); el("text", { x: Xs(t * 1e3), y: c.h - 8, "text-anchor": "middle", class: "mono" }, c.s, t === 0 ? "0" : (t > 0 ? "+" : "") + t.toLocaleString("en-US") + "k"); });
+  rows.forEach((r, k) => { const y = c.m.t + k * 30 + 4; el("text", { x: c.m.l - 8, y: y + 12, "text-anchor": "end" }, c.s, r.label);
+    [[r.lo, r.loLabel], [r.hi, r.hiLabel]].forEach(([v, lab]) => { if (v == null || Math.abs(v) < 1) return; const x0 = Xs(0), x1 = Xs(v), rc = el("rect", { x: Math.min(x0, x1), y, width: Math.abs(x1 - x0), height: 18, rx: 2, fill: v < 0 ? "var(--c2)" : "var(--c1)" }, c.s);
+      rc.addEventListener("mousemove", (e) => showTip(e, `<b>${r.label}</b><br>${lab}<br>Year-3 ARR ${v > 0 ? "+" : "-"}$${Math.round(Math.abs(v) / 1e3).toLocaleString("en-US")}k`)); rc.addEventListener("mouseleave", hideTip); }); });
+  el("line", { x1: Xs(0), x2: Xs(0), y1: c.m.t, y2: c.h - c.m.b, class: "axis" }, c.s);
+}
+function gateChart() {
+  const rows = X.gates; if (!rows) { $("#c-gate").innerHTML = '<p class="def">Working it out…</p>'; return; }
+  const max = Math.max(1, ...rows.map((r) => r.saved)), hh = 14 + rows.length * 26;
+  const c = chart($("#c-gate"), 560, hh, { l: 196, r: 64, t: 6, b: 6 }); const Xg = (v) => c.m.l + c.iw * Math.max(0, v) / max;
+  rows.forEach((r, k) => { const y = c.m.t + k * 26 + 3; el("text", { x: c.m.l - 8, y: y + 12, "text-anchor": "end" }, c.s, r.id + " " + r.name);
+    const b = el("rect", { x: c.m.l, y, width: Math.max(1, Xg(r.saved) - c.m.l), height: 17, rx: 3, fill: "var(--c3)" }, c.s); b.addEventListener("mousemove", (e) => showTip(e, `<b>${r.id} ${r.name}</b><br>${r.fte} FTE, released month ${r.base} in the plan<br>Saves $${Math.round(r.saved / 1e3).toLocaleString("en-US")}k of people cost`)); b.addEventListener("mouseleave", hideTip);
+    el("text", { x: Xg(r.saved) + 6, y: y + 13, class: "mono" }, c.s, "$" + Math.round(r.saved / 1e3).toLocaleString("en-US") + "k"); });
+}
+function kpis() {
+  const S = R[sel], B = R[1], P = D.pub[sel], n = nChanged();
+  const items = [["Revenue, Year 3", S.rev[2], B && B.rev[2], fmtM, true, P.rev3], ["ARR, end of Year 3", S.arr3, B && B.arr3, fmtM, true, P.arr3], ["Peak funding need", S.peak, B && B.peak, fmtM, false, P.peak], ["Lowest cash with rounds", S.mincash, B && B.mincash, fmtM, true, P.mincash]];
+  let html = items.map(([l, v, b, f, upGood, pub]) => { const d = b == null ? NaN : v - b, cls = isNaN(d) || Math.abs(d) < 1e3 ? "" : ((d > 0) === upGood ? "up" : "dn"), vs = sel === 1 ? "Base" : isNaN(d) ? "…" : (d >= 0 ? "+" : "-") + f(Math.abs(d)).replace("-", "") + " vs Base";
+    return `<div class="kpi"><div class="l">${l}</div><div class="v">${f(v)}</div><div class="d ${cls}">${vs}</div>${n ? `<div class="d">workbook: ${f(pub)}</div>` : ""}</div>`; }).join("");
+  html += `<div class="kpi"><div class="l">Months below 6-month cash policy</div><div class="v">${S.lowmonths}</div><div class="d ${S.lowmonths === 0 ? "up" : B && S.lowmonths > B.lowmonths ? "dn" : ""}">${sel === 1 ? "Base" : B ? "Base: " + B.lowmonths : "…"}</div>${n ? `<div class="d">workbook: ${P.lowmonths}</div>` : ""}</div>`;
+  html += `<div class="kpi"><div class="l">Burn multiple, Year 3</div><div class="v">${typeof S.bm3 === "number" ? S.bm3.toFixed(1) + "x" : "n/a"}</div><div class="d">net burn ÷ net new ARR</div></div>`;
+  $("#kpis").innerHTML = html;
+}
+function tables() {
+  const hd = ["Scenario", "Revenue Y3", "ARR Y3", "Gross margin Y3", "EBITDA Y3", "Peak need", "Lowest cash", "Months below policy", "Heads Y3"];
+  $("#tbl").innerHTML = "<thead><tr>" + hd.map((x) => `<th>${x}</th>`).join("") + "</tr></thead><tbody>" + D.names.map((n, i) => { const s = R[i]; return `<tr class="${i === sel ? "sel" : ""}"><td>${i + 1}. ${n}</td>` + (s ? `<td>${fmtM(s.rev[2])}</td><td>${fmtM(s.arr3)}</td><td>${pct(s.gm3)}</td><td>${fmtM(s.ebitda[2])}</td><td>${fmtM(s.peak)}</td><td>${fmtM(s.mincash)}</td><td>${s.lowmonths}</td><td>${Math.round(s.heads3)}</td>` : '<td colspan="8">…</td>') + "</tr>"; }).join("") + "</tbody>";
+  const S = R[sel], q = S.labels;
+  $("#tq").innerHTML = "<thead><tr><th>$ thousands</th>" + q.map((x) => `<th>${x}</th>`).join("") + "</tr></thead><tbody>" + [["Revenue", S.q.rev], ["ARR, end of quarter", S.q.arr], ["EBITDA", S.q.ebitda], ["Cash, end of quarter", S.q.cash]].map(([n, a]) => `<tr><td>${n}</td>${a.map((v) => `<td>${fmtK(v)}</td>`).join("")}</tr>`).join("") + `<tr><td>Headcount</td>${S.q.heads.map((v) => `<td>${Math.round(v)}</td>`).join("")}</tr></tbody>`;
+}
+function checks() {
+  const S = R[sel], p = $("#checks"), f = S.failing;
+  p.className = "pill " + (f.length ? "bad" : "ok");
+  p.textContent = f.length ? f.length + (f.length === 1 ? " model check fails: " : " model checks fail: ") + f.slice(0, 2).join("; ") + (f.length > 2 ? "…" : "") : "All model checks pass";
+}
+function renderAll() {
+  const S = R[sel]; if (!S) return;
+  document.querySelectorAll("#seg button").forEach((b, i) => b.setAttribute("aria-pressed", i === sel));
+  $("#desc").textContent = D.desc[sel];
+  renderStatus(); checks(); kpis(); lineChart(); cashChart(); streamChart(); peakChart(); sensChart(); gateChart(); tables();
+}
+
+/* ---------- start */
+$("#stamp").textContent = D.stamp;
+buildSeg(); buildLevers(); buildAll(); buildHires();
+{ const saved = lsGet(LS, null); if (saved) { ov = clean(saved.ov); if (Number.isInteger(saved.sel) && saved.sel >= 0 && saved.sel < 9) sel = saved.sel; } }
+buildDrivers(); fields.forEach((f) => f.show());
+$("#q").addEventListener("input", filterAll);
+$("#reset-all").addEventListener("click", () => { ov = {}; fields.forEach((f) => f.show()); renderStatus(); persist(); recompute(); });
+$("#psave").addEventListener("click", savePlan); $("#pexp").addEventListener("click", copyOut); $("#pimp").addEventListener("click", applyIn);
+renderStatus(); recompute(); initDb();
+</script>

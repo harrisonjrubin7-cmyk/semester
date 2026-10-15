@@ -214,10 +214,11 @@ export function Onboarding() {
       </div>
 
       <div className="kicker">{step.k}</div>
-      <div
+      <h1
         className="chrome-text"
         style={{
           fontSize: 'calc(42px * var(--text-scale, 1))',
+          fontWeight: 'inherit',
           lineHeight: 1.04,
           letterSpacing: '-0.01em',
           marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(14px * var(--density, 1))',
@@ -225,7 +226,7 @@ export function Onboarding() {
         }}
       >
         {soft && state.onb === 0 ? welcomeLine(mine, now) : step.t}
-      </div>
+      </h1>
       <div style={{ fontSize: 'var(--type-display-xs)', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)', maxWidth: '30ch' }}>
         {soft && state.onb === 0 ? welcomeLead(mine) : step.b}
       </div>
@@ -454,6 +455,22 @@ export function Onboarding() {
       )}
 
       <div style={{ flex: 1, minHeight: 24 }} />
+
+      {/* A link brought them here with somewhere to go; say that setup will
+          not lose it. (`lib/entrycontext.ts`) */}
+      {state.afterSetup && (
+        <p
+          style={{
+            margin: 0,
+            marginBottom: 'calc(12px * var(--density, 1))',
+            fontSize: 'var(--type-sm)',
+            color: 'var(--app-dim)',
+            lineHeight: 'var(--leading-normal)',
+          }}
+        >
+          When you finish, the page you opened will open.
+        </p>
+      )}
 
       {/* Secondary on the account step, where the primary action is the
           form's own button and two primaries would be two answers to one

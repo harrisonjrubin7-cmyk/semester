@@ -472,7 +472,7 @@ export function FoldAll({ style }: { style?: CSSProperties }) {
   const { count, said, press } = useFoldAll(scope);
   if (count < 2) return null;
   return (
-    <div style={{ display: 'flex', justifyContent: 'flex-end', ...style }}>
+    <div className="fold-all" style={{ justifyContent: 'flex-end', ...style }}>
       <button
         type="button"
         className="bare tappable tap-x"

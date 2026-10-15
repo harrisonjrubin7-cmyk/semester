@@ -1,6 +1,6 @@
 import { dateToIso } from '../lib/date';
 import { useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { cloudConfigured } from '../lib/cloud';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
@@ -10,6 +10,7 @@ import { secondLine } from '../lib/dim';
 import { endProblem } from '../lib/sharing';
 import { ClaimFamilyCode, FamilyInvite } from '../components/FamilyInvite';
 import { SharedWithYou } from '../components/SharedWithYou';
+import { GuardianProjectionAccessHistory } from '../components/GuardianProjection';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
 import { fromMarkdown } from '../lib/document';
@@ -79,10 +80,11 @@ const ITEM_KIND_LABELS: Record<FamilyItem['kind'], string> = {
 
 export function Family() {
   const { account } = useStore();
-  return <Workspace key={account?.id || 'device'} storageKey={`semester.family.v1:${account?.id || 'device'}`} />;
+  return <Workspace key={account?.id || 'device'} accountId={account?.id ?? null} storageKey={`semester.family.v1:${account?.id || 'device'}`} />;
 }
 
-function Workspace({ storageKey }: { storageKey: string }) {
+function Workspace({ storageKey, accountId }: { storageKey: string; accountId: string | null }) {
+  const now = useNow();
   const { dispatch } = useStore();
   const lib = useDeviceLibrary(storageKey, readFamily, EMPTY_FAMILY);
 
@@ -234,6 +236,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <input
                 className="input"
                 type="email"
+                autoComplete="off"
                 maxLength={FAMILY_LIMITS.email}
                 value={member.email}
                 onChange={(e) => setMember((m) => ({ ...m, email: e.target.value }))}
@@ -260,9 +263,9 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 style={input}
               />
               {/* Held to the sharing rules now, so the plan says why before anyone is asked to accept it. D-037 / D4. */}
-              {endProblem(member.expires, dateToIso(new Date())) && (
+              {endProblem(member.expires, dateToIso(now)) && (
                 <span style={{ display: 'block', fontSize: 'var(--type-sm)', marginTop: 'var(--sp-2)', ...secondLine() }}>
-                  {endProblem(member.expires, dateToIso(new Date()))}
+                  {endProblem(member.expires, dateToIso(now))}
                 </span>
               )}
             </label>
@@ -620,10 +623,11 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       {tab === 'history' && (
         <>
+          <GuardianProjectionAccessHistory actorId={accountId} />
           <SectionLabel style={{ marginBlock: 'var(--sp-6) var(--sp-4)' }}>On this device</SectionLabel>
           <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
-            What you changed here. Not a record of what anybody else saw — there is no server to have such a
-            record.
+            What you changed in this private plan. The guardian calendar history above is a separate server
+            record of bounded access decisions; this backup never includes it.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}>
             <ActionButton

@@ -1,0 +1,100 @@
+-- 060 · Write paths as audited command functions (closes "no insert policies" from the security review).
+-- Clients never insert into these tables directly; every write goes through a function that validates, rate-limits, writes the audit event first, then applies.
+-- Not yet run. Prove with tests/commands.test.ts.
+
+create schema if not exists api;
+
+-- Simple per-user rate limit (window, max) backed by a counter table.
+create table if not exists core.rate_counters(actor uuid not null, action text not null, window_start timestamptz not null, n int not null default 0, primary key(actor, action, window_start));
+alter table core.rate_counters enable row level security; -- no policies: definer functions only
+create or replace function core.rate_ok(a text, per interval, max_n int) returns boolean language plpgsql security definer set search_path = '' as $$
+declare w timestamptz := date_trunc('minute', now()); c int;
+begin
+  insert into core.rate_counters(actor, action, window_start, n) values (auth.uid(), a, w, 1)
+  on conflict (actor, action, window_start) do update set n = core.rate_counters.n + 1 returning n into c;
+  select coalesce(sum(n),0) into c from core.rate_counters where actor = auth.uid() and action = a and window_start > now() - per;
+  return c <= max_n;
+end $$;
+
+-- Re-grant audit.log to the owner of the command functions (definer functions run as owner).
+grant execute on function audit.log(text, text, jsonb, jsonb) to postgres;
+
+-- Create a post. Public (non-group) posts start held for the AI pre-screen; group posts are visible.
+create or replace function api.create_post(p_group uuid, p_body text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare pid uuid; st text;
+begin
+  if auth.uid() is null then raise exception 'sign in required'; end if;
+  if not core.feature_on('community') then raise exception 'community is off for this institution'; end if;
+  if length(coalesce(p_body,'')) not between 1 and 5000 then raise exception 'post must be 1–5000 characters'; end if;
+  if not core.rate_ok('create_post', interval '10 minutes', 20) then raise exception 'too many posts, try again shortly'; end if;
+  if p_group is not null and not community.is_member(p_group) then raise exception 'not a member of this group'; end if;
+  st := case when p_group is null then 'held' else 'visible' end;
+  pid := gen_random_uuid();
+  perform audit.log('community.post.create', pid::text, null, jsonb_build_object('group', p_group, 'status', st, 'length', length(p_body)));
+  insert into community.posts(id, institution_id, group_id, author, body, status) values (pid, core.my_institution(), p_group, auth.uid(), p_body, st);
+  return pid;
+end $$;
+
+-- Create a listing. Always starts pending the academic-integrity check; never live on insert.
+create or replace function api.create_listing(p_title text, p_category text, p_price_cents int) returns uuid language plpgsql security definer set search_path = '' as $$
+declare lid uuid;
+begin
+  if auth.uid() is null then raise exception 'sign in required'; end if;
+  if not core.feature_on('marketplace') then raise exception 'marketplace is off for this institution'; end if;
+  if core.my_role() <> 'student' then raise exception 'only students can list items'; end if;
+  if length(coalesce(p_title,'')) not between 3 and 120 then raise exception 'title must be 3–120 characters'; end if;
+  if p_category not in ('textbooks','gear','housing','services','tickets') then raise exception 'unknown category'; end if;
+  if p_price_cents < 0 or p_price_cents > 1000000 then raise exception 'price out of range'; end if;
+  if p_title ~* '(answer key|exam|test bank|solutions manual|graded essay|homework answers)' then raise exception 'listings that break academic integrity rules are not allowed'; end if;
+  if not core.rate_ok('create_listing', interval '1 day', 10) then raise exception 'daily listing limit reached'; end if;
+  lid := gen_random_uuid();
+  perform audit.log('market.listing.create', lid::text, null, jsonb_build_object('category', p_category, 'price_cents', p_price_cents));
+  insert into market.listings(id, institution_id, seller, title, category, price_cents, status) values (lid, core.my_institution(), auth.uid(), p_title, p_category, p_price_cents, 'pending_check');
+  return lid;
+end $$;
+
+-- Make an offer. Not on your own listing; listing must be live and on your campus.
+create or replace function api.make_offer(p_listing uuid, p_amount_cents int) returns uuid language plpgsql security definer set search_path = '' as $$
+declare oid uuid; l record;
+begin
+  select * into l from market.listings where id = p_listing;
+  if l is null or l.institution_id <> core.my_institution() or l.status <> 'live' then raise exception 'listing not available'; end if;
+  if l.seller = auth.uid() then raise exception 'you cannot offer on your own listing'; end if;
+  if p_amount_cents <= 0 or p_amount_cents > 1000000 then raise exception 'offer out of range'; end if;
+  if not core.rate_ok('make_offer', interval '1 hour', 30) then raise exception 'too many offers, try again later'; end if;
+  oid := gen_random_uuid();
+  perform audit.log('market.offer.create', oid::text, null, jsonb_build_object('listing', p_listing, 'amount_cents', p_amount_cents));
+  insert into market.offers(id, listing_id, buyer, amount_cents) values (oid, p_listing, auth.uid(), p_amount_cents);
+  return oid;
+end $$;
+
+-- Report content. The target must exist on the reporter's campus; reporter identity is visible to moderators only.
+create or replace function api.report(p_type text, p_target uuid, p_reason text, p_note text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare rid uuid; ok boolean;
+begin
+  if p_type not in ('post','message','listing','profile') then raise exception 'unknown report type'; end if;
+  if p_reason not in ('harassment','hate','threat','privacy','integrity','scam','illegal','other') then raise exception 'unknown reason'; end if;
+  ok := case p_type
+    when 'post' then exists(select 1 from community.posts where id = p_target and institution_id = core.my_institution())
+    when 'listing' then exists(select 1 from market.listings where id = p_target and institution_id = core.my_institution())
+    when 'profile' then exists(select 1 from core.profiles where id = p_target and institution_id = core.my_institution())
+    else true end;
+  if not ok then raise exception 'target not found'; end if;
+  if not core.rate_ok('report', interval '1 hour', 20) then raise exception 'too many reports, try again later'; end if;
+  rid := gen_random_uuid();
+  perform audit.log('community.report.create', rid::text, null, jsonb_build_object('type', p_type, 'reason', p_reason));
+  insert into community.reports(id, institution_id, target_type, target_id, reason, note, reporter) values (rid, core.my_institution(), p_type, p_target, p_reason, left(p_note, 2000), auth.uid());
+  return rid;
+end $$;
+
+-- Only signed-in users may call commands; direct table writes stay closed.
+revoke all on schema api from anon;
+grant usage on schema api to authenticated;
+grant execute on function api.create_post(uuid, text), api.create_listing(text, text, int), api.make_offer(uuid, int), api.report(text, uuid, text, text) to authenticated;
+revoke insert on community.posts, community.reports, market.listings, market.offers from authenticated;
+
+-- Storage: listing photos and post attachments. Path convention: <institution_id>/<owner uid>/<file>.
+-- insert into storage.buckets (id, name, public) values ('listing-photos', 'listing-photos', false) on conflict do nothing;
+create policy photos_campus_read on storage.objects for select using (bucket_id = 'listing-photos' and (storage.foldername(name))[1] = core.my_institution()::text);
+create policy photos_owner_write on storage.objects for insert with check (bucket_id = 'listing-photos' and (storage.foldername(name))[1] = core.my_institution()::text and (storage.foldername(name))[2] = auth.uid()::text);
+create policy photos_owner_delete on storage.objects for delete using (bucket_id = 'listing-photos' and (storage.foldername(name))[2] = auth.uid()::text);

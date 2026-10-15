@@ -197,6 +197,59 @@ async function visible(locator, timeout = WAIT) {
   }
 }
 
+/**
+ * Wait for a completed action to be on this device's disk, not merely painted.
+ *
+ * The normal path is the `tasks` IndexedDB store. A browser that refused the
+ * database uses the older `semester.v1` localStorage copy, so the probe accepts
+ * that honest fallback too. This is a test-side acknowledgement only: it does
+ * not reach into React state, call the writer, or make an unsaved edit pass.
+ */
+async function taskIsDurable(page, title) {
+  return page.evaluate(
+    async ({ wanted, timeout }) => {
+      const local = () => {
+        try {
+          const state = JSON.parse(localStorage.getItem('semester.v1') || 'null');
+          return Array.isArray(state?.tasks) && state.tasks.some((task) => task?.title === wanted && task?.done === true);
+        } catch {
+          return false;
+        }
+      };
+      if (local()) return true;
+
+      const database = await Promise.race([
+        new Promise((resolve) => {
+          const request = indexedDB.open('semester-store');
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => resolve(null);
+          request.onblocked = () => resolve(null);
+        }),
+        new Promise((resolve) => setTimeout(() => resolve(null), Math.min(timeout, 3_000))),
+      ]);
+      if (!database || !database.objectStoreNames.contains('tasks')) return false;
+
+      const read = () => new Promise((resolve) => {
+        const request = database.transaction('tasks', 'readonly').objectStore('tasks').getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => resolve([]);
+      });
+      const until = Date.now() + timeout;
+      try {
+        while (Date.now() < until) {
+          const tasks = await read();
+          if (tasks.some((task) => task?.title === wanted && task?.done === true)) return true;
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+        return false;
+      } finally {
+        database.close();
+      }
+    },
+    { wanted: title, timeout: WAIT },
+  );
+}
+
 // ── The syllabus, and the one part of adding it that is not the app's ──────
 //
 // Turning a syllabus into a course is a model call (`generateCourse` in
@@ -425,6 +478,16 @@ async function journey(label, viewport) {
       expect(await visible(page.locator('main').getByText(d.title, { exact: true })), `${CODE}'s assignments do not list "${d.title}"`);
     }
     await go(page, '#/home', 'Today');
+    // First use must fetch the deferred capture chunk and focus its real field.
+    await page.evaluate(() => document.activeElement?.blur());
+    await page.keyboard.press('q');
+    const quick = page.getByRole('dialog', { name: 'Add something quickly' });
+    expect(await visible(quick), 'first-use Quick Add did not load');
+    const quickField = quick.getByRole('textbox', { name: 'What to add' });
+    await quickField.fill('Read a chapter tomorrow');
+    expect(await quickField.inputValue() === 'Read a chapter tomorrow', 'deferred Quick Add field is not usable');
+    await page.keyboard.press('Escape');
+    await quick.waitFor({ state: 'hidden' });
 
     // ── 3 · Make something of the student's own ────────────────────────────
     at(STEPS[3]);
@@ -447,7 +510,15 @@ async function journey(label, viewport) {
       name: new RegExp(`^\\w+ ${course.first} ${MONTHS[course.month]}\\..*\\b\\d+ deadlines?\\b`),
     });
     expect(await visible(day), `the calendar does not show a deadline on ${MONTHS[course.month]} ${course.first}`);
-    await day.first().dblclick();
+    await day.first().click();
+    await day.first().waitFor({ state: 'visible', timeout: WAIT });
+    expect(await day.first().getAttribute('aria-selected') === 'true', 'the deadline day did not become selected');
+    // The phone grid can replace the selected cell between Playwright's two
+    // synthetic pointer clicks even after selection has settled. Dispatch the
+    // browser's native bubbling event on the acknowledged selected cell so
+    // this gate exercises the application's real double-click handler without
+    // depending on the node surviving two separate automation clicks.
+    await day.first().dispatchEvent('dblclick');
     const what = page.getByRole('textbox', { name: /^what is on /i });
     expect(await visible(what), 'double-clicking the day did not offer to add something there');
     await what.fill(`Study group for ${CODE}`);
@@ -558,7 +629,19 @@ async function journey(label, viewport) {
     expect(struck.includes('line-through'), `the done action is not struck through (text-decoration: ${struck})`);
 
     // ── 7 · Resume here: a reload, then a second tab ───────────────────────
+    //
+    // The database writer deliberately coalesces edits for a quarter second.
+    // Reloading in the same browser turn as the click raced that contract: the
+    // new button had painted, but the persistence effect had not necessarily
+    // queued the write yet. That made this check alternate between passing
+    // and losing the action on otherwise identical CI runs.
+    //
+    // `taskIsDurable` is the acknowledgement rather than an arbitrary sleep.
+    // It reads the same object store a reload will read and waits for the exact
+    // completed action. Only then do the reload and independent tab prove they
+    // can reconstruct the state the first tab wrote.
     at(STEPS[10]);
+    expect(await taskIsDurable(page, title), 'the completed action did not reach device storage');
     await page.reload({ waitUntil: 'domcontentloaded' });
     expect(await visible(page.locator('h1', { hasText: 'Personal' })), 'a reload did not come back to Personal');
     expect(await visible(page.getByRole('button', { name: done })), 'after a reload the action is gone or no longer done');

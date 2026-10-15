@@ -264,12 +264,23 @@ describe('first-session setup', () => {
   it('asks what would help, and goes straight there', async () => {
     await mount(<FirstGoal />);
     expect(host.querySelector('h2')?.textContent).toBe('What would help most today?');
+    await press('More options');
     await press('Study for a course');
     expect(currentLook(seen).goal).toBe('study');
     expect(seen.screen).toBe('study');
     expect(text()).toContain('Your focus');
     await press('Change');
     expect(text()).toContain('What would help most today?');
+  });
+
+  it('keeps keyboard focus on the goal disclosure after revealing more choices', async () => {
+    await mount(<FirstGoal />);
+    const more = button('More options');
+    more.focus();
+    await act(async () => more.click());
+    expect(document.activeElement).toBe(more);
+    expect(more.getAttribute('aria-expanded')).toBe('true');
+    expect(text()).toContain('Study for a course');
   });
 });
 

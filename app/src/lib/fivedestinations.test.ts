@@ -5,6 +5,7 @@ import {
   DEFAULT_TABS,
   FIVE_DESTINATIONS,
   FIVE_LABELS,
+  canonicalDestinationFor,
   PINNED,
   barFor,
   barForMode,
@@ -60,7 +61,16 @@ describe('with the flag on', () => {
     expect(litForMode('behind', five, true)).toBe('home');
     expect(litForMode('ask', five, true)).toBe('search');
     expect(litForMode('settings', five, true)).toBe('me');
+    expect(litForMode('university', five, true)).toBe('search');
+    expect(litForMode('opportunities', five, true)).toBe('search');
     expect(litForMode('degree', five, true)).toBe('degree');
+  });
+
+  it('uses one canonical-home rule outside the navigation component', () => {
+    expect(canonicalDestinationFor('guide')).toBe('me');
+    expect(canonicalDestinationFor('university')).toBe('search');
+    expect(canonicalDestinationFor('yes')).toBe('degree');
+    expect(canonicalDestinationFor('calendar')).toBe('calendar');
   });
 
   it('leaves out a destination the role cannot open, rather than a dead tab', () => {

@@ -1,0 +1,21 @@
+create schema if not exists community;
+create table community.groups(id uuid primary key default gen_random_uuid(), institution_id uuid not null default core.my_institution(), name text not null, kind text not null check (kind in ('course','club','community','rec')), created_by uuid not null default auth.uid(), created_at timestamptz default now());
+create table community.members(group_id uuid references community.groups on delete cascade, profile_id uuid references core.profiles on delete cascade, role text not null default 'member' check (role in ('member','leader')), primary key(group_id,profile_id));
+create table community.posts(id uuid primary key default gen_random_uuid(), institution_id uuid not null default core.my_institution(), group_id uuid references community.groups on delete cascade, author uuid not null default auth.uid(), body text not null check (length(body) between 1 and 5000), status text not null default 'visible' check (status in ('visible','held','removed')), created_at timestamptz default now());
+create table community.reports(id uuid primary key default gen_random_uuid(), institution_id uuid not null default core.my_institution(), target_type text not null check (target_type in ('post','message','listing','profile')), target_id uuid not null, reason text not null, note text, reporter uuid not null default auth.uid(), status text not null default 'open', created_at timestamptz default now());
+create table community.events(id uuid primary key default gen_random_uuid(), institution_id uuid not null default core.my_institution(), group_id uuid references community.groups, title text not null, starts_at timestamptz not null, location text);
+create table community.rsvps(event_id uuid references community.events on delete cascade, profile_id uuid default auth.uid() references core.profiles on delete cascade, primary key(event_id,profile_id));
+alter table community.groups enable row level security; alter table community.members enable row level security; alter table community.posts enable row level security; alter table community.reports enable row level security; alter table community.events enable row level security; alter table community.rsvps enable row level security;
+create policy g_read on community.groups for select using (institution_id = core.my_institution() and core.feature_on('community'));
+create policy g_create on community.groups for insert with check (institution_id = core.my_institution() and core.feature_on('community'));
+create policy m_read on community.members for select using (exists(select 1 from community.groups g where g.id = group_id and g.institution_id = core.my_institution()));
+create policy m_join on community.members for insert with check (profile_id = auth.uid() and role = 'member');
+create policy p_read on community.posts for select using (institution_id = core.my_institution() and (status = 'visible' or author = auth.uid() or core.my_role() in ('moderator','student_affairs')));
+create policy p_write on community.posts for insert with check (author = auth.uid() and core.feature_on('community') and (group_id is null or exists(select 1 from community.members m where m.group_id = posts.group_id and m.profile_id = auth.uid())));
+create policy p_moderate on community.posts for update using (core.my_role() in ('moderator','student_affairs') and institution_id = core.my_institution());
+create policy r_create on community.reports for insert with check (reporter = auth.uid());
+create policy r_mod on community.reports for select using (institution_id = core.my_institution() and core.my_role() in ('moderator','student_affairs'));
+create policy e_read on community.events for select using (institution_id = core.my_institution());
+-- RSVPs visible to self and to group leaders only
+create policy rs_self on community.rsvps for all using (profile_id = auth.uid()) with check (profile_id = auth.uid());
+create policy rs_leader on community.rsvps for select using (exists(select 1 from community.events e join community.members m on m.group_id = e.group_id where e.id = event_id and m.profile_id = auth.uid() and m.role = 'leader'));

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ALWAYS_INCLUDED, NOT_ON_SALE_HERE, PLANS, plan, priceLine, type PlanId } from '../lib/plans';
+import { ALWAYS_INCLUDED, INDIVIDUAL_PAID_ACQUISITION_ENABLED, NOT_ON_SALE_HERE, PLANS, plan, priceLine, type PlanId } from '../lib/plans';
 import { cloud, cloudConfigured, currentSession } from '../lib/cloud';
 import { formatDate } from '../lib/locale';
 import {
@@ -10,6 +10,7 @@ import {
   fetchOwnSubscriptions,
   fetchPlusPrices,
   hasPaidBefore,
+  openBillingPortal,
   priceWords,
   takeOpenUpgrade,
   startCheckout,
@@ -96,7 +97,7 @@ export function MembershipPanel() {
     void (async () => {
       try {
         const db = await cloud();
-        const found = await fetchPlusPrices(db);
+        const found = INDIVIDUAL_PAID_ACQUISITION_ENABLED ? await fetchPlusPrices(db) : [];
         if (!accountId) {
           if (live) setPrices(found);
           return;
@@ -198,6 +199,27 @@ export function MembershipPanel() {
     }
   };
 
+  const billingHistory = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      const token = (await currentSession())?.access_token;
+      if (!token) {
+        setError('Sign in again to view billing history.');
+        return;
+      }
+      const r = await openBillingPortal(token);
+      if (r.kind === 'redirect') {
+        window.location.assign(r.url);
+        return;
+      }
+      setError(r.said);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const statusLine = unchecked
     ? 'Nothing has changed and nothing will be charged. Try again in a moment.'
     : checking
@@ -206,7 +228,11 @@ export function MembershipPanel() {
     ? sub.cancelAtPeriodEnd
       ? `Cancelled. Plus stays on until ${when(sub.periodEnd)}.`
       : sub.status === 'past_due' || sub.status === 'grace'
-        ? 'Your last payment did not go through. Stripe will try again; update your card from the link in Stripe’s email.'
+        ? sub.billingIssue === 'address_required'
+          ? 'Your last payment did not go through, and another invoice needs your current billing address. Update your card from Stripe’s email, then open billing history below to update your address.'
+          : 'Your last payment did not go through. Stripe will try again; update your card from the link in Stripe’s email.'
+        : sub.billingIssue === 'address_required'
+          ? 'Stripe needs your current billing address to calculate tax. Open billing history below and update your address; your card has not failed.'
         : `Renews on ${when(sub.periodEnd)}.`
     : onSale
       ? `Plus is ${prices.map(priceWords).join(' or ')}. Free stays free.`
@@ -230,7 +256,7 @@ export function MembershipPanel() {
       {!unknown && <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap', marginBottom: 'var(--sp-3)' }}>
         {!sub && (
           <button type="button" className="btn btn-secondary" aria-expanded={said === 'upgrade'} onClick={() => toggle('upgrade')}>
-            Upgrade
+            View planned Plus
           </button>
         )}
         {!(sub && sub.cancelAtPeriodEnd) && (
@@ -321,7 +347,7 @@ export function MembershipPanel() {
                 {p.id === currentId ? ' · your plan' : ''}
               </div>
               <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
-                {p.id === 'plus' && onSale ? prices.map(priceWords).join(' or ') : p.id === 'plus' ? `${priceLine(p)} (planned)` : priceLine(p)}
+                {p.id === 'plus' && onSale ? prices.map(priceWords).join(' or ') : priceLine(p)}
               </div>
               <ul style={{ fontSize: 'var(--type-sm)', margin: 'var(--sp-2) 0 0', paddingInlineStart: '1.2em' }}>
                 {p.includes.map((i) => <li key={i}>{i}</li>)}
@@ -352,6 +378,11 @@ export function MembershipPanel() {
           ? 'Stripe takes your payments and emails a receipt for each one. Semester holds no card or bank details.'
           : 'No payments. Semester has never charged you and holds no card or bank details.'}
       </p>
+      {!unknown && (sub || paidBefore) && (
+        <button type="button" className="btn btn-ghost" aria-busy={busy} onClick={() => void billingHistory()} style={{ marginTop: 'var(--sp-3)' }}>
+          {busy ? 'Opening billing history…' : 'Receipts, invoices and payment method'}
+        </button>
+      )}
     </section>
   );
 }

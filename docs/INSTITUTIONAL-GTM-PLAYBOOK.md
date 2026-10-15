@@ -34,21 +34,32 @@ students' records live in:
    school's administrator must each be refused, as #817's `gtm.check.sql`
    already does for its own tables.
 
-## Ideal customer profile, in order of fit today
+## Ideal customer profile
 
 What decides fit is what Semester can honestly deliver now: a planning and
 experience layer, invite-only, with no system-of-record integration yet.
 
-1. **Transfer-heavy community college, or one department of a regional
-   public university.** The pain is concrete (planning, deadlines, where to
-   get help), a cohort of 50–200 is natural, and no SIS write is needed.
-2. **A career center, library or research office** whose service is under-used
-   because students can't find it. It needs only the directory and human-help
-   modules.
-3. **A private college**, when the champion is in student success rather than
-   IT.
-4. **Multi-campus or state systems**: later. The multi-campus rules exist
-   (`governance/hierarchy.ts`), but no single campus is live yet.
+**The ranking is owned by [`commercial/MARKET-SEGMENTATION.md`](commercial/MARKET-SEGMENTATION.md)
+and [`commercial/IDEAL-CUSTOMER-PROFILE.md`](commercial/IDEAL-CUSTOMER-PROFILE.md)**, dated later
+and carrying the evidence state: first a private or regional four-year program or
+student-success unit, then honors, first-year or transfer programs, then a
+college or department advising unit. This list used to rank transfer-heavy
+community colleges first and private colleges third; those are hypotheses, not
+a measured order, so they are no longer ranked here. Each of the following
+qualifies on the same disqualifiers, and
+[`commercial/ACCOUNT-SCORING-AND-FORECAST.md`](commercial/ACCOUNT-SCORING-AND-FORECAST.md)
+orders actual accounts:
+
+- **Transfer-heavy community college, or one department of a regional
+  public university.** The pain is concrete (planning, deadlines, where to
+  get help), a cohort of 50–200 is natural, and no SIS write is needed.
+- **A career center, library or research office** whose service is under-used
+  because students can't find it. It needs only the directory and human-help
+  modules.
+- **A private college**, when the champion is in student success rather than
+  IT.
+- **Multi-campus or state systems**: later. The multi-campus rules exist
+  (`governance/hierarchy.ts`), but no single campus is live yet.
 
 For each target, record the following on the account (#817's tables, or a CRM for anything about named people):
 - institution type and size

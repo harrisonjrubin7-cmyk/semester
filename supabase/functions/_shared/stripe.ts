@@ -92,7 +92,7 @@ export async function verifySignature(
 }
 
 /** The payment kinds `apply_payment_event` records. */
-export type PaymentKind = 'payment_succeeded' | 'payment_failed' | 'refund' | 'chargeback' | 'other';
+export type PaymentKind = 'payment_succeeded' | 'payment_failed' | 'address_required' | 'refund' | 'chargeback' | 'other';
 
 /** The subscription statuses Semester's `subscriptions.status` allows. */
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'grace' | 'canceled' | 'ended';

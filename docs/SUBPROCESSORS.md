@@ -37,6 +37,19 @@ Mixing the third kind into the first would overstate what Semester
 controls. Leaving it out would understate where data goes. So both are
 listed, and labelled.
 
+## What this register does not cover
+
+The table above is driven by the **app's** content-security policy. It does not
+cover `company-site/`, which has its own hosting and loads: it is served from
+GitHub Pages, embeds YouTube through `www.youtube-nocookie.com` and
+`i.ytimg.com`, and posts its lead forms to the `lead-intake` function. Those
+destinations see a visitor's IP address and are in no register yet. They are
+listed as coverage gaps to close in
+[`privacy-operations/03-VENDOR-REVIEW-PROCESS.md`](privacy-operations/03-VENDOR-REVIEW-PROCESS.md) §6 (including whether any
+script CDN is loaded and whether the site's hosting is the same party as the
+app's). Until a row exists for each, do not read this register as the
+complete list for the company site.
+
 ## Before this is published
 
 This register is accurate to the code and tested. Publishing it to an
@@ -77,9 +90,9 @@ configured host the register does not list.
 | Supabase | Subprocessor | Database, authentication, storage of synced rows, and Edge Functions. | Account email and sign-in records; what a signed-in student chose to sync; usage counts; audit records. | When signed in |
 | GitHub Pages | Subprocessor | Serves the public web app’s static files. | Standard request metadata (IP address, user agent) when the app is loaded. No student content. | Always |
 | Vercel | Subprocessor | Runs the institutional gateway as serverless functions. | Institution-scoped requests from signed-in members of a connected institution. Action bodies are encrypted before they are stored. | Only once an institution enables it |
-| Anthropic (Semester’s key) | Subprocessor | AI features for signed-in students who have not supplied their own key, metered per account. | The text of the AI request the student made (for example a syllabus to turn into a course). | When signed in |
+| Anthropic (Semester’s key) | Subprocessor | AI features for signed-in students who have not supplied their own key, metered per account. When the owner sets AI_GATEWAY_API_KEY the request reaches Anthropic through Vercel AI Gateway. | The text of the AI request the student made (for example a syllabus to turn into a course). | When signed in |
 | Stripe | Subprocessor | Payments for a paid plan: the hosted checkout page, recurring billing, and the webhook that tells Semester a payment succeeded or failed. Not active until its keys are set; nothing is charged before then. | The student’s email address, the plan and price chosen, and the payment details they type into Stripe’s own page, which never pass through Semester. Semester keeps Stripe’s customer and subscription references, never card or bank data. | Only when the student turns it on |
-| Resend | Subprocessor | Emails each company-site form submission to the Semester owner. Not active until its key and the owner’s address are set. | What a visitor typed into a company-site form (name, work email, organization, role, message) and the form’s reference. No student data, and no IP address. | Only when someone sends a company-site form |
+| Resend | Subprocessor | Emails each company-site form submission to the Semester owner. The built support-notice path can send a generic hint after student opt-in, but remains inactive until vendor review, executed terms/DPA, ownership and activation approval are recorded in addition to its key and sender. | For site forms: the visitor’s submitted contact fields and reference. For opted-in support notices: the student’s email address, a support reference and app link, but never the reply body or approved diagnostic context. No IP address. | Only when someone sends a company-site form or an opted-in student has a support reply |
 | OpenAI (institution-approved) | Institution-directed | AI over approved course sources, through the gateway, once an institution approves the provider and a budget. | The student’s request and the approved sources it cites; never data classified above what the institution’s rules allow to that destination. | Only once an institution enables it |
 | The institution’s LMS (LTI 1.3 platform) | Institution-directed | Course launch, deep linking and, where an instructor placed a graded link, a quiz score. | Launch verification traffic; a score only for a graded link the instructor placed. | Only once an institution enables it |
 | Anthropic (student’s own key) | Student-directed | AI features using a key the student entered on their device. | The student’s AI request, sent from their browser under their own key. | Only when the student turns it on |
@@ -90,5 +103,6 @@ configured host the register does not list.
 | Apple | Student-directed | Signing in with Apple. | The sign-in exchange the student starts. | Only when the student turns it on |
 | OpenStreetMap tile servers | Student-directed | Map images when the student opens the map. | The student’s IP address and which map area is being viewed. | Only when the student turns it on |
 | Nominatim and Photon (address lookup) | Student-directed | Turning a typed address into a map position, and only if the student switched lookup on. | The text the student typed into the lookup box; their position only if they separately switched reverse lookup on. | Only when the student turns it on |
+| Public institution source hosts | Student-directed | Checking the availability of a public source and whether it contains a reviewed exact excerpt. | A request to the public source URL chosen by the student. No Semester session token, reflections, or excerpt is sent to the source host. | Only when the student turns it on |
 | Calendar and Canvas hosts the student links | Student-directed | Reading a calendar feed or Canvas instance the student pasted, relayed because those hosts refuse browser requests. | The request to the address the student supplied, with the token they supplied. | Only when the student turns it on |
 | The student’s browser push service | Student-directed | Delivering reminders the student switched on. | An encrypted notification for the student’s device, via the push service their browser vendor runs. | Only when the student turns it on |

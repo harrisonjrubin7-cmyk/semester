@@ -182,8 +182,29 @@ jobs:
         with:
           version: latest
 
+      # A later merge can finish CI first. Re-check main immediately before
+      # the mutation so an older passing run cannot overwrite newer function
+      # code merely because its slower CI completed last. A hand-started run
+      # deliberately remains the documented override.
+      - name: Refuse a stale release
+        id: current
+        env:
+          PASSED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ -z "$PASSED_SHA" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          current=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$current" = "$PASSED_SHA" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Stale release::CI passed $PASSED_SHA, but main is now $current. The newer functions stay live; this run will not replace them."
+          fi
+
       - name: Deploy
-        if: steps.what.outputs.list != ''
+        if: steps.what.outputs.list != '' && steps.current.outputs.deploy == 'true'
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           REF: ${{ steps.project.outputs.ref }}

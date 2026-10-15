@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { useModal } from '../a11y/modal';
+import { useModal, useScrim } from '../a11y/modal';
 import { EMPTY_CAREER, readCareer } from '../lib/career';
 import {
   EMPTY_SHORTLIST,
@@ -68,6 +68,7 @@ export function CourseDetailV2({
   const headingId = useId();
   const first = useRef<HTMLHeadingElement>(null);
   const { ref: modalRef, onKeyDown: modalKeys } = useModal<HTMLDivElement>({ onClose, initial: first, on: !wide });
+  const scrim = useScrim(onClose);
   const { data: day } = useRegistrationPlan();
   const library = useDeviceLibrary(SHORTLIST_KEY, readShortlist, EMPTY_SHORTLIST);
   // Read and changed against this catalog, so a stale or reused id counts for nothing.
@@ -335,7 +336,7 @@ export function CourseDetailV2({
     return host ? createPortal(aside, host) : aside;
   }
   const sheet = (
-    <div className="explain-wash" onClick={onClose}>
+    <div className="explain-wash" {...scrim}>
       <div
         ref={modalRef}
         className="explain-sheet"

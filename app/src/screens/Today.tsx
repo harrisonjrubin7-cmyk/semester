@@ -1,3 +1,4 @@
+import { OperatingLauncher } from '../components/OperatingLauncher';
 import { Fragment, lazy, Suspense, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -12,12 +13,18 @@ import { WhatChanged } from '../components/WhatChanged';
 import { DayPlanNote } from '../components/DayPlanNote';
 import { SchoolRecords } from '../components/SchoolRecords';
 import { FirstRun } from './FirstRun';
+import { useOnline } from '../lib/offline-mode';
+import { ReadState } from '../components/unity/ReadState';
+import { countSources, itemSources, todayEnvelope } from '../lib/read/surfaces';
+import type { SourceLabel } from '../lib/source';
+import { DEADLINE_HORIZON_DAYS } from '../lib/today-actions';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, ChipRow, EmptyState, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
 import { homeShape } from '../lib/chrome';
 import type { Catalog } from '../data/catalog';
 import type { State } from '../state/shape';
+import { showsTodayDecisionSurface } from '../lib/today-decision';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import {
   appointmentsOn,
@@ -68,9 +75,19 @@ import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
 import { JourneyCards } from '../components/JourneyCards';
 import { journeysFor, recommendJourney } from '../lib/journeys';
 import { offered } from '../lib/nav';
-import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { EXPERIENCE_FLAGS, MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
+import { useTaskActions } from '../composition/taskactions';
 import { CommandCenter, FirstGoal } from '../components/unity/CommandCenter';
 import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
+import { isOpen, needsFollowUp } from '../lib/maintenance';
+import { DeadlineHorizon } from '../components/DeadlineHorizon';
+import { AssignmentStates } from '../components/AssignmentStates';
+import { OperatingRhythm } from '../components/OperatingRhythm';
+import { DailyRhythm } from '../components/DailyRhythm';
+import { WeeklyReset } from '../components/WeeklyReset';
+import { WeeklyReflection } from '../components/WeeklyReflection';
+import { GoalPlan } from '../components/GoalPlan';
+import { fromItems } from '../lib/deadline-feed';
 
 const FlightPlanHome = lazy(() =>
   import('../components/institutional/FlightPlanHome').then((module) => ({
@@ -208,6 +225,7 @@ function NextClassCard() {
  */
 function YourTasks() {
   const { state, dispatch, courseCode, tint } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
   const rowTen = useRowStyle(10);
   const mine = tasksOn(state.tasks, now);
@@ -258,7 +276,7 @@ function YourTasks() {
             <button
               type="button"
               className="bare"
-              onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
+              onClick={() => taskActions.toggle(t.id)}
               aria-label={t.done ? `Mark ${t.title} not done` : `Mark ${t.title} done`}
               // 20px was the icon's size, not a target. This is the most
               // tapped control in the app and it was less than half the
@@ -408,6 +426,50 @@ function OverdueBanner() {
  * about what a week is. What differs is the presentation: there a page you
  * pin up, here rows you tap to open.
  */
+/** The same deadlines, grouped by how near they are, with each one's source. */
+function WeekHorizon() {
+  const { state, catalog, courseCode } = useStore();
+  const now = useNow();
+  const deadlines = useMemo(
+    () => fromItems(upcomingItems(catalog, now), state.done, (id) => courseCode(id)),
+    [catalog, now, state.done, courseCode],
+  );
+  // Effort and saved blocks are not recorded for course items, so those
+  // fields are left out rather than guessed: a state is only ever as sure as
+  // what the student and the syllabus actually said.
+  const assignments = useMemo(
+    () =>
+      deadlines.map((d) => ({
+        id: d.id,
+        course: '',
+        title: d.title,
+        due: d.due,
+        label: d.label,
+        done: d.done,
+      })),
+    [deadlines],
+  );
+  const closed = { marginTop: 'var(--sp-5)' } as const;
+  return (
+    <>
+      <DeadlineHorizon deadlines={deadlines} now={now.getTime()} />
+      <details style={closed}>
+        <summary>Assignment states</summary>
+        <AssignmentStates assignments={assignments} now={now.getTime()} />
+      </details>
+      <details style={closed}>
+        <summary>Weekly reset · about five minutes, skip any time</summary>
+        <WeeklyReset now={now} />
+        <WeeklyReflection now={now} />
+      </details>
+      <details style={closed}>
+        <summary>Turn a goal into a plan</summary>
+        <GoalPlan now={now} />
+      </details>
+    </>
+  );
+}
+
 function ThisWeek() {
   const { state, dispatch, catalog, tint, courseCode } = useStore();
   const now = useNow();
@@ -733,6 +795,7 @@ function TabHome() {
 
   return (
     <Page bottom={26}>
+      <OperatingLauncher />
       {/*
         Four tabs, not five. The fifth was Report, and it rendered the Reports
         screen inline — the same body, sharing the same `state.report` grain,
@@ -744,31 +807,45 @@ function TabHome() {
         "Week" only because a fifth tab made the switcher wrap to two lines on
         every Today view.
       */}
-      <Segmented
-        options={[
-          { id: 'today', label: 'Today' },
-          { id: 'hours', label: 'Hours' },
-          { id: 'week', label: 'This week' },
-          { id: 'done', label: 'Done' },
-        ]}
-        value={tab}
-        onChange={(next) => dispatch({ type: 'setHomeTab', tab: next })}
-        style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(16px * var(--density, 1))' }}
-      />
+      <div className="hides-in-focus">
+        <Segmented
+          options={[
+            { id: 'today', label: 'Today' },
+            { id: 'hours', label: 'Hours' },
+            { id: 'week', label: 'This week' },
+            { id: 'done', label: 'Done' },
+          ]}
+          value={tab}
+          onChange={(next) => dispatch({ type: 'setHomeTab', tab: next })}
+          style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(16px * var(--density, 1))' }}
+        />
+      </div>
 
-      <FirstGoal />
-      <TodayDecisionSurface />
-      <CommandCenter />
-      <FlightPlanHomeSlot />
-      <RecommendedJourney />
+      {/* Keep briefing state when changing tabs, but put each tab's own
+          content first. Focus View still needs the briefing when it hides
+          the switcher and secondary content. */}
+      <div className="today-briefing" hidden={tab !== 'today' && state.workspaceMode !== 'focused'}>
+        <FirstGoal />
+        <TodayDecisionSurface />
+        <OperatingRhythm />
+      </div>
+      <div className="hides-in-focus">
+        {tab === 'week' && <ThisWeek />}
+        {tab === 'week' && <WeekHorizon />}
 
-      {tab === 'today' && <TodayFeed />}
+        {tab === 'hours' && <HoursToday />}
 
-      {tab === 'week' && <ThisWeek />}
+        {tab === 'done' && <DoneToday />}
 
-      {tab === 'hours' && <HoursToday />}
-
-      {tab === 'done' && <DoneToday />}
+        <details key={tab} className="today-more">
+          <summary>More from Today</summary>
+          <CommandCenter />
+          <FlightPlanHomeSlot />
+          <RecommendedJourney />
+          {tab === 'today' && <TodayFeed />}
+          {tab === 'today' && <DailyPlanSlot />}
+        </details>
+      </div>
     </Page>
   );
 }
@@ -1175,6 +1252,7 @@ function Feed_rail() {
       style={{ display: 'flex', gap: RAIL_GAP, alignItems: 'center', padding: 'var(--sp-2) 0' }}
     >
       <div
+        className="hides-in-focus"
         style={{
           width: RAIL_GUTTER,
           flex: 'none',
@@ -1863,6 +1941,11 @@ function HoursToday() {
 }
 
 /** Nav mode 1B — one chronological scroll, sliced by the chip row. */
+function DailyPlanSlot() {
+  const { account } = useStore();
+  return <details><summary>Daily plan · one outcome and three actions</summary><DailyRhythm accountId={account?.id ?? null} /></details>;
+}
+
 function FeedHome() {
   const { state, dispatch, catalog, tint } = useStore();
   const now = useNow();
@@ -1891,13 +1974,19 @@ function FeedHome() {
       <div style={{ padding: 'var(--page-pad)' }}>
         <FirstGoal />
         <TodayDecisionSurface />
-        <CommandCenter />
-        <NextClassCard />
-        <FlightPlanHomeSlot />
-        <RecommendedJourney />
+        <OperatingRhythm />
+        <div className="hides-in-focus">
+          <details className="today-more">
+            <summary>More from Today</summary>
+            <CommandCenter />
+            <NextClassCard />
+            <FlightPlanHomeSlot />
+            <RecommendedJourney />
+            <DailyPlanSlot />
+          </details>
 
-        <div style={{ marginTop: 'calc(22px * var(--density, 1))', display: 'flex', flexDirection: 'column' }}>
-          {entries.map((f) => (
+          <div style={{ marginTop: 'calc(22px * var(--density, 1))', display: 'flex', flexDirection: 'column' }}>
+            {entries.map((f) => (
             <button
               key={f.key}
               type="button"
@@ -1991,9 +2080,10 @@ function FeedHome() {
                 <div style={{ fontSize: 'var(--type-sm)', ...secondLine(f.done || f.canceled), marginTop: 'var(--sp-1)' }}>{f.meta}</div>
               </div>
             </button>
-          ))}
+            ))}
+          </div>
+          <div style={{ height: 70 }} />
         </div>
-        <div style={{ height: 70 }} />
       </div>
     </>
   );
@@ -2023,19 +2113,47 @@ function FeedHome() {
 export function nothingOnToday(
   shape: ReturnType<typeof homeShape>,
   catalog: Catalog,
-  state: Pick<State, 'tasks' | 'appointments' | 'feedEvents'>,
+  state: Pick<State, 'tasks' | 'appointments' | 'feedEvents'> & { maintenance?: State['maintenance']; role?: State['role'] },
+  now: number = Date.now(),
+  /** Whether the Action Center, the only surface that draws repairs, is on. */
+  actionCenter: boolean = moduleOn(MODULE_FLAGS.today_action_center),
 ): boolean {
+  // A repair whose follow-up has come is something to do today, and both
+  // homes draw it through the Action Center — the first-run screen would hide
+  // it. With the Action Center rolled back, nothing draws it, so it does not
+  // count — and the Action Center mounts only for a student
+  // (`TodayDecisionSurface`), so for any other role it does not count either.
+  const drawn = actionCenter && state.role !== undefined && showsTodayDecisionSurface(state.role);
+  if (drawn && (state.maintenance ?? []).some((r) => isOpen(r) && needsFollowUp(r, now))) return false;
   return shape === 'feed' ? catalog.empty : nothingYet(catalog, state);
 }
 
 export function Today() {
-  const { state, catalog } = useStore();
+  const { state, catalog, loading } = useStore();
+  const now = useNow();
+  const online = useOnline();
   // `homeShape` rather than a second `nav === 'feed'` written here. This test
   // and the one in `App.tsx` used to be separate, so a navigation added to
   // one and not the other got the feed's home screen inside the bar's chrome.
   const shape = homeShape(state.nav);
-  if (nothingOnToday(shape, catalog, state)) return <FirstRun where="on today" />;
-  return shape === 'feed' ? <FeedHome /> : <TabHome />;
+  const empty = nothingOnToday(shape, catalog, state, now.getTime());
+  const sources = useMemo(() => {
+    const near = datedItems(catalog, now).filter((i) => !i.isPast && !state.done[i.id] && i.daysAway <= DEADLINE_HORIZON_DAYS);
+    return countSources([...itemSources(near), ...state.tasks.map((): SourceLabel => 'student_entered')]);
+  }, [catalog, now, state.done, state.tasks]);
+  const env = todayEnvelope({ loading, empty, count: Object.values(sources).reduce((a, b) => a + b, 0), sources, online, now: now.getTime() });
+  return (
+    <ReadState
+      env={env}
+      now={now.getTime()}
+      what="today"
+      empty={{ title: 'Nothing on today yet.', body: 'Add a course or an action to start.' }}
+      emptyNode={<FirstRun where="on today"><DailyPlanSlot /></FirstRun>}
+      inset
+    >
+      {() => (shape === 'feed' ? <FeedHome /> : <TabHome />)}
+    </ReadState>
+  );
 }
 
 /** Re-exported for the Me screen's load bars. */

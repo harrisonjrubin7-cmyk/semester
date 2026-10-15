@@ -6,6 +6,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { EXTRA_CONNECT, parsePolicy, uncoveredOrigins } from './src/lib/cspheader.ts'
 import { privateHost, publicCalendarUrl } from './src/lib/publichost.ts'
+import { isAmbiguousStaticPath, staticHostHeaders } from './src/lib/previewsecurity.ts'
 import { unregisteredHosts } from './src/lib/trust/subprocessors.ts'
 
 /**
@@ -597,6 +598,28 @@ const csp = (serving: boolean) => {
 }
 
 /**
+ * Keep the production-build preview honest as a DAST target.
+ *
+ * Vite preview is a convenient static server, not a deployment host: it does
+ * not read public/_headers and its SPA fallback answers malformed asset paths
+ * with index.html. The first difference hides the headers the real static
+ * hosts enforce; the second creates relative-path-confusion findings that do
+ * not represent a valid Semester route. The preview used by CI therefore
+ * carries the host contract and refuses only impossible asset subpaths.
+ */
+const previewPathGuard = () => ({
+  name: 'preview-path-guard',
+  configurePreviewServer(server: { middlewares: { use: (handler: (req: { url?: string }, res: { statusCode: number; setHeader: (name: string, value: string) => void; end: (body: string) => void }, next: () => void) => void) => void } }) {
+    server.middlewares.use((req, res, next) => {
+      if (!isAmbiguousStaticPath(req.url ?? '/')) return next()
+      res.statusCode = 404
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+      res.end('Not found')
+    })
+  },
+})
+
+/**
  * The chunk graph of a production build, for `scripts/budgets.ts`.
  *
  * Which source module each chunk came from, and which chunks it imports
@@ -680,10 +703,23 @@ function vercelUncovered(extra: string): string[] {
  * fails if this list and the tree disagree.
  */
 const MOCKS_MODULES = [
+  'src/components/AboutMe.test.tsx',
+  'src/components/TodayActionCenter.shadow.sources.test.tsx',
+  'src/composition/react.mount.test.tsx',
+  'src/components/ProductivityCloud.test.tsx',
+  'src/components/ProductivityPreparation.test.tsx',
+  'src/lib/productivity-cloud.test.ts',
+  'src/components/ProductivityWorkspace.test.tsx',
+  'src/components/GetHelp.feedback.test.tsx',
+  'src/components/MomentPromptSlot.test.tsx',
+  'src/screens/behind.lifeevents.test.tsx',
+  'src/screens/whatsnew.feedback.test.tsx',
   'src/components/StudyStudio.packs.test.tsx',
   'src/lib/coursestudio.test.ts',
+  'src/lib/courserules.account.test.tsx',
   'src/components/CourseStudio.test.tsx',
   'src/components/MembershipPanel.live.test.tsx',
+  'src/components/MyRules.test.tsx',
   'src/components/PlusPrompt.test.tsx',
   'src/components/institutional/ModulesPanel.test.tsx',
   'src/components/unity/rollout-b.test.tsx',
@@ -692,10 +728,14 @@ const MOCKS_MODULES = [
   'src/screens/onboardingcounts.test.tsx',
   'src/components/saysomething.test.tsx',
   'src/screens/mentionbadge.test.tsx',
+  'src/screens/mine/Drive.delete-file.test.tsx',
+  'src/screens/mine/Drive.delete-folder.test.tsx',
   'src/components/syncstrip.test.tsx',
   'src/components/waitingrow.test.tsx',
   'src/components/pushstalled.test.tsx',
   'src/components/credentials.test.tsx',
+  'src/components/creation/Publishing.test.tsx',
+  'src/components/desk/TopBar.test.tsx',
   'src/components/referrallink.test.tsx',
   'src/components/schoolclaim.test.tsx',
   'src/components/downloads.test.tsx',
@@ -703,13 +743,18 @@ const MOCKS_MODULES = [
   'src/lib/graduation-cloud.test.ts',
   'src/lib/advisor-shares.test.ts',
   'src/components/SourceLocker.test.tsx',
+  'src/components/StudentOperating.test.tsx',
   'src/components/AdvisorMeeting.test.tsx',
   'src/components/OfficeActionFeed.test.tsx',
+  'src/components/DataRightsRequests.test.tsx',
   'src/components/DemandContribution.test.tsx',
+  'src/components/Drawing.test.tsx',
   'src/components/SemesterWrapped.test.tsx',
   'src/components/TrustCenter.test.tsx',
   'src/components/rework.test.tsx',
+  'src/components/room/Talk.test.tsx',
   'src/components/GraduationSimulator.phase-d.test.tsx',
+  'src/components/Grapher.clear.test.tsx',
   'src/components/StudyStudio.test.tsx',
   'src/components/QuizFeedback.test.tsx',
   'src/components/TeachBack.test.tsx',
@@ -718,6 +763,8 @@ const MOCKS_MODULES = [
   'src/components/FamilyInvite.test.tsx',
   'src/lib/familyshare.test.ts',
   'src/components/SharedWithYou.test.tsx',
+  'src/components/GuardianProjection.test.tsx',
+  'src/lib/guardianprojection.test.ts',
   'src/components/AthleteShare.test.tsx',
   'src/components/SupportAccess.test.tsx',
   'src/components/GetHelp.test.tsx',
@@ -730,14 +777,22 @@ const MOCKS_MODULES = [
   'src/screens/Moderation.test.tsx',
   'src/screens/console.test.tsx',
   'src/components/MfaStep.test.tsx',
+  'src/components/PrivilegedMfaBoundary.test.tsx',
   'src/lib/console/client.test.ts',
+  'src/lib/console/workspaces.test.ts',
+  'src/lib/support-case-client.test.ts',
   'src/screens/registration.test.tsx',
+  'src/screens/me.operations.test.tsx',
   'src/lib/enrollment/client.test.ts',
   'src/screens/gradebook.test.tsx',
   'src/lib/gradebook/client.test.ts',
   'src/lib/modulegate.test.ts',
   'src/screens/dining.test.tsx',
   'src/lib/dining/client.test.ts',
+  'src/lib/governance/activation.test.ts',
+  'src/state/account-refresh.test.tsx',
+  // This test reads this list and must not inherit filesystem doubles from a shared worker.
+  'src/isolation.test.ts',
   'src/state/readonly.test.tsx',
   'src/screens/Volunteer.test.tsx',
   'src/screens/Agreements.test.tsx',
@@ -745,6 +800,7 @@ const MOCKS_MODULES = [
   'src/components/betapanel.test.tsx',
   'src/components/institutional-preview-bar.test.tsx',
   'src/components/supportticketspanel.test.tsx',
+  'src/components/console/supportqueue.test.tsx',
   'src/components/TermChoice.test.tsx',
   'src/components/gpascalenote.test.tsx',
   'src/components/institutional/ControlPlane.test.tsx',
@@ -766,9 +822,13 @@ const MOCKS_MODULES = [
   'src/screens/solvephoto.test.tsx',
   'src/screens/trustroom.test.tsx',
   'src/screens/university.test.tsx',
+  'src/screens/directory.workspaces.test.tsx',
+  'src/screens/directory.test.tsx',
+  'src/shell.workspaces.test.tsx',
   'src/screens/university.helpcount.test.tsx',
   'src/state/deeplink.test.tsx',
   'src/state/persist/firstrun.test.ts',
+  'src/state/persist/leaving.test.ts',
   'src/state/persist/tell.test.ts',
   'src/state/pushlater.test.tsx',
   'src/state/storetoken.test.tsx',
@@ -889,6 +949,15 @@ export default defineConfig(({ command, mode }) => {
         '@semester/institution': fileURLToPath(
           new URL('../packages/institution/src/index.ts', import.meta.url),
         ),
+        '@semester/offline-sync': fileURLToPath(
+          new URL('../packages/offline-sync/src/index.ts', import.meta.url),
+        ),
+        '@semester/platform': fileURLToPath(
+          new URL('../packages/platform/src/index.ts', import.meta.url),
+        ),
+        '@semester/platform-control': fileURLToPath(
+          new URL('../packages/platform-control/src/index.ts', import.meta.url),
+        ),
       },
     },
     // GitHub Pages serves a project site from /<repo>/, not from the root. The
@@ -903,16 +972,26 @@ export default defineConfig(({ command, mode }) => {
       appleToken(),
       claudeProxy(anthropicKey),
       bundleGraph(),
+      previewPathGuard(),
     ],
+    preview: {
+      headers: staticHostHeaders(
+        readFileSync(new URL('./public/_headers', import.meta.url), 'utf8'),
+        process.env.VITE_CSP_EXTRA_CONNECT,
+      ),
+    },
     /*
      * The test suite, which had no configuration at all and was paying for it.
      *
-     * 363 files, and vitest was spawning one worker per file: 363 spawns at
-     * ~224ms each, which is 27 of the suite's 47 seconds spent starting
-     * processes rather than running tests. Vitest says so itself at the foot
-     * of every run, and has done for as long as there have been this many
-     * files. CI pays it three times — `npm test`, then `test:zones` runs the
-     * whole suite again in Chicago and again in Kiritimati.
+     * The suite is now more than twelve hundred files. Leaving Vitest to use
+     * every reported CPU made the slow structural scans and async component
+     * tests compete with seven other transforms and miss their otherwise
+     * ordinary five-second test budget. The same files passed alone and failed
+     * under the full run, so the failure was runner contention rather than a
+     * product assertion. Four workers keeps useful parallelism without making
+     * the suite's own source-tree reads fight an eight-way transform storm.
+     * CI pays for this suite three times — `npm test`, then `test:zones` runs
+     * it again in Chicago and Kiritimati — so this is a cap, not serial mode.
      *
      * `isolate: false` reuses a worker across files instead of starting one
      * per file. What it gives up is the guarantee that each file gets a fresh
@@ -932,14 +1011,28 @@ export default defineConfig(({ command, mode }) => {
      * listed.
      */
     test: {
+      // Five seconds is Vitest's small-unit default. This suite also contains
+      // deliberately medium-sized component and whole-source-tree checks. The
+      // release gate is their assertions, not whether a loaded workstation can
+      // finish each one inside the framework's unrelated default stopwatch.
+      maxWorkers: 4,
+      testTimeout: 30_000,
+      hookTimeout: 30_000,
       projects: [
         {
           extends: true,
           test: {
             name: 'shared',
             isolate: false,
-            include: [...configDefaults.include, '../packages/institution/src/**/*.test.ts'],
-            exclude: [...configDefaults.exclude, ...MOCKS_MODULES],
+            include: [
+              ...configDefaults.include,
+              '../packages/institution/src/**/*.test.ts',
+              '../packages/offline-sync/src/**/*.test.ts',
+              '../packages/platform/src/**/*.test.ts',
+            ],
+            // Publication artifacts are outside the repository. Their explicit
+            // suite requires the real deliverables; it is not an app regression.
+            exclude: [...configDefaults.exclude, ...MOCKS_MODULES, 'scripts/rollout-publication.test.ts'],
           },
         },
         {

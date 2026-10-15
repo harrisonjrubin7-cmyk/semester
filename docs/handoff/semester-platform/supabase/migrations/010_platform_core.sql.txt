@@ -1,0 +1,15 @@
+-- Tenancy, profiles, roles, audit
+create schema if not exists core; create schema if not exists audit;
+create table core.institutions(id uuid primary key default gen_random_uuid(), name text not null, features jsonb not null default '{}'::jsonb, created_at timestamptz default now());
+create table core.profiles(id uuid primary key references auth.users on delete cascade, institution_id uuid not null references core.institutions, display_name text not null, role text not null check (role in ('student','faculty','ta','advisor','registrar','student_affairs','it_admin','moderator','support')), visibility jsonb not null default '{"major":true,"class_year":false}'::jsonb, created_at timestamptz default now());
+create or replace function core.my_institution() returns uuid language sql stable as $$ select institution_id from core.profiles where id = auth.uid() $$;
+create or replace function core.my_role() returns text language sql stable as $$ select role from core.profiles where id = auth.uid() $$;
+create or replace function core.feature_on(f text) returns boolean language sql stable as $$ select coalesce((features->>f)::boolean,false) from core.institutions where id = core.my_institution() $$;
+alter table core.profiles enable row level security;
+create policy profiles_same_campus on core.profiles for select using (institution_id = core.my_institution());
+create policy profiles_self_update on core.profiles for update using (id = auth.uid()) with check (id = auth.uid() and role = core.my_role());
+create table audit.events(id bigserial primary key, at timestamptz default now(), actor uuid, actor_role text, institution_id uuid, action text not null, target text, before jsonb, after jsonb);
+alter table audit.events enable row level security;
+create policy audit_admin_read on audit.events for select using (institution_id = core.my_institution() and core.my_role() in ('it_admin','registrar'));
+-- inserts only through security definer function
+create or replace function audit.log(a text, t text, b jsonb, af jsonb) returns void language sql security definer set search_path = '' as $$ insert into audit.events(actor,actor_role,institution_id,action,target,before,after) values (auth.uid(), core.my_role(), core.my_institution(), a, t, b, af) $$;

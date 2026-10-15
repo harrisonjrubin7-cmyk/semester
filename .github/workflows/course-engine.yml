@@ -1,0 +1,83 @@
+name: Course Engine
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'course-engine/**'
+      - '.github/workflows/course-engine.yml'
+  pull_request:
+    branches: ['main']
+    paths:
+      - 'course-engine/**'
+      - '.github/workflows/course-engine.yml'
+
+concurrency:
+  group: course-engine-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'push' }}
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: API (${{ matrix.database }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [sqlite, postgres]
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: course_engine_test
+          POSTGRES_USER: course_engine
+          POSTGRES_PASSWORD: course_engine
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U course_engine -d course_engine_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: ${{ matrix.database == 'postgres' && 'postgresql+psycopg://course_engine:course_engine@127.0.0.1:5432/course_engine_test' || 'sqlite:////tmp/course-engine.db' }}
+      MIGRATION_TEST_DATABASE_URL: ${{ matrix.database == 'postgres' && 'postgresql+psycopg://course_engine:course_engine@127.0.0.1:5432/course_engine_test' || 'sqlite:////tmp/course-engine-migrations.db' }}
+    defaults:
+      run:
+        working-directory: course-engine/apps/api
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Create Python 3.12 environment
+        run: |
+          python3 --version | grep '^Python 3\.12\.'
+          python3 -m venv /tmp/course-engine-venv
+          echo /tmp/course-engine-venv/bin >> "$GITHUB_PATH"
+      - name: Install API and test dependencies
+        run: python -m pip install --disable-pip-version-check -e '.[dev]'
+      - name: Lint API and worker
+        run: ruff check app tests ../worker/tasks.py
+      - name: Test API and real migrations
+        run: pytest -q
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: course-engine/apps/web
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+      - name: Enable pinned pnpm
+        run: corepack enable && corepack prepare pnpm@10.18.3 --activate
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Test
+        run: pnpm test
+      - name: Typecheck
+        run: pnpm run typecheck
+      - name: Build
+        run: pnpm run build

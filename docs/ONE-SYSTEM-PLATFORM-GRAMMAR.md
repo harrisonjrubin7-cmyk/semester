@@ -137,7 +137,7 @@ and sending a referral all make scope, impact and recovery obvious.
 | digest | Digest controls | building | `app/src/lib/comms.ts`: instant, daily, weekly and digestGroups | No test; no send. |
 | dedupe | Duplicate suppression | tested | `app/src/lib/notify.ts`: the seen set, last four hundred<br>`app/src/lib/notify.test.ts`: a reminder is not repeated | None. |
 | per-course | Per-course, community and service controls | building | `app/src/components/MuteCourses.tsx`: mute a course<br>`app/src/lib/myrules.ts`: the student’s own rules | Courses only. |
-| history | Delivery history | not-started | `docs/ETHICAL-ENGAGEMENT-AND-NOTIFICATIONS.md`: the model | Only push stall detection; the notifications screen renders static data. |
+| history | Delivery history | not-started | `docs/ETHICAL-ENGAGEMENT-AND-NOTIFICATIONS.md`: the model | Only push stall detection; the screen lists today’s reminders (lib/read/notifications.ts) but keeps no history of past ones. |
 | why | Why-am-I-seeing-this explanation | tested | `app/src/lib/notify.ts`: whyFor and shownBody<br>`app/src/lib/notify.test.ts`: the why line | None. |
 | **total** | | not-started 1, designed 0, building 5, tested 4 | | |
 

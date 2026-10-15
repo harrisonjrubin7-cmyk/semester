@@ -17,7 +17,7 @@
 **Who we are:** [DECIDE: legal entity name — e.g. "Semester, LLC", a Tennessee
 limited liability company — or the individual operator's name until one is
 formed] ("Semester", "we"). Contact: harrisonjrubin7@gmail.com
-[DECIDE: replace with a dedicated support and privacy address before launch].
+[COUNSEL REQUIRED: this is the owner's personal mailbox; no dedicated support and privacy address is decided (P-20)].
 
 ## 1. The short version
 
@@ -110,7 +110,7 @@ needs.
 | Vercel | Runs the institutional gateway | Only for school deployments |
 | Anthropic | AI answers, when you use AI features without your own key | Only when you press an AI button |
 | Stripe | Payments for a paid plan: the checkout page you type your card into, and recurring billing. Semester never sees your card | Only if you subscribe to a paid plan |
-| Resend | Delivers the message you send through a form on Semester's website to our team | Only when you send such a form |
+| Resend | Delivers a company-site form to our team; sends a generic notice to your account email when Semester support replies (the reply body and app context stay in Semester) | Only when you send such a form, or support replies to your in-app question |
 
 **Services you or your school choose to connect.** These receive information
 only because you, or your school, turned them on:
@@ -134,10 +134,15 @@ this policy continues to apply to it. [DECIDE with counsel.]
 
 ## 6. How long we keep it
 
-Until you delete it. Your work is not removed on a schedule. The exceptions
-are records *about* your use: the log of who read your rows (ninety days) and
-the daily usage facts (a little over a year). Queued reminders are deleted
-once sent. For school deployments, retention follows the school's contract.
+Your courses, deadlines, notes, plans and other study work stay until you
+delete them. Individual-beta support questions not associated with a school
+deployment are the one content exception: resolved or closed tickets and their
+replies are deleted 180 days after the last activity, unless a legal hold
+requires preservation. Records *about* your use also age out: the log of who
+read your rows (ninety days) and the daily usage facts (a little over a year).
+Queued reminders are deleted once sent. For school deployments, retention
+follows the school's contract; no automatic ticket purge runs until that rule
+is configured.
 
 Our hosting provider backs up the whole database daily, and each backup
 expires 7 days after it is taken [VERIFY on the provider dashboard before
@@ -165,7 +170,7 @@ and change there first.]
 - **Correct**: edit anything you entered, in the app.
 - **Stop syncing**: sign out. The app keeps working on your device.
 - **Ask us**: email the address above. We will answer within
-  [DECIDE: e.g. 30] days.
+  [COUNSEL REQUIRED: no response time is decided; do not publish a number until counsel sets it (P-03)] days.
 
 Depending on where you live, you may have further rights, such as to know,
 access, correct, delete or port your information, or to object to or limit
@@ -180,9 +185,12 @@ will help your school respond.
 ## 8. Children
 
 Semester is not directed to children under 13, and we do not knowingly
-collect personal information from them. [DECIDE with counsel: the minimum age
-in the Terms (13 or 18), whether a sign-up age question is needed, and how
-dual-enrollment students who are minors are handled — see COPPA-1 to COPPA-5
+collect personal information from them. The product's recorded setting is a
+minimum age of 13, enforced when an age is stated (D-139), and a student aged
+13 to 17 is kept out of the features where strangers reach them. [COUNSEL
+REQUIRED: whether 13 stays the minimum age in the Terms or becomes 18,
+whether a sign-up age question is needed for everyone, and how dual-enrollment
+students who are minors are handled — see COPPA-1 to COPPA-5
 in `docs/FERPA-COPPA-1EDTECH-READINESS.md`.] If you believe a child under 13
 has given us information, contact us and we will delete it.
 
@@ -209,3 +217,9 @@ version.
 
 harrisonjrubin7@gmail.com [DECIDE: dedicated address; postal address if
 counsel requires one].
+
+### Public source checks and private productivity work
+
+**Public institution source hosts you check** receive a public page request only when you request a source check. The check sends no Semester session token, reflections, selected excerpt, or saved student content to that host. Semester checks the excerpt in memory and does not store the page body or source URL server-side. The host receives ordinary request metadata from Semester's server.
+
+Your private productivity cloud copy includes saved decisions, captures, drafts, reflections and history. It is readable only by your own authenticated account. You can delete that cloud copy while keeping the device copy; deleting the account removes the cloud copy. Institution counts require your separate opt-in, active membership and an administrator request, and are suppressed below ten consenting members. The count response contains no names or student content. Assistant drafts and semantic search send only the context displayed for your review, to the assistant provider or institution gateway you selected. Provider retention depends on that connection's terms. Browser captures stay unauthorized for assistant use until you authorize them.

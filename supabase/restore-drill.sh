@@ -61,8 +61,8 @@ set -euo pipefail
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 live_ref=lzrqvlugnawcgywkhqlz
 
-: "${SOURCE_DB_URL:?set SOURCE_DB_URL to the live project's direct connection string}"
-: "${TARGET_DB_URL:?set TARGET_DB_URL to the drill project's direct connection string}"
+: "${SOURCE_DB_URL:?set SOURCE_DB_URL to the live project direct connection string}"
+: "${TARGET_DB_URL:?set TARGET_DB_URL to the drill project direct connection string}"
 
 # ── Guards, before anything touches the target ──────────────────────────────
 

@@ -130,7 +130,7 @@ None is open. The four this register found — the Plus price, the pilot length,
 | IMP-005 | Guided tenant setup and an SSO wizard | designed | `docs/SSO-TENANT-ONBOARDING.md` — a checklist<br>`supabase/tenant-sso-policy.check.sql` — the policy the wizard would write | No wizard; the SSO tables have no screen. | M8, L9, E | `oneos:ic-tenant` |
 | IMP-006 | Every pilot runs 26 weeks: the Registration and Path Pilot length | tested | `app/src/lib/gtm/pilot.ts` — PILOT_WEEKS<br>`app/src/lib/gtm/pilot.test.ts` — exactly 182 days, or refused | The owner set it (D-134). The offer itself — 25–100 students, the explicit exclusions, the price sheet — is not packaged as one document. | E, P, V | — |
 | IMP-007 | Pilot dashboard | building | `app/src/lib/gtm/pilot.ts` — readiness and verdict | No screen reads the pilot tables. | M8, L9 | — |
-| IMP-008 | Institution data migration: plans, catalog, directories, events | not-started | `docs/market-readiness/MIGRATION_PLAYBOOK.md` — customer data migration does not exist | Student-side import only; no SIS, ERP, Google or Microsoft mapping template. | R22 | — |
+| IMP-008 | Institution data migration: plans, catalog, directories, events | not-started | `docs/market-readiness/MIGRATION_PLAYBOOK.md` — no production load path; evidence path and roster staging only | Student-side import only; no SIS, ERP, Google or Microsoft mapping template. | R22 | — |
 | IMP-009 | Parallel-run mode | not-started | — | Named once in docs/INSTITUTIONAL_REQUIREMENTS.md; nothing designs it. | R22 | — |
 
 ### PKG
@@ -313,7 +313,7 @@ None is open. The four this register found — the Plus price, the pilot length,
 | ID | Item | Status | Evidence | Gap | Asked by | Overlaps |
 | --- | --- | --- | --- | --- | --- | --- |
 | K12-001 | A stated minimum age and a posture on children | tested | `supabase/minimum-age.check.sql` — under 13 refused at sign-up by the database<br>`docs/legal/TERMS-OF-SERVICE-DRAFT.md` — at least 13 | Set by the owner (D-139); counsel has not reviewed it, and an age is stated, not verified. | F, P | — |
-| K12-002 | Guardian consent, age-aware design and strict guardian boundaries | tested | `supabase/minimum-age.check.sql` — a minor is out of discovery, matching, messaging and employer visibility until 18 | Age-aware design is held; guardian consent is not built, and nothing verifies a guardian. | F, P | `connect:CTL-006` |
+| K12-002 | Guardian consent, age-aware design and strict guardian boundaries | tested | `supabase/minimum-age.check.sql` — a minor is out of discovery, matching, messaging and employer visibility until 18<br>`supabase/k12-guardians.check.sql` — only a K–12 school’s staff record a guardian, for a minor, and the link stops counting at 18 | Age-aware design is held, and a K–12 school’s staff can record and verify a guardian (D-1022); nothing a guardian reads through the link exists yet, and no guardian-facing screen is built. | F, P | `connect:CTL-006` |
 | K12-003 | K–12 positioning, segments, module configuration, pilot and PRD | tested | `app/src/lib/k12/edition.ts` — positioning, five segments, ten modules configured for a school, the 26-week pilot<br>`app/src/lib/k12/edition.test.ts` — held<br>`app/src/site/k12.tsx` — /k-12/, which says no district uses Semester | No PRD. Offered to nobody: mayTakeDistrictData() is the sixteen-item district baseline (D-140), and it is false. | F, P | — |
 
 ## The operating model
@@ -355,7 +355,7 @@ Every row the compliance playbook marks P0 — a blocker before institutional da
 | SEC-01 | Security governance | `security` (vacant) | designed | `SECURITY.md` | The security seat accepted. |
 | SEC-02 | Secure SDLC | `engineering` | tested | `app/src/lib/branchprotection.test.ts` | CI screenshots kept as evidence. |
 | SEC-03 | Secrets management | `engineering` | tested | `app/src/lib/security.test.ts` | A rotation runbook exercised. |
-| SEC-04 | Authentication and admin MFA | `security` (vacant) | tested | `supabase/console-control-plane.check.sql` | Fresh MFA is held for the operations console only; the claims register still says planned (IAM-005) for every other privileged role. |
+| SEC-04 | Authentication and admin MFA | `security` (vacant) | tested | `supabase/privileged-mfa.check.sql` | Extend the tested aal2 boundary beyond platform_admin and support_agent, add student/passkey enrolment and recovery coverage, and file production Auth and provider-console proof. |
 | SEC-05 | Authorisation and tenant isolation | `security` (vacant) | tested | `supabase/rls-coverage.check.sql` | An external review. |
 | SEC-06 | SECURITY DEFINER review | `security` (vacant) | tested | `app/src/lib/definerregister.test.ts` | Kept current as functions are added. |
 | SEC-07 | Database RLS | `security` (vacant) | tested | `supabase/rls-coverage.check.sql` | A linter baseline kept. |

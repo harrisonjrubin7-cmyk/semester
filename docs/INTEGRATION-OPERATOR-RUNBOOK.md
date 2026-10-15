@@ -46,8 +46,27 @@ its open errors and open dead letters. Alert on:
 - `status = 'error'`;
 - `open_dead_letters > 0` for more than a day.
 
-The dashboard (University → Integrations) shows the same per school, and its **Export health summary** gives counts
-and states only.
+The school dashboard (University → Integrations) shows the same per school, and its **Export health summary** gives
+counts and states only. Platform operators use **Operations console → Integration health**. That workspace derives
+its schools from the operator's live, exact-school `integration:view` grants and returns only configuration state,
+freshness, run/reconciliation counts, owners, cautious customer impact and a next safe action. Credentials, tokens,
+cursors, payload references, external record references and provider messages do not cross that RPC boundary. Production
+never includes demo tenants; staging and demo require explicit inclusion and an exact-school `tenant:implement` grant.
+
+### Request a configuration change from the console
+
+The Integration health workspace never edits a connector. **Request configuration approval** creates an
+`integration-config` approval against the connection's public id and exact tenant. Choose the bounded change kind and
+enter only opaque references for the institution's written approval, rollback/fallback plan and change ticket, plus the
+credential-expiry date. Never paste a credential, token or secret. This is a two-person request; approval and execution
+remain separate.
+
+Before execution, confirm the requested provider domain and data scope, the provider-side fallback, and the credential
+reference's expiry. After execution, run one bounded sync and verify the declared freshness, reconciliation state and
+exception counts in Integration health. If verification fails, stop writes, restore the prior credential reference or
+connector state according to the cited rollback plan, keep the incident/ticket open, and do not replay while an open
+dead letter or unresolved cause remains. The health row and approval status are evidence of current state, not proof of
+institutional sign-off or successful deployment.
 
 ## 4. Run a sync
 

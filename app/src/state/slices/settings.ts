@@ -14,7 +14,7 @@ import { readLook } from '../../lib/look';
 import { record } from '../../lib/pace';
 import { currentLook, type Action, type State } from '../shape';
 import { readTabs } from '../../lib/tabbar';
-import { readRules } from '../../lib/myrules';
+import { dropRule, readRules } from '../../lib/myrules';
 import { readFacts } from '../../lib/aboutme';
 import { mark as markAttendance, readPolicy } from '../../lib/attend';
 import { readDrop } from '../../lib/drop';
@@ -137,6 +137,12 @@ export function settings(state: State, action: Action): State | null {
     case 'setMyRules':
       return { ...state, myRules: readRules(action.rules) };
 
+    // Deletion is its own action so the cross-cutting Undo path can snapshot
+    // the rule list. Ordinary edits stay on `setMyRules`: they remain visible
+    // and can be edited back without an interrupting toast.
+    case 'deleteMyRule':
+      return { ...state, myRules: dropRule(state.myRules, action.id) };
+
     // Read back through the same reader the stored list goes through, so a
     // list that arrived from a screen and a list that arrived from disk are
     // the same list — the cap, the trim and the empty-line drop all happen
@@ -257,6 +263,7 @@ export function settings(state: State, action: Action): State | null {
     case 'wipeLocalForAdopt':
       return {
         ...state,
+        operatingWorkspace: null,
         courses: [],
         notes: [],
         tasks: [],

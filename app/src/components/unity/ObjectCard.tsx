@@ -2,7 +2,9 @@ import { useId } from 'react';
 import type { StatusKey } from '../../lib/status';
 import { statusOf } from '../../lib/status';
 import { showSource, type SourceDetail } from '../../lib/unity';
+import type { FactProvenance } from '../../lib/factprovenance';
 import { OpenIn, type OpenTarget } from './OpenIn';
+import { ProvenanceChips } from './ProvenanceChips';
 
 /** The kinds of thing Semester draws as a card. Presentation only — no kind unlocks anything. */
 export type ObjectKind =
@@ -63,7 +65,12 @@ export function ObjectCard({
   primary,
   secondary,
   source,
+  provenance,
+  now,
   openIn = [],
+  context,
+  relationships = [],
+  history = [],
   level = 3,
 }: {
   kind: ObjectKind;
@@ -74,7 +81,18 @@ export function ObjectCard({
   primary?: CardAction;
   secondary?: CardAction;
   source?: SourceDetail;
+  /**
+   * Who produced the fact and how far to trust it, as `lib/factprovenance.ts`
+   * models it. Optional while the cards are migrated off `statuses`; the
+   * design census counts the cards that still do not pass it.
+   */
+  provenance?: FactProvenance;
+  /** The moment ages are measured against. Only a test or the gallery passes it. */
+  now?: number;
   openIn?: OpenTarget[];
+  context?: string;
+  relationships?: string[];
+  history?: { at: string; label: string }[];
   level?: 2 | 3 | 4;
 }) {
   const heading = useId();
@@ -94,6 +112,11 @@ export function ObjectCard({
       <H id={heading} className="object-card-title">
         {title}
       </H>
+      {provenance && (
+        <div>
+          <ProvenanceChips provenance={provenance} now={now} />
+        </div>
+      )}
       {explanation && <p className="object-card-why">{explanation}</p>}
       {metadata && <p className="object-card-meta nums">{metadata}</p>}
       {/* Detailed mode puts the source's own sentence on the card; the other
@@ -124,10 +147,17 @@ export function ObjectCard({
             <button
               type="button"
               className="bare link-quiet tap-y"
-              onClick={() => showSource(source)}
+              onClick={() => showSource({
+                ...source,
+                kind: KIND_SAID[kind],
+                context,
+                relationships,
+                history,
+                actions: [primary, secondary].filter((action): action is CardAction => Boolean(action)).map((action) => ({ label: action.label, run: action.run })),
+              })}
               aria-label={`Source and details for ${title}`}
             >
-              Source &amp; details
+              View details
             </button>
           )}
           <OpenIn targets={openIn} about={title} />

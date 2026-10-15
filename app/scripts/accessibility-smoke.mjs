@@ -5,9 +5,10 @@
  * workflows named in docs/market-readiness/ACCESSIBILITY_READINESS.md using a
  * real browser, including the deployed base path. Static source guards remain
  * valuable; this catches the integration failures they cannot: a skip link
- * that does not move focus, a route with two mains, a broken ARIA reference,
- * an unnamed visible control, or a page that overflows at the 320 CSS-pixel
- * reflow viewport used to represent 400% zoom from a 1280-pixel baseline.
+ * that does not move focus or overwrites the current hash route, a route with
+ * two mains, a broken ARIA reference, an unnamed visible control, or a page
+ * that overflows at the 320 CSS-pixel reflow viewport used to represent 400%
+ * zoom from a 1280-pixel baseline.
  *
  * Exit 0 only after every journey and both viewports were measured. Exit 1 on
  * a finding and 2 when the instrument itself could not run.
@@ -24,6 +25,7 @@ const SETTLE = Number(process.env.SMOKE_SETTLE || 1200);
 const JOURNEYS = [
   ['Home', '#/home'],
   ['Calendar', '#/calendar'],
+  ['Me', '#/me'],
   ['Courses', '#/courses'],
   ['Assignments', '#/work'],
   ['Registration', '#/yes'],
@@ -166,10 +168,27 @@ async function inspect(journey, hash, viewport, label) {
       if (!String(skip.className).split(/\s+/).includes('skip-link') || skip.text !== 'Skip to content' || !skip.visible) {
         messages.push('first Tab did not reveal and focus the skip link');
       } else {
+        const before = await page.evaluate(() => ({
+          hash: window.location.hash,
+          heading: document.querySelector('h1')?.textContent?.trim() || '',
+        }));
         await page.keyboard.press('Enter');
         await page.waitForTimeout(50);
-        const target = await page.evaluate(() => ({ id: document.activeElement?.id, tag: document.activeElement?.tagName }));
+        const target = await page.evaluate(() => {
+          const main = document.querySelector('main#main');
+          const rect = main?.getBoundingClientRect();
+          return {
+            id: document.activeElement?.id,
+            tag: document.activeElement?.tagName,
+            hash: window.location.hash,
+            heading: document.querySelector('h1')?.textContent?.trim() || '',
+            visible: Boolean(rect && rect.bottom > 0 && rect.top < window.innerHeight),
+          };
+        });
         if (target.id !== 'main' || target.tag !== 'MAIN') messages.push('skip link did not transfer focus to main');
+        if (target.hash !== before.hash) messages.push(`skip link changed route from ${before.hash} to ${target.hash}`);
+        if (target.heading !== before.heading) messages.push(`skip link changed heading from ${before.heading} to ${target.heading}`);
+        if (!target.visible) messages.push('skip link target is outside the viewport after activation');
       }
     }
 

@@ -58,55 +58,111 @@ describe('consented support access surface', () => {
     expect(mock.load).not.toHaveBeenCalled();
   });
 
+  it('does not mislabel a load failure as an empty support-access state', async () => {
+    mock.load.mockRejectedValue(new Error('Support access is temporarily unavailable.'));
+    await renderSignedIn();
+    expect(host.textContent).toContain('Could not load support access');
+    expect(host.textContent).toContain('Support access is temporarily unavailable.');
+    expect(host.textContent).not.toContain('Open a support question in Help');
+    expect(host.textContent).not.toContain('has not provisioned a verified support recipient');
+  });
+
   it('lets a student see and immediately revoke only their named window', async () => {
     mock.load.mockResolvedValue({
       supporters: [{ supporterId: 'staff', label: 'Advisor Rivera' }],
+      tickets: [{ ticketId: '123e4567-e89b-12d3-a456-426614174000', subject: 'Recovery plan' }],
       windows: [{
         grantId: 'grant-1', side: 'student', counterpartLabel: 'Advisor Rivera',
         reason: 'Help me review the pattern.', expiresAt: '2099-01-02T00:00:00Z',
         revokedAt: null, createdAt: '2099-01-01T00:00:00Z',
+        ticketId: '123e4567-e89b-12d3-a456-426614174000', scopes: ['learning-progress'], consentState: 'active',
       }],
     });
     mock.revoke.mockResolvedValue(undefined);
     await renderSignedIn();
     expect(host.textContent).toContain('Advisor Rivera');
-    expect(host.textContent).toContain('You granted access');
+    expect(host.textContent).toContain('SUP-123E-4567-E89B-12D3');
+    expect(host.textContent).toContain('Course evidence counts, averages, mistakes and last observation time');
     expect(host.textContent).not.toContain('View aggregate signals');
-    const revoke = [...host.querySelectorAll('button')].find((button) => button.textContent === 'Revoke now');
-    await act(async () => { revoke?.click(); });
+    expect(host.querySelector('[data-semester-design="archive-2026-10-08"]')).not.toBeNull();
+    const ask = [...host.querySelectorAll('button')].find((button) => button.textContent === 'Revoke');
+    act(() => { ask?.click(); });
+    expect(host.textContent).toContain('Advisor Rivera loses access right away');
+    const confirm = [...host.querySelectorAll('button')].find((button) => button.textContent === 'Revoke now');
+    await act(async () => { confirm?.click(); });
     expect(mock.revoke).toHaveBeenCalledWith('grant-1');
     expect(host.textContent).toContain('Support access revoked');
+  });
+
+  it('marks a student grant expiring within a day without weakening its scope', async () => {
+    mock.load.mockResolvedValue({
+      supporters: [], tickets: [], windows: [{
+        grantId: 'grant-expiring', side: 'student', counterpartLabel: 'Advisor Rivera',
+        reason: 'Help me review the pattern.', expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+        revokedAt: null, createdAt: new Date().toISOString(),
+        ticketId: null, scopes: ['learning-progress'], consentState: 'active',
+      }],
+    });
+    await renderSignedIn();
+    const delegation = host.querySelector('[data-state="expiring"]');
+    expect(delegation?.textContent).toContain('Expires soon');
+    expect(delegation?.textContent).toContain('Course evidence counts, averages, mistakes and last observation time');
   });
 
   it('creates a bounded window and keeps the success confirmation visible', async () => {
     mock.load.mockResolvedValue({
       supporters: [{ supporterId: 'staff', label: 'Advisor Rivera' }],
+      tickets: [{ ticketId: '123e4567-e89b-12d3-a456-426614174000', subject: 'Recovery plan' }],
       windows: [],
     });
     mock.create.mockResolvedValue(undefined);
     await renderSignedIn();
 
     const reason = host.querySelector('textarea');
-    const [supporter, duration] = [...host.querySelectorAll('select')];
+    const [supporter, ticket, duration] = [...host.querySelectorAll('select')];
     const form = host.querySelector('form');
     await act(async () => {
       if (supporter) changeValue(supporter, 'staff');
+      if (ticket) changeValue(ticket, '123e4567-e89b-12d3-a456-426614174000');
       if (reason) changeValue(reason, 'Help me make a recovery plan.');
       if (duration) changeValue(duration, '3');
     });
     await act(async () => { form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); });
 
-    expect(mock.create).toHaveBeenCalledWith('staff', 'Help me make a recovery plan.', 3);
+    expect(mock.create).toHaveBeenCalledWith(
+      'staff',
+      'Help me make a recovery plan.',
+      3,
+      '123e4567-e89b-12d3-a456-426614174000',
+    );
     expect(host.textContent).toContain('Support access created');
+  });
+
+  it('replaces a supporter selection that is no longer eligible', async () => {
+    const ticket = { ticketId: '123e4567-e89b-12d3-a456-426614174000', subject: 'Recovery plan' };
+    mock.load
+      .mockResolvedValueOnce({ supporters: [{ supporterId: 'old', label: 'Old agent' }], tickets: [ticket], windows: [] })
+      .mockResolvedValue({ supporters: [{ supporterId: 'new', label: 'New agent' }], tickets: [ticket], windows: [] });
+    mock.create.mockResolvedValue(undefined);
+    await renderSignedIn();
+    const reason = host.querySelector('textarea')!;
+    const form = host.querySelector('form')!;
+    await act(async () => changeValue(reason, 'First request.'));
+    await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+    await act(async () => changeValue(reason, 'Second request.'));
+    await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+    expect(mock.create).toHaveBeenLastCalledWith('new', 'Second request.', 1, ticket.ticketId);
   });
 
   it('gives the named supporter aggregates but never raw mistake detail', async () => {
     mock.load.mockResolvedValue({
       supporters: [],
+      tickets: [],
       windows: [{
         grantId: 'grant-2', side: 'supporter', counterpartLabel: 'Student Avery',
         reason: 'Help me review the pattern.', expiresAt: '2099-01-02T00:00:00Z',
         revokedAt: null, createdAt: '2099-01-01T00:00:00Z',
+        ticketId: null, scopes: ['learning-progress'], consentState: 'active',
       }],
     });
     mock.read.mockResolvedValue([{
@@ -122,5 +178,45 @@ describe('consented support access surface', () => {
     expect(host.textContent).toContain('average 75%');
     expect(host.textContent).not.toContain('Private detail');
     expect(host.textContent).not.toContain('Revoke now');
+  });
+
+  it('routes case-bound supporter reads through the MFA-gated console path', async () => {
+    mock.load.mockResolvedValue({
+      supporters: [], tickets: [], windows: [{
+        grantId: 'grant-case', side: 'supporter', counterpartLabel: 'Student Avery',
+        reason: 'Help with this case.', expiresAt: '2099-01-02T00:00:00Z',
+        revokedAt: null, createdAt: '2099-01-01T00:00:00Z',
+        ticketId: '123e4567-e89b-12d3-a456-426614174000', scopes: ['learning-progress'], consentState: 'active',
+      }],
+    });
+    await renderSignedIn();
+    expect(host.textContent).toContain('require fresh MFA');
+    expect(host.textContent).toContain('Operations Console');
+    expect(host.textContent).not.toContain('View aggregate signals');
+    expect(mock.read).not.toHaveBeenCalled();
+  });
+
+  it('discards support windows and tickets loaded for a previous account', async () => {
+    let finishOld!: (value: {
+      supporters: Array<{ supporterId: string; label: string }>;
+      tickets: Array<{ ticketId: string; subject: string }>;
+      windows: Array<never>;
+    }) => void;
+    mock.load
+      .mockImplementationOnce(() => new Promise((resolve) => { finishOld = resolve; }))
+      .mockResolvedValueOnce({ supporters: [], tickets: [], windows: [] });
+    await act(async () => {
+      root.render(<SupportAccess account={{ id: 'first', email: 'first@example.edu', via: 'email' }} />);
+    });
+    await act(async () => {
+      root.render(<SupportAccess account={{ id: 'second', email: 'second@example.edu', via: 'email' }} />);
+    });
+    await act(async () => finishOld({
+      supporters: [{ supporterId: 'old-staff', label: 'Old account advisor' }],
+      tickets: [{ ticketId: '123e4567-e89b-12d3-a456-426614174000', subject: 'Old account ticket' }],
+      windows: [],
+    }));
+    expect(host.textContent).not.toContain('Old account advisor');
+    expect(host.textContent).not.toContain('Old account ticket');
   });
 });

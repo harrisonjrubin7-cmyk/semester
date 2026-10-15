@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { useModal } from '../a11y/modal';
+import { useModal, useScrim } from '../a11y/modal';
 import type { Action } from '../lib/actions';
 import { DESKTOP, useMedia } from '../lib/media';
 import { SourceBadge } from './SourceBadge';
@@ -40,6 +40,7 @@ export function ExplanationSheet({
   const headingId = useId();
   const first = useRef<HTMLHeadingElement>(null);
   const { ref: modalRef, onKeyDown: modalKeys } = useModal<HTMLDivElement>({ onClose, initial: first, on: !wide });
+  const scrim = useScrim(onClose);
   const e = action.explanation;
 
   // The drawer is not a dialog, so `useModal` does not manage it: take focus
@@ -71,6 +72,14 @@ export function ExplanationSheet({
           </li>
           {e.factors.map((f) => <li key={f}>{f}</li>)}
         </ul>
+        {(action.source.authority || action.source.dataOwner || action.source.correctionRoute || action.source.officialFallback) ? (
+          <dl className="explain-source-details">
+            {action.source.authority ? <><dt>Authority</dt><dd>{action.source.authority}</dd></> : null}
+            {action.source.dataOwner ? <><dt>Data owner</dt><dd>{action.source.dataOwner}</dd></> : null}
+            {action.source.correctionRoute ? <><dt>Correction route</dt><dd>{action.source.correctionRoute}</dd></> : null}
+            {action.source.officialFallback ? <><dt>Official fallback</dt><dd>{action.source.officialFallback}</dd></> : null}
+          </dl>
+        ) : null}
         <h3>What it changes</h3>
         <p>{e.expectedImpact}</p>
         <h3>What Semester can’t tell you</h3>
@@ -107,7 +116,7 @@ export function ExplanationSheet({
   }
 
   const sheet = (
-    <div className="explain-wash" onClick={onClose}>
+    <div className="explain-wash" {...scrim}>
       <div
         ref={modalRef}
         className="explain-sheet"

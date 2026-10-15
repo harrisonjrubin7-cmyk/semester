@@ -1,11 +1,14 @@
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup, renderToString } from 'react-dom/server';
 import { defaultNext } from '../lib/graduation';
+import { STATUS_LABEL } from '../lib/ops/claims';
+import { MODULES as CORE_MODULES } from './modules';
 import { PROMISE, type SiteConfig } from './config';
 import { Layout, href } from './Layout';
 import * as B from './benchmark';
 import * as C from './community';
 import * as K from './k12';
+import * as AD from './advancement';
 import * as O from './oneos';
 import * as M from './more';
 import * as P from './pages';
@@ -35,7 +38,7 @@ export const ROUTES: Route[] = [
   { path: '/product/', title: 'How Semester works', description: 'Today, My Path, Search, Plan and Me: five places, each answering one question a student has.', Page: P.Product },
   { path: '/students/', title: 'Semester for students', description: 'Plan registration, prepare for advising and see the next deadline first.', Page: P.Students },
   { path: '/institutions/', title: 'Semester for institutions', description: 'A small, measured pilot that turns fragmented systems into clearer student action.', Page: P.Institutions },
-  { path: '/pricing/', title: 'Semester pricing', description: 'Free, Plus, Pro and Institution Access. During the pilot every student feature is free.', Page: P.Pricing },
+  { path: '/pricing/', title: 'Semester pricing', description: 'Free, Plus, Pro and Semester Institutional. During the pilot every student feature is free.', Page: P.Pricing },
   { path: '/tools/', title: 'Free tools from Semester', description: 'A graduation timeline calculator, schedule builder, registration checklist and advisor meeting planner.', Page: P.Tools },
   { path: '/resources/', title: 'Semester resources', description: 'Guides for registration, advising and planning a degree.', Page: P.Resources },
   { path: '/about/', title: 'About Semester', description: 'Why Semester exists and how it works with student data.', Page: P.About },
@@ -82,6 +85,8 @@ export const ROUTES: Route[] = [
   { path: '/community/ambassadors/', title: 'Campus ambassadors — Semester', description: 'What an ambassador does, what they get, and the boundaries: never paid per sign-up, and no access to other students’ data.', Page: C.Ambassadors },
   { path: '/community/stories/', title: 'Student stories — Semester', description: 'Real campus journeys in the student’s own words, published only with permission, anonymous, attributed, campus-only or public as they chose.', Page: C.Stories },
   { path: '/k-12/', title: 'Semester for high school', description: 'The K–12 edition, described and not yet offered: no district uses Semester, and nobody under 13 may hold an account.', Page: K.K12 },
+  { path: '/solutions/advancement/', title: 'Alumni relations and fundraising', description: 'Planned, not built: no school uses Semester for alumni relations or fundraising, and no gift has been taken.', Page: AD.Advancement },
+  { path: '/alumni/', title: 'For graduates', description: 'What a graduate can do in Semester today, and what a school’s alumni office might one day add. Nothing here asks for a gift.', Page: AD.Alumni },
   { path: '/community/partners/', title: 'Partner community directory — Semester', description: 'Who can be listed, the four verification labels, and the rules: visibility is never sold and a partner never sees a student’s record.', Page: C.Partners },
   { path: '/community/events/', title: 'Events and sessions — Semester', description: 'Workshops, registration-prep sessions, roundtables and panels, each with registration, calendar save, accessibility information, a replay and a next step.', Page: C.Events },
   ...TOOL_LIST.map(
@@ -105,6 +110,9 @@ export const ROUTES: Route[] = [
  */
 export function toolMarkup(id: ToolId, now = new Date()): { html: string; props: string } {
   const props: ToolProps = { next: defaultNext(now) };
+  if (id === 'stack') {
+    props.statuses = Object.fromEntries(CORE_MODULES.map((m) => [m.id, STATUS_LABEL[m.status]]));
+  }
   return { html: renderToString(<Tool id={id} props={props} />), props: JSON.stringify(props) };
 }
 

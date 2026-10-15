@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { lines as handoffLines, withHandoff, type Handoff } from '../lib/tickethandoff';
 import type { Account } from '../lib/cloud';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import {
   CATEGORIES,
   CATEGORY_LABELS,
@@ -14,6 +15,8 @@ import {
   myTickets,
   openTicket,
   replyToTicket,
+  setSupportEmailNotice,
+  ticketReference,
   type Category,
   type ContextKey,
   type Message,
@@ -52,6 +55,7 @@ export function SupportTicketsPanel({
 }
 
 function AccountTickets({ context, handoff }: { context: Record<ContextKey, string>; handoff: Handoff | null }) {
+  const emailNoticesAvailable = EXPERIENCE_FLAGS.supportEmailNotices !== 'off';
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
@@ -62,6 +66,7 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
   const [ticked, setTicked] = useState<ReadonlySet<ContextKey>>(new Set());
   // Whether the handoff lines (`lib/tickethandoff.ts`) go in the body. Off until ticked, like every context key.
   const [withDetails, setWithDetails] = useState(false);
+  const [emailNotice, setEmailNotice] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [thread, setThread] = useState<Message[]>([]);
@@ -75,19 +80,27 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
       setTickets(await myTickets());
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Could not load your questions.');
+      throw error;
     }
   }, []);
 
   // An account-backed resource, not render-derived state.
   // oxlint-disable-next-line react/set-state-in-effect
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => { void refresh().catch(() => undefined); }, [refresh]);
 
-  const run = (work: () => Promise<void>, done: string) => {
+  const run = <T,>(work: () => Promise<T>, done: string | ((result: T) => string), onCommitted?: () => void) => {
     setBusy(true);
     void work()
-      .then(async () => {
-        await refresh();
-        setNotice(done);
+      .then(async (result) => {
+        const committed = typeof done === 'function' ? done(result) : done;
+        onCommitted?.();
+        try {
+          await refresh();
+          setNotice(committed);
+        } catch (error) {
+          const detail = error instanceof Error ? error.message : 'Could not load your questions.';
+          setNotice(onCommitted ? `${committed} ${detail} The saved setting is shown.` : detail);
+        }
       })
       .catch((error: unknown) => setNotice(error instanceof Error ? error.message : 'That did not work.'))
       .finally(() => setBusy(false));
@@ -121,6 +134,7 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
     setBody('');
     setTicked(new Set());
     setWithDetails(false);
+    setEmailNotice(false);
   };
 
   // The database holds the body to 4000 characters after trimming. The lines
@@ -144,8 +158,8 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
       <ul style={{ lineHeight: 'var(--leading-relaxed-plus)' }}>
         <li>Semester’s support staff read what you write, without your name or email address.</li>
         <li>Details about the app go only if you tick them, and you see each one first.</li>
-        <li>Accessibility and privacy questions get a first reply within a day; the rest within three.</li>
-        <li>Deleting your account deletes these too.</li>
+        <li>We aim to reply to accessibility and privacy questions within a day, and other questions within three. These are targets, not guaranteed coverage.</li>
+        <li>Deleting your account deletes classified questions. Older unclassified records are detached and preserved only for evidence-backed retention review.</li>
       </ul>
       {notice && <Notice>{notice}</Notice>}
 
@@ -196,6 +210,20 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
               <p style={{ color: 'var(--app-dim)', margin: 'var(--sp-2) 0 0' }}>Never included: your notes, files, grades, conversations with the assistant, or anything from your student record.</p>
             </fieldset>
           ) : null}
+          <fieldset style={{ border: 0, padding: 0 }}>
+            <legend>When support replies (optional)</legend>
+            {emailNoticesAvailable ? <label style={{ display: 'block' }}>
+              <input type="checkbox" checked={emailNotice} onChange={() => setEmailNotice((value) => !value)} />
+              {' '}Email me a generic notice. The reply itself stays in Semester.
+            </label> : <p style={{ color: 'var(--app-dim)', margin: 0 }}>
+              Email notices are unavailable while the email provider review and terms are incomplete. Replies stay in Help.
+            </p>}
+            <p style={{ color: 'var(--app-dim)', margin: 'var(--sp-2) 0 0' }}>
+              {emailNoticesAvailable
+                ? 'Off by default. At most three notices per question in 24 hours. You can turn it off anytime.'
+                : 'No account email is sent while this gate is closed.'}
+            </p>
+          </fieldset>
           <button className="btn btn-primary btn-block" disabled={!subject.trim() || !body.trim() || composed.length > BODY_LIMIT}>Check before sending</button>
           <button type="button" className="btn btn-secondary btn-block" onClick={reset}>Cancel</button>
         </form>
@@ -212,12 +240,13 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
                 ? 'None'
                 : CONTEXT_KEYS.filter((k) => k in sending).map((k) => `${CONTEXT_LABELS[k]}: ${sending[k]}`).join(' · ')}
             </dd>
+            <dt>Email notice</dt><dd>{emailNotice ? 'On — generic notice only' : 'Off'}</dd>
           </dl>
-          <p style={{ color: 'var(--app-dim)' }}>A first reply is due within {firstResponseHours(category)} hours.</p>
+          <p style={{ color: 'var(--app-dim)' }}>Our first-reply target is {firstResponseHours(category)} hours. It is not a guaranteed SLA.</p>
           <ActionButton
             tone="primary"
             disabled={busy}
-            onClick={() => run(async () => { await openTicket(category, subject, composed, sending); reset(); }, 'Sent. The reply will appear here.')}
+            onClick={() => run(async () => { await openTicket(category, subject, composed, sending, emailNotice); reset(); }, 'Sent. The reply will appear here.')}
           >
             Send to Semester support
           </ActionButton>
@@ -231,6 +260,7 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
           <ul aria-label="Your questions" style={{ paddingLeft: 0, listStyle: 'none' }}>
             {tickets.map((t) => (
               <li key={t.id} className="portal-panel" style={{ marginBlock: 'var(--sp-3)' }}>
+                <div style={{ color: 'var(--app-dim)', marginBottom: 'var(--sp-2)' }}>Reference {ticketReference(t.id)}</div>
                 <button type="button" className="btn btn-secondary btn-block" aria-expanded={openId === t.id} onClick={() => show(openId === t.id ? null : t.id)}>
                   {t.subject} · {STATUS_LABELS[t.status]}
                 </button>
@@ -242,6 +272,35 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
 
       {current && (
         <div aria-label="Conversation" style={{ display: 'grid', gap: 'var(--sp-3)' }}>
+          <label className="portal-panel">
+            <input
+              type="checkbox"
+              checked={current.emailNoticeEnabled}
+              disabled={busy || (!emailNoticesAvailable && !current.emailNoticeEnabled)}
+              onChange={(event) => {
+                const enabled = event.currentTarget.checked;
+                run(
+                  () => setSupportEmailNotice(current.id, enabled),
+                  (outcome) => enabled
+                    ? 'Generic email notices are on for this question.'
+                    : outcome === 'off_with_in_flight'
+                      ? 'Email notices are off for this question. One notice was already being delivered and may still arrive.'
+                      : 'Email notices are off for this question.',
+                  () => setTickets((items) => items.map((ticket) => (
+                    ticket.id === current.id ? { ...ticket, emailNoticeEnabled: enabled } : ticket
+                  ))),
+                );
+              }}
+            />
+            {' '}Email me a generic notice when support replies
+            <span style={{ display: 'block', color: 'var(--app-dim)' }}>
+              {emailNoticesAvailable
+                ? 'At most three notices in 24 hours. Turn off anytime; replies remain here.'
+                : current.emailNoticeEnabled
+                  ? 'Email delivery is gated. You can turn this saved preference off; replies remain here.'
+                  : 'Unavailable until the email provider review and terms are complete; replies remain here.'}
+            </span>
+          </label>
           {thread.map((m, i) => (
             <p key={i} className="portal-panel">
               <strong>{m.from === 'support' ? 'Semester support' : 'You'}</strong>{' · '}{m.body}

@@ -33,6 +33,10 @@
 --
 -- ## The gap this suite does not close, and does not pretend to
 --
+-- (Update, 30 Sep 2026: `20260930185000_school_membership_enforcement.sql` adds the
+-- per-school switch that closes it, off for every school; `school-membership.check.sql`
+-- is its suite. Until a school is switched on, what follows is still true of it.)
+--
 -- There is no cross-tenant isolation in this project today. A confirmed
 -- address of any domain can still enter any school's course room, because
 -- `verified_student()` asks only that the address be confirmed.

@@ -1,5 +1,6 @@
 import { useStore } from '../state/store';
 import type { Screen } from '../lib/types';
+import { AgentPicker } from '../intelligence/AgentPicker';
 import { IntegrityModePicker } from '../intelligence/ModePicker';
 import type { IntegrityMode } from '../intelligence/contracts';
 import type { HelpState } from './converse';
@@ -162,7 +163,7 @@ export function HowItHelps({
   noticeVariant: 'full' | 'line';
 }) {
   if (help.kind === 'ready') {
-    return <IntegrityModePicker requested={requested} policy={{ allowed, reason }} onChange={onChange} />;
+    return <><AgentPicker /><IntegrityModePicker requested={requested} policy={{ allowed, reason }} onChange={onChange} /></>;
   }
   return <HelpNotice help={help} id={noticeId} variant={noticeVariant} onRetry={onRetry} />;
 }

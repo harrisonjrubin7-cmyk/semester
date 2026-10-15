@@ -10,6 +10,9 @@ import { StoreProvider } from '../state/store';
 
 const sent: { email: string; title: string; payload: SharePayload; days: number }[] = [];
 const revoked: string[] = [];
+const deleted: string[] = [];
+let deleteFailure: Error | null = null;
+let revokeFailure: Error | null = null;
 let listed: { shares: unknown[]; events: unknown[] } = { shares: [], events: [] };
 vi.mock('../lib/advisor-shares', async (importOriginal) => {
   const real = await importOriginal<typeof import('../lib/advisor-shares')>();
@@ -21,9 +24,13 @@ vi.mock('../lib/advisor-shares', async (importOriginal) => {
     }),
     myShares: vi.fn(async () => listed),
     revokeShare: vi.fn(async (id: string) => {
+      if (revokeFailure) throw revokeFailure;
       revoked.push(id);
     }),
-    deleteShare: vi.fn(async () => {}),
+    deleteShare: vi.fn(async (id: string) => {
+      if (deleteFailure) throw deleteFailure;
+      deleted.push(id);
+    }),
     sharedWithMe: vi.fn(async () => [
       { id: 'in-1', title: 'Spring planning', shared_as: 'Riley', created_at: '2026-09-20T00:00:00Z', expires_at: '2026-10-20T00:00:00Z' },
     ]),
@@ -58,6 +65,9 @@ beforeEach(() => {
   window.location.hash = '';
   window.matchMedia = (() => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} })) as unknown as typeof window.matchMedia;
   localStorage.clear();
+  deleted.length = 0;
+  deleteFailure = null;
+  revokeFailure = null;
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 6, seenOnboarding: true, sample: false, courses: [] }));
   localStorage.setItem(
     'semester.registration.v1',
@@ -136,7 +146,51 @@ describe('the Degree tab', () => {
     expect(text()).not.toContain('Advisor meeting');
     await act(async () => root.render(<StoreProvider><Degree advisorMeeting /></StoreProvider>));
     expect([...host.querySelectorAll('button, [role="tab"], [role="radio"]')].some((b) => b.textContent === 'Advisor meeting')).toBe(true);
-  });
+  }, 15_000);
+
+  it('puts a named course on the student agenda and opens that meeting, without sharing', async () => {
+    const { blankCourse } = await import('../lib/edit');
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      schemaVersion: 6, seenOnboarding: true, sample: false,
+      courses: [blankCourse('ECON 1020', 'Fall 2026')],
+    }));
+    await act(async () => root.render(<StoreProvider><Degree advisorMeeting /></StoreProvider>));
+    expect(text()).toContain('Needs attention');
+    await act(async () => button(/^Add to my meeting$/).click());
+    const stored = JSON.parse(localStorage.getItem(meetingKey(null))!);
+    expect(stored.meetings).toHaveLength(1);
+    expect(stored.meetings[0].agenda.map((line: { text: string }) => line.text)).toEqual([
+      'ECON 1020 (Fall 2026). Named on this device. Not an enrollment.',
+    ]);
+    expect(stored.meetings[0].notes).toBe('');
+    expect(stored.meetings[0].attach.courses).toEqual([]);
+    expect(JSON.stringify(stored)).not.toContain('SECRET');
+    expect(sent).toEqual([]);
+    expect(text()).toMatch(/nothing was shared/i);
+    expect(button(/^Show my meeting$/)).toBeTruthy();
+    expect(text()).toContain('Add an agenda item');
+    const agenda = [...host.querySelectorAll<HTMLInputElement>('input')].find((input) => /Agenda item 1/.test(input.closest('label')?.textContent ?? ''));
+    expect(agenda?.value).toBe('ECON 1020 (Fall 2026). Named on this device. Not an enrollment.');
+    const notes = [...host.querySelectorAll<HTMLTextAreaElement>('textarea')].find((input) => /Private notes/.test(input.closest('label')?.textContent ?? ''));
+    expect(notes?.value ?? '').toBe('');
+  }, 15_000);
+
+  it('still writes the agenda when the meeting tab is off, and does not invent the tab', async () => {
+    const { blankCourse } = await import('../lib/edit');
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      schemaVersion: 6, seenOnboarding: true, sample: false,
+      courses: [blankCourse('ECON 1020', 'Fall 2026')],
+    }));
+    await act(async () => root.render(<StoreProvider><Degree advisorMeeting={false} /></StoreProvider>));
+    await act(async () => button(/^Add to my meeting$/).click());
+    const stored = JSON.parse(localStorage.getItem(meetingKey(null))!);
+    expect(stored.meetings[0].agenda[0].text).toContain('ECON 1020');
+    expect(stored.meetings[0].notes).toBe('');
+    expect(text()).not.toContain('Advisor meeting');
+    expect(text()).toMatch(/nothing was shared/i);
+    expect(button(/^On your agenda$/).disabled).toBe(true);
+    expect(sent).toEqual([]);
+  }, 15_000);
 });
 
 describe('preparing and exporting', () => {
@@ -182,6 +236,24 @@ describe('preparing and exporting', () => {
     expect(() => button(/^Preview and share…$/)).toThrow();
     expect(text()).toContain('Sign in to share with an advisor.');
   });
+
+  it('previews the exact local meeting deletion and its partial backup boundary', async () => {
+    await mount(null);
+    await prepare();
+    await act(async () => button(/^Remove this meeting…$/).click());
+
+    const preview = text(dialog());
+    expect(preview).toContain('What happens');
+    expect(preview).toContain('agenda, questions, follow-ups and private notes');
+    expect(preview).toContain('What stays the same');
+    expect(preview).toContain('Shares already made stay available until you revoke or delete them');
+    expect(preview).toContain('Taking it back');
+    expect(preview).toContain('This can’t be undone.');
+    expect(preview).toContain('A device workspace backup can restore the meeting without its private notes');
+
+    await act(async () => button(/^Cancel$/).click());
+    expect(JSON.parse(localStorage.getItem(meetingKey(null))!).meetings).toHaveLength(1);
+  });
 });
 
 describe('sharing with an advisor', () => {
@@ -220,7 +292,7 @@ describe('sharing with an advisor', () => {
     expect(sent[0].payload.followUps).toEqual(['Email the department']);
   });
 
-  it('lists shares by state and reads, and revokes only after confirming', async () => {
+  it('lists shares by state and reads, and keeps a refused revocation available to retry', async () => {
     listed = {
       shares: [
       // 07:00 UTC is the same calendar day from UTC-5 to UTC+14, the range
@@ -242,10 +314,53 @@ describe('sharing with an advisor', () => {
     expect(text(rows[1])).toContain('Expired Aug 8, 2026.');
     expect(rows[1].textContent).not.toContain('Revoke');
     await act(async () => button(/^Revoke…$/, rows[0]).click());
-    expect(text(dialog())).toContain('stops opening for your advisor now');
+    expect(text(dialog())).toContain('Your advisor loses access to this shared meeting immediately.');
+    expect(text(dialog())).toContain('The share and its access log stay in your account');
+    expect(text(dialog())).toContain('This can’t be undone. You can make a new share later.');
+    expect(document.activeElement?.textContent).toBe('Cancel');
     expect(revoked).toEqual([]);
+    revokeFailure = new Error('The share was not revoked. Refresh your shares, then try again.');
+    await act(async () => button(/^Revoke$/).click());
+    expect(revoked).toEqual([]);
+    expect(text(dialog())).toContain('The share was not revoked. Refresh your shares, then try again.');
+
+    revokeFailure = null;
     await act(async () => button(/^Revoke$/).click());
     expect(revoked).toEqual(['s-live']);
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('previews account-share deletion and keeps the choice open when the server refuses it', async () => {
+    listed = {
+      shares: [
+        { id: 's-live', title: 'Spring planning', created_at: '2026-09-20T07:00:00Z', expires_at: '2099-01-01T07:00:00Z', revoked_at: null },
+      ],
+      events: [{ share_id: 's-live', read_at: '2026-09-22T07:00:00Z' }],
+    };
+    await mount('u1');
+    await act(async () => button(/^Prepare a meeting$/).click());
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+
+    await act(async () => button(/^Delete…$/).click());
+    expect(text(dialog())).toContain('Deletes this advisor share and its access log from your account.');
+    expect(text(dialog())).toContain('Your meeting preparation on this device');
+    expect(text(dialog())).toContain('This can’t be undone.');
+    expect(document.activeElement?.textContent).toBe('Cancel');
+    expect(deleted).toEqual([]);
+
+    await act(async () => button(/^Cancel$/).click());
+    expect(deleted).toEqual([]);
+    await act(async () => button(/^Delete…$/).click());
+    deleteFailure = new Error('The share was not deleted. Try again.');
+    await act(async () => button(/^Delete$/).click());
+    expect(deleted).toEqual([]);
+    expect(text(dialog())).toContain('The share was not deleted. Try again.');
+
+    deleteFailure = null;
+    await act(async () => button(/^Delete$/).click());
+    expect(deleted).toEqual(['s-live']);
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(text()).toContain('“Spring planning” and its access log are deleted.');
   });
 });
 
@@ -255,6 +370,8 @@ describe('the advisor’s view', () => {
     await mount('u1');
     expect(shares.sharedWithMe).not.toHaveBeenCalled();
     const details = host.querySelector<HTMLDetailsElement>('.advisor-view')!;
+    expect(details.querySelector('summary')?.textContent).toBe('Caseload');
+    expect(text(details)).toContain('not every student at your school');
     await act(async () => {
       details.open = true;
       details.dispatchEvent(new Event('toggle'));

@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { FieldMessage, fieldProps, messageId, useFieldErrors } from './FieldMessage';
+import { ErrorSummary, FieldMessage, fieldProps, messageId, useFieldErrors } from './FieldMessage';
 
 /**
  * The shared field-error pattern, driven the way a form drives it.
@@ -30,12 +30,13 @@ afterEach(() => {
   host.remove();
 });
 
-function Form() {
+function Form({ summary = false }: { summary?: boolean }) {
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const fields = useFieldErrors(['name', 'amount'] as const);
   return (
     <>
+      {summary ? <ErrorSummary {...fields.summary({ name: 'Name', amount: 'Amount' })} /> : null}
       <p id="hint">Both are needed.</p>
       <input
         aria-label="Name"
@@ -189,5 +190,50 @@ describe('a field checked as it is typed', () => {
       'aria-invalid': undefined,
       'aria-describedby': 'proxy-error',
     });
+  });
+});
+
+describe('ErrorSummary', () => {
+  const links = () => [...host.querySelectorAll<HTMLAnchorElement>('.error-summary a')];
+
+  it('draws nothing before a submit, and nothing for a single problem', () => {
+    act(() => root.render(<Form summary />));
+    expect(host.querySelector('.error-summary')).toBeNull();
+    type(box('Name'), 'Book');
+    type(box('Amount'), 'lots');
+    submit();
+    // One wrong field: focus is on it and its own message is live; no summary.
+    expect(host.querySelector('.error-summary')).toBeNull();
+    expect(document.activeElement).toBe(box('Amount'));
+  });
+
+  it('lists every problem in screen order, as a named group of links', () => {
+    act(() => root.render(<Form summary />));
+    submit();
+    const group = host.querySelector('.error-summary')!;
+    expect(group.getAttribute('aria-labelledby')).toBe(group.querySelector('h3')!.id);
+    expect(group.querySelector('h3')!.textContent).toBe('2 things need fixing');
+    // `check` was given amount first; the list follows the screen: name, then amount.
+    expect(links().map((a) => a.textContent)).toEqual(['Name: Say what it is.', 'Amount: Amount has to be a number.']);
+    // Not a live region and not an alert: the first wrong field already speaks.
+    expect(group.hasAttribute('aria-live')).toBe(false);
+    expect(group.hasAttribute('role')).toBe(false);
+  });
+
+  it('moves focus to the field a link names, without touching the address', () => {
+    act(() => root.render(<Form summary />));
+    submit();
+    expect(document.activeElement).toBe(box('Name'));
+    const before = window.location.href;
+    act(() => links()[1]!.click());
+    expect(document.activeElement).toBe(box('Amount'));
+    expect(window.location.href).toBe(before);
+  });
+
+  it('shrinks as the person fixes fields, and goes when one is left', () => {
+    act(() => root.render(<Form summary />));
+    submit();
+    type(box('Name'), 'Book');
+    expect(host.querySelector('.error-summary')).toBeNull();
   });
 });

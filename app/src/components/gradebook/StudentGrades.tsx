@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../../state/store';
 import { ActionButton, EmptyState, Notice, SectionLabel } from '../ui';
 import { SourceBadge } from '../SourceBadge';
+import { Table } from '../unity/Table';
 import { Field, Result, Row, Stack, Sub, type Said } from '../academic/Form';
 import { settled, useAttempts } from '../../lib/attempt';
 import { formatDate } from '../../lib/locale';
@@ -108,41 +109,41 @@ export function StudentGrades({ course, term, me }: { course: string; term: stri
             Semester from released grades only; your instructor’s final grade is the one that counts.
           </p>
           <SectionLabel aside={<SourceBadge label="institution_verified" at={readAt} />}>Released grades</SectionLabel>
-          <div className="integration-table-wrap">
-            <table className="integration-table">
-              <caption className="sr-only">Your released grades in {course}, {term}.</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Item</th>
-                  <th scope="col">Grade</th>
-                  <th scope="col">Released</th>
-                  <th scope="col">Regrade</th>
-                </tr>
-              </thead>
-              <tbody>
-                {view.lines.map((l) => (
-                  <tr key={l.itemId}>
-                    <th scope="row">{l.title}</th>
-                    <td>
-                      {l.score === null ? '—' : `${l.score} of ${l.pointsPossible}`}
-                      {l.mark ? ` · ${MARK_SAID[l.mark]}` : ''}
-                      {l.comment && <Sub>{l.comment}</Sub>}
-                    </td>
-                    <td>{formatDate(new Date(l.releasedAt), { month: 'short', day: 'numeric' })}</td>
-                    <td>
-                      {openOn.has(l.itemId) ? (
-                        'Asked — waiting for an answer'
-                      ) : (
-                        <button type="button" className="btn" disabled={busy} onClick={() => { setAsking(l.itemId); setSaid(null); }}>
-                          Ask about {l.title}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            caption={`Your released grades in ${course}, ${term}.`}
+            captionHidden
+            rows={view.lines}
+            rowKey={(l) => l.itemId}
+            // The empty case is the whole block's, drawn above, so this table is never empty.
+            empty={null}
+            columns={[
+              { id: 'item', header: 'Item', rowHeader: true, cell: (l) => l.title },
+              {
+                id: 'grade',
+                header: 'Grade',
+                cell: (l) => (
+                  <>
+                    {l.score === null ? '—' : `${l.score} of ${l.pointsPossible}`}
+                    {l.mark ? ` · ${MARK_SAID[l.mark]}` : ''}
+                    {l.comment && <Sub>{l.comment}</Sub>}
+                  </>
+                ),
+              },
+              { id: 'released', header: 'Released', cell: (l) => formatDate(new Date(l.releasedAt), { month: 'short', day: 'numeric' }) },
+              {
+                id: 'regrade',
+                header: 'Regrade',
+                cell: (l) =>
+                  openOn.has(l.itemId) ? (
+                    'Asked — waiting for an answer'
+                  ) : (
+                    <button type="button" className="btn" disabled={busy} onClick={() => { setAsking(l.itemId); setSaid(null); }}>
+                      Ask about {l.title}
+                    </button>
+                  ),
+              },
+            ]}
+          />
         </>
       )}
 

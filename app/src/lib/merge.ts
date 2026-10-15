@@ -45,6 +45,7 @@ export type Strategy = 'union' | 'theirs' | 'ticks' | 'latest' | 'mine';
  *   which is what "I changed it on my laptop" should mean.
  */
 export const STRATEGY: Record<string, Strategy> = {
+  operatingWorkspace: 'theirs',
   // Things you add to. Losing one of these is losing work.
   courses: 'union',
   notes: 'union',
@@ -137,6 +138,9 @@ export const STRATEGY: Record<string, Strategy> = {
   payments: 'union',
   balances: 'union',
   residences: 'union',
+  // Each request stamps `updated` on every move, so where two devices both
+  // changed one, the later change is the one kept.
+  maintenance: 'union',
   feeds: 'union',
   feedEvents: 'union',
   extraLinks: 'union',
@@ -290,6 +294,7 @@ export const STRATEGY: Record<string, Strategy> = {
   // not one on a phone, and tab labels are height a small screen wants back
   // and a large one does not.
   lineHeight: 'mine',
+  textSpacing: 'mine',
   readingWidth: 'mine',
   labels: 'mine',
   // An arrangement rather than a list you add to — merging two orderings

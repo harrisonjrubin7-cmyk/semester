@@ -119,7 +119,7 @@ export const NAV_AREAS: readonly NavAreaInfo[] = [
  * One area each. Where a screen could argue for two, the rule used is the
  * question the student is asking *when they open it*, not what the screen
  * happens to contain: Registration is about next term, so it is Plan, even
- * though it lists courses; "When you are behind" is somebody asking for help,
+ * though it lists courses; "Catching up" is somebody asking for help,
  * so it is Help, even though it re-plans the week.
  *
  * Learn is the largest by a distance — twenty-two screens — and that is a

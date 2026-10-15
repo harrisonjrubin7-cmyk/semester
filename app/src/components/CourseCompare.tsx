@@ -3,7 +3,9 @@ import { EMPTY_SHORTLIST, MAX_COMPARE, SHORTLIST_KEY, liveShortlist, meetingLine
 import { useDeviceLibrary } from '../lib/device-library';
 import { WIDE, useMedia } from '../lib/media';
 import type { CatalogCourse } from '../lib/registration';
-import { useStore } from '../state/store';
+import { compareOptions } from '../lib/decision-compare';
+import { DecisionTable } from './DecisionTable';
+import { useNow, useStore } from '../state/store';
 import { SourceBadge } from './SourceBadge';
 
 /**
@@ -17,6 +19,7 @@ import { SourceBadge } from './SourceBadge';
 export function CourseCompare({ catalog, cart, onOpen }: { catalog: CatalogCourse[]; cart: CatalogCourse[]; onOpen: (id: string) => void }) {
   const { state } = useStore();
   const wide = useMedia(WIDE);
+  const now = useNow();
   const headingId = useId();
   const library = useDeviceLibrary(SHORTLIST_KEY, readShortlist, EMPTY_SHORTLIST);
   const shortlist = { value: liveShortlist(library.value, catalog), update: (f: (l: Shortlist) => Shortlist) => library.update((l) => f(liveShortlist(l, catalog))) };
@@ -110,6 +113,18 @@ export function CourseCompare({ catalog, cart, onOpen }: { catalog: CatalogCours
           ))}
         </div>
       )}
+      {compared.length >= 2 && <details>
+        <summary>Full decision comparison</summary>
+        <DecisionTable comparison={compareOptions('course', compared.map(course => ({
+          id: course.id,
+          label: `${course.code} · ${course.section}`,
+          requirementFit: requirementFit(course, state.requirements, state.taken),
+          clashes: scheduleFit(course, cart, state.commitments),
+          prerequisites: requisites(course, state.taken, cart),
+          source: {label: 'imported', asOf: null},
+          uncertainty: ['Seat availability and eligibility must be confirmed by your institution.'],
+        })), now)} />
+      </details>}
     </section>
   );
 }

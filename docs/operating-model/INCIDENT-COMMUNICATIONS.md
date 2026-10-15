@@ -41,8 +41,21 @@ because readers fill the gap with the worst interpretation.
 | Community safety incident | Trust & Safety lead | 1 h | Campus crisis contact (verified by the institution) |
 | Scheduled maintenance | Operations lead | 24 h | — |
 | Feature rollback | Product owner | 24 h | What you will see instead · Is your work affected: Yes / No |
+| Launch delay | Founder | 7 days | Check not yet complete · Has any account or data changed: Yes / No |
+| Change notice | Product owner, Privacy owner, Legal | 30 days | Takes effect · Is your work affected: Yes / No |
+
+A launch delay and a change notice are not incidents. A delay is told as a check not yet complete, never as a promise of a
+later date, and its cadence is the weekly steering meeting. A change notice carries every approver every time, so a change
+that needs neither privacy nor counsel is a feature rollback or scheduled maintenance instead; its 30 days is the longest
+notice period, and a contract that asks for more is a change to that number in `incident-comms.ts` and the migration.
 
 Every audience except scheduled maintenance also notifies the institution's named incident contact.
+
+## Operations-console boundary
+
+The **Release & incidents** workspace shows operational metadata only: affected tenant and workflows, customer-impact wording, owner, lifecycle state, notice cadence and rollback status. It never returns a notice body, recipient, personal detail or security-investigation narrative. Demo incidents are excluded in Production and require explicit inclusion elsewhere.
+
+The workspace can request a release or rollback approval through the `release` duty. A request is not approval, execution or verification. Deployment and rollback happen through the owned external runbook; the operator then records evidence for the exact commit and verifies affected customer workflows before describing recovery. See [`RELEASE-INCIDENT-OPERATOR-RUNBOOK.md`](../RELEASE-INCIDENT-OPERATOR-RUNBOOK.md).
 
 ## Student-facing outage (example)
 

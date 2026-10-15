@@ -96,7 +96,7 @@ export const STANDING: readonly { party: string; provider: Provider; standing: S
   {
     party: 'Anthropic (Semester’s key)', provider: 'Anthropic', standing: 'published',
     appliesWhen: 'Semester accepts the Commercial Terms by opening an API account under its legal entity; the DPA then applies with them, by reference.',
-    today: 'Not in force. Production has no shared key (#977), and Semester has no legal entity to be the Customer yet.',
+    today: 'Not in force. The key answered production on 29 September (the kill-switch drill, docs/evidence/ai/) under an account no record names a Customer for, and Semester has no legal entity yet. From its next deploy the claude function serves nobody until docs/trust/SHARED-PROVIDER-ACTIVATION.md is complete.',
   },
   {
     party: 'OpenAI (institution-approved)', provider: 'OpenAI', standing: 'published',
@@ -108,7 +108,7 @@ export const STANDING: readonly { party: string; provider: Provider; standing: S
 /** What only the owner can do, in order. */
 export const OWNER_STEPS: readonly string[] = [
   'Form the legal entity that will be the Customer in each agreement.',
-  'Before the shared key goes to production, accept Anthropic’s Commercial Terms under that entity, and file the acceptance (or a pointer to it) under docs/evidence/vendors/.',
+  'Before the shared key serves anybody, accept Anthropic’s Commercial Terms under that entity, file the acceptance (or a pointer to it) under docs/evidence/vendors/, and record it in the shared-provider activation record (docs/trust/SHARED-PROVIDER-ACTIVATION.md).',
   'Ask Anthropic whether a FERPA or student-data addendum is available for the API, since none is published.',
   'Before an institution enables OpenAI, ask OpenAI in writing whether its certifications and the Student DPA cover the API, and what an Order Form requires.',
   'Decide whether to request zero data retention from either provider; both grant it by approval only.',

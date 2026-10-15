@@ -1,4 +1,4 @@
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { secondLine } from '../lib/dim';
 import { ActionButton } from './ui';
 import { useDeviceLibrary } from '../lib/device-library';
@@ -43,10 +43,11 @@ import { money } from '../lib/cost';
  * logged, with no rate applied to it.
  */
 export function NilTaxNote() {
+  const now = useNow();
   const { account, dispatch } = useStore();
   const nil = useDeviceLibrary(nilKey(account?.id), readNil, EMPTY_NIL);
 
-  const year = String(new Date().getFullYear());
+  const year = String(now.getFullYear());
   const total = yearTotal(nil.value.deals, year);
 
   // Nothing recorded means nothing to say. A permanent note about tax on

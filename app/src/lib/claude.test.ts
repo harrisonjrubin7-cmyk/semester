@@ -4,6 +4,7 @@ import { ask, checkShared, explainAskError, readCitation, readMaterial, withAtta
 import { configured, proxyProblem, route, routeLabel, saveSettings, settings } from './assistant';
 import type { Turn } from './claude';
 import { UNNAMED, forget, read as readSpend } from './spend';
+import { NOT_ACTIVATED, NOT_ACTIVATED_MESSAGE } from '../../../supabase/functions/_shared/provideractivation';
 
 const user = [{ role: 'user' as const, content: 'What is due first?' }];
 
@@ -1400,6 +1401,27 @@ describe('checking the shared key', () => {
     const got = await checkShared();
     expect(got.ok).toBe(false);
     expect(got.detail).toMatch(/ANTHROPIC_API_KEY/);
+  });
+
+  it('names a function that is switched off until the provider decisions are recorded', async () => {
+    // The gate in `supabase/functions/_shared/provideractivation.ts` answers
+    // 501 too, and "set ANTHROPIC_API_KEY" would send the operator to fix a
+    // secret that may well be set. The code tells the two apart.
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_KEY', 'sb_publishable_test');
+    reply(501, { error: { message: NOT_ACTIVATED_MESSAGE, code: NOT_ACTIVATED } });
+
+    const got = await checkShared();
+    expect(got.ok).toBe(false);
+    expect(got.detail).toMatch(/SHARED-PROVIDER-ACTIVATION/);
+    expect(got.detail).not.toMatch(/ANTHROPIC_API_KEY/);
+  });
+
+  it('passes the switched-off sentence to a student asking a question, and nothing else', () => {
+    const said = explainAskError('shared', 501, NOT_ACTIVATED_MESSAGE, 'https://project.supabase.co/functions/v1/claude');
+    expect(said).toBe(NOT_ACTIVATED_MESSAGE);
+    // The control: a 501 without the sentence is still read the old way.
+    expect(explainAskError('shared', 501, 'This deployment has no shared key.', 'x')).not.toBe('This deployment has no shared key.');
   });
 
   it('names a function that was never deployed', async () => {

@@ -6,7 +6,14 @@ const request = () => ({
   model: 'gpt-5-mini',
   question: 'What should I review?',
   mode: 'review' as const,
-  sources: [{ id: 'source-1', evidenceIds: ['evidence-1'], body: 'Elasticity is on the exam.' }],
+  sources: [{
+    id: 'source-1',
+    labels: {
+      tenantId: 'northstar', purpose: 'ai_context' as const, source: { id: 'source-1', kind: 'course' },
+      freshness: { state: 'current' as const, observedAt: '2026-10-01T00:00:00.000Z' },
+    },
+    evidenceIds: ['evidence-1'], body: 'Elasticity is on the exam.',
+  }],
   maxOutputTokens: 900,
 });
 

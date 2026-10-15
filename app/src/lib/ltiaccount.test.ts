@@ -151,6 +151,13 @@ const NOT_CONTENT = new Set([
   'access_log',
   'profiles',
   /*
+   * A request to be recognised as a member of a university (G-03). It records
+   * that somebody asked and what was decided, not anything they made, and it is
+   * listed in `OWNED_TABLES` only so Delete my account removes it. An account
+   * whose only history is a waiting request has lost nothing by being retired.
+   */
+  'school_membership_requests',
+  /*
    * `activity` is the strongest case in this list rather than the weakest, and
    * it is worth saying why in more than a word.
    *
@@ -227,6 +234,14 @@ const NOT_CONTENT = new Set([
    */
   'support_tickets',
   'support_ticket_messages',
+  /*
+   * A privacy-rights case records a request about the account and the
+   * institution's handling of it. It is governance metadata rather than
+   * coursework or a student-created artifact, and it must remain attached to
+   * the subject for audit even when no academic work exists. Account deletion
+   * still includes it through `OWNED_TABLES`.
+   */
+  'data_subject_request',
   /*
    * An operator's saved console views and last-open tab
    * (`lib/console/client.ts`, `20260929100000_console_control_plane.sql`).

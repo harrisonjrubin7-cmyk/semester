@@ -28,6 +28,7 @@ import {
   type SentRequest,
 } from '../lib/help-routes';
 import { ActionButton, Notice, SectionLabel } from './ui';
+import { MomentPromptSlot } from './MomentPrompt';
 
 /**
  * Ask a person for help — the screen half of `lib/help-routes.ts`.
@@ -52,6 +53,8 @@ export function GetHelp({ account }: { account: Account | null }) {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
+  // True from a send made in this visit, so the question is about the request just made and not an old one.
+  const [justSent, setJustSent] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!account) return;
@@ -249,6 +252,7 @@ export function GetHelp({ account }: { account: Account | null }) {
                             setDraft(emptyDraft());
                             setConfirming(false);
                             setNotice('');
+                            setJustSent(true);
                             await refresh();
                           })
                           .catch((error: unknown) => setNotice(error instanceof Error ? error.message : 'Could not send.'))
@@ -285,6 +289,9 @@ export function GetHelp({ account }: { account: Account | null }) {
           )}
         </div>
       )}
+
+      {/* One optional question, off unless VITE_ME_MOMENT_FEEDBACK is set; see lib/momentfeedback.ts. */}
+      {justSent && <MomentPromptSlot moment="support-routed" />}
 
       {requests.length > 0 && (
         <div style={{ display: 'grid', gap: 'var(--sp-3)' }}>

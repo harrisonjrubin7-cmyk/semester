@@ -13,8 +13,9 @@ A case moves through these steps:
 5. The case goes to a qualified human queue.
 6. The reviewer calls `decide` with a policy reason code.
 7. The student gets a notice.
-8. The student may appeal: `fileAppeal`, then `decideAppeal` by a different
-   professional.
+8. The student may appeal within thirty days of the decision
+   (`APPEAL_RULES`): `fileAppeal`, then `decideAppeal` by a different
+   professional. There is no deadline for deciding an appeal yet.
 9. The case's retention date is set: 90 days after a no-action close, a year
    after enforcement or an appeal. The daily `community-retention` sweep
    deletes it after that date, unless the case is open or under appeal.

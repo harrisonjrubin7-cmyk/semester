@@ -1,0 +1,27 @@
+// POST /api/ai — the only path to a model. Order: auth → policy → gate() → scan() → provider → audit + spend → labelled answer.
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { createServerClient } from '@/lib/supabase/server';
+import { gate } from '@/lib/core/aigateway';
+import { scan } from '@/lib/ai/redact';
+const Body = z.object({ task: z.enum(['outline', 'feedback', 'practice', 'write', 'plan', 'search']), prompt: z.string().min(1).max(4000), courseId: z.string().uuid().optional(), scope: z.array(z.object({ id: z.string(), cls: z.enum(['public', 'course', 'personal', 'student-record']) })).max(20).default([]) });
+export async function POST(req: Request) {
+  const sb = await createServerClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Sign in required' }, { status: 401 });
+  const parsed = Body.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+  const b = parsed.data;
+  const { data: pol } = await sb.schema('api').rpc('ai_policy', { p_course: b.courseId ?? null }); // { institutionAiOn, courseAllows, budgetLeft, studentIdPattern, provider, model }
+  if (!pol) return NextResponse.json({ error: 'AI policy unavailable' }, { status: 503 });
+  const d = gate({ task: b.task, scope: b.scope, policy: { institutionAiOn: pol.institutionAiOn, courseAllows: pol.courseAllows }, budgetLeft: pol.budgetLeft });
+  if (!d.allowed) { await sb.schema('api').rpc('ai_log', { p_task: b.task, p_outcome: 'refused', p_reason: d.reason, p_tokens: 0 }); return NextResponse.json({ allowed: false, reason: d.reason, label: d.label }); }
+  const s = scan(b.prompt, { studentId: pol.studentIdPattern ? new RegExp(pol.studentIdPattern) : undefined });
+  if (s.block) { await sb.schema('api').rpc('ai_log', { p_task: b.task, p_outcome: 'blocked', p_reason: s.findings.map((f) => f.kind).join(','), p_tokens: 0 }); return NextResponse.json({ allowed: false, reason: 'That looks like a student record (' + [...new Set(s.findings.map((f) => f.kind))].join(', ') + '). Ask without it, or contact the office that holds it.', label: d.label }); }
+  const ctx = await sb.schema('api').rpc('ai_context', { p_ids: d.sendScope }); // approved sources only, with citations
+  const res = await fetch(process.env.AI_PROVIDER_URL!, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + process.env.AI_PROVIDER_KEY }, body: JSON.stringify({ model: pol.model, max_tokens: 800, system: 'You help students using only the provided sources. Cite them as [n]. Say when you are unsure and suggest the official office. Never state institutional rules as decided; the institution decides.', messages: [{ role: 'user', content: s.text + '\n\nSources:\n' + JSON.stringify(ctx.data ?? []) }] }), signal: AbortSignal.timeout(20000) }).catch(() => null);
+  if (!res || !res.ok) { await sb.schema('api').rpc('ai_log', { p_task: b.task, p_outcome: 'provider_error', p_reason: String(res?.status ?? 'timeout'), p_tokens: 0 }); return NextResponse.json({ allowed: true, error: 'Ask Semester is unavailable right now. The offices below can help.', label: d.label }, { status: 502 }); }
+  const out = await res.json();
+  await sb.schema('api').rpc('ai_log', { p_task: b.task, p_outcome: 'answered', p_reason: d.reason, p_tokens: out.usage?.output_tokens ?? 0 });
+  return NextResponse.json({ allowed: true, label: d.label, answer: out.content?.[0]?.text ?? '', sources: ctx.data ?? [], dropped: d.dropped.length, redacted: s.findings.length, model: pol.model });
+}

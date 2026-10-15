@@ -79,4 +79,29 @@ describe('the feedback inbox on a cold open', () => {
     expect(items).toHaveLength(1);
     expect(items[0].courseId, 'saved against no course').not.toBe('');
   });
+
+  it('previews the exact local consequence before deleting filed feedback', async () => {
+    await mount();
+    await type(controlFor<HTMLInputElement>('Piece of work'), 'Essay 1');
+    await type(controlFor<HTMLTextAreaElement>('The comment'), 'Claims need support.');
+    for (let i = 0; i < 30 && !host.querySelector('.feedback-inbox form select option'); i++) await act(async () => void (await new Promise((r) => setTimeout(r, 10))));
+    await act(async () => void (host.querySelector('.feedback-inbox form') as HTMLFormElement).requestSubmit());
+
+    const deleteButton = [...host.querySelectorAll('button')].find((button) => button.textContent === 'Delete this feedback')!;
+    await act(async () => deleteButton.click());
+    const dialog = host.querySelector('[role="dialog"]')!;
+    expect(dialog.textContent).toContain('Essay 1');
+    expect(dialog.textContent).toContain('Deletes this filed feedback, its source note, category, comment and next-time note from this device.');
+    expect(dialog.textContent).toContain('Returned work outside Semester, actions you added to your plan and evidence you already saved stay where they are.');
+    expect(dialog.textContent).toContain('This can’t be undone.');
+
+    await act(async () => void ([...dialog.querySelectorAll('button')].find((button) => button.textContent === 'Cancel') as HTMLButtonElement).click());
+    expect(stored()).toHaveLength(1);
+
+    await act(async () => deleteButton.click());
+    const confirm = [...host.querySelectorAll('[role="dialog"] button')].find((button) => button.textContent === 'Delete it') as HTMLButtonElement;
+    await act(async () => confirm.click());
+    expect(stored()).toHaveLength(0);
+    expect(host.textContent).toContain('Feedback deleted from this device.');
+  });
 });

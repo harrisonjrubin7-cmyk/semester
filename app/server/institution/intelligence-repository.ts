@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { courseAgentPolicy, type CourseAgentPolicy } from '../../../packages/institution/src/course-agent-policy.ts';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type {
   IntelligenceFeatureState,
@@ -9,7 +10,9 @@ import type {
 import type {
   ApprovedIntelligenceSource,
   IntelligenceBudgetReservation,
+  IntelligenceCourseScope,
 } from './intelligence.ts';
+import type { RequestContext } from '../../../packages/platform/src/index.ts';
 
 const STATES = new Set<IntelligenceFeatureState>(['off', 'preview', 'sandbox', 'production']);
 const MODES = new Set<IntelligenceMode>(['explain', 'hint', 'practice', 'review', 'draft']);
@@ -20,13 +23,16 @@ export interface IntelligenceRepositoryOptions {
   serviceKey?: string;
   configuredModels: readonly string[];
   maxRequestCents: number;
+  /** Dates without a timezone in Course Studio take effect at the start of the UTC day. */
+  now?: () => Date;
 }
 
 export interface IntelligenceRepository {
   /** Whether `kill.ai_generation` is engaged for this school or for everyone. */
   killSwitchEngaged(identity: UniversityIdentity): Promise<boolean>;
+  loadCoursePolicy(identity: UniversityIdentity, scope: IntelligenceCourseScope): Promise<CourseAgentPolicy>;
   loadPolicy(identity: UniversityIdentity): Promise<TenantIntelligencePolicy>;
-  loadApprovedSources(identity: UniversityIdentity, sourceIds: string[]): Promise<ApprovedIntelligenceSource[]>;
+  loadApprovedSources(context: RequestContext, identity: UniversityIdentity, sourceIds: string[]): Promise<ApprovedIntelligenceSource[]>;
   reserveBudget(identity: UniversityIdentity, maximumCents: number): Promise<IntelligenceBudgetReservation | null>;
   settleBudget(
     identity: UniversityIdentity,
@@ -137,12 +143,30 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
       };
     },
 
-    async loadApprovedSources(identity, sourceIds) {
+    async loadCoursePolicy(identity, scope) {
+      const today = (options.now?.() ?? new Date()).toISOString().slice(0, 10);
+      const { data, error } = await client.from('course_ai_rules')
+        .select('blanket, uses, words, version, effective')
+        .eq('tenant_id', identity.institutionId)
+        .eq('course_code', scope.courseId)
+        .eq('term', scope.term)
+        // NULL is the existing publish-now choice. Filter before taking the
+        // highest version so a scheduled update cannot erase today's rule.
+        .or(`effective.is.null,effective.lte.${today}`)
+        .order('version', { ascending: false }).limit(1).maybeSingle();
+      if (error) throw new Error('The published course AI policy could not be loaded.');
+      return courseAgentPolicy(data);
+    },
+
+    async loadApprovedSources(context, identity, sourceIds) {
+      if (context.tenantId !== identity.institutionId || context.actor.personId !== identity.userId || context.purpose !== 'ai_context') {
+        return [];
+      }
       if (!sourceIds.length) return [];
       const uniqueIds = [...new Set(sourceIds)];
       const metadata = await client
         .from('approved_source')
-        .select('id, authority')
+        .select('id, authority, course_id, origin, policy_scope, policy_course_code, policy_term, title, citation_label, updated_at')
         .eq('tenant_id', identity.institutionId)
         .in('id', uniqueIds)
         .neq('authority', 'prohibited');
@@ -155,13 +179,36 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
       });
       if (payloads.error) throw new Error('Approved source content lookup failed.');
       const rows = (payloads.data ?? []) as Array<{ source_id: unknown; body: unknown; evidence_ids: unknown }>;
-      return rows.map((row) => ({
-        id: row.source_id as string,
-        body: row.body as string,
-        evidenceIds: Array.isArray(row.evidence_ids)
-          ? row.evidence_ids.filter((id: unknown): id is string => typeof id === 'string')
-          : [],
-      }));
+      const sourceMetadata = new Map((metadata.data ?? []).map((source) => [source.id, source]));
+      return rows.map((row) => {
+        const id = row.source_id as string;
+        const source = sourceMetadata.get(row.source_id);
+        const observedAt = typeof source?.updated_at === 'string' ? source.updated_at : null;
+        return {
+          id,
+          labels: {
+            tenantId: context.tenantId,
+            purpose: 'ai_context' as const,
+            source: { id, kind: typeof source?.origin === 'string' ? source.origin : 'approved_source' },
+            freshness: {
+              state: observedAt && Number.isFinite(Date.parse(observedAt)) ? 'current' as const : 'unknown' as const,
+              observedAt,
+            },
+          },
+          courseId: source?.course_id,
+          origin: source?.origin,
+          policyScope: source?.policy_scope,
+          policyCourseCode: source?.policy_course_code,
+          policyTerm: source?.policy_term,
+          title: source?.title,
+          locator: source?.citation_label,
+          verifiedAt: source?.updated_at,
+          body: row.body as string,
+          evidenceIds: Array.isArray(row.evidence_ids)
+            ? row.evidence_ids.filter((id: unknown): id is string => typeof id === 'string')
+            : [],
+        };
+      });
     },
 
     async reserveBudget(identity, maximumCents) {

@@ -29,7 +29,7 @@
  */
 
 export type Kind = 'subprocessor' | 'institution-directed' | 'student-directed';
-export type When = 'always' | 'signed-in' | 'institution-enabled' | 'student-opt-in' | 'form-sent';
+export type When = 'always' | 'signed-in' | 'institution-enabled' | 'student-opt-in' | 'form-sent' | 'form-sent-or-opted-in-support-reply';
 
 export interface Party {
   name: string;
@@ -53,7 +53,7 @@ export const PARTIES: readonly Party[] = [
     purpose: 'Database, authentication, storage of synced rows, and Edge Functions.',
     receives: 'Account email and sign-in records; what a signed-in student chose to sync; usage counts; audit records.',
     when: 'signed-in', hosts: ['*.supabase.co'],
-    functions: ['calendar', 'trust-room', 'integration-tick', 'delete-account'],
+    functions: ['calendar', 'trust-room', 'integration-tick', 'access-saga-tick', 'ops-projector', 'delete-account'],
     evidence: ['supabase/config.toml', 'app/src/lib/cloud.ts', 'RETENTION.md'],
   },
   {
@@ -72,24 +72,24 @@ export const PARTIES: readonly Party[] = [
   },
   {
     name: 'Anthropic (Semester’s key)', kind: 'subprocessor',
-    purpose: 'AI features for signed-in students who have not supplied their own key, metered per account.',
+    purpose: 'AI features for signed-in students who have not supplied their own key, metered per account. When the owner sets AI_GATEWAY_API_KEY the request reaches Anthropic through Vercel AI Gateway.',
     receives: 'The text of the AI request the student made (for example a syllabus to turn into a course).',
     when: 'signed-in', hosts: [], functions: ['claude'],
-    evidence: ['supabase/functions/claude/index.ts', 'app/src/lib/privacy.ts'],
+    evidence: ['supabase/functions/claude/index.ts', 'supabase/functions/_shared/upstream.ts', 'app/src/lib/privacy.ts'],
   },
   {
     name: 'Stripe', kind: 'subprocessor',
     purpose: 'Payments for a paid plan: the hosted checkout page, recurring billing, and the webhook that tells Semester a payment succeeded or failed. Not active until its keys are set; nothing is charged before then.',
     receives: 'The student’s email address, the plan and price chosen, and the payment details they type into Stripe’s own page, which never pass through Semester. Semester keeps Stripe’s customer and subscription references, never card or bank data.',
-    when: 'student-opt-in', hosts: [], functions: ['billing-cancel', 'billing-checkout', 'billing-webhook'],
-    evidence: ['supabase/functions/billing-cancel/index.ts', 'supabase/functions/billing-checkout/index.ts', 'supabase/functions/billing-webhook/index.ts', 'docs/COMMERCIAL-CORE.md'],
+    when: 'student-opt-in', hosts: [], functions: ['billing-cancel', 'billing-checkout', 'billing-portal', 'billing-webhook'],
+    evidence: ['supabase/functions/billing-cancel/index.ts', 'supabase/functions/billing-checkout/index.ts', 'supabase/functions/billing-portal/index.ts', 'supabase/functions/billing-webhook/index.ts', 'docs/COMMERCIAL-CORE.md'],
   },
   {
     name: 'Resend', kind: 'subprocessor',
-    purpose: 'Emails each company-site form submission to the Semester owner. Not active until its key and the owner’s address are set.',
-    receives: 'What a visitor typed into a company-site form (name, work email, organization, role, message) and the form’s reference. No student data, and no IP address.',
-    when: 'form-sent', hosts: [], functions: ['lead-intake'],
-    evidence: ['supabase/functions/lead-intake/index.ts', 'docs/COMMERCIAL-CORE.md'],
+    purpose: 'Emails each company-site form submission to the Semester owner. The built support-notice path can send a generic hint after student opt-in, but remains inactive until vendor review, executed terms/DPA, ownership and activation approval are recorded in addition to its key and sender.',
+    receives: 'For site forms: the visitor’s submitted contact fields and reference. For opted-in support notices: the student’s email address, a support reference and app link, but never the reply body or approved diagnostic context. No IP address.',
+    when: 'form-sent-or-opted-in-support-reply', hosts: [], functions: ['lead-intake', 'support-reply-notify'],
+    evidence: ['supabase/functions/lead-intake/index.ts', 'supabase/functions/support-reply-notify/index.ts', 'docs/COMMERCIAL-CORE.md'],
   },
   // ── Institution-directed ─────────────────────────────────────────────────
   {
@@ -165,6 +165,13 @@ export const PARTIES: readonly Party[] = [
     evidence: ['app/src/lib/geocode.ts'],
   },
   {
+    name: 'Public institution source hosts', kind: 'student-directed',
+    purpose: 'Checking the availability of a public source and whether it contains a reviewed exact excerpt.',
+    receives: 'A request to the public source URL chosen by the student. No Semester session token, reflections, or excerpt is sent to the source host.',
+    when: 'student-opt-in', hosts: [], functions: ['productivity-sourcecheck'],
+    evidence: ['supabase/functions/productivity-sourcecheck/index.ts'],
+  },
+  {
     name: 'Calendar and Canvas hosts the student links', kind: 'student-directed',
     purpose: 'Reading a calendar feed or Canvas instance the student pasted, relayed because those hosts refuse browser requests.',
     receives: 'The request to the address the student supplied, with the token they supplied.',
@@ -191,6 +198,7 @@ const WHEN_LABEL: Record<When, string> = {
   'institution-enabled': 'Only once an institution enables it',
   'student-opt-in': 'Only when the student turns it on',
   'form-sent': 'Only when someone sends a company-site form',
+  'form-sent-or-opted-in-support-reply': 'Only when someone sends a company-site form or an opted-in student has a support reply',
 };
 
 /** The register as a Markdown table, which the document must contain verbatim. */

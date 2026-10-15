@@ -445,7 +445,7 @@ describe('"delete my account" really means every row', () => {
       'migration_runs',
       // Verified listings (lib/listings.ts, components/ListingDesk.tsx): an
       // office's or employer's publication. publisher_id is `on delete set null`.
-      // A school's Connect/Core switch and who approved it (D-152): governance
+      // A school's Connect/Core switch and who approved it (D-1011): governance
       // records of the school, kept with their approvals.
       'module_mode_approval',
       'module_mode_request',
@@ -456,6 +456,9 @@ describe('"delete my account" really means every row', () => {
       'registration_sections',
       'registration_terms',
       'reports',
+      // The Configuration Studio's table (lib/config/api.ts, D-1011): a school's
+      // versioned policy settings. No person, credential or student record.
+      'school_config_versions',
       'schools',
       // Student accounts (lib/finance/api.ts, D-146): the school's financial
       // record of its students' accounts, and its reconciliations and closes.
@@ -469,6 +472,9 @@ describe('"delete my account" really means every row', () => {
       'study_packs',
       'subscriptions',
       'support_access_event',
+      // The Workflow Builder's table (lib/workflow/api.ts, D-1018): a school's
+      // versioned workflow definitions. No person, credential or student record.
+      'workflow_versions',
     ]);
     const said = deletionClaims().map((c) => c.body).join(' ');
     for (const { table, why } of KEPT_TABLES) {
@@ -504,6 +510,9 @@ describe('"delete my account" really means every row', () => {
     expect(said).not.toMatch(/outlives the button/i);
     expect(said).toMatch(/one step that either happens completely or not at all/i);
     expect(said).toMatch(/download my account data/i);
+    expect(said).toMatch(/pre-classifier legacy support evidence/i);
+    expect(said).toMatch(/detached from your deleted account/i);
+    expect(said).toMatch(/ordinary support staff cannot open it/i);
     expect(said).toContain(SUPPORT);
     // The named tables a person would not have guessed were being kept.
     for (const word of ['display name', 'messages', 'blocked', 'group', 'practice paper']) {

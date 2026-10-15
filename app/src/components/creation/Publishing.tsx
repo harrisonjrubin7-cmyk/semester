@@ -3,6 +3,8 @@ import { cloudConfigured } from '../../lib/cloud';
 import { collect, publish, republish, shareLink, withdraw } from '../../lib/formshare';
 import type { CreativeProject } from '../../lib/creations';
 import { secondLine } from '../../lib/dim';
+import { ConfirmDialog } from '../ConfirmDialog';
+import { ActionPreview } from '../unity/ActionPreview';
 
 /**
  * Sending a form to people who are not you.
@@ -38,6 +40,7 @@ export function Publishing({
   const [busy, setBusy] = useState('');
   const [note, setNote] = useState('');
   const [copied, setCopied] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
 
   const line = { fontSize: 'var(--type-sm)', ...secondLine(), lineHeight: 'var(--leading-normal)' } as const;
   const body = { fontSize: 'var(--type-base)', lineHeight: 'var(--leading-normal)' } as const;
@@ -161,19 +164,7 @@ export function Publishing({
               type="button"
               className="btn"
               disabled={!!busy}
-              onClick={() => {
-                if (
-                  !window.confirm(
-                    'Take this form down? The link stops working and every answer sent through it is deleted. Answers you have already collected stay on this device.',
-                  )
-                ) {
-                  return;
-                }
-                run('withdraw', async () => {
-                  await withdraw(f.published!);
-                  onChange({ form: { ...f, published: null } });
-                });
-              }}
+              onClick={() => setWithdrawing(true)}
             >
               {busy === 'withdraw' ? 'Taking down…' : 'Take it down'}
             </button>
@@ -191,6 +182,33 @@ export function Publishing({
           {note}
         </p>
       )}
+
+      {withdrawing && f.published ? (
+        <ConfirmDialog
+          title="Take this form down?"
+          preview={(
+            <ActionPreview
+              subject={project.title}
+              says="The shared link stops working, and every answer still stored with the published form is permanently deleted."
+              doesNotChange={`Your questions, settings, and ${f.responses.length} ${f.responses.length === 1 ? 'answer' : 'answers'} already collected on this device stay here.`}
+              recovery={{
+                kind: 'none',
+                how: 'Publishing again creates a new link; it cannot restore deleted responses.',
+              }}
+            />
+          )}
+          confirmLabel="Take down form"
+          onCancel={() => setWithdrawing(false)}
+          onConfirm={() => {
+            const published = f.published!;
+            setWithdrawing(false);
+            run('withdraw', async () => {
+              await withdraw(published);
+              onChange({ form: { ...f, published: null } });
+            });
+          }}
+        />
+      ) : null}
     </div>
   );
 }

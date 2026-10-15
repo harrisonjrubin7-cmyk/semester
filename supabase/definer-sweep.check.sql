@@ -75,6 +75,7 @@ begin
     when 'jsonb' then '''{}''::jsonb'
     when 'boolean' then 'false'
     when 'integer' then '1'
+    when 'bigint' then '1::bigint'
     when 'numeric' then '1::numeric'
     when 'timestamp with time zone' then 'now()'
     when 'date' then 'current_date'
@@ -210,7 +211,7 @@ begin
   -- The victim, with something to lose.
   perform pg_temp.become(victim);
   code := public.make_referral_code();
-  perform public.open_support_ticket('how_to', 'Victim ticket subject', 'Victim ticket body', '{}'::jsonb);
+  perform public.open_support_ticket('how_to', 'Victim ticket subject', 'Victim ticket body', '{}'::jsonb, false);
   execute 'reset role';
   secrets := array[victim::text, 'victim@sweep.example', code, 'Victim ticket subject', 'Victim ticket body'];
 

@@ -1,8 +1,11 @@
-import { StrictMode } from 'react';
+import { retainIncomingCapture } from './lib/productivity-arrival';
+import { lazy, StrictMode, Suspense } from 'react';
+import type { ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 // The typefaces both sheets below name, declared once and served from this
 // origin rather than from Google — see `styles/typefaces.css` for why.
 import './styles/typefaces.css';
+import './styles/hyperlegible.css';
 import './styles/industry.css';
 import './styles/app.css';
 // The ported audit feature modules (study studio, assignment centre, campus
@@ -13,6 +16,10 @@ import './styles/features.css';
 // components built on it — see `styles/tokens.css` and `styles/unity.css`.
 import './styles/tokens.css';
 import './styles/unity.css';
+import './styles/semester-design/integration.css';
+import './styles/semester-design/components.css';
+import './styles/semester-design/components-2.css';
+import './styles/form-usability.css';
 import App from './App';
 import { Splash } from './components/Splash';
 import { askToPersist } from './lib/device';
@@ -25,9 +32,36 @@ import { takeFromUrl } from './lib/referral';
 import { takeHandoff } from './lib/ltiarrival';
 // Type-only, so it is erased at build and pulls nothing onto the critical path.
 import type { ProviderId } from './lib/connect';
-import { load as loadFromDb, prime as primeDb } from './state/persist';
+import {
+  load as loadFromDb,
+  OfflineRecoveryRequired,
+  prime as primeDb,
+} from './state/persist';
 import { primePersisted } from './state/shape';
 import { warm } from './lib/warm';
+
+retainIncomingCapture();
+
+const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const ClerkProviderBoundary = lazy(() => import('./components/ClerkProviderBoundary'));
+
+/**
+ * Clerk is being introduced alongside the existing account system. Keep the
+ * app runnable in builds that have not received a Clerk key yet, while making
+ * Clerk's session context available everywhere inside the signed-in product
+ * once the deployment is configured.
+ *
+ * Public form and procurement-room links intentionally bypass this boundary:
+ * those links are designed for respondents and reviewers without accounts.
+ */
+function ClerkBoundary({ children }: { children: ReactNode }) {
+  if (!clerkPublishableKey) return <>{children}</>;
+  return (
+    <Suspense fallback={null}>
+      <ClerkProviderBoundary publishableKey={clerkPublishableKey}>{children}</ClerkProviderBoundary>
+    </Suspense>
+  );
+}
 
 /**
  * A sign-in comes back as a redirect to this same page. Redeem the code before
@@ -153,6 +187,8 @@ function finishAnyLaunch(): Promise<void> {
     });
 }
 
+let recoveryBlocked = false;
+
 finishAnyLaunch()
   .then(finishAnyRedirect)
   .then((result) => {
@@ -176,7 +212,10 @@ finishAnyLaunch()
   // A device that will not open a database gets null, and the app falls
   // straight back to the localStorage path it has always had. See
   // `state/persist/`.
-  .then(() => loadFromDb().catch(() => null))
+  .then(() => loadFromDb().catch((error: unknown) => {
+    if (error instanceof OfflineRecoveryRequired) recoveryBlocked = true;
+    return null;
+  }))
   .then((state) => {
     primePersisted(state);
     // The first diff has to be against what was just read, or the first write
@@ -185,6 +224,30 @@ finishAnyLaunch()
   })
   .catch(() => primePersisted(null))
   .finally(() => {
+    if (recoveryBlocked) {
+      createRoot(document.getElementById('root')!).render(
+        <div
+          role="alert"
+          style={{
+            maxWidth: '38rem',
+            margin: '12vh auto',
+            padding: '2rem',
+            fontFamily: 'system-ui, sans-serif',
+            lineHeight: 'var(--leading-relaxed)',
+          }}
+        >
+          <p><strong>Your semester is still on this device</strong></p>
+          <p>
+            Semester could not finish restoring a protected offline update, so it has
+            kept the app read-only instead of opening a second copy that could hide
+            your work. Nothing was deleted.
+          </p>
+          <p>Reload to retry. If this continues, keep this device as-is and contact support.</p>
+          <button type="button" onClick={() => window.location.reload()}>Retry safely</button>
+        </div>,
+      );
+      return;
+    }
     // The worker is what makes this installable as its own window, and what
     // keeps a lesson playable with no signal. Only in a build: in dev it would
     // serve yesterday's bundle back to you.
@@ -234,19 +297,21 @@ finishAnyLaunch()
 
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
-        <StoreProvider>
-          {/* The assistant's own state sits above the router, so it is one
-              thing across all sixty screens rather than a thing each screen
-              mounts. See `ai/store.tsx`. */}
-          <AIProvider>
-            {/* The curtain over the first half-second, mounted beside the app
-                rather than inside it: it belongs to opening the app, not to
-                any screen, and out here it cannot become a child of the desk's
-                grid on a wide window. See `components/Splash.tsx`. */}
-            <Splash />
-            <App />
-          </AIProvider>
-        </StoreProvider>
+        <ClerkBoundary>
+          <StoreProvider>
+            {/* The assistant's own state sits above the router, so it is one
+                thing across all sixty screens rather than a thing each screen
+                mounts. See `ai/store.tsx`. */}
+            <AIProvider>
+              {/* The curtain over the first half-second, mounted beside the app
+                  rather than inside it: it belongs to opening the app, not to
+                  any screen, and out here it cannot become a child of the desk's
+                  grid on a wide window. See `components/Splash.tsx`. */}
+              <Splash />
+              <App />
+            </AIProvider>
+          </StoreProvider>
+        </ClerkBoundary>
       </StrictMode>,
     );
   });

@@ -1,0 +1,42 @@
+-- 080 · Remaining review items: approved-source context for AI, storage buckets, sessions and delegations. Not yet run.
+
+-- Approved sources for AI answers: course resources and public institution pages only, never student records.
+create table if not exists core.sources(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, course_id uuid, kind text not null check (kind in ('policy','course','catalog','support','public')), title text not null, url text, body text not null, version text, updated_at timestamptz default now(), approved boolean not null default false);
+alter table core.sources enable row level security;
+create policy src_read on core.sources for select using (institution_id = core.my_institution() and approved);
+create or replace function api.ai_context(p_ids text[]) returns jsonb language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('n', rn, 'id', id, 'title', title, 'kind', kind, 'version', version, 'url', url, 'excerpt', left(body, 1500)) order by rn), '[]'::jsonb)
+  from (select s.*, row_number() over (order by s.kind = 'policy' desc, s.updated_at desc) rn from core.sources s
+        where s.institution_id = core.my_institution() and s.approved and s.id::text = any(p_ids) limit 8) t $$;
+grant execute on function api.ai_context(text[]) to authenticated;
+
+-- Storage: every bucket private; path = <institution_id>/<owner uid>/<file>.
+-- buckets: 'student-files' (owner only), 'course-materials' (course members read, faculty write), 'evidence' (Semester trust team only, service role).
+create policy sf_owner on storage.objects for all using (bucket_id = 'student-files' and (storage.foldername(name))[1] = core.my_institution()::text and (storage.foldername(name))[2] = auth.uid()::text) with check (bucket_id = 'student-files' and (storage.foldername(name))[1] = core.my_institution()::text and (storage.foldername(name))[2] = auth.uid()::text);
+create policy cm_read on storage.objects for select using (bucket_id = 'course-materials' and (storage.foldername(name))[1] = core.my_institution()::text);
+create policy cm_write on storage.objects for insert with check (bucket_id = 'course-materials' and (storage.foldername(name))[1] = core.my_institution()::text and core.my_role() in ('faculty','ta'));
+-- 'evidence' bucket: no policies for authenticated; service role only.
+
+-- Sessions and delegations (account switcher, remote sign-out, delegated access with expiry).
+create table if not exists core.delegations(id uuid primary key default gen_random_uuid(), institution_id uuid not null default core.my_institution(), grantor uuid not null default auth.uid(), grantee uuid not null, scope text[] not null, purpose text not null, expires_at timestamptz not null check (expires_at <= now() + interval '365 days'), revoked_at timestamptz, created_at timestamptz default now());
+alter table core.delegations enable row level security;
+create policy dl_parties on core.delegations for select using (grantor = auth.uid() or grantee = auth.uid());
+create or replace function api.grant_delegation(p_grantee uuid, p_scope text[], p_purpose text, p_expires timestamptz) returns uuid language plpgsql security definer set search_path = '' as $$
+declare did uuid;
+begin
+  if not exists(select 1 from core.profiles where id = p_grantee and institution_id = core.my_institution()) then raise exception 'recipient not found'; end if;
+  if p_expires <= now() or p_expires > now() + interval '365 days' then raise exception 'expiry must be within a year'; end if;
+  did := gen_random_uuid();
+  perform audit.log('core.delegation.grant', did::text, null, jsonb_build_object('grantee', p_grantee, 'scope', p_scope, 'expires', p_expires));
+  insert into core.delegations(id, grantee, scope, purpose, expires_at) values (did, p_grantee, p_scope, p_purpose, p_expires);
+  return did;
+end $$;
+create or replace function api.revoke_delegation(p_id uuid) returns void language plpgsql security definer set search_path = '' as $$
+begin
+  perform audit.log('core.delegation.revoke', p_id::text, null, null);
+  update core.delegations set revoked_at = now() where id = p_id and grantor = auth.uid() and revoked_at is null;
+  if not found then raise exception 'not found'; end if;
+end $$;
+create or replace function core.has_delegation(p_grantor uuid, p_scope text) returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(select 1 from core.delegations d where d.grantor = p_grantor and d.grantee = auth.uid() and p_scope = any(d.scope) and d.revoked_at is null and d.expires_at > now()) $$;
+grant execute on function api.grant_delegation(uuid, text[], text, timestamptz), api.revoke_delegation(uuid) to authenticated;

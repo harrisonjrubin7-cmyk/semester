@@ -80,11 +80,11 @@ Rollout plans and success criteria for each are in `flags.ts` beside the key.
 
 ### Grade passback and this flag
 
-`writeback.lms_grade_passback` governs the existing Brightspace score passback (`functions/lti`, `/score`) for any
+`writeback.lms_grade_passback` governs the existing Brightspace score passback (`functions/lti`, `/score`) for an
 LTI registration **bound to a school**, through `public.lti_passback_decision`, which the SQL suite
-`lti-integration.check.sql` walks gate by gate. A registration not yet bound keeps the pre-existing behaviour
-(instructor-gated), stopped only by the global `kill.writeback` / `kill.integration_sync`. See the migration
-plan, D-1, for why and for the binding steps.
+`lti-integration.check.sql` walks gate by gate. A registration not yet bound is refused as
+`registration-unbound`; global kill switches still take precedence. See the migration plan, D-1, for the
+remaining binding and approval steps.
 
 ## Kill switches
 
@@ -125,16 +125,64 @@ These decide what a build contains, not what a school has turned on. Values:
 ### Experience flags (`app/src/lib/experience-flags.ts`)
 
 A preview build (`VITE_INSTITUTIONAL_PREVIEW=true`) turns each of these on as
-`preview`. An explicit value overrides that.
+`preview`. An explicit value overrides that. `journeyNavigation` is the one
+exception: the canonical five-destination shell is `production` in a normal
+build, and an explicit `off` is its rollback.
 
 | Flag | Env |
 | --- | --- |
 | semesterIntelligence | `VITE_SEMESTER_INTELLIGENCE` |
-| journeyNavigation | `VITE_JOURNEY_NAVIGATION` |
+| journeyNavigation | `VITE_JOURNEY_NAVIGATION` (production default; `off` rolls back) |
 | adaptiveLearning | `VITE_ADAPTIVE_LEARNING` |
 | careerSkillsGraph | `VITE_CAREER_SKILLS_GRAPH` |
 | multimodalCapture | `VITE_MULTIMODAL_CAPTURE` |
 | universityControlPlane | `VITE_UNIVERSITY_CONTROL_PLANE` |
+
+### Module flags (`MODULE_FLAG_ENV` in `app/src/lib/experience-flags.ts`)
+
+Each is `off` until its own variable is set; none inherits `preview` from
+`VITE_INSTITUTIONAL_PREVIEW`. (`docs/FEATURE-EXPANSION-CROSSWALK.md` lists the
+modules; this section carries the registry fields for the one below, which is
+the first with a rollout plan, success criteria, a rollback and a review date
+written here. The others still lack them — see BL-M.5 in
+`docs/CLAUDE-CODE-BACKLOG.md`.)
+
+| Flag | Env | Owner | High-risk | Review by |
+| --- | --- | --- | --- | --- |
+| `offline_engine_tasks` | `VITE_OFFLINE_ENGINE_TASKS` | Platform | no | 2026-12-15 |
+
+**`offline_engine_tasks`** — personal tasks (the product calls them *actions*)
+travel through the offline-sync engine over `public.tasks` instead of inside
+the account's `state` blob (D-1190, `docs/architecture/mobile-offline-reference.md`
+§10a). Tasks only: a flag whose reach grows silently is what this registry is
+for, so the next class gets its own.
+
+- **Two switches, both required.** The build's flag, and the device's own
+  opt-in (`semester.engine.tasks = on`). The sync is one-way for a mixed
+  account: edits to tasks on a device that has not opted in do not reach one
+  that has.
+- **Rollout.** The author's own devices in a preview build; then one pilot
+  account on every device it signs in from; then a pilot school once a screen
+  exists for rejected and conflicted tasks. Never first on a device a person
+  shares.
+- **Success criteria.** Fourteen days of real use across two devices with no
+  task lost; every offline edit reaches the account or is shown as not
+  accepted, never silently dropped; the sync line never reads "Synced" over
+  tasks the account has not confirmed. There is no load harness for the engine
+  yet — `npm run smoke:sync` exercises the blob sync, not this — so the first
+  criterion is observed, not measured, until one is written.
+- **Rollback.** Set the variable to `off` and rebuild. Every device returns to
+  the account sync with nothing lost: the old sync half has pushed the task
+  list in its blob all along (a write-only mirror), so it resumes from a
+  current list. One thing can come back: a task *deleted* while the engine was
+  on may reappear on a device that had not opted in, because the old merge
+  keeps no record of a deletion it never saw. The rows the engine wrote stay in
+  `public.tasks`, unread. There
+  is no database kill switch for this flag — it moves a person's own rows
+  under their own row-level security — and none is needed for the rollback.
+- **Not covered.** No tenant policy row, no role or cohort limit, and no
+  per-school switch: it is a build decision. A school that must not have it
+  does not set the variable in its build.
 
 ### Community flags (`app/src/community/flags.ts`)
 
@@ -198,8 +246,8 @@ feature; none of them stops a student's semester going up.
 
 - **Owner:** the `engineering` seat (`docs/LAUNCH-READINESS-COUNCIL.md`).
 - **Type:** ops, build-time on the app, environment on the gateway. Default off. Not a tenant flag: it is for every school at once, which is what a restore is.
-- **Engage (app):** set `VITE_READ_ONLY=true` in the deploy's environment and run `pages.yml`; the deploy is the switch, measured under five minutes in `ROLLBACK.md`. **Engage (gateway):** set `SEMESTER_READ_ONLY=on` on the process; it is read per request.
+- **Engage (app):** set `VITE_READ_ONLY=true` in the deploy's environment and run `pages.yml`; the deploy is the switch, measured under five minutes in `ROLLBACK.md`. **Engage (gateway):** set `SEMESTER_READ_ONLY=on`; both entry points re-read their runtime environment object per request. A hosted Vercel environment change can still require a redeploy or process restart before the new value reaches that object.
 - **Confirm:** the banner is on the live page, and `curl …/health` answers `"readOnly": true`.
-- **Rollback:** unset the variable (or any value but the exact word) and deploy again; restart nothing on the gateway. Every edit made in the window is on the device, marked unpushed, and the first build without the flag pushes it by the same path a reconnect takes — nothing is lost and nothing has to be replayed by hand.
+- **Rollback:** unset the variable (or use any value but the exact word) and deploy the app again. For the gateway, propagate the changed environment to the running process; a hosted Vercel runtime may require a redeploy or restart. Once the runtime environment changes, the next request observes it without an additional in-process cache delay. Every edit made in the window is on the device, marked unpushed, and the first build without the flag pushes it by the same path a reconnect takes — nothing is lost and nothing has to be replayed by hand.
 - **Not yet done:** it has never been engaged against production. `docs/GO-NO-GO-CHECKLIST.md` (`flags-rollback`) keeps that line open.
 - **Tests:** `app/src/lib/readonly.test.ts`, `cloud.test.ts` ("push under read-only mode"), `app/src/state/readonly.test.tsx`, `app/src/components/ReadOnlyBanner.test.tsx`, `app/server/institution/gateway.test.ts` ("read-only mode").

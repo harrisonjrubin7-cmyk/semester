@@ -88,9 +88,18 @@ do not yet express the school boundary (HECVAT TEN-1).
 - Staff access to a student's records requires the student's consent, is
   limited to named scopes, and expires (`supabase/support-access.check.sql`).
 
-**MFA is not yet enforced**, neither for the app's own administrators nor as
-recorded evidence on the owner's provider consoles. It is the first item in
-the remediation plan.
+**MFA is partially enforced.** The shared server predicates require an aal2
+session for platform_admin and support_agent capability listings/checks and
+role-based approval requests. Ordinary content stays available while the role
+lookup is pending; capability listings and server policies keep privileged
+tools dormant, and the app presents an elevation gate once either privileged
+role is confirmed. Ordinary console roles remain usable at aal1. Verified TOTP
+and phone-code factors can be challenged;
+TOTP can be enrolled. MFA is not yet enforced for every staff role or student
+account, and production Auth and provider-console configuration evidence
+has not been filed. This is not evidence of universal MFA or production-console
+enforcement. The remaining product and provider-console work is tracked in the
+remediation plan and still requires dated configuration evidence.
 
 ## 7. Encryption and key management
 
@@ -122,7 +131,10 @@ ledger snapshot so that a mis-numbered migration fails in CI
 (`app/src/lib/migrationorder.test.ts`). A Content Security Policy is enforced
 in the page and verified against a control (`app/src/lib/csp.test.ts`).
 
-SAST and DAST tooling are not yet in place.
+HawkScan DAST is configured in `.github/workflows/hawkscan.yml` against an
+ephemeral local build, so active probes do not target production data. It
+starts scanning once `HAWK_API_KEY` and `STACKHAWK_APPLICATION_ID` are set in
+GitHub Actions; until the first completed run, DAST evidence remains pending.
 
 ## 9. Infrastructure and network security
 

@@ -1,0 +1,327 @@
+[
+  {
+    "id": "RFP-01",
+    "category": "Governance",
+    "question": "Describe your enterprise security, privacy, accessibility, and AI-governance organization, including executive accountability."
+  },
+  {
+    "id": "RFP-02",
+    "category": "Governance",
+    "question": "Provide your NIST SP 800-53 Rev. 5 control crosswalk and identify implemented, partial, planned, and independently assessed controls."
+  },
+  {
+    "id": "RFP-03",
+    "category": "Governance",
+    "question": "Describe your risk-assessment process for new integrations, new AI models, source expansion, and official-write workflows."
+  },
+  {
+    "id": "RFP-04",
+    "category": "Governance",
+    "question": "Provide your security, privacy, data-retention, incident-response, business-continuity, accessibility, secure-development, and vendor-risk policies."
+  },
+  {
+    "id": "RFP-05",
+    "category": "Governance",
+    "question": "Identify all subprocessors, including cloud hosting, analytics, support, AI/model vendors, integrations, and communications vendors."
+  },
+  {
+    "id": "RFP-06",
+    "category": "Governance",
+    "question": "Describe subprocessor approval, review, contractual controls, customer notice, and removal processes."
+  },
+  {
+    "id": "RFP-07",
+    "category": "Governance",
+    "question": "Describe your software release/change-control process for integrations, models, prompts, policies, and agents."
+  },
+  {
+    "id": "RFP-08",
+    "category": "Governance",
+    "question": "Identify all certifications, independent assessments, penetration tests, and accessibility assessments currently available."
+  },
+  {
+    "id": "RFP-09",
+    "category": "Identity",
+    "question": "Which identity standards are supported: SAML 2.0, OpenID Connect, OAuth 2.0, SCIM 2.0, MFA, passkeys, and delegated administration?"
+  },
+  {
+    "id": "RFP-10",
+    "category": "Identity",
+    "question": "Describe provisioning, role changes, suspension, transfer, deprovisioning, and account- recovery flows."
+  },
+  {
+    "id": "RFP-11",
+    "category": "Identity",
+    "question": "Describe RBAC and ABAC enforcement across institution, campus, college, program, course, term, workflow, data class, purpose, and consent scope."
+  },
+  {
+    "id": "RFP-12",
+    "category": "Identity",
+    "question": "Explain how least privilege applies to users, staff, support personnel, services, API credentials, AI agents, and tool calls."
+  },
+  {
+    "id": "RFP-13",
+    "category": "Identity",
+    "question": "Describe administrative MFA, break-glass access, privileged-session logging, and periodic access review."
+  },
+  {
+    "id": "RFP-14",
+    "category": "Identity",
+    "question": "Explain tenant isolation for relational data, files, caches, semantic/vector indexes, logs, analytics, backups, and model context."
+  },
+  {
+    "id": "RFP-15",
+    "category": "Identity",
+    "question": "Describe support-staff access controls, customer approval requirements, session recording/logging, and emergency access procedures."
+  },
+  {
+    "id": "RFP-16",
+    "category": "Interoperability",
+    "question": "Identify the exact 1EdTech standards and versions supported: LTI 1.3, LTI Advantage, NRPS, AGS, Deep Linking, OneRoster, Edu-API, CASE, QTI, Caliper, Common Cartridge, Open Badges."
+  },
+  {
+    "id": "RFP-17",
+    "category": "Interoperability",
+    "question": "Provide a feature-by-feature conformance matrix, limitations, and test/conformance evidence for each claimed standard."
+  },
+  {
+    "id": "RFP-18",
+    "category": "Interoperability",
+    "question": "Describe LTI 1.3 OIDC login and launch validation: issuer, audience, deployment ID, nonce, state, JWT signature, JWKS rotation, redirect URI, and time-window validation."
+  },
+  {
+    "id": "RFP-19",
+    "category": "Interoperability",
+    "question": "Describe LTI registration storage, tenant separation, platform key management, secret rotation, and revocation."
+  },
+  {
+    "id": "RFP-20",
+    "category": "Interoperability",
+    "question": "Describe how LTI roster/membership data from NRPS is scoped, minimized, cached, refreshed, expired, and deleted."
+  },
+  {
+    "id": "RFP-21",
+    "category": "Interoperability",
+    "question": "Describe AGS grade passback safeguards: institutional enablement, course/faculty approval, user role enforcement, preview, confirmation, idempotency, reconciliation, rollback, and audit."
+  },
+  {
+    "id": "RFP-22",
+    "category": "Interoperability",
+    "question": "Describe Deep Linking authorization, content/source versioning, instructor controls, and change history."
+  },
+  {
+    "id": "RFP-23",
+    "category": "Interoperability",
+    "question": "Describe OneRoster support, including version, CSV/REST options, supported objects, sync handling, field-level minimization, and error recovery."
+  },
+  {
+    "id": "RFP-24",
+    "category": "Interoperability",
+    "question": "Describe Edu-API entity support, canonical model mapping, transformation versioning, source ownership, validation, and vendor-adapter architecture."
+  },
+  {
+    "id": "RFP-25",
+    "category": "Interoperability",
+    "question": "Identify all integration methods\u2014API, events, webhook, SFTP, CSV, direct database, manual import\u2014and state whether direct production database access is ever required."
+  },
+  {
+    "id": "RFP-26",
+    "category": "Interoperability",
+    "question": "Describe integration service-account scopes, OAuth controls, secrets storage, key rotation, rate limits, input validation, retries, queues, dead-letter handling, and reconciliation."
+  },
+  {
+    "id": "RFP-27",
+    "category": "Interoperability",
+    "question": "Describe behavior during LMS/SIS outages, including stale-data labels, safe mode, write prevention, user notices, and recovery."
+  },
+  {
+    "id": "RFP-28",
+    "category": "Privacy",
+    "question": "Provide a complete data-processing inventory by data class, integration, source, purpose, recipient, region, retention, access role, model/AI eligibility, and deletion method."
+  },
+  {
+    "id": "RFP-29",
+    "category": "Privacy",
+    "question": "Describe how authority to process PII and PII processing purpose are recorded and technically enforced for every workflow and agent."
+  },
+  {
+    "id": "RFP-30",
+    "category": "Privacy",
+    "question": "Describe how the platform distinguishes institution-required processing from optional student consent."
+  },
+  {
+    "id": "RFP-31",
+    "category": "Privacy",
+    "question": "Describe consent collection, granular scopes, accessibility, language clarity, expiration, revocation, policy versioning, audit history, and downstream enforcement."
+  },
+  {
+    "id": "RFP-32",
+    "category": "Privacy",
+    "question": "Can students view data used in recommendations, decision workspaces, tutoring, advisor packets, and AI answers? Provide product evidence."
+  },
+  {
+    "id": "RFP-33",
+    "category": "Privacy",
+    "question": "Describe student controls for access, export, correction requests, deletion of eligible personal content, sharing, recipient-specific access, expiration, and revocation."
+  },
+  {
+    "id": "RFP-34",
+    "category": "Privacy",
+    "question": "Identify data categories excluded from routine AI retrieval by default."
+  },
+  {
+    "id": "RFP-35",
+    "category": "Privacy",
+    "question": "Describe protections for grades, transcript, enrollment status, degree-audit data, instructor feedback, academic standing, and private advising notes."
+  },
+  {
+    "id": "RFP-36",
+    "category": "Privacy",
+    "question": "Describe protections for financial-aid, payment, accommodation, health/counseling, conduct, immigration, identity-document, emergency-contact, and disciplinary information."
+  },
+  {
+    "id": "RFP-37",
+    "category": "Privacy",
+    "question": "Confirm whether student notes, tutor sessions, course activity, attendance, search history, or workspace content are used for grading, discipline, admissions, financial aid, employment, marketing, behavioral profiling, or model training."
+  },
+  {
+    "id": "RFP-38",
+    "category": "Privacy",
+    "question": "Describe retention and deletion controls for customer records, files, prompts, outputs, vector indexes, integration caches, operational logs, backups, and legal holds."
+  },
+  {
+    "id": "RFP-39",
+    "category": "Privacy",
+    "question": "Describe data residency, cross-border processing, location selection, and subprocessor region controls."
+  },
+  {
+    "id": "RFP-40",
+    "category": "Privacy",
+    "question": "Describe privacy incident intake, investigation, notification, remediation, and redress processes."
+  },
+  {
+    "id": "RFP-41",
+    "category": "AI",
+    "question": "List every model/provider used, deployment location, API/service type, retention/data-use terms, training policy, and subprocessor relationship."
+  },
+  {
+    "id": "RFP-42",
+    "category": "AI",
+    "question": "State whether student/institution data, prompts, attachments, tool outputs, or generated outputs may train shared or proprietary models."
+  },
+  {
+    "id": "RFP-43",
+    "category": "AI",
+    "question": "Describe the AI Gateway, including source authorization, data classification, purpose checks, consent enforcement, model routing, logging, and human escalation."
+  },
+  {
+    "id": "RFP-44",
+    "category": "AI",
+    "question": "Describe agent boundaries for Executive Assistant, Executive Advisor, Tutor, Course Guide, and any workflow agents."
+  },
+  {
+    "id": "RFP-45",
+    "category": "AI",
+    "question": "Describe safeguards against prompt injection, indirect prompt injection from sources/files, data exfiltration, cross-user context leakage, tool abuse, source poisoning, and autonomous writes."
+  },
+  {
+    "id": "RFP-46",
+    "category": "AI",
+    "question": "Describe source grounding, citation/provenance, source freshness, uncertainty handling, missing-source handling, and source-owner correction workflows."
+  },
+  {
+    "id": "RFP-47",
+    "category": "AI",
+    "question": "Describe course- and activity-level academic-integrity enforcement, including restricted assessments, AI policy configuration, student notices, and faculty controls."
+  },
+  {
+    "id": "RFP-48",
+    "category": "AI",
+    "question": "Describe prohibited AI uses, including automated high-impact decisions, student surveillance, hidden risk scoring, discipline, eligibility decisions, and unapproved grade and academic integrity inference."
+  },
+  {
+    "id": "RFP-49",
+    "category": "AI",
+    "question": "Describe human oversight, student confirmation, staff approval, two-person approvals, action limits, kill switches, and rollback for official workflows."
+  },
+  {
+    "id": "RFP-50",
+    "category": "AI",
+    "question": "Provide evidence from AI evaluation, red-team, or adversarial testing for privacy, prompt injection, policy compliance, hallucination, academic integrity, accessibility, bias, security, and harmful advice."
+  },
+  {
+    "id": "RFP-51",
+    "category": "AI",
+    "question": "Describe AI trace logging: prompt/input categories, sources retrieved, policy decision, model/version, tools used, output, confirmation, approval, and retention/access safeguards."
+  },
+  {
+    "id": "RFP-52",
+    "category": "Operations",
+    "question": "Describe encryption in transit and at rest, key hierarchy, KMS/HSM use, key rotation, backup encryption, and customer-managed-key options."
+  },
+  {
+    "id": "RFP-53",
+    "category": "Operations",
+    "question": "Describe secure SDLC controls: threat modeling, design review, code review, SAST, DAST, dependency and secret scanning, SBOM, pen testing, and remediation timelines."
+  },
+  {
+    "id": "RFP-54",
+    "category": "Operations",
+    "question": "Describe vulnerability management, disclosure process, severity definitions, patch SLA, exception process, and customer notification."
+  },
+  {
+    "id": "RFP-55",
+    "category": "Operations",
+    "question": "Describe event logging for authentication, access decisions, sensitive reads, exports, consent changes, policy edits, configuration changes, integration activity, AI/tool calls, and official writes."
+  },
+  {
+    "id": "RFP-56",
+    "category": "Operations",
+    "question": "Describe SIEM export, log API, retention, immutability, tamper detection, clock synchronization, and correlation identifiers."
+  },
+  {
+    "id": "RFP-57",
+    "category": "Operations",
+    "question": "Describe security/privacy/AI incident-response plan, severity tiers, notification timelines, forensic support, lessons learned, and tabletop testing."
+  },
+  {
+    "id": "RFP-58",
+    "category": "Operations",
+    "question": "Provide tested RTO/RPO, backup frequency, restore-test cadence, regional-failure strategy, capacity planning, and peak registration/exam resilience."
+  },
+  {
+    "id": "RFP-59",
+    "category": "Operations",
+    "question": "Describe integration reliability controls: idempotency, dead-letter queues, message replay, reconciliation, circuit breakers, rate limiting, and duplicate-write protection."
+  },
+  {
+    "id": "RFP-60",
+    "category": "Operations",
+    "question": "Describe customer exit: data export formats, migration assistance, source mapping, retention after termination, secure deletion, and certificate-of-deletion."
+  },
+  {
+    "id": "RFP-61",
+    "category": "Accessibility and launch",
+    "question": "Provide a current VPAT/Accessibility Conformance Report, standards used, assessment date, known gaps, and remediation timeline."
+  },
+  {
+    "id": "RFP-62",
+    "category": "Accessibility and launch",
+    "question": "Describe how accessibility is tested for mobile, keyboard-only workflows, screen readers, low vision, color contrast, captions, documents, generated content, tables, charts, and math."
+  },
+  {
+    "id": "RFP-63",
+    "category": "Accessibility and launch",
+    "question": "Describe implementation phases, institutional governance setup, integration onboarding, source validation, data-mapping review, training, and support model."
+  },
+  {
+    "id": "RFP-64",
+    "category": "Accessibility and launch",
+    "question": "Describe the controls and institutional approvals required before enabling \u201cOperate\u201d mode or any official-record write."
+  },
+  {
+    "id": "RFP-65",
+    "category": "Accessibility and launch",
+    "question": "Identify known limitations against this RFP\u2019s security, privacy, accessibility, interoperability, retention, residency, or procurement requirements."
+  }
+]

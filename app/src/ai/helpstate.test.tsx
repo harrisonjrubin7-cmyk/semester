@@ -137,7 +137,7 @@ describe('the strip above the composer', () => {
 
   it('draws the picker, and a live composer, when help is ready', () => {
     draw({ kind: 'ready' });
-    expect(host.querySelectorAll('input[type="radio"]:not(:disabled)').length).toBe(MODES.length);
+    expect(host.querySelectorAll('input[type="radio"]:not(:disabled)').length).toBe(MODES.length + 4);
     expect(host.querySelector('textarea')?.disabled).toBe(false);
   });
 });

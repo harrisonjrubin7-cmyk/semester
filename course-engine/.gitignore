@@ -1,0 +1,14 @@
+.env
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+node_modules/
+.next/
+*.tsbuildinfo
+course_engine.db
+data/objects/
+benchmark/fixtures/guide_100_pages.json
+benchmark/output/*
+!benchmark/output/.gitkeep

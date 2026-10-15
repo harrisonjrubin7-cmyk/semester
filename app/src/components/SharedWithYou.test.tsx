@@ -12,7 +12,10 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
 const mock = vi.hoisted(() => ({ rpc: vi.fn(), account: { id: 'parent' } as { id: string } | null }));
 vi.mock('../lib/cloud', () => ({ cloudConfigured: true, cloud: () => Promise.resolve({ rpc: mock.rpc }) }));
-vi.mock('../state/store', () => ({ useStore: () => ({ account: mock.account }) }));
+vi.mock('../state/store', () => ({
+  useNow: () => new Date('2026-10-03T12:00:00Z'),
+  useStore: () => ({ account: mock.account }),
+}));
 const { SharedWithYou } = await import('./SharedWithYou');
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -69,7 +72,25 @@ it('shows what was shared, as it was shared, and nothing about it that was not',
   expect(host.textContent).toContain('Due before classes start.');
   expect(host.textContent).toContain('Selected calendar events · due 2026-12-10');
   // Read only: no control on the page acts on the student's items.
-  expect([...host.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Open it again']);
+  expect([...host.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Open it again', 'Open calendar']);
+});
+
+it('opens a guardian calendar only for a student returned by the existing authorized reader', async () => {
+  mock.rpc.mockImplementation((name: string) => name === 'read_family_share'
+    ? Promise.resolve({ data: [row({ category: 'calendar', item_id: 'exam' })], error: null })
+    : Promise.resolve({ data: [{
+      student_id: 's1', item_id: 'exam', title: 'Finals week', starts_at: '2026-12-10T15:00:00Z',
+      status: 'scheduled', source_observed_at: '2026-10-03T10:00:00Z', expires_at: new Date(Date.now() + 60 * 60_000).toISOString(),
+    }], error: null }));
+  await render();
+  await act(async () => button(/Open what is shared with me/)!.click());
+  await act(async () => button(/Open calendar/)!.click());
+  expect(mock.rpc).toHaveBeenLastCalledWith('read_guardian_calendar_projection', {
+    wanted_student: 's1',
+    wanted_purpose: 'guardian_portal',
+  });
+  expect(host.textContent).toContain('Finals week');
+  expect(host.querySelector('input')).toBeNull();
 });
 
 it('says a share has ended, in the same words whichever way it ended', async () => {

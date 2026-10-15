@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from '../../../app/node_modules/vitest/dist/index.js';
+import { describe, expect, it } from 'vitest';
 import {
   IDENTITY_CLAIMS,
   PROHIBITED_ATTRIBUTE_FRAGMENTS,

@@ -7,6 +7,7 @@ import { useStore } from '../state/store';
 import { PathProfileForm, usePathProfile } from './PathProfileForm';
 import { SourceBadge } from './SourceBadge';
 import { SectionLabel } from './ui';
+import { RegistrationReadiness } from './RegistrationReadiness';
 
 /**
  * The Path Snapshot on My Path: status, credits, target, goals, and the
@@ -16,7 +17,7 @@ import { SectionLabel } from './ui';
  * Credits in the registration cart count as *planned*, never as registered:
  * the cart is a plan the student has not submitted anywhere.
  */
-export function PathSnapshotCard() {
+export function PathSnapshotCard({ onPrepareMeeting }: { onPrepareMeeting?: () => void } = {}) {
   const { state } = useStore();
   const profile = usePathProfile();
   const registration = useDeviceLibrary('semester.registration.v1', readRegistration, EMPTY_REGISTRATION);
@@ -90,6 +91,7 @@ export function PathSnapshotCard() {
       ) : (
         <button type="button" className="btn btn-ghost" onClick={() => setEditing(true)}>Edit your path details</button>
       )}
+      <RegistrationReadiness onPrepareMeeting={onPrepareMeeting} />
     </section>
   );
 }

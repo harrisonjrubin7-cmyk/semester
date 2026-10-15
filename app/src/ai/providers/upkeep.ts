@@ -147,7 +147,7 @@ export const ahead: Provide = (look) => {
   };
 };
 
-/** When you are behind — what has gone by, and what still fits. */
+/** Catching up — what has gone by, and what still fits. */
 export const behind: Provide = (look) => {
   const { state, catalog, now } = look;
   const missed = datedItems(catalog, now)

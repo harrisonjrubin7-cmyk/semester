@@ -59,7 +59,7 @@ describe('reading a plan saved before the mode existed', () => {
   it('fills the new fields with their defaults, and keeps what was there', () => {
     const old = { opensAt: '2027-04-03T08:00', source: 'student_entered', backups: { psy: ['econ'] }, checks: ['holds'] };
     expect(readRegistrationDay(old)).toEqual({
-      ...old, creditTarget: null, portalUrl: null, remind: true, manual: false, handoff: null,
+      ...old, creditTarget: null, minCredits: null, maxCredits: null, studyHours: null, portalUrl: null, remind: true, manual: false, handoff: null,
     });
   });
 
@@ -81,9 +81,9 @@ describe('reading a plan saved before the mode existed', () => {
 
 describe('when the mode shows', () => {
   const now = new Date(2027, 3, 1, 12, 0);
-  it('shows within a week of the window, and for a day after it opens', () => {
-    expect(modeActive(data({ opensAt: '2027-04-08T11:00' }), now)).toBe(true);
-    expect(modeActive(data({ opensAt: '2027-04-09T12:01' }), now)).toBe(false);
+  it('shows within 72 hours of the window, and for a day after it opens', () => {
+    expect(modeActive(data({ opensAt: '2027-04-04T11:00' }), now)).toBe(true);
+    expect(modeActive(data({ opensAt: '2027-04-04T12:01' }), now)).toBe(false);
     expect(modeActive(data({ opensAt: '2027-03-31T13:00' }), now)).toBe(true);
     expect(modeActive(data({ opensAt: '2027-03-31T11:00' }), now)).toBe(false);
   });
@@ -189,8 +189,10 @@ describe('the two reminders', () => {
   it('is passed by all three places that build the notifier source', () => {
     // The in-page tick and both push fillers. The notes in PushSwitch record
     // a field that reached one caller and not the others; this is that check.
-    for (const file of ['src/state/store.tsx', 'src/components/PushTop.tsx', 'src/components/PushSwitch.tsx']) {
+    for (const file of ['src/state/reminders.ts', 'src/components/PushTop.tsx', 'src/components/PushSwitch.tsx']) {
       expect(readFileSync(file, 'utf8'), file).toContain('registrationOpens: storedWindow()');
     }
+    // The tick's source is built in reminders.ts; the provider must still go through it.
+    expect(readFileSync('src/state/store.tsx', 'utf8')).toContain('remindersFor(');
   });
 });

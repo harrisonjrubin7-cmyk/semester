@@ -275,9 +275,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'MFA required for privileged/admin roles and supported for configured users',
     validation: 'MFA policy/config export',
     severity: 'P0',
-    status: 'designed',
-    evidence: [{ path: 'docs/trust/SOC2-READINESS.md', shows: 'CC6-02: app has no MFA for admins; MFA enforcement export Absent' }, { path: 'docs/trust/SECURITY-WHITEPAPER.md', shows: 'States MFA is not yet enforced' }, { path: 'app/src/lib/governance/rollout.ts', shows: 'Rollout checklist item \'Session and MFA policy configured\' (text only)' }],
-    gap: 'No MFA enrollment or aal2 enforcement in app or database; console MFA not evidenced. Needs MFA enforcement for privileged roles, user opt-in, and exported config/screenshots.',
+    status: 'tested',
+    evidence: [{ path: 'supabase/migrations/20261008223000_privileged_role_mfa.sql', shows: 'platform_admin and support_agent grants require an aal2 JWT for capability listings/checks and role-based approval requests, and auth-js phone verification counts as fresh MFA' }, { path: 'supabase/privileged-mfa.check.sql', shows: 'aal1 denials, app-gate status and aal2 success for both privileged roles' }, { path: 'supabase/my-capabilities.check.sql', shows: 'the client projection omits dormant privileged grants at aal1 and restores them at aal2' }, { path: 'app/src/components/PrivilegedMfaBoundary.test.tsx', shows: 'The boundary keeps ordinary offline-first content mounted during status lookup, gates confirmed privileged sessions, and rechecks session changes' }, { path: 'app/src/screens/console.test.tsx', shows: 'Ordinary console roles retain aal1 access while sensitive actions still step up' }, { path: 'app/src/components/MfaStep.test.tsx', shows: 'TOTP enrolment, pre-sent and resendable phone challenges, enrolled-factor choice, and factor-discovery retry paths' }],
+    gap: 'Product aal2 is enforced for platform_admin and support_agent capabilities and role-based approval requests, with an app-level elevation gate and fresh MFA on sensitive console actions. Other staff roles, student opt-in/passkeys, recovery tests, production Auth configuration and provider-console exports remain open.',
   },
   {
     id: 'IAM-006',
@@ -456,8 +456,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Support ticket UAT',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'app/src/lib/supporttickets.ts', shows: 'Support tickets: six app-context keys, every detail unticked by default, 24h/72h targets (#839)' }, { path: 'supabase/support-tickets.check.sql', shows: '25 checks: no identity reaches the queue, five a day, only the student closes' }, { path: 'app/src/components/supportticketspanel.test.tsx', shows: 'Nothing unticked is sent, and the preview shows all of it' }, { path: 'app/src/lib/help-routes.ts', shows: 'Help requests to campus offices with minimal context, withdrawable, DB-enforced' }, { path: 'app/public/status.html', shows: 'A status page that checks from the reader\'s browser (#902)' }, { path: 'app/src/lib/statuspage.test.ts', shows: 'Holds the page\'s probes and key to .env.production (#902, #908)' }],
-    gap: 'Tickets are off by default (VITE_SUPPORT_TICKETS), have no staff screen and no notification to the student, and no ticket id is shown in the app. The status page is live at /status.html and linked from Help (#922; held by help.statuslink.test.ts). No support ticket UAT.',
+    evidence: [{ path: 'app/src/lib/supporttickets.ts', shows: 'Support tickets: stable SUP references, six app-context keys, every detail unticked by default, 24h/72h targets, and capability-gated staff RPC clients' }, { path: 'supabase/support-tickets.check.sql', shows: '25 checks: no identity reaches the queue, five a day, only the student closes' }, { path: 'app/src/components/supportticketspanel.test.tsx', shows: 'Nothing unticked is sent, the preview shows all of it, and the student sees the ticket reference' }, { path: 'app/src/components/console/supportqueue.test.tsx', shows: 'The Operations Console reads the identity-free queue, shows SLA state and approved context, and records replies and resolution state' }, { path: 'app/src/lib/supportnotify.test.ts', shows: 'The generic email hint is origin-, auth- and capability-gated and excludes the reply body' }, { path: 'docs/launch-readiness/2026-10-03-support-production-uat.md', shows: 'Production ticket creation, staff reply, Help-thread receipt, resolution, provider acceptance, quarantine and release evidence' }, { path: 'app/src/lib/help-routes.ts', shows: 'Help requests to campus offices with minimal context, withdrawable, DB-enforced' }, { path: 'app/public/status.html', shows: 'A status page that checks from the reader\'s browser (#902)' }, { path: 'app/src/lib/statuspage.test.ts', shows: 'Holds the page\'s probes and key to .env.production (#902, #908)' }],
+    gap: 'Production ticket creation, staff reply, Help-thread receipt and resolution passed UAT on October 3, 2026, and the founder staffs the current beta queue. Email-notice mechanics reached provider acceptance in that UAT, but the worker and UI are parked until Resend vendor review, executed terms/DPA, ownership and explicit activation approval are recorded; Outlook inbox receipt remains pending. No support hours or 24/7 coverage are promised. The status page is live at /status.html and linked from Help (#922; held by help.statuslink.test.ts).',
   },
   {
     id: 'LMS-001',
@@ -786,7 +786,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Migration discovery report',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'Customer data migration: NOT_STARTED; nothing supports it' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3 course-migration milestones and evidence' }],
+    evidence: [{ path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'Customer data migration: evidence path (Migration Center) and roster staging built; no discovery scanner and no load path' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3 course-migration milestones and evidence' }],
     gap: 'No scanner of legacy courses/tools/content/links/assessments and no risk report. Needs tooling and a migration discovery report.',
   },
   {
@@ -796,7 +796,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Migration UAT',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'No import format, dry-run, provenance, rollback or reconciliation' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3: course shells, pages, files and media imported' }],
+    evidence: [{ path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'Rosters only have a manifest, dry-run, rollback and reconciliation; no content import and no provenance' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3: course shells, pages, files and media imported' }],
     gap: 'No content migration from Canvas/Brightspace/Blackboard and no native content model to receive it. Needs importers and migration UAT.',
   },
   {
@@ -816,7 +816,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Reconciliation UAT',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3: grade ledger reconciled before any passback' }, { path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'Reconciliation report: none' }],
+    evidence: [{ path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3: grade ledger reconciled before any passback' }, { path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'Reconciliation counts exist in the Migration Center and for rosters; no grade import or reconciliation' }],
     gap: 'No gradebook structure or historical grade import, security model or reconciliation. Needs definition, build and reconciliation UAT.',
   },
   {
@@ -1296,8 +1296,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Privacy evidence',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'RETENTION.md', shows: 'data inventory with retention answer per table' }, { path: 'app/src/lib/retention.test.ts', shows: 'bidirectional tripwire holding RETENTION.md to the schema' }, { path: 'app/src/lib/privacy.test.ts', shows: 'holds in-app privacy disclosure true to code' }, { path: 'supabase/deletion.check.sql', shows: 'tests account deletion empties what it claims' }],
-    gap: 'No data classification scheme, no signed DPA, DSAR workflow is a data_requests table without an operated handling process/SLA, and privacy notice has no legal review.',
+    evidence: [{ path: 'RETENTION.md', shows: 'data inventory with retention answer per table' }, { path: 'app/src/lib/retention.test.ts', shows: 'bidirectional tripwire holding RETENTION.md to the schema' }, { path: 'app/src/lib/privacy.test.ts', shows: 'holds in-app privacy disclosure true to code' }, { path: 'supabase/deletion.check.sql', shows: 'tests account deletion empties what it claims' }, { path: 'app/src/components/DataRightsRequests.test.tsx', shows: 'student intake and status history for access, correction, restriction and assisted erasure' }, { path: 'supabase/audit-and-subject-requests.check.sql', shows: 'own-account and cross-tenant refusal, audit, deadline and idempotent intake checks' }, { path: 'docs/DATA-RIGHTS-REQUEST-RUNBOOK.md', shows: 'daily handling, escalation, evidence and rehearsal procedure' }],
+    gap: 'No data classification scheme, no signed DPA, no trusted handler UI/service or completed rehearsal/SLA evidence, and the privacy notice has no legal review.',
   },
   {
     id: 'SEC-009',
@@ -1496,8 +1496,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Support UAT',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'supabase/migrations/20260928210000_support_tickets.sql', shows: 'Two tables with RLS and no grants; nine definer functions; 24h/72h first-response targets computed from the category' }, { path: 'supabase/support-tickets.check.sql', shows: '25 checks, three of which fail against a faithful revert' }, { path: 'app/src/lib/supporttickets.ts', shows: 'Client and the six context keys' }, { path: 'app/src/components/supportticketspanel.test.tsx', shows: 'Nothing unticked is sent' }, { path: 'docs/market-readiness/SUPPORT_PLAYBOOK.md', shows: 'T1-T3 support tiers' }, { path: 'docs/launch/FAQ.md', shows: 'FAQ as a starting knowledge base' }],
-    gap: 'Off by default; no staff screen (an agent answers from the SQL editor), no notification to the student, no retention for closed tickets, no support address separate from a personal mailbox, no owner or hours, no customer comms workflow, no support UAT.',
+    evidence: [{ path: 'supabase/migrations/20260928210000_support_tickets.sql', shows: 'Two tables with RLS and no grants; nine definer functions; 24h/72h first-response targets computed from the category' }, { path: 'supabase/support-tickets.check.sql', shows: '25 checks, three of which fail against a faithful revert' }, { path: 'app/src/lib/supporttickets.ts', shows: 'Student and support RPC clients, stable SUP references and the six context keys' }, { path: 'app/src/components/supportticketspanel.test.tsx', shows: 'Nothing unticked is sent and students can retain a ticket reference' }, { path: 'app/src/components/console/supportqueue.test.tsx', shows: 'Identity-free staff queue, SLA state, approved context, replies and resolution states' }, { path: 'app/src/lib/supportnotify.test.ts', shows: 'Generic reply notification without identity or reply content in the staff browser' }, { path: 'docs/launch-readiness/2026-10-03-support-production-uat.md', shows: 'Production ticket creation, staff reply, Help-thread receipt, resolution, provider acceptance, quarantine and release evidence' }, { path: 'supabase/migrations/20261008195500_support_ticket_retention.sql', shows: 'Creation-time-classified individual-beta tickets expire after 180 days; effective signed-deployment and legacy tickets awaiting evidence review stay outside the sweep; active legal holds suspend deletion' }, { path: 'docs/market-readiness/SUPPORT_PLAYBOOK.md', shows: 'T1-T3 support tiers' }, { path: 'docs/launch/FAQ.md', shows: 'FAQ as a starting knowledge base' }],
+    gap: 'The individual beta queue is enabled and founder-staffed, and the ticket/reply/Help/resolution production UAT passed October 3, 2026. Email-notice mechanics reached provider acceptance in that UAT, but the worker and UI are parked until Resend vendor review, executed terms/DPA, ownership and explicit activation approval are recorded; Outlook inbox receipt remains pending. Creation-time-classified individual-beta tickets without a signed deployment association have an enforced 180-day retention period with legal-hold protection; pre-classifier legacy tickets await evidence-backed ticket-only classification and institution-specific support retention remains a contract/configuration gate. The contact is still a personal Gmail address; there are no published support hours, contracted customer-success workflow or 24/7 rota.',
   },
   {
     id: 'SUP-002',

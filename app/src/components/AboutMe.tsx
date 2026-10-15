@@ -25,6 +25,8 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { MOST_CHARS, MOST_FACTS, addFact, dropFact, editFact } from '../lib/aboutme';
 import { useRowStyle } from './shell/useShell';
+import { ConfirmDialog } from './ConfirmDialog';
+import { ActionPreview } from './unity/ActionPreview';
 
 /**
  * What goes in the empty box.
@@ -103,6 +105,7 @@ export function AboutMe() {
   const { state, dispatch } = useStore();
   const facts = state.aboutMe;
   const [typed, setTyped] = useState('');
+  const [forgetting, setForgetting] = useState<(typeof facts)[number] | null>(null);
   const row = useRowStyle(11);
 
   const set = (next: typeof facts) => dispatch({ type: 'setAboutMe', facts: next });
@@ -142,7 +145,7 @@ export function AboutMe() {
           <button
             type="button"
             className="bare"
-            onClick={() => set(dropFact(facts, f.id))}
+            onClick={() => setForgetting(f)}
             aria-label={`Delete: ${f.text}`}
             style={{ flex: 'none', width: 28, color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
           >
@@ -192,6 +195,27 @@ export function AboutMe() {
           stops being something you can check before it stops being something the assistant reads.
         </div>
       )}
+
+      {forgetting ? (
+        <ConfirmDialog
+          title="Forget this remembered line?"
+          preview={(
+            <ActionPreview
+              subject={`“${forgetting.text}”`}
+              says="Semester stops using this line straight away on this device and, once it syncs, on your account."
+              doesNotChange="Your other remembered lines, conversations, notes and plans stay unchanged."
+              recovery={{ kind: 'none', how: 'You can add the line again if you still know it. A data export downloaded before deletion still contains its earlier copy.' }}
+            />
+          )}
+          confirmLabel="Forget"
+          onCancel={() => setForgetting(null)}
+          onConfirm={() => {
+            const id = forgetting.id;
+            setForgetting(null);
+            set(dropFact(facts, id));
+          }}
+        />
+      ) : null}
     </div>
   );
 }

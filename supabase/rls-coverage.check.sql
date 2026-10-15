@@ -376,7 +376,10 @@ begin
   end if;
 
   perform pg_temp.become(null);
-  select string_agg(data ->> 'who', ',') into seen from public.notes where id = 'coverage';
+  begin
+    select string_agg(data ->> 'who', ',') into seen from public.notes where id = 'coverage';
+  exception when insufficient_privilege then seen := null;  -- anon holds no grant on notes: refused before any row
+  end;
   if seen is not null then
     raise exception 'FAILED: signed out on the same connection, still saw %', seen;
   end if;

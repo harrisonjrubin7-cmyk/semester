@@ -62,3 +62,34 @@ open and not as fixed.
    so a stall can be attributed, rather than raising the cap.
 3. Only then decide whether the cause is the runner (a budget question for whoever owns D-154) or the
    scenario (a harness fix).
+
+## Update, 30 September 2026 (D-1019)
+
+**Status: still open, cause unknown, and now measurable.** Steps 1 and 2 above were done; step 3 was not,
+because it needs what step 2 produces.
+
+**Step 1, the recurrence since c9aa36f (#996).** Fourteen `main` CI runs from c9aa36f to 598e6b1 had their
+load step read from the job logs. `plans` passed in all fourteen and never missed its 60 ms budget. Its p95
+ran from 6.1 ms to 48.3 ms and its p99 from 7.6 ms to 143.8 ms; four runs had a p99 over 60 ms and still a
+p95 inside it. Three runs came close on p95: 48.3 (7d01431), 47.2 (c8fa684) and 39.3 ms (f917896). One more
+`main` run (2dadbdf) failed before it reached the load step, in the golden-path step, and says nothing about
+`plans`; two newer runs had not reached it when this was read.
+
+So after #996, `main` showed no miss in fourteen runs. That is weak evidence that the settling helped, not
+proof: the spread between a 6 ms run and a 48 ms run is wide, and the old failures were two. Against it, one
+PR branch running the soak (PR #1019, head d6f77b9, four windows of six seconds) hit `plans` at 99.4 ms in
+one window, with other scenarios also raised in that window (the others were 19.8, 30.3 and 50.4 ms). That run
+is what the median-window rule in `docs/LOAD-AND-SOAK.md` answers; it does not explain the stall.
+
+**Step 2, attribution.** The runner now reads, around every scenario, the checkpoints and autovacuum passes
+in the throwaway database and the runner's CPU steal, prints them under the scenario when there are any
+(`↳ while it ran: …`), and `drift.sh` says how many windows over a budget coincided with one. The first local
+run (Postgres 16, three windows) showed 12 autovacuum or analyze passes during one `plans` window, so the
+probe finds something real; that run did not stall. Nothing was changed in any budget or verdict.
+
+**What would close it now.** Read the `↳` lines from the next CI runs that miss or nearly miss a `plans`
+budget. If they show a checkpoint or autovacuum beside every bad window, the cause is Postgres's own
+background work and the fix is to settle it before timing (autovacuum off on the throwaway database, or
+another `vacuum` and `checkpoint` between scenarios), which is a harness change and is **not** made here,
+because nothing yet shows it is the cause. If they show CPU steal, it is the runner, and the budget is a
+question for whoever owns D-154. If they show neither, it is neither, and that is the finding.

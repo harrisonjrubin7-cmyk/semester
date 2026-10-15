@@ -27,6 +27,23 @@ export function Fields({ label, items }: { label: string; items: readonly { fiel
 }
 
 /**
+ * A sentence in a table cell.
+ *
+ * The shared table sets `white-space: nowrap` on every cell, which suits a
+ * word or a number and not a sentence: above the tablet edge a long cell has
+ * no scroll region in `stack` mode, so it widens the whole page. Prose opts
+ * out, and breaks even a long file path, so the column takes the room that is
+ * left. `data-prose` is what the console tests look for.
+ */
+export function Prose({ children }: { children: ReactNode }) {
+  return (
+    <span data-prose="" style={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
+      {children}
+    </span>
+  );
+}
+
+/**
  * The line under a write.
  *
  * In production it is `PRODUCTION_WRITE_NOTICE`, word for word. Anywhere else

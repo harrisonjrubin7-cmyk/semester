@@ -160,5 +160,68 @@ export function useFieldErrors<K extends string>(order: readonly K[]) {
   /** Spread onto the `<FieldMessage>` that belongs to that box. */
   const message = (k: K) => ({ id: idOf(k), error: errors[k] });
 
-  return { errors, check, clear, control, message };
+  /** Move focus to one field's box, for the summary's links. */
+  const focusOn = useCallback((k: K) => boxes.current.get(k)?.focus(), []);
+
+  /**
+   * Spread onto `<ErrorSummary>`. `labels` is what each field is called to a
+   * person; the items follow screen order, not the order the form wrote them.
+   */
+  const summary = (labels: Record<K, string>) => ({
+    items: order.filter((k) => errors[k]).map((k) => ({ key: k, id: idOf(k), label: labels[k], message: errors[k] as string })),
+    onPick: focusOn as (k: string) => void,
+  });
+
+  return { errors, check, clear, control, message, summary, focusOn };
+}
+
+/**
+ * Every problem a failed submit found, in one place, each a link to its field.
+ *
+ * `FieldMessage` says what is wrong *at* a field, and focus lands on the first.
+ * That serves someone who is moving through the form. It does not serve someone
+ * who wants to know how much is wrong before they start, or who must get back
+ * to the third field from the first without tabbing past the second — so with
+ * two or more problems this lists them all.
+ *
+ * With one problem it draws nothing: focus is already on that field and its
+ * message is in a live region, and a summary of one would say it a third time.
+ *
+ * It is not a live region and does not take focus. The first wrong field does
+ * (`useFieldErrors.check`), and what a reader hears there already names the
+ * problem; a second announcement from here would talk over it. A link moves
+ * focus to the field it names; `preventDefault` because the fragment URL
+ * would put `#…` in the address and, in a hash-routed app, change the route.
+ */
+export function ErrorSummary({
+  items,
+  onPick,
+}: {
+  items: readonly { key: string; id: string; label: string; message: string }[];
+  onPick: (key: string) => void;
+}) {
+  const heading = useId();
+  if (items.length < 2) return null;
+  return (
+    <section className="error-summary" aria-labelledby={heading}>
+      <h3 id={heading} className="error-summary-title">
+        {items.length} things need fixing
+      </h3>
+      <ul>
+        {items.map((i) => (
+          <li key={i.key}>
+            <a
+              href={`#${i.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                onPick(i.key);
+              }}
+            >
+              {i.label}: {i.message}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 }

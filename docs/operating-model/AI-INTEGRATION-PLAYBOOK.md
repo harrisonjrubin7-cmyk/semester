@@ -272,7 +272,7 @@ First-session goal: “I now know what I need to do next.” Deliver a useful re
 | Find campus support | Verified resource recommendation and safe handoff | `support` — Find campus support |
 | Explore career options | Starter goal, related skills, opportunity or portfolio checklist | `career` — Explore careers |
 
-FirstGoal also offers `registration` — Prepare for registration, which the playbook does not list.
+FirstGoal also offers `registration` — Prepare for registration, `week` — Organize my week, `meeting` — Prepare for a meeting, `privacy` — Manage my data and settings, which the playbook does not list.
 
 ### The first week
 

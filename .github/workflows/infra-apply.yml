@@ -1,0 +1,193 @@
+# The one way production infrastructure is changed.
+#
+# Run by hand (Actions → Infrastructure apply → Run workflow), from main, naming
+# the Terraform root and the change record that authorises it. Nothing else in
+# this repository holds a credential that can write to Supabase, Vercel or the
+# repository's own protections, and no person is meant to either: a change made
+# with a console, a CLI or a personal token is drift, and `drift.yml` will say
+# so within a day.
+#
+# Two jobs, because the thing a reviewer approves must be the thing that runs:
+#
+#   plan   no reviewer, read-scoped credentials. Checks the change record,
+#          plans, and evaluates the plan against infra/policy. The saved plan
+#          and its hash are uploaded.
+#   apply  the `infrastructure-production` environment: required reviewer, no
+#          admin bypass, main only. Verifies the hash, applies *that file*, and
+#          plans again — which must find nothing left to do.
+#
+# `terraform apply plan.bin` applies exactly the saved plan or fails; it never
+# re-plans on the way. That is why the reviewer's approval means something.
+
+name: Infrastructure apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      root:
+        description: Terraform root to apply
+        type: choice
+        required: true
+        options: [platform, staging, production]
+      change_record:
+        description: 'Change record id, e.g. CC-1234 (infra/changes/CC-1234.md, status approved)'
+        type: string
+        required: true
+
+concurrency:
+  group: infra-apply-${{ inputs.root }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  OPA_VERSION: '1.0.0'
+  OPA_SHA256: '3985fb4814b3860511beac516f59c5509eee9fdc83dbe910b67f3999f743b901'
+  TERRAFORM_VERSION: '1.15.9'
+
+jobs:
+  plan:
+    name: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: infrastructure-plan
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      plan_sha256: ${{ steps.plan.outputs.plan_sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: The change record exists, is approved and names this root
+        id: record
+        env:
+          RECORD_ID: ${{ inputs.change_record }}
+          ROOT: ${{ inputs.root }}
+        run: |
+          [[ "$RECORD_ID" =~ ^CC-[0-9]+$ ]] || { echo "::error::'$RECORD_ID' is not a change record id (CC-<pull request number>)"; exit 1; }
+          file="infra/changes/${RECORD_ID}.md"
+          [ -f "$file" ] || { echo "::error::$file is not on main"; exit 1; }
+          status="$(scripts/infra/record-field.sh "$file" Status)"
+          [ "$status" = "approved" ] || { echo "::error::$file has Status: '$status'; only 'approved' authorises an apply"; exit 1; }
+          roots="$(scripts/infra/record-field.sh "$file" Roots)"
+          case ",${roots// /}," in *",$ROOT,"*) ;; *) echo "::error::$file does not list '$ROOT' under Roots (has: $roots)"; exit 1;; esac
+          echo "destroys=$(scripts/infra/record-field.sh "$file" Approved-destroys)" >> "$GITHUB_OUTPUT"
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Install OPA
+        run: |
+          curl -fsSL -o opa "https://openpolicyagent.org/downloads/v${OPA_VERSION}/opa_linux_amd64_static"
+          echo "${OPA_SHA256}  opa" | sha256sum --check --strict
+          chmod +x opa && sudo mv opa /usr/local/bin/opa
+
+      - name: Plan
+        id: plan
+        # `shell: bash` runs with pipefail, so a failed `terraform plan` fails
+        # this step at the plan, not by accident at the `show` after it.
+        # `workflowshell.test.ts` requires it of any step that pipes into tee.
+        shell: bash
+        working-directory: infra/terraform/envs/${{ inputs.root }}
+        env:
+          TF_IN_AUTOMATION: '1'
+          GITHUB_TOKEN: ${{ secrets.INFRA_GITHUB_TOKEN }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.TF_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STATE_SECRET_ACCESS_KEY }}
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+          STATE_REGION: ${{ vars.TF_STATE_REGION }}
+          STATE_ENDPOINT: ${{ vars.TF_STATE_ENDPOINT }}
+          ROOT: ${{ inputs.root }}
+          DESTROYS: ${{ steps.record.outputs.destroys }}
+        run: |
+          "$GITHUB_WORKSPACE/scripts/infra/tf-init.sh" "$ROOT"
+          terraform plan -out=plan.bin -no-color | tee plan.txt
+          terraform show -json plan.bin > plan.json
+          # The destroys the record approved, as policy data.
+          jq -n --arg env "$ROOT" --arg d "$DESTROYS" \
+            '{run: {environment: $env, approved_destroys: ($d | split(",") | map(gsub("^ +| +$"; "")) | map(select(. != "")))}}' > run.json
+          # An empty result is a pass; anything else is printed and fails.
+          violations="$(opa eval --format raw --input plan.json \
+            --data "$GITHUB_WORKSPACE/infra/policy/terraform.rego" --data run.json \
+            'concat("\n", [m | some m in data.semester.terraform.deny])')"
+          if [ -n "$violations" ]; then
+            printf '%s\n' "$violations" | sed 's/^/::error::policy: /'
+            exit 1
+          fi
+          echo "plan_sha256=$(sha256sum plan.bin | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Plan for \`$ROOT\`"
+            echo '```'
+            tail -n 60 plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: plan-${{ inputs.root }}-${{ github.run_id }}
+          path: |
+            infra/terraform/envs/${{ inputs.root }}/plan.bin
+            infra/terraform/envs/${{ inputs.root }}/plan.txt
+            infra/terraform/envs/${{ inputs.root }}/plan.json
+          retention-days: 400
+
+  apply:
+    name: apply
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: infrastructure-production
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: plan-${{ inputs.root }}-${{ github.run_id }}
+          path: infra/terraform/envs/${{ inputs.root }}
+
+      - name: Apply exactly the plan that was reviewed
+        working-directory: infra/terraform/envs/${{ inputs.root }}
+        env:
+          TF_IN_AUTOMATION: '1'
+          GITHUB_TOKEN: ${{ secrets.INFRA_GITHUB_TOKEN }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.TF_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STATE_SECRET_ACCESS_KEY }}
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+          STATE_REGION: ${{ vars.TF_STATE_REGION }}
+          STATE_ENDPOINT: ${{ vars.TF_STATE_ENDPOINT }}
+          ROOT: ${{ inputs.root }}
+          EXPECTED: ${{ needs.plan.outputs.plan_sha256 }}
+        run: |
+          echo "${EXPECTED}  plan.bin" | sha256sum --check --strict
+          "$GITHUB_WORKSPACE/scripts/infra/tf-init.sh" "$ROOT"
+          terraform apply -no-color plan.bin
+
+      # Read it back. A plan that still has changes after an apply means the
+      # apply did not do what the plan said, or the provider cannot express it —
+      # either way production is not what the repository says, which is the
+      # condition this whole pipeline exists to prevent.
+      - name: Converged? (a second plan must be empty)
+        working-directory: infra/terraform/envs/${{ inputs.root }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.INFRA_GITHUB_TOKEN }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.TF_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STATE_SECRET_ACCESS_KEY }}
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+          STATE_REGION: ${{ vars.TF_STATE_REGION }}
+          STATE_ENDPOINT: ${{ vars.TF_STATE_ENDPOINT }}
+          ROOT: ${{ inputs.root }}
+        run: terraform plan -detailed-exitcode -input=false -no-color

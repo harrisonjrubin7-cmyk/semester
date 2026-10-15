@@ -15,11 +15,14 @@ import {
   searchString,
   SOURCE_KINDS,
   verify,
+  type Claim,
   type Evidence,
   type Project,
   type Style,
 } from '../../lib/toolkit/research';
 import { Notice } from '../ui';
+import { ConfirmDialog } from '../ConfirmDialog';
+import { ActionPreview } from '../unity/ActionPreview';
 import { newId, type useToolkit } from './store';
 
 type Library = ReturnType<typeof useToolkit>;
@@ -59,6 +62,9 @@ export function ResearchPanel({ library }: { library: Library }) {
   const [message, setMessage] = useState('');
   const [style, setStyle] = useState<Style>('apa');
   const [claimText, setClaimText] = useState('');
+  const [removingSource, setRemovingSource] = useState<Evidence | null>(null);
+  const [removingClaim, setRemovingClaim] = useState<Claim | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const project = projects.find((p) => p.id === openId);
 
   const save = (next: Project) => library.update((s) => ({ ...s, research: s.research.map((p) => (p.id === next.id ? next : p)) }));
@@ -71,18 +77,21 @@ export function ResearchPanel({ library }: { library: Library }) {
 
   if (!project)
     return (
-      <section className="portal-panel" aria-labelledby="rs-title">
-        <h3 id="rs-title">Research Studio</h3>
-        <ol>
-          {STEPS.map((s) => (
-            <li key={s}>{s}</li>
-          ))}
-        </ol>
-        <p className="portal-muted">AI summaries can help you find sources. They are never a source themselves: every entry here is checked against the original you open.</p>
-        <button className="portal-primary" onClick={start}>
-          Start a research project
-        </button>
-      </section>
+      <>
+        <section className="portal-panel" aria-labelledby="rs-title">
+          <h3 id="rs-title">Research Studio</h3>
+          <ol>
+            {STEPS.map((s) => (
+              <li key={s}>{s}</li>
+            ))}
+          </ol>
+          <p className="portal-muted">AI summaries can help you find sources. They are never a source themselves: every entry here is checked against the original you open.</p>
+          <button className="portal-primary" onClick={start}>
+            Start a research project
+          </button>
+        </section>
+        {message && <Notice>{message}</Notice>}
+      </>
     );
 
   const verifiedCount = project.evidence.filter((e) => e.verified).length;
@@ -238,15 +247,7 @@ export function ResearchPanel({ library }: { library: Library }) {
                     Mark verified
                   </button>
                 )}
-                <button
-                  onClick={() =>
-                    save({
-                      ...project,
-                      evidence: project.evidence.filter((x) => x.id !== e.id),
-                      claims: project.claims.map((c) => ({ ...c, evidence: c.evidence.filter((id) => id !== e.id) })),
-                    })
-                  }
-                >
+                <button onClick={() => setRemovingSource(e)}>
                   Remove source
                 </button>
               </div>
@@ -254,6 +255,32 @@ export function ResearchPanel({ library }: { library: Library }) {
           );
         })}
       </section>
+      {removingSource ? (
+        <ConfirmDialog
+          title="Remove this research source?"
+          preview={(
+            <ActionPreview
+              subject={removingSource.title || 'Untitled source'}
+              says="Removes this source and detaches it from every claim in this research project."
+              exactly={`${removingSource.verified ? 'Verified' : 'Unverified'} source · linked to ${project.claims.filter((claim) => claim.evidence.includes(removingSource.id)).length} claim${project.claims.filter((claim) => claim.evidence.includes(removingSource.id)).length === 1 ? '' : 's'}.`}
+              doesNotChange="The research question, search plan, other sources and original files stay unchanged."
+              recovery={{ kind: 'none', how: 'Restore it from a device workspace backup created before removal. Without one, re-enter the source from the original.' }}
+            />
+          )}
+          confirmLabel="Remove source"
+          onCancel={() => setRemovingSource(null)}
+          onConfirm={() => {
+            if (save({
+              ...project,
+              evidence: project.evidence.filter((source) => source.id !== removingSource.id),
+              claims: project.claims.map((claim) => ({ ...claim, evidence: claim.evidence.filter((id) => id !== removingSource.id) })),
+            })) {
+              setRemovingSource(null);
+              setMessage('Source removed from this device.');
+            }
+          }}
+        />
+      ) : null}
 
       <section className="portal-panel" aria-labelledby="rs-claims">
         <h3 id="rs-claims">7–9. Claims and citation audit</h3>
@@ -294,11 +321,33 @@ export function ResearchPanel({ library }: { library: Library }) {
                   {e.page ? ` (${e.page})` : ''}
                 </label>
               ))}
-              <button onClick={() => save({ ...project, claims: project.claims.filter((x) => x.id !== c.id) })}>Remove claim</button>
+              <button onClick={() => setRemovingClaim(c)}>Remove claim</button>
             </fieldset>
           );
         })}
       </section>
+      {removingClaim ? (
+        <ConfirmDialog
+          title="Remove this research claim?"
+          preview={(
+            <ActionPreview
+              subject={removingClaim.text}
+              says="Removes this claim and its links to supporting sources from this research project."
+              exactly={`${AUDIT_LABEL[audit(removingClaim, project.evidence).status]} · linked to ${removingClaim.evidence.length} source${removingClaim.evidence.length === 1 ? '' : 's'}.`}
+              doesNotChange="The linked sources, research question, search plan and other claims stay unchanged."
+              recovery={{ kind: 'none', how: 'Restore it from a device workspace backup created before removal. Without one, re-enter the claim and reconnect its sources.' }}
+            />
+          )}
+          confirmLabel="Remove claim"
+          onCancel={() => setRemovingClaim(null)}
+          onConfirm={() => {
+            if (save({ ...project, claims: project.claims.filter((claim) => claim.id !== removingClaim.id) })) {
+              setRemovingClaim(null);
+              setMessage('Claim removed from this device.');
+            }
+          }}
+        />
+      ) : null}
 
       <section className="portal-panel" aria-labelledby="rs-export">
         <h3 id="rs-export">References</h3>
@@ -324,17 +373,40 @@ export function ResearchPanel({ library }: { library: Library }) {
           <button onClick={() => download({ name: 'references.ris', mime: 'application/x-research-info-systems', body: ris(project.evidence.filter((e) => e.screening !== 'exclude')) })}>Download RIS</button>
           <button onClick={() => download({ name: 'references.bib', mime: 'application/x-bibtex', body: bibtex(project.evidence.filter((e) => e.screening !== 'exclude')) })}>Download BibTeX</button>
           <button
-            onClick={() => {
-              if (!window.confirm('Delete this research project from this device? This cannot be undone.')) return;
-              library.update((s) => ({ ...s, research: s.research.filter((p) => p.id !== project.id) }));
-              setOpenId(null);
-            }}
+            onClick={() => setDeleting(true)}
           >
             Delete project
           </button>
           <button onClick={start}>Start another project</button>
         </div>
       </section>
+      {deleting ? (
+        <ConfirmDialog
+          title="Delete research project?"
+          preview={(
+            <ActionPreview
+              subject={project.question || 'Untitled research project'}
+              says="Deletes this project, its evidence matrix, claims and search plan from this device."
+              exactly={`${project.evidence.length} source${project.evidence.length === 1 ? '' : 's'} · ${project.claims.length} claim${project.claims.length === 1 ? '' : 's'}`}
+              doesNotChange={projects.length > 1
+                ? `Original sources and files outside Semester stay where they are. Your other research project${projects.length === 2 ? '' : 's'} stay${projects.length === 2 ? 's' : ''} unchanged.`
+                : 'Original sources and files outside Semester stay where they are.'}
+              recovery={{ kind: 'none', how: 'Restore it from a device workspace backup created before deletion. Without one, re-enter the question, search plan, sources and claims from the originals.' }}
+            />
+          )}
+          confirmLabel="Delete project"
+          onCancel={() => setDeleting(false)}
+          onConfirm={() => {
+            const id = project.id;
+            const next = projects.find((candidate) => candidate.id !== id);
+            if (library.update((s) => ({ ...s, research: s.research.filter((candidate) => candidate.id !== id) }))) {
+              setDeleting(false);
+              setOpenId(next?.id ?? null);
+              setMessage('Research project deleted from this device.');
+            }
+          }}
+        />
+      ) : null}
       {message && <Notice>{message}</Notice>}
     </>
   );

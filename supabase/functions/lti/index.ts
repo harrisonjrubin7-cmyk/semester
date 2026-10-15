@@ -62,6 +62,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { createRemoteJWKSet, importJWK, jwtVerify, SignJWT, type JWK } from 'npm:jose@5';
 import { checkLaunch, launchTenant, startLogin, type Launch, type Registration } from '../_shared/lti.ts';
+import { JWKS_OPTIONS, checkHeader, decodeHeader, safeError, subjectDigest, verifyOptions } from '../_shared/ltiverify.ts';
 import { landingPath, provisionedEmail, provisionedMetadata } from '../_shared/ltiaccount.ts';
 import { autoPostForm, mayPlace, readSettings, resourceLinkItem, responseClaims } from '../_shared/ltideeplink.ts';
 import { SCOPE, clientAssertion, jwks, keyId, publicJwk, tokenRequest } from '../_shared/ltikey.ts';
@@ -103,7 +104,7 @@ const keySets = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 function keysFor(jwksUrl: string) {
   let set = keySets.get(jwksUrl);
   if (!set) {
-    set = createRemoteJWKSet(new URL(jwksUrl));
+    set = createRemoteJWKSet(new URL(jwksUrl), { ...JWKS_OPTIONS });
     keySets.set(jwksUrl, set);
   }
   return set;
@@ -493,7 +494,7 @@ Deno.serve(async (req) => {
         .setProtectedHeader({ alg: 'RS256', kid, typ: 'JWT' })
         .sign(await importJWK(key as JWK, 'RS256'));
     } catch (e) {
-      return not('sign-failed', `The client assertion could not be signed: ${e}`, 500);
+      return not('sign-failed', `The client assertion could not be signed: ${safeError(e)}`, 500);
     }
 
     const form = tokenRequest(signed, [SCOPE.score]);
@@ -511,7 +512,7 @@ Deno.serve(async (req) => {
       if (!parsed.ok) return not(parsed.reason, parsed.detail, 502);
       token = parsed.value;
     } catch (e) {
-      return not('token-unreachable', `${reg.tokenUrl}: ${e}`, 502);
+      return not('token-unreachable', `token endpoint: ${safeError(e)}`, 502);
     }
 
     // ── and the number, to the column the instructor made ──────────────
@@ -523,11 +524,11 @@ Deno.serve(async (req) => {
       });
       if (!res.ok) return not('platform-refused', `${item.lineitem_url} answered ${res.status}.`, 502);
     } catch (e) {
-      return not('platform-unreachable', `${item.lineitem_url}: ${e}`, 502);
+      return not('platform-unreachable', `line item endpoint: ${safeError(e)}`, 502);
     }
 
     console.log(
-      `lti score ok: iss=${item.issuer} sub=${item.subject} context=${item.context_id} ${given}/${max}`,
+      `lti score ok: iss=${item.issuer} sub=${await subjectDigest(item.subject)} context=${item.context_id} ${given}/${max}`,
     );
     return answer({ reported: true, course: item.context_title ?? item.context_id });
   }
@@ -637,13 +638,16 @@ Deno.serve(async (req) => {
 
     let claims: Record<string, unknown>;
     try {
-      // Signature only. Every claim rule is in `_shared/lti.ts`, where it is
-      // tested; duplicating two of them here would mean two places to be
-      // wrong and one of them with no test on it.
-      const { payload } = await jwtVerify(token, keysFor(reg.jwksUrl));
+      // The header first, before any key is fetched: no key-location
+      // parameter, RS256 only, a key id. `jwtVerify` is then pinned to the
+      // same algorithm list and to this registration's issuer and audience.
+      // Every claim rule is in `_shared/lti.ts`, where it is tested.
+      const header = checkHeader(decodeHeader(token));
+      if (!header.ok) return refuse(header.reason, header.detail, 401);
+      const { payload } = await jwtVerify(token, keysFor(reg.jwksUrl), verifyOptions(reg));
       claims = payload as Record<string, unknown>;
     } catch (e) {
-      return refuse('bad-signature', `The token did not verify against ${reg.jwksUrl}: ${e}`, 401);
+      return refuse('bad-signature', `The token did not verify against the registration's key set: ${safeError(e)}`, 401);
     }
 
     const verdict = checkLaunch({
@@ -657,7 +661,7 @@ Deno.serve(async (req) => {
 
     const who = verdict.value;
     console.log(
-      `lti launch ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${who.subject} context=${who.contextId ?? '-'} teaches=${who.teaches}`,
+      `lti launch ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${await subjectDigest(who.subject)} context=${who.contextId ?? '-'} teaches=${who.teaches}`,
     );
     // Allowed either way; an unbound registration is logged on every launch
     // so the row that needs its school recorded is never quiet about it.
@@ -722,11 +726,11 @@ Deno.serve(async (req) => {
           .setProtectedHeader({ alg: 'RS256', kid, typ: 'JWT' })
           .sign(await importJWK(key as JWK, 'RS256'));
       } catch (e) {
-        return refuse('sign-failed', `The deep linking response could not be signed: ${e}`, 500);
+        return refuse('sign-failed', `The deep linking response could not be signed: ${safeError(e)}`, 500);
       }
 
       console.log(
-        `lti deep link ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${who.subject} ` +
+        `lti deep link ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${await subjectDigest(who.subject)} ` +
           `context=${who.contextId ?? '-'} return=${settings.value.returnUrl}`,
       );
 
@@ -866,7 +870,7 @@ Deno.serve(async (req) => {
     to.hash = landingPath(who);
 
     console.log(
-      `lti launch ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${who.subject} ` +
+      `lti launch ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${await subjectDigest(who.subject)} ` +
         `context=${who.contextId ?? '-'} teaches=${who.teaches} provisioned=${Boolean(bound.ticket)}`,
     );
 

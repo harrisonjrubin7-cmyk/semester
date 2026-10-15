@@ -1,7 +1,8 @@
 /// <reference types="node" />
-import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+type FileSystem = Pick<typeof import('node:fs'), 'readFileSync' | 'readdirSync'>;
 
 /**
  * The list of test files that still need a worker to themselves.
@@ -26,30 +27,42 @@ import { describe, expect, it } from 'vitest';
 const ROOT = new URL('..', import.meta.url).pathname;
 
 /** Every test file under `src`, as the config spells them. */
-function testFiles(dir = 'src'): string[] {
+function testFiles(fs: FileSystem, dir = 'src'): string[] {
   const out: string[] = [];
-  for (const entry of readdirSync(join(ROOT, dir), { withFileTypes: true })) {
+  for (const entry of fs.readdirSync(join(ROOT, dir), { withFileTypes: true })) {
     const at = `${dir}/${entry.name}`;
-    if (entry.isDirectory()) out.push(...testFiles(at));
+    if (entry.isDirectory()) out.push(...testFiles(fs, at));
     else if (/\.test\.tsx?$/.test(entry.name)) out.push(at);
   }
   return out;
 }
 
-const mocks = (path: string) => /\bvi\.mock\(/.test(readFileSync(join(ROOT, path), 'utf8'));
+const mocks = (fs: FileSystem, path: string) =>
+  /\bvi\.mock\(/.test(fs.readFileSync(join(ROOT, path), 'utf8'));
 
 /** The list, read out of the config rather than duplicated here. */
-function listed(): string[] {
-  const config = readFileSync(join(ROOT, 'vite.config.ts'), 'utf8');
+function listed(fs: FileSystem): string[] {
+  const config = fs.readFileSync(join(ROOT, 'vite.config.ts'), 'utf8');
   const block = /const MOCKS_MODULES = \[([\s\S]*?)\]/.exec(config);
   expect(block, 'MOCKS_MODULES should be declared in vite.config.ts').toBeTruthy();
   return [...(block?.[1] ?? '').matchAll(/'([^']+)'/g)].map((m) => m[1]);
 }
 
 describe('which test files run isolated', () => {
-  it('is every file that calls vi.mock, and no other', () => {
-    const shouldBe = testFiles().filter(mocks).sort();
-    expect(listed().sort()).toEqual(shouldBe);
+  it('is every file that calls vi.mock, and no other', async () => {
+    // Bypass any filesystem double retained by a worker. This test is the
+    // isolation policy itself, so it must inspect the checkout, not a prior
+    // test's view of it.
+    const fs = await vi.importActual<FileSystem>('node:fs');
+    const shouldBe = [...new Set([
+      ...testFiles(fs).filter((path) => mocks(fs, path)),
+      // This policy test reads the config itself, so it also needs protection
+      // from filesystem doubles left by shared-worker tests.
+      'src/isolation.test.ts',
+    ])].sort();
+    const configured = listed(fs);
+    expect(new Set(configured).size, 'MOCKS_MODULES contains a duplicate path').toBe(configured.length);
+    expect(configured.sort()).toEqual(shouldBe);
   });
 
   /*
@@ -61,9 +74,10 @@ describe('which test files run isolated', () => {
    * wrong, because "expected A to equal B" on two sorted paths is not obvious
    * at a glance.
    */
-  it('names only files that exist', () => {
-    const all = new Set(testFiles());
-    for (const path of listed()) {
+  it('names only files that exist', async () => {
+    const fs = await vi.importActual<FileSystem>('node:fs');
+    const all = new Set(testFiles(fs));
+    for (const path of listed(fs)) {
       expect(all.has(path), `${path} is listed in MOCKS_MODULES but is not a test file`).toBe(true);
     }
   });

@@ -36,6 +36,19 @@ import {
 /** Where the migration records that it happened, so it happens once. */
 export const MIGRATED = 'migratedFrom';
 export const MIGRATED_VALUE = 'localStorage.v1';
+/**
+ * Inverse writes for an account snapshot that is not owned until its exact
+ * write and the auth boundary both settle. Kept in the same transaction as
+ * the snapshot, so startup can restore authored device state after a crash.
+ */
+export const REMOTE_ROLLBACK = 'remoteWriteRollback';
+
+export class OfflineRecoveryRequired extends Error {
+  constructor() {
+    super('Semester could not safely restore the device copy.');
+    this.name = 'OfflineRecoveryRequired';
+  }
+}
 
 /**
  * The version a database account is assumed to be at when it does not say.
@@ -101,6 +114,32 @@ async function readEverything(): Promise<Partial<Persisted> | null> {
   }
 
   return out as Partial<Persisted>;
+}
+
+/**
+ * Restore a remote snapshot whose owner changed (or whose final acknowledgement
+ * was interrupted). Unknown journal shapes fail closed into the localStorage
+ * fallback rather than exposing a possibly cross-account snapshot.
+ */
+async function recoverRemoteWrite(): Promise<boolean> {
+  const rows = await readAll(SETTINGS_STORE);
+  if (rows === null) return false;
+  const value = rows.find(([key]) => key === REMOTE_ROLLBACK)?.[1];
+  if (value === undefined) return true;
+  const stores = new Set<string>([...COLLECTIONS, MAPS_STORE, SETTINGS_STORE]);
+  if (!Array.isArray(value)) return false;
+  const inverse: Write[] = [];
+  for (const entry of value) {
+    if (!entry || typeof entry !== 'object') return false;
+    const candidate = entry as Partial<Write>;
+    if (typeof candidate.store !== 'string' || !stores.has(candidate.store) ||
+      typeof candidate.key !== 'string' || !('value' in candidate)) return false;
+    inverse.push(candidate as Write);
+  }
+  return write([
+    ...inverse,
+    { store: SETTINGS_STORE, key: REMOTE_ROLLBACK, value: null },
+  ]);
 }
 
 /**
@@ -199,6 +238,11 @@ export async function load(): Promise<Persisted | null> {
     return null;
   };
 
+  if (!(await recoverRemoteWrite())) {
+    ready = false;
+    throw new OfflineRecoveryRequired();
+  }
+
   const empty = await isEmpty();
   if (empty === null) return lost();
   if (empty) {
@@ -244,6 +288,9 @@ export async function load(): Promise<Persisted | null> {
     return freshPersisted();
   }
 
+  // A change owed when the page last went away, and the transaction the
+  // browser tore down with it. See `keepForNextLoad`.
+  await replayLeaving();
   const found = await readEverything();
   if (found === null || !held()) return lost();
   // The database path never goes near `loadPersisted` — the value is primed
@@ -356,6 +403,22 @@ export const SETTLE_MS = 250;
 
 let pending: Partial<Persisted> | null = null;
 let last: Partial<Persisted> | null = null;
+
+/**
+ * What the database is known to hold: `last` as of the last write that
+ * answered true. `last` runs ahead of it while a write is in flight.
+ */
+let confirmed: Partial<Persisted> | null = null;
+
+/**
+ * Each state `persist` is handed is numbered, so a write that lands can tell
+ * whether it carried everything the leaving journal holds. States are whole,
+ * not diffs: a later one landing means an earlier one has too.
+ */
+let seq = 0;
+let pendingSeq = 0;
+let lastSeq = 0;
+let journalSeq: number | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
 let inFlight: Promise<void> = Promise.resolve();
 
@@ -383,18 +446,34 @@ export function whileWriting(fn: ((failing: boolean) => void) | null): void {
   watching = fn;
 }
 
-async function flush(): Promise<void> {
-  const next = pending;
-  const tell = told;
-  pending = null;
-  told = null;
-  if (!next || !last) return;
+async function flushValue(
+  next: Partial<Persisted> | null,
+  nextSeq: number,
+  tell: (() => void) | null,
+  exact = false,
+  signal?: AbortSignal,
+  rollbackTo?: Partial<Persisted>,
+): Promise<boolean> {
+  if (!next || !last) return true;
   const before = last;
-  const writes = writesFor(last, next);
+  const beforeSeq = lastSeq;
+  /*
+   * Ordinary coalesced writes follow `last`, the state the preceding write is
+   * expected to leave behind. An explicit flush is a durability boundary, so
+   * expectation is not enough: build it from `confirmed`, which moves only
+   * after IndexedDB completes successfully. `flushOnLeave()` can advance
+   * `last` while its out-of-queue transaction is still able to abort.
+   */
+  const base = exact ? (confirmed ?? last) : last;
+  const writes = writesFor(base, next);
   last = next;
+  lastSeq = nextSeq;
   // Nothing to write is not something to announce. A tab told to re-read a
   // disk that did not change is the first step of a loop, not an update.
-  if (writes.length === 0) return;
+  if (writes.length === 0) {
+    if (exact) confirmed = next;
+    return true;
+  }
   /*
    * `write` reports a failure by answering false, not by throwing.
    *
@@ -415,8 +494,16 @@ async function flush(): Promise<void> {
    * none afterwards, and nothing in the console.
    */
   let ok = false;
+  const inverse = exact && signal && rollbackTo ? writesFor(next, rollbackTo) : [];
+  const journal = { store: SETTINGS_STORE, key: REMOTE_ROLLBACK, value: inverse };
   try {
-    ok = await write(writes);
+    /*
+     * The journal deliberately survives each successful iteration. A remote
+     * merge may be rewritten when an authored edit arrives during its first
+     * transaction; acknowledging either iteration separately would strand
+     * the earlier account rows if identity changed during the next one.
+     */
+    ok = await write(exact && signal && rollbackTo ? [...writes, journal] : writes, signal);
   } catch {
     ok = false;
   }
@@ -443,20 +530,46 @@ async function flush(): Promise<void> {
      * origin's quota is not.
      */
     last = before;
+    lastSeq = beforeSeq;
     watching?.(true);
-    return;
+    return false;
   }
 
+  /*
+   * Only a write built on what the database is known to hold makes the
+   * database hold `next`. One started while another was in flight carries
+   * only the diff from that one, and if that one was aborted (the browser may
+   * abort either as the page goes) this landing leaves the earlier change
+   * missing. Then nothing is confirmed and the journal stays; the failure
+   * already put `last` back, so the next write carries it again.
+   */
+  if (exact || before === confirmed) {
+    confirmed = next;
+    // Everything the leaving journal held has now landed, or something newer
+    // has. Replaying it next load would put an older value over a newer one.
+    if (journalSeq !== null && nextSeq >= journalSeq) forgetLeaving();
+  }
   tell?.();
   // And the writer is working, which clears a warning left by a failure that
   // has since passed — a browser that made room, or a transaction that lost a
   // race and won the next one.
   watching?.(false);
+  return true;
+}
+
+async function flush(): Promise<void> {
+  const next = pending;
+  const nextSeq = pendingSeq;
+  const tell = told;
+  pending = null;
+  told = null;
+  await flushValue(next, nextSeq, tell);
 }
 
 /** What the app last read or wrote, so the first diff has something to be against. */
 export function prime(state: Partial<Persisted>): void {
   last = state;
+  confirmed = state;
 }
 
 /**
@@ -478,6 +591,7 @@ export function prime(state: Partial<Persisted>): void {
 export function persist(next: Partial<Persisted>, onWrote?: () => void): void {
   if (!ready) return;
   pending = next;
+  pendingSeq = ++seq;
   told = onWrote ?? null;
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => {
@@ -498,6 +612,8 @@ export function persist(next: Partial<Persisted>, onWrote?: () => void): void {
 export function stopWriting(): void {
   ready = false;
   pending = null;
+  // An erase followed by a reload must not bring rows back from the journal.
+  forgetLeaving();
   told = null;
   if (timer) {
     clearTimeout(timer);
@@ -505,14 +621,69 @@ export function stopWriting(): void {
   }
 }
 
-/** Write whatever is owing right now. For a tab closing, and for tests. */
-export async function flushNow(): Promise<void> {
+/**
+ * Write whatever is owing right now against what is confirmed on disk.
+ * False means the transaction did not land.
+ */
+export async function flushNow(
+  signal?: AbortSignal,
+  rollbackTo?: Partial<Persisted>,
+): Promise<boolean> {
   if (timer) {
     clearTimeout(timer);
     timer = null;
   }
-  inFlight = inFlight.then(flush);
+  /*
+   * Capture the exact owed value before waiting behind an earlier write.
+   *
+   * Calling `inFlight.then(flush)` used to defer reading `pending` until the
+   * earlier transaction finished. A render during that wait could call
+   * `persist()` again and replace the value the caller explicitly asked to
+   * flush. Account adoption hit exactly that race: the accepted remote copy
+   * was queued, a stale pre-adoption render replaced it, and `flushNow()`
+   * resolved even though the remote task had never reached IndexedDB.
+   *
+   * A later call remains pending for its own turn. This one writes the value
+   * that was owing at the instant `flushNow()` was called, in order behind
+   * any transaction already in flight.
+   */
+  const next = pending;
+  const nextSeq = pendingSeq;
+  const tell = told;
+  pending = null;
+  told = null;
+  let landed = false;
+  inFlight = inFlight.then(async () => {
+    landed = await flushValue(next, nextSeq, tell, true, signal, rollbackTo);
+  });
   await inFlight;
+  return landed;
+}
+
+/**
+ * Acknowledge the complete, quiescent remote operation. Auth delivery remains
+ * fenced until this durable marker removal lands.
+ */
+export async function acknowledgeRemoteWrite(): Promise<boolean> {
+  return write([{ store: SETTINGS_STORE, key: REMOTE_ROLLBACK, value: null }]);
+}
+
+/**
+ * Restore the current device-authored snapshot before releasing a queued
+ * identity. The restore and journal acknowledgement are one transaction.
+ */
+export async function rollbackRemoteWrite(target: Partial<Persisted>): Promise<boolean> {
+  const base = confirmed ?? last;
+  if (!base) return false;
+  const ok = await write([
+    ...writesFor(base, target),
+    { store: SETTINGS_STORE, key: REMOTE_ROLLBACK, value: null },
+  ]);
+  if (ok) {
+    last = target;
+    confirmed = target;
+  }
+  return ok;
 }
 
 /**
@@ -529,13 +700,90 @@ export async function flushNow(): Promise<void> {
  * transactions over the same stores in the order they were created, so the
  * new one still lands after the old. `last` has already moved on to what the
  * write in flight carries, so the diff here is only what came after it.
+ *
+ * That narrowed the loss and did not close it: the browser may abort either
+ * transaction as the document goes. So it first leaves a synchronous copy of
+ * everything unconfirmed behind, for the next load. See `keepForNextLoad`.
  */
 export function flushOnLeave(): void {
   if (timer) {
     clearTimeout(timer);
     timer = null;
   }
+  keepForNextLoad();
   if (!pending) return;
   const now = flush();
   inFlight = Promise.all([inFlight, now]).then(() => undefined);
+}
+
+/**
+ * Where a change owed as the page leaves is kept, synchronously.
+ *
+ * `flushOnLeave` starts the database write before the page goes, and that
+ * narrowed the loss without closing it: a browser tearing a document down may
+ * abort a transaction still running in it, and a reload does not wait. CI's
+ * golden path lost a tick that way on 30 September after the fix above was in
+ * (#996, desktop, "after a reload the action is gone or no longer done").
+ *
+ * localStorage is written synchronously and survives the unload. So as the
+ * page leaves, whatever the database has not confirmed, the rows between
+ * `confirmed` and the newest state, is written here, and `load` puts it into
+ * the database before reading. It is a diff, one row per tick, not the whole
+ * account, so it is small. It is dropped as soon as a write covering it lands,
+ * so a stale journal can never be replayed over something newer. `stopWriting`
+ * drops it too, for the erase.
+ *
+ * Two tabs share it: one leaving with a change owed while the other keeps
+ * editing the same row, then reopened, replays its row over the other's. That
+ * needs a tab closed within a quarter of a second of its own edit, on the same
+ * record another tab is changing, and is left as it is.
+ */
+export const LEAVING_KEY = 'semester.leaving';
+
+function keepForNextLoad(): void {
+  const current = pending ?? last;
+  const currentSeq = pending ? pendingSeq : lastSeq;
+  if (!current || !confirmed || current === confirmed) return;
+  const writes = writesFor(confirmed, current);
+  if (writes.length === 0) return;
+  try {
+    localStorage.setItem(LEAVING_KEY, JSON.stringify(writes));
+    journalSeq = currentSeq;
+  } catch {
+    // Full, or blocked. The database write still goes out as before.
+  }
+}
+
+function forgetLeaving(): void {
+  journalSeq = null;
+  try {
+    localStorage.removeItem(LEAVING_KEY);
+  } catch {
+    // Nothing to forget where there is no storage.
+  }
+}
+
+const isWrite = (w: unknown): w is Write =>
+  !!w && typeof w === 'object' && typeof (w as Write).store === 'string' && typeof (w as Write).key === 'string' && 'value' in (w as object);
+
+async function replayLeaving(): Promise<void> {
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(LEAVING_KEY);
+  } catch {
+    return;
+  }
+  if (!raw) return;
+  let writes: unknown;
+  try {
+    writes = JSON.parse(raw);
+  } catch {
+    writes = null;
+  }
+  if (!Array.isArray(writes) || !writes.every(isWrite)) {
+    forgetLeaving();
+    return;
+  }
+  // Kept if the write does not land, so the next open tries again.
+  if (await write(writes)) forgetLeaving();
 }

@@ -1,15 +1,20 @@
-import { Suspense, lazy, useState } from 'react';
+import { Suspense, lazy, useMemo, useState } from 'react';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
+import { remindersFor } from '../state/reminders';
+import { ReadState } from '../components/unity/ReadState';
+import { notificationsEnvelope } from '../lib/read/notifications';
+import { readDismissed, writeDismissed } from '../lib/read/dismissed';
+import { useOnline } from '../lib/offline-mode';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { permission, requestPermission, type Permission } from '../lib/notify';
 import { Blueprint } from '../components/Blueprint';
-import { ActionButton, EmptyState, Segmented } from '../components/ui';
+import { ActionButton, Segmented } from '../components/ui';
 import { Group as Panel, NavRow } from '../components/shell/Rows';
-import { Bell } from '../components/Icons';
-import { NOTIFICATIONS } from '../data/misc';
 import { ByTask } from '../components/nav/ByTask';
+import { useMyCapabilities } from '../lib/capabilities';
+import { holdsConsole } from '../lib/console/capability';
 
 import type { CourseModule } from '../lib/types';
 import { cardIdentity } from '../lib/review';
@@ -110,6 +115,8 @@ export function Me({
   trustCenter = moduleOn(MODULE_FLAGS.trust_center),
 }: { semesterWrapped?: boolean; trustCenter?: boolean } = {}) {
   const { state, dispatch } = useStore();
+  // Only offers the way in; `console:operate` is still checked by the database and the screen.
+  const operator = holdsConsole(useMyCapabilities());
 
   const tab = state.meTab;
 
@@ -154,6 +161,13 @@ export function Me({
             label="Trust & data"
             sub="What Semester holds, who can see it, and how to take it back"
             onClick={() => dispatch({ type: 'go', screen: 'privacy' })}
+          />
+        ) : null}
+        {operator ? (
+          <NavRow
+            label="Semester Operations"
+            sub="Support, approvals, audit and customer operations for staff"
+            onClick={() => dispatch({ type: 'go', screen: 'console' })}
           />
         ) : null}
         <NavRow
@@ -219,65 +233,80 @@ export function Me({
 }
 
 export function Notifications() {
-  const { state, dispatch } = useStore();
+  const { state, catalog, courseCode } = useStore();
+  const now = useNow();
+  const online = useOnline();
+  const [dismissed, setDismissed] = useState(readDismissed);
+  const at = now.getTime();
 
-  if (state.cleared) {
-    return (
-      <Page>
-        <EmptyState
-          title="All caught up."
-          body="We’ll poke you 24 hours before the next deadline."
-          icon={<Bell size={18} />}
-        />
-      </Page>
-    );
-  }
+  const reminders = useMemo(
+    () => {
+      const { rules, mine } = remindersFor(state, catalog, now, courseCode);
+      return [...rules, ...mine];
+    },
+    // `now` ticks each minute; the reminders are a function of the store and the minute.
+    [state, catalog, courseCode, now],
+  );
+  const env = notificationsEnvelope({ ready: !catalog.empty, reminders, dismissed, online, permission: permission(), now: at });
+
+  const put = (next: Set<string>) => {
+    writeDismissed(next);
+    setDismissed(next);
+  };
 
   return (
     <Page>
-      {NOTIFICATIONS.map((n, i) => (
-        <Blueprint
-          key={n.id}
-          plain
-          style={{
-            paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
-            marginBottom: 'var(--sp-5)',
-            background: i < 2 ? 'var(--app-panel)' : 'transparent',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-4)' }}>
-            <span className="tag tag-accent">{n.code}</span>
-            <span
-              style={{
-                fontSize: 'var(--type-xs)',
-                color: 'var(--app-dim)',
-                fontFamily: 'var(--font-heading)',
-                letterSpacing: '0.1em',
-              }}
-            >
-              {n.when}
-            </span>
-          </div>
-          <div
-            style={{
-              fontFamily: 'var(--font-heading)',
-              fontSize: 'var(--type-display-sm)',
-              lineHeight: 'var(--leading-display)',
-              marginTop: 'var(--sp-4)',
-            }}
-          >
-            {n.title}
-          </div>
-          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>{n.body}</div>
-        </Blueprint>
-      ))}
-      <ActionButton
-        onClick={() => dispatch({ type: 'clearNotifs' })}
-        spacing="0.12em"
-        style={{ marginTop: 'var(--sp-4)' }}
+      <ReadState
+        env={env}
+        now={at}
+        what="your reminders"
+        empty={{ title: 'Nothing needs you right now.', body: 'Reminders appear here when a deadline, class or bill is close.' }}
+        onRecover={(action) => {
+          if (action === 'restore') put(new Set());
+        }}
       >
-        Clear all
-      </ActionButton>
+        {(items) => (
+          <>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {items.map((n) => (
+                <li key={n.id}>
+                  <Blueprint
+                    plain
+                    style={{
+                      paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
+                      marginBottom: 'var(--sp-5)',
+                      background: n.tier === 'critical' ? 'var(--app-panel)' : 'transparent',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-4)' }}>
+                      <span className="tag tag-accent">{n.tier === 'critical' ? 'Important' : n.tier === 'important' ? 'Today' : 'Helpful'}</span>
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-heading)',
+                        fontSize: 'var(--type-display-sm)',
+                        lineHeight: 'var(--leading-display)',
+                        marginTop: 'var(--sp-4)',
+                      }}
+                    >
+                      {n.title}
+                    </div>
+                    {n.body && <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>{n.body}</div>}
+                    <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>{n.why}</div>
+                    <ActionButton
+                      onClick={() => put(new Set([...dismissed, n.id]))}
+                      spacing="0.12em"
+                      style={{ marginTop: 'var(--sp-3)' }}
+                    >
+                      Put away
+                    </ActionButton>
+                  </Blueprint>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </ReadState>
     </Page>
   );
 }

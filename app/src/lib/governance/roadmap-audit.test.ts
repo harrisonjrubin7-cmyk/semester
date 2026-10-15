@@ -116,4 +116,4 @@ describe('the roadmap audit', () => {
   });
 });
 
-const EXPECTED = { landed: 20, partial: 99, absent: 16, operational: 14 };
+const EXPECTED = { landed: 20, partial: 100, absent: 15, operational: 14 };

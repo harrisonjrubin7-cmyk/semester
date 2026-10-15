@@ -147,10 +147,15 @@ export async function probeAll(config, fetchImpl = fetch) {
 
 // ── incidents ───────────────────────────────────────────────────────────────
 
-export const INCIDENT_STATUSES = ['investigating', 'identified', 'monitoring', 'resolved'];
+export const INCIDENT_STATUSES = ['investigating', 'identified', 'monitoring', 'resolved', 'scheduled'];
 export const INCIDENT_IMPACTS = ['down', 'partial', 'maintenance'];
 
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+const realIso = (value) => {
+  if (typeof value !== 'string' || !ISO.test(value)) return false;
+  const time = Date.parse(value);
+  return Number.isFinite(time) && new Date(time).toISOString().replace('.000Z', 'Z') === value;
+};
 
 /** Everything wrong with the incident file, as sentences; empty when nothing is. */
 export function incidentProblems(data) {
@@ -172,6 +177,10 @@ export function incidentProblems(data) {
     if (x?.resolved !== null && !ISO.test(x?.resolved ?? '')) out.push(`${id} has a resolved time that is neither null nor ISO.`);
     if (x?.resolved && x.resolved < x.started) out.push(`${id} was resolved before it started.`);
     const updates = Array.isArray(x?.updates) ? x.updates : [];
+    if (updates.some((u) => u?.status === 'scheduled') &&
+      (x?.impact !== 'maintenance' || !realIso(x?.started) || !realIso(x?.until) || x.until <= x.started)) {
+      out.push(`${id} is scheduled without a valid maintenance start/end window.`);
+    }
     if (updates.length === 0) out.push(`${id} has no updates.`);
     let prior = '';
     for (const u of updates) {

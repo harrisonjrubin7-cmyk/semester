@@ -3,6 +3,7 @@ import { COUNCIL } from '../lib/launchreadiness';
 import { KNOWN_LIMITATIONS, KNOWN_LIMITATIONS_AS_OF, REPORT } from '../lib/knownlimitations';
 import { AUDIENCES, CLAIMS, PROOF_RULES, STATUS_LABEL } from '../lib/ops/claims';
 import { ALWAYS_INCLUDED, PILOT_NOTE, PLANS, priceLine } from '../lib/plans';
+import { INSTITUTIONAL_PACKAGE, ROLLOUT_PHASES } from '../lib/institutional-package';
 import { AudienceClaims, ClaimItem, ClaimList, ClaimTable, PolicyTable, StatusLegend } from './claims';
 import { CONTACT_EMAIL, PROMISE, type SiteConfig } from './config';
 import { appHref, href } from './Layout';
@@ -194,24 +195,29 @@ export const Students: Page = ({ config }) => (
 
 export const Institutions: Page = ({ config }) => (
   <>
-    <Hero title="For institutions" lead="Turn fragmented systems into clearer student action — starting with a small, measured pilot.">
+    <Hero title="Semester Institutional" lead="Pilot a student action layer beside existing systems, with one package and a controlled path to any approved migration.">
       <p className="site-actions">
         <a className="site-button" href={href(config, '/demo/')}>Explore a sample university</a>
         <a href={href(config, '/contact/')}>Talk to us</a>
       </p>
     </Hero>
-    <Section title="What a pilot looks like" id="i-pilot">
+    <Section title="One package" id="i-package">
       <ul>
-        <li>One cohort of 25 to 100 students around a registration or advising moment.</li>
-        <li>Student-entered data first, so no records change hands before an agreement exists.</li>
-        <li>Clear measures: can students say what to do next, and are advising conversations better prepared?</li>
+        {INSTITUTIONAL_PACKAGE.includes.map((item) => <li key={item}>{item}</li>)}
       </ul>
+    </Section>
+    <Section title="Pilot to campus-wide cutover" id="i-pilot">
+      <ol>
+        {ROLLOUT_PHASES.map((phase) => <li key={phase.id}><strong>{phase.name}.</strong> {phase.outcome}</li>)}
+      </ol>
+      <p>The package removes a fragmented buying process. It does not remove security, privacy, accessibility, approval, reconciliation or rollback gates.</p>
     </Section>
     <Section title="How Semester connects" id="i-connect">
       <p>
-        Official systems stay official. Semester links to your registration, learning and billing systems rather than
-        replacing them, and any connection starts read-only, least-privilege, and under a written agreement. No
-        institutional connection is live today.
+        Semester starts beside the systems you have, read-only and least-privilege. Only after conformance, parallel-run,
+        migration and customer acceptance evidence is approved could an institution separately authorize Semester as
+        its LMS or gradebook of record. Registration, finance and every other official write remain off until the
+        institution authorizes that exact workflow. No institutional connection is live today.
       </p>
       <p>Each connection below carries the word the register gives it. None is running for an institution yet.</p>
       <ClaimList ids={['sso', 'scim', 'lti', 'sis', 'connector-health', 'support-access', 'hecvat']} />
@@ -230,11 +236,11 @@ const COMMERCIAL_TERMS: [string, string][] = [
   ['Billing period', 'Monthly or yearly, as shown. No other period.'],
   ['Tax', 'Determined for your location before anything is sold; the price shown is before tax.'],
   ['Free trial', 'Not decided. Everything a student can use is free during the pilot, which is more than a trial.'],
-  ['Upgrading', 'Plus, from the Account screen in the app: the price is shown first and you tick a consent before Stripe is asked. Pro is not on sale.'],
+  ['Upgrading', 'Individual paid acquisition is held. Plus and Pro are planned, not on sale, until the required product, legal, privacy, accessibility, security and operational approvals are current.'],
   ['Cancelling', 'From the same screen. Cancelling stops the renewal at Stripe, Plus lasts to the end of the period you paid for, and everything you built stays.'],
   ['What stays available', 'Everything on Free, always, and every plan you saved.'],
   ['Refunds', 'The policy is a proposal: it is published on the legal page before a live payment is taken, not after.'],
-  ['Receipts and invoices', 'Stripe sends the receipt for a Plus payment. Nothing else has been charged.'],
+  ['Receipts and invoices', 'Existing subscribers retain billing-history access. New individual checkout is disabled.'],
   ['Institution-sponsored access', 'If your university provides Semester, you sign in with your university account and pay nothing.'],
 ];
 
@@ -257,9 +263,9 @@ export const Pricing: Page = ({ config }) => (
       <ul>
         {ALWAYS_INCLUDED.map((i) => <li key={i}>{i}</li>)}
       </ul>
-      <p>Nothing you built on a free plan is taken away. Nothing can be bought on this site. Plus is bought from the Account screen in the app, on Stripe’s own page, and no card details reach Semester.</p>
+      <p>Nothing you built on a free plan is taken away. Individual paid plans are planned, not on sale. New checkout is disabled while the required approvals remain open.</p>
     </Section>
-    <Section title="Buying Semester Plus" id="pr-terms">
+    <Section title="Planned individual plans" id="pr-terms">
       <ClaimList ids={['no-sale']} />
       <dl className="site-legend">
         {COMMERCIAL_TERMS.map(([term, detail]) => (

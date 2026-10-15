@@ -191,6 +191,7 @@ export function Compose({
               <input
                 aria-label="Who it goes to"
                 type="email"
+                autoComplete="off"
                 value={address}
                 placeholder="someone@vanderbilt.edu"
                 onChange={(e) => setTo(e.target.value)}
@@ -211,13 +212,14 @@ export function Compose({
               <>
                 <div className="mb-field">
                   <span className="mb-field-name">Cc</span>
-                  <input aria-label="Copy to" type="email" value={cc} onChange={(e) => setCc(e.target.value)} />
+                  <input aria-label="Copy to" type="email" autoComplete="off" value={cc} onChange={(e) => setCc(e.target.value)} />
                 </div>
                 <div className="mb-field">
                   <span className="mb-field-name">Bcc</span>
                   <input
                     aria-label="Blind copy to"
                     type="email"
+                    autoComplete="off"
                     value={bcc}
                     onChange={(e) => setBcc(e.target.value)}
                   />

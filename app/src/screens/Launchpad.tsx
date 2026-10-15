@@ -7,6 +7,7 @@ import { MentorFinder } from '../components/MentorFinder';
 import { useDeviceLibrary } from '../lib/device-library';
 import { creditHoursOr0 } from '../lib/credits';
 import { hasMode } from '../lib/accessmode';
+import { forRole } from '../lib/role';
 import {
   EMPTY_LAUNCHPAD,
   EXPLAINERS,
@@ -72,6 +73,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
 }
 
 function Steps({ lib, set, chunk }: { lib: LaunchpadLibrary; set: (p: Partial<LaunchpadLibrary>) => void; chunk: boolean }) {
+  const { state } = useStore();
   const steps = useMemo(() => stepsFor(lib.types), [lib.types]);
   const p = progress(steps, lib.stage, lib.done);
   const open = openSteps(steps, lib.stage, lib.done);
@@ -144,7 +146,7 @@ function Steps({ lib, set, chunk }: { lib: LaunchpadLibrary; set: (p: Partial<La
                   <>
                     {s.detail}
                     {s.office ? <OfficeDoor office={s.office} compact /> : null}
-                    {s.screen ? <GoTo screen={s.screen}>Work on it here</GoTo> : null}
+                    {s.screen && forRole(s.screen, state.role) ? <GoTo screen={s.screen}>Work on it here</GoTo> : null}
                   </>
                 ),
               }))}
@@ -159,7 +161,7 @@ function Steps({ lib, set, chunk }: { lib: LaunchpadLibrary; set: (p: Partial<La
 }
 
 function FirstTerm() {
-  const { catalog } = useStore();
+  const { catalog, state } = useStore();
   const [typed, setTyped] = useState('15');
   const credits = catalog.courses.length
     ? catalog.courses.map((c) => creditHoursOr0(c.credits))
@@ -181,7 +183,7 @@ function FirstTerm() {
         <p className="jx-muted">
           Two hours outside class for each credit is a convention many catalogs state. It varies by course and by person — it is here so fifteen credits does not read as fifteen hours.
         </p>
-        <GoTo screen="yes">Plan first-term courses</GoTo>
+        {forRole('yes', state.role) ? <GoTo screen="yes">Plan first-term courses</GoTo> : null}
       </Card>
       {EXPLAINERS.map((e) => (
         <Card key={e.id} title={e.title}>

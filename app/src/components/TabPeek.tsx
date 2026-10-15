@@ -65,7 +65,7 @@ const KEY = {
   // is right to — a string is one value where these are two decisions.
   paddingBlock: 'var(--sp-1)',
   paddingInline: 'var(--sp-2)',
-  borderRadius: 'var(--r-xs)',
+  borderRadius: 'var(--r-sm)',
   border: '1px solid var(--app-line)',
   background: 'var(--app-hero)',
   fontFamily: 'var(--font-heading)',

@@ -57,7 +57,7 @@ describe('the operational reality register', () => {
       expect(SERVICE_TIERS).toHaveLength(5);
       expect(TIER_DEFINITIONS).toHaveLength(12);
       expect(FACTORY).toHaveLength(17);
-      expect(PACKAGES).toHaveLength(6);
+      expect(PACKAGES).toHaveLength(1);
       expect(BRAND).toHaveLength(4);
       expect(PUBLIC_WORKS).toHaveLength(6);
       expect(READINESS_TEST).toHaveLength(12);

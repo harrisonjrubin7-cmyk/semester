@@ -381,3 +381,75 @@ describe('which school a launch is for', () => {
     expect(launchTenant(' vanderbilt ', reg).tenantId).toBe('vanderbilt');
   });
 });
+
+/*
+ * The envelope-level gaps closed after the 30 September 2026 audit
+ * (docs/SECURITY-GAP-AUDIT-2026-09-30.md). Each case breaks one thing about
+ * the control above.
+ */
+describe('how old a token may be, and when it may start', () => {
+  it('refuses a token issued long before it arrived, though it has not expired', () => {
+    // exp is far in the future, so only the age rule can refuse this.
+    expect(why(check({ iat: NOW - 3600, exp: NOW + 3600 }))).toBe('too-old');
+  });
+
+  it('forgives a token just inside the age bound and refuses one just past it', () => {
+    expect(why(check({ iat: NOW - 600, exp: NOW + 3600 }))).toBe('accepted');
+    expect(why(check({ iat: NOW - 600 - 61, exp: NOW + 3600 }))).toBe('too-old');
+  });
+
+  it('refuses a token that says it is not valid yet, and one whose nbf is not a number', () => {
+    expect(why(check({ nbf: NOW + 3600 }))).toBe('not-yet');
+    expect(why(check({ nbf: 'soon' }))).toBe('bad-nbf');
+  });
+
+  it('accepts an nbf that has passed, or none at all', () => {
+    expect(why(check({ nbf: NOW - 30 }))).toBe('accepted');
+    expect(why(check({ nbf: NOW + 30 }))).toBe('accepted'); // inside the 60 s skew
+    expect(why(check())).toBe('accepted');
+  });
+});
+
+describe('a token addressed to us but issued to someone else', () => {
+  it('refuses a single audience whose azp names another client', () => {
+    expect(why(check({ azp: 'another-tool' }))).toBe('wrong-azp');
+  });
+
+  it('accepts a single audience whose azp is this client', () => {
+    expect(why(check({ azp: REG.clientId }))).toBe('accepted');
+  });
+});
+
+describe('cross-deployment and cross-tenant negatives', () => {
+  const OTHER_DEPLOYMENT: Registration = { ...REG, deploymentId: 'deploy-2' };
+  const OTHER_CLIENT: Registration = { ...REG, clientId: 'another-tenants-client' };
+
+  const against = (reg: Registration, over: Record<string, unknown> = {}) =>
+    checkLaunch({ claims: claims(over), reg, expectedNonce: 'nonce-we-issued', redirectUri: REDIRECT, now: NOW });
+
+  it('control: the token passes against the registration it was issued for', () => {
+    expect(why(against(REG))).toBe('accepted');
+  });
+
+  it("refuses a token for one deployment against a sibling deployment's registration", () => {
+    // Same issuer, same client, different deployment: the medical school's
+    // launch must not open the law school's registration.
+    expect(why(against(OTHER_DEPLOYMENT))).toBe('wrong-deployment');
+  });
+
+  it("refuses a token for one tenant's client against another tenant's registration", () => {
+    // Two schools registering the same platform get different client ids.
+    expect(why(against(OTHER_CLIENT))).toBe('wrong-aud');
+  });
+
+  it('refuses the same token replayed against a flight that issued a different nonce', () => {
+    const v = checkLaunch({
+      claims: claims(),
+      reg: REG,
+      expectedNonce: 'a-different-flights-nonce',
+      redirectUri: REDIRECT,
+      now: NOW,
+    });
+    expect(why(v)).toBe('wrong-nonce');
+  });
+});

@@ -52,15 +52,21 @@ import { ControlPlane } from '../components/institutional/ControlPlane';
 import { TrustDashboard } from '../components/institutional/TrustDashboard';
 import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
 import { CampaignManager } from '../components/institutional/CampaignManager';
+import { InstitutionalPackage } from '../components/institutional/InstitutionalPackage';
 import { campaignsAllowed } from '../lib/gtm/manager';
 import { canApprove, canManage, migrationAllowed } from '../lib/migration/api';
+import { workflowsAllowed } from '../lib/workflow/allowed';
+import { studioAllowed } from '../lib/config/allowed';
 import { canDecide, canOverride, canPropose, canRead, recordAllowed } from '../lib/record/api';
 import { canApprove as canApproveFinance, canApproveHigh, canClose, canReadAccounts, canRequest, financeAllowed } from '../lib/finance/api';
 import type { ControlPlaneStatus } from '../lib/control-plane';
 import { formatDateTime, formatTime } from '../lib/locale';
+import { forRole } from '../lib/role';
 
 // The ledgers and the Migration Center are behind flags that are off by
 // default, so their code loads only when a tab of theirs opens.
+const WorkflowBuilder = lazy(() => import('../components/institutional/WorkflowBuilder').then((m) => ({ default: m.WorkflowBuilder })));
+const ConfigurationStudio = lazy(() => import('../components/institutional/ConfigurationStudio').then((m) => ({ default: m.ConfigurationStudio })));
 const ModulesPanel = lazy(() => import('../components/institutional/ModulesPanel').then((m) => ({ default: m.ModulesPanel })));
 const MigrationCenter = lazy(() => import('../components/institutional/MigrationCenter').then((m) => ({ default: m.MigrationCenter })));
 const RecordLedger = lazy(() => import('../components/institutional/RecordLedger').then((m) => ({ default: m.RecordLedger })));
@@ -148,6 +154,7 @@ const tabsFor = (verified: readonly string[]) => [
   { id: 'drafts' as const, label: 'Drafts' },
   { id: 'records' as const, label: 'Records' },
   { id: 'connections' as const, label: 'Connections' },
+  { id: 'package' as const, label: 'Institutional package' },
   ...(EXPERIENCE_FLAGS.universityControlPlane !== 'off'
     ? [{ id: 'control' as const, label: 'Control' }, { id: 'trust' as const, label: 'Trust' }]
     : []),
@@ -179,6 +186,16 @@ const tabsFor = (verified: readonly string[]) => [
   ...(EXPERIENCE_FLAGS.migrationCenter !== 'off' && migrationAllowed(verified)
     ? [{ id: 'migration' as const, label: 'Migration' }]
     : []),
+  // Only for an account holding a verified configuration capability at this
+  // school (D-147); RLS and the second-person publish rule decide the rest.
+  ...(EXPERIENCE_FLAGS.configurationStudio !== 'off' && studioAllowed(verified)
+    ? [{ id: 'configuration' as const, label: 'Configuration' }]
+    : []),
+  // Only for an account holding a verified workflow capability at this school
+  // (D-1018); RLS and the second-person publish rule decide the rest.
+  ...(EXPERIENCE_FLAGS.workflowBuilder !== 'off' && workflowsAllowed(verified)
+    ? [{ id: 'workflows' as const, label: 'Workflows' }]
+    : []),
   // Only for an account holding a verified record capability at this school
   // (D-145); the approval trigger decides what enters the ledger.
   ...(EXPERIENCE_FLAGS.recordLedger !== 'off' && recordAllowed(verified)
@@ -191,7 +208,7 @@ const tabsFor = (verified: readonly string[]) => [
     : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'trust' | 'modules' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'ledger' | 'accounts';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'package' | 'control' | 'trust' | 'modules' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'configuration' | 'workflows' | 'ledger' | 'accounts';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -333,10 +350,15 @@ function Workspace({ storageKey }: { storageKey: string }) {
   const TABS = tabsFor(verified);
 
   // An Action Center "Ask for help" lands here with a seed waiting; open on it.
-  const [tab, setTab] = useState<Tab>(() =>
-    EXPERIENCE_FLAGS.humanHelp !== 'off' && helpSeedWaiting() ? 'help' : 'overview',
-  );
-  const [intent, setIntent] = useState<UniversityRole>('student');
+  const [tab, setTab] = useState<Tab>(() => {
+    if (EXPERIENCE_FLAGS.humanHelp !== 'off' && helpSeedWaiting()) return 'help';
+    return state.workspaceView === 'drafts' ? 'drafts' : 'overview';
+  });
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- browser Back/Forward is an external navigation into this local tab set
+    if (state.workspaceView === 'drafts' || state.workspaceView === 'overview') setTab(state.workspaceView);
+  }, [state.workspaceView]);
+  const [intent, setIntent] = useState<UniversityRole>(state.role);
   const [area, setArea] = useState<UniversityArea>('courses');
 
   /*
@@ -619,6 +641,11 @@ function Workspace({ storageKey }: { storageKey: string }) {
     });
 
   const areaName = (id: UniversityArea) => UNIVERSITY_AREAS.find(([x]) => x === id)?.[1] ?? id;
+  const localForRole = (id: UniversityArea) => {
+    const local = LOCAL[id];
+    return local && forRole(local.screen, state.role) ? local : undefined;
+  };
+  const currentLocal = localForRole(area);
 
   return (
     <Page>
@@ -653,7 +680,13 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 : t.label,
         }))}
         value={tab}
-        onChange={setTab}
+        onChange={(next) => {
+          setTab(next);
+          dispatch({
+            type: 'setWorkspaceView',
+            view: next === 'drafts' ? 'drafts' : next === 'overview' ? 'overview' : null,
+          });
+        }}
         style={{ marginBlock: 'var(--sp-5)' }}
       />
 
@@ -678,7 +711,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <ActionButton
               onClick={() => {
                 if (drafts.length >= DRAFT_LIMITS.drafts) return;
-                setDrafts((ds) => [removed, ...ds]);
+                if (!setDrafts((ds) => [removed, ...ds])) return;
                 setRemoved(null);
                 setNotice('Draft restored.');
               }}
@@ -747,7 +780,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 <GridCard
                   key={id}
                   label={name}
-                  meta={connected ? 'Connected' : LOCAL[id] ? 'Opens here' : 'Prepare only'}
+                  meta={connected ? 'Connected' : localForRole(id) ? 'Opens here' : 'Prepare only'}
                   selected={id === area}
                   title={DRAFT_TEMPLATES[id].steps.join(' · ')}
                   onClick={() => {
@@ -763,13 +796,13 @@ function Workspace({ storageKey }: { storageKey: string }) {
             {areaName(area)}
           </SectionLabel>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)' }}>
-            {LOCAL[area] && (
+            {currentLocal && (
               <ActionButton
                 tone="primary"
-                onClick={() => dispatch({ type: 'go', screen: LOCAL[area]!.screen })}
+                onClick={() => dispatch({ type: 'go', screen: currentLocal.screen })}
                 style={{ flex: '1 1 auto' }}
               >
-                {LOCAL[area]!.label}
+                {currentLocal.label}
               </ActionButton>
             )}
             {area === 'courses' && (
@@ -807,6 +840,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
           <HelpInbox account={account} onInboxes={countHelp} />
         </>
       )}
+
+      {tab === 'package' && <InstitutionalPackage />}
 
       {tab === 'control' && EXPERIENCE_FLAGS.universityControlPlane !== 'off' && (
         <ControlPlane
@@ -848,6 +883,26 @@ function Workspace({ storageKey }: { storageKey: string }) {
             viewerId={account?.id ?? null}
             manage={canManage(verified)}
             approve={canApprove(verified)}
+          />
+        </Suspense>
+      )}
+
+      {tab === 'configuration' && EXPERIENCE_FLAGS.configurationStudio !== 'off' && studioAllowed(verified) && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <ConfigurationStudio
+            tenantId={school.id}
+            viewerId={account?.id ?? null}
+            holds={verified}
+          />
+        </Suspense>
+      )}
+
+      {tab === 'workflows' && EXPERIENCE_FLAGS.workflowBuilder !== 'off' && workflowsAllowed(verified) && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <WorkflowBuilder
+            tenantId={school.id}
+            viewerId={account?.id ?? null}
+            holds={verified}
           />
         </Suspense>
       )}
@@ -1096,8 +1151,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 </ActionButton>
                 <ActionButton
                   onClick={() => {
+                    if (!setDrafts((ds) => ds.filter((d) => d.id !== selected))) return;
                     setRemoved(draft);
-                    setDrafts((ds) => ds.filter((d) => d.id !== selected));
                     setSelected('');
                     setNotice('Draft removed. You can undo this.');
                   }}

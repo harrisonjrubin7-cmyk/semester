@@ -5,9 +5,11 @@ import { dateFormatter } from '../lib/locale';
 import { readDue } from '../lib/duetime';
 import { pathSnapshot, nextTodayDecision, showsTodayDecisionSurface } from '../lib/today-decision';
 import { appointmentsOn, tasksOn, upcomingItems } from '../lib/select';
+import { ownedScope } from '../lib/standing';
 import { useNow, useStore } from '../state/store';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { Blueprint } from './Blueprint';
+import { TodayGuide } from './TodayGuide';
 // Loaded only when their flags are on, so a build with both off — the
 // default — does not carry them in the first download.
 const RegistrationDayCard = lazy(() => import('./RegistrationDayCard').then((m) => ({ default: m.RegistrationDayCard })));
@@ -94,9 +96,14 @@ export function TodayDecisionSurface({
       {crunchWeek ? <CrunchWeekCard /> : null}
     </Suspense>
   ) : null;
+  const guide = student ? <details className="today-guide-disclosure">
+    <summary>Semester Guide suggestion</summary>
+    <TodayGuide />
+  </details> : null;
   if (actionCenter && student) {
     return (
       <>
+        {guide}
         {registration}
         <Suspense fallback={null}>
           <TodayActionCenter registrationDay={registrationDay} officeActions={officeActions} officeAccountId={officeAccountId} />
@@ -107,6 +114,7 @@ export function TodayDecisionSurface({
   }
   return (
     <>
+      {guide}
       {registration}
       {officeActions && student ? (
         <Suspense fallback={null}>
@@ -127,7 +135,12 @@ function DecisionBriefing() {
     () => pathSnapshot(state.requirements, state.taken),
     [state.requirements, state.taken],
   );
-  const upcoming = useMemo(() => upcomingItems(catalog, now), [catalog, now]);
+  const ownIds = useMemo(() => state.courses.map((c) => c.course.id), [state.courses]);
+  const scope = useMemo(
+    () => ownedScope(upcomingItems(catalog, now), ownIds, state.sample, catalog.empty),
+    [catalog, now, ownIds, state.sample],
+  );
+  const upcoming = scope.items;
   const reviewDue = useMemo(
     () => Object.values(state.reviews).filter((review) => review.due <= now.getTime()).length,
     [state.reviews, now],
@@ -138,9 +151,9 @@ function DecisionBriefing() {
       upcoming,
       done: state.done,
       reviewDue,
-      catalogEmpty: catalog.empty,
+      catalogEmpty: scope.empty,
     }),
-    [path, upcoming, state.done, reviewDue, catalog.empty],
+    [path, upcoming, state.done, reviewDue, scope.empty],
   );
   const timeline = useMemo(() => {
     const rows: TimelineRow[] = [];
@@ -212,6 +225,41 @@ function DecisionBriefing() {
 
   return (
     <section className="today-decision-surface" aria-label="Today decision briefing">
+      <Blueprint className="today-next-action today-dominant-card">
+        <div className="today-dominant-heading">
+          <SectionLabel>Next best step</SectionLabel>
+          <button
+            type="button"
+            className="workspace-text-button hides-in-focus"
+            onClick={() => dispatch({ type: 'setLook', look: { workspaceMode: 'focused' } })}
+          >
+            Focus on this
+          </button>
+        </div>
+        {dismissed === decision.id ? (
+          <p role="status" className="today-dismissed">
+            Hidden for this visit.{' '}
+            <button type="button" className="workspace-text-button" onClick={() => setDismissed(null)}>Undo</button>
+          </p>
+        ) : (
+          <>
+            <h2>{decision.title}</h2>
+            <p>{decision.body}</p>
+            <ActionButton tone="primary" onClick={openDecision}>{decision.action}</ActionButton>
+            <div className="today-action-tools">
+              <details className="today-why">
+                <summary>Why am I seeing this?</summary>
+                <p>{decision.why}</p>
+                <p><strong>Source:</strong> {decision.source}</p>
+              </details>
+              <button type="button" className="workspace-text-button" onClick={() => setDismissed(decision.id)}>
+                Not now
+              </button>
+            </div>
+          </>
+        )}
+      </Blueprint>
+
       <Blueprint className="today-path-snapshot">
         <SectionLabel>Your path</SectionLabel>
         {/* Built from what the student typed in, so it wears the shared
@@ -253,32 +301,6 @@ function DecisionBriefing() {
         >
           Source &amp; details
         </button>
-      </Blueprint>
-
-      <Blueprint className="today-next-action">
-        <SectionLabel>Next best step</SectionLabel>
-        {dismissed === decision.id ? (
-          <p role="status" className="today-dismissed">
-            Hidden for this visit.{' '}
-            <button type="button" className="workspace-text-button" onClick={() => setDismissed(null)}>Undo</button>
-          </p>
-        ) : (
-          <>
-            <h2>{decision.title}</h2>
-            <p>{decision.body}</p>
-            <ActionButton tone="primary" onClick={openDecision}>{decision.action}</ActionButton>
-            <div className="today-action-tools">
-              <details className="today-why">
-                <summary>Why am I seeing this?</summary>
-                <p>{decision.why}</p>
-                <p><strong>Source:</strong> {decision.source}</p>
-              </details>
-              <button type="button" className="workspace-text-button" onClick={() => setDismissed(decision.id)}>
-                Not now
-              </button>
-            </div>
-          </>
-        )}
       </Blueprint>
 
       <aside className="today-near-term" aria-labelledby="today-near-term-heading">

@@ -113,7 +113,7 @@ describe('a reminder keeps its destination all the way to the phone', () => {
  * The three callers that build what the rules are allowed to see.
  *
  * `dueReminders` takes a `Source`, and three places build one: the in-page
- * tick in `state/store.tsx`, and the two that fill the push queue. The file's
+ * tick (`state/reminders.ts`, called from `state/store.tsx`), and the two that fill the push queue. The file's
  * own header states the hazard — "a rule enforced in one of three callers is
  * a rule that leaks, and the thing it leaks is a notification somebody
  * explicitly switched off" — and two of the three were leaking it.
@@ -130,7 +130,9 @@ describe('a reminder keeps its destination all the way to the phone', () => {
  */
 describe('every caller shows the rules the same thing', () => {
   const CALLERS = [
-    'app/src/state/store.tsx',
+    // The in-page tick's source is built in `state/reminders.ts`, which the
+    // provider calls; `registration-day.mode.test.ts` checks the provider still does.
+    'app/src/state/reminders.ts',
     'app/src/components/PushSwitch.tsx',
     'app/src/components/PushTop.tsx',
   ];

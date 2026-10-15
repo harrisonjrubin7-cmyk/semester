@@ -1,0 +1,8 @@
+{
+  "key":"integrations.sis","name":"Student information system","owner":"integration-platform","status":"blocked",
+  "contract":"Registration readiness read-side facts with authority, freshness, version, and source references.",
+  "credential_reference":"Required per tenant; no credential is stored in this registry.",
+  "freshness_target":"Must be configured and accepted by a named tenant.",
+  "reconciliation":"Unknown or stale outcomes must enter the readiness reconciliation workflow.",
+  "evidence":["docs/UNIVERSITY_CONNECTIONS.md","packages/institution/src/readiness.ts"]
+}

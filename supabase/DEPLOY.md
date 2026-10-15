@@ -18,12 +18,32 @@ reading:
     canvas            ACTIVE, v230, verify_jwt off  platform
     lti               ACTIVE, v232, verify_jwt off  platform
     integration-tick  ACTIVE, v88, verify_jwt off   platform
+    access-saga-tick  PENDING, deployed by the merge that adds it, verify_jwt off; its job `access-saga-worker` is parked until the test request below answers
+    ops-projector     PENDING, dormant until its dedicated secret is provisioned; no scheduler entry
     trust-room        ACTIVE, v95, verify_jwt off   platform
     delete-account    ACTIVE, v72, verify_jwt off   platform
     billing-cancel    ACTIVE, v2, verify_jwt off    platform
     billing-checkout  ACTIVE, v32, verify_jwt off   platform
+    billing-portal    PENDING THIS GATED RELEASE, verify_jwt off
     billing-webhook   ACTIVE, v32, verify_jwt off   platform
     lead-intake       ACTIVE, v32, verify_jwt off   platform
+    support-reply-notify ACTIVE, v5, verify_jwt off, delivery PARKED by SUPPORT_NOTIFY_VENDOR_APPROVED and SUPPORT_NOTIFY_ACTIVATED_AT pending Resend vendor approval and executed terms/DPA; provider acceptance was reached in the 3 October 2026 UAT, but that historical exercise is not current activation and Outlook inbox receipt remains pending. A future approved release must record a fresh UTC activation instant so parked-period intents are cancelled rather than delivered as backlog
+
+The same release defines `support-ticket-retention`, daily at 05:43 UTC, to
+remove resolved or closed tickets after 180 days unless a legal hold applies.
+The migration installs and explicitly activates that credential-free job when
+pg_cron is present. It is not listed as live until a post-deploy read of
+`cron.job` and its first successful execution are recorded.
+
+    productivity-sourcecheck ACTIVE, v2, verify_jwt off   manual (first deploy)
+
+`ops-projector` is source-complete but not activated or deployed by this local
+slice. On a future merge the function remains dormant until an operator sets a
+dedicated `OPS_PROJECTOR_SECRET`; there is no `scheduler.sql` entry. A valid
+manual POST runs one service-role-only database batch capped at 25 matching
+events. Retention sweeps and scheduler activation are later release gates.
+
+The new source-check function was deployed through the authenticated Management API on 1 October 2026; its initial entrypoint is `/tmp/user_fn_.../source/productivity-sourcecheck/index.ts`. This is recorded as `manual` provenance in the snapshot, awaiting the first platform deploy after merge. Every POST verifies the user's JWT with `auth.getUser`; OPTIONS carries no token. It reports public page availability and exact-excerpt presence, caps redirects, bytes and time, and rejects private DNS addresses. `PRODUCTIVITY_SOURCE_HOSTS` adds approved exact hosts outside .edu. It does not store or log source URLs/page bodies.
 
 **This file once said two, at v1, and filed three of the other four under "Not
 deployed yet".** `fetchcal` had been live since 9 September when that was
@@ -445,39 +465,47 @@ immutable tenant history tables cannot be erased this way yet — the history
 triggers refuse the clear its `on delete set null` asks for, the transaction
 rolls back, and the student-facing answer is that nothing was deleted.
 
-## Live on merge, off until configured: `billing-checkout`, `billing-webhook`, `billing-cancel`
+## Live on merge, off until configured: `billing-checkout`, `billing-webhook`, `billing-cancel`, `billing-portal`
 
-The commercial core's three payment functions (`docs/COMMERCIAL-CORE.md`). The
-rules are in `_shared/billingcheckout.ts`, `_shared/billingwebhook.ts` and
-`_shared/billingcancel.ts`,
+The commercial core's four payment functions (`docs/COMMERCIAL-CORE.md`). The
+rules are in `_shared/billingcheckout.ts`, `_shared/billingwebhook.ts`,
+`_shared/billingcancel.ts` and `_shared/billingportal.ts`,
 driven by `app/src/lib/billing/`; the database side is
 `migrations/20260929080000_commercial_automation.sql` and
 `commercial-automation.check.sql`.
 
-**All three answer 503 until their secret is set**, so merging deploys
+**All four answer 503 until their secret is set**, so merging deploys
 functions that charge nobody:
 
     STRIPE_SECRET_KEY       billing-checkout,  the secret API key (sk_live_… or sk_test_…)
-                            billing-cancel
+                            billing-cancel, billing-portal
     STRIPE_WEBHOOK_SECRET   billing-webhook    the endpoint's signing secret (whsec_…)
     ALLOWED_ORIGIN          billing-checkout,  the app's origin(s), read strictly: unset or * allows nobody
-                            billing-cancel
-    CHECKOUT_RETURN_URL     billing-checkout   optional; where Stripe returns the student (default: the calling origin)
+                            billing-cancel, billing-portal
+    CHECKOUT_RETURN_URL     billing-checkout,  where Stripe returns the student; required by billing-portal
+                            billing-portal      so subpath deployments cannot fall back to the origin root
+    STRIPE_PORTAL_CONFIGURATION_ID
+                            billing-portal     active bpc_… configuration selected by the activation tool
+    STRIPE_PRODUCT_TAX_CODE billing-checkout   owner/accountant-approved txcd_… software classification
 
-**`verify_jwt` is off on all three.** Stripe has no Supabase token: the webhook's
+**`verify_jwt` is off on all four.** Stripe has no Supabase token: the webhook's
 credential is the `Stripe-Signature` HMAC over the raw body, checked before the
 body is parsed, with a five-minute tolerance. The checkout and the cancel check the
 caller's access token themselves after answering the CORS preflight, which
 carries none. The cancel uses no service key: it reads the subscription and
 calls `request_cancellation` *as the caller*, over the anon key, after telling
 Stripe.
-The webhook sends no CORS header at all and refuses anything with an `Origin`.
+The portal also checks the caller's token itself and resolves the Stripe
+customer only from that person's RLS-scoped individual billing account. It
+creates a short-lived Stripe-hosted URL for invoice history and payment-method
+management; the browser never supplies a customer id. The webhook sends no
+CORS header at all and refuses anything with an `Origin`.
 
 The webhook endpoint to register in Stripe (Developers → Webhooks) is
 `https://<project-ref>.supabase.co/functions/v1/billing-webhook`, with
 `checkout.session.completed`, `customer.subscription.updated`,
 `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`,
-`charge.refunded` and `charge.dispute.created`.
+`invoice.finalization_failed`, `charge.refunded` and `charge.dispute.created`.
 
 **Live since #942's merge**, and `billing-cancel` since #971's. Each went up
 with a `pending` row in `functions.snapshot`, like trust-room did. The checkout
@@ -637,6 +665,14 @@ under *Push notifications* below (`supabase secrets set CRON_SECRET=…`), and
 then step 3 to unpark the job. Until then `cron.job_run_details` is empty for
 `push`, which is what parked looks like and is correct.
 
+### The hand-off sweep — written, not yet applied
+
+`scheduler.sql` schedules a job `handoffs`, daily at `31 3 * * *`, calling `public.sweep_handoffs()`. It
+marks hand-offs past their fifteen minutes expired and deletes those finished more than seven days ago. It is
+active on apply, needs no secret and no endpoint, and does nothing until the onboarding migration
+(`20261006000000`) has been applied, because the function does not exist before it. Applying the scheduler
+before the migration fails on that job alone. Nothing here has been run against the live project.
+
 ### The tombstone sweep — on the project, measured 22 September
 
 `scheduler.sql` now also schedules a second job, `tombstones`, weekly at
@@ -713,6 +749,31 @@ never applied; the other two came with the integration scheduler. Read off `cron
 **28 September: `integration-sync` unparked.** The runbook's test request, sent from the project with pg_net,
 answered 200 with `{"outcome":"ran","due":0,"ran":0,...}`; `cron.alter_job(..., active := true)` followed and
 `cron.job` reads `active = true`. `scheduler.sql` now states it active, so a re-run keeps it on.
+
+**12 October: `access-saga-worker` added, parked.** `scheduler.sql` now creates `access_saga_cron_secret` in
+Vault and the `access-saga-worker` job, which every five minutes (minutes 1, 6, 11 … 56, clear of `push` and
+`integration-sync`) posts to the `access-saga-tick` Edge Function. The function runs
+`app/server/institution/access-saga-tick.ts` over the Postgres saga store: the database lists the sagas that are due
+(`public.access_saga_due`) and the runner moves each one a step. The token check is
+`public.access_saga_tick_authorized` (20261012040000), the same shape as `integration_tick_authorized`. The job is
+**parked** in the file, and `health.sql` expects it parked, because the function is PENDING above: it deploys with
+the merge that adds it, and nothing has read it yet. No participants are registered
+(`app/server/institution/access-saga-registry.ts` holds null), so until they are every tick answers
+`{"outcome":"unregistered","due":N,...}` and claims no saga; the job can be unparked on that answer, as
+`integration-sync` was, and the count then says how much work waits for a real policy administrator and enforcement
+point. The test request, from the project with pg_net:
+
+    select net.http_post(
+      url := 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/access-saga-tick',
+      headers := jsonb_build_object('Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'access_saga_cron_secret')),
+      body := '{}'::jsonb, timeout_milliseconds := 60000);
+
+A 200 with `outcome: unregistered` and a `due` count is the function, the token check and the due list all working;
+then `select cron.alter_job((select jobid from cron.job where jobname = 'access-saga-worker'), active := true);`,
+and change the `alter_job` at the end of the job's block in `scheduler.sql` to `active := true` (with the row in
+`health.sql` to `false`) so a re-run keeps it on. A 401 is the token check refusing the Vault token; a 503 is the
+function without its service credentials or without the check.
 
 Re-running the whole file stays safe. Every statement is idempotent, and it parks `push` again (and keeps
 `integration-sync` on), so re-run it only while `push` is meant to be parked. Otherwise run the one `cron.schedule` you need. To
@@ -961,8 +1022,15 @@ Set it in the dashboard or with the CLI — **never** in this repo, in a build
 variable, or in a chat window. `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
 are injected by the platform and need no action.
 
-Until it is set the function returns 501 and the app says so plainly: *"This
-deployment has no shared key. Add your own under Ask Claude → Settings."* A
+Setting it is not enough. The function first asks
+[`_shared/provideractivation.ts`](functions/_shared/provideractivation.ts),
+and answers 501 with *"The shared key is switched off until Semester's
+agreements with its AI provider are in place"* until the owner's five
+decisions are recorded with evidence and `SHARED_AI_PROVIDER=on` is set
+([`docs/trust/SHARED-PROVIDER-ACTIVATION.md`](../docs/trust/SHARED-PROVIDER-ACTIVATION.md)).
+Once that clears, and until the key is set, the function returns 501 and the
+app says so plainly: *"This deployment has no shared key. Add your own under
+Ask Claude → Settings."* A
 student with their own key is unaffected either way — the app prefers a key set
 on the device and only falls back to this one.
 

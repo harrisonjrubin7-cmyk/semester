@@ -8,7 +8,7 @@ import { Page } from '../components/Page';
 import { SectionLabel, Segmented } from '../components/ui';
 import { Bill } from './Bill';
 import { TermSwitch } from '../components/TermSwitch';
-import { FieldMessage, useFieldErrors } from '../components/FieldMessage';
+import { ErrorSummary, FieldMessage, useFieldErrors } from '../components/FieldMessage';
 import { CAMPUS_LINKS } from '../data/campus';
 import {
   KINDS,
@@ -236,6 +236,7 @@ function OutOfPocket() {
       <NilTaxNote />
 
       <SectionLabel>Add something</SectionLabel>
+      <ErrorSummary {...fields.summary({ what: 'What it was', amount: 'What it cost' })} />
       <select
         className="input"
         value={courseId}

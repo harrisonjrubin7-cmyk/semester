@@ -4,6 +4,8 @@ import { Page } from '../components/Page';
 import { SectionLabel, TabList } from '../components/ui';
 import { Card, Checklist, GoTo, Never, OfficeDoor } from '../components/JourneyKit';
 import { RoomsNow } from '../components/RoomsNow';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ActionPreview } from '../components/unity/ActionPreview';
 import { useDeviceLibrary } from '../lib/device-library';
 import { hasMode } from '../lib/accessmode';
 import { clock } from '../lib/date';
@@ -50,6 +52,9 @@ function Workspace({ storageKey }: { storageKey: string }) {
     <Page blurb="Where to go for care, basic needs, access, safety and the campus itself — and what happens to what you say there.">
       <TabList label="Support" className="portal-tabs" value={tab} onChange={setTab} tabs={SECTIONS.map((s) => ({ id: s.id, label: s.label }))} />
       <p className="jx-lead">{section.intro}</p>
+      <p className="jx-muted">
+        Not sure which door fits? <GoTo screen="help">See who can help with what</GoTo>
+      </p>
       {lib.error ? <p className="jx-warn" role="alert">{lib.error}</p> : null}
 
       {section.groups.map((g) => (
@@ -93,9 +98,11 @@ function EntryCard({ entry: e }: { entry: Entry }) {
   );
 }
 
-function Now({ lib, set, chunk }: { lib: SupportLibrary; set: (p: Partial<SupportLibrary>) => void; chunk: boolean }) {
+function Now({ lib, set, chunk }: { lib: SupportLibrary; set: (p: Partial<SupportLibrary>) => boolean; chunk: boolean }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [removing, setRemoving] = useState<SupportLibrary['contacts'][number] | null>(null);
+  const [notice, setNotice] = useState('');
   const add = () => {
     if (!name.trim() || !phone.trim()) return;
     set({ contacts: [...lib.contacts, { id: `c-${Date.now().toString(36)}`, name: name.trim(), phone: phone.trim() }].slice(0, 10) });
@@ -109,11 +116,34 @@ function Now({ lib, set, chunk }: { lib: SupportLibrary; set: (p: Partial<Suppor
       {lib.contacts.map((c) => (
         <div key={c.id} className="jx-row">
           <a href={`tel:${c.phone}`}>{c.name} · {c.phone}</a>
-          <button type="button" className="bare" aria-label={`Remove ${c.name}`} onClick={() => set({ contacts: lib.contacts.filter((x) => x.id !== c.id) })}>
+          <button type="button" className="bare" aria-label={`Remove ${c.name}`} onClick={() => setRemoving(c)}>
             ×
           </button>
         </div>
       ))}
+      {removing ? (
+        <ConfirmDialog
+          title="Remove this emergency contact?"
+          preview={(
+            <ActionPreview
+              subject={removing.name}
+              says="Removes this name and phone number from the Support workspace on this device."
+              exactly={removing.phone}
+              doesNotChange="Other emergency contacts, access planning notes, routines, continuity choices and official campus records stay unchanged."
+              recovery={{ kind: 'none', how: 'This Support workspace is not included in a device workspace backup. You can add the contact again if you still know the details.' }}
+            />
+          )}
+          confirmLabel="Remove contact"
+          onCancel={() => setRemoving(null)}
+          onConfirm={() => {
+            if (set({ contacts: lib.contacts.filter((contact) => contact.id !== removing.id) })) {
+              setNotice(`${removing.name} removed from this device.`);
+              setRemoving(null);
+            }
+          }}
+        />
+      ) : null}
+      {notice ? <p className="jx-muted" role="status">{notice}</p> : null}
       <div className="jx-inline">
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" aria-label="Contact name" />
         <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" inputMode="tel" aria-label="Contact phone" />

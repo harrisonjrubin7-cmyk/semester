@@ -32,6 +32,7 @@ let host: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
+  localStorage.clear();
   host = document.createElement('div');
   document.body.append(host);
   act(() => {

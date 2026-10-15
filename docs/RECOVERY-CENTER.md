@@ -2,9 +2,17 @@
 
 > Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).
 
-**Status: design, not built. Decision D-153 (proposed).** Nothing here ships
-until the owner decides it; the first phase needs no schema and no new
-navigation.
+**Status: R1 built (below); R2 and R3 are designs.** Decision D-153.
+
+> **A correction to the first version of this page.** It said "Restart my week"
+> was absent from the student app and proposed building it. That was wrong: the
+> week-that-went-wrong screen exists (`screens/Behind.tsx`), and Today already
+> shows a welcome-back card after a break. The claim came from research that
+> found no feature *named* "Restart my week" and was not checked against the
+> code before it was written here. It also missed that `Recovery.tsx` itself told
+> students there was nothing to restore while `Export` held a restore. Both are
+> fixed below; what R1 built is smaller than what this page first promised, and
+> that is the reason.
 
 ## The point
 
@@ -33,12 +41,12 @@ say "something went wrong" (DD-002).
 | Recovery function | Exists | Where | Gap |
 |---|---|---|---|
 | Resume an unfinished workflow | Partly | `lib/opened.ts` (keeps 8; drops finished work, DO-NOT-BUILD #12), `lib/welcomeback.ts` (after `AWAY_DAYS` = 5: what to confirm, what is ahead) | Only surfaces on Today; nothing on Recovery |
-| Recover an unsaved draft | Yes | `lib/draft.ts` (14 days, device-only, says so: `KEPT_LINE`), `lib/draft.hook.ts` | Not listed anywhere a student can browse; found only by returning to the field |
+| Recover an unsaved draft | Yes | `lib/draft.ts` (14 days, device-only, says so: `KEPT_LINE`), `lib/draft.hook.ts` | **Closed in R1:** `Recovery` lists them (`lib/recoverydrafts.ts`) |
 | Undo a change | Yes, one step | `lib/undo.ts`, `SHOWN_FOR` = 8 s, on-device | Gone after eight seconds |
-| Restore a removed item | Partly | Server tombstones kept 90 days (`RETENTION.md`); `Snapshots` restores the *whole workspace* from up to 20 snapshots over 7 days (`lib/snapshots.ts`) | No student view of tombstones; no per-item restore |
-| Restore a past plan version | **Absent** | `Recovery.tsx` says so | Needs a version store |
-| Rebuild a week after missed deadlines | **Absent** in the student app | `welcomeback.ts` lists; `components/institutional/FlightPlanRecovery.tsx` is a preview-only sample | The feature the PDF calls "Restart my week" |
-| Explain stale or unavailable data, with the official fallback | Partly | `lib/source.ts` (`freshnessLine`, `sourceLine`), `NotOfficial`, `lib/failure.ts`, `lib/trouble.ts`, `lib/offline-mode.ts` | Explained one field at a time; no single "why is this out of date, and where is the official system" |
+| Restore a removed item | Partly | Server tombstones kept 90 days (`RETENTION.md`); `Snapshots` (on `Export`) restores the *whole workspace* from up to 20 copies over 7 days, cost shown first, `lib/snapshots.ts` | No student view of tombstones; no per-item restore. **`Recovery` said nothing could be restored; fixed in R1 and held by `Recovery.test.tsx`** |
+| Restore a past plan version | **Absent** (per plan) | Whole-workspace copies above are the nearest thing | Needs a version store |
+| Rebuild a week after missed deadlines | **Yes** | `screens/Behind.tsx`: everything outstanding, sorted against the student's own hours, nothing hidden; reached from Today's welcome-back card, `BehindOffer`, `lib/you.ts`, `insights/pressure.ts` | **Closed in R1:** `Recovery` now links it. (`FlightPlanRecovery` is a preview-only sample and not the feature) |
+| Explain stale or unavailable data, with the official fallback | Partly | `lib/source.ts` (`freshnessLine`, `sourceLine`), `NotOfficial`, `lib/failure.ts`, `lib/trouble.ts`, `lib/offline-mode.ts`; `Recovery`'s first section prints the last sync; the Connect row says what last synced | Explained one source at a time. A consolidated explainer was dropped from R1: what the store can read cheaply is the sync time `Recovery` already prints, so a list of one would add nothing |
 | Ask for help with context attached, after review | Partly | Help inbox | Context is not attached from Recovery |
 | Restore an account after deletion (cooling-off) | **Absent** | `lib/erase.ts` erases | A retention and legal decision, not a UI one — see phase R3 |
 
@@ -57,23 +65,41 @@ Sections, top to bottom, on the existing screen. Each is a `Panel`/`NavRow`
    afterwards, the snapshot list (`Snapshots`) with its cost line, and — when
    R2 lands — per-plan versions. Every restore takes a snapshot first, as
    `Snapshots` already does (DO-NOT-BUILD #11).
-4. **Restart my week.** R1, below.
-5. **Why is this out of date?** One explanation per stale source, in the
-   standard shape: what happened, why, what you can still do, the official
-   system to open, retry.
+4. **Restart my week.** It is `screens/Behind.tsx`; `Recovery` links it.
+5. **Why is this out of date?** The sync section and the Connect row cover
+   what the store can read. A per-source explainer waits until more sources
+   record when they last updated.
 6. **Ask someone.** Help, with the relevant context attached only after the
    student has reviewed it.
 
-### R1 — no schema, no new navigation
+### R1 — built: no schema, no new navigation
 
-- **Restart my week**, built on `welcomeback.ts`'s existing reading of what is
-  overdue and ahead. The student chooses what still matters; the rest is
-  archived, not deleted. Overdue items are named without shame ("This deadline
-  passed. Here are your options"), and the offer of a **ten-minute next step**
-  is the first action, not the last.
-- **The stale-data explainer**, assembled from `freshnessLine`/`sourceLine`
-  across the sources a student actually has, ending in the official system.
-- **A drafts list**, so a kept draft can be found without remembering the field.
+What shipped, all on the existing `Recovery` screen:
+
+- **Unfinished writing on this device** (`lib/recoverydrafts.ts`). Each draft
+  `draft.ts` holds, by the screen it belongs to, with its word count, when it was
+  last typed and how many days it has left, and an *Open* that goes to that
+  screen, where it is put back as it always was. Read-only: there is no delete
+  here, because a removal with no undo is what `DO-NOT-BUILD.md` #11 forbids;
+  clearing the field on its own screen still lets one go. A guard reads the
+  source and fails if a screen starts keeping drafts that this list does not
+  know.
+- **The claim about restoring, corrected.** The screen said there was no earlier
+  version of a plan to restore. There is no per-plan version, but there are
+  copies of the whole workspace, and it now says so, and links them.
+- **One link added, one reworded.** *Sort out a bad week* (`Behind`) is new.
+  The existing Export row now also says it is where to go back to an earlier
+  copy: a second row to the same screen was tried and refused by
+  `lib/oneroute.test.ts`, which holds the repo to one route per home.
+
+What was designed here and **not** built, and why:
+
+- **"Restart my week" as new behaviour.** It exists. The design also said the
+  student chooses what still matters and "the rest is archived". That needs a
+  new persisted state (a set-aside marker per deadline) — a migration, a sync
+  mapping, an export entry — which is not "no schema". It is an owner decision
+  and is not in R1; `Behind` already shows everything and hides nothing.
+- **A consolidated stale-data explainer.** See the table above.
 
 ### R2 — needs a version store
 
@@ -111,14 +137,18 @@ posture in D-139). Not designed here beyond naming the conflict.
 | Recovery is reachable and adds no root | `donotbuild.test.ts` (roots list unchanged) |
 | A screen opened cold has a way on | `screens/deadends.test.tsx` |
 | Every restore snapshots first | extend `lib/snapshots` tests |
-| "Restart my week" archives and never deletes | new `lib/recoverweek.test.ts`, including a revert-the-fix run |
+| Recovery does not say nothing can be restored while `Export` holds a restore | `screens/Recovery.test.tsx` (shown red by putting the sentence back) |
 | No shame or score vocabulary | `content/ledger.ts` entries for the phrases above |
-| Draft list shows only what `draft.ts` holds and honours `KEEP_DAYS` | extend `lib/draft` tests |
+| Draft list shows only what `draft.ts` holds, honours `KEEP_DAYS`, offers no delete, and knows every screen that keeps a draft | `lib/recoverydrafts.test.ts`, `screens/Recovery.test.tsx` |
 
 ## Open questions for the owner
 
 1. Is R1 enough for now, or is the per-plan version store (R2) a launch item?
 2. Is a cooling-off window for deleted accounts wanted at all (R3)? It trades
    the strength of "delete" against the value of "undo".
-3. Should "Restart my week" appear on Today for a returning student, or only
-   here? `welcomeback` already owns that moment; a second door is DD-004's shape.
+3. ~~Should "Restart my week" appear on Today or only here?~~ Answered by the
+   code: Today's welcome-back card and `Behind` already exist, and `Recovery`
+   links `Behind`. One door to the feature, two ways to reach it.
+4. Should a deadline be *settable aside* — kept, out of the way, restorable —
+   which needs the new persisted state described under R1? Today the choices
+   are done or outstanding.

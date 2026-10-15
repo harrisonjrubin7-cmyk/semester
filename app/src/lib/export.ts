@@ -726,6 +726,7 @@ export interface Restore {
  * automatically a section a restore warns you about.
  */
 export const BACKUP_SECTIONS: { key: string; label: string; array: boolean; valueType?: 'string'|'number' }[] = [
+  { key: 'operatingWorkspace', label: 'private operating workspace', array: false, valueType: 'string' },
   { key: 'courses', label: 'courses', array: true },
   { key: 'updates', label: 'added readings', array: true },
   { key: 'notes', label: 'notes', array: true },
@@ -817,6 +818,7 @@ export const BACKUP_SECTIONS: { key: string; label: string; array: boolean; valu
   { key: 'payments', label: 'recorded payments', array: true },
   { key: 'balances', label: 'meal balances', array: true },
   { key: 'residences', label: 'housing records', array: true },
+  { key: 'maintenance', label: 'repair requests', array: true },
   { key: 'mySchools', label: 'school profiles', array: true },
   { key: 'archivedTerms', label: 'archived terms', array: true },
   { key: 'gradeSystems', label: 'grade systems', array: false },
@@ -880,6 +882,7 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   iconShape: 'how the icons are drawn',
   labels: 'whether the tab bar names its tabs',
   lineHeight: 'how far apart the lines sit',
+  textSpacing: 'how far apart the letters and words sit',
   readingWidth: 'how wide a paragraph gets',
   shell: 'how a screen is arranged once you are on it',
   textSize: 'the size text is set at here',
@@ -1014,6 +1017,7 @@ export function readBackup(text: string): Restore {
 export function backupOf(state: State) {
   return {
     format: 'semester.backup.v1',
+    operatingWorkspace: state.operatingWorkspace,
     exported: new Date().toISOString(),
     courses: state.courses,
     updates: state.updates,
@@ -1089,6 +1093,7 @@ export function backupOf(state: State) {
     payments: state.payments,
     balances: state.balances,
     residences: state.residences,
+    maintenance: state.maintenance,
     mySchools: state.mySchools,
     schoolPack: state.schoolPack,
     archivedTerms: state.archivedTerms,

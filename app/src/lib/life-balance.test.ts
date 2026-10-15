@@ -15,6 +15,7 @@ import {
   suggestionAppointment,
   summarizeDay,
   summarizeWeek,
+  workloadPressure,
   type Input,
 } from './life-balance';
 import { datedItems } from './select';
@@ -166,6 +167,44 @@ describe('schedule aggregation', () => {
     const late = summarizeDay(input({ floor: { from: 24 * 60, to: 9 * 60, on: true } }), MON);
     // 9a–midnight is 15 h: 1 h less open time than the default.
     expect(late.hours.open).toBe(6.5);
+  });
+});
+
+describe('workload forecast', () => {
+  const dueTuesday = [item('paper', 'econ', 8, 29, 'Paper', '', true)];
+
+  it('compares the student\'s own estimate with open time without scoring the student', () => {
+    const forecast = workloadPressure(
+      input(
+        {
+          commitments: [commitment({ id: 'day', name: 'Fixed commitments', days: [2], at: 7 * 60, minutes: 16 * 60 })],
+          spent: [{ id: 'old-paper', courseId: 'econ', kind: 'essay', minutes: 120, at: NOW.getTime() }],
+        },
+        dueTuesday,
+      ),
+      new Date(2026, 8, 27),
+    );
+    expect(forecast[2]).toMatchObject({
+      iso: '2026-09-29',
+      estimatedMinutes: 120,
+      openMinutes: 0,
+      balanceMinutes: -120,
+      known: 1,
+      unknown: 0,
+      state: 'more_than_open',
+      confirmed: true,
+    });
+  });
+
+  it('keeps unseen work unknown instead of inventing an effort estimate', () => {
+    const forecast = workloadPressure(input({}, dueTuesday), new Date(2026, 8, 27));
+    expect(forecast[2]).toMatchObject({
+      iso: '2026-09-29',
+      estimatedMinutes: 0,
+      known: 0,
+      unknown: 1,
+      state: 'unknown',
+    });
   });
 });
 

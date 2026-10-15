@@ -13,10 +13,14 @@
  *
  * Nothing syncs until an adapter is registered in
  * `app/server/integration/registry.ts`, which is empty; until then each tick
- * reports every connection as unregistered.
+ * reports every connection as unregistered. No credential services are passed
+ * to `tick`, so an adapter that declares a credential is refused (and
+ * dead-lettered as `authentication`) rather than calling its provider
+ * anonymously; see `provider-client.ts`.
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { ADAPTERS } from '../_shared/integration/registry.ts';
+import { providerRuntime } from '../_shared/integration/provider-client.ts';
 import { tick } from '../_shared/integration/tick.ts';
 import { serveTick } from '../_shared/integrationtick.ts';
 
@@ -32,6 +36,9 @@ Deno.serve((req: Request) => {
       if (error) throw new Error('token check unavailable');
       return data === true;
     },
-    run: () => tick(db, { adapters: ADAPTERS }),
+    // No credential services: an adapter that declares a credential is refused,
+    // not called anonymously. A deployment that has a secret store, a token store
+    // and an audit sink passes them here.
+    run: () => tick(db, { adapters: ADAPTERS, runtime: providerRuntime() }),
   });
 });

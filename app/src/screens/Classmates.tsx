@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, SectionLabel } from '../components/ui';
@@ -30,6 +30,15 @@ import { bucket, listed, type Say } from '../lib/roomchat';
 import { markRead, marks as storedMarks, remember, type Marks } from '../lib/roomprefs';
 import { Rooms } from '../components/room/Rooms';
 import { Talk } from '../components/room/Talk';
+
+async function loadClassmates(account: { id: string } | null, term: string) {
+  if (!account) return null;
+  const [profile, rooms] = await Promise.all([myProfile(account.id), myRooms(account.id, term)]);
+  // Fetch every room's last lines together; one request per room makes the
+  // conversation list wait on a chain of phone round trips.
+  const messages = rooms.length > 0 ? bucket(await across(term, rooms), (message) => message.code) : {};
+  return { profile, rooms, messages };
+}
 
 /**
  * The people in your classes, as a chat rather than as a settings page.
@@ -70,6 +79,7 @@ import { Talk } from '../components/room/Talk';
  * not something the other forty people in it should be able to read.
  */
 export function Classmates() {
+  const now = useNow();
   const { account, catalog, state, school, dispatch } = useStore();
   const wide = useMedia(WIDE);
   const term = termOf();
@@ -81,7 +91,11 @@ export function Classmates() {
   /** Everything said in every room you are in, for the list's last lines. */
   const [said, setSaid] = useState<Record<string, Message[]>>({});
   const [marks, setMarks] = useState<Marks>(() => storedMarks());
-  const [open, setOpen] = useState('');
+  const [open, setOpen] = useState(() =>
+    typeof window === 'undefined'
+      ? ''
+      : (new URLSearchParams(window.location.search).get('room') ?? ''),
+  );
   const [adding, setAdding] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -96,25 +110,13 @@ export function Classmates() {
 
   const refresh = useCallback(async () => {
     if (!account || !ok) return;
-    setError('');
     try {
-      const [p, mine] = await Promise.all([myProfile(account.id), myRooms(account.id, term)]);
-      setProfile(p);
-      setHandle(p?.handle ?? '');
-      setRooms(mine);
-      /*
-       * One query for every room's last lines, rather than one per room.
-       *
-       * The list needs a preview and an unread count for each class; asking
-       * room by room is five round trips on a phone before anything is drawn.
-       * `bucket` splits the one answer back out. See `lib/roomchat.ts`.
-       */
-      if (mine.length > 0) {
-        const recent = await across(term, mine);
-        setSaid(bucket(recent, (m) => m.code));
-      } else {
-        setSaid({});
-      }
+      const loaded = await loadClassmates(account, term);
+      if (!loaded) return;
+      setProfile(loaded.profile);
+      setHandle(loaded.profile?.handle ?? '');
+      setRooms(loaded.rooms);
+      setSaid(loaded.messages);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -123,8 +125,26 @@ export function Classmates() {
   }, [account, ok, term]);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (!account || !ok) return;
+    let live = true;
+    void loadClassmates(account, term)
+      .then((loaded) => {
+        if (!live || !loaded) return;
+        setProfile(loaded.profile);
+        setHandle(loaded.profile?.handle ?? '');
+        setRooms(loaded.rooms);
+        setSaid(loaded.messages);
+      })
+      .catch((e: unknown) => {
+        if (live) setError(e instanceof Error ? e.message : String(e));
+      })
+      .finally(() => {
+        if (live) setLoaded(true);
+      });
+    return () => {
+      live = false;
+    };
+  }, [account, ok, term]);
 
   /*
    * `?room=` — the link the room's own menu copies.
@@ -140,7 +160,6 @@ export function Classmates() {
     const url = new URL(window.location.href);
     url.searchParams.delete('room');
     window.history.replaceState({}, '', url);
-    setOpen(asked);
   }, []);
 
   /*
@@ -189,7 +208,7 @@ export function Classmates() {
       // and the name arrives once you are in the room. Better an honest line
       // than four queries for forty names to prefix it with.
       nameOf,
-      new Date(),
+      now,
       profile?.handle ?? '',
       /*
        * Your own handle, and it has to be here for the badge to work.
@@ -214,7 +233,7 @@ export function Classmates() {
        */
       profile?.handle ? [profile.handle] : [],
     );
-  }, [account, catalog.courses, rooms, state.schoolId, said, marks, profile]);
+  }, [account, catalog.courses, rooms, state.schoolId, said, marks, profile, now]);
 
   if (!cloudConfigured) {
     return (
@@ -308,6 +327,7 @@ export function Classmates() {
   };
 
   const onLeave = (key: string) => {
+    setError('');
     void leave(account.id, term, key)
       .then(() => {
         setOpen((now) => (now === key ? '' : now));
@@ -358,7 +378,10 @@ export function Classmates() {
 
   const room = openRow && (
     <Talk
-      key={openRow.key}
+      // The transcript owns live subscriptions and state for exactly one
+      // person, term, and room. Remount when any part of that identity changes
+      // so prior-room data cannot flash while the new queries are in flight.
+      key={`${account.id}/${term}/${openRow.key}`}
       term={term}
       roomKey={openRow.key}
       code={openRow.code}

@@ -20,11 +20,11 @@ import { secondLine } from '../../lib/dim';
 import { formatDateTime } from '../../lib/locale';
 import { migrationApi, type MigrationApi, type ProjectPatch } from '../../lib/migration/api';
 import {
-  APPROVAL_AREAS, APPROVAL_LABEL, CLASSIFICATIONS, DOMAINS, DOMAIN_LABEL, DUPLICATE_LABEL, DUPLICATE_RULES, GATE_TEXT, STAGES,
+  APPROVAL_AREAS, APPROVAL_LABEL, CLASSIFICATIONS, DOMAINS, DOMAIN_LABEL, DUPLICATE_LABEL, DUPLICATE_RULES, GATE_TEXT, SLASH_ORDER_LABEL, STAGES,
   STAGE_DOES, STAGE_LABEL, STAGE_RUN, TRANSFORMS, TRANSFORM_LABEL,
   canGoBack, gateFailures, mapsEditable, nextStage, parseTable, preview, reconcile, sha256,
   type ApprovalArea, type DuplicateRule, type FieldMap, type MigrationApproval, type MigrationDomain, type MigrationProject,
-  type MigrationRun, type Preview, type Reconciliation, type RunKind, type Stage, type Transform,
+  type MigrationRun, type Preview, type Reconciliation, type RunKind, type SlashOrder, type Stage, type Transform,
 } from '../../lib/migration/center';
 import { ActionButton, EmptyState, FilePick, Notice, SectionLabel } from '../ui';
 
@@ -617,6 +617,7 @@ function Evidence({
   const [semester, setSemester] = useState<{ name: string; text: string } | null>(null);
   const [period, setPeriod] = useState('');
   const [note, setNote] = useState('');
+  const [order, setOrder] = useState<SlashOrder | undefined>(undefined);
 
   const read = (files: File[], put: (f: { name: string; text: string }) => void) => {
     const f = files[0];
@@ -624,7 +625,7 @@ function Evidence({
     f.text().then((text) => put({ name: f.name, text }), () => setNote(`Could not read ${f.name}.`));
   };
 
-  const mapped: Preview | null = legacy ? preview(parseTable(legacy.text), maps, row.duplicate_rule) : null;
+  const mapped: Preview | null = legacy ? preview(parseTable(legacy.text), maps, row.duplicate_rule, order) : null;
   const compared: Reconciliation | null = mapped && semester && compares(kind) ? reconcile(mapped.rows, parseTable(semester.text), maps) : null;
   const counts = compares(kind) ? compared?.counts : mapped?.counts;
   const ready = counts && (kind !== 'parallel_run' || period.trim() !== '');
@@ -651,6 +652,15 @@ function Evidence({
             </div>
           )}
         </>
+      )}
+      {maps.some((m) => m.transform === 'date_iso') && (
+        <label style={{ ...label, marginTop: 'var(--sp-3)' }}>
+          Dates written like 3/7/2026
+          <select className="input" value={order ?? ''} onChange={(e) => setOrder((e.target.value || undefined) as SlashOrder | undefined)}>
+            <option value="">Not chosen: refuse the ones that could be either</option>
+            {(Object.keys(SLASH_ORDER_LABEL) as SlashOrder[]).map((o) => <option key={o} value={o}>{SLASH_ORDER_LABEL[o]}</option>)}
+          </select>
+        </label>
       )}
       {note && <Notice alert>{note}</Notice>}
 

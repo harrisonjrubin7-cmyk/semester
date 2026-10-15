@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { CourseAgentPolicy } from '../../../packages/institution/src/course-agent-policy.ts';
 import {
   chooseModel,
   parseIntelligenceGatewayRequest,
@@ -13,13 +14,47 @@ import type {
   InstitutionModelProvider,
   ProviderGenerationRequest,
 } from './providers/types.ts';
+import { checkProviderRequest } from './ai-data-class.ts';
 import { MemoryIntelligenceActionStore, type IntelligenceActionStore } from './intelligence-action-store.ts';
+import {
+  retrievalLabelsMatch,
+  type RequestContext,
+  type RetrievalLabels,
+} from '../../../packages/platform/src/index.ts';
 
 export interface ApprovedIntelligenceSource {
   id: string;
+  /** Exact policy facts that authorized this source for provider context. */
+  labels: RetrievalLabels;
   evidenceIds: string[];
   /** Used only to assemble the provider request; never returned or journaled. */
   body: string;
+  courseId?: string;
+  /** Institution-approved policy binding, never a course/term asserted by a client. */
+  origin?: string;
+  policyScope?: string | null;
+  policyCourseCode?: string | null;
+  policyTerm?: string | null;
+  title?: string;
+  locator?: string;
+  verifiedAt?: string;
+}
+
+export interface IntelligenceCourseScope {
+  courseId: string;
+  term: string;
+}
+
+function sourceScope(source: ApprovedIntelligenceSource): IntelligenceCourseScope | 'institution' | null {
+  if (!['course', 'institution', 'library', 'web'].includes(source.origin ?? '')) return null;
+  if (source.policyScope === 'institution' && source.origin !== 'course' &&
+      source.policyCourseCode == null && source.policyTerm == null) return 'institution';
+  if (source.policyScope === 'course' && typeof source.policyCourseCode === 'string' &&
+      /^[A-Z]{2,4} [0-9]{3,4}[A-Z]?$/.test(source.policyCourseCode) &&
+      typeof source.policyTerm === 'string' && /^[0-9]{4}(FA|SP|SU)$/.test(source.policyTerm)) {
+    return { courseId: source.policyCourseCode, term: source.policyTerm };
+  }
+  return null;
 }
 
 export interface IntelligenceAuditRecord {
@@ -40,9 +75,11 @@ export interface IntelligenceBudgetReservation {
 }
 
 export interface IntelligenceRespondInput {
+  context: RequestContext;
   identity: UniversityIdentity;
   request: IntelligenceGatewayRequest;
   tenantPolicy: TenantIntelligencePolicy;
+  loadCoursePolicy?: (identity: UniversityIdentity, scope: IntelligenceCourseScope) => Promise<CourseAgentPolicy>;
   approvedSources: ApprovedIntelligenceSource[];
   modelTask: ModelTask;
   generate: InstitutionModelProvider['generate'];
@@ -94,7 +131,10 @@ const PROVIDER_DEADLINE_MS = 20_000;
 const MAX_OUTPUT_TOKENS = 1_200;
 
 export async function respond(input: IntelligenceRespondInput): Promise<IntelligenceResult> {
-  const { identity, request, tenantPolicy } = input;
+  const { context, identity, request, tenantPolicy } = input;
+  if (context.tenantId !== identity.institutionId || context.actor.personId !== identity.userId || context.purpose !== 'ai_context') {
+    return result(403, { code: 'scope-refused', message: 'The verified AI retrieval context does not match this account.' });
+  }
   if (request.tenantId !== identity.institutionId || request.personId !== identity.userId) {
     return result(403, { code: 'scope-refused', message: 'The authenticated university scope does not match this request.' });
   }
@@ -114,6 +154,11 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
     return result(403, { code: 'mode-disabled', message: 'This academic-integrity mode is not permitted.' });
   }
 
+  const agent = request.agent ?? 'assistant';
+  // Role-specific actions are preparation only; the role cannot widen institutional authority.
+  if (agent !== 'assistant' && request.proposedActions.some((action) => action.class !== 'prepare')) {
+    return result(403, { code: 'agent-action-refused', message: 'This role may prepare drafts only; it cannot change institutional records.' });
+  }
   const requestedSources = new Set(request.sourceIds);
   const sources = input.approvedSources.filter((source) => requestedSources.has(source.id));
   if (requestedSources.size === 0 || sources.length !== requestedSources.size) {
@@ -121,6 +166,48 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
       code: 'source-not-approved',
       message: 'Every source sent to Semester Intelligence must be approved for this tenant and account.',
     });
+  }
+  if (sources.some((source) => !retrievalLabelsMatch(context, source.labels, 'ai_context', {
+    sourceId: source.id,
+    requireCurrent: true,
+  }))) {
+    return result(403, {
+      code: 'source-context-refused',
+      message: 'A source is not current or was not authorized for this tenant and AI purpose.',
+    });
+  }
+  // Same spelling normalization as Course Studio; never a mapping from an opaque ID.
+  const selectedCourse = request.courseId?.trim().replace(/\s+/g, ' ').toUpperCase();
+  const scopes = sources.map(sourceScope);
+  if (scopes.some((scope) => scope === null)) {
+    return result(403, { code: 'source-scope-unverified', message: 'Your institution must approve a policy scope for each source before it can be used. Course sources need a verified course code and term.' });
+  }
+  const courses = [...new Map(scopes.flatMap((scope) => scope && scope !== 'institution'
+    ? [[`${scope.courseId}/${scope.term}`, scope] as const] : [])).values()];
+  if ((agent === 'tutor' || agent === 'course-guide') &&
+      (!selectedCourse || courses.length !== 1 || scopes.includes('institution') || courses[0].courseId !== selectedCourse)) {
+    return result(403, { code: 'course-scope-required', message: 'Select approved sources from one course before using this role.' });
+  }
+  // Client fields are consistency hints only. They never select which sources'
+  // policies apply. Assistant/Advisor may combine courses; every binding is checked.
+  // Institution-only guidance ignores the UI's incidental selected course/term.
+  if (courses.length && !courses.some((scope) =>
+    (!selectedCourse || scope.courseId === selectedCourse) && (!request.term || scope.term === request.term))) {
+    return result(403, { code: 'course-scope-mismatch', message: 'The requested course and term do not match the institution-approved source scope.' });
+  }
+  const coursePolicies: CourseAgentPolicy[] = [];
+  if (courses.length) {
+    if (!input.loadCoursePolicy) {
+      return result(503, { code: 'course-policy-unavailable', message: 'The institution course policy service is unavailable.' });
+    }
+    try {
+      for (const scope of courses) coursePolicies.push(await input.loadCoursePolicy(identity, scope));
+    } catch {
+      return result(503, { code: 'course-policy-unavailable', message: 'The institution course policy could not be verified.' });
+    }
+  }
+  if (coursePolicies.some((policy) => !policy.allowedModes.includes(request.mode))) {
+    return result(403, { code: 'course-mode-disabled', message: 'This support mode is not permitted by the published course policy. Use concept review or ask your instructor.' });
   }
   const allowedEvidence = new Set(sources.flatMap((source) => source.evidenceIds));
   const monthlyRemaining = Math.max(
@@ -147,9 +234,26 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
     model: route.model.replace(`${route.provider}:`, ''),
     question: request.question,
     mode: request.mode,
+    agent,
+    coursePolicyInstruction: [...new Set(coursePolicies.map((policy) => policy.instruction))].join('\n') || undefined,
     sources,
     maxOutputTokens: MAX_OUTPUT_TOKENS,
   };
+  // The last point before budget is reserved and a provider is reached. Every
+  // field the request carries must be declared at or under the AI data-class
+  // ceiling; one that is not is refused by name, and audited the same way, with
+  // no content in either. See `ai-data-class.ts`.
+  const carried = checkProviderRequest(providerRequest);
+  if (!carried.ok) {
+    await input.audit?.(identity, {
+      category: request.category, provider: route.provider, model: route.model,
+      inputTokens: 0, outputTokens: 0, costCents: 0, policyDecision: `data-class-refused:${carried.highest}`,
+    });
+    return result(403, {
+      code: 'data-class-refused',
+      message: 'This request includes material above the data class Semester Intelligence accepts, so it was not sent.',
+    });
+  }
   let reservation: IntelligenceBudgetReservation | null = null;
   if (input.reserveBudget) {
     try {
@@ -236,18 +340,27 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
     ...action,
     evidenceIds: action.evidenceIds.filter((id) => allowedEvidence.has(id)),
   }));
-  await input.audit?.(identity, {
-    category: request.category,
-    provider: route.provider,
-    model: route.model,
-    inputTokens: generated.inputTokens,
-    outputTokens: generated.outputTokens,
-    costCents,
-    policyDecision: `${tenantPolicy.state}:${request.mode}`,
-  });
+  // The record is a precondition of the answer, not a courtesy after it: an AI
+  // response nobody can account for is the worse failure, so one whose audit
+  // cannot be written is discarded. The usage was already settled and stays
+  // settled, because the provider did the work.
+  try {
+    await input.audit?.(identity, {
+      category: request.category,
+      provider: route.provider,
+      model: route.model,
+      inputTokens: generated.inputTokens,
+      outputTokens: generated.outputTokens,
+      costCents,
+      policyDecision: `${tenantPolicy.state}:${agent}:${request.mode}`,
+    });
+  } catch {
+    return result(503, { code: 'audit-unavailable', message: 'The response was discarded because it could not be recorded.' });
+  }
   return result(200, {
     version: 1,
     text: generated.text,
+    agent,
     sourceIds: [...citedSources],
     evidenceIds,
     mode: request.mode,
@@ -309,8 +422,9 @@ export interface IntelligenceServiceConfig {
    * policy-disabled runtime, which generates nothing anyway.
    */
   killSwitch?: (identity: UniversityIdentity) => Promise<boolean>;
+  loadCoursePolicy?: IntelligenceRespondInput['loadCoursePolicy'];
   loadPolicy: (identity: UniversityIdentity) => Promise<TenantIntelligencePolicy>;
-  loadApprovedSources: (identity: UniversityIdentity, sourceIds: string[]) => Promise<ApprovedIntelligenceSource[]>;
+  loadApprovedSources: (context: RequestContext, identity: UniversityIdentity, sourceIds: string[]) => Promise<ApprovedIntelligenceSource[]>;
   modelTask: (identity: UniversityIdentity, request: IntelligenceGatewayRequest) => Promise<ModelTask>;
   generate: IntelligenceRespondInput['generate'];
   reserveBudget?: IntelligenceRespondInput['reserveBudget'];
@@ -323,7 +437,7 @@ export interface IntelligenceServiceConfig {
 export interface IntelligenceService {
   status: IntelligenceServiceConfig['status'];
   policy: (identity: UniversityIdentity) => Promise<IntelligenceResult>;
-  respond: (identity: UniversityIdentity, value: unknown) => Promise<IntelligenceResult>;
+  respond: (context: RequestContext, identity: UniversityIdentity, value: unknown) => Promise<IntelligenceResult>;
   confirm: (identity: UniversityIdentity, actionId: string, value: unknown) => Promise<IntelligenceResult>;
 }
 
@@ -353,7 +467,7 @@ export function createIntelligenceService(config: IntelligenceServiceConfig): In
       }
       return result(200, { state: policy.state, allowedModes: policy.allowedModes });
     },
-    respond: async (identity, value) => {
+    respond: async (context, identity, value) => {
       let request: IntelligenceGatewayRequest;
       try {
         request = parseIntelligenceGatewayRequest(value);
@@ -363,10 +477,12 @@ export function createIntelligenceService(config: IntelligenceServiceConfig): In
       const stopped = await killed(identity, request.category);
       if (stopped) return stopped;
       const response = await respond({
+        context,
         identity,
         request,
         tenantPolicy: await config.loadPolicy(identity),
-        approvedSources: await config.loadApprovedSources(identity, request.sourceIds),
+        loadCoursePolicy: config.loadCoursePolicy,
+        approvedSources: await config.loadApprovedSources(context, identity, request.sourceIds),
         modelTask: await config.modelTask(identity, request),
         generate: config.generate,
         reserveBudget: config.reserveBudget,
@@ -392,6 +508,12 @@ export function createIntelligenceService(config: IntelligenceServiceConfig): In
       return response;
     },
     confirm: async (identity, actionId, value) => {
+      // Before the claim, which consumes the action. Containment means no write
+      // runs, including one reviewed before the switch was engaged; and a
+      // refusal here must leave the action unspent, so it can still be
+      // confirmed if the switch is released inside the five minutes it lives.
+      const stopped = await killed(identity, 'action');
+      if (stopped) return stopped;
       const action = await actions.claim(actionId, identity, Date.now());
       if (!action) return result(404, { code: 'action-not-found', message: 'Proposed action not found for this account.' });
       const body = value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};

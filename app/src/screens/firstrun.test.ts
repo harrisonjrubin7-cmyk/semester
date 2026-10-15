@@ -35,12 +35,21 @@ const OWN = /state\.(tasks|appointments|feedEvents)\b/;
 const gates = readdirSync(DIR)
   .filter((f) => f.endsWith('.tsx'))
   .map((f) => ({ file: f, src: readFileSync(new URL(f, DIR), 'utf8') }))
-  .flatMap(({ file, src }) =>
-    src
-      .split('\n')
-      .filter((line) => line.includes('return <FirstRun'))
-      .map((line) => ({ file, line, showsOwn: OWN.test(src) })),
-  );
+  .flatMap(({ file, src }) => {
+    const lines = src.split('\n');
+    return lines.flatMap((line) => {
+      if (line.includes('return <FirstRun')) return [{ file, line, showsOwn: OWN.test(src) }];
+      // Today and Calendar draw it as the `emptyNode` of a `ReadState`, and the
+      // question that decides it is the line that sets `empty` — so that is the
+      // line asked about. A screen with an `emptyNode` and no such line has
+      // lost its gate, and `undefined` fails the pairing test below.
+      if (line.includes('emptyNode={<FirstRun')) {
+        const asks = lines.find((l) => /^\s*const empty = /.test(l)) ?? '';
+        return [{ file, line: asks, showsOwn: OWN.test(src) }];
+      }
+      return [];
+    });
+  });
 
 describe('the FirstRun gate', () => {
   it('is on the screens it is supposed to be on', () => {
@@ -111,6 +120,28 @@ describe('which Today is being gated', () => {
   it('agrees with itself once there is a syllabus', () => {
     expect(nothingOnToday('feed', CAT, none)).toBe(false);
     expect(nothingOnToday('today', CAT, none)).toBe(false);
+  });
+
+  it('does not hide a repair follow-up that is due behind the first run, on either home', () => {
+    const at = Date.UTC(2026, 9, 12, 15);
+    const repair = {
+      id: 'mr1', term: '', hall: 'Branscomb', room: '', what: 'Sink', where: '', urgency: 'routine' as const, channel: 'portal' as const,
+      reference: '', reportedAt: at - 5 * 86_400_000, checkBackAt: at - 60_000, checkBackStated: false, scheduledFor: null,
+      status: 'reported' as const, history: [], created: at - 5 * 86_400_000, updated: at - 5 * 86_400_000,
+    };
+    const student = { ...none, role: 'student' as const };
+    expect(nothingOnToday('today', EMPTY_CATALOG, { ...student, maintenance: [repair] }, at, true)).toBe(false);
+    expect(nothingOnToday('feed', EMPTY_CATALOG, { ...student, maintenance: [repair] }, at, true)).toBe(false);
+    // Not due yet, or closed: the first run still shows.
+    expect(nothingOnToday('today', EMPTY_CATALOG, { ...none, maintenance: [{ ...repair, checkBackAt: at + 86_400_000 }] }, at)).toBe(true);
+    expect(nothingOnToday('today', EMPTY_CATALOG, { ...none, maintenance: [{ ...repair, status: 'fixed' as const }] }, at)).toBe(true);
+    // With the Action Center rolled back nothing draws a repair, so it does not count.
+    expect(nothingOnToday('today', EMPTY_CATALOG, { ...student, maintenance: [repair] }, at, false)).toBe(true);
+    // The Action Center mounts only for a student, so for another role nothing
+    // draws the repair either, and the first run is what that Today has to say.
+    for (const role of ['faculty', 'advisor'] as const) {
+      expect(nothingOnToday('today', EMPTY_CATALOG, { ...none, role, maintenance: [repair] }, at, true)).toBe(true);
+    }
   });
 
   it('shows the first run to somebody who has nothing at all', () => {

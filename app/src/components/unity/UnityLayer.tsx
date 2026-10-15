@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react';
 import { FixThis } from '../FixThis';
-import { useModal } from '../../a11y/modal';
+import { useModal, useScrim } from '../../a11y/modal';
 import { DESKTOP, useMedia } from '../../lib/media';
 import { statusOf } from '../../lib/status';
 import { SESSION_MINUTES, closeOverlay, showCapture, useOverlay, type SourceDetail } from '../../lib/unity';
 import { FocusBar } from './modes';
 import { useStore } from '../../state/store';
+import { useTaskActions } from '../../composition/taskactions';
 import { courseFieldFor } from '../../lib/parent';
 import { useModernShell } from '../shell-context';
 import { SaveState, StatusChip } from './Status';
@@ -43,8 +44,9 @@ function Sheet({ label, children, initial }: { label: string; children: React.Re
   const wide = useMedia(DESKTOP);
   const modern = useModernShell();
   const { ref, onKeyDown } = useModal<HTMLDivElement>({ onClose: closeOverlay, initial });
+  const scrim = useScrim(closeOverlay);
   return (
-    <div className={`unity-scrim ${wide || modern ? 'is-window' : 'is-pane'}`} onClick={closeOverlay}>
+    <div className={`unity-scrim ${wide || modern ? 'is-window' : 'is-pane'}`} {...scrim}>
       <div
         role="dialog"
         aria-modal="true"
@@ -78,9 +80,22 @@ function Sheet({ label, children, initial }: { label: string; children: React.Re
 export function SourceDrawer({ detail }: { detail: SourceDetail }) {
   const origin = statusOf(detail.origin);
   return (
-    <Sheet label="Source & details">
+    <Sheet label={detail.kind ? 'Details' : 'Source & details'}>
+      {detail.kind && <div className="kicker">{detail.kind}</div>}
       <h2 className="unity-sheet-title">{detail.title}</h2>
       <dl className="source-list">
+        {detail.context && (
+          <>
+            <dt>Context</dt>
+            <dd>{detail.context}</dd>
+          </>
+        )}
+        {detail.status && (
+          <>
+            <dt>Status</dt>
+            <dd>{detail.status}</dd>
+          </>
+        )}
         <dt>Origin</dt>
         <dd>
           <StatusChip status={detail.origin} />
@@ -92,6 +107,9 @@ export function SourceDrawer({ detail }: { detail: SourceDetail }) {
             <dd>{detail.sourceName}</dd>
           </>
         )}
+        {detail.location && <><dt>Source location</dt><dd>{detail.location}</dd></>}
+        {detail.owner && <><dt>Source owner</dt><dd>{detail.owner}</dd></>}
+        {detail.excerpt && <><dt>Supporting excerpt</dt><dd><blockquote>{detail.excerpt}</blockquote></dd></>}
         {detail.freshness && (
           <>
             <dt>Freshness</dt>
@@ -122,6 +140,26 @@ export function SourceDrawer({ detail }: { detail: SourceDetail }) {
             </dd>
           </>
         )}
+        {detail.relationships && detail.relationships.length > 0 && (
+          <>
+            <dt>Connected to</dt>
+            <dd>
+              <ul>
+                {detail.relationships.map((relationship) => <li key={relationship}>{relationship}</li>)}
+              </ul>
+            </dd>
+          </>
+        )}
+        {detail.history && detail.history.length > 0 && (
+          <>
+            <dt>Recent activity</dt>
+            <dd>
+              <ol className="object-history">
+                {detail.history.map((event) => <li key={`${event.at}:${event.label}`}><span className="nums">{event.at}</span> · {event.label}</li>)}
+              </ol>
+            </dd>
+          </>
+        )}
         {detail.limitations && (
           <>
             <dt>Limitations</dt>
@@ -132,6 +170,11 @@ export function SourceDrawer({ detail }: { detail: SourceDetail }) {
         <dd>{detail.visibility ?? 'Only you'}</dd>
       </dl>
       <div className="unity-sheet-actions">
+        {detail.actions?.map((action) => (
+          <button key={action.label} type="button" className="btn btn-secondary" onClick={action.run}>
+            {action.label}
+          </button>
+        ))}
         {detail.openSource && (
           <button type="button" className="btn btn-primary" onClick={detail.openSource.run}>
             {detail.openSource.label}
@@ -210,6 +253,7 @@ export function KeepItAs({ text, onLeave }: { text: string; onLeave: () => void 
  */
 export function QuickCapture({ context, as, text: carried = '' }: { context?: string; as?: string; text?: string }) {
   const { state, dispatch, catalog } = useStore();
+  const taskActions = useTaskActions();
   const field = useRef<HTMLInputElement>(null);
   const [text, setText] = useState(carried);
   const [kind, setKind] = useState<CaptureKind>(
@@ -230,7 +274,7 @@ export function QuickCapture({ context, as, text: carried = '' }: { context?: st
     const course = courseId || null;
     const said = CAPTURE_KINDS.find((k) => k.id === kind)!.label;
     if (kind === 'task') {
-      dispatch({ type: 'addTask', task: { title, date: null, time: '', note: '', courseId: course } });
+      taskActions.add({ title, date: null, time: '', note: '', courseId: course });
     } else if (kind === 'session') {
       dispatch({ type: 'addTimer', label: `Study: ${title}`, seconds: SESSION_MINUTES * 60, at: Date.now() });
     } else {

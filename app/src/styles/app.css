@@ -19,6 +19,54 @@
 
 /* Cinzel is declared in styles/typefaces.css, loaded by main.tsx. */
 
+/* One calm content frame for every routed workspace. Individual screens own
+   their internal layout; the shell owns readable measure and dependable air. */
+.page-frame {
+  width: min(100%, var(--layout-operational));
+  margin-inline: auto;
+  padding: var(--page-pad);
+}
+
+.deskhome-title {
+  margin: 0;
+  font: inherit;
+}
+
+.page-frame-wide {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
+.page-purpose {
+  max-width: var(--layout-reading);
+  margin-bottom: var(--sp-6);
+  color: var(--app-dim);
+  font-size: var(--type-base);
+  line-height: var(--leading-relaxed);
+  text-wrap: pretty;
+}
+
+.page-purpose.has-actions {
+  margin-bottom: 0;
+}
+
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-block: var(--sp-5) var(--sp-6);
+}
+
+.page-actions > :is(button, a) {
+  width: auto;
+}
+
+.page-end {
+  pointer-events: none;
+}
+
 :root {
   /* Ground — five steps of near-black, cooled very slightly toward blue.
      A perfectly neutral grey ramp reads as flat and a little dead on an OLED
@@ -500,7 +548,7 @@ a:hover {
   border-radius: var(--r-sm);
   border: 1px solid var(--app-accent);
   background: var(--app-panel);
-  color: var(--app-ink);
+  color: var(--app-fg);
   font-family: var(--font-heading);
   font-size: calc(13px * var(--text-scale, 1));
   letter-spacing: 0.08em;
@@ -547,6 +595,10 @@ a:hover {
      line for their own reason still override locally; what this fixes is the
      hundred places that were relying on the browser default. */
   line-height: var(--line-height, 1.55);
+  /* The reader's letter and word spacing (`textSpacing` in lib/look.ts). `.chrome-text`
+     sets its own tracking, so display type is untouched. */
+  letter-spacing: var(--tracking-body, 0);
+  word-spacing: var(--word-space, 0);
   overflow: hidden;
   isolation: isolate;
 }
@@ -834,14 +886,30 @@ a:hover {
   flex-direction: column;
   gap: var(--sp-1);
   padding: calc(26px * var(--density, 1)) 0 calc(20px * var(--density, 1));
-  border-right: 1px solid var(--app-line);
-  background: var(--app-bg);
+  border-right: 1px solid var(--shell-navigation-border);
+  background: var(--shell-navigation-surface);
+  color: var(--shell-navigation-text);
   overflow-y: auto;
 }
 
 .rail-mark {
   font-size: calc(16px * var(--text-scale, 1));
   padding: 0 calc(20px * var(--density, 1)) calc(18px * var(--density, 1));
+}
+
+/* The general wordmark is milled from the active ground's metal sweep. The
+   rail sits on that ground, where the sweep can go black, so both its mark
+   and word use the navigation foreground instead. */
+.rail .rail-mark {
+  color: var(--shell-navigation-text);
+  background: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+.rail .rail-mark .brandword {
+  color: inherit;
+  background: none;
+  -webkit-text-fill-color: currentColor;
 }
 
 .rail .rail-item {
@@ -859,9 +927,17 @@ a:hover {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   transition: color var(--duration-fast) ease;
+  color: var(--shell-navigation-muted);
 }
 .rail .rail-item:hover {
-  color: var(--app-accent-bright);
+  color: var(--shell-navigation-text);
+  background: var(--shell-navigation-surface-active);
+}
+/* The current page is marked by the rail's raised surface, not the action
+   colour: orange reads as a button to press. */
+.rail .rail-item.is-on {
+  color: var(--shell-navigation-text);
+  background: var(--shell-navigation-surface-active);
 }
 
 /* ── The collapsed rail (medium) ──────────────────────────────────────────
@@ -889,11 +965,12 @@ a:hover {
   place-items: center;
   width: 44px;
   height: 44px;
-  color: var(--app-dim);
+  color: var(--shell-navigation-muted);
   border-radius: var(--r-md);
 }
 .rail .rail-toggle:hover {
-  color: var(--app-accent-bright);
+  color: var(--shell-navigation-text);
+  background: var(--shell-navigation-surface-active);
 }
 .rail[data-collapsed]:not([data-open]) .rail-head {
   justify-content: center;
@@ -953,13 +1030,15 @@ a:hover {
   font-size: calc(11px * var(--text-scale, 1));
   padding: calc(9px * var(--density, 1)) calc(20px * var(--density, 1));
 }
-.rail .rail-item:hover {
-  background: rgba(236, 238, 242, 0.045);
-}
 .rail-gap {
   margin-top: calc(18px * var(--density, 1));
   padding-top: calc(14px * var(--density, 1));
-  border-top: 1px solid var(--app-line-soft);
+  border-top: 1px solid var(--shell-navigation-border);
+}
+
+.rail :focus-visible,
+.desk-side :focus-visible {
+  outline-color: var(--shell-navigation-text);
 }
 
 /*
@@ -2075,6 +2154,8 @@ a:hover {
      negative tracking is what makes a large heading look set rather than
      typed. */
   letter-spacing: -0.012em;
+  /* Display type is not body text: the reader's spacing (`textSpacing`) stops here. */
+  word-spacing: 0;
 }
 @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
   .chrome-text {
@@ -2174,18 +2255,22 @@ a:hover {
   transform: translateY(1px);
 }
 .device .btn-primary {
-  background: var(--chrome);
-  border-color: rgba(255, 255, 255, 0.45);
+  background: var(--app-accent);
+  border-color: var(--app-accent);
   color: var(--chrome-ink);
   font-weight: 600;
-  text-shadow: 0 1px 0 var(--chrome-glint);
-  box-shadow: var(--glow);
+  text-shadow: none;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset;
 }
 .device .btn-primary:hover {
-  filter: brightness(1.1);
+  background: var(--app-accent-bright);
+  border-color: var(--app-accent-bright);
+  filter: none;
 }
 .device .btn-primary:active {
-  filter: brightness(0.94);
+  background: var(--app-accent-deep);
+  border-color: var(--app-accent-deep);
+  filter: none;
 }
 .device .btn-secondary {
   border-color: var(--app-line);
@@ -2208,6 +2293,38 @@ a:hover {
 }
 .device .btn-ghost:active {
   background: rgba(206, 211, 220, 0.2);
+}
+
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding: var(--sp-1);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--app-panel) 72%, transparent);
+}
+
+.device .segmented-option {
+  border-color: transparent;
+  background: transparent;
+  color: var(--app-dim);
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.device .segmented-option:hover {
+  border-color: transparent;
+  background: var(--app-accent-wash);
+  color: var(--app-fg);
+}
+
+.device .segmented-option[aria-pressed='true'] {
+  border-color: var(--app-line);
+  background: var(--app-raise);
+  color: var(--app-fg);
+  font-weight: 600;
+  box-shadow: 0 1px 0 var(--app-line-top) inset;
 }
 
 /*
@@ -2420,6 +2537,38 @@ a:hover {
 .field-message-icon {
   flex: none;
   margin-top: var(--sp-1);
+}
+
+/*
+ * The list of everything a failed submit found — `ErrorSummary` in
+ * `components/FieldMessage.tsx`. A border and a heading say it is a problem;
+ * the warning colour only reinforces the border. Each link is a full-height
+ * target, so the list is usable on a phone without precision.
+ */
+.error-summary {
+  margin: 0 0 var(--sp-5);
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--app-warn);
+  border-radius: var(--r-md);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+.error-summary-title {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-sm);
+  color: var(--app-warn);
+}
+.error-summary ul {
+  margin: 0;
+  padding-left: var(--sp-6);
+}
+.error-summary a {
+  display: inline-block;
+  min-height: 44px;
+  padding-block: var(--sp-2);
+  color: var(--app-fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /*
@@ -3187,6 +3336,13 @@ input[type='search'].input {
  * implied. `tokensFor` already returns `none` for both shadow tokens under
  * the same preference, so this is the half that cannot be done in JS.
  */
+:root[data-contrast="more"] .surface,
+:root[data-contrast="more"] .surface-in,
+:root[data-contrast="more"] .pill-soft {
+  box-shadow: none;
+  border-color: var(--app-fg);
+}
+
 @media (prefers-contrast: more) {
   .surface,
   .surface-in,
@@ -4132,6 +4288,21 @@ section[data-drop] > .grip + * {
   padding-bottom: var(--sp-3);
 }
 
+@media (min-width: 840px) {
+  /* Keep every persistent institutional layer on a short laptop without
+     shrinking its 44px controls. These three bands previously put the page
+     itself 361px below the window top. Removing only surrounding air keeps
+     the content start inside the 320px compact-chrome budget. */
+  .deskwork:has(.institutional-navigation) > .deskstrip,
+  .deskwork:has(.institutional-navigation) > .desktop-bar {
+    padding-block: 0;
+  }
+
+  .deskwork:has(.institutional-navigation) .app-header {
+    padding-block: 0;
+  }
+}
+
 @media (max-width: 839px) {
   .deskwork:has(.institutional-navigation) > .desktop-bar {
     padding-inline: var(--sp-5);
@@ -4648,6 +4819,54 @@ section[data-drop] > .grip + * {
   height: 18px;
   margin: 0 var(--sp-2);
   background: var(--app-line);
+}
+
+/* A horizontal row only announces that it moves when it actually clips.
+   Native touch, wheel and focus scrolling stay on the viewport; these controls
+   make that movement discoverable without covering the row's last item. */
+.overflow-cue {
+  min-width: 0;
+}
+
+.overflow-cue__controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.overflow-cue__button {
+  display: grid;
+  place-items: center;
+  width: var(--target-compact);
+  min-width: var(--target-compact);
+  height: var(--target-compact);
+  padding: 0;
+  color: var(--app-fg);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+}
+
+.overflow-cue__button:hover:not(:disabled) {
+  border-color: var(--app-accent-deep);
+  background: var(--app-accent-wash);
+}
+
+.overflow-cue__button:disabled {
+  color: var(--app-faint);
+  background: transparent;
+  cursor: default;
+}
+
+.overflow-cue__viewport {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overflow-cue__viewport {
+    scroll-behavior: auto;
+  }
 }
 
 /* ── The shelf a file screen opens on ─────────────────────────────────────
@@ -5452,9 +5671,9 @@ section[data-drop] > .grip + * {
   padding-inline: var(--sp-4);
   border-left: 2px solid var(--app-accent);
   border-radius: var(--r-sm);
-  background: var(--app-ground);
-  color: var(--app-ink);
-  font-family: var(--app-font);
+  background: var(--app-bg);
+  color: var(--app-fg);
+  font-family: var(--font-body);
   font-size: var(--type-xs);
   line-height: var(--leading-snug);
 }
@@ -6558,7 +6777,7 @@ section[data-drop] > .grip + * {
    are the two things `.device` asserts about being a phone, undone. */
 .deskwork {
   max-width: none;
-  background: var(--app-void);
+  background: var(--shell-content-canvas);
 }
 
 /* The skip link is absolute, and the blanket `position: relative` on
@@ -6600,7 +6819,7 @@ section[data-drop] > .grip + * {
   align-items: center;
   gap: var(--sp-6);
   padding: var(--sp-5) var(--sp-7);
-  background: var(--app-bg);
+  background: var(--shell-content-canvas);
 }
 
 .desktop-brand {
@@ -6769,11 +6988,11 @@ section[data-drop] > .grip + * {
   background: var(--app-accent);
 }
 
-/* Two of the four go on a phone: alerts and settings are both one row down in
-   the launcher, and the avatar and the nine dots are the two that are not. */
+/* Alerts and settings are both in the launcher on a phone. Name the controls
+   rather than their positions: the compact toolbar also carries page actions. */
 @media (max-width: 839px) {
-  .desktop-tools > :nth-child(1),
-  .desktop-tools > :nth-child(2) {
+  .desktop-tools > .desktop-alerts,
+  .desktop-tools > .desktop-settings {
     display: none;
   }
 }
@@ -6876,7 +7095,7 @@ section[data-drop] > .grip + * {
   min-height: 0;
   display: grid;
   grid-template-columns: 232px minmax(0, 1fr);
-  background: var(--app-bg);
+  background: var(--shell-content-canvas);
 }
 
 .deskwork-one {
@@ -6891,6 +7110,8 @@ section[data-drop] > .grip + * {
      it gone the first row would start against the chrome above. */
   padding: var(--sp-3) var(--sp-6) var(--sp-7);
   overflow-y: auto;
+  background: var(--shell-navigation-surface);
+  color: var(--shell-navigation-text);
 }
 
 .desk-row {
@@ -6901,18 +7122,110 @@ section[data-drop] > .grip + * {
   text-align: left;
   padding: var(--sp-5) var(--sp-6);
   border-radius: 999px;
-  color: var(--app-dim);
+  color: var(--shell-navigation-muted);
   font-size: var(--type-md);
 }
 
 .desk-row:hover {
-  background: var(--app-line-soft);
-  color: var(--app-fg);
+  background: var(--shell-navigation-surface-active);
+  color: var(--shell-navigation-text);
 }
 
+/* The current page is marked by the rail's raised surface, not the action
+   colour: orange reads as a button to press. */
 .desk-row.is-on {
-  background: var(--app-accent-wash);
-  color: var(--app-fg);
+  background: var(--shell-navigation-surface-active);
+  color: var(--shell-navigation-text);
+}
+
+/* The same server-gated destinations appear in both persistent navigation
+   forms. The component is a group, not a second nav landmark, so the page
+   keeps one primary navigation and one current-page announcement. */
+.workspace-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--shell-navigation-border);
+}
+
+.workspace-nav-label {
+  padding: 0 var(--sp-6) var(--sp-2);
+  color: var(--shell-navigation-muted);
+  font-family: var(--font-heading);
+  font-size: var(--type-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.workspace-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  width: auto;
+  min-height: var(--target-compact);
+  margin-inline: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--shape-control);
+  color: var(--shell-navigation-muted);
+  font-size: var(--type-sm);
+  text-align: left;
+}
+
+.workspace-nav-item:hover {
+  background: var(--shell-navigation-surface-active);
+  color: var(--shell-navigation-text);
+}
+
+.workspace-nav-item.is-on {
+  background: var(--shell-navigation-surface-active);
+  color: var(--shell-navigation-text);
+}
+
+.workspace-nav-item > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-nav-go {
+  flex: none;
+}
+
+.workspace-nav-status {
+  padding: var(--sp-2) var(--sp-4) 0;
+  color: var(--shell-navigation-muted);
+  font-size: var(--type-xs);
+  line-height: var(--leading-normal);
+}
+
+.workspace-nav-retry {
+  width: auto;
+  align-self: flex-start;
+  margin-inline: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--shape-control);
+  color: var(--shell-navigation-text);
+  font-size: var(--type-sm);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.rail .workspace-nav {
+  margin-inline: var(--sp-4);
+  padding-inline: 0;
+}
+
+.rail .workspace-nav-label,
+.rail .workspace-nav-status {
+  padding-inline: var(--sp-2);
+}
+
+.rail .workspace-nav-item {
+  margin-inline: 0;
 }
 
 .desk-side-label {
@@ -6920,12 +7233,13 @@ section[data-drop] > .grip + * {
   font-size: var(--type-xs);
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  color: var(--shell-navigation-muted);
 }
 
 .desk-side-gap {
   margin-top: var(--sp-7);
   padding-top: var(--sp-7);
-  border-top: 1px solid var(--app-line-soft);
+  border-top: 1px solid var(--shell-navigation-border);
 }
 
 .desk-side-foot {
@@ -6933,6 +7247,7 @@ section[data-drop] > .grip + * {
   padding: var(--sp-7) var(--sp-6) 0;
   font-size: var(--type-xs);
   line-height: var(--leading-normal);
+  color: var(--shell-navigation-muted);
 }
 
 /* The pane: the one rounded surface every screen is drawn on. */
@@ -6960,7 +7275,7 @@ section[data-drop] > .grip + * {
    pane: it is the app's front door, and a door with a frame round it is a
    window. */
 .deskwork-pane:has(.deskhome) {
-  background: var(--app-void);
+  background: var(--shell-content-canvas);
   border: 0;
   border-radius: 0;
 }
@@ -7470,6 +7785,16 @@ section[data-drop] > .grip + * {
   color: var(--app-accent-deep);
 }
 
+/* Accent-deep is audited to 4.5:1 on the page and the panel, not on the lighter
+   surface a hovered card moves to: on Graphite it is 4.20 to 4.48 and on
+   Industry Dark 3.59 to 3.96. The card still shows its accent border; the
+   reason takes the ground's full-strength ink, which contrast.test.ts holds to
+   4.5:1 on that surface. */
+.journey-card:hover .journey-reason,
+.journey-card:focus-visible .journey-reason {
+  color: var(--app-fg);
+}
+
 .journey-arrow {
   color: var(--app-accent);
   font-size: var(--type-lg);
@@ -7484,6 +7809,68 @@ section[data-drop] > .grip + * {
 
 .today-journey .journey-card {
   min-height: 0;
+}
+
+/* Today presents one decision first. Supporting systems stay available, but
+   they no longer arrive as equally loud full-width regions. */
+.today-guide-disclosure,
+.today-more,
+.page-frame > details:has(> summary:first-child) {
+  margin-block: var(--sp-4);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-md);
+  background: var(--bar-surface);
+}
+
+.today-guide-disclosure > summary,
+.today-more > summary,
+.page-frame > details:has(> summary:first-child) > summary {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: var(--sp-3) var(--sp-5);
+  color: var(--app-fg);
+  cursor: pointer;
+  font-size: var(--type-sm-plus);
+  font-weight: 600;
+  list-style: none;
+}
+
+.today-guide-disclosure > summary::-webkit-details-marker,
+.today-more > summary::-webkit-details-marker,
+.page-frame > details:has(> summary:first-child) > summary::-webkit-details-marker {
+  display: none;
+}
+
+.today-guide-disclosure > summary::after,
+.today-more > summary::after,
+.page-frame > details:has(> summary:first-child) > summary::after {
+  content: '+';
+  margin-left: auto;
+  color: var(--app-accent-deep);
+  font-size: var(--type-lg);
+  font-weight: 400;
+}
+
+.today-guide-disclosure[open] > summary::after,
+.today-more[open] > summary::after,
+.page-frame > details[open]:has(> summary:first-child) > summary::after {
+  content: '−';
+}
+
+.today-guide-disclosure > .sync-strip {
+  border: 0;
+  border-top: 1px solid var(--app-line-soft);
+  background: transparent;
+}
+
+.today-more[open] {
+  padding: 0 var(--sp-5) var(--sp-5);
+}
+
+.today-more[open] > summary {
+  margin-inline: calc(-1 * var(--sp-5));
+  border-bottom: 1px solid var(--app-line-soft);
 }
 
 /* Today is a briefing before it is a feed. These three objects share the
@@ -7510,6 +7897,28 @@ section[data-drop] > .grip + * {
 .today-decision-surface > :is(.blueprint, .today-near-term) {
   min-width: 0;
   padding: var(--sp-5);
+}
+
+/* The default briefing has one clear visual centre. Path and schedule remain
+   in the first layer, but they no longer compete with the next decision as
+   three equal cards. DOM order follows the same priority for keyboard and
+   screen-reader users. */
+.today-dominant-card {
+  border-color: var(--app-accent);
+  box-shadow: 0 1px 0 var(--app-line-top) inset;
+}
+
+.today-dominant-heading,
+.action-panel-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-5);
+}
+
+.today-dominant-heading .section-label,
+.action-panel-heading .action-kicker {
+  margin: 0;
 }
 
 .today-decision-surface h2 {
@@ -7797,11 +8206,6 @@ section[data-drop] > .grip + * {
   margin: 0 0 var(--sp-7);
 }
 
-.today-action-center.is-wide {
-  grid-template-columns: minmax(0, 1fr) 260px;
-  align-items: start;
-}
-
 .action-center-main {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -7815,6 +8219,15 @@ section[data-drop] > .grip + * {
   border: 1px solid var(--app-line);
   border-radius: var(--r-md);
   background: var(--app-panel);
+}
+
+.action-panel-primary {
+  border-color: var(--app-accent);
+  box-shadow: 0 1px 0 var(--app-line-top) inset;
+}
+
+.action-panel-secondary {
+  box-shadow: none;
 }
 
 .action-kicker {
@@ -8121,6 +8534,28 @@ section[data-drop] > .grip + * {
   list-style: none;
 }
 
+.explain-source-details {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) 1fr;
+  gap: var(--sp-2) var(--sp-5);
+  margin: var(--sp-5) 0 0;
+  padding: var(--sp-5);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+  background: var(--app-raise);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.explain-source-details dt {
+  color: var(--app-dim);
+}
+
+.explain-source-details dd {
+  margin: 0;
+  color: var(--app-fg);
+}
+
 .explain-controls {
   margin-top: var(--sp-7);
   padding-top: var(--sp-5);
@@ -8342,6 +8777,131 @@ section[data-drop] > .grip + * {
 
 /* ── Academic life balance + Crunch Week Forecast (Phase E) ─────────────── */
 
+.guide-contract {
+  margin: 0 0 var(--sp-6);
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-sm);
+  background: var(--app-panel);
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+}
+
+.guide-contract.is-compact {
+  margin: var(--sp-2) 0 0 calc(24px + var(--sp-4));
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: var(--type-xs);
+}
+
+.guide-contract > summary {
+  min-height: var(--target-min);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--app-accent-deep);
+}
+
+.guide-contract-body {
+  max-height: min(60vh, 36rem);
+  overflow: auto;
+  padding: var(--sp-3) var(--sp-2) var(--sp-2);
+  line-height: var(--leading-relaxed);
+}
+
+.guide-contract-body h3 {
+  margin: var(--sp-4) 0 var(--sp-2);
+  font-size: var(--type-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.guide-contract-body p,
+.guide-contract-body ul {
+  margin: 0 0 var(--sp-3);
+}
+
+.guide-contract-boundary {
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--app-line-soft);
+  color: var(--app-dim);
+}
+
+.academic-recovery {
+  margin: 0 0 var(--sp-7);
+  padding: var(--sp-6);
+  border: 1px solid var(--app-accent-deep);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+}
+
+.academic-recovery h2 {
+  margin: var(--sp-2) 0 var(--sp-3);
+  font-size: var(--type-lg);
+}
+
+.academic-recovery h3,
+.academic-recovery h4 {
+  margin: var(--sp-4) 0 var(--sp-2);
+}
+
+.academic-recovery p,
+.academic-recovery li {
+  font-size: var(--type-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.academic-recovery-choices,
+.academic-recovery-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin: var(--sp-4) 0;
+}
+
+.academic-recovery-options .balance-button {
+  display: grid;
+  gap: var(--sp-1);
+  height: auto;
+  max-width: 20rem;
+  padding-block: var(--sp-3);
+  text-align: left;
+}
+
+.academic-recovery-options span {
+  color: var(--app-dim);
+  font-size: var(--type-xs);
+}
+
+.academic-recovery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-4);
+}
+
+.academic-recovery-grid ul {
+  margin: 0;
+  padding-left: var(--sp-5);
+}
+
+.academic-recovery-confidence {
+  display: inline-block;
+  margin: 0;
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  color: var(--app-dim);
+}
+
+@media (max-width: 640px) {
+  .academic-recovery-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+
 .balance {
   margin: 0 var(--page-pad) var(--sp-7);
   padding: var(--sp-6);
@@ -8464,6 +9024,62 @@ section[data-drop] > .grip + * {
 .balance-more > summary {
   cursor: pointer;
   color: var(--app-accent-deep);
+}
+
+.balance-workload {
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--app-line-soft);
+}
+
+.balance-workload-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.balance-workload-head .balance-heading {
+  margin-top: 0;
+}
+
+.balance-workload-days {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.balance-workload-days li {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.8fr) minmax(12rem, 1fr) auto;
+  gap: var(--sp-4);
+  align-items: center;
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--app-line-soft);
+  font-size: var(--type-sm);
+}
+
+.balance-workload-days li > span:first-child {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.balance-workload-days small,
+.balance-workload-days .nums {
+  color: var(--app-dim);
+  font-size: var(--type-xs-plus);
+}
+
+@media (max-width: 640px) {
+  .balance-workload-days li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .balance-workload-days .nums {
+    grid-column: 1 / -1;
+  }
 }
 
 .balance-crunch {
@@ -8612,6 +9228,127 @@ section[data-drop] > .grip + * {
 }
 
 /* ── Advisor Meeting Mode (advisor_meeting_mode, Phase G) ───────────────── */
+
+.path-readiness {
+  border-top: 1px solid var(--app-line);
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-6);
+}
+
+.path-readiness-list {
+  display: grid;
+  gap: var(--sp-3);
+  list-style: none;
+  margin: var(--sp-4) 0;
+  padding: 0;
+}
+
+.path-readiness-list li {
+  align-items: center;
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  display: flex;
+  gap: var(--sp-4);
+  justify-content: space-between;
+  padding: var(--sp-4);
+}
+
+.path-readiness-list li[data-state='attention'] {
+  border-color: var(--app-warn, var(--app-line));
+}
+
+.path-readiness-overall {
+  border-inline-start: 3px solid var(--app-line);
+  font-size: var(--type-sm);
+  margin: var(--sp-4) 0;
+  padding: var(--sp-2) var(--sp-4);
+}
+
+.path-readiness-overall[data-state='blocked'],
+.path-readiness-overall[data-state='unavailable'] {
+  border-inline-start-color: var(--app-warn, var(--app-line));
+}
+
+.path-readiness-list p {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  margin: var(--sp-1) 0 0;
+}
+
+.path-readiness-state {
+  color: var(--app-dim);
+  font-size: var(--type-xs);
+  margin-inline-start: var(--sp-2);
+}
+
+.path-readiness-systems {
+  margin-top: var(--sp-5);
+}
+
+.path-readiness-systems summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: var(--sp-3);
+}
+
+.path-readiness-systems dl {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.path-readiness-systems dl > div {
+  border-left: 2px solid var(--app-line);
+  padding-inline-start: var(--sp-3);
+}
+
+.path-readiness-systems dt {
+  font-size: var(--type-sm);
+  font-weight: 700;
+}
+
+.path-readiness-systems dd {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  margin: var(--sp-1) 0 0;
+}
+
+@media (max-width: 560px) {
+  .path-readiness-list li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+.credential-wallet-list {
+  border: 0;
+  display: grid;
+  gap: var(--sp-3);
+  margin: var(--sp-5) 0;
+  padding: 0;
+}
+
+.credential-wallet-list label {
+  align-items: flex-start;
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  display: flex;
+  gap: var(--sp-3);
+  min-height: 44px;
+  padding: var(--sp-4);
+}
+
+.credential-wallet-list label > span,
+.credential-wallet-list small {
+  display: block;
+}
+
+.credential-wallet-list label > span > span,
+.credential-wallet-list small {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  margin-top: var(--sp-1);
+}
 
 .advisor-lines,
 .advisor-share-list {
@@ -8992,9 +9729,32 @@ section[data-drop] > .grip + * {
     gap: var(--sp-5);
   }
 
-  .today-near-term {
+  .today-dominant-card {
     grid-column: 1 / -1;
   }
+
+  .today-near-term {
+    grid-column: auto;
+  }
+
+  .action-center-main {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .action-panel-primary,
+  .action-center-main > .hides-in-focus {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Focus mode is a real one-task view on Today, not just a hidden tab bar.
+   Source, rationale, help and the persistent Exit focus bar remain inside the
+   dominant action. Supporting status and navigation are still one step away
+   after the student leaves focus. */
+:root[data-workspace='focused'] .today-decision-surface > :not(.today-dominant-card),
+:root[data-workspace='focused'] .today-action-center .action-panel-secondary,
+:root[data-workspace='focused'] .today-action-center .today-context {
+  display: none;
 }
 
 .course-mastery {
@@ -9826,14 +10586,14 @@ button.adband-bar {
   padding: var(--sp-5) var(--sp-6);
   border: 1px solid var(--app-line);
   border-radius: var(--r-sm);
-  background: var(--app-paper);
+  background: var(--app-panel);
   color: var(--app-dim);
   font-size: var(--type-sm);
   line-height: var(--leading-normal);
 }
 
 .course-capture-policy strong {
-  color: var(--app-ink);
+  color: var(--app-fg);
   font-family: var(--font-heading);
   font-size: var(--type-base);
 }
@@ -9843,7 +10603,7 @@ button.adband-bar {
   grid-template-columns: auto 1fr;
   align-items: start;
   gap: var(--sp-3);
-  color: var(--app-ink);
+  color: var(--app-fg);
   font-size: var(--type-sm-plus);
   line-height: var(--leading-normal);
 }
@@ -10049,6 +10809,59 @@ button.adband-bar {
   color: var(--app-dim);
 }
 
+.trust-scorecard {
+  display: grid;
+  gap: var(--sp-4);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--app-line);
+}
+
+.trust-scorecard-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trust-scorecard-row {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-left: 4px solid var(--app-dim);
+  border-radius: var(--r-sm);
+  background: var(--app-panel);
+}
+
+.trust-scorecard-row > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.trust-scorecard-row p,
+.trust-scorecard-row small {
+  margin: 0;
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.trust-scorecard-state {
+  flex: none;
+  text-transform: uppercase;
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+}
+
+/* The state is spelled out beside each row; the border only repeats it. */
+.trust-scorecard-row.is-green { border-left-color: var(--status-success); }
+.trust-scorecard-row.is-yellow { border-left-color: var(--status-attention); }
+.trust-scorecard-row.is-red { border-left-color: var(--status-danger); }
+
 /* ── Integration dashboard ───────────────────────────────────────────────
  * Status is a glyph and a word; the border only repeats it, so nothing here
  * is carried by colour alone. Tables scroll inside their own box so the page
@@ -10222,6 +11035,82 @@ button.adband-bar {
 .integration-table thead th {
   color: var(--app-dim);
   font-weight: 500;
+}
+
+/* The shared Table (components/unity/Table.tsx). The look above is the existing
+   integration table's; these are what it adds. */
+.table-caption {
+  caption-side: top;
+  padding: var(--sp-2) var(--sp-3);
+  text-align: start;
+  color: var(--app-dim);
+}
+
+.table-ui [data-numeric] {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-sort {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  width: auto;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.table-sort-mark {
+  font-size: var(--type-xs);
+}
+
+/* Stacked: every cell stays, one labelled line per column. The header row is
+   kept for assistive technology and drawn nowhere. */
+@media (max-width: 839px) {
+  .table-stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .table-stack,
+  .table-stack tbody,
+  .table-stack tr {
+    display: block;
+  }
+
+  /* A table-caption inside a block table gets wrapped in an anonymous shrink-to-fit table, and the
+     caption wraps in a sliver. Block it so it takes the width like everything else. */
+  .table-stack caption {
+    display: block;
+  }
+
+  .table-stack tr {
+    padding-block: var(--sp-3);
+    border-bottom: 1px solid var(--app-line-soft);
+  }
+
+  .table-stack th,
+  .table-stack td {
+    display: grid;
+    grid-template-columns: minmax(0, 40%) minmax(0, 1fr);
+    gap: var(--sp-3);
+    border-bottom: 0;
+    white-space: normal;
+  }
+
+  .table-stack th::before,
+  .table-stack td::before {
+    content: attr(data-label);
+    color: var(--app-dim);
+  }
+
+  .table-stack [data-numeric] {
+    text-align: start;
+  }
 }
 
 .integration-dead-letters {
@@ -10534,4 +11423,32 @@ button.adband-bar {
 .device .ai-composer[data-blocked] .ai-composer-field {
   cursor: not-allowed;
   color: var(--app-dim);
+}
+
+/* Standards readiness and procurement review. */
+.standards-audit { margin-top: calc(var(--sp-7) + var(--sp-6)); }
+.standards-audit-summary, .standards-audit-filters { display: flex; flex-wrap: wrap; align-items: end; gap: var(--sp-6); margin: var(--sp-7) 0; }
+.standards-audit-summary p { flex-basis: 100%; margin: 0; }
+.standards-audit label { display: flex; flex-direction: column; gap: var(--sp-3); }
+.standards-audit select, .standards-audit input[type="search"] { max-width: 100%; padding: var(--sp-4); color: var(--app-fg); background: var(--app-panel); border: 1px solid var(--app-line); border-radius: var(--r-md); min-height: 44px; }
+.standards-audit button { min-height: 44px; padding: var(--sp-4) var(--sp-6); color: var(--app-fg); background: var(--app-panel); border: 1px solid var(--app-line); border-radius: var(--r-md); cursor: pointer; }
+.standards-audit-views { display: flex; flex-wrap: wrap; gap: var(--sp-4); }
+.standards-audit-views button[aria-pressed="true"] { border-color: var(--app-fg); font-weight: 600; }
+.standards-audit-table { overflow: auto; max-width: 100%; margin: var(--sp-7) 0; }
+.standards-audit table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: var(--type-md); line-height: 1.6; }
+.standards-audit caption { text-align: left; padding-bottom: var(--sp-5); }
+.standards-audit td, .standards-audit th { padding: var(--sp-6); border-bottom: 1px solid var(--app-line); text-align: left; vertical-align: top; }
+.standards-audit summary { min-height: 44px; cursor: pointer; }
+.standards-audit a { overflow-wrap: anywhere; text-decoration: underline; }
+.standards-audit li { margin-bottom: var(--sp-5); }
+.standards-audit :focus-visible { outline: 2px solid var(--app-fg); outline-offset: 3px; }
+
+/* One default assignment action stays visible; alternatives remain a readable
+   list without turning four equal controls into a single action wall. */
+.assignment-options-list {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  list-style: none;
 }

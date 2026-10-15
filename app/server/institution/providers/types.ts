@@ -1,3 +1,4 @@
+import type { SemesterAgent } from '../../../../packages/institution/src/agents.ts';
 import type { IntelligenceMode } from '../../../../packages/institution/src/intelligence.ts';
 import type { ApprovedIntelligenceSource } from '../intelligence.ts';
 
@@ -6,6 +7,8 @@ export interface ProviderGenerationRequest {
   model: string;
   question: string;
   mode: IntelligenceMode;
+  agent?: SemesterAgent;
+  coursePolicyInstruction?: string;
   sources: ApprovedIntelligenceSource[];
   maxOutputTokens: number;
 }

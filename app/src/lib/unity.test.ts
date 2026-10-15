@@ -192,3 +192,10 @@ describe('⌘K / Ctrl+K', () => {
     expect(shortcutFor({ key: 'k' }, document)?.screen).toBe('calendar');
   });
 });
+
+// The launcher's destinations must cover the PDF's seven starting intentions.
+it('starts meeting preparation, weekly planning and privacy without setup', () => {
+  expect(GOALS.some(goal => goal.screen === 'meet')).toBe(true);
+  expect(GOALS.some(goal => goal.screen === 'calendar')).toBe(true);
+  expect(GOALS.some(goal => goal.screen === 'privacy')).toBe(true);
+});

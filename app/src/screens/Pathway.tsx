@@ -1,4 +1,5 @@
-import { useState, type Dispatch, type SetStateAction } from 'react';
+import { incomingCapture } from '../lib/productivity-arrival';
+import { lazy, Suspense, useState, type Dispatch, type SetStateAction } from 'react';
 import { useWorkspaceSelection, useWorkspaceTabId } from '../lib/workspace-view';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -11,6 +12,7 @@ import { useDeviceLibrary } from '../lib/device-library';
 import { LEARNER_KEY, learnerPathwaysOn } from '../lib/learner-pathways';
 import { LearnerPathways } from '../components/LearnerPathways';
 import { download } from '../lib/deliver';
+const ProductivityWorkspace = lazy(() => import('../components/ProductivityWorkspace').then(module => ({ default: module.ProductivityWorkspace })));
 import { StudyAbroad } from '../components/StudyAbroad';
 import { abroadKey } from '../lib/abroad';
 import { fromMarkdown } from '../lib/document';
@@ -66,6 +68,7 @@ import { formatDateTime } from '../lib/locale';
  */
 
 const TABS = [
+  { id: 'productivity' as const, label: 'Decisions & productivity' },
   { id: 'home' as const, label: 'Pathway' },
   { id: 'programs' as const, label: 'Programs' },
   { id: 'compare' as const, label: 'Costs' },
@@ -128,7 +131,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
     applications each come back to their own. The applications themselves
     stay in the one shared library below.
   */
-  const [tab, setTab] = useWorkspaceSelection(storageKey, 'tab', 'home') as [
+  const [tab, setTab] = useWorkspaceSelection(storageKey, 'tab', incomingCapture() ? 'productivity' : 'home') as [
     Tab,
     Dispatch<SetStateAction<Tab>>,
   ];
@@ -203,6 +206,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
           {lib.error || notice}
         </Notice>
       )}
+
+      {tab === 'productivity' && <Suspense fallback={<p role="status">Loading decisions and productivity…</p>}><ProductivityWorkspace /></Suspense>}
 
       {tab === 'home' && (
         <>

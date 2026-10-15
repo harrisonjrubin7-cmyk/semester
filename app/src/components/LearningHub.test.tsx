@@ -6,6 +6,7 @@ import { StoreProvider } from '../state/store';
 import { STORAGE_KEY } from '../state/shape';
 import { loadSeed } from '../data/seed';
 import { LearningHub } from './LearningHub';
+import { askToOpen, clear, peek } from '../lib/learningintent';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -42,6 +43,8 @@ afterEach(async () => {
   host.remove();
   localStorage.clear();
 });
+
+afterEach(clear);
 
 const details = () => host.querySelector('details.learning-hub') as HTMLDetailsElement;
 const toggle = (open: boolean) =>
@@ -93,5 +96,27 @@ describe('the learning row', () => {
     await toggle(false);
     expect(host.querySelector('.office-agenda')).not.toBeNull();
     expect((host.querySelector('.office-agenda input.input') as HTMLInputElement).value).toBe('ask about the paper');
+  });
+});
+
+describe('the learning row opened from the assignment planner', () => {
+  it('opens itself and the feedback inbox, with the work and course carried over, then lets go of the request', async () => {
+    askToOpen({ panel: 'feedback', work: 'Essay 1 draft', courseCode: 'PSCI 1104' });
+    await mount();
+    await settle(() => !!host.querySelector('.feedback-inbox'));
+    expect(details().open).toBe(true);
+    const inbox = host.querySelector('.feedback-inbox') as HTMLDetailsElement;
+    expect(inbox.open).toBe(true);
+    expect((inbox.querySelector('form input.input') as HTMLInputElement).value).toBe('Essay 1 draft');
+    await settle(() => !!inbox.querySelector('form select option'));
+    const select = inbox.querySelector('form select') as HTMLSelectElement;
+    expect(select.selectedOptions[0]?.textContent).toBe('PSCI 1104');
+    await act(async () => void (await new Promise((r) => setTimeout(r, 10))));
+    expect(peek('feedback')).toBeNull();
+  });
+
+  it('control: with nothing asked, it stays closed', async () => {
+    await mount();
+    expect(details().open).toBe(false);
   });
 });

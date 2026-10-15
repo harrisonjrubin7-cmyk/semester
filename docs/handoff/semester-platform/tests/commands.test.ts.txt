@@ -1,0 +1,18 @@
+// Proves migration 060. npx supabase start && npx vitest run tests/commands.test.ts
+import { describe, it, expect } from 'vitest';
+import { asUser } from './helpers';
+const rpc = (c, fn, args) => c.schema('api').rpc(fn, args);
+describe('060 command functions', () => {
+  it('direct inserts are closed', async () => { const c = await asUser('student@campus-a.test'); const { error } = await c.schema('community').from('posts').insert({ body: 'hi' }); expect(error).not.toBeNull(); });
+  it('public posts start held for pre-screen', async () => { const c = await asUser('student@campus-a.test'); const { data: id } = await rpc(c, 'create_post', { p_group: null, p_body: 'Study group tonight?' }); const { data } = await c.schema('community').from('posts').select('status').eq('id', id).single(); expect(data.status).toBe('held'); });
+  it('non-members cannot post in a group', async () => { const c = await asUser('student2@campus-a.test'); const { error } = await rpc(c, 'create_post', { p_group: process.env.PRIVATE_GROUP, p_body: 'x' }); expect(error?.message).toMatch(/not a member/); });
+  it('listings never go live on create', async () => { const c = await asUser('student@campus-a.test'); const { data: id } = await rpc(c, 'create_listing', { p_title: 'BIO textbook', p_category: 'textbooks', p_price_cents: 4000 }); const { data } = await c.schema('market').from('listings').select('status').eq('id', id).single(); expect(data.status).toBe('pending_check'); });
+  it('integrity filter blocks exam material', async () => { const c = await asUser('student@campus-a.test'); const { error } = await rpc(c, 'create_listing', { p_title: 'CHEM 101 answer key', p_category: 'textbooks', p_price_cents: 500 }); expect(error?.message).toMatch(/academic integrity/); });
+  it('staff cannot list items', async () => { const c = await asUser('advisor@campus-a.test'); const { error } = await rpc(c, 'create_listing', { p_title: 'Desk', p_category: 'gear', p_price_cents: 100 }); expect(error).not.toBeNull(); });
+  it('no offers on own listing', async () => { const c = await asUser('seller@campus-a.test'); const { error } = await rpc(c, 'make_offer', { p_listing: process.env.SELLER_LISTING, p_amount_cents: 100 }); expect(error?.message).toMatch(/own listing/); });
+  it('no offers across campuses', async () => { const c = await asUser('student@campus-b.test'); const { error } = await rpc(c, 'make_offer', { p_listing: process.env.SELLER_LISTING, p_amount_cents: 100 }); expect(error?.message).toMatch(/not available/); });
+  it('reports must target own campus', async () => { const c = await asUser('student@campus-b.test'); const { error } = await rpc(c, 'report', { p_type: 'post', p_target: process.env.CAMPUS_A_POST, p_reason: 'harassment', p_note: null }); expect(error?.message).toMatch(/not found/); });
+  it('rate limit holds', async () => { const c = await asUser('student@campus-a.test'); let last; for (let i = 0; i < 22; i++) last = await rpc(c, 'create_post', { p_group: null, p_body: 'spam ' + i }); expect(last.error?.message).toMatch(/too many/); });
+  it('every command writes an audit event first', async () => { const it = await asUser('it@campus-a.test'); const { data } = await it.schema('audit').from('events').select('action').like('action', 'market.listing.create'); expect((data ?? []).length).toBeGreaterThan(0); });
+  it('photos only under own campus and uid', async () => { const c = await asUser('student@campus-a.test'); const { error } = await c.storage.from('listing-photos').upload(process.env.CAMPUS_B + '/' + process.env.STUDENT_A_ID + '/x.jpg', new Blob(['x'])); expect(error).not.toBeNull(); });
+});

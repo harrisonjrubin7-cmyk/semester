@@ -23,3 +23,7 @@
 /app/vercel.json          @harrisonjrubin7-cmyk
 /app/public/_headers      @harrisonjrubin7-cmyk
 /.github/                 @harrisonjrubin7-cmyk
+
+# Tenant contracts: a school's signed terms as data. Written by the owner alone and
+# never by the school's own administrator (D-1019).
+/contracts/               @harrisonjrubin7-cmyk

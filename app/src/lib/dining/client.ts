@@ -22,6 +22,7 @@ import { buildEnvironment } from '../integration/school-records';
 import { formatNumber } from '../locale';
 import { SOURCE_LABELS, type SourceLabel } from '../source';
 import type { FeatureState } from '../../intelligence/contracts';
+import type { ActivationReceipt } from '../governance/activation';
 import { REFUSALS, type Refusal } from './decision';
 import { figure, partnerLabel, type Figure } from './figures';
 import { DINING_FLAG, diningGate, requireDining } from './gate';
@@ -131,7 +132,7 @@ export type DiningOpening =
  * through the one flag evaluator, so a kill switch or an environment answers
  * here as it does everywhere. A failed read throws rather than reading as off.
  */
-export async function openDining(now = new Date()): Promise<DiningOpening> {
+export async function openDining(now = new Date(), activationReceipt: ActivationReceipt | null = null): Promise<DiningOpening> {
   if (!cloudConfigured) return { kind: 'no_service' };
   const db = await cloud();
   const { data: user } = await db.auth.getUser();
@@ -165,6 +166,7 @@ export async function openDining(now = new Date()): Promise<DiningOpening> {
       roles: narrowing.roles,
       cohorts: narrowing.cohorts,
       capabilities,
+      activationReceipt,
     }),
   );
   return { kind: 'ready', context: { userId, school, moduleState, on: decision.ok, reason: decision.reason, capabilities } };

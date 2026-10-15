@@ -304,3 +304,99 @@ describe('the learning stores', () => {
     expect(fresh.length).toBe(0);
   });
 });
+
+describe('the Toolkit stores', () => {
+  const toolkit = {
+    hidden: ['researchStudio'],
+    showLess: true,
+    workspaces: [],
+    research: [{
+      id: 'research-1',
+      question: 'What supports student persistence?',
+      concepts: 'persistence',
+      synonyms: 'retention',
+      databases: 'ERIC',
+      dateRange: '2020-2026',
+      include: 'Higher education',
+      exclude: 'Editorials',
+      evidence: [],
+      claims: [],
+    }],
+    declaration: { assignment: '', course: '', tool: '', version: '', dates: '', uses: [], purpose: '', inputTier: 'T2', interaction: '', outputUsed: '', sourcesChecked: '', verified: '', edits: '', limitations: '', attested: false },
+  };
+  const data = [{
+    id: 'data-1',
+    name: 'Survey extract',
+    tier: 'T1',
+    raw: 'score\n4',
+    imported: '2026-10-11T12:00:00.000Z',
+    dictionary: [{ name: 'score', type: 'number', unit: '', valid: '', source: '', missingRule: '', confirmed: true }],
+    transforms: [],
+    randomized: false,
+    interpretation: { shows: '', method: '', uncertainty: '', conclude: '', cannotConclude: '' },
+  }];
+
+  it('backs up both account-scoped records and restores them only to the restoring account', () => {
+    storage.setItem(`semester.toolkit.v1:${ACCOUNT}`, JSON.stringify(toolkit));
+    storage.setItem(`semester.toolkit-data.v1:${ACCOUNT}`, JSON.stringify(data));
+    storage.setItem('semester.toolkit.v1:someone-else', JSON.stringify({ ...toolkit, hidden: ['other-account'] }));
+
+    const backup = workspaceBackup(ACCOUNT, storage);
+    expect(backup.records.map((record) => record.kind).sort()).toEqual(['toolkit', 'toolkitData']);
+    expect(JSON.stringify(backup)).not.toContain('other-account');
+
+    const fresh = new FakeStorage();
+    restoreWorkspaces(backup, 'acct-2', fresh);
+    expect(JSON.parse(fresh.getItem('semester.toolkit.v1:acct-2')!)).toEqual(toolkit);
+    expect(JSON.parse(fresh.getItem('semester.toolkit-data.v1:acct-2')!)).toEqual(data);
+    expect(fresh.getItem(`semester.toolkit.v1:${ACCOUNT}`)).toBeNull();
+  });
+
+  it('validates Toolkit data before any restore write', () => {
+    const bad = {
+      format: 'semester.workspaces.v1',
+      exported: '',
+      records: [
+        { kind: 'toolkit', term: '', value: toolkit },
+        { kind: 'toolkitData', term: '', value: [{ ...data[0], raw: 42 }] },
+      ],
+    } as unknown as WorkspaceBackup;
+    const fresh = new FakeStorage();
+    expect(() => restoreWorkspaces(bad, 'acct-2', fresh)).toThrow();
+    expect(fresh.length).toBe(0);
+  });
+});
+
+/*
+ * The study journal, with an entry in it.
+ *
+ * It holds what a student got wrong, in their own words, so it is backed up
+ * like the other stores that hold their writing, and held to the same rule: a
+ * file with an entry the reader cannot accept is refused whole.
+ */
+describe('the study journal', () => {
+  const journal = {
+    version: 1,
+    entries: [{ id: 'j1', courseId: 'c1', topic: 'Confounders', attempt: 'I said correlation proves cause.', correction: 'It does not; a third variable can drive both.', kind: 'Concept', source: 'Week 4, slide 12', review: '2026-10-07', resolved: false }],
+  };
+  const put = (account: string) => storage.setItem(`semester.study-journal.v1:${account}:${TERM}`, JSON.stringify(journal));
+
+  it('is taken, and comes back whole on another account', () => {
+    put(ACCOUNT);
+    const backup = workspaceBackup(ACCOUNT, storage);
+    expect(backup.records.map((r) => r.kind)).toEqual(['studyJournal']);
+    const fresh = new FakeStorage();
+    restoreWorkspaces(backup, 'acct-2', fresh);
+    expect(JSON.parse(fresh.getItem(`semester.study-journal.v1:acct-2:${TERM}`)!)).toEqual(journal);
+    expect(fresh.length).toBe(1);
+  });
+
+  it('refuses a file whose entry is unreadable, and writes nothing', () => {
+    put(ACCOUNT);
+    const bad = JSON.parse(JSON.stringify(workspaceBackup(ACCOUNT, storage))) as WorkspaceBackup;
+    (bad.records[0].value as typeof journal).entries[0].resolved = 'yes' as unknown as boolean;
+    const fresh = new FakeStorage();
+    expect(() => restoreWorkspaces(bad, 'acct-2', fresh)).toThrow();
+    expect(fresh.length).toBe(0);
+  });
+});

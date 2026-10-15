@@ -323,7 +323,7 @@ describe('the SQL suites are run by something other than a person remembering', 
    * invite gate's own suite caught a real hole in it. So the step existing is
    * worth pinning.
    */
-  it('CI runs supabase/check.sh', () => {
+  it('CI runs the policy-evidence wrapper around supabase/check.sh', () => {
     /*
      * The `run:` lines only, and that is not fussiness. The first version
      * searched the whole file — which passed against a `ci.yml` with the step
@@ -334,7 +334,7 @@ describe('the SQL suites are run by something other than a person remembering', 
      */
     const runs = [...workflow('ci.yml').matchAll(/^\s*run:\s*(.*)$/gm)].map((m) => m[1]);
     expect(
-      runs.some((r) => r.includes('supabase/check.sh')),
+      runs.some((r) => r.includes('supabase/policy-evidence.sh')),
       'the database policy checks are no longer run by CI',
     ).toBe(true);
   });

@@ -1,0 +1,71 @@
+.operating-rhythm {
+  margin-block: var(--sp-5);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  padding: var(--sp-4);
+}
+.operating-rhythm summary {
+  cursor: pointer;
+  min-height: 44px;
+  align-content: center;
+}
+.operating-rhythm section {
+  display: grid;
+  gap: var(--sp-3);
+}
+.operating-rhythm label {
+  display: block;
+  margin-block: var(--sp-2);
+}
+.rhythm-field {
+  display: grid;
+  gap: var(--sp-2);
+}
+.operating-rhythm input:not([type='checkbox']),
+.operating-rhythm textarea,
+.operating-rhythm select {
+  max-width: 100%;
+  min-height: 44px;
+  background: var(--app-bg);
+  color: var(--app-fg);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+  padding: var(--sp-2);
+}
+.operating-rhythm textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+.rhythm-actions {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+.operating-rhythm details {
+  border-block-start: 1px solid var(--app-line);
+  padding-block: var(--sp-2);
+}
+.operating-rhythm table {
+  width: 100%;
+  font-size: var(--type-xs);
+  border-collapse: collapse;
+}
+.operating-rhythm th,
+.operating-rhythm td {
+  text-align: start;
+  border-block-end: 1px solid var(--app-line);
+  padding: var(--sp-2);
+}
+.rhythm-focus {
+  max-width: min(92vw, 36rem);
+  max-height: 90vh;
+  overflow: auto;
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  padding: var(--sp-5);
+  background: var(--app-bg);
+  color: var(--app-fg);
+}
+.rhythm-focus::backdrop {
+  background: rgb(0 0 0 / 75%);
+}

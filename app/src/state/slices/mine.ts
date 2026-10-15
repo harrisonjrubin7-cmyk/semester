@@ -21,6 +21,8 @@ import { newLetter, newPerson, newVisit } from '../../lib/letters';
 import { newRest, readFloor } from '../../lib/rest';
 import { tidy } from '../../lib/windows';
 import { resurface } from '../../lib/postmortem';
+import { weave } from '../../lib/sync/engine/tasks';
+import { move, snoozeCheckBack } from '../../lib/maintenance';
 import type { Action, State } from '../shape';
 
 export function mine(state: State, action: Action): State | null {
@@ -168,6 +170,16 @@ export function mine(state: State, action: Action): State | null {
 
     case 'deleteTask':
       return { ...state, tasks: state.tasks.filter((t) => t.id !== action.id) };
+
+    /*
+     * What the engine holds, woven into the list the student has — here, against the list as it is *now*, not as
+     * it was when the engine started asking. An edit made while a sync was in flight is in `state.tasks` already
+     * and is the student's; the weave keeps it and the next pass sends it.
+     */
+    case 'tasksFromEngine': {
+      const next = weave(state.tasks, action.tasks, new Set(action.known), action.adopted);
+      return next ? { ...state, tasks: next } : state;
+    }
 
     case 'addAppointment':
       return {
@@ -590,6 +602,38 @@ export function mine(state: State, action: Action): State | null {
 
     case 'dropResidence':
       return { ...state, residences: state.residences.filter((r) => r.id !== action.id) };
+
+    // Repairs reported to housing. The caller makes the id, so a double tap
+    // or a replayed dispatch finds it already there and changes nothing.
+    case 'addMaintenance':
+      if (state.maintenance.some((r) => r.id === action.request.id)) return state;
+      return { ...state, maintenance: [...state.maintenance, action.request] };
+
+    // Every status move goes through `move`, which refuses the ones `NEXT`
+    // does not allow. The screen checks first; a refusal here leaves the
+    // state alone rather than storing half a change.
+    case 'moveMaintenance': {
+      const at = state.maintenance.findIndex((r) => r.id === action.id);
+      if (at < 0) return state;
+      const moved = move(state.maintenance[at], action.change);
+      if (!moved.ok) return state;
+      const maintenance = [...state.maintenance];
+      maintenance[at] = moved.request;
+      return { ...state, maintenance };
+    }
+
+    case 'snoozeMaintenance': {
+      const at = state.maintenance.findIndex((r) => r.id === action.id);
+      if (at < 0) return state;
+      const later = snoozeCheckBack(state.maintenance[at], action.until, action.at);
+      if (!later) return state;
+      const maintenance = [...state.maintenance];
+      maintenance[at] = later;
+      return { ...state, maintenance };
+    }
+
+    case 'dropMaintenance':
+      return { ...state, maintenance: state.maintenance.filter((r) => r.id !== action.id) };
 
     case 'addPlace':
       return {

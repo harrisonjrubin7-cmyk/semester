@@ -40,3 +40,24 @@ describe('the hand-off to the capture box', () => {
     expect(takeQuickAddSeed()).toBe('');
   });
 });
+
+// Removing a command route must leave its requested workflow unreachable.
+describe('navigationIntent', () => {
+  it('opens the requested workflow without committing an action', async () => {
+    const { navigationIntent } = await import('./intent');
+    expect(navigationIntent('  Prepare my advisor agenda  ')).toBe('meet');
+    expect(navigationIntent('Open privacy controls')).toBe('privacy');
+    expect(navigationIntent('Find my next deadline')).toBe('home');
+    expect(navigationIntent('Add a study block')).toBe('calendar');
+    expect(navigationIntent('Compare course options')).toBe('degree');
+    expect(navigationIntent('Show my shared items')).toBe('meet');
+    expect(navigationIntent('Find tutoring')).toBe('support');
+    expect(navigationIntent('Open my fall plan')).toBe('degree');
+  });
+  it('leaves unfamiliar and consequential requests for search or explicit review', async () => {
+    const { navigationIntent } = await import('./intent');
+    for (const phrase of ['', 'delete all courses', 'share my private notes', 'register ECON 101', 'pay tuition', 'find tutoring jobs', 'open my fall plan and delete it']) {
+      expect(navigationIntent(phrase)).toBeNull();
+    }
+  });
+});

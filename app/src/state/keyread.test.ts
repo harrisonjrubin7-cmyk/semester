@@ -81,12 +81,26 @@ function persistedFields(): string[] {
  * `persisted.seenOnboarding` in the store (off the persisted object, not off
  * state), and `lastOpened` nowhere.
  */
-function readersOf(field: string, read: [string, string][]): string[] {
-  const access = new RegExp(`\\.${field}\\b`);
-  const destructured = new RegExp(`\\{[^}]*\\b${field}\\b[^}]*\\}\\s*=\\s*(state|persisted|saved|useStore\\(\\))`);
-  return read
-    .filter(([, code]) => access.test(code) || destructured.test(code))
-    .map(([f]) => f.slice(SRC.length));
+function readerIndex(read: [string, string][]): Map<string, string[]> {
+  const indexed = new Map<string, Set<string>>();
+  const add = (field: string, file: string) => {
+    const readers = indexed.get(field) ?? new Set<string>();
+    readers.add(file.slice(SRC.length));
+    indexed.set(field, readers);
+  };
+
+  for (const [file, code] of read) {
+    // The former implementation compiled two regexes and searched every
+    // source file once per persisted field. Index the same two access shapes
+    // in one pass over each file instead: `.field`, and a field named inside
+    // an object destructured from one of the store-bearing values.
+    for (const match of code.matchAll(/\.([A-Za-z_$][\w$]*)\b/g)) add(match[1], file);
+    for (const match of code.matchAll(/\{([^}]*)\}\s*=\s*(?:state|persisted|saved|useStore\(\))/g)) {
+      for (const name of match[1].matchAll(/\b([A-Za-z_$][\w$]*)\b/g)) add(name[1], file);
+    }
+  }
+
+  return new Map([...indexed].map(([field, readers]) => [field, [...readers]]));
 }
 
 /**
@@ -105,17 +119,18 @@ describe('every field the store persists', () => {
   const files = sources(SRC);
   const fields = persistedFields();
   const read = readable(files);
+  const readers = readerIndex(read);
 
   it('found the store and the tree, or the rest of this proves nothing', () => {
     expect(fields.length).toBeGreaterThan(50);
     expect(files.length).toBeGreaterThan(300);
     // The probe, pointed at what it is meant to see. A field that is only
     // carried must read as unread — this is the shape `lastOpened` had.
-    expect(readersOf('notAFieldAnythingReads', read)).toEqual([]);
+    expect(readers.get('notAFieldAnythingReads') ?? []).toEqual([]);
   });
 
-  it('is read by something that is not merely carrying it', { timeout: 15_000 }, () => {
-    const unread = fields.filter((f) => readersOf(f, read).length === 0);
+  it('is read by something that is not merely carrying it', () => {
+    const unread = fields.filter((field) => !readers.has(field));
     expect(unread).toEqual([]);
   });
 });

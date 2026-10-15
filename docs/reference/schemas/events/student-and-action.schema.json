@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semester:events:student-and-action",
+  "title": "Semester events: Student and action",
+  "description": "The 4 Student and action event types. Each branch fixes the type name and version and allows the classifications at or above the type's floor. Generated from EVENT_TYPES in packages/institution/src/events.ts.",
+  "allOf": [
+    {
+      "$ref": "urn:semester:events:envelope"
+    }
+  ],
+  "oneOf": [
+    {
+      "title": "action.created",
+      "properties": {
+        "eventType": {
+          "const": "action.created"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares student_record for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "student_record"
+        }
+      }
+    },
+    {
+      "title": "action.updated",
+      "properties": {
+        "eventType": {
+          "const": "action.updated"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares student_record for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "student_record"
+        }
+      }
+    },
+    {
+      "title": "action.completed",
+      "properties": {
+        "eventType": {
+          "const": "action.completed"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares student_record for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "student_record"
+        }
+      }
+    },
+    {
+      "title": "plan.updated",
+      "properties": {
+        "eventType": {
+          "const": "plan.updated"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares student_record for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "student_record"
+        }
+      }
+    }
+  ]
+}

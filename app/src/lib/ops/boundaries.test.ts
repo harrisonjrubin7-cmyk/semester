@@ -3,6 +3,7 @@ import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BOUNDARIES, DB_DRIVERS, FACE_LIBRARIES, SCREEN_CAPTURE_ALLOWED } from './boundaries';
 import { cell, controlLine, link, renderedFrom, table } from './render';
+import { written } from './decisionlog';
 
 /**
  * The strategic boundaries, and the mechanical half of holding them.
@@ -75,11 +76,10 @@ describe('the strategic boundaries', () => {
     });
 
     it('cite decisions that are written down', () => {
-      const log = read('docs/DECISION-LOG.md');
       for (const b of BOUNDARIES) {
         for (const d of b.decisions) {
           if (d.startsWith('ADR-')) expect(readdirSync(at('docs/architecture')).some((f) => f.startsWith(`${d.slice(4)}-`)), `${b.id} cites ${d}`).toBe(true);
-          else expect(log.includes(`## ${d} ·`), `${b.id} cites ${d}`).toBe(true);
+          else expect(written(root, d), `${b.id} cites ${d}`).toBe(true);
         }
       }
     });

@@ -188,7 +188,7 @@
    marked run keeps the panel's own ink, so it has nothing new to contrast
    against on any of the thirteen grounds `lib/look.ts` can put behind it. */
 .study-cite-place{white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto;font-size:calc(13px * var(--text-scale, 1));line-height:1.7;color:var(--app-dim)}
-.study-cite-place mark{background:none;color:var(--app-ink);font-weight:600;box-shadow:inset 0 -2px var(--app-accent-bright)}
+.study-cite-place mark{background:none;color:var(--app-fg);font-weight:600;box-shadow:inset 0 -2px var(--app-accent-bright)}
 .study-controls{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(16px * var(--density, 1))!important}
 .study-controls label{display:flex;flex-direction:column;gap:calc(8px * var(--density, 1))}
 .study-question-types{display:flex;gap:calc(16px * var(--density, 1));flex-wrap:wrap;margin:calc(20px * var(--density, 1)) 0!important}
@@ -278,6 +278,17 @@
 .family-confirm{border:1px solid var(--app-line);border-radius:var(--r-md);padding:var(--sp-4);margin-bottom:var(--sp-3)}
 .shared-from{border:1px solid var(--app-line);border-radius:var(--r-md);padding:var(--sp-4);margin-block:var(--sp-4)}
 .shared-from h3{font-size:var(--type-base);margin:0 0 var(--sp-2)}
+.guardian-projection{border-top:1px solid var(--app-line);padding-top:var(--sp-3)}
+.guardian-projection-heading{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);flex-wrap:wrap}
+.guardian-projection-heading .sharing-lead{margin:0}
+.guardian-projection-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:var(--sp-2) var(--sp-4);margin:var(--sp-3) 0 0}
+.guardian-projection-fields div{min-width:0}
+.guardian-projection-fields dt{color:var(--app-dim);font-size:var(--type-sm)}
+.guardian-projection-fields dd{margin:0;overflow-wrap:anywhere}
+.guardian-access-list{display:grid;gap:var(--sp-3);padding:0;list-style:none}
+.guardian-access-list li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--sp-1) var(--sp-3);border:1px solid var(--app-line);border-radius:var(--r-md);padding:var(--sp-3)}
+.guardian-access-list li span{overflow-wrap:anywhere}
+@media(max-width:599px){.guardian-access-list li{grid-template-columns:1fr}.guardian-projection .btn{width:100%}}
 .shared-body{font-size:var(--type-sm);margin:var(--sp-2) 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
 .support-payload section{margin-block:var(--sp-4)}
 .support-payload h4{font-size:var(--type-sm);margin:0 0 var(--sp-2)}
@@ -295,3 +306,17 @@
 .studio-items{padding-inline-start:1.2em;display:grid;gap:var(--sp-4)}
 .study-packs ul{padding-inline-start:1.2em;margin:var(--sp-2) 0}
 .study-pack{margin-block:var(--sp-3)}
+/* Repairs reported to housing (components/MaintenanceRequests.tsx). Tokens only. */
+.maintenance-intro,.maintenance-hint{font-size:var(--type-sm);color:var(--app-dim);line-height:var(--leading-relaxed);margin-block:var(--sp-3) var(--sp-4)}
+.maintenance-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--sp-4)}
+.maintenance-row{border:1px solid var(--app-line);border-radius:var(--r-md);padding:var(--sp-5)}
+.maintenance-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--sp-3);font-size:var(--type-base)}
+.maintenance-status{font-size:var(--type-sm);color:var(--app-dim)}
+.maintenance-meta{font-size:var(--type-sm);color:var(--app-dim);margin-top:var(--sp-2);overflow-wrap:anywhere}
+.maintenance-actions{display:flex;flex-wrap:wrap;gap:var(--sp-3);margin-top:var(--sp-4)}
+.maintenance-actions .btn{min-height:var(--target-primary)}
+.btn.maintenance-add{margin-top:var(--sp-4);min-height:var(--target-primary)}
+.maintenance-form,.maintenance-visit{display:grid;gap:var(--sp-2);margin-top:var(--sp-4)}
+.maintenance-form fieldset{border:0;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:var(--sp-4)}
+.maintenance-form legend{font-size:var(--type-sm);margin-bottom:var(--sp-2)}
+.maintenance-choice{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:var(--target-primary)}

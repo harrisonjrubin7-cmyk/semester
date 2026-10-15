@@ -1,3 +1,5 @@
+import { useDeviceLibrary } from '../lib/device-library';
+import { EMPTY_PRODUCTIVITY, readProductivity, id } from '../lib/productivity';
 /**
  * One line, anywhere: "econ ps4 friday 5pm".
  *
@@ -45,6 +47,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useModal } from '../a11y/modal';
 import { useModernShell } from './shell-context';
 import { useNow, useStore } from '../state/store';
+import { useTaskActions } from '../composition/taskactions';
 import { capture, enough, readBack, type Caught } from '../lib/capture';
 import { heardLine, readAloud } from '../lib/aloud';
 import { dictate, dictationSupported } from '../lib/mic';
@@ -65,7 +68,9 @@ import { KeepItAs } from './unity/UnityLayer';
 const COLUMN = 620;
 
 export function QuickAdd({ onClose }: { onClose: () => void }) {
-  const { catalog, dispatch } = useStore();
+  const { catalog, account } = useStore();
+  const taskActions = useTaskActions();
+  const productivity = useDeviceLibrary(`semester.productivity.v1:${account?.id || 'device'}`, readProductivity, EMPTY_PRODUCTIVITY);
   const now = useNow();
   // Opens on what was typed into the search field when that was an add —
   // "add econ ps4 friday" there lands here as "econ ps4 friday". See
@@ -104,15 +109,12 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
 
   /** File one reading. The one place a task is written, whichever view called. */
   const file = (c: Caught) => {
-    dispatch({
-      type: 'addTask',
-      task: {
-        title: c.title,
-        date: c.date || null,
-        time: c.time,
-        note: c.kind ? `${c.kind}, captured` : 'Captured',
-        courseId: c.courseId,
-      },
+    taskActions.add({
+      title: c.title,
+      date: c.date || null,
+      time: c.time,
+      note: c.kind ? `${c.kind}, captured` : 'Captured',
+      courseId: c.courseId,
     });
   };
 
@@ -226,14 +228,14 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
             className={listening ? 'btn btn-primary' : 'btn btn-secondary'}
             onClick={listen}
             aria-pressed={listening}
-            style={{ width: 'auto', height: 30, fontSize: 'var(--type-xs)', paddingInline: 'var(--sp-6)' }}
+            style={{ width: 'auto', minHeight: 44, height: 'auto', fontSize: 'var(--type-xs)', paddingInline: 'var(--sp-6)' }}
           >
             {listening ? 'Stop' : 'Say it'}
           </button>
         ) : null}
         <button
           type="button"
-          className="bare"
+          className="bare tap-y"
           onClick={onClose}
           style={{ width: 'auto', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
         >
@@ -267,6 +269,11 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
       />
       {/* Everything that is not a dated line — see `KeepItAs`. */}
       <KeepItAs text={text} onLeave={onClose} />
+      <ActionButton tone="ghost" spacing="0" style={{width: 'auto', marginTop: 'var(--sp-3)', textTransform: 'none'}} disabled={!text.trim()} onClick={() => {
+        const ok = productivity.update(old => ({ ...old, captures: [...old.captures, { id: id(), title: text.trim(), kind: 'Idea', source: 'Quick capture', reason: '', context: '', next: '', due: '', status: 'Saved for later', authorized: false }] }));
+        setSaid(ok ? 'Saved to Pathway → Decisions & productivity → Inbox.' : 'Could not save captured context.');
+      }}>Capture for later</ActionButton>
+      {productivity.error && <p role="alert">{productivity.error}</p>}
 
       {micError ? (
         <div

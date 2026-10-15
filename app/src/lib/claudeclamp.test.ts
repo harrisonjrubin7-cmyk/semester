@@ -35,7 +35,7 @@ const appRequest = () => ({
   thinking: { type: 'adaptive' },
   tools: [
     {
-      name: 'lookup',
+      name: 'find_deadlines',
       description: 'Look something up in the app',
       input_schema: { type: 'object', properties: { q: { type: 'string' } }, required: ['q'] },
       strict: true,

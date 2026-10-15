@@ -96,7 +96,7 @@ export const SETTINGS: SettingsSection[] = [
         label: 'Courses',
         holds: 'What is loaded, and where you study',
         keywords:
-          'courses course remove delete sample data demo example school university college switch order rearrange import syllabus term',
+          'courses course remove delete sample data demo example school university college switch order rearrange import syllabus term role student teaching faculty teaching assistant advising advisor administration administrator parent payer parent or payer campus services staff applicant authorized family alumni',
       },
       {
         screen: 'setGrading',
@@ -130,7 +130,7 @@ export const SETTINGS: SettingsSection[] = [
         label: 'Your data',
         holds: 'What is stored, and what leaves the device',
         keywords:
-          'privacy data policy gdpr delete erase what is stored sent tracking analytics rights api key anthropic security',
+          'privacy data policy gdpr delete erase what is stored sent tracking analytics rights api key anthropic security permissions camera microphone location notifications allow block revoke who can see access shared advisor family guardian support',
       },
       {
         // Not a settings page of its own: the Data screen measures every byte

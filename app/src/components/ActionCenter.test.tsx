@@ -110,7 +110,83 @@ it('snoozes until tomorrow morning and says how many are snoozed', () => {
   const choice = stored().a0;
   expect(choice.status).toBe('snoozed');
   expect(choice.snoozedUntil).toBe(tomorrowMorning(Date.now()));
-  expect(host.textContent).toContain('1 snoozed until tomorrow morning');
+  expect(host.textContent).toContain('1 snoozed until the time you chose');
+  expect(host.querySelector('[role="status"]')?.textContent).toContain('Snoozed until tomorrow morning');
+});
+
+/** Wednesday 30 September 2026, 10:00 local: every preset is on offer. */
+const MIDDAY = new Date(2026, 8, 30, 10, 0).getTime();
+
+it('offers later today, next week and the day before it is due, and stores the time chosen', () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(MIDDAY);
+  try {
+    // make(1) is due two days out and make(0) is pushed to five, so make(1) leads.
+    const due = MIDDAY + 2 * DAY;
+    render([{ ...make(0), dueAt: MIDDAY + 5 * DAY }, make(1)]);
+    const top = host.querySelector('article')!;
+    expect(button(/^Snooze until later today$/, top)).toBeUndefined(); // behind "More snooze times"
+    act(() => button(/^More snooze times$/, top)?.click());
+    const group = top.querySelector('[role="group"][aria-label*="until"]')!;
+    const labels = [...group.querySelectorAll('button')].map((b) => b.textContent);
+    expect(labels).toEqual([
+      'Snooze until later today',
+      'Snooze until next week',
+      'Snooze until the day before it is due',
+    ]);
+    act(() => button(/^Snooze until the day before it is due$/, group)?.click());
+    expect(stored().a1.status).toBe('snoozed');
+    expect(stored().a1.snoozedUntil).toBe(due - DAY);
+    expect(stored().a0).toBeUndefined();
+    expect(host.querySelector('[role="status"]')?.textContent).toContain('Snoozed until the day before it is due');
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it('does not offer later today late in the evening', () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 8, 30, 21, 30).getTime());
+  try {
+    render([make(0), make(1)]);
+    const top = host.querySelector('article')!;
+    act(() => button(/^More snooze times$/, top)?.click());
+    const labels = [...top.querySelectorAll('[role="group"][aria-label*="until"] button')].map((b) => b.textContent);
+    expect(labels).not.toContain('Snooze until later today');
+    expect(labels).toContain('Snooze until next week');
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it('asks why before hiding, records the reason, and shows it in the hidden list', () => {
+  render([make(0), make(1)]);
+  const top = host.querySelector('article')!;
+  act(() => button(/^Not relevant$/, top)?.click());
+  // Choosing to hide is one more tap, and nothing is hidden until it happens.
+  expect(stored().a0).toBeUndefined();
+  const group = top.querySelector('[role="group"][aria-label^="Why hide"]')!;
+  expect([...group.querySelectorAll('button')].map((b) => b.textContent)).toEqual([
+    'I already did this',
+    'This does not apply to me',
+    'The information is wrong',
+    'Too much right now',
+    'Hide without saying why',
+  ]);
+  act(() => button(/^I already did this$/, group)?.click());
+  expect(stored().a0.status).toBe('dismissed');
+  expect(stored().a0.history.at(-1).note).toBe('Hidden because: I already did this');
+  expect(host.textContent).toContain('Not relevant · I already did this');
+});
+
+it('hides without a reason when the student would rather not say', () => {
+  render([make(0), make(1)]);
+  const top = host.querySelector('article')!;
+  act(() => button(/^Not relevant$/, top)?.click());
+  act(() => button(/^Hide without saying why$/, top)?.click());
+  expect(stored().a0.status).toBe('dismissed');
+  expect(stored().a0.history.at(-1).note).toBeUndefined();
+  expect(host.textContent).not.toContain('Not relevant ·');
 });
 
 it('records a correction with a note, and says it was not sent anywhere', () => {
@@ -199,7 +275,8 @@ it('with the help route off, "Ask for help" keeps the note and hands nothing ove
 
 it('can bring back something marked not relevant, after the Undo is gone', () => {
   render([make(0), make(1)]);
-  act(() => button(/Not relevant/)?.click());
+  act(() => button(/^Not relevant$/)?.click());
+  act(() => button(/^Hide without saying why$/)?.click());
   expect(stored().a0.status).toBe('dismissed');
 
   // A reload: the Undo line lives in component state and does not survive it.

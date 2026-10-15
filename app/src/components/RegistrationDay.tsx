@@ -3,6 +3,7 @@ import { EmptyState } from './ui';
 import { ErrorState, SuccessState } from './unity/States';
 import { NextSteps } from './unity/NextSteps';
 import { SourceBadge } from './SourceBadge';
+import { termLoad } from '../lib/termload';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
 import type { CatalogCourse } from '../lib/registration';
@@ -80,6 +81,13 @@ export function RegistrationDay({
   const ready = readiness(data, cart, catalog);
   const byId = useMemo(() => new Map(catalog.map((c) => [c.id, c])), [catalog]);
   const list = sectionList(data, cart, catalog);
+  const load = termLoad({
+    credits: cart.reduce((sum, c) => sum + c.credits, 0),
+    target: data.creditTarget,
+    min: data.minCredits,
+    max: data.maxCredits,
+    studyHours: data.studyHours,
+  });
 
   const copy = async () => {
     try {
@@ -225,6 +233,59 @@ export function RegistrationDay({
           </label>
           <p className="portal-muted">
             <SourceBadge label="student_entered" /> Your own target. Semester does not know what load is right for you.
+          </p>
+        </section>
+      ) : null}
+
+      {mode ? (
+        <section className="portal-panel" aria-labelledby="regday-load">
+          <h3 id="regday-load">How heavy this term is</h3>
+          <ul className="regday-card-lines" aria-label="Term load estimate">
+            {load.lines.map((line) => (
+              <li key={line} className="is-ok">
+                {line}
+              </li>
+            ))}
+          </ul>
+          {load.flags.some((f) => f !== 'fits') ? (
+            <p role="status" className="portal-muted">
+              Worth a look with your advisor before your window opens. Nothing here stops you from registering.
+            </p>
+          ) : null}
+          <p className="portal-muted">
+            <SourceBadge label="estimated" /> {load.assumption} A planning estimate, not a credit check: your school and
+            your advisor decide what you may take.
+          </p>
+          {(
+            [
+              ['minCredits', 'Fewest credits my school asks for full-time', 40],
+              ['maxCredits', 'Most credits my school allows without approval', 40],
+              ['studyHours', 'Hours a week I can study after work and travel', 100],
+            ] as const
+          ).map(([key, label, cap]) => (
+            <label key={key} className="portal-check">
+              {label}
+              <input
+                className="input"
+                type="number"
+                inputMode="decimal"
+                min={1}
+                max={cap}
+                aria-label={label}
+                value={data[key] ?? ''}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  library.update((d) => ({ ...d, [key]: e.target.value && v > 0 && v <= cap ? v : null }));
+                }}
+              />
+            </label>
+          ))}
+          {load.missing.length > 0 ? (
+            <p className="portal-muted">Not checked yet: {load.missing.join(', ')}.</p>
+          ) : null}
+          <p className="portal-muted">
+            <SourceBadge label="student_entered" /> The limits and hours are the ones you type; Semester does not know
+            your school&rsquo;s rules.
           </p>
         </section>
       ) : null}

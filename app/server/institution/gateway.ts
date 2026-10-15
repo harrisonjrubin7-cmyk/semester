@@ -1,22 +1,36 @@
 import { randomUUID } from 'node:crypto';
 import {
-  CORRELATION_ID_PATTERN,
   UNIVERSITY_AREAS,
   isRefusal,
+  groundsFor,
   isUniversityArea,
+  mayStep,
   parseAction,
   validateActionFields,
   type ActionInput,
+  type PolicyEnvironment,
   type UniversityArea,
   type UniversityIdentity,
   type UserAction,
 } from '../../../packages/institution/src/index.ts';
+import {
+  PlatformError,
+  errorResponse,
+  isPlatformError,
+  resolveCorrelationId,
+  type ErrorEnvelope as PlatformErrorEnvelope,
+} from '../../../packages/platform/src/index.ts';
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
+import { contextFor } from './context.ts';
 import type { ActionJournalStore } from './journal.ts';
 import type { IntelligenceService } from './intelligence.ts';
 import type { PublicSsoConfig } from './membership.ts';
 import { MemoryRateLimiter, type RateLimiter } from './rate-limit.ts';
 import type { ReadinessResult } from './readiness.ts';
+import {
+  readinessCommandContext,
+  type RegistrationReadinessCommandBoundary,
+} from './registration-readiness-commands.ts';
 
 /**
  * The gateway: everything that is the same whichever university it is.
@@ -83,6 +97,7 @@ interface Config {
   loadSsoConfig?: () => Promise<PublicSsoConfig | null>;
   rateLimiter?: RateLimiter;
   readiness?: () => Promise<ReadinessResult>;
+  registrationReadiness?: RegistrationReadinessCommandBoundary;
   telemetry?: (event: GatewayTelemetryEvent) => void | Promise<void>;
   /**
    * Read-only mode: every write is refused with a 503 `read_only` that says
@@ -93,6 +108,8 @@ interface Config {
    * and the two are registered together in `docs/FEATURE-FLAG-REGISTRY.md`.
    */
   readOnly?: () => boolean;
+  /** Which environment the tenants of this gateway are in. `production` unless told otherwise. */
+  environment?: PolicyEnvironment;
 }
 
 export interface GatewayTelemetryEvent {
@@ -109,12 +126,16 @@ export interface GatewayTelemetryEvent {
 const TELEMETRY_ROUTES = new Set([
   '/health', '/health/live', '/health/ready', '/v1/auth/config',
   '/v1/intelligence/policy', '/v1/intelligence/respond',
+  '/v1/registration-readiness/evaluations',
   '/status', '/records', '/actions/prepare', '/actions/commit', '/actions/reconcile',
 ]);
 
 function telemetryRoute(pathname: string): string {
   if (/^\/v1\/intelligence\/actions\/[^/]+\/confirm$/.test(pathname)) {
     return '/v1/intelligence/actions/:id/confirm';
+  }
+  if (/^\/v1\/registration-readiness\/evaluations\/[^/]+\/evaluate$/.test(pathname)) {
+    return '/v1/registration-readiness/evaluations/:id/evaluate';
   }
   return TELEMETRY_ROUTES.has(pathname) ? pathname : '/unmatched';
 }
@@ -125,7 +146,7 @@ function telemetryRoute(pathname: string): string {
  * client may switch on them; a status alone is not enough to tell "the
  * review expired" from "the record moved", and both are 4xx.
  */
-const CODE_BY_STATUS: Record<number, string> = {
+export const CODE_BY_STATUS: Record<number, string> = {
   400: 'invalid_request',
   401: 'unauthenticated',
   403: 'forbidden',
@@ -140,21 +161,6 @@ const CODE_BY_STATUS: Record<number, string> = {
   503: 'unavailable',
 };
 
-/** Whether the same request may be sent again. Only two statuses say yes. */
-const retryable = (status: number) => status === 429 || status === 503;
-
-class HttpError extends Error {
-  status: number;
-  code: string;
-  userAction?: UserAction;
-  constructor(status: number, message: string, code?: string, userAction?: UserAction) {
-    super(message);
-    this.status = status;
-    this.code = code ?? CODE_BY_STATUS[status] ?? 'error';
-    if (userAction) this.userAction = userAction;
-  }
-}
-
 /*
  * A declaration rather than a const arrow, deliberately: TypeScript only
  * narrows control flow through a `never`-returning call when the callee is a
@@ -162,25 +168,18 @@ class HttpError extends Error {
  * arrow, every `fail(...)` guard below would still leave its subject nullable.
  */
 function fail(status: number, message: string, code?: string, userAction?: UserAction): never {
-  throw new HttpError(status, message, code, userAction);
+  throw PlatformError.from(status, code ?? CODE_BY_STATUS[status] ?? 'error', message, userAction ? { userAction } : {});
 }
 
-export interface ErrorEnvelope {
-  error: {
-    code: string;
-    message: string;
-    correlation_id: string;
-    retryable: boolean;
-    user_action?: UserAction;
-  };
-  /** The same sentence, where a client written before the envelope looks for it. */
-  message: string;
-}
+/**
+ * The envelope every refusal is: `@semester/platform`'s, which is this
+ * gateway's own shape (ADR 0010) lifted out so every surface says it the same
+ * way. Kept as an export here because clients and tests import it by this name.
+ */
+export type ErrorEnvelope = PlatformErrorEnvelope;
 
 function envelope(status: number, code: string, message: string, correlationId: string, userAction?: UserAction): ErrorEnvelope {
-  const error: ErrorEnvelope['error'] = { code, message, correlation_id: correlationId, retryable: retryable(status) };
-  if (userAction) error.user_action = userAction;
-  return { error, message };
+  return errorResponse(PlatformError.from(status, code, message, userAction ? { userAction } : {}), correlationId).body;
 }
 
 /**
@@ -190,8 +189,7 @@ function envelope(status: number, code: string, message: string, correlationId: 
  * outside it (a sentence, a script, four kilobytes) reaches a log line.
  */
 export function correlationIdFor(request: Request): string {
-  const given = request.headers.get('x-correlation-id');
-  return given && CORRELATION_ID_PATTERN.test(given) ? given : randomUUID();
+  return resolveCorrelationId(request.headers.get('x-correlation-id') ?? undefined, { next: () => randomUUID() });
 }
 
 /** How long somebody has to read a review and confirm it. */
@@ -217,7 +215,7 @@ export function createGateway(config: Config) {
   const installed = new Map(config.adapters.map((a) => [`${a.institutionId}:${a.area}`, a]));
   const rateLimiter = config.rateLimiter ?? new MemoryRateLimiter();
 
-  const handle = async (request: Request, correlationId: string): Promise<Response> => {
+  const handle = async (request: Request, correlationId: string, requestId: string): Promise<Response> => {
     const headers = new Headers({
       'Content-Type': 'application/json',
       'Cache-Control': 'no-store',
@@ -243,7 +241,7 @@ export function createGateway(config: Config) {
       headers.set('Access-Control-Expose-Headers', 'X-Request-Id, X-Correlation-Id');
     }
     if (request.method === 'OPTIONS') {
-      headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Correlation-Id');
+      headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, Idempotency-Key, X-Correlation-Id');
       headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       return new Response(null, { status: 204, headers });
     }
@@ -335,7 +333,64 @@ export function createGateway(config: Config) {
         fail(503, 'Semester is in read-only mode for maintenance. Nothing was sent; try again later.', 'read_only');
       }
 
-      const context: AdapterContext = { identity: who, signal: AbortSignal.timeout(20_000) };
+      /*
+       * The platform's request context, built once from the verified identity
+       * and the two ids this request already carries. It is where a client's
+       * `X-Tenant-Id` that disagrees with the session is refused
+       * (`tenant_mismatch`) instead of ignored: the tenant is the session's, and
+       * a request that names another one is a bug or an attack worth hearing about.
+       */
+      const ids = { requestId, correlationId };
+      const intelligencePurpose = path === '/v1/intelligence/respond' ? 'ai_context' : undefined;
+      const context: AdapterContext = {
+        identity: who,
+        signal: AbortSignal.timeout(20_000),
+        request: contextFor(request, who, ids, config.environment, intelligencePurpose),
+      };
+
+      const readinessStart = path === '/v1/registration-readiness/evaluations';
+      const readinessEvaluate = /^\/v1\/registration-readiness\/evaluations\/([^/]+)\/evaluate$/.exec(path);
+      if (request.method === 'POST' && (readinessStart || readinessEvaluate)) {
+        context.request = readinessCommandContext(context.request!, request);
+        if (!config.registrationReadiness) {
+          fail(503, 'Registration readiness is not configured for this university.');
+        }
+        if (!request.headers.get('content-type')?.startsWith('application/json')) fail(415, 'Send JSON.');
+        const text = await request.text();
+        if (Buffer.byteLength(text) > MAX_BODY) fail(413, 'Request is too large.');
+        let body: unknown;
+        try {
+          body = JSON.parse(text);
+        } catch {
+          fail(400, 'Invalid JSON.');
+        }
+        if (!config.refreshIdentity) {
+          fail(503, 'Current university membership cannot be verified.');
+        }
+        const current = await config.refreshIdentity(who, token);
+        if (!current || current.userId !== who.userId || current.institutionId !== who.institutionId) {
+          fail(403, 'Your current university access does not permit this action.');
+        }
+        who = current;
+        context.identity = current;
+        context.request = readinessCommandContext(
+          contextFor(request, current, ids, config.environment),
+          request,
+        );
+        if (readinessStart) {
+          const receipt = await config.registrationReadiness.start(context.request, current.roles, body);
+          return Response.json(receipt, { status: 202, headers });
+        }
+        if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body as Record<string, unknown>).length !== 0) {
+          fail(400, 'The evaluator command does not accept request fields.');
+        }
+        const receipt = await config.registrationReadiness.evaluate(
+          context.request,
+          current.roles,
+          readinessEvaluate![1],
+        );
+        return Response.json(receipt, { status: receipt.status === 'completed' ? 200 : 202, headers });
+      }
 
       const intelligenceConfirm = /^\/v1\/intelligence\/actions\/([^/]+)\/confirm$/.exec(path);
       if (request.method === 'GET' && path === '/v1/intelligence/policy') {
@@ -366,9 +421,10 @@ export function createGateway(config: Config) {
           }
           who = current;
           context.identity = current;
+          context.request = contextFor(request, current, ids, config.environment);
         }
         const response = path === '/v1/intelligence/respond'
-          ? await config.intelligence.respond(who, value)
+          ? await config.intelligence.respond(context.request!, who, value)
           : await config.intelligence.confirm(who, decodeURIComponent(intelligenceConfirm![1]), value);
         return Response.json(response.body, { status: response.status, headers });
       }
@@ -553,6 +609,7 @@ export function createGateway(config: Config) {
         }
         who = current;
         context.identity = current;
+        context.request = contextFor(request, current, ids, config.environment);
       }
 
       /*
@@ -568,6 +625,30 @@ export function createGateway(config: Config) {
       const checked = await adapter.review(context, row.input);
       if (JSON.stringify(checked) !== JSON.stringify({ title: row.review.title, details: row.review.details })) {
         fail(409, 'The action details changed. Prepare a new review.', 'review_changed');
+      }
+
+      /*
+       * The ladder, asked at the one place something is written.
+       *
+       * Everything above is what "confirm" and its four grounds are made of:
+       * the explicit `true`, write access to this area, an action the adapter
+       * offered for this record, and the correlation id the journal will hold
+       * the start of the action under. If any is missing the answer is a
+       * refusal that names it, before anything is claimed or sent.
+       */
+      const step = mayStep(
+        { from: 'confirm', to: 'execute' },
+        groundsFor({
+          confirmed: asked.confirmed,
+          institutionId: who.institutionId,
+          area: row.input.area,
+          actionId: row.input.actionId,
+          correlationId,
+        }),
+      );
+      if (!step.ok) {
+        await config.journal.audit(who, row.input.area, 'action.refused', row.review.id, correlationId);
+        fail(403, `This action cannot run yet: ${step.why}`, 'not_ready_to_execute');
       }
 
       if (!(await config.journal.claim(row.review.id, who, Date.now()))) {
@@ -618,7 +699,7 @@ export function createGateway(config: Config) {
       /*
        * Three kinds of thrown thing, and the middle one used to be lost.
        *
-       * An `HttpError` is something this gateway meant to say. A `Refusal` is
+       * A `PlatformError` is something this gateway meant to say. A `Refusal` is
        * something the *adapter* meant to say — a rubric line that will not
        * parse, a mark outside its range, a deadline that has passed — and it
        * is the caller's to fix, so it is a 400 carrying that sentence. Every
@@ -631,7 +712,7 @@ export function createGateway(config: Config) {
        * sentence, which is still the default and still the right one.
        */
       if (isRefusal(e)) return refuse(400, 'refused', e.message);
-      if (e instanceof HttpError) return refuse(e.status, e.code, e.message, e.userAction);
+      if (isPlatformError(e)) return refuse(e.status, e.code, e.message, e.userAction);
       return refuse(503, 'unavailable', 'The university service is unavailable. Please try again later.');
     }
   };
@@ -640,7 +721,7 @@ export function createGateway(config: Config) {
     const requestId = randomUUID();
     const correlationId = correlationIdFor(request);
     const started = performance.now();
-    const response = await handle(request, correlationId);
+    const response = await handle(request, correlationId, requestId);
     response.headers.set('X-Request-Id', requestId);
     response.headers.set('X-Correlation-Id', correlationId);
     const pathname = new URL(request.url).pathname;

@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DESTINATIONS } from './nav';
 import {
@@ -47,6 +49,25 @@ describe('rollout capability registry', () => {
           capability.dependencies.some((dependency) => dependency.startsWith('external:')),
           capability.id,
         ).toBe(true);
+      }
+    }
+  });
+
+  it('holds each promoted capability to focused executable evidence', () => {
+    const promoted = [
+      'CAP-003', 'CAP-010', 'CAP-011', 'CAP-014', 'CAP-015', 'CAP-016', 'CAP-019', 'CAP-021', 'CAP-025',
+      'CAP-031', 'CAP-033', 'CAP-034', 'CAP-035', 'CAP-036', 'CAP-040',
+      'CAP-042', 'CAP-049', 'CAP-052', 'CAP-053', 'CAP-054', 'CAP-055',
+      'CAP-013', 'CAP-018', 'CAP-027', 'CAP-041', 'CAP-043', 'CAP-044', 'CAP-045', 'CAP-046',
+      'CAP-047', 'CAP-048', 'CAP-050', 'CAP-051', 'CAP-057', 'CAP-058', 'CAP-059', 'CAP-060',
+    ];
+    for (const id of promoted) {
+      const capability = CAPABILITIES.find((item) => item.id === id)!;
+      expect(capability.currentState, id).toBe('verified');
+      expect(capability.sources.filter((source) => source.startsWith('repo:app/')).length, id).toBeGreaterThanOrEqual(2);
+      expect(capability.acceptance[0]?.length, id).toBeGreaterThan(70);
+      for (const source of capability.sources.filter((item) => item.startsWith('repo:'))) {
+        expect(existsSync(resolve(process.cwd(), '..', source.slice('repo:'.length))), `${id}: ${source}`).toBe(true);
       }
     }
   });

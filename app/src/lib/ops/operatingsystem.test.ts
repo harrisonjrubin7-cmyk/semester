@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { COUNCIL, SEATS } from '../launchreadiness';
+import { written } from './decisionlog';
 import { ARCHIVED, BRIEF_CATEGORIES, SCOPE_QUESTIONS, SCOPE_RULE, SOURCES, type Source } from './operatingsystem';
 import { OPERATING_SYSTEM, cell, controlLine, isIsoDate, link, renderedFrom, table } from './render';
 
@@ -31,14 +32,12 @@ const at = (p: string) => join(root, p);
 const read = (p: string) => readFileSync(at(p), 'utf8');
 const DOC = OPERATING_SYSTEM;
 
-const decisionLog = read('docs/DECISION-LOG.md');
 const decisionsFile = read('DECISIONS.md');
 
 /** Whether a `decisions` entry names something that is actually written down. */
 function resolves(id: string): boolean {
-  let m = /^D-(\d{3})$/.exec(id);
-  if (m) return new RegExp(`^## D-${m[1]} ·`, 'm').test(decisionLog);
-  m = /^ADR-(\d{4})$/.exec(id);
+  if (/^D-\d+$/.test(id)) return written(root, id);
+  let m = /^ADR-(\d{4})$/.exec(id);
   if (m) return readdirSync(at('docs/architecture')).some((f) => f.startsWith(`${m![1]}-`) && f.endsWith('.md'));
   m = /^DECISIONS §(\d+)$/.exec(id);
   if (m) return new RegExp(`^## ${m[1]} ·`, 'm').test(decisionsFile);

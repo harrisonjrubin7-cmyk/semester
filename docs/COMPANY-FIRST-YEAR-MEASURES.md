@@ -75,8 +75,9 @@ counts nothing.
 
 ## Setting a target
 
-1. Record the decision in `docs/DECISION-LOG.md` as `D-nnn`, with the
-   number, the date it is judged on, and what would change it.
+1. Record the decision as `docs/decisions/D-<n>.md`, `n` being its pull
+   request's number, with the number, the date it is judged on, and what
+   would change it.
 2. Set `target: { value, decision }` on the measure in
    `app/src/lib/ops/firstyear.ts`.
 3. Run `npm run registers` from `app/` to rewrite this page.

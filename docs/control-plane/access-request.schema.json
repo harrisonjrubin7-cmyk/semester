@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semester:access-request:v1",
+  "title": "Semester Access Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["resourceId", "action"],
+  "properties": {
+    "resourceId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "action": {
+      "type": "string",
+      "enum": ["registration.readiness.view", "registration.override.request", "registration.override.approve"]
+    }
+  }
+}

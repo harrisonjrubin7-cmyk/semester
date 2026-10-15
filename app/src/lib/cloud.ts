@@ -42,6 +42,7 @@ import type { Seen } from '../state/shape';
 import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
 import { explainSignUp } from './invite';
 import { READ_ONLY, ReadOnly } from './readonly';
+import { forLegacy } from './sync/engine/ownership';
 
 const env = import.meta.env as unknown as Record<string, string | undefined>;
 const URL = env.VITE_SUPABASE_URL ?? '';
@@ -447,7 +448,8 @@ export async function sendReset(email: string): Promise<string> {
 }
 
 export async function signOut(): Promise<void> {
-  await (await cloud()).auth.signOut();
+  const { error } = await (await cloud()).auth.signOut();
+  if (error) throw new Error(error.message);
 }
 
 /**
@@ -610,8 +612,47 @@ export interface Snapshot {
   seen: Seen;
 }
 
+/**
+ * What each course row held when this device last knew it matched the
+ * database: the stamp, and the data in a canonical form. Keyed `user/id`.
+ *
+ * It is what lets `push` send only the courses that changed. A push used to
+ * rewrite every course, changed or not, and on 30 September that was where
+ * capacity gave first: the load harness's push, the state row and four 42 KB
+ * courses, was the slowest thing a student does (docs/PERFORMANCE-AND-LOW-END-
+ * DEVICE-PLAN.md). A student edits one course at a time.
+ *
+ * Skipping a row is safe only when two things hold, and both are checked: the
+ * stamp this push names for it is the stamp recorded here, so the device has
+ * not taken a newer copy since; and its data is what was recorded, so there
+ * is nothing to send. If another device changed that row meanwhile, not
+ * writing it loses nothing: this push does not touch it, and the state row's
+ * compare-and-swap, which every push makes, is refused because the other
+ * device's push moved that too.
+ *
+ * Memory only. After a reload it is empty until the first pull, and the first
+ * push writes everything, which is what every push did before.
+ */
+const acked = new Map<string, { at: string; data: string }>();
+
+/** JSON with object keys sorted, so jsonb's reordering is not a change. */
+function canon(value: unknown): string {
+  return JSON.stringify(value, (_k, v: unknown) =>
+    v && typeof v === 'object' && !Array.isArray(v)
+      ? Object.fromEntries(Object.entries(v as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+      : v,
+  );
+}
+
+const ackKey = (userId: string, id: string) => `${userId}/${id}`;
+
 export async function pull(userId: string): Promise<Snapshot> {
-  const db = (await cloud());
+  const db = await cloud();
+  const identity = await db.auth.getUser();
+  if (identity.error) throw new Error(identity.error.message);
+  if (identity.data.user?.id !== userId) {
+    throw new Error('The signed-in account changed before its semester could be read.');
+  }
   const [stateRow, courseRows] = await Promise.all([
     db.from('state').select('data, updated_at').eq('user_id', userId).maybeSingle(),
     db.from('courses').select('id, data, updated_at').eq('user_id', userId),
@@ -622,10 +663,15 @@ export async function pull(userId: string): Promise<Snapshot> {
 
   const rows = (courseRows.data ?? []) as { id: string; data: unknown; updated_at: string }[];
   const stateAt = stateRow.data?.updated_at as string | undefined;
+  for (const r of rows) acked.set(ackKey(userId, r.id), { at: r.updated_at, data: canon(r.data) });
   const stamps = [stateAt, ...rows.map((r) => r.updated_at)].filter(Boolean) as string[];
 
+  // While the engine owns this device's tasks (`lib/sync/engine/ownership.ts`), the account's old copy of them is
+  // not read back: the engine is the one source. What this device pushes still carries them, so a device that
+  // has not opted in keeps receiving them.
+  const held = stateRow.data?.data as CloudState | undefined;
   return {
-    state: (stateRow.data?.data as CloudState) ?? null,
+    state: held ? forLegacy(held as unknown as Record<string, unknown>) as unknown as CloudState : null,
     courses: rows.map((r) => ({ id: r.id, data: r.data })),
     updated: stamps.length ? Math.max(...stamps.map((s) => new Date(s).getTime())) : 0,
     seen: {
@@ -760,7 +806,16 @@ export async function push(
   }
 
   const stamps: Record<string, string> = {};
-  const known = courses.filter((c) => seen?.courses[c.id]);
+  const sent = new Map(courses.map((c) => [c.id, canon(c.data)]));
+  // Known to this device and unchanged since the database last confirmed
+  // them: nothing to send, and the stamp carries forward (see `acked`).
+  const same = courses.filter((c) => {
+    const at = seen?.courses[c.id];
+    const was = at ? acked.get(ackKey(userId, c.id)) : undefined;
+    return !!was && was.at === at && was.data === sent.get(c.id);
+  });
+  for (const c of same) stamps[c.id] = seen!.courses[c.id];
+  const known = courses.filter((c) => seen?.courses[c.id] && !same.includes(c));
   const fresh = courses.filter((c) => !seen?.courses[c.id]);
 
   // New to this device: one insert for all of them. A clash on any means
@@ -810,6 +865,12 @@ export async function push(
       .eq('user_id', userId)
       .in('id', gone);
     if (pruneError) throw new Error(pruneError.message);
+    for (const id of gone) acked.delete(ackKey(userId, id));
+  }
+
+  // What the database now holds, for the next push to compare against.
+  for (const c of [...fresh, ...known]) {
+    if (stamps[c.id]) acked.set(ackKey(userId, c.id), { at: stamps[c.id], data: sent.get(c.id)! });
   }
 
   /*
@@ -1048,6 +1109,14 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'state', column: 'user_id' },
   { table: 'notes', column: 'user_id' },
   { table: 'tasks', column: 'user_id' },
+  // The student's private productivity workspace. The database also cascades
+  // it from auth.users, but listing it here keeps explicit erasure complete
+  // even when account deletion is exercised before the auth row is removed.
+  { table: 'productivity_workspace', column: 'user_id' },
+  // Tasks and events written through the command API (`server/productivity/`).
+  // Both cascade from auth.users; the person is `owner_id`, not `user_id`.
+  { table: 'productivity_task', column: 'owner_id' },
+  { table: 'productivity_event', column: 'owner_id' },
   { table: 'appointments', column: 'user_id' },
   { table: 'sittings', column: 'user_id' },
   { table: 'calendar_feeds', column: 'user_id' },
@@ -1055,6 +1124,7 @@ export const OWNED_TABLES: OwnedTable[] = [
   // (`lib/graduation-cloud.ts`, Phase D). The foreign key cascades from
   // auth.users too; listed so the delete here does not depend on it.
   { table: 'graduation_scenarios', column: 'user_id' },
+  { table: 'productivity_workspace', column: 'user_id' },
   // Advisor shares (`lib/advisor-shares.ts`, Phase G), at either end: the ones
   // a student made and the ones an advisor received. Deleting them cascades to
   // their read log. `erase_account` runs the RPC before the auth user goes,
@@ -1076,6 +1146,15 @@ export const OWNED_TABLES: OwnedTable[] = [
   // it, so the filtered DELETE takes nothing; the cascade from auth.users
   // does, and the school's record stays with the school.
   { table: 'academic_record_subjects', column: 'user_id' },
+  // A request to be recognised as a member of a university (`school_membership_
+  // requests`, G-03). The person reads their own; they have no delete policy —
+  // a decision is a record other people made — so the filtered DELETE takes
+  // nothing and the cascade from auth.users does. It holds no address.
+  { table: 'school_membership_requests', column: 'user_id' },
+  // A formal export, correction, restriction or assisted-erasure request.
+  // It is keyed by `subject` and cascades with auth.users; the completed fact
+  // may remain without an identity in the older `data_requests` ledger.
+  { table: 'data_subject_request', column: 'subject' },
   // A support grant names this account in either of two columns. The RPC
   // removes both sides, which one filtered DELETE cannot express, while its
   // audit trigger leaves only pseudonyms behind.
@@ -1371,6 +1450,14 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'migration_approvals',
     why: 'An approval or rejection you recorded for a migration’s cutover is part of the record of why your school retired a system. It stays with the migration, no longer attributed to you.',
+  },
+  {
+    table: 'workflow_versions',
+    why: 'A workflow you drafted or published for your school — the steps of a process and the checks a student must meet — is the school’s process, not a record about you, and it holds no student. Deleting your account removes you as the person who drafted or published it; every version stays.',
+  },
+  {
+    table: 'school_config_versions',
+    why: 'A configuration you drafted or published for your school — its terms, workflow thresholds, AI defaults or reporting floor — is the school’s policy, not a record about you. Deleting your account removes you as the person who drafted or published it; every version stays.',
   },
   {
     table: 'groups',

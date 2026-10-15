@@ -1,11 +1,11 @@
 /**
  * Who is holding the app.
  *
- * Semester was written for one person: a student, taking four courses,
- * carrying their own semester on their own device. Every screen assumes it,
- * and the assumption is load-bearing — the app has no server holding anybody's
- * data, which is what lets it promise that a private note never leaves the
- * phone.
+ * Semester began as one student's local workspace. It now also has an
+ * authenticated institutional gateway, scoped grants and role workspaces. The
+ * client role still does not grant access: it changes the language and tools
+ * addressed to the person holding the app, while the server independently
+ * authorizes every institutional read and action.
  *
  * It is now meant to be both that and an institutional platform. This file is
  * the first half of that: the concept, and an honest account of which roles
@@ -13,33 +13,19 @@
  *
  * ## What a role can and cannot be without a server
  *
- * This matters more than the list below, so it is written first.
- *
- * A role that only ever reads and writes **its own** data works today, because
- * that is the shape the whole app already has. A professor preparing a course
- * — turning a syllabus into modules and deadlines, writing a practice paper,
- * making slides and a handout, keeping the term's dates — is doing exactly
- * what a student does with the same screens, for a different reason.
- *
- * A role that reads **somebody else's** data cannot. An advisor reviewing a
- * student's plan, a professor grading a roster, an administrator reporting on
- * enrolment, a parent seeing a bill: every one of those needs a server, an
- * authenticated identity on both sides, and an authorisation model, and the
- * app has none of the three. Shipping them as screens that look right and hold
- * only what you typed into them would be the exact failure `data/campus.ts`
- * refuses — a confident thing that is not true.
- *
- * So `ready` below is not a roadmap ordering. It is the line between what the
- * app can do and what it would have to pretend.
+ * Every role below can use a live, local workspace today. A role may prepare
+ * work, keep its own records and use the tools addressed to it without waiting
+ * for an institution. Cross-person or official institutional data is a
+ * different boundary. Those functions appear only after the gateway returns a
+ * current, scoped grant; selecting a role here never manufactures one.
  *
  * ## Not a security boundary
  *
- * Nothing here is a permission. It is one device, one person, and a role is a
- * statement about what they are here to do — the same kind of thing as the
- * school's capabilities in `lib/school.ts`, which decide whether a meal-plan
- * screen exists rather than whether somebody is allowed to see one. When the
- * institutional half arrives it will need real authorisation on a server, and
- * this file will be what the client asks for, never what grants it.
+ * Nothing here is a permission. It is a statement about what this person is
+ * here to do — the same kind of thing as the school's capabilities in
+ * `lib/school.ts`, which decide whether a meal-plan screen exists rather than
+ * whether somebody is allowed to see one. `institutional-access.ts` and the
+ * gateway remain the authority for connected data.
  */
 
 import type { Screen } from './types';
@@ -61,17 +47,11 @@ export interface RoleInfo {
   label: string;
   /** What this person opens Semester to do. */
   blurb: string;
-  /**
-   * Whether it can be chosen today.
-   *
-   * False means the app cannot serve it without a server and an institution
-   * behind it — see the note above. A role that is not ready is shown, with
-   * what it is waiting on, rather than hidden: somebody who came looking for
-   * it deserves to know it is understood and missing, not to conclude the app
-   * has never heard of advisors.
-   */
+  /** Whether this role has a usable workspace and can be chosen today. */
   ready: boolean;
-  /** What it is still waiting on. Empty for the ready ones. */
+  /** What works without an institutional connection. */
+  live: string;
+  /** What connected or official data still requires. */
   needs: string;
 }
 
@@ -81,6 +61,7 @@ export const ROLES: RoleInfo[] = [
     label: 'Student',
     blurb: 'Your courses, your deadlines, your studying, your bill.',
     ready: true,
+    live: 'Plan, study, create work and manage your own Semester records now.',
     needs: '',
   },
   {
@@ -90,67 +71,74 @@ export const ROLES: RoleInfo[] = [
       'Build a course from your own syllabus, keep the term’s dates, write the handout, the ' +
       'slides and the practice paper.',
     ready: true,
-    needs: '',
+    live: 'Build course materials, assignments, lessons and feedback drafts now.',
+    needs: 'Publishing, rosters and official grading require an institution-assigned course role and an approved learning-system connection.',
   },
   {
     id: 'teaching_assistant',
     label: 'Teaching assistant',
     blurb: 'Your assigned course sections, learning activities and student support work.',
-    ready: false,
-    needs: 'An institution-assigned course role and an authorized learning-management connection.',
+    ready: true,
+    live: 'Prepare learning activities, office-hours support and course materials now.',
+    needs: 'Assigned sections, rosters and grading require an institution-assigned course role and an approved learning-system connection.',
   },
   {
     id: 'advisor',
     label: 'Advising',
     blurb: 'Your advisees’ plans, their progress, and the appointments between.',
-    ready: false,
+    ready: true,
+    live: 'Prepare appointment plans, advising notes and follow-up drafts now.',
     needs:
-      'Reading a student’s record, which needs a server, an identity on both sides and their ' +
-      'consent. The app holds nobody’s data but yours.',
+      'Reading an advisee’s record requires verified identities, a current scoped grant and the student’s consent.',
   },
   {
     id: 'admin',
     label: 'Administration',
     blurb: 'Enrolment, the catalogue, billing, reporting.',
-    ready: false,
-    needs: 'An institutional deployment and a student-information system to read.',
+    ready: true,
+    live: 'Prepare policies, catalogue work, implementation plans and reports now.',
+    needs: 'Official records and administrative actions require a verified institutional role and approved source-system connections.',
   },
   {
     id: 'payer',
     label: 'Parent or payer',
     blurb: 'The part of a student’s bill they have chosen to share with you.',
-    ready: false,
+    ready: true,
+    live: 'Keep payment questions, deadlines and handoff preparation together now.',
     needs:
-      'A way for the student to share it — an authorised-payer relationship the university ' +
-      'grants, not something either side can assert here.',
+      'Billing details and payment actions require a current authorized-payer relationship granted by the institution.',
   },
   {
     id: 'staff',
     label: 'Campus services',
     blurb: 'Dining, housing, the library, transport, the desk you work at.',
-    ready: false,
-    needs: 'The service systems themselves, none of which publish anything a client can use.',
+    ready: true,
+    live: 'Prepare service information, support responses and campus-resource work now.',
+    needs: 'Student cases and official service records require a scoped staff grant and approved campus-system connections.',
   },
   {
     id: 'applicant',
     label: 'Applicant',
     blurb: 'Your application steps, decisions, visits and transition into the university.',
-    ready: false,
-    needs: 'An authorized admissions identity and the institution’s applicant systems.',
+    ready: true,
+    live: 'Track application preparation, visits, questions and transition actions now.',
+    needs: 'Official application status and decisions require a verified admissions identity and an approved applicant-system connection.',
   },
   {
     id: 'family',
     label: 'Authorized family',
     blurb: 'The information and actions a student or university has explicitly shared with you.',
-    ready: false,
-    needs: 'A current, auditable authorization scoped to specific records and actions.',
+    ready: true,
+    live: 'Keep student-approved questions, shared plans and family follow-up together now.',
+    needs: 'Student or university records require a current, auditable authorization scoped to the specific record and action.',
   },
   {
     id: 'alumni',
     label: 'Alumni',
     blurb: 'Mentoring, lifelong learning, university services and opportunities after graduation.',
-    ready: false,
-    needs: 'An institution-verified alumni identity and approved alumni-service connections.',
+    ready: true,
+    live: 'Find opt-in mentors, plan lifelong learning and explore opportunities now.',
+    needs: 'Alumni-only records and services require an institution-verified alumni identity and approved service connections.',
   },
 ];
 
@@ -160,9 +148,25 @@ export function roleOf(id: string): RoleInfo {
   return ROLES.find((r) => r.id === id) ?? ROLES[0];
 }
 
-/** The roles somebody can actually pick. */
+/** Every role with a usable workspace. Kept as a predicate so a future role cannot ship half-built. */
 export function pickable(): RoleInfo[] {
   return ROLES.filter((r) => r.ready);
+}
+
+/**
+ * A denser layout worth *offering* to roles whose screens are mostly rows and
+ * columns, or null when the default is right.
+ *
+ * An offer and never a default: the role is self-chosen and "has not chosen a
+ * density" is not representable (`density` is always one of three), so nothing
+ * here may change a layout on its own. The settings page shows the offer beside
+ * the role and the person accepts it or does not. See the design-system spec,
+ * section 3.5.
+ */
+export function denserLayoutFor(role: Role): 'snug' | null {
+  return role === 'faculty' || role === 'teaching_assistant' || role === 'advisor' || role === 'admin' || role === 'staff'
+    ? 'snug'
+    : null;
 }
 
 /**
@@ -216,7 +220,12 @@ export function forRole(screen: string, role: Role | null | undefined): boolean 
   // failed, a state not yet read — gets the narrower set, never the wider:
   // a gate that grants on "don't know" is not a gate. See `find.test.ts`,
   // "search is a gate too".
-  return role === 'student' ? true : !STUDENT_ONLY_SET.has(screen);
+  if (role === 'student') return true;
+  // The applicant workspace is the prospect-to-first-term checklist. It is
+  // local and self-authored, so it stays available before an admissions
+  // connection exists; only official status and decisions remain gated.
+  if (role === 'applicant' && screen === 'launchpad') return true;
+  return !STUDENT_ONLY_SET.has(screen);
 }
 
 /** A stale bookmark or role switch cannot keep a role-inapplicable screen open. */
@@ -226,5 +235,7 @@ export function screenForRole(screen: Screen, role: Role): Screen {
 
 /** Every screen this role does not see. For the diagnostics dump and the tests. */
 export function hiddenFrom(role: Role): string[] {
-  return role === 'student' ? [] : [...STUDENT_ONLY];
+  if (role === 'student') return [];
+  if (role === 'applicant') return STUDENT_ONLY.filter((screen) => screen !== 'launchpad');
+  return [...STUDENT_ONLY];
 }

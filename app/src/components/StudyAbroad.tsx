@@ -23,7 +23,10 @@ import {
 } from '../lib/abroad';
 import { useDeviceLibrary } from '../lib/device-library';
 import { secondLine } from '../lib/dim';
+import { ConfirmDialog } from './ConfirmDialog';
+import { SourceBadge } from './SourceBadge';
 import { Notice, SectionLabel, Segmented } from './ui';
+import { ActionPreview } from './unity/ActionPreview';
 
 /**
  * Study abroad, as a tab of Pathway: which programme, whether its credit will
@@ -41,7 +44,9 @@ export function StudyAbroad({ storageKey }: { storageKey: string }) {
   const plan = lib.value;
   const [chosen, setChosen] = useState<string>('');
   const [said, setSaid] = useState('');
+  const [removing, setRemoving] = useState<AbroadProgram | null>(null);
   const program = plan.programs.find((p) => p.id === chosen) ?? plan.programs[0];
+  const removingCourses = removing ? plan.courses.filter((course) => course.programId === removing.id) : [];
 
   const setProgram = (id: string, patch: Partial<AbroadProgram>) =>
     lib.update((old) => ({ ...old, programs: old.programs.map((p) => (p.id === id ? { ...p, ...patch } : p)) }));
@@ -95,6 +100,7 @@ export function StudyAbroad({ storageKey }: { storageKey: string }) {
               onAdd={() => lib.update((old) => ({ ...old, courses: [...old.courses, newCourse(program.id)] }))}
               onChange={setCourse}
               onRemove={(id) => lib.update((old) => ({ ...old, courses: old.courses.filter((c) => c.id !== id) }))}
+              onRemoved={() => setSaid('Course match removed from this device. No official approval or school record was changed.')}
             />
             <Stages
               plan={plan}
@@ -120,14 +126,34 @@ export function StudyAbroad({ storageKey }: { storageKey: string }) {
               >
                 Copy course plan
               </button>
-              <button type="button" className="btn btn-ghost" onClick={() => remove(program.id)}>
+              <button type="button" className="btn btn-ghost" onClick={() => setRemoving(program)}>
                 Remove this program
               </button>
             </div>
-            {said && <Notice>{said}</Notice>}
           </>
         )}
+        {said && <Notice>{said}</Notice>}
       </fieldset>
+      {removing ? (
+        <ConfirmDialog
+          title="Remove this study abroad program?"
+          preview={(
+            <ActionPreview
+              subject={removing.name || 'Untitled program'}
+              says={`Removes its program details, ${removingCourses.length} course ${removingCourses.length === 1 ? 'match' : 'matches'}, recorded approval ${removingCourses.length === 1 ? 'status' : 'statuses'} and stage progress from this device.`}
+              doesNotChange="Other study abroad programs, official applications, written approval decisions and records held by your school stay unchanged. Semester sends no removal request."
+              recovery={{ kind: 'none', how: 'Restore only from a device workspace backup created before removal.' }}
+            />
+          )}
+          confirmLabel="Remove program"
+          onCancel={() => setRemoving(null)}
+          onConfirm={() => {
+            if (!remove(removing.id)) return;
+            setRemoving(null);
+            setSaid('Study abroad program removed from this device. No official record was changed.');
+          }}
+        />
+      ) : null}
     </div>
   );
 }
@@ -200,13 +226,16 @@ function Courses({
   onAdd,
   onChange,
   onRemove,
+  onRemoved,
 }: {
   plan: AbroadPlan;
   program: AbroadProgram;
   onAdd: () => void;
   onChange: (id: string, patch: Partial<CourseMatch>) => void;
-  onRemove: (id: string) => void;
+  onRemove: (id: string) => boolean;
+  onRemoved: () => void;
 }) {
+  const [removing, setRemoving] = useState<CourseMatch | null>(null);
   const rows = plan.courses.filter((c) => c.programId === program.id);
   const picture = creditPicture(plan, program.id);
   return (
@@ -216,6 +245,10 @@ function Courses({
       </SectionLabel>
       <p style={{ ...body, marginTop: 0 }} role="status">
         {creditLine(picture)}
+      </p>
+      <p style={small}>
+        <SourceBadge label="student_entered" /> The approval statuses are the ones you recorded. This is not an official
+        credit evaluation: your home school&rsquo;s registrar or department decides what counts.
       </p>
       {picture.approved < picture.planned && (
         <p style={small}>
@@ -261,7 +294,7 @@ function Courses({
                 <input className="input" maxLength={ABROAD_LIMITS.text} value={c.from} onChange={(e) => onChange(c.id, { from: e.target.value })} style={input} />
               </label>
               <p style={small}>{APPROVAL_MEANING[c.status]}</p>
-              <button type="button" className="btn btn-ghost" onClick={() => onRemove(c.id)}>
+              <button type="button" className="btn btn-ghost" onClick={() => setRemoving(c)}>
                 Remove course {i + 1}
               </button>
             </fieldset>
@@ -273,6 +306,26 @@ function Courses({
           Add a course abroad
         </button>
       )}
+      {removing ? (
+        <ConfirmDialog
+          title="Remove this course match?"
+          preview={(
+            <ActionPreview
+              subject={`${removing.host || 'Unnamed course abroad'} → ${removing.counts || 'No home-course match'}`}
+              says={`Removes ${formatNumber(removing.credits)} ${removing.credits === 1 ? 'credit' : 'credits'}, your recorded ${APPROVAL_TEXT[removing.status]} status${removing.from ? ' and its source note' : ''} from this device.`}
+              doesNotChange="The study abroad program, its stage progress, other course matches and records held by your school stay unchanged. Semester sends no removal request."
+              recovery={{ kind: 'none', how: 'Restore only from a device workspace backup created before removal.' }}
+            />
+          )}
+          confirmLabel="Remove course match"
+          onCancel={() => setRemoving(null)}
+          onConfirm={() => {
+            if (!onRemove(removing.id)) return;
+            setRemoving(null);
+            onRemoved();
+          }}
+        />
+      ) : null}
     </section>
   );
 }

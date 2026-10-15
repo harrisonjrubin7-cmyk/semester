@@ -118,6 +118,7 @@ function fixture({
   let intelligenceConfirmedRoles: UniversityIdentity['roles'] = [];
   let version = '1';
   let calls = 0;
+  let executedIdempotencyKey: string | undefined;
   let mode = 'ok';
   let reviewTitle = 'Submit coursework';
 
@@ -159,8 +160,9 @@ function fixture({
       if (mode === 'crash') throw new Error('pg: password authentication failed for user "sis"');
       return { title: reviewTitle, details: [{ label: 'Action', value: 'Submit coursework' }] };
     },
-    execute: async () => {
+    execute: async (context) => {
       calls++;
+      executedIdempotencyKey = context.request?.idempotencyKey;
       // The message a vendor failure carries must never reach the student.
       if (mode === 'timeout') throw new Error('Vendor secret must not be exposed');
       if (mode === 'refuse-late') throw new Refusal('You are already enrolled in this course.');
@@ -231,6 +233,7 @@ function fixture({
   };
 
   return {
+    gateway,
     journal,
     journalEvents: () => [...journalEvents],
     path,
@@ -238,6 +241,7 @@ function fixture({
     request,
     prepare,
     calls: () => calls,
+    executedIdempotencyKey: () => executedIdempotencyKey,
     identity: (v: UniversityIdentity | null) => {
       identity = v;
     },
@@ -394,6 +398,24 @@ describe('university gateway boundaries', () => {
     expect((await f.request('/status', undefined, { origin: 'https://elsewhere.test' })).status).toBe(403);
   });
 
+  it('allows browser action preflights to carry the governed idempotency key', async () => {
+    const f = fixture();
+    const response = await f.gateway(new Request('http://local/actions/commit', {
+      method: 'OPTIONS',
+      headers: {
+        origin: 'http://localhost:5173',
+        'access-control-request-method': 'POST',
+        'access-control-request-headers': 'authorization, content-type, idempotency-key, x-correlation-id',
+      },
+    }));
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get('access-control-allow-origin')).toBe('http://localhost:5173');
+    expect(response.headers.get('access-control-allow-methods')).toBe('GET, POST, OPTIONS');
+    expect(response.headers.get('access-control-allow-headers'))
+      .toBe('Authorization, Content-Type, Idempotency-Key, X-Correlation-Id');
+  });
+
   it('keeps unconfigured services unavailable without inventing records', async () => {
     const f = fixture();
     const status = await (await f.request('/status')).json();
@@ -469,6 +491,28 @@ describe('university gateway boundaries', () => {
     const raw = Buffer.concat([readFileSync(f.path), readFileSync(`${f.path}-wal`)]).toString('utf8');
     expect(raw).not.toContain('Private coursework response');
     expect(raw).not.toContain('Recorded by school');
+  });
+
+  it('validates the SDK idempotency key and carries it to the adapter request context', async () => {
+    const f = fixture();
+    const r = await f.prepare();
+    const invalid = await f.request(
+      '/actions/commit',
+      { reviewId: r.id, confirmed: true },
+      { 'idempotency-key': 'too-short' },
+    );
+    expect(invalid.status).toBe(400);
+    expect((await invalid.json()).error.code).toBe('invalid_request');
+    expect(f.calls()).toBe(0);
+
+    const key = 'commit-key-00000001';
+    const committed = await f.request(
+      '/actions/commit',
+      { reviewId: r.id, confirmed: true },
+      { 'idempotency-key': key },
+    );
+    expect(committed.status).toBe(200);
+    expect(f.executedIdempotencyKey()).toBe(key);
   });
 
   it('serializes concurrent confirmations across durable claims', async () => {
@@ -839,5 +883,40 @@ describe('read-only mode', () => {
     const health = await f.request('/health', undefined, { authorization: '' });
     expect((await health.json()).readOnly).toBe(false);
     expect((await f.request('/actions/prepare', f.input)).status).toBe(200);
+  });
+
+  it('asks the automation ladder before it claims or executes, with grounds read from what it already checked', async () => {
+    /*
+     * Structural, because every request that reaches this line has all four
+     * grounds — the point is that the line cannot be removed unnoticed. The
+     * behavioural half is the happy path just above: a confirmed, authorised,
+     * offered, audited commit still completes.
+     */
+    const src = readFileSync(join(import.meta.dirname, 'gateway.ts'), 'utf8');
+    const ask = src.indexOf("mayStep(");
+    const claim = src.indexOf('journal.claim(row.review.id');
+    expect(ask, 'the commit path asks the ladder').toBeGreaterThan(0);
+    expect(ask, 'and does so before the journal is claimed').toBeLessThan(claim);
+    expect(src).toMatch(/const step = mayStep\(\s*\{ from: 'confirm', to: 'execute' \},\s*groundsFor\(/);
+    expect(src).toMatch(/if \(!step\.ok\) \{[\s\S]*?fail\(403, `This action cannot run yet: \$\{step\.why\}`, 'not_ready_to_execute'\);/);
+    expect(src).toMatch(/groundsFor\(/);
+    // A prepare never reaches it: nothing is asked of the ladder until a write is about to happen.
+    expect(src.indexOf("path === '/actions/prepare'")).toBeLessThan(ask);
+
+    const f = fixture();
+    const review = await f.prepare();
+    const done = await f.request('/actions/commit', { reviewId: review.id, confirmed: true });
+    expect(done.status).toBe(200);
+    expect(f.calls()).toBe(1);
+  });
+
+  it('never treats anything but an explicit true as confirmation, before the ladder is asked', async () => {
+    const f = fixture();
+    const review = await f.prepare();
+    for (const confirmed of ['true', 1, 'yes', null, undefined]) {
+      const refused = await f.request('/actions/commit', { reviewId: review.id, confirmed });
+      expect(refused.status, String(confirmed)).toBe(400);
+    }
+    expect(f.calls()).toBe(0);
   });
 });

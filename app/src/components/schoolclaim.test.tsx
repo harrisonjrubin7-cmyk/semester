@@ -52,7 +52,21 @@ vi.mock('../lib/schoolclaim', async () => {
     domainOf: real.domainOf,
     knownSchools: () => listing(),
     claimedSchool: async () => stored,
+    claimedSchoolOrUnknown: async () => stored,
     claimSchool: (id: string) => claimSchool(id),
+    // Membership, added with G-03. The pure decision is the real one; the
+    // network calls answer "nothing" so these older cases see what they saw.
+    shouldAutoClaim: real.shouldAutoClaim,
+    autoClaimDeclined: real.autoClaimDeclined,
+    rememberDeclined: real.rememberDeclined,
+    schoolEnforced: async () => false,
+    myRequests: async () => [],
+    waitingFor: async () => [],
+    readinessOf: async () => null,
+    requestMembership: async () => ({ ok: true }),
+    withdrawRequest: async () => ({ ok: true }),
+    leaveSchool: async () => ({ ok: true }),
+    decideRequest: async () => ({ ok: true }),
   };
 });
 
@@ -148,22 +162,26 @@ describe('offering the claim', () => {
    * server checks. Someone whose confirmed address differs from the one shown
    * here must still be able to ask and be told no by the only thing that knows.
    */
-  it('still offers the one the address does not fit', async () => {
+  it('offers to ask instead of to claim for the one the address does not fit', async () => {
     await draw();
-    expect(pressing('Claim Southern').disabled).toBe(false);
+    // The screen is not the check, but it no longer invites a claim it knows
+    // the server will refuse: that school's staff can be asked instead.
+    expect(pressing('Ask to join Southern').disabled).toBe(false);
+    expect(buttons().some((b) => (b.textContent ?? '').includes('Claim Southern'))).toBe(false);
   });
 
-  it('refuses a school that publishes no addresses, because nobody can claim it', async () => {
+  it('cannot be claimed for a school that publishes no addresses, but can be asked', async () => {
     known = [{ id: 'closed', name: 'Closed University', shortName: 'Closed', domains: [] }];
     await draw();
-    expect(pressing('Claim Closed').disabled).toBe(true);
+    expect(buttons().some((b) => (b.textContent ?? '').includes('Claim Closed'))).toBe(false);
+    expect(pressing('Ask to join Closed').disabled).toBe(false);
     expect(text()).toMatch(/publishes no addresses/i);
   });
 
   it('asks the server for the id of the school that was pressed', async () => {
     await draw();
-    await act(async () => { pressing('Claim Southern').click(); });
-    expect(claimSchool).toHaveBeenCalledWith('southern');
+    await act(async () => { pressing('Claim Northern').click(); });
+    expect(claimSchool).toHaveBeenCalledWith('northern');
   });
 });
 
@@ -247,6 +265,7 @@ describe('what it promises', () => {
   it('says the same after the claim, rather than implying it took effect', async () => {
     await draw();
     await act(async () => { pressing('Claim Northern').click(); });
-    expect(text()).toMatch(/nothing uses that yet/i);
+    // Said as a fact about this school (it is not members-only), not as a promise.
+    expect(text()).toMatch(/not limited to members yet/i);
   });
 });

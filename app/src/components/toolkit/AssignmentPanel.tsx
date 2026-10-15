@@ -1,9 +1,12 @@
 import { useState } from 'react';
+import { askToOpen } from '../../lib/learningintent';
 import { download } from '../../lib/deliver';
 import { card, type PolicySource } from '../../lib/toolkit/policy';
 import { DISCLAIMER, interpret } from '../../lib/toolkit/rubric';
 import { completeStage, MIN_NOTE, newWorkspace, progress, reopenStage, submissionChecklist, TEMPLATE_IDS, TEMPLATES, type TemplateId, type Workspace } from '../../lib/toolkit/templates';
 import { Notice } from '../ui';
+import { ConfirmDialog } from '../ConfirmDialog';
+import { ActionPreview } from '../unity/ActionPreview';
 import { ContextBar } from '../unity/ContextBar';
 import { newId, type useToolkit } from './store';
 
@@ -20,6 +23,7 @@ export function AssignmentPanel({
   layers,
   initialTemplate,
   now,
+  onLeave,
 }: {
   library: Library;
   courseCode: string;
@@ -27,12 +31,15 @@ export function AssignmentPanel({
   /** Preselects the type; the caller keys this panel on it, so a new choice remounts rather than syncing state in an effect. */
   initialTemplate: TemplateId | null;
   now: Date;
+  /** Leave the toolkit for the Study screen it sits inside — the toolkit is a mode of Study, not a screen, so this closes it. */
+  onLeave: () => void;
 }) {
   const workspaces = library.value.workspaces;
   const [openId, setOpenId] = useState<string | null>(null);
   const [kind, setKind] = useState<TemplateId>(initialTemplate ?? 'essay');
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   const save = (ws: Workspace) => library.update((s) => ({ ...s, workspaces: s.workspaces.map((w) => (w.id === ws.id ? ws : w)) }));
   const create = () => {
@@ -140,14 +147,38 @@ export function AssignmentPanel({
           </button>
           <button
             onClick={() => {
-              if (!window.confirm(`Delete “${open.title}” from this device? This cannot be undone.`)) return;
-              library.update((s) => ({ ...s, workspaces: s.workspaces.filter((w) => w.id !== open.id) }));
-              setOpenId(null);
+              askToOpen({ panel: 'feedback', work: open.title, courseCode: open.courseCode });
+              onLeave();
             }}
+          >
+            File the feedback I received
+          </button>
+          <button
+            onClick={() => setDeleting(true)}
           >
             Delete workspace
           </button>
         </div>
+        {deleting ? (
+          <ConfirmDialog
+            title="Delete assignment workspace?"
+            preview={(
+              <ActionPreview
+                subject={open.title}
+                says="Deletes this workspace, its stage notes and reflection from this device."
+                doesNotChange="Your course assignment and any files outside Semester stay where they are."
+                recovery={{ kind: 'none' }}
+              />
+            )}
+            confirmLabel="Delete it"
+            onCancel={() => setDeleting(false)}
+            onConfirm={() => {
+              library.update((s) => ({ ...s, workspaces: s.workspaces.filter((w) => w.id !== open.id) }));
+              setDeleting(false);
+              setOpenId(null);
+            }}
+          />
+        ) : null}
       </section>
     );
   }

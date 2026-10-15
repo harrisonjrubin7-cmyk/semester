@@ -82,9 +82,26 @@ fetchcal          239  platform  2026-09-29T21:10:28Z
 canvas            230  platform  2026-09-29T21:10:28Z
 lti               232  platform  2026-09-29T21:10:28Z
 integration-tick   88  platform  2026-09-29T21:10:28Z
+# Added with the access saga worker. Replace this pending row with the Management
+# API reading after the merge that adds it deploys it.
+access-saga-tick    -  pending   2026-10-12T04:30:00Z
+ops-projector       -  pending   2026-10-08T21:00:00Z
 trust-room         95  platform  2026-09-29T21:10:28Z
 delete-account     72  platform  2026-09-29T21:10:28Z
 billing-cancel      2  platform  2026-09-29T21:10:28Z
 billing-checkout   32  platform  2026-09-29T21:10:28Z
+# Added in the billing-availability release. Replace this pending row with the
+# Management API reading after the gated main deploy completes.
+billing-portal      -  pending   2026-10-03T07:31:00Z
 billing-webhook    32  platform  2026-09-29T21:10:28Z
 lead-intake        32  platform  2026-09-29T21:10:28Z
+
+# productivity-sourcecheck first deployed through the Management API connector.
+# Its entrypoint is /tmp/user_fn_.../source/productivity-sourcecheck/index.ts,
+# so provenance is manual, not a fabricated platform/runner reading. On merge,
+# the continuous platform deploy should replace this first reading.
+productivity-sourcecheck  2  manual  2026-10-01T16:05:17Z first
+# Dashboard reading on 3 October: deployment count 5, updated with the full
+# platform function set. The dashboard exposed the deploy time to minute
+# precision (14:22 UTC) rather than seconds.
+support-reply-notify      5  platform 2026-10-03T14:22:00Z

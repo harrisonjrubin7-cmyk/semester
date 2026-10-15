@@ -165,8 +165,16 @@ describe('the document exists and says what it is for', () => {
   it('rests on the promise the privacy page actually makes', async () => {
     const { CLAIMS } = await import('./privacy');
     const said = JSON.stringify(CLAIMS);
-    expect(said).toContain('There is no retention schedule that quietly removes your work');
-    expect(flat()).toContain('There is no retention schedule that quietly removes your work');
+    expect(said).toContain('Your courses, deadlines, notes, plans and other study work stay until you delete them');
+    expect(said).toContain('Newly classified individual-beta support questions that are not associated with a school deployment');
+    expect(said).toContain('after a ticket is resolved or closed and has no new activity for 180 days');
+    expect(said).toContain('no automatic school-ticket purge runs until that rule is configured');
+    expect(said).toContain('Tickets created before the durable creation-time classifier remain outside automated and ticket-only deletion');
+    expect(said).toContain('Whole-account erasure detaches those legacy records');
+    expect(flat()).toContain('Your courses, deadlines, notes, plans and other study work stay until you delete them');
+    expect(flat()).toContain('Individual-beta support questions not associated with a school deployment');
+    expect(flat()).toContain('a resolved or closed ticket and its replies are deleted 180 days after the last activity');
+    expect(flat()).toContain('no automatic school-ticket purge runs until that rule is configured');
   });
 });
 
@@ -590,5 +598,85 @@ describe('the AI-runtime and Community sweeps obey a hold at their last definiti
     expect(forgetful).toHaveLength(1);
     expect(forgetful[0]).not.toMatch(/account_is_held\(/);
     expect(ACCOUNTLESS).not.toContain('community_restrictions');
+  });
+});
+
+/**
+ * The last three sweeps a legal hold had not reached
+ * (20261004150000_holds_reach_the_last_three_sweeps.sql): student tombstones,
+ * individual subscribers' financial records and the gateway journal. Same hazard
+ * as the sweeps above, and the same answer: a Postgres function is replaced
+ * whole, so the last migration to define one is the one that runs. Each is read
+ * here at its last definition and held to its hold clauses, and the one delete
+ * that carries none is named, so leaving a clause off is a decision somebody
+ * wrote down and not a line nobody noticed was missing.
+ *
+ * `supabase/hold-blind-sweeps.check.sql` is the half that runs them against
+ * held and unheld rows; this is the half that notices a later rewrite dropping
+ * a clause before a database is ever involved.
+ */
+describe('the tombstone, financial and gateway-journal sweeps obey a hold at their last definition', () => {
+  const files = readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql')).sort();
+  /** A function's body at the last migration that defines it, up to the end of its dollar quote. */
+  const lastBody = (header: string): string => {
+    const definers = files.filter((f) => readFileSync(join(MIGRATIONS, f), 'utf8').includes(header));
+    expect(definers.length, `${header} is defined by some migration`).toBeGreaterThan(0);
+    const sql = readFileSync(join(MIGRATIONS, definers[definers.length - 1]), 'utf8');
+    return (sql.split(header)[1] ?? '').split(/\nend \$\$;|\nend;\s*\$\$;/)[0];
+  };
+  // Comments come out first: a semicolon in one would cut a statement in two.
+  const deletes = (body: string) =>
+    body
+      .replace(/--[^\n]*/g, '')
+      .split(';')
+      .map((s) => s.replace(/\s+/g, ' ').trim())
+      // The first statement of a body shares its text with `begin`; nothing else may precede a delete.
+      .map((s) => {
+        const at = s.indexOf('delete from ');
+        return at >= 0 && ['', 'begin'].includes(s.slice(0, at).trim()) ? s.slice(at) : '';
+      })
+      .filter(Boolean);
+
+  /** Deletes that hold no record and so obey no hold. Adding to this list is a decision. */
+  const UNCONDITIONAL = ['private.gateway_rate_limit'];
+
+  it('keeps the tombstones of a held account, or of one in a held school', () => {
+    const body = lastBody('create or replace function public.sweep_tombstones(').replace(/--[^\n]*/g, '');
+    expect(body, 'the read found the sweep').toMatch(/delete from public\.%1\$s where deleted_at is not null/);
+    expect(body).toMatch(/not private\.account_is_held\(user_id\)/);
+    // Every table the sweep walks is one a student owns, so one clause on the shared statement covers all five.
+    expect(body).toMatch(/array\['notes', 'tasks', 'appointments', 'sittings', 'courses'\]/);
+  });
+
+  it('keeps an individual subscriber\'s financial records while the account is held', () => {
+    const del = deletes(lastBody('create or replace function public.purge_financial_records('));
+    expect(del.length, 'the read found the purge').toBe(6);
+    // Five delete from tables that hang off an account the owner can still be named by...
+    for (const d of del.slice(0, 5)) expect(d, d.slice(0, 60)).toMatch(/account_is_held\(a\.user_id\)/);
+    // ...and the billing account with no owner left cannot be, so it follows the platform hold.
+    expect(del[5]).toMatch(/^delete from public\.billing_accounts /);
+    expect(del[5]).toMatch(/platform_is_held\(\)/);
+  });
+
+  it('keeps a held school\'s gateway journal, and a held account\'s, except the replay window', () => {
+    const del = deletes(lastBody('create or replace function private.gateway_purge_journal()'));
+    expect(del.length, 'the read found the purge').toBe(5);
+    const checked = del.filter((d) => !UNCONDITIONAL.some((t) => d.startsWith(`delete from ${t}`)));
+    expect(checked.length).toBe(del.length - UNCONDITIONAL.length);
+    for (const d of checked) {
+      expect(d, d.slice(0, 60)).toMatch(/tenant_is_held\(/);
+      expect(d, d.slice(0, 60)).toMatch(/account_is_held\(/);
+    }
+    // The cast of a text actor happens only behind the UUID pattern, so a non-UUID actor never raises.
+    for (const d of checked) expect(d).toMatch(/\^\[0-9a-f\]\{8\}-.*then private\.account_is_held\(.*::uuid\) else false end/);
+  });
+
+  it('is not fooled: a delete that forgets the hold, or is not on the list, is caught by the same checks', () => {
+    const forgetful = deletes('delete from private.gateway_audit a where a.at < now();');
+    expect(forgetful).toHaveLength(1);
+    expect(forgetful[0]).not.toMatch(/tenant_is_held\(/);
+    expect(UNCONDITIONAL).not.toContain('private.gateway_audit');
+    // And a definition that is missing is an error, not an empty pass.
+    expect(() => lastBody('create or replace function private.no_such_sweep(')).toThrow();
   });
 });

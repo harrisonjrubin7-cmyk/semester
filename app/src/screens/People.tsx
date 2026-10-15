@@ -367,6 +367,7 @@ function Correct({ person: p }: { person: Person }) {
       <input
         className="input"
         type="email"
+        autoComplete="off"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         onKeyDown={(e) => {

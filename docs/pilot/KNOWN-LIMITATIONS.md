@@ -2,7 +2,7 @@
 
 <!-- Rendered from app/src/lib/knownlimitations.ts by pilotdocs.test.ts. Edit the data, then run `REGISTERS=write npx vitest run src/lib/pilotdocs.test.ts` from app/. -->
 
-**As of 2026-09-28.** What does not work yet, what to do instead, and how to
+**As of 2026-10-03.** What does not work yet, what to do instead, and how to
 report something. Every item names the file in this repository that states it;
 nothing here is a plan or a guess. The same list is printed on the public site
 at `/known-limitations/` and on the Help screen in the app, from the same data.
@@ -69,21 +69,21 @@ either direction, that is a bug: report it the same way.
 
 *Stated in:* `docs/legal/TERMS-OF-SERVICE-DRAFT.md`, `docs/legal/PRIVACY-POLICY-DRAFT.md`, `app/src/lib/privacy.ts`
 
-### Plus can be bought in the app, but checkout is new and has taken no live payment.
+### Individual paid acquisition is held; Plus and Pro are not on sale.
 
-**What does not work yet.** Plus can be bought and cancelled from the Account screen, at the price the screen shows. The card is typed into Stripe’s page and never reaches Semester. Checkout runs on Stripe test keys, and its first end-to-end check has not been recorded. Pro is not on sale, nothing can be bought on the public site, and during the pilot every student feature is free.
+**What does not work yet.** The checkout and cancellation implementation exists, but new checkout is disabled while pricing, legal, tax, accessibility, security, support and operational approvals remain open. Existing subscribers retain cancellation and billing-history access. During controlled validation, every feature a student can use is free.
 
-**What to do instead.** Nothing to do. Buy only from the Account screen: if another page asks you to pay for Semester, it is not Semester. Write to support about any charge you do not recognise.
+**What to do instead.** Do not enter payment information for Semester. Use Free during controlled validation. Existing subscribers can use Account to cancel or open billing history and should contact support about any unrecognized charge.
 
 *Stated in:* `app/src/lib/membership.ts`, `app/src/lib/plans.ts`, `docs/DECISION-LOG.md`
 
-### Support is one address, read by a person, with no promised response time.
+### The beta support desk is live, but email delivery and formal coverage are gated.
 
-**What does not work yet.** There is no support desk, no ticket system you can watch, and no response time anybody has committed to. The status page checks the service from your own browser when you open it and shows the last 90 days as recorded hourly, starting the day recording began, with days before that shown as no data. It sends no notifications, and its AI and checkout rows only show that the service answered.
+**What does not work yet.** Help shows your questions, stable SUP references, replies and their non-binding 24-hour or 72-hour first-response target. Authorized staff answer through an identity-free queue. Production ticket creation, staff reply, Help-thread receipt and resolution passed UAT on October 3, 2026, and the founder staffs the current beta queue. Email notices are unavailable: their delivery mechanics reached provider acceptance in that UAT, but the worker and UI are now parked until Resend has a completed vendor review, executed terms/DPA, an owner and an explicit activation decision. Outlook inbox receipt also remains pending. Replies remain available in Help. Newly classified individual-beta tickets without a signed school deployment are deleted 180 days after resolution or closure unless a legal hold applies; a school-domain claim alone remains individual beta. Tickets opened under a signed school deployment await a configured contract rule and are not automatically purged. Tickets created before the durable classifier stay outside automated and ticket-only deletion until their historical authority is verified instead of guessed from today’s profile. Whole-account erasure detaches those legacy records from the deleted account and preserves them with an opaque review key so potentially held evidence is not destroyed. Support still uses the founder’s personal Gmail address, and no support hours, guaranteed response time or 24/7 coverage are promised. The status page checks the service from your own browser and its AI and checkout rows only show that the service answered.
 
-**What to do instead.** Write to the address below with the screen, what you were doing and what you saw. For “is it down?”, open the status page from Help; Up means your browser reached it just now.
+**What to do instead.** If the ticket panel is available, use it and keep the SUP reference. Otherwise write to the address below. For “is it down?”, open the status page from Help; Up means your browser reached it just now.
 
-*Stated in:* `app/src/lib/privacy.ts`, `docs/GO-NO-GO-CHECKLIST.md`, `app/public/status.html`
+*Stated in:* `app/src/lib/supporttickets.ts`, `app/src/components/console/SupportQueue.tsx`, `docs/launch-readiness/2026-10-03-support-production-uat.md`, `docs/trust/VENDOR-RISK-REGISTER.md`, `supabase/migrations/20261008195500_support_ticket_retention.sql`, `docs/GO-NO-GO-CHECKLIST.md`, `app/public/status.html`
 
 ### Your own backup is the one that has been rehearsed.
 
@@ -101,13 +101,13 @@ either direction, that is a bug: report it the same way.
 
 *Stated in:* `SEMESTER_MARKET_READINESS.md`
 
-### Ask Semester does not cite its sources.
+### Not every Ask Semester answer has a source to cite.
 
-**What does not work yet.** Answers do not say which reading or syllabus line they came from, and which model answers is a setting rather than chosen for the question asked. When the assistant cannot help it says why.
+**What does not work yet.** When Ask Semester uses saved course material, its answer details show the source title, locator and excerpt. Answers based on general knowledge have no citation; the “How to read this answer” section labels them “No source” and says what needs the official record or a person. The model is selected in Settings rather than chosen independently for each question.
 
-**What to do instead.** Check any date, rule or grade weighting against the syllabus on the course screen (#/courses) before acting on it.
+**What to do instead.** Open the answer details and check the cited excerpt. If the answer says “No source”, or if a date, rule or grade weighting matters, confirm it against the syllabus on the course screen (#/courses) or the official record before acting on it.
 
-*Stated in:* `SEMESTER_MARKET_READINESS.md`
+*Stated in:* `app/src/intelligence/Disclosure.tsx`, `app/src/ai/converse.ts`, `app/src/ai/quality.ts`
 
 ### During maintenance the app may be read-only.
 

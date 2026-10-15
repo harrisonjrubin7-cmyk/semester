@@ -49,9 +49,9 @@ Anything unwritten says `NOT_STARTED` rather than pointing at a stub.
 | Student quick-start guide | READY | student | `docs/launch/STUDENT-QUICK-START.md` |  |
 | 60-second “What is Semester?” | IN_PROGRESS | student, public | `docs/launch/WHAT-IS-SEMESTER.md` | The script is written; a video needs captions and a transcript before it counts |
 | Role-specific first-day checklists | READY | student, faculty, advisor, admin | `docs/launch/FIRST-DAY-CHECKLISTS.md` |  |
-| Course and faculty quick-start guide | NOT_STARTED | faculty | — | Waits on the pilot deciding whether faculty are in its first cohort |
-| Advisor quick-start guide | NOT_STARTED | advisor | — | Waits on the advisor features the pilot turns on |
-| Admin onboarding guide | IN_PROGRESS | admin | `docs/vanderbilt/production-activation-runbook.md` | The activation runbook covers setup; a guide for day-to-day administration is not written |
+| Course and faculty quick-start guide | READY | faculty | `docs/launch/FACULTY-QUICK-START.md` |  |
+| Advisor quick-start guide | READY | advisor | `docs/launch/ADVISOR-QUICK-START.md` |  |
+| Admin onboarding guide | READY | admin | `docs/launch/ADMIN-OPERATIONS-GUIDE.md` | Day-to-day pilot operation; activation remains in the production runbook |
 | Accessibility guide | NOT_STARTED | student, staff | — | Needs the accessibility conformance evidence first, so it describes what was tested rather than what was intended |
 | Privacy and AI-use guide | IN_PROGRESS | student | `app/src/lib/privacy.ts` | The Privacy screen states each claim and a test holds it; a guide for the school’s own AI policy waits on that policy |
 | Source and freshness guide | NOT_STARTED | student, staff | — |  |
@@ -67,6 +67,8 @@ Anything unwritten says `NOT_STARTED` rather than pointing at a stub.
 ## 3. Training
 
 **First-day checklists, one per role.** [`docs/launch/FIRST-DAY-CHECKLISTS.md`](launch/FIRST-DAY-CHECKLISTS.md) has one list each for students, faculty, advisors and administrators. Every step names the screen it happens on, typed as a `Screen`, so a list pointing at a screen the app no longer has fails the type check.
+
+**Role guides.** Faculty, advisors and administrators each have a ready quick-start or operations guide. The [pilot measures and baseline worksheet](launch/PILOT-MEASURES-BASELINE-WORKSHEET.md) gives the sponsor a fixed place to agree scope, sources, thresholds and the expand/extend/stop decision before measurement begins.
 
 **Live sessions.** These are a task in the 90-day program (`training`), closed by evidence rather than a status: each role has had its checklist and a live session.
 

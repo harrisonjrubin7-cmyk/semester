@@ -1,0 +1,62 @@
+# Public company frontend only. No account sessions or production API probes.
+# Reuse the existing Semester application, with a separate findings timeline.
+# Existing broad policy is preserved; no policy/technology flags are pruned.
+app:
+  applicationId: ${STACKHAWK_APPLICATION_ID}
+  host: ${APP_HOST:https://localhost:4186}
+  env: CompanySiteCI
+
+hawk:
+  startupTimeoutMinutes: 3
+  failureThreshold: low
+  config:
+    - pscans.maxAlertsPerRule=0
+    # Plugin 20012 (Anti-CSRF Tokens Check) stays enabled. Hawk's build raises
+    # it for every HTML form that lacks a changing hidden token, including
+    # forms with no method (the HTML default, GET). These company forms do not
+    # carry an authenticated cookie session: submit is cancelled in site.js and
+    # the lead is a cross-origin JSON POST with no credentials. The ignore list
+    # matches form id exactly and skips only these forms. A form that is not
+    # listed is still scanned. The plugin itself stays enabled.
+    - rules.csrf.ignorelist=hv-form,proc-form,ag-form,contact-form,bp-form,le-form,bc-form,a11y-form,evt-form,st-sub,pr-form,gap-form,ir-form,kit-form,rep-form,lead-form,fb-form,up-form,ri-form,nd-form,yt-req,cm-apply,sc-mail,sec-form
+  spider:
+    ajax: true
+    maxDurationMinutes: 4
+    ajaxBrowser: CHROME_HEADLESS
+    seedPaths:
+      - /site.css
+      - /site.js
+      - /product
+      - /students
+      - /personal-academic-os
+      - /contact
+      - /request-invite
+      - /trust
+      - /accessibility
+      - /status
+      - /legal
+      - /sitemap.xml
+      - /screenshots/search-desktop.jpg
+      - /screenshots/search-mobile.jpg
+      - /screenshots/today-desktop.jpg
+      - /screenshots/today-mobile.jpg
+      - /screenshots/courses-desktop.jpg
+      - /screenshots/courses-mobile.jpg
+      - /screenshots/calendar-desktop.jpg
+      - /screenshots/calendar-mobile.jpg
+      - /screenshots/path-desktop.jpg
+      - /screenshots/path-mobile.jpg
+      - /screenshots/discover-desktop.jpg
+      - /screenshots/discover-mobile.jpg
+
+tags:
+  - name: _STACKHAWK_AGENT
+    value: ${HAWK_AGENT:Codex}
+  - name: _STACKHAWK_GIT_COMMIT_SHA
+    value: ${COMMIT_SHA:none}
+  - name: _STACKHAWK_GIT_BRANCH
+    value: ${BRANCH_NAME:none}
+  - name: git_origin
+    value: harrisonjrubin7-cmyk/semester
+  - name: surface
+    value: company-site-frontend

@@ -41,7 +41,7 @@ create or replace function pg_temp.become(who uuid)
 returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims',
-                     json_build_object('sub', who::text, 'role', 'authenticated')::text,
+                     json_build_object('sub', who::text, 'role', 'authenticated', 'aal', 'aal2')::text,
                      true);
   execute 'set local role authenticated';
 end $$;
@@ -256,9 +256,24 @@ begin
                           'delete from public.app_admins');
 
   -- ── is_app_admin(), and where it lives ──────────────────────────────────
+  -- is_app_admin() follows platform:configure, not the app_admins list. A row
+  -- in the list alone is not an operator; the grant is. Both halves, so a
+  -- function that answered false for everyone could not pass.
+  set local role postgres;
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance)
+  values (admin, 'platform_admin', 'platform', '', 'platform');
   perform pg_temp.become(admin);
   select private.is_app_admin() into says;
-  perform pg_temp.said('is_app_admin is true for an administrator', says::text, 'true');
+  perform pg_temp.said('is_app_admin is true for a holder of platform:configure', says::text, 'true');
+
+  set local role postgres;
+  delete from public.role_grants where subject = admin;
+  perform pg_temp.become(admin);
+  select private.is_app_admin() into says;
+  perform pg_temp.said('and false for an app_admins row with no grant — F-5', says::text, 'false');
+  set local role postgres;
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance)
+  values (admin, 'platform_admin', 'platform', '', 'platform');
 
   perform pg_temp.become(person);
   select private.is_app_admin() into says;

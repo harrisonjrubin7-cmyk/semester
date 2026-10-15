@@ -4,6 +4,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ACCESS_BASIS, CONTEXT_BAR, FIGURE_PROVENANCE, PRODUCTION_WRITE_NOTICE } from '../lib/ops/console';
 import { EVIDENCE } from '../lib/ops/evidence';
+import { READINESS_GATES } from '../lib/ops/readiness';
+import type { CommandItem } from '../lib/console/client';
 
 /**
  * The operations console, driven against a replaced account service.
@@ -33,7 +35,17 @@ const mock = vi.hoisted(() => ({
   audit: vi.fn(),
   auditStatus: vi.fn(),
   figures: vi.fn(),
+  command: vi.fn(),
+  projection: vi.fn(),
   customers: vi.fn(),
+  tenantOperations: vi.fn(),
+  integrationHealth: vi.fn(),
+  releaseIncidents: vi.fn(),
+  privacyRequests: vi.fn(),
+  claimPrivacy: vi.fn(),
+  privacyDetail: vi.fn(),
+  verifyPrivacy: vi.fn(),
+  resolvePrivacy: vi.fn(),
   prefs: vi.fn(),
   savePref: vi.fn(),
   mfa: vi.fn(),
@@ -56,8 +68,16 @@ vi.mock('../lib/cloud', () => ({
   },
   cloud: vi.fn(),
 }));
-vi.mock('../lib/capabilities', () => ({ loadMyCapabilities: mock.caps }));
+vi.mock('../lib/capabilities', async (orig) => {
+  const actual = await orig<typeof import('../lib/capabilities')>();
+  return {
+    ...actual,
+    loadMyCapabilities: mock.caps,
+    useCapabilityDiscovery: (accountId: string) => actual.useCapabilityDiscovery(accountId, mock.caps),
+  };
+});
 vi.mock('../lib/environment', async (orig) => ({ ...(await orig<object>()), environment: () => mock.env }));
+vi.mock('../lib/experience-flags', () => ({ EXPERIENCE_FLAGS: { supportTickets: 'production' } }));
 vi.mock('../lib/console/client', async (orig) => ({
   ...(await orig<object>()),
   loadDuties: mock.duties,
@@ -71,14 +91,24 @@ vi.mock('../lib/console/client', async (orig) => ({
   loadAudit: mock.audit,
   auditStatus: mock.auditStatus,
   loadFigures: mock.figures,
+  loadCommandCenter: mock.command,
+  loadProjectionDashboard: mock.projection,
   loadCustomers: mock.customers,
+  loadTenantOperations: mock.tenantOperations,
+  loadIntegrationHealth: mock.integrationHealth,
+  loadReleaseIncidents: mock.releaseIncidents,
+  loadPrivacyRequests: mock.privacyRequests,
+  claimPrivacyRequest: mock.claimPrivacy,
+  readPrivacyRequestDetail: mock.privacyDetail,
+  verifyPrivacyRequest: mock.verifyPrivacy,
+  resolvePrivacyRequest: mock.resolvePrivacy,
   loadPreferences: mock.prefs,
   savePreference: mock.savePref,
   mfaLevel: mock.mfa,
-  totpFactors: mock.factors,
+  mfaFactors: mock.factors,
   enrollTotp: mock.enroll,
-  challengeTotp: mock.challenge,
-  verifyTotp: mock.verify,
+  challengeMfa: mock.challenge,
+  verifyMfa: mock.verify,
   sessionExpiry: mock.session,
   openSupportGrants: mock.support,
 }));
@@ -91,8 +121,22 @@ let host: HTMLDivElement;
 let root: Root;
 
 const PLATFORM = [{ capability: 'console:operate', scopeKind: 'platform', scopeId: '' }];
+const SUPPORT_PLATFORM = [...PLATFORM, { capability: 'support:ticket', scopeKind: 'platform', scopeId: '' }];
+const IMPLEMENTATION_PLATFORM = [...PLATFORM, { capability: 'tenant:implement', scopeKind: 'school', scopeId: 'vu' }];
+const PRIVACY_PLATFORM = [...PLATFORM, { capability: 'data_request:handle', scopeKind: 'school', scopeId: 'vu' }];
+const INTEGRATION_PLATFORM = [...PLATFORM, { capability: 'integration:view', scopeKind: 'school', scopeId: 'vu' }];
+const INCIDENT_PLATFORM = [...PLATFORM, { capability: 'incident:communicate', scopeKind: 'platform', scopeId: '' }];
 const FRESH = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 2 * 60_000) };
 const STALE = { currentLevel: 'aal1', nextLevel: 'aal2', verifiedAt: null };
+const STALE_AAL2 = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 20 * 60_000) };
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; });
+  void promise.catch(() => {});
+  return { promise, resolve, reject };
+}
 
 const DUTIES = [
   { id: 'role-grant', action: 'Grant or widen a privileged role', requester: 'role:university_admin', approvers: ['security'], twoPerson: false, evidence: 'The access request, naming the person, the role, the tenant and the reason' },
@@ -149,6 +193,8 @@ beforeEach(() => {
     { figure: 'billing', value: 'not applicable', source: 'docs/DECISION-LOG.md D-009', timeWindow: 'always', ownerSeat: 'founder', refreshedAt: null, evidence: 'D-009', limitation: 'Semester takes no payments; no payment provider exists to read from' },
     { figure: 'approvals-open', value: '1', source: 'public.approval_request', timeWindow: 'now', ownerSeat: 'security', refreshedAt: '2026-09-28T10:00:00Z', evidence: 'supabase/console-approvals.check.sql', limitation: 'Counts pending requests only' },
   ]);
+  mock.command.mockResolvedValue([]);
+  mock.projection.mockResolvedValue({ freshness: 'fresh', generatedAt: '2026-10-12T00:00:00Z', activeModels: 0, eventSourcesMapped: 0, projections: [], warnings: [] });
   mock.customers.mockResolvedValue([
     {
       id: 'c-1',
@@ -164,7 +210,55 @@ beforeEach(() => {
       contracts: [{ id: 'ct-1', kind: 'pilot-agreement', signedOn: '2026-09-01', startsOn: '2026-09-01', endsOn: '2027-05-31', documentRef: 'VU-PILOT-1' }],
     },
   ]);
-  mock.prefs.mockResolvedValue({});
+  mock.tenantOperations.mockResolvedValue([{
+    tenantId: 'vu', tenantName: 'Vanderbilt University', isDemo: false,
+    factKey: 'rollout', category: 'rollout', label: 'Rollout state', value: 'requested',
+    classification: 'internal', provenance: 'public.tenant_rollout', owner: 'implementation',
+    observedAt: '2026-10-03T10:00:00Z', staleAfterDays: 14,
+    limitation: 'State is not approval evidence.',
+    visibilityReason: 'Live tenant:implement grant at exact school scope.',
+  }]);
+  mock.integrationHealth.mockResolvedValue([{
+    connectionId: 'conn-canvas', tenantId: 'vu', tenantName: 'Vanderbilt University', isDemo: false,
+    connectionName: 'Canvas', providerDomain: 'lms', providerName: 'Canvas', configurationState: 'healthy',
+    healthState: 'healthy', featureState: 'production', lastSuccessfulSyncAt: '2026-10-03T10:00:00Z',
+    freshnessTargetMinutes: 30, minutesSinceSuccess: 10, latestRunStatus: 'success',
+    latestRunAt: '2026-10-03T10:00:00Z', reconciliationState: 'complete', recordsReceived: 20,
+    recordsRejected: 0, openErrors: 0, criticalErrors: 0, openDeadLetters: 0,
+    ownerName: 'Integration owner', backupOwnerName: 'Backup owner', customerImpact: 'No current impact.',
+    nextSafeAction: 'Continue monitoring.', configurationApprovalId: null, configurationApprovalStatus: null,
+    classification: 'restricted', provenance: 'server sources', limitation: 'No credentials returned.',
+  }]);
+  mock.releaseIncidents.mockResolvedValue([{
+    itemId: 'release:platform', itemKind: 'release', tenantId: null, tenantName: null, isDemo: false,
+    state: 'deployed_unverified', title: 'Production release', severity: 'critical', owner: 'engineering',
+    affectedWorkflows: ['application'], customerImpact: 'Deployment recorded; behavior unverified.',
+    communicationStatus: 'not_applicable', lastNoticeAt: null, nextUpdateAt: null,
+    rollbackStatus: 'documented', releaseCommit: 'a'.repeat(40), deploymentSource: 'pages', deploymentId: 'deploy-9',
+    observedAt: '2026-10-03T10:00:00Z', expiresAt: '2026-10-17T10:00:00Z', approvalId: null,
+    approvalStatus: null, canRequest: true, evidence: 'production_verification=blocked', nextSafeAction: 'Verify the deployed commit.',
+    classification: 'restricted', provenance: 'server sources', limitation: 'Production behavior remains unverified.',
+  }]);
+  mock.privacyRequests.mockResolvedValue([{
+    requestId: 'request-1', requestRef: 'DSR-1234567890', tenantId: 'vu',
+    tenantName: 'Vanderbilt University', isDemo: false, kind: 'export', requestedBy: 'self',
+    status: 'received', receivedAt: '2026-10-01T10:00:00Z', dueAt: '2026-10-31T10:00:00Z',
+    overdue: false, identityState: 'unverified', assignedTo: null, assignedAt: null,
+    assignedToMe: false, holdState: 'clear', affectedStores: ['account-scoped server records'],
+    deletionApprovalId: null, deletionApprovalStatus: null, classification: 'restricted',
+    provenance: 'public.data_subject_request', limitation: 'Metadata only.',
+  }]);
+  mock.claimPrivacy.mockResolvedValue('verifying');
+  mock.privacyDetail.mockResolvedValue({
+    requestRef: 'DSR-1234567890', subjectReference: 'ab'.repeat(32), kind: 'export',
+    requestedBy: 'self', detail: 'Provide my export.', tenantId: 'vu', verifiedAt: null,
+    resolution: '', resolutionEvidence: null, completionCertificateId: null,
+  });
+  mock.verifyPrivacy.mockResolvedValue('in_progress');
+  mock.resolvePrivacy.mockResolvedValue({ status: 'completed', certificateId: 'certificate-1' });
+  // Existing view tests exercise Approvals first; production defaults to the
+  // Command center when no server-side preference exists.
+  mock.prefs.mockResolvedValue({ 'console.tab': 'approvals' });
   mock.savePref.mockResolvedValue(undefined);
   mock.mfa.mockResolvedValue(FRESH);
   mock.factors.mockResolvedValue([{ id: 'f-1', name: 'Phone' }]);
@@ -193,6 +287,87 @@ async function render() {
   });
   await flush();
 }
+
+describe('support tab capability gate', () => {
+  it('does not offer support to console operators without support:ticket', async () => {
+    await render();
+    expect(button('Support')).toBeUndefined();
+  });
+
+  it('offers support to a platform support operator', async () => {
+    mock.caps.mockResolvedValue(SUPPORT_PLATFORM);
+    await render();
+    expect(button('Support')).toBeDefined();
+  });
+});
+
+describe('tenant operations capability gate', () => {
+  it('does not offer tenant operations to a console-shell-only operator', async () => {
+    await render();
+    expect(button('Tenant operations')).toBeUndefined();
+  });
+
+  it('offers and loads tenant operations for an exact-school implementation grant', async () => {
+    mock.caps.mockResolvedValue(IMPLEMENTATION_PLATFORM);
+    await render();
+    await press('Tenant operations');
+    expect(mock.tenantOperations).toHaveBeenCalledWith(false);
+    expect(host.textContent).toContain('Vanderbilt University');
+    expect(host.textContent).toContain('Live tenant:implement grant at exact school scope.');
+  });
+});
+
+describe('integration health capability gate', () => {
+  it('does not offer integration health to a console-shell-only operator', async () => {
+    await render();
+    expect(button('Integration health')).toBeUndefined();
+    expect(mock.integrationHealth).not.toHaveBeenCalled();
+  });
+
+  it('offers and loads credential-free health for an exact-school integration grant', async () => {
+    mock.caps.mockResolvedValue(INTEGRATION_PLATFORM);
+    await render();
+    await press('Integration health');
+    expect(mock.integrationHealth).toHaveBeenCalledWith(false);
+    expect(host.textContent).toContain('Canvas');
+    expect(host.textContent).toContain('No credentials returned.');
+    expect(mock.request).not.toHaveBeenCalled();
+  });
+});
+
+describe('release and incident capability gate', () => {
+  it('does not offer or load release operations for a console-shell-only operator', async () => {
+    await render();
+    expect(button('Release & incidents')).toBeUndefined();
+    expect(mock.releaseIncidents).not.toHaveBeenCalled();
+  });
+
+  it('offers the workspace only with the platform incident communication grant', async () => {
+    mock.caps.mockResolvedValue(INCIDENT_PLATFORM);
+    await render();
+    await press('Release & incidents');
+    expect(mock.releaseIncidents).toHaveBeenCalledWith(false);
+    expect(host.textContent).toContain('Deployment recorded; behavior unverified.');
+    expect(mock.request).not.toHaveBeenCalled();
+  });
+});
+
+describe('privacy request capability gate', () => {
+  it('does not offer privacy requests to a console-shell-only operator', async () => {
+    await render();
+    expect(button('Privacy requests')).toBeUndefined();
+  });
+
+  it('offers and loads the identity-minimized queue for an exact-school data-rights grant', async () => {
+    mock.caps.mockResolvedValue(PRIVACY_PLATFORM);
+    await render();
+    await press('Privacy requests');
+    expect(mock.privacyRequests).toHaveBeenCalledWith(false);
+    expect(host.textContent).toContain('DSR-1234567890');
+    expect(host.textContent).toContain('Metadata only.');
+    expect(mock.privacyDetail).not.toHaveBeenCalled();
+  });
+});
 
 const buttons = () => [...host.querySelectorAll('button')];
 const button = (text: string) => buttons().find((b) => b.textContent?.trim() === text) as HTMLButtonElement | undefined;
@@ -238,7 +413,7 @@ function dd(list: Element, field: string): string {
 }
 
 const noReads = () => {
-  for (const fn of [mock.duties, mock.approvals, mock.audit, mock.figures, mock.customers, mock.prefs, mock.breakGlass]) expect(fn).not.toHaveBeenCalled();
+  for (const fn of [mock.duties, mock.approvals, mock.audit, mock.figures, mock.command, mock.customers, mock.prefs, mock.breakGlass]) expect(fn).not.toHaveBeenCalled();
 };
 
 describe('the gate', () => {
@@ -275,6 +450,261 @@ describe('the gate', () => {
     await flush();
     expect(host.querySelector('[aria-label="Context bar"]')).toBeTruthy();
   });
+
+  it('removes account A operations while account B grants are unresolved', async () => {
+    const accountB = deferred<never[]>();
+    mock.caps.mockResolvedValueOnce(PLATFORM).mockImplementationOnce(() => accountB.promise);
+
+    await render();
+    expect(host.querySelector('[aria-label="Context bar"]')).toBeTruthy();
+
+    mock.account = { id: 'op-2', email: 'other@semester.example', via: 'an email address and password' };
+    await render();
+    expect(mock.caps).toHaveBeenLastCalledWith('op-2');
+    expect(host.textContent).toContain('Reading your grants');
+    expect(host.querySelector('[aria-label="Context bar"]')).toBeNull();
+
+    await act(async () => accountB.resolve([]));
+    await flush();
+    expect(host.textContent).toContain('holds no console:operate grant at platform scope');
+  });
+
+  it('keeps account B closed when account A grants arrive after the switch', async () => {
+    const accountA = deferred<typeof PLATFORM>();
+    const accountB = deferred<never[]>();
+    mock.caps.mockImplementationOnce(() => accountA.promise).mockImplementationOnce(() => accountB.promise);
+
+    await render();
+    mock.account = { id: 'op-2', email: 'other@semester.example', via: 'an email address and password' };
+    await render();
+    expect(mock.caps).toHaveBeenCalledWith('op-1');
+    expect(mock.caps).toHaveBeenCalledWith('op-2');
+
+    await act(async () => accountA.resolve(PLATFORM));
+    await flush();
+    expect(host.textContent).toContain('Reading your grants');
+    expect(host.querySelector('[aria-label="Context bar"]')).toBeNull();
+    expect(mock.mfa).not.toHaveBeenCalled();
+
+    await act(async () => accountB.resolve([]));
+    await flush();
+    expect(host.textContent).toContain('holds no console:operate grant at platform scope');
+    expect(host.querySelector('[aria-label="Context bar"]')).toBeNull();
+  });
+
+  it('keeps account B pending when account A grant discovery fails after the switch', async () => {
+    const accountA = deferred<typeof PLATFORM>();
+    const accountB = deferred<typeof PLATFORM>();
+    mock.caps.mockImplementationOnce(() => accountA.promise).mockImplementationOnce(() => accountB.promise);
+
+    await render();
+    mock.account = { id: 'op-2', email: 'other@semester.example', via: 'an email address and password' };
+    await render();
+
+    await act(async () => accountA.reject(new Error('account A is offline')));
+    await flush();
+    expect(host.textContent).toContain('Reading your grants');
+    expect(host.textContent).not.toContain('Could not check connected access');
+    expect(host.textContent).not.toContain('holds no console:operate');
+    expect(mock.mfa).not.toHaveBeenCalled();
+
+    await act(async () => accountB.resolve(PLATFORM));
+    await flush();
+    expect(host.querySelector('[aria-label="Context bar"]')).toBeTruthy();
+    expect(host.textContent).toContain('other@semester.example');
+  });
+
+  it('shows a failed grant read as retryable instead of as a genuine denial', async () => {
+    const retry = deferred<typeof PLATFORM>();
+    mock.caps.mockRejectedValueOnce(new Error('offline')).mockImplementationOnce(() => retry.promise);
+
+    await render();
+    const alert = host.querySelector('[role="alert"]');
+    expect(alert).not.toBeNull();
+    expect(alert!.textContent).toContain('Could not check connected access.');
+    expect(host.textContent).not.toContain('holds no console:operate');
+    expect(host.querySelector('[aria-label="Context bar"]')).toBeNull();
+    expect(mock.mfa).not.toHaveBeenCalled();
+
+    await act(async () => must('Try again').click());
+    expect(host.textContent).toContain('Reading your grants');
+    expect(host.querySelector('[role="alert"]')).toBeNull();
+    await act(async () => retry.resolve(PLATFORM));
+    await flush();
+    expect(host.querySelector('[aria-label="Context bar"]')).toBeTruthy();
+    expect(mock.caps).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('command center', () => {
+  const exception = (patch: Partial<CommandItem> = {}): CommandItem => ({
+    id: 'gate:production_restore', severity: 'critical', category: 'release gate',
+    title: 'Production restore evidence', tenantId: null, tenantName: null,
+    isDemo: false, owner: 'engineering', dueAt: null, status: 'missing',
+    nextStep: 'Record a dated production result.', route: 'Recovery runbook',
+    source: 'public.platform_release_evidence', evidence: '',
+    limitation: 'A backup listing is not execution evidence.', observedAt: '2026-09-30T16:00:00Z',
+    ...patch,
+  });
+
+  it('shows live blockers with their evidence boundary and never turns them green', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockResolvedValue([{
+      id: 'gate:production_restore', severity: 'critical', category: 'release gate',
+      title: 'Production restore evidence', tenantId: null, tenantName: null,
+      isDemo: false, owner: 'engineering', dueAt: null, status: 'missing',
+      nextStep: 'Record a dated production result.', route: 'Recovery runbook',
+      source: 'public.platform_release_evidence', evidence: '',
+      limitation: 'A backup listing is not execution evidence.', observedAt: '2026-09-30T16:00:00Z',
+    }]);
+    await render();
+    expect(host.textContent).toContain('NOT GO');
+    expect(host.textContent).toContain('Production restore evidence');
+    expect(host.textContent).toContain('No evidence recorded');
+    expect(host.textContent).not.toContain('GREEN —');
+    expect(mock.command).toHaveBeenCalledWith(false);
+  });
+
+  it('shows projection health in words, and never as healthy when it cannot be read or is unmapped', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.projection.mockResolvedValue({
+      freshness: 'unknown', generatedAt: '2026-10-12T00:00:00Z', activeModels: 2, eventSourcesMapped: 1,
+      warnings: ['zz_model has no event source mapped, so eventsBehind, deadLetters and lastError are not reported.'],
+      projections: [
+        { projection: 'ops_tenant_rollout', version: 1, freshness: 'stale', freshnessSloSeconds: 300, workerStatus: 'idle', lastEventAt: '2026-10-11T00:00:00Z', lagSeconds: 3600, eventsBehind: 0, oldestPendingSeconds: null, deadLetters: 0, lastError: null, lastRebuild: null, eventSourceMapped: true },
+        { projection: 'zz_model', version: 1, freshness: 'unknown', freshnessSloSeconds: 300, workerStatus: 'unknown', lastEventAt: null, lagSeconds: null, eventsBehind: null, oldestPendingSeconds: null, deadLetters: null, lastError: null, lastRebuild: null, eventSourceMapped: false },
+      ],
+    });
+    await render();
+    const text = host.querySelector('[aria-label="Projection health"]')!.textContent!;
+    expect(text).toContain('STALE · ops_tenant_rollout v1');
+    expect(text).toContain('idle, nothing is waiting');
+    expect(text).toContain('never rebuilt');
+    expect(text).toContain('UNKNOWN · zz_model v1');
+    expect(text).toContain('No event source is mapped to this model');
+    const unmapped = host.querySelector('[aria-label="unknown zz_model"]')!.textContent!;
+    expect(unmapped).not.toContain('Behind');
+    expect(unmapped).not.toContain('dead letters 0');
+    expect(text).not.toContain('FRESH');
+  });
+
+  it('says projection health is unavailable, not healthy, when the read is refused', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.projection.mockRejectedValue(new Error('console:operate at platform scope is required.'));
+    await render();
+    const panel = host.querySelector('[aria-label="Projection health"]')!;
+    expect(panel.textContent).toContain('UNKNOWN');
+    expect(panel.textContent).toContain('console:operate at platform scope is required.');
+    expect(panel.textContent).toContain('not shown as healthy');
+    expect(panel.textContent).not.toContain('FRESH');
+  });
+
+  it('says green only when the live exception reader returns no rows', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockResolvedValue([]);
+    await render();
+    expect(host.textContent).toContain('GREEN');
+    expect(host.textContent).toContain('no open exception');
+  });
+
+  it('keeps the open count and severity status when a filter hides some or all blockers', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockResolvedValue([
+      exception({ id: 'tenant:vu', severity: 'high', title: 'Tenant approval', tenantId: 'vu' }),
+      exception(),
+    ]);
+    await render();
+    const status = 'NOT GO: 1 critical · 1 high · 0 medium · 0 informational';
+    expect(host.textContent).toContain(status);
+    expect(host.textContent).toContain('2 open');
+
+    type(field('Filter this view'), 'Tenant approval');
+    expect(host.querySelectorAll('article')).toHaveLength(1);
+    expect(host.textContent).toContain(status);
+    expect(host.textContent).toContain('2 open');
+    expect(host.textContent).not.toContain('GREEN');
+
+    type(field('Filter this view'), 'nothing matches');
+    expect(host.querySelectorAll('article')).toHaveLength(0);
+    expect(host.textContent).toContain('No matching exceptions');
+    expect(host.textContent).toContain(status);
+    expect(host.textContent).toContain('2 open');
+    expect(host.textContent).not.toContain('GREEN');
+
+    type(field('Filter this view'), '');
+    expect([...host.querySelectorAll('article')].map((row) => row.getAttribute('aria-label')))
+      .toEqual(['critical Production restore evidence', 'high Tenant approval']);
+    expect(host.textContent).not.toContain('No matching exceptions');
+    expect(host.textContent).toContain(status);
+  });
+
+  it('counts only the selected tenant even when its blockers do not match the filter', async () => {
+    mock.command.mockResolvedValue([
+      exception(),
+      exception({ id: 'tenant:other', severity: 'medium', title: 'Other tenant evidence', tenantId: 'other' }),
+      exception({ id: 'tenant:vu', severity: 'high', title: 'Tenant approval', tenantId: 'vu' }),
+    ]);
+    await render();
+    await press('Customers');
+    type(field('Purpose'), 'SUP-4');
+    await submit(host.querySelector('form[aria-label="Purpose of this read"]'));
+    await press('Scope the console to this tenant');
+    await press('Command center');
+    expect(host.textContent).toContain('1 open');
+    expect(host.textContent).toContain('NOT GO: 0 critical · 1 high · 0 medium · 0 informational');
+    expect(host.querySelectorAll('article')).toHaveLength(1);
+
+    type(field('Filter this view'), 'Other tenant evidence');
+    expect(host.textContent).toContain('No matching exceptions');
+    expect(host.textContent).toContain('1 open');
+    expect(host.textContent).toContain('NOT GO: 0 critical · 1 high · 0 medium · 0 informational');
+    expect(host.textContent).not.toContain('GREEN');
+    expect(host.querySelectorAll('article')).toHaveLength(0);
+
+    await press('Show all tenants');
+    expect(host.textContent).toContain('3 open');
+    expect(host.textContent).toContain('NOT GO: 1 critical · 1 high · 1 medium · 0 informational');
+    expect(host.querySelectorAll('article')).toHaveLength(1);
+  });
+
+  it('can report an empty tenant scope while another scope has blockers', async () => {
+    mock.command.mockResolvedValue([exception()]);
+    await render();
+    await press('Customers');
+    type(field('Purpose'), 'SUP-4');
+    await submit(host.querySelector('form[aria-label="Purpose of this read"]'));
+    await press('Scope the console to this tenant');
+    await press('Command center');
+    type(field('Filter this view'), 'nothing matches');
+    expect(host.textContent).toContain('GREEN');
+    expect(host.textContent).toContain('0 open');
+    expect(host.textContent).not.toContain('No matching exceptions');
+
+    await press('Show all tenants');
+    expect(host.textContent).toContain('NOT GO: 1 critical');
+    expect(host.textContent).toContain('1 open');
+    expect(host.textContent).toContain('No matching exceptions');
+    expect(host.textContent).not.toContain('GREEN');
+  });
+
+  it('never reports green while the live exception reader is pending', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockReturnValue(new Promise(() => {}));
+    await render();
+    expect(host.textContent).toContain('Reading live operational sources');
+    expect(host.textContent).not.toContain('GREEN');
+    expect(host.textContent).not.toContain('No matching exceptions');
+  });
+
+  it('fails closed when the live exception reader cannot be reached', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockRejectedValue(new Error('The operational source refused the read.'));
+    await render();
+    expect(host.textContent).toContain('NOT GO');
+    expect(host.textContent).toContain('The operational source refused the read.');
+    expect(host.textContent).toContain('green status cannot be calculated');
+    expect(host.textContent).not.toContain('GREEN');
+  });
 });
 
 describe('the context bar', () => {
@@ -303,12 +733,24 @@ describe('the context bar', () => {
     expect(dd(host.querySelector('[aria-label="Context bar"]')!, 'Environment')).toBe('◆ Staging');
   });
 
-  it('says None for support access when no grant is open, and how the MFA stands when it is not aal2', async () => {
+  it('lets an ordinary console role mount at aal1; the app-level boundary handles the two privileged roles', async () => {
     mock.mfa.mockResolvedValue(STALE);
     await render();
-    const bar = host.querySelector('[aria-label="Context bar"]') as Element;
-    expect(dd(bar, 'Support access')).toBe('None');
-    expect(dd(bar, 'MFA')).toContain('Not verified this session');
+    expect(host.querySelector('[aria-label="Context bar"]')).not.toBeNull();
+    expect(mock.approvals).toHaveBeenCalled();
+    expect(mock.support).toHaveBeenCalled();
+    expect(host.querySelector('[aria-label="Second factor"]')).toBeNull();
+  });
+
+  it('keeps ordinary console work mounted when assurance cannot be read', async () => {
+    mock.mfa.mockRejectedValue(new Error('The assurance service is unavailable'));
+    await render();
+    expect(host.querySelector('[aria-label="Context bar"]')).not.toBeNull();
+    expect(mock.approvals).toHaveBeenCalled();
+    expect(mock.support).toHaveBeenCalled();
+    expect(host.textContent).toContain('The assurance service is unavailable');
+    expect(host.textContent).toContain('sensitive changes still require a verified second factor');
+    expect(button('Try again')).toBeDefined();
   });
 });
 
@@ -369,17 +811,27 @@ describe('approvals', () => {
   });
 
   it('puts the second factor in front of a decision when the session is not aal2, and decides once it is', async () => {
-    mock.mfa.mockResolvedValueOnce(STALE).mockResolvedValue(FRESH);
+    mock.mfa.mockResolvedValueOnce(STALE_AAL2).mockResolvedValue(FRESH);
     await render();
     await press('Approve');
     expect(mock.decide).not.toHaveBeenCalled();
     const step = host.querySelector('[aria-label="Second factor"]') as Element;
     expect(step).toBeTruthy();
+    expect(button('Approve')).toBeDefined();
+    expect(host.querySelector('[aria-label="Console views"]')).not.toBeNull();
+    expect(host.querySelector('[data-console-content]')?.hasAttribute('inert')).toBe(true);
     type(step.querySelector('input'), '123456');
+    let finishDecision: (() => void) | undefined;
+    mock.decide.mockImplementationOnce(() => new Promise<void>((resolve) => { finishDecision = resolve; }));
     await submit(step.querySelector('form'));
     expect(mock.verify).toHaveBeenCalledWith('f-1', 'ch-1', '123456');
+    expect(host.querySelector('[data-console-content]')?.hasAttribute('inert')).toBe(true);
+    expect(host.textContent).toContain('Finishing the verified change');
+    await act(async () => { finishDecision?.(); });
+    await flush();
     expect(mock.decide).toHaveBeenCalledExactlyOnceWith('req-1', 'approve');
     expect(host.querySelector('[aria-label="Second factor"]')).toBeNull();
+    expect(host.querySelector('[data-console-content]')?.hasAttribute('inert')).toBe(false);
   });
 
   it('offers no decision where the server says the caller cannot decide, and says why', async () => {
@@ -390,12 +842,14 @@ describe('approvals', () => {
   });
 
   it('runs nothing when the second factor is cancelled', async () => {
-    mock.mfa.mockResolvedValue(STALE);
+    mock.mfa.mockResolvedValue(STALE_AAL2);
     await render();
+    type(field('Evidence attached'), 'Draft evidence survives MFA.');
     await press('Approve');
     await press('Cancel');
     expect(mock.decide).not.toHaveBeenCalled();
     expect(host.querySelector('[aria-label="Second factor"]')).toBeNull();
+    expect(field('Evidence attached').value).toBe('Draft evidence survives MFA.');
   });
 
   it('offers the action only to the requester or an approver who decided it', async () => {
@@ -533,6 +987,11 @@ describe('evidence', () => {
     expect(cards.length).toBe(EVIDENCE.length);
     expect(EVIDENCE.length).toBeGreaterThan(0);
     for (const card of cards) expect(card.textContent).toMatch(/— (current|expiring|expired)/);
+    const readiness = [...host.querySelectorAll('article[aria-label^="Readiness "]')];
+    expect(readiness).toHaveLength(READINESS_GATES.length);
+    expect(host.textContent).toContain('Configuration — missing');
+    expect(host.textContent).toContain('Observed operation — missing');
+    expect(host.textContent).toContain('Highest continuous evidence: repository');
     expect(mock.customers).not.toHaveBeenCalled();
   });
 });

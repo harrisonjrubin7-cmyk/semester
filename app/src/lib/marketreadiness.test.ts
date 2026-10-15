@@ -135,6 +135,25 @@ describe('the market-readiness scorecard', () => {
     }
   });
 
+  /*
+   * Part B of the migration playbook said customer data migration "does not
+   * exist" for days after the Migration Center and roster staging landed. This
+   * is the same fault as the four rows above, so it gets the same probe: while
+   * those migrations are in the tree, the playbook has to name them and may not
+   * say nothing supports migration.
+   */
+  it('does not say customer data migration is unsupported while its evidence path is built', () => {
+    const built = ['supabase/migrations/20260929200000_migration_center.sql', 'supabase/migrations/20260930220000_roster_import_staging.sql'];
+    for (const f of built) expect(existsSync(join(root, f)), `${f} is the control: if it moved, update this probe`).toBe(true);
+    const playbook = readFileSync(join(root, 'docs/market-readiness/MIGRATION_PLAYBOOK.md'), 'utf8');
+    const partB = playbook.split(/^## B\./m)[1]?.split(/^## /m)[0] ?? '';
+    expect(partB.length, 'Part B not found').toBeGreaterThan(200);
+    expect(partB).toMatch(/Migration Center/);
+    expect(partB).toMatch(/roster staging/i);
+    expect(partB).not.toMatch(/does not exist\s*$/m);
+    expect(partB).not.toMatch(/Nothing supports this/i);
+  });
+
   it('does not regress export and deletion to an unmet release claim', () => {
     const release = readFileSync(goLive, 'utf8');
     const entry = release

@@ -88,6 +88,14 @@ describe('operating-model docs match the registries', () => {
     const d = doc('SLOS-AND-ERROR-BUDGETS.md');
     for (const j of JOURNEYS) expect(d, j.id).toContain(`| ${j.name} | ${j.slo}% | ${j.good} | ${j.why} |`);
     for (const b of BAD_WRITE_OUTCOMES) expect(d, b).toContain(`- ${b}`);
+    // A proposed journey is listed apart from the adopted ones, with its own bad events, so it is never read as a commitment.
+    const proposed = d.split('## Proposed journeys\n')[1]?.split('\n## ')[0] ?? '';
+    for (const j of JOURNEYS) {
+      expect(proposed.includes(`| ${j.name} | ${j.slo}% |`), `${j.id}: ${j.proposed ? 'proposed, so under "Proposed journeys"' : 'adopted, so not under "Proposed journeys"'}`).toBe(!!j.proposed);
+      if (!j.proposed) continue;
+      const section = proposed.split(`### ${j.name}\n`)[1]?.split('\n### ')[0] ?? '';
+      for (const b of j.bad ?? []) expect(section, `${j.id}: ${b}`).toContain(`- ${b}`);
+    }
     expect(d).toContain(PERMITTED_EXCLUSION);
     for (const p of Object.values(POLICY)) expect(d, p.label).toContain(`| ${p.label} | ${p.remaining} | ${p.release} | ${p.action} |`);
     for (const t of FRONTEND_TARGETS) {

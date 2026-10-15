@@ -1,0 +1,42 @@
+[
+  {
+    "key": "student.registration.readiness",
+    "name": "Student registration readiness",
+    "owner": "product-registration",
+    "status": "designed",
+    "route": "app.semester.com/registration/readiness",
+    "evidence": [
+      "docs/reference/registration-readiness-workflow.md"
+    ]
+  },
+  {
+    "key": "staff.advising.readiness",
+    "name": "Advisor readiness",
+    "owner": "product-registration",
+    "status": "designed",
+    "route": "staff.semester.com/advising/readiness",
+    "evidence": [
+      "docs/reference/registration-readiness-workflow.md"
+    ]
+  },
+  {
+    "key": "institution.registration.readiness",
+    "name": "Institution registration readiness",
+    "owner": "institution-product",
+    "status": "designed",
+    "route": "institution.semester.com/registration/readiness",
+    "evidence": [
+      "docs/reference/registration-readiness-workflow.md"
+    ]
+  },
+  {
+    "key": "ops.workflows.registration",
+    "name": "Registration workflow operations",
+    "owner": "operations",
+    "status": "designed",
+    "route": "ops.semester.com/workflows/registration",
+    "evidence": [
+      "docs/reference/registration-readiness-workflow.md"
+    ]
+  }
+]

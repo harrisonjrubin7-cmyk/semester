@@ -236,7 +236,10 @@ begin
     pg_temp.visible(unclaimed, 'public.organizations'), 0);
 
   perform pg_temp.become_anon();
-  select count(*) into n from public.organizations;
+  begin
+    select count(*) into n from public.organizations;
+  exception when insufficient_privilege then n := 0;  -- no grant: refused before any row
+  end;
   reset role;
   perform pg_temp.counted('and a signed-out visitor sees none either', n, 0);
 
@@ -595,12 +598,17 @@ begin
   -- `on delete restrict` instead, and the difference is the whole of what this
   -- asserts.
 
+  -- (The delete guard of 20260930200000 refuses first; it is off here so this
+  -- proves the foreign key's own refusal, which is what would matter if the
+  -- guard were ever dropped.)
+  alter table public.schools disable trigger refuse_school_delete;
   begin
     delete from public.schools where id = 'northerly';
     raise exception 'FAILED: a university with organizations on it was removed anyway';
   exception when foreign_key_violation then
     perform pg_temp.ok('a university cannot be removed while it has organizations');
   end;
+  alter table public.schools enable trigger refuse_school_delete;
 end $$;
 
 -- ── What happens when somebody stops existing ─────────────────────────────

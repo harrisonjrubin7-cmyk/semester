@@ -184,7 +184,7 @@ export const NOTIFICATIONS: readonly Held[] = held([
   { id: 'digest', what: 'Digest controls', status: 'building', evidence: [['app/src/lib/comms.ts', 'instant, daily, weekly and digestGroups']], gap: 'No test; no send.' },
   { id: 'dedupe', what: 'Duplicate suppression', status: 'tested', evidence: [['app/src/lib/notify.ts', 'the seen set, last four hundred'], ['app/src/lib/notify.test.ts', 'a reminder is not repeated']], gap: 'None.' },
   { id: 'per-course', what: 'Per-course, community and service controls', status: 'building', evidence: [['app/src/components/MuteCourses.tsx', 'mute a course'], ['app/src/lib/myrules.ts', 'the student’s own rules']], gap: 'Courses only.' },
-  { id: 'history', what: 'Delivery history', status: 'not-started', evidence: [['docs/ETHICAL-ENGAGEMENT-AND-NOTIFICATIONS.md', 'the model']], gap: 'Only push stall detection; the notifications screen renders static data.' },
+  { id: 'history', what: 'Delivery history', status: 'not-started', evidence: [['docs/ETHICAL-ENGAGEMENT-AND-NOTIFICATIONS.md', 'the model']], gap: 'Only push stall detection; the screen lists today’s reminders (lib/read/notifications.ts) but keeps no history of past ones.' },
   { id: 'why', what: 'Why-am-I-seeing-this explanation', status: 'tested', evidence: [['app/src/lib/notify.ts', 'whyFor and shownBody'], ['app/src/lib/notify.test.ts', 'the why line']], gap: 'None.' },
 ]);
 

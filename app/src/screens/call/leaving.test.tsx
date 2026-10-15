@@ -26,9 +26,12 @@ import { createRoot, type Root } from 'react-dom/client';
  * screen goes, whatever the reason it went.
  */
 const dispatch = vi.fn();
+const state = { callCode: 'bcd-fghj-kmn' };
 vi.mock('../../state/store', () => ({
-  useStore: () => ({ state: { callCode: 'bcd-fghj-kmn' }, dispatch }),
+  useStore: () => ({ state, dispatch }),
 }));
+
+vi.mock('./Lobby', () => ({ Lobby: () => null }));
 
 /** Hands a stream over the moment it renders, as pressing Join does. */
 vi.mock('./Green', () => ({
@@ -60,6 +63,7 @@ let host: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
+  state.callCode = 'bcd-fghj-kmn';
   stopped = [];
   const tracks = [track('video'), track('audio')];
   stream = { getTracks: () => tracks, getVideoTracks: () => [tracks[0]] } as unknown as MediaStream;
@@ -123,5 +127,17 @@ it('stops the stream when Leave is pressed', async () => {
   });
   expect(stopped).toEqual([]);
   await act(async () => leave?.());
+  expect(stopped.sort()).toEqual(['audio', 'video']);
+});
+
+it('stops the stream when the call code is cleared outside the call controls', async () => {
+  await act(async () => root.render(<Call />));
+  await act(async () => {
+    await Promise.resolve();
+  });
+
+  state.callCode = '';
+  await act(async () => root.render(<Call />));
+
   expect(stopped.sort()).toEqual(['audio', 'video']);
 });

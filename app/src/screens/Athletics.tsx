@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
@@ -82,6 +82,7 @@ export function Athletics() {
 }
 
 function Workspace({ storageKey }: { storageKey: string }) {
+  const now = useNow();
   const { state, dispatch, catalog } = useStore();
   const lib = useDeviceLibrary(storageKey, readAthletics, EMPTY_ATHLETICS);
 
@@ -128,7 +129,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
       }
 
       for (const i of catalog.items) {
-        if (dateToIso(decorateItem(i, new Date()).date) === day && !state.done[i.id]) {
+        if (dateToIso(decorateItem(i, now).date) === day && !state.done[i.id]) {
           found.push(`${day} · Due: ${i.title}`);
         }
       }

@@ -1,16 +1,17 @@
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { CLAUSES, DOCUMENTS, OWNER_STEPS, QUESTIONS, READ_ON, STANDING, type Provider } from './provider-terms';
 import { PARTIES } from './subprocessors';
+import { SHARED_PROVIDER } from '../../../../supabase/functions/_shared/provideractivation';
 
 /**
  * Holds the provider-terms record to what it may claim. Every clause cites a
  * document on the record, every document sits on its provider's own host,
  * each provider answers every question the DPA checklist asks, every AI party
  * Semester or an institution directs is covered — and nothing is `accepted`
- * or `signed`, because no executed agreement is filed under
- * `docs/evidence/vendors/`. The day one is, this test is the one to change.
+ * or `signed`, because no executed agreement is recorded in the shared-provider
+ * activation record. The day one is, this test is the one to change.
  *
  * `docs/trust/PROVIDER-TERMS.md` is rendered from the data; run
  * `npm run registers` from app/ to rewrite it. The last test fails while stale.
@@ -56,9 +57,14 @@ describe('the provider terms record', () => {
     for (const s of STANDING) expect(s.party.startsWith(s.provider), s.party).toBe(true);
   });
 
-  it('claims nothing is accepted or signed while no executed agreement is filed', () => {
-    const filed = existsSync(join(root, 'docs', 'evidence', 'vendors'));
-    expect(filed, 'docs/evidence/vendors/ exists: re-read STANDING against what is filed, then change this test').toBe(false);
+  it('claims nothing is accepted or signed while no executed agreement is recorded', () => {
+    // Keyed on the activation record's accepted-terms field, not on whether
+    // docs/evidence/vendors/ exists: filing the entity's evidence there first
+    // must not fail this test while the terms are still unaccepted. The day
+    // termsAccepted is recorded, provideractivation.test.ts fails until the
+    // Anthropic row here moves too. OpenAI has no record of Semester's; its
+    // row moves only when this test is changed.
+    expect(SHARED_PROVIDER.termsAccepted.status, 'Anthropic terms are recorded as accepted: move STANDING, then change this test').toBe('pending-owner');
     for (const s of STANDING) {
       expect(s.standing, s.party).toBe('published');
       expect(s.today, s.party).toMatch(/^Not in force\./);

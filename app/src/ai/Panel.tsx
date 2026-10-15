@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useId, useMemo, useRef, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { focusablesIn, nextInRing } from '../a11y/modal';
 import { useStore } from '../state/store';
@@ -18,6 +18,7 @@ import { Applied, Locally, Proposals } from './Actions';
 import { IntelligenceDisclosure } from '../intelligence/Disclosure';
 import { HowItHelps } from './HelpNotice';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { GuideOperatingContract } from '../components/GuideOperatingContract';
 
 /**
  * The panel: the assistant once it is open, and nothing that is true before.
@@ -77,7 +78,12 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
   const wide = useMedia(WIDE);
   const touch = useMedia(TOUCH);
   const [full, setFull] = useState(false);
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(seed.text);
+  const [seenSeed, setSeenSeed] = useState(seed.id);
+  if (seed.text && seed.id !== seenSeed) {
+    setSeenSeed(seed.id);
+    setDraft(seed.text);
+  }
 
   // One place that empties the box and sends, because the send button and the
   // Enter key must not drift into doing slightly different things.
@@ -183,16 +189,6 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
       borderRadius: 'var(--r-lg)',
     };
   }, [wide, full, side]);
-
-
-
-  useEffect(() => {
-    if (seed.seeded) {
-      setDraft(seed.seeded);
-      seed.clear();
-    }
-  }, [seed]);
-
   /*
    * Focus is trapped only at full height.
    *
@@ -442,6 +438,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                         : ' — nothing of its own'
                     }`}
               </button>
+              <GuideOperatingContract compact />
             </div>
 
             <div
@@ -562,7 +559,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                           i === talk.turns.length - 1 && !talk.busy ? (
                             <>
                               {EXPERIENCE_FLAGS.semesterIntelligence !== 'off' && talk.response ? (
-                                <IntelligenceDisclosure response={talk.response} />
+                                <IntelligenceDisclosure response={talk.response} onAskHuman={() => dispatch({ type: 'go', screen: 'help' })} />
                               ) : (
                                 <Using read={talk.read} />
                               )}

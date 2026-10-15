@@ -1,0 +1,45 @@
+.productivity-workspace {
+  display: grid;
+  gap: var(--sp-4);
+}
+.productivity-workspace nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.productivity-workspace button {
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+}
+.productivity-workspace button[aria-pressed="true"] {
+  font-weight: 700;
+  text-decoration: underline;
+}
+.productivity-field {
+  display: grid;
+  gap: var(--sp-2);
+  margin-block: var(--sp-3);
+}
+.productivity-field .input {
+  width: 100%;
+  min-height: 44px;
+}
+.productivity-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: var(--sp-4);
+}
+.productivity-card {
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+  padding: var(--sp-4);
+  overflow-wrap: anywhere;
+}
+.productivity-card fieldset {
+  min-width: 0;
+  margin-block: var(--sp-4);
+  padding: var(--sp-3);
+  border: 1px solid var(--app-line);
+}

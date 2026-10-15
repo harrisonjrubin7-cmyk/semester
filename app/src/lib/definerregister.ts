@@ -71,6 +71,26 @@ export const SOURCES: readonly { path: string; title: string; what: string }[] =
 
 export const READ_ON = '2026-09-29';
 
+/**
+ * The second reading of the same project, 30 September 2026, 13:46 UTC,
+ * read-only through the advisor and `pg_catalog` (D-1026). The register was
+ * asked to hold, and it did: the 180 functions the advisor listed are exactly
+ * the 180 rows below — the first reading's 151 and the 29 whose migrations had
+ * not then been applied. The tables did not: four (`private.account_ages` and
+ * `public.registration_completions`, `_holds`, `_requests`) arrived with those
+ * migrations and had no disposition until this reading. They have one now.
+ *
+ * The same reading's other advisor findings, and what became of each, are in
+ * `docs/ADVISOR-RECONCILIATION-2026-09-30.md`.
+ */
+export const SECOND_READING = {
+  on: '2026-09-30',
+  functions: 180,
+  tables: 49,
+  /** Executable by `anon` or PUBLIC: none. Without a pinned `search_path`: none. */
+  clientFunctionsOpenToAnon: 0,
+} as const;
+
 export const PROJECT = 'lzrqvlugnawcgywkhqlz';
 
 /**
@@ -98,14 +118,20 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['accept_family_grant', 'sharing', ['auth.uid()']],
   ['activate_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['adopt_lti_identity', 'integration', ['auth.uid()']],
+  ['answer_data_subject_request', 'admin', ['auth.uid()', 'private.has_capability', 'req.subject = me']],
   ['answer_help_request', 'admin', ['auth.uid()', 'private.answers_for']],
   ['answer_mentor_request', 'admin', ['auth.uid()', 'private.subject_has_capability']],
   ['appeal_community_decision', 'self-service', ['auth.uid()']],
   ['apply_to_organization', 'self-service', ['auth.uid()', 'private.verified_student']],
   ['apply_to_volunteer', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['approve_community_pseudonymity', 'moderation', ['private.has_capability']],
+  ['approve_offboarding', 'admin', ['auth.uid()', 'private.is_app_admin', 'private.has_capability']],
+  ['archive_school', 'admin', ['private.offboarding_operator']],
+  ['authorize_school_purge', 'admin', ['private.offboarding_operator']],
+  ['available_case_supporters', 'read-helper', ['auth.uid()', 'private.subject_has_capability']],
   ['available_supporters', 'read-helper', ['auth.uid()']],
   ['begin_community_image', 'self-service', ['auth.uid()', 'private.community_role']],
+  ['begin_privileged_access_review', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['beta_add_cohort', 'admin', ['private.beta_manager']],
   ['beta_create_program', 'admin', ['auth.uid()', 'private.beta_manager']],
   ['beta_declare_flag', 'admin', ['private.beta_manager']],
@@ -120,21 +146,32 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['beta_triage_feedback', 'admin', ['private.beta_triager']],
   ['block_community_author', 'self-service', ['auth.uid()', 'private.community_role']],
   ['can_manage_escalation_agreements', 'admin', ['private.has_capability']],
+  ['cancel_offboarding', 'admin', ['private.is_app_admin', 'private.has_capability']],
   ['case_author_safety', 'moderation', ['private.has_capability']],
   ['claim_abandoned_organization', 'self-service', ['auth.uid()', "mine is distinct from 'MEMBER'"]],
   ['claim_community_alias', 'self-service', ['auth.uid()', 'private.community_role']],
   ['claim_family_invite', 'sharing', ['auth.uid()']],
+  ['claim_privacy_request', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed']],
   ['claim_referral', 'self-service', ['auth.uid()']],
   ['claim_school', 'self-service', ['auth.uid()']],
   ['close_break_glass', 'admin', ['auth.uid()', 'g.subject is distinct from me']],
   ['close_my_ticket', 'self-service', ['auth.uid()']],
   ['community_reviewer_standing', 'moderation', ['private.has_capability']],
   ['community_session_counts', 'read-helper', ['private.community_role']],
+  ['complete_onboarding_step', 'self-service', ['auth.uid()']],
+  ['complete_privileged_access_review', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['connected_with', 'read-helper', ['auth.uid()']],
   ['console_act', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['console_audit_read', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_audit_status', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_command_center', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_figures', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_integration_health', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_privacy_requests', 'admin', ['auth.uid()', 'private.account_is_held', 'private.has_capability']],
+  ['console_release_incidents', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_tenant_access', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_tenant_operations', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['consume_handoff', 'self-service', ['auth.uid()']],
   ['contribute_course_plan', 'self-service', ['auth.uid()', 'private.school_of']],
   ['create_community', 'self-service', ['auth.uid()', 'private.has_capability', 'private.verified_student', 'private.school_of']],
   ['create_community_post', 'self-service', ['auth.uid()', 'private.community_role']],
@@ -145,6 +182,8 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['decide_community_appeal', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['decide_community_case', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['decide_community_escalation', 'moderation', ['auth.uid()', 'private.has_capability']],
+  ['decide_privileged_access_review_item', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
+  ['decide_school_request', 'admin', ['private.has_capability']],
   ['delete_community_post', 'self-service', ['auth.uid()']],
   ['dining_advance_order', 'admin', ['auth.uid()', 'private.dining_caller_school', 'private.has_capability']],
   ['dining_cancel_order', 'financial', ['auth.uid()', 'private.dining_caller_school', 'private.has_capability']],
@@ -154,8 +193,10 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['dining_place_order', 'financial', ['auth.uid()', 'private.dining_caller_school', 'private.dining_charge_gate']],
   ['dining_pool_summary', 'admin', ['private.dining_caller_school', 'private.has_capability']],
   ['dining_set_ordering', 'admin', ['private.dining_caller_school', 'private.has_capability']],
+  ['disable_school_access', 'admin', ['private.offboarding_operator']],
   ['draft_office_action', 'admin', ['auth.uid()', 'private.may_publish']],
   ['edit_community_post', 'self-service', ['auth.uid()']],
+  ['end_my_session', 'self-service', ['auth.uid()', 'user_id = $2']],
   ['export_my_data', 'self-service', ['auth.uid()']],
   ['follow_organization', 'self-service', ['auth.uid()']],
   ['forget_my_advisor_shares', 'self-service', ['auth.uid()']],
@@ -182,6 +223,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['gtm_campaign_report', 'admin', ['auth.uid()', 'private.has_capability']],
   ['gtm_pilot_problems', 'admin', ['private.gtm_account_visible']],
   ['help_inbox', 'admin', ['private.answers_for']],
+  ['incident_evidence_custody', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['integration_approve_connection', 'integration', ['auth.uid()', 'private.has_capability']],
   ['integration_approve_scope', 'integration', ['auth.uid()', 'private.has_capability']],
   ['integration_request_replay', 'integration', ['auth.uid()', 'private.has_capability']],
@@ -192,6 +234,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['kill_switch_engaged', 'read-helper', ['k.tenant_id is null or k.tenant_id = want_tenant']],
   ['leave_beta', 'self-service', ['private.beta_my_membership']],
   ['leave_organization', 'self-service', ['auth.uid()']],
+  ['leave_school', 'self-service', ['auth.uid()']],
   ['list_advisor_shares', 'sharing', ['auth.uid()']],
   ['list_support_shares', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['make_family_invite', 'sharing', ['auth.uid()', 'private.verified_account']],
@@ -214,24 +257,44 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['my_entitlements', 'read-helper', ['auth.uid()']],
   ['my_help_destinations', 'read-helper', ['private.has_capability']],
   ['my_moderation_access', 'read-helper', ['private.has_capability']],
+  ['my_privacy_completion_certificates', 'read-helper', ['auth.uid()']],
   ['my_registration', 'read-helper', ['auth.uid()', 'private.school_of']],
   ['my_registration_hold', 'read-helper', ['auth.uid()', 'private.school_of']],
+  ['my_sessions', 'read-helper', ['auth.uid()']],
+  ['my_support_email_notices', 'read-helper', ['auth.uid()']],
   ['my_support_thread', 'read-helper', ['auth.uid()']],
   ['my_support_tickets', 'read-helper', ['auth.uid()']],
   ['my_volunteer_standing', 'read-helper', ['auth.uid()']],
   ['note_activity', 'self-service', ['auth.uid()']],
+  ['offboarding_preflight', 'admin', ['private.is_app_admin', 'private.has_capability']],
   ['office_action_programs', 'read-helper', ['auth.uid()']],
   ['office_desk_actions', 'admin', ['auth.uid()', 'private.may_publish']],
   ['open_help_request', 'self-service', ['auth.uid()', 'private.answers_for']],
   ['open_support_ticket', 'self-service', ['auth.uid()']],
+  ['ops_projection_dashboard', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['privileged_access_review', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
+  ['privileged_mfa_required', 'read-helper', ['auth.uid()']],
+  ['productivity_readiness_aggregate', 'admin', ['auth.uid()', "'admin'=any(m.roles)", 'if owners<10']],
+  ['propose_offboarding', 'admin', ['auth.uid()', 'private.is_app_admin', 'private.has_capability']],
   ['publish_course_guidance', 'admin', ['auth.uid()', 'private.course_publisher']],
+  ['publish_course_material_retention_policy', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['publish_course_rules', 'admin', ['auth.uid()', 'private.course_publisher']],
   ['publish_study_pack', 'admin', ['auth.uid()', 'private.course_publisher']],
+  ['raise_my_data_subject_request', 'self-service', ['auth.uid()']],
   ['read_advisor_share', 'sharing', ['auth.uid()']],
   ['read_family_share', 'sharing', ['auth.uid()']],
+  ['read_guardian_calendar_projection', 'sharing', ['auth.uid()', 'private.is_minor']],
+  ['read_guardian_projection_access_history', 'sharing', ['auth.uid()']],
+  ['read_privacy_request_detail', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed']],
   ['read_shared_accommodation', 'sharing', ['auth.uid()']],
+  ['read_support_case_signals', 'sharing', ['auth.uid()', 'private.assert_fresh_mfa', 'private.subject_has_capability', 'private.support_agent', 'private.support_consent_active', 'public.read_support_signals']],
   ['read_support_share', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['read_support_signals', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
+  ['read_tenant_projection', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['record_incident_evidence', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
+  ['record_incident_evidence_custody', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
+  ['record_offboarding_export', 'admin', ['private.offboarding_operator']],
+  ['record_offboarding_notice', 'admin', ['private.is_app_admin', 'private.has_capability']],
   ['referral_standing', 'read-helper', ['auth.uid()']],
   ['registrar_decide', 'admin', ['auth.uid()', 'private.registration_registrar', 'private.registration_gate', 'private.registration_key']],
   ['registrar_grant_override', 'admin', ['auth.uid()', 'private.registration_registrar', 'private.registration_gate', 'private.registration_key']],
@@ -241,6 +304,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['registration_enroll', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['registration_withdraw', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['remove_connection', 'self-service', ['auth.uid()']],
+  ['replay_domain_event', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['reply_to_my_ticket', 'self-service', ['auth.uid()']],
   ['report_community_post', 'self-service', ['auth.uid()', 'private.community_role']],
   ['request_alias_identity', 'moderation', ['auth.uid()', 'private.has_capability']],
@@ -249,41 +313,110 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['request_community_escalation', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['request_connection', 'self-service', ['auth.uid()']],
   ['request_mentor', 'self-service', ['auth.uid()', 'private.school_of', 'private.in_cohort']],
+  ['request_school_membership', 'self-service', ['auth.uid()', 'private.verified_account']],
+  ['resolve_privacy_request', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed', 'private.account_is_held']],
+  ['resolve_privileged_access_review_investigation', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
+  ['restore_school', 'admin', ['private.offboarding_operator']],
   ['retire_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['reveal_alias_identity', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['review_break_glass', 'admin', ['auth.uid()', 'private.holds_seat']],
+  ['revoke_school_membership', 'admin', ['private.has_capability']],
   ['revoke_support_access', 'sharing', ['auth.uid()']],
   ['save_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['school_enforcement_readiness', 'admin', ['private.is_app_admin', 'private.has_capability']],
+  ['school_purge_eligibility', 'admin', ['private.is_app_admin', 'private.has_capability']],
+  ['school_requests_for_admin', 'admin', ['private.has_capability']],
   ['send_help_request', 'self-service', ['auth.uid()', 'private.school_of']],
   ['set_member_capabilities', 'admin', ['private.org_can']],
   ['set_member_standing', 'admin', ['auth.uid()', 'private.org_can']],
+  ['set_school_enforcement', 'admin', ['private.is_app_admin']],
+  ['set_support_email_notice', 'self-service', ['auth.uid()']],
   ['share_with_advisor', 'sharing', ['auth.uid()']],
   ['share_with_support', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
+  ['skip_onboarding_step', 'self-service', ['auth.uid()']],
+  ['start_onboarding', 'self-service', ['auth.uid()']],
   ['start_organization', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['state_my_age', 'self-service', ['auth.uid()']],
   ['stop_contributing', 'self-service', ['auth.uid()']],
   ['submit_course_review', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['support_access_windows', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
+  ['support_case_access', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_agent', 'private.support_consent_active']],
   ['support_reply', 'admin', ['private.support_agent']],
   ['support_ticket_queue', 'admin', ['private.support_agent']],
   ['support_ticket_thread', 'admin', ['private.support_agent']],
   ['trust_room_grant', 'sharing', ['auth.uid()', 'private.has_capability']],
   ['trust_room_revoke', 'sharing', ['auth.uid()', 'private.has_capability']],
+  ['verify_data_subject_request', 'admin', ['auth.uid()', 'private.has_capability', 'req.subject = me']],
+  ['verify_offboarding_export', 'admin', ['private.offboarding_operator']],
+  ['verify_privacy_request', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed']],
   ['volunteer_attest', 'self-service', ['auth.uid()']],
   ['volunteer_decide', 'moderation', ['auth.uid()', 'private.volunteer_ready']],
   ['volunteer_next_tasks', 'moderation', ['auth.uid()', 'private.volunteer_ready']],
   ['volunteer_roster', 'moderation', ['private.has_capability']],
   ['withdraw_help_request', 'self-service', ['auth.uid()']],
+  ['withdraw_school_request', 'self-service', ['auth.uid()']],
 ];
 
 /**
- * Callable definer functions added by migrations that are **not** applied to
- * production, so were not in the advisor's reading. They have rows in
- * `FUNCTIONS` like any other; they are named here so the reading stays the
- * reading — the page says 151 on production and lists these beside it — and
- * a file here that is applied moves its functions into the count.
+ * Migrations in `SINCE_READING` that production still lacked at
+ * `SECOND_READING.on`. Their functions have rows in `FUNCTIONS` but were not in
+ * the reading, so the reading's count is the register's rows minus these.
+ * Delete an entry when the file is applied, and the next reading's count moves.
+ */
+export const NOT_YET_APPLIED: readonly string[] = [
+  '20260930185000_school_membership_enforcement.sql',
+  '20260930200000_school_offboarding.sql',
+  '20260930234000_data_subject_request_intake.sql',
+  '20261004200000_answer_data_subject_requests.sql',
+];
+
+/**
+ * Callable definer functions added by migrations that were **not** applied to
+ * production on `READ_ON`, so were not in the advisor's first reading. They
+ * have rows in `FUNCTIONS` like any other; they are named here so the first
+ * reading stays the reading — the page says 151 and lists these beside it.
+ * The second reading (`SECOND_READING`) finds every one of them applied except
+ * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261004200000_answer_data_subject_requests.sql',
+    functions: ['answer_data_subject_request', 'verify_data_subject_request'],
+  },
+  {
+    file: '20260930234000_data_subject_request_intake.sql',
+    functions: ['raise_my_data_subject_request'],
+  },
+  {
+    file: '20260930200000_school_offboarding.sql',
+    functions: [
+      'approve_offboarding',
+      'archive_school',
+      'authorize_school_purge',
+      'cancel_offboarding',
+      'disable_school_access',
+      'offboarding_preflight',
+      'propose_offboarding',
+      'record_offboarding_export',
+      'record_offboarding_notice',
+      'restore_school',
+      'school_purge_eligibility',
+      'verify_offboarding_export',
+    ],
+  },
+  {
+    file: '20260930185000_school_membership_enforcement.sql',
+    functions: [
+      'decide_school_request',
+      'leave_school',
+      'request_school_membership',
+      'revoke_school_membership',
+      'school_enforcement_readiness',
+      'school_requests_for_admin',
+      'set_school_enforcement',
+      'withdraw_school_request',
+    ],
+  },
   {
     file: '20260929150000_minimum_age.sql',
     functions: ['my_age_status', 'state_my_age'],
@@ -332,11 +465,102 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
   },
 ];
 
+/**
+ * Callable definers added after the dated second advisor reading. They remain
+ * part of the exact register but are not retroactively counted in that
+ * historical snapshot.
+ */
+export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261011000000_incident_evidence_custody.sql',
+    functions: ['incident_evidence_custody', 'record_incident_evidence', 'record_incident_evidence_custody'],
+  },
+  {
+    file: '20261011160000_privileged_access_review.sql',
+    functions: ['begin_privileged_access_review', 'complete_privileged_access_review', 'decide_privileged_access_review_item', 'privileged_access_review', 'resolve_privileged_access_review_investigation'],
+  },
+  {
+    file: '20261009230000_guardian_projection_foundation.sql',
+    functions: ['read_guardian_calendar_projection', 'read_guardian_projection_access_history'],
+  },
+  {
+    file: '20261009001500_course_material_retention_policy.sql',
+    functions: ['publish_course_material_retention_policy'],
+  },
+  {
+    file: '20261008233000_tenant_projection_read.sql',
+    functions: ['read_tenant_projection'],
+  },
+  {
+    file: '20261012000000_ops_projection_dashboard.sql',
+    functions: ['ops_projection_dashboard'],
+  },
+  {
+    file: '20261008223000_privileged_role_mfa.sql',
+    functions: ['privileged_mfa_required'],
+  },
+  {
+    file: '20261008190500_projection_outbox_operations.sql',
+    functions: ['replay_domain_event'],
+  },
+  {
+    file: '20261008190000_console_postmerge_safety.sql',
+    functions: ['console_command_center', 'console_release_incidents'],
+  },
+  {
+    file: '20261005125000_console_integration_health.sql',
+    functions: ['console_integration_health'],
+  },
+  {
+    file: '20261005124000_privacy_case_actions.sql',
+    functions: ['claim_privacy_request', 'my_privacy_completion_certificates', 'read_privacy_request_detail', 'resolve_privacy_request', 'verify_privacy_request'],
+  },
+  {
+    file: '20261005123000_privacy_case_workspace.sql',
+    functions: ['console_privacy_requests'],
+  },
+  {
+    file: '20261001153124_productivity_workspace.sql',
+    functions: ['productivity_readiness_aggregate'],
+  },
+  {
+    file: '20261002003000_support_notification_outbox.sql',
+    functions: ['my_support_email_notices'],
+  },
+  {
+    file: '20261005120000_console_scoped_tenant_access.sql',
+    functions: ['console_tenant_access'],
+  },
+  {
+    file: '20261005121000_console_tenant_operations.sql',
+    functions: ['console_tenant_operations'],
+  },
+  {
+    file: '20261005122000_support_case_access.sql',
+    functions: ['available_case_supporters', 'read_support_case_signals', 'support_case_access'],
+  },
+  {
+    file: '20261003120000_support_notification_consent_boundary.sql',
+    functions: ['set_support_email_notice'],
+  },  {
+    file: '20261006000000_onboarding_journeys_and_handoff.sql',
+    functions: ['complete_onboarding_step', 'consume_handoff', 'skip_onboarding_step', 'start_onboarding'],
+  },
+  {
+    file: '20261006160000_my_sessions.sql',
+    functions: ['end_my_session', 'my_sessions'],
+  },
+];
+
 /** How many functions the advisor listed on production on `READ_ON`. */
 export const READ_COUNT = 151;
 
+/** How many policy-less tables it listed the same day. */
+export const READ_TABLES = 45;
+
 /**
- * The advisor's 45 `rls_enabled_no_policy` tables. `private-internal` is a
+ * The advisor's `rls_enabled_no_policy` tables: 45 on `READ_ON`, 49 on
+ * `SECOND_READING.on`. `private-internal` is a
  * table in `private`, which PostgREST does not expose; `server-only` is a
  * `public` table with every client privilege revoked, reached only through a
  * definer function in `FUNCTIONS` or an Edge Function holding the service key.
@@ -345,6 +569,7 @@ export const READ_COUNT = 151;
 export type Disposition = 'private-internal' | 'server-only';
 
 export const TABLES: readonly (readonly [table: string, disposition: Disposition, writer: string])[] = [
+  ['private.account_ages', 'private-internal', 'the sign-up age trigger and state_my_age (20260929150000_minimum_age.sql)'],
   ['private.ai_usage_month', 'private-internal', 'the AI gateway meter'],
   ['private.ai_usage_reservation', 'private-internal', 'the AI gateway meter'],
   ['private.approved_source_content', 'private-internal', 'the intelligence gateway'],
@@ -386,6 +611,9 @@ export const TABLES: readonly (readonly [table: string, disposition: Disposition
   ['public.lti_nonce', 'server-only', 'the LTI launch function'],
   ['public.lti_platform', 'server-only', 'the LTI launch function'],
   ['public.payment_events', 'server-only', 'the verified Stripe webhook'],
+  ['public.registration_completions', 'server-only', 'the registration definer functions (20260929300000_registration_transaction.sql)'],
+  ['public.registration_holds', 'server-only', 'the registration definer functions (20260929300000_registration_transaction.sql)'],
+  ['public.registration_requests', 'server-only', 'the registration idempotency ledger, private.registration_replay and registration_commit'],
   ['public.scim_credential', 'server-only', 'the SCIM gateway'],
   ['public.site_leads', 'server-only', 'submit_site_lead, called by the lead-intake Edge Function with the service key'],
   ['public.support_ticket_messages', 'server-only', 'the support ticket functions'],
@@ -400,8 +628,8 @@ export const OPEN: readonly { id: string; severity: 'low' | 'medium' | 'high'; w
   {
     id: 'DR-01',
     severity: 'low',
-    what: '`kill_switch_engaged(switch, tenant)` answers for any tenant, where the read policy on `feature_kill_switch` shows a signed-in account only the platform-wide rows, its own school\'s and those it holds `integration:view` over. The one bit it discloses is whether another school has a named switch engaged. `grants.check.sql` records it as deliberate: one boolean, no row.',
-    closes: 'Scope the answer to the policy\'s tenants for a client caller, or accept the disclosure in SECURITY.md. The definer callers (`tenant_plan`, `tenant_sso_policy`, the LTI entitlement facts, the trust room) run as the owner and are unaffected either way.',
+    what: '`kill_switch_engaged(switch, tenant)` answers for any tenant, where the read policy on `feature_kill_switch` shows a signed-in account only the platform-wide rows, its own school\'s and those it holds `integration:view` over. The one bit it discloses is whether another school has a named switch engaged. `grants.check.sql` records it as deliberate: one boolean, no row. It is the only one of the 180 whose body names neither `auth.uid()` nor a `private.` gate (checked on production, 30 September).',
+    closes: 'Not by revoking `EXECUTE` from `authenticated`, as the 30 September reconciliation first considered: production has three callers that run with the signed-in caller\'s rights, not the owner\'s — `public.effective_module_modes`, `private.gtm_placement_guard` and `private.gtm_send_guard` (SECURITY INVOKER) — and each would fail for every signed-in user. Scope the answer to the policy\'s tenants for a client caller, and give those three a definer wrapper first, or accept the disclosure in SECURITY.md. The definer callers (`tenant_plan`, `tenant_sso_policy`, the LTI entitlement facts, the trust room) run as the owner and are unaffected either way.',
   },
   {
     id: 'DR-02',
@@ -413,8 +641,14 @@ export const OPEN: readonly { id: string; severity: 'low' | 'medium' | 'high'; w
   {
     id: 'DR-03',
     severity: 'low',
-    what: 'The 45 tables are pinned to the reading of 29 September. A table that gains or loses its last policy through a `format()` loop is not noticed here.',
+    what: 'The 49 tables are pinned to the reading of 30 September (45 on 29 September, and the four that arrived between). A table that gains or loses its last policy through a `format()` loop is not noticed here. `supabase/advisor-reconciliation.check.sql` now asks the schema directly whether any table with row-level security and no policy is open to a client role, which is the fact that makes the notice benign; what it cannot see is a table whose policy count changes by a loop, or whether its intended writer exists.',
     closes: 'Re-read the advisor at each quarterly architecture review and compare; or move the loops\' table lists into data the test can read.',
+  },
+  {
+    id: 'DR-04',
+    severity: 'low',
+    what: '`anon` holds table privileges it cannot use on 26 `public` tables, found by the 30 September reading: INSERT, UPDATE, DELETE and TRUNCATE on the caller-owned tables (`appointments`, `blocks`, `calendar_feeds`, `courses`, `enrollments`, `family_grants`, `group_members`, `group_tasks`, `groups`, `message_reactions`, `messages`, `notes`, `push_devices`, `push_queue`, `referral_codes`, `referrals`, `schools`, `sittings`, `state`, `tasks`, `usage`, and a part of `form_responses`, `organizations`, `organization_members`, `profiles`, `reports`). Supabase\'s default privileges grant them. All 26 have row-level security on, and every policy that could let `anon` write requires `auth.uid()` or an admin/capability check except one: `answer an open form` on `form_responses`, which lets anyone answer a form its owner opened, and is deliberate (`20260921143455_forms.sql`). So nothing is exposed today. TRUNCATE is not subject to row-level security, but PostgREST has no verb for it.',
+    closes: 'Revoke INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES and TRIGGER from `anon` on those tables, keeping INSERT on `form_responses`, and extend `supabase/grants.check.sql`, which asks about function `EXECUTE` and not about table privileges, to hold the rule. Not done in the 30 September reconciliation: it is a grant change across twenty-six core-app tables that the advisor did not flag, and wants its own review.',
   },
 ];
 
@@ -440,7 +674,7 @@ export const BRIEF: readonly { id: string; item: string; status: BriefStatus; pa
   { id: 'A12', item: 'Service objectives', status: 'partial', paths: ['app/src/lib/governance/error-budgets.ts', 'app/src/lib/governance/error-budgets.test.ts', 'docs/operating-model/SLOS-AND-ERROR-BUDGETS.md'], gap: 'Journey SLOs and error budgets are defined and held; no indicator is measured against them.' },
   { id: 'A13', item: 'Resilience: queues, idempotency, dead letters, circuit breakers, rate limits, kill switches, offline', status: 'partial', paths: ['app/src/lib/integration/retry.ts', 'supabase/functions/_shared/killswitch.ts', 'app/src/lib/aikillswitch.test.ts', 'app/src/lib/offline-mode.test.ts'], gap: 'No circuit breaker, no general job queue or retry console.' },
   { id: 'A14', item: 'A design-system package with accessibility and visual regression tests', status: 'partial', paths: ['app/src/styles/tokens.css', 'app/src/styles/tokens.test.ts', 'app/src/a11y/axe.test.tsx'], gap: 'Tokens and axe tests exist; no separate package, component catalogue or visual regression.' },
-  { id: 'A15', item: 'A platform event bus with a standard envelope', status: 'partial', paths: ['packages/institution/src/events.ts', 'packages/institution/src/events.test.ts', 'supabase/outbox.check.sql', 'docs/architecture/0008-event-envelope-and-outbox.md'], gap: 'The envelope and outbox are tested; no producer writes to the outbox and no publisher runs.' },
+  { id: 'A15', item: 'A platform event bus with a standard envelope', status: 'partial', paths: ['packages/institution/src/events.ts', 'packages/institution/src/events.test.ts', 'supabase/outbox.check.sql', 'supabase/ops-projector-worker.check.sql'], gap: 'The envelope, outbox, one SQL-native producer and one bounded projector endpoint are tested; the endpoint is dormant and unscheduled, and no publisher runs.' },
   { id: 'A16', item: 'First-class feature flags', status: 'partial', paths: ['app/src/lib/flags.ts', 'app/src/lib/flags.test.ts', 'docs/FEATURE-FLAG-REGISTRY.md'], gap: 'Owner, review date, expiry, kill switch, tenant and role scope exist; no cohort scope, and evaluation is client-side.' },
   { id: 'A17', item: 'Tests by risk: tenant isolation, contracts, critical journeys, accessibility, visual, load', status: 'partial', paths: ['supabase/integration-rls-matrix.check.sql', 'supabase/tenancy.check.sql', 'app/scripts/golden-path.mjs', 'app/src/a11y/axe.test.tsx'], gap: 'No visual regression or load tests.' },
   { id: 'A18', item: 'Performance budgets', status: 'partial', paths: ['app/src/lib/perfbudget.ts', 'app/src/lib/perfbudget.test.ts', 'app/perf-budgets.json', 'docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md'], gap: 'Bundle budgets are a CI gate: first load, each of 90 screens and the largest file, in gzip bytes, set from a measurement. The first load they were set from is 395 KB, well above common mobile guidance, and nothing measures Core Web Vitals in the field yet.' },

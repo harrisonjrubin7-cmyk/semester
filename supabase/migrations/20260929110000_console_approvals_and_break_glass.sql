@@ -532,6 +532,64 @@ begin
   if duty.id in ('tenant-suspension', 'break-glass') and want_tenant is null then
     raise exception 'Name the tenant.';
   end if;
+  if duty.id = 'integration-config' and (
+    want_tenant is null
+    or not private.has_capability('integration:configure', 'school', want_tenant)
+  ) then
+    raise exception 'integration:configure over this exact school is required.' using errcode = '42501';
+  end if;
+  if duty.id = 'integration-config'
+     and coalesce(detail ->> 'requested_change', '') not in (
+       'configure', 'rotate-credential-reference', 'disable'
+     ) then
+    raise exception 'requested_change must be configure, rotate-credential-reference or disable.'
+      using errcode = '22023';
+  end if;
+  if duty.id = 'integration-config'
+     and coalesce(detail ->> 'requested_change', '') <> 'disable' then
+    if coalesce(detail ->> 'credential_expiry', '') !~ '^\d{4}-\d{2}-\d{2}$' then
+      raise exception 'A future credential expiry date is required.' using errcode = '22023';
+    end if;
+    if (detail ->> 'credential_expiry')::date <= current_date then
+      raise exception 'A future credential expiry date is required.' using errcode = '22023';
+    end if;
+  end if;
+  if duty.id = 'release' and detail ->> 'action' = 'release' then
+    if want_tenant is not null or want_target is distinct from 'platform'
+       or coalesce(detail ->> 'release_commit', '') !~ '^[0-9a-f]{40}$' then
+      raise exception 'A platform release request must name its exact 40-character commit.' using errcode = '22023';
+    end if;
+    if detail ->> 'release_commit' is distinct from (
+      select e.commit_sha
+        from public.platform_release_evidence e
+       where e.gate = 'production_migrations'
+       order by e.observed_at desc, e.recorded_at desc, e.id desc
+       limit 1
+    ) then
+      raise exception 'The release request commit does not match current migration evidence.' using errcode = '23514';
+    end if;
+    if exists (
+      with required(gate, max_age, needs_commit) as (values
+        ('production_restore', interval '90 days', false),
+        ('legal_approval', interval '365 days', false),
+        ('paid_infrastructure', interval '30 days', false),
+        ('domain_tls', interval '30 days', false),
+        ('production_migrations', interval '14 days', true)
+      ), latest as (
+        select distinct on (e.gate) e.gate, e.status, e.source, e.commit_sha,
+               e.observed_at, e.expires_at
+          from public.platform_release_evidence e
+         order by e.gate, e.observed_at desc, e.recorded_at desc, e.id desc
+      )
+      select 1 from required r left join latest l on l.gate = r.gate
+       where l.gate is null or l.status <> 'pass' or l.observed_at > now()
+          or coalesce(l.expires_at, l.observed_at + r.max_age) <= now()
+          or coalesce(length(trim(l.source)), 0) < 3
+          or (r.needs_commit and coalesce(l.commit_sha, '') !~ '^[0-9a-f]{40}$')
+    ) then
+      raise exception 'Every release prerequisite must be current before requesting approval.' using errcode = '23514';
+    end if;
+  end if;
   if duty.id = 'break-glass' then
     -- Requesting break-glass is itself a capability (`breakglass:request`),
     -- on top of the engineering seat the duty names.

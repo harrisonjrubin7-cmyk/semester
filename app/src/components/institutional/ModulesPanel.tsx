@@ -15,12 +15,13 @@ const NAME = new Map(MODULES.map((m) => [m.id, m]));
  * mode it is in now, and the requests waiting. The mode itself is the
  * database's (`lib/modulemode.ts`); this only asks and shows.
  *
- * It says, on the page, that nothing in Core is built. A switch changes a
- * setting; until a module's own screens exist (the takeover map on the site
- * says which), switching one to Core changes nothing a student sees.
+ * A mode switch is still an authorization boundary, not a deployment claim.
  */
 export function ModulesPanel({ school, me, canEdit }: { school: string; me: string; canEdit: boolean }) {
   const [rows, setRows] = useState<readonly ModuleModeRow[] | null>(null);
+  // `null` rows is also how a failed read comes back, so "not read yet" needs
+  // its own flag: without it the failure sentence flashed on first paint.
+  const [loaded, setLoaded] = useState(false);
   const [requests, setRequests] = useState<ModuleRequest[]>([]);
   const [asking, setAsking] = useState<CoreModuleId | null>(null);
   const [reason, setReason] = useState('');
@@ -35,7 +36,7 @@ export function ModulesPanel({ school, me, canEdit }: { school: string; me: stri
     void (async () => {
       const r = await moduleModes(school, tick > 0);
       const q = await loadRequests(school, me);
-      if (live) { setRows(r); setRequests(q); }
+      if (live) { setRows(r); setRequests(q); setLoaded(true); }
     })();
     return () => { live = false; };
   }, [school, me, tick]);
@@ -58,9 +59,10 @@ export function ModulesPanel({ school, me, canEdit }: { school: string; me: stri
     <section aria-label="Modules">
       <SectionLabel>Modules</SectionLabel>
       <Notice>
-        Each module runs in <strong>Connect</strong> (Semester reads your own system) or <strong>Core</strong> (Semester is the record for it). Every module is in Connect until two other administrators approve a switch, and going back deletes nothing. <strong>No Core module is built yet</strong>: today a switch changes the setting only.
+        Each module runs in <strong>Connect</strong> (Semester reads your own system) or <strong>Core</strong> (Semester is the record for it). Every module starts in Connect and moves only after two other administrators approve the request and its rollout gates are complete. Going back deletes nothing. The native gradebook exists, but no school has authorized a Core cutover; other Core capabilities remain at the status shown below.
       </Notice>
-      {rows === null && <p className="portal-muted">The settings could not be read, so every module shows as Connect.</p>}
+      {!loaded && <p className="portal-muted" role="status">Reading the settings…</p>}
+      {loaded && rows === null && <p className="portal-muted">The settings could not be read, so every module shows as Connect.</p>}
       {said && <p role="status">{said}</p>}
       <ul className="portal-list">
         {CORE_MODULES.map((id) => {
@@ -71,8 +73,9 @@ export function ModulesPanel({ school, me, canEdit }: { school: string; me: stri
             <li key={id} className="portal-panel">
               <h3>{m?.name ?? id}</h3>
               <p>
-                <strong>{r.mode === 'core' ? 'Core' : 'Connect'}</strong>
-                {r.frozen ? ' · frozen: Core data kept, read-only' : ''} · {SOURCE_TEXT[r.source]}
+                <strong>{!loaded ? 'Reading…' : r.mode === 'core' ? 'Core' : 'Connect'}</strong>
+                {loaded && r.frozen ? ' · frozen: Core data kept, read-only' : ''}
+                {loaded ? ` · ${SOURCE_TEXT[r.source]}` : ''}
               </p>
               {m && <p className="portal-muted">Would replace {m.replaces}. Status: {STATUS_LABEL[m.status]}.</p>}
               {pending && (
@@ -83,10 +86,10 @@ export function ModulesPanel({ school, me, canEdit }: { school: string; me: stri
                   )}
                 </p>
               )}
-              {canEdit && !pending && r.mode === 'connect' && asking !== id && (
+              {loaded && canEdit && !pending && r.mode === 'connect' && asking !== id && (
                 <ActionButton onClick={() => { setAsking(id); setSaid(''); }}>Ask for Core</ActionButton>
               )}
-              {canEdit && !pending && r.mode === 'core' && (
+              {loaded && canEdit && !pending && r.mode === 'core' && (
                 <ActionButton onClick={() => { setAsking(id); setSaid(''); }}>Go back to Connect</ActionButton>
               )}
               {canEdit && asking === id && (

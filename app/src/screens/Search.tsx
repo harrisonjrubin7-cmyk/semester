@@ -88,7 +88,14 @@ export function SearchHome() {
 
   return (
     <div className="deskhome">
-      <Wordmark className="deskhome-mark" />
+      <h1
+        className="deskhome-title"
+        aria-label="Semester"
+        data-page-title
+        tabIndex={-1}
+      >
+        <Wordmark className="deskhome-mark" />
+      </h1>
 
       {/*
         Hidden rather than dimmed — see the note at the top of this file. The

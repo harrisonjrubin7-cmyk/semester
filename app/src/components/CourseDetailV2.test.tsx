@@ -228,5 +228,8 @@ describe('with course_detail_v2 on', () => {
     expect([...row('Prerequisites').querySelectorAll('td')].map((td) => td.textContent)).toEqual(['1 of 2 named courses in your records', 'None listed']);
     expect([...row('May count toward').querySelectorAll('td')].map((td) => td.textContent)).toEqual(['Core theory', 'Nothing you recorded']);
     expect(text(table)).toContain('No course is ranked.');
+    expect(host.querySelector('[aria-label="Comparison view"]')).not.toBeNull();
+    await act(async () => button(/^Summary view$/).click());
+    expect(host.textContent).toContain('Official next step');
   });
 });

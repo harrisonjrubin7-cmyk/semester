@@ -1,0 +1,325 @@
+Semester Campus Life should unite four connected products: a marketplace, clubs,
+global/career opportunities, and a student-controlled social layer. Club-management systems
+commonly combine rosters, events, RSVPs, check-ins, communications, and approval
+workflows; Semester should provide these functions without exposing protected academic data
+in social spaces.
+Module Student outcome Staff / organization outcome
+Marketplace Finds trusted opportunities, services, jobs,
+and events Publishes, verifies, moderates, and measures listings
+Clubs Discovers groups, joins, applies, attends, and
+participates
+Runs rosters, applications, events, officer roles, and
+communications
+Study
+abroad
+Compares programs and completes a guided
+application
+Manages eligibility, documents, reviews, decisions, and pre-
+departure steps
+Internships Tracks opportunities, applications, interviews,
+and offers Publishes roles and supports career workflows
+Daily feed Sees relevant campus updates and
+opportunities
+Sends approved announcements without spamming
+students
+Messaging Coordinates safely with clubs, peers, and
+event groups
+Supports moderation and controlled official
+communications
+┌───────────────────────────────────────────────────────────────┐
+│ Discover [Saved: 12] │
+│ [ Search opportunities, clubs, events, programs... ] │
+├───────────────────────────────────────────────────────────────┤
+│ For You All Jobs Internships Study Abroad Clubs │
+│ Events Campus Services Housing & Deals │
+├───────────────┬───────────────────────────────────────────────┤
+│ Filters │ 248 opportunities │
+│ │ │
+│ Type │ ┌─────────────────────────────────────────┐ │
+│ □ Internship │ │ Summer UX Internship │ │
+│ □ Campus job │ │ Career Center verified · Paid · Hybrid │ │
+│ □ Program │ │ Deadline: Oct 22 · Matches saved skills │ │
+Campus Platform Blueprint
+[1] [2] [3]
+Core modules
+Marketplace Discovery UX
+Primary screen
+│ □ Club │ │ [Save] [View] │ │
+│ │ └─────────────────────────────────────────┘ │
+│ Location │ │
+│ □ On campus │ ┌─────────────────────────────────────────┐ │
+│ □ Remote │ │ Barcelona: Design and Culture │ │
+│ □ International│ │ Global Learning verified · Spring term │ │
+│ │ │ Est. cost available · Apply by Nov 4 │ │
+│ Deadline │ │ [Compare] [Save] [View] │ │
+│ □ This week │ └─────────────────────────────────────────┘ │
+│ □ This month │ │
+│ │ [Load more] │
+└───────────────┴───────────────────────────────────────────────┘
+Students should filter by:
+Category: job, internship, study abroad, club, event, campus service, peer opportunity.
+Verification: institution verified, partner verified, student-posted, external.
+Timing: application deadline, term, start date, recurring event schedule.
+Location: campus, remote, city/region, country, time zone.
+Academic fit: major, discipline, course-credit option, class year.
+Career fit: industry, skills, job type, paid/unpaid, work authorization.
+Study abroad: language, program model, estimated budget, housing, accessibility,
+internship component.
+Club fit: interest area, meeting time, dues, beginner-friendly, open membership,
+application required.
+Accessibility: wheelchair access, captions, virtual attendance, accommodation contact.
+Commitment: estimated hours, event duration, schedule compatibility.
+Students need both a filter drawer for detailed search and fast filter chips such as “Paid,”
+“Deadline this week,” “Remote,” or “No application required.”
+Ranking should prioritize:
+1. Exact search terms.
+2. Explicitly saved interests and filters.
+3. Verified listings.
+4. Near deadlines and relevant time windows.
+5. Recently updated opportunities.
+6. Clearly explained recommendations.
+Show explanations such as:
+Required filtering
+Search ranking and transparency
+Recommended because you saved “product design”
+Shown because it matches your Spring study-abroad filter
+Deadline in 5 days
+Do not rank or target opportunities using grades, disciplinary records, disability
+accommodations, counseling/wellness activity, or private messages. Student privacy rules
+require careful treatment of education-record data in institution-provided services.
+┌──────────────────────────────────────────────────────────────┐
+│ Summer UX Internship [Save] [Share] │
+│ Verified by Career Center · Posted 2 days ago │
+├───────────────────────────┬──────────────────────────────────┤
+│ Overview │ Apply by Oct 22 │
+│ Responsibilities │ Paid: $22–28/hour │
+│ Skills and qualifications │ Hybrid · Chicago │
+│ Accessibility │ 10–15 hrs/week │
+│ Employer information │ [Start application] │
+│ Safety / reporting │ [Ask organizer] │
+├───────────────────────────┴──────────────────────────────────┤
+│ Why this may fit: Matches your saved design interest. │
+│ Verification: Institution-verified employer listing. │
+└──────────────────────────────────────────────────────────────┘
+Every listing needs a visible source, verification label, report action, deadline, contact method,
+and external-site warning when students leave Semester.
+Club platforms commonly support roster management, event planning, RSVP, check-in,
+communication, and approval flows.
+Discover club
+↓
+Read club profile, eligibility, commitments, dues, events
+↓
+Follow club or select Join / Apply
+↓
+Complete application or membership request
+↓
+Save draft / submit
+↓
+Under review
+↓
+Accepted / Waitlisted / Declined / Withdrawn
+↓
+Member onboarding and club-space access
+[4] [2]
+Listing detail page
+Club application and roster workflow
+[5] [6] [1]
+Student application flow
+┌─────────────────────────────────────────────────────────────┐
+│ Product Design Collective — Member Application │
+│ Estimated time: 8 minutes Due: October 18 │
+├─────────────────────────────────────────────────────────────┤
+│ Why would you like to join? │
+│ [__________________________________________________________] │
+│ │
+│ Which activities interest you? │
+│ [ ] Workshops [ ] Portfolio review [ ] Speaker events │
+│ │
+│ Upload optional portfolio │
+│ [Choose file] No file selected │
+│ │
+│ [Save draft] [Review and submit]│
+└─────────────────────────────────────────────────────────────┘
+Applications should support text, selections, file uploads, availability, recommendations,
+interview scheduling, and required acknowledgments. Students need a receipt, version history,
+withdrawal option, and visible status.
+Submitted
+↓
+Eligibility check
+↓
+Assigned to reviewer(s)
+↓
+Blind review, if configured
+↓
+Rubric or structured review
+↓
+Decision recommendation
+↓
+Officer / staff approval
+↓
+Student notified
+Use separate roles:
+Role Permissions
+Applicant Own application, status, messages, decision
+Member Club content, events, member directory as permitted
+Officer Roster, events, approved communication, limited application review
+Application reviewer Assigned applications and scoring only
+Faculty/staff advisor Governance oversight, escalation, approvals
+Club application UI
+Reviewer workflow
+Role Permissions
+Student-life administrator Organization verification, policy, audit, reporting
+┌──────────────────────────────────────────────────────────────┐
+│ Robotics Club / Members [Invite] │
+│ 112 active · 8 pending · 4 officers │
+├──────────────────────────────────────────────────────────────┤
+│ Search member [Export, if authorized]│
+│ │
+│ Jordan Lee Member Attended 4 events [Manage] │
+│ Maya Patel Treasurer Attended 7 events [Manage] │
+│ Alex Kim Pending Application review [Review] │
+├──────────────────────────────────────────────────────────────┤
+│ [Add role] [Send announcement] [Create event] [View requests]│
+└──────────────────────────────────────────────────────────────┘
+Roster functions:
+Join, invite, approve, deny, remove, or suspend membership.
+Assign time-limited officer roles.
+Record dues status only where permitted.
+Maintain attendance and participation records.
+Create leadership-transition checklists.
+Limit exports by role, purpose, and audit trail.
+Keep alumni and former members separate from active rosters.
+Preserve member privacy controls.
+Attendance, RSVP, and QR check-in are established club/event patterns and should remain
+optional—not a hidden surveillance mechanism.
+Study-abroad applications commonly include an initial application, institutional eligibility
+review, nomination, provider decision, commitment, and pre-departure requirements. The
+exact sequence varies by institution and program.
+┌──────────────────────────────────────────────────────────────┐
+│ Barcelona: Design and Culture — Spring 2027 │
+│ Status: In institutional review │
+├──────────────────────────────────────────────────────────────┤
+│ ✓ Personal details │
+│ ✓ Academic information │
+│ ✓ Statement of purpose │
+Roster management
+[3] [6]
+Study abroad and internship trackers
+[7]
+Application tracker
+│ ! Faculty recommendation — requested; due Oct 19 │
+│ ○ Passport upload │
+│ ○ Program-provider application │
+│ ○ Pre-departure orientation │
+├──────────────────────────────────────────────────────────────┤
+│ [Message advisor] [View documents] [Withdraw application] │
+└──────────────────────────────────────────────────────────────┘
+Key application states:
+Draft → Submitted → Eligibility review → Nominated
+→ Provider review → Accepted / Waitlisted / Declined
+→ Student committed → Pre-departure → Completed / Withdrawn
+Do not represent an automated preliminary eligibility check as a final academic or admission
+decision.
+Saved → Preparing → Applied → Interviewing
+→ Offer → Accepted / Declined → Active internship → Completed
+Students should see deadlines, application materials, interview notes, recruiter
+communication preferences, work/credit requirements, and reminders. Employers should not
+gain access to grades, course schedules, or protected records through this tracker.
+The feed has three modes:
+Mode Purpose
+Following Chronological posts from followed clubs, people, and official offices
+Campus Moderated campus-wide announcements and discoverable activity
+For You Explainable recommendations from explicit interests, saves, and opt-in preferences
+Feed cards can represent:
+Club announcements.
+Events and RSVP reminders.
+Marketplace opportunities.
+Study-abroad and internship deadline reminders.
+Campus-service updates.
+Peer study-group requests.
+Internship tracker
+Daily feed and messaging schema
+Feed design
+Polls, photos, video, and discussion posts.
+Official emergency or safety communications.
+Never place grades, assignment submissions, accommodation information, disciplinary
+records, private application status, or private advising information in a social feed. Guidance
+on social media and FERPA emphasizes that instructor comments and grades should not be
+made public.
+Table/entity Key fields
+profiles User, display name, photo, bio, privacy level, opt-in flags
+follows Follower, target user/org/topic, status, notification preference
+communities Club, course cohort, interest group, program cohort, visibility
+posts Author, community, content, visibility, media, status, timestamps
+comments Post, author, parent comment, body, moderation state
+reactions User, target, reaction type, timestamp
+topics Name, category, safety classification
+post_topics Post-to-topic relationship
+reports Reporter, target, reason, evidence, priority, status
+moderation_cases Assigned reviewer, action, rationale, appeal status
+notifications Recipient, event type, delivery preference, read status
+feed_impressions Viewer, item, ranking reason, visibility decision
+feed_preferences User, muted topics, blocked accounts, ranking controls
+Table/entity Key fields
+conversations Type, creator, organization/context, status, created time
+conversation_members Conversation, user, role, joined/le timestamps, notification setting
+messages Conversation, sender, encrypted/body reference, attachment status, edited/deleted
+timestamps
+message_requests Sender, recipient, request state, anti-spam signal
+message_reactions Message, user, reaction type
+blocks Blocker, blocked account, scope
+message_reports Reporter, message, reason, moderation status
+presence User, availability setting, last-seen policy—not exact location
+[8]
+Social data model
+Real-time messaging schema
+Table/entity Key fields
+typing_indicators Ephemeral channel state; do not retain unnecessarily
+Message requests by default for people without an accepted connection or shared
+organization.
+Club announcements can be one-way, discussion-enabled, or moderated.
+Event chats can auto-expire aer an institution-defined period.
+Students choose availability, read receipts, and notification settings.
+Blocking immediately prevents new direct contact.
+Rate-limit new conversations and attachments.
+Scan uploads for malware before delivery.
+Provide report and escalation routes in every conversation.
+The matrix below can become a sortable product-planning table in the Semester admin
+console.
+Feature Primary users MVP Dependency Risk level
+Marketplace search and filters Students Yes Verified listing catalog Medium
+Saved listings and alerts Students Yes Notification service Low
+Club directory and profiles Students, officers Yes Organization approval data Low
+Club applications Students, reviewers Yes Form engine, workflow Medium
+Roster and officer roles Officers, staff Yes Identity and authorization High
+RSVP and QR event check-in Students, officers Yes Event service Medium
+Study-abroad tracker Students, global office Yes Program/application system High
+Internship tracker Students, career office Phase 2 Employer and application data High
+Following feed Students Phase 2 Post, follow, moderation services High
+Recommended feed Students Phase 3 Consent-aware ranking engine High
+Direct messaging Students Phase 2 Safety, blocking, moderation High
+Group/event chat Students, organizations Phase 2 Messaging, event membership High
+Payments/dues Clubs, students Phase 3 Approved payment provider Very high
+Build the marketplace and club workflows first, then add social features aer moderation,
+privacy controls, identity verification, and reporting operations are fully functional.
+Messaging controls
+Interactive feature roadmap
+Which workflow would you like to turn into a detailed build specification next: marketplace
+listing creation, club event management, or the study-abroad application tracker?
+⁂
+1. https://www.suitable.co/products/student-organization-management
+2. https://studentprivacy.ed.gov/resources/protecting-student-privacy-while-using-online-educational-services-requirem
+ents-and-best
+3. https://about.lounge.live/
+4. https://studentprivacy.ed.gov/
+5. https://icommunify.com/blog/what-is-icommunify
+6. https://www.readyeducation.com/solutions/student-engagement/
+7. https://www.vanderbilt.edu/study-abroad/application-tips/
+8. https://www.facultyfocus.com/articles/teaching-with-technology-articles/ferpa-and-social-media/
+9. https://dormway.app/blog/how-to-manage-a-student-club-without-sacrificing-your-gpa
+10. https://joinit.com/blog/best-student-organization-management-system
+11. https://icommunify.com/blog/best-club-membership-management-tools-in-2026
+12. https://www.yourglobalmentors.com/blog/study-abroad-application-process-step-by-step-complete-guide-for-2026
+13. https://www.iesabroad.org/study-abroad/application-process
+14. https://www.applyboard.com/
+15. https://www.intostudy.com/en/admissions

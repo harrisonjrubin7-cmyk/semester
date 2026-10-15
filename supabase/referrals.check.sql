@@ -252,7 +252,10 @@ begin
   reset role;
 
   perform pg_temp.become_anon();
-  select count(*) into n from public.referral_codes;
+  begin
+    select count(*) into n from public.referral_codes;
+  exception when insufficient_privilege then n := 0;  -- no grant: refused before any row
+  end;
   perform pg_temp.counted('a signed-out visitor sees no codes', n, 0);
   reset role;
 end $$;
@@ -346,7 +349,10 @@ begin
   reset role;
 
   perform pg_temp.become_anon();
-  select count(*) into n from public.referrals;
+  begin
+    select count(*) into n from public.referrals;
+  exception when insufficient_privilege then n := 0;  -- no grant: refused before any row
+  end;
   perform pg_temp.counted('a signed-out visitor cannot read any of it', n, 0);
   reset role;
 end $$;

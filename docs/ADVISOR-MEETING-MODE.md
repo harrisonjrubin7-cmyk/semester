@@ -42,7 +42,7 @@ Only what the student explicitly shared:
 - the ticked scenario, courses and (if ticked) follow-up actions;
 - the name the student chose to share as.
 
-The advisor view is folded as "For advisors: meetings shared with you". It
+The advisor view is folded as "Caseload". It is the plans students shared, not every student at the school. It
 asks the server nothing until it is opened. It lists titles and dates, and
 opening one shows the snapshot with "The student can see that you opened it,
 and can revoke it."
@@ -63,6 +63,7 @@ asserts the payload's keys.
 | `share_with_advisor(email, title, payload, expires)` | Finds the address only among live `academic_advisor` grants scoped to the student's own school, and inserts. Every miss gives the same message |
 | `list_advisor_shares()` | For the advisor: live shares' titles and dates. Logs nothing |
 | `read_advisor_share(id)` | For the advisor: checks the share is theirs, unrevoked and unexpired. Logs the read and returns the snapshot |
+| audit triggers (`20260930190000_advisor_share_audit.sql`) | Creating, reading, revoking and deleting a share each write one pseudonymous `audit_event` for the share's school: the verb, a hash of the share id, and (for a new share) the number of days. Never the title, the payload or an address. A school's auditor reads its own school's; a refused attempt writes nothing (its own write rolls back). Proved by `share-audit.check.sql` |
 | `lti_account_untouched` | Redefined with `advisor_shares` at both ends, so account linking never retires an account holding shares. Restated in `20260928304000_untouched_advisor_after_help.sql`, because `20260927230000_help_requests.sql` (merged into the base later) redefines it without them, and the later version wins |
 
 **Deletion:**

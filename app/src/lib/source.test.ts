@@ -5,11 +5,13 @@ import {
   SOURCE_MEANING,
   SOURCE_TEXT,
   freshnessLine,
+  freshnessState,
   isSourceLabel,
   sourceLine,
   wantsAttention,
   TRUST_KINDS,
   TRUST_TEXT,
+  TRUST_GLYPH,
   TRUST_MEANING,
 } from './source';
 
@@ -94,16 +96,46 @@ describe('freshness', () => {
     expect(sourceLine('imported', now - 86_400_000, now)).toBe('Imported · Updated yesterday');
     expect(sourceLine('estimated', null, now)).toBe('Estimated');
   });
+
+  it('classifies freshness only against the caller\'s rule', () => {
+    expect(freshnessState(now - 60_000, 5 * 60_000, now)).toBe('current');
+    expect(freshnessState(now - 6 * 60_000, 5 * 60_000, now)).toBe('stale');
+    expect(freshnessState(null, 5 * 60_000, now)).toBe('unknown');
+    expect(freshnessState(now, -1, now)).toBe('unknown');
+  });
 });
 
 describe('the display-only trust kinds', () => {
-  it('add AI-assisted and External without touching the stored five', () => {
-    // The five are the database's check constraint; the two are never stored.
+  it('adds display-only trust states without touching the stored five', () => {
+    // The five are the database's check constraint; the others are never stored.
     expect(SOURCE_LABELS).toHaveLength(5);
     expect(SOURCE_LABELS as readonly string[]).not.toContain('ai_assisted');
     expect(TRUST_KINDS.slice(0, 5)).toEqual([...SOURCE_LABELS]);
     expect(TRUST_TEXT.ai_assisted).toBe('AI-assisted');
     expect(TRUST_TEXT.external).toBe('External');
+    expect(TRUST_TEXT.unavailable_stale).toBe('Unavailable or stale');
+  });
+
+  it('has the ten kinds of the design brief, each with its own glyph and word', () => {
+    expect([...TRUST_KINDS].sort()).toEqual(
+      ['ai_assisted', 'connected', 'estimated', 'external', 'imported', 'institution_verified', 'needs_review', 'sample', 'student_entered', 'unavailable_stale'],
+    );
+    expect(TRUST_GLYPH).toEqual({
+      institution_verified: '◆',
+      connected: '⇄',
+      imported: '↓',
+      student_entered: '○',
+      ai_assisted: '✦',
+      estimated: '≈',
+      needs_review: '?',
+      unavailable_stale: '!',
+      external: '↗',
+      sample: '◌',
+    });
+    expect(new Set(Object.values(TRUST_GLYPH)).size).toBe(TRUST_KINDS.length);
+    expect(new Set(Object.values(TRUST_TEXT)).size).toBe(TRUST_KINDS.length);
+    expect(TRUST_TEXT.connected).toBe('Connected');
+    expect(TRUST_TEXT.sample).toBe('Sample');
   });
 
   it('give every kind words and a meaning', () => {
@@ -115,6 +147,7 @@ describe('the display-only trust kinds', () => {
 
   it('style an AI answer to be noticed, like an estimate', () => {
     expect(wantsAttention('ai_assisted')).toBe(true);
+    expect(wantsAttention('unavailable_stale')).toBe(true);
     expect(wantsAttention('institution_verified')).toBe(false);
   });
 });

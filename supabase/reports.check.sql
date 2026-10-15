@@ -131,7 +131,10 @@ begin
 
   -- ── Signed out ──────────────────────────────────────────────────────────
   perform pg_temp.become_anon();
-  select count(*) into n from public.reports;
+  begin
+    select count(*) into n from public.reports;
+  exception when insufficient_privilege then n := 0;  -- no grant: refused before any row
+  end;
   perform pg_temp.counted('a signed-out visitor reads no reports', n, 0);
 
   begin

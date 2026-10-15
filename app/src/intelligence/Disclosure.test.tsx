@@ -2,7 +2,7 @@
 
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IntelligenceResponse } from './contracts';
 import { IntelligenceDisclosure } from './Disclosure';
 
@@ -65,5 +65,17 @@ describe('IntelligenceDisclosure', () => {
 
     act(() => root.render(<IntelligenceDisclosure response={{ ...responseFixture(), origins: ['course', 'web'] }} />));
     expect(host.querySelector('[data-source="external"]')?.textContent).toContain('External');
+  });
+
+  it('offers a way to a person only when the screen can take the student there', () => {
+    act(() => root.render(<IntelligenceDisclosure response={responseFixture()} />));
+    expect([...host.querySelectorAll('button')].map((b) => b.textContent)).toEqual([]);
+
+    const onAskHuman = vi.fn();
+    act(() => root.render(<IntelligenceDisclosure response={responseFixture()} onAskHuman={onAskHuman} />));
+    const button = [...host.querySelectorAll('button')].find((b) => /who can help/i.test(b.textContent ?? ''));
+    expect(button).toBeDefined();
+    act(() => button!.click());
+    expect(onAskHuman).toHaveBeenCalledTimes(1);
   });
 });

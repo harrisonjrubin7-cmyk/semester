@@ -393,14 +393,6 @@ export interface Block {
   optional?: boolean;
 }
 
-export interface AppNotification {
-  id: string;
-  code: string;
-  when: string;
-  title: string;
-  body: string;
-}
-
 // ── Your own things ───────────────────────────────────────────────────────
 // Everything above comes out of a syllabus. Everything below you added
 // yourself, and the app keeps the two visibly apart.

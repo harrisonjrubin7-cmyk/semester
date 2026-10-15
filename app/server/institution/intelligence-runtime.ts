@@ -61,6 +61,7 @@ export function createInstitutionIntelligenceRuntime(options: IntelligenceRuntim
     status: options.status,
     killSwitch: repository.killSwitchEngaged,
     loadPolicy: repository.loadPolicy,
+    loadCoursePolicy: repository.loadCoursePolicy,
     loadApprovedSources: repository.loadApprovedSources,
     modelTask: async () => task,
     generate: provider.generate,

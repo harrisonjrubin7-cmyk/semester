@@ -48,7 +48,7 @@ describe('the semantic token layer', () => {
   const everywhere = new Set([...defined(APP), ...defined(INDUSTRY), ...defined(TOKENS), ...runtime]);
 
   it('has the families the brief names', () => {
-    for (const family of ['--surface-', '--text-', '--border-', '--action-', '--status-', '--focus-', '--target-', '--duration-', '--motion-', '--layer-', '--elevation-', '--shape-', '--layout-']) {
+    for (const family of ['--surface-', '--text-', '--border-', '--brand-', '--action-', '--status-', '--state-', '--data-', '--focus-', '--target-', '--control-', '--type-role-', '--duration-', '--motion-', '--layer-', '--elevation-', '--shape-', '--layout-']) {
       expect([...defs.keys()].some((k) => k.startsWith(family)), family).toBe(true);
     }
   });
@@ -121,6 +121,12 @@ describe('the semantic token layer', () => {
     expect(defs.get('--target-primary')).toBe('44px');
     expect(defs.get('--target-min')).toBe('24px');
     expect(APP).toContain('max(100%, 44px)');
+  });
+
+  it('paints the rail wordmark with the semantic navigation text', () => {
+    const wordmark = /\.rail \.rail-mark\s*\{([^}]*)\}/.exec(APP)?.[1] ?? '';
+    expect(wordmark).toContain('color: var(--shell-navigation-text)');
+    expect(wordmark).toContain('-webkit-text-fill-color: currentColor');
   });
 
   it('stills every motion role for reduced motion and for the app’s own setting', () => {

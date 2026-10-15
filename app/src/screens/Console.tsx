@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, TabList } from '../components/ui';
 import { cloudConfigured } from '../lib/cloud';
-import { loadMyCapabilities, type Grant } from '../lib/capabilities';
+import { useCapabilityDiscovery, type Grant } from '../lib/capabilities';
 import { environment } from '../lib/environment';
+import { ErrorState } from '../components/unity/States';
 import {
   holdsConsole,
   loadPreferences,
@@ -23,9 +24,21 @@ import { BreakGlass } from '../components/console/BreakGlass';
 import { Audit } from '../components/console/Audit';
 import { Customers } from '../components/console/Customers';
 import { Figures } from '../components/console/Figures';
+import { StandardsCrosswalk } from '../components/console/StandardsCrosswalk';
 import { Evidence } from '../components/console/Evidence';
 import { Views, readViews, type SavedView } from '../components/console/Views';
+import { CommandCenter } from '../components/console/CommandCenter';
+import { SupportQueue } from '../components/console/SupportQueue';
+import { TenantOperations } from '../components/console/TenantOperations';
+import { PrivacyRequests } from '../components/console/PrivacyRequests';
+import { IntegrationHealth } from '../components/console/IntegrationHealth';
+import { ReleaseIncidents } from '../components/console/ReleaseIncidents';
 import { said, when } from '../components/console/Fields';
+import {
+  isConsoleWorkspaceId,
+  visibleConsoleWorkspaces,
+  type ConsoleWorkspaceId,
+} from '../lib/console/workspaces';
 
 /**
  * The operations console.
@@ -48,47 +61,23 @@ import { said, when } from '../components/console/Fields';
  * browser storage; `console.test.tsx` asserts it.
  */
 
-const BLURB = 'Approvals, break-glass, the audit chain, customers, figures and evidence — for operators holding console:operate.';
+// Its own chunk: it reads six flag modules the rest of the console never needs, and the console's opening cost is budgeted.
+const Releases = lazy(() => import('../components/console/Releases').then((m) => ({ default: m.Releases })));
+// Its own chunk, for the same reason: twelve gates' worth of evidence text the rest of the console never reads.
+const Launch = lazy(() => import('../components/console/Launch').then((m) => ({ default: m.Launch })));
+const Controls = lazy(() => import('../components/console/Controls').then((m) => ({ default: m.Controls })));
+const FinancialModel = lazy(() => import('../finance/FinancialModel').then((m) => ({ default: m.FinancialModel })));
+const Ecosystem = lazy(() => import('../components/console/Ecosystem').then((m) => ({ default: m.Ecosystem })));
 
-type Tab = 'approvals' | 'breakglass' | 'audit' | 'customers' | 'figures' | 'evidence' | 'views';
-
-const TABS: readonly { id: Tab; label: string }[] = [
-  { id: 'approvals', label: 'Approvals' },
-  { id: 'breakglass', label: 'Break-glass' },
-  { id: 'audit', label: 'Audit' },
-  { id: 'customers', label: 'Customers' },
-  { id: 'figures', label: 'Figures' },
-  { id: 'evidence', label: 'Evidence' },
-  { id: 'views', label: 'Views' },
-];
-
-const isTab = (v: unknown): v is Tab => typeof v === 'string' && TABS.some((t) => t.id === v);
+const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures, release flags and evidence — for operators holding console:operate.';
 
 /** Preference keys, under `operator_preference`. */
 const PREF_TAB = 'console.tab';
 const PREF_VIEWS = 'console.views';
 
-/**
- * The caller's grants: `null` until read, so "no grant" is never shown while
- * reading, and not read at all when there is nothing to read them from.
- */
-function useGrants(enabled: boolean): Grant[] | null {
-  const [grants, setGrants] = useState<Grant[] | null>(null);
-  useEffect(() => {
-    if (!enabled) return;
-    let live = true;
-    loadMyCapabilities().then(
-      (g) => { if (live) setGrants(g); },
-      () => { if (live) setGrants([]); },
-    );
-    return () => { live = false; };
-  }, [enabled]);
-  return grants;
-}
-
 export function Console() {
   const { account } = useStore();
-  const grants = useGrants(cloudConfigured && account !== null);
+  const access = useCapabilityDiscovery(cloudConfigured ? account?.id ?? '' : '');
   if (!cloudConfigured || !account) {
     return (
       <Page blurb={BLURB}>
@@ -96,13 +85,25 @@ export function Console() {
       </Page>
     );
   }
-  if (grants === null) {
+  if (access.status === 'loading') {
     return (
       <Page blurb={BLURB}>
         <p role="status">Reading your grants…</p>
       </Page>
     );
   }
+  if (access.status === 'error') {
+    return (
+      <Page blurb={BLURB}>
+        <ErrorState
+          title="Could not read your grants"
+          body={access.error}
+          recover={{ label: 'Try again', run: access.retry }}
+        />
+      </Page>
+    );
+  }
+  const grants = access.grants;
   if (!holdsConsole(grants)) {
     return (
       <Page blurb={BLURB}>
@@ -115,7 +116,8 @@ export function Console() {
 
 function Operations({ operator, grants }: { operator: string; grants: Grant[] }) {
   const env = environment();
-  const [tab, setTab] = useState<Tab>('approvals');
+  const workspaces = useMemo(() => visibleConsoleWorkspaces(grants), [grants]);
+  const [tab, setTab] = useState<ConsoleWorkspaceId>('command');
   const [filter, setFilter] = useState('');
   const [scope, setScope] = useState('All');
   const [views, setViews] = useState<SavedView[]>([]);
@@ -124,6 +126,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
   const [support, setSupport] = useState<SupportGrant[] | null | string>(null);
   const [status, setStatus] = useState('');
   const [gate, setGate] = useState<{ run: () => Promise<void> } | null>(null);
+  const [gateRunning, setGateRunning] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
   const onStatus = useCallback((s: string) => setStatus(s), []);
@@ -137,7 +140,11 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
     setNow(new Date());
   }, []);
 
-  // The context bar and the preferences: account-backed, read once at open.
+  const mfaKnown = mfa !== null;
+
+  // Read assurance before mounting a workspace. The app-level privileged MFA
+  // boundary keeps platform_admin and support_agent out at aal1; ordinary
+  // console roles are deliberately allowed through by the database.
   useEffect(() => {
     let live = true;
     mfaLevel().then(
@@ -148,6 +155,16 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       },
       (e: unknown) => { if (live) setMfa(said(e, 'Could not read')); },
     );
+    return () => { live = false; };
+  }, []);
+
+  // The context bar and preferences are account-backed and protected by the
+  // same role boundary as the workspaces. Do not ask for them until the first
+  // assurance read settles; ordinary console roles may legitimately remain at
+  // aal1 or continue read-only work while that assurance read is unavailable.
+  useEffect(() => {
+    if (!mfaKnown) return;
+    let live = true;
     sessionExpiry().then(
       (at) => { if (live) setSession(at ?? 'No session'); },
       (e: unknown) => { if (live) setSession(said(e, 'Could not read')); },
@@ -159,7 +176,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
     loadPreferences().then(
       (p) => {
         if (!live) return;
-        if (isTab(p[PREF_TAB])) setTab(p[PREF_TAB]);
+        if (isConsoleWorkspaceId(p[PREF_TAB], workspaces)) setTab(p[PREF_TAB]);
         setViews(readViews(p[PREF_VIEWS]));
       },
       (e: unknown) => { if (live) setStatus(said(e, 'Could not load your preferences.')); },
@@ -169,9 +186,9 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       live = false;
       clearInterval(tick);
     };
-  }, []);
+  }, [mfaKnown, workspaces]);
 
-  const choose = (next: Tab) => {
+  const choose = (next: ConsoleWorkspaceId) => {
     setTab(next);
     savePreference(PREF_TAB, next).catch((e: unknown) => setStatus(said(e, 'The last-open tab was not saved.')));
   };
@@ -199,22 +216,49 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
 
   const verified = () => {
     const pending = gate;
-    setGate(null);
-    void readMfa().then(() => pending?.run().catch((e: unknown) => setStatus(said(e, 'The change was not recorded.'))));
+    if (!pending) return;
+    setGateRunning(true);
+    void readMfa()
+      .then(() => pending.run())
+      .catch((e: unknown) => setStatus(said(e, 'The change was not recorded.')))
+      .finally(() => {
+        setGate(null);
+        setGateRunning(false);
+      });
   };
 
   const sessionEnds = session instanceof Date ? `At session end, ${when(session.toISOString())}` : 'At session end';
   const viewProps = { env, scope, filter, onStatus, privileged };
 
+  if (mfa === null) {
+    return (
+      <Page blurb={BLURB}>
+        <p role="status">Checking the operator session’s second factor…</p>
+      </Page>
+    );
+  }
   return (
     <Page blurb={BLURB}>
       <ContextBar context={{ env, scope, operator, grants, mfa, session, support, now }} />
+      {typeof mfa === 'string' && (
+        <Notice>
+          {mfa}. Ordinary console work remains available, but sensitive changes still require a verified second factor.{' '}
+          <button type="button" className="btn" onClick={() => void readMfa()}>Try again</button>
+        </Notice>
+      )}
       {status && (
         <p role="status" style={{ marginBlock: 0, marginBottom: 'var(--sp-4)' }}>
           {status}
         </p>
       )}
-      {gate && <MfaStep onVerified={verified} onCancel={() => setGate(null)} />}
+      {gate && (gateRunning
+        ? <p role="status">Finishing the verified change…</p>
+        : <MfaStep onVerified={verified} onCancel={() => setGate(null)} />)}
+      <div
+        data-console-content
+        inert={gate ? true : undefined}
+        aria-hidden={gate ? true : undefined}
+      >
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', alignItems: 'end', marginBottom: 'var(--sp-4)' }}>
         <label style={{ display: 'grid', gap: 'var(--sp-2)', flex: 1 }}>
           Filter this view
@@ -226,14 +270,45 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
           </button>
         )}
       </div>
-      <TabList label="Console views" className="portal-tabs" value={tab} onChange={choose} tabs={TABS} />
+      <TabList label="Console views" className="portal-tabs" value={tab} onChange={choose} tabs={workspaces} />
       <div style={{ marginTop: 'var(--sp-5)' }}>
+        {tab === 'command' && <CommandCenter {...viewProps} />}
+        {tab === 'support' && <SupportQueue {...viewProps} />}
         {tab === 'approvals' && <Approvals {...viewProps} />}
         {tab === 'breakglass' && <BreakGlass {...viewProps} />}
         {tab === 'audit' && <Audit {...viewProps} />}
+        {tab === 'tenant-operations' && <TenantOperations {...viewProps} now={now} />}
+        {tab === 'privacy' && <PrivacyRequests {...viewProps} />}
+        {tab === 'integration-health' && <IntegrationHealth {...viewProps} />}
+        {tab === 'release-incidents' && <ReleaseIncidents {...viewProps} />}
         {tab === 'customers' && <Customers {...viewProps} sessionEnds={sessionEnds} onFocus={setScope} />}
         {tab === 'figures' && <Figures {...viewProps} />}
-        {tab === 'evidence' && <Evidence {...viewProps} />}
+        {tab === 'finance' && (
+          <Suspense fallback={<p role="status">Loading the finance model…</p>}>
+            <FinancialModel />
+          </Suspense>
+        )}
+        {tab === 'ecosystem' && (
+          <Suspense fallback={<p role="status">Loading the connected ecosystem…</p>}>
+            <Ecosystem filter={filter} />
+          </Suspense>
+        )}
+        {tab === 'releases' && (
+          <Suspense fallback={<p role="status">Loading the release flags…</p>}>
+            <Releases env={env} filter={filter} />
+          </Suspense>
+        )}
+        {tab === 'launch' && (
+          <Suspense fallback={<p role="status">Loading the launch gates…</p>}>
+            <Launch filter={filter} />
+          </Suspense>
+        )}
+        {tab === 'controls' && (
+          <Suspense fallback={<p role="status">Loading the control register…</p>}>
+            <Controls filter={filter} />
+          </Suspense>
+        )}
+        {tab === 'evidence' && <><Evidence {...viewProps} /><StandardsCrosswalk /></>}
         {tab === 'views' && (
           <Views
             views={views}
@@ -242,11 +317,12 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
             onSave={(v) => keepViews([...views.filter((x) => x.name !== v.name), v], `Saved the view “${v.name}”.`)}
             onApply={(v) => {
               setFilter(v.filter);
-              if (isTab(v.tab)) choose(v.tab);
+              if (isConsoleWorkspaceId(v.tab, workspaces)) choose(v.tab);
             }}
             onDelete={(name) => keepViews(views.filter((x) => x.name !== name), `Deleted the view “${name}”.`)}
           />
         )}
+      </div>
       </div>
     </Page>
   );

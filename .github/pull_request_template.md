@@ -12,6 +12,7 @@ Run from `app/`, not the repository root (see `CLAUDE.md`).
 - [ ] `npm run test:shuffle`
 - [ ] `npm run build`
 - [ ] Every new guard is shown to fail against a revert of the fix, and then restored.
+- [ ] The documentation that describes this change moved with it — or the description says `Docs: none because <reason>` on a line of its own. `npm run docs:impact` checks the paths; `docs/documentation/OWNERSHIP-AND-REVIEW.md` says which.
 
 ## New dependency (skip if no package or Action is added)
 

@@ -1,0 +1,17 @@
+-- Company operations. No student identifiers in this schema, ever.
+create schema if not exists ops;
+create table ops.staff(id uuid primary key references auth.users, role text not null check (role in ('ceo','cfo','finance','comms','social','sales','revops','cs','support','tns','legal','people','security','data','partnerships')));
+create or replace function ops.my_role() returns text language sql stable as $$ select role from ops.staff where id = auth.uid() $$;
+create table ops.accounts(id uuid primary key default gen_random_uuid(), institution_name text not null, acv_cents bigint, term_ends date, health int check (health between 0 and 100), csm uuid references ops.staff);
+create table ops.invoices(id text primary key, account_id uuid references ops.accounts, amount_cents bigint not null, due date not null, status text not null default 'sent');
+create table ops.social_posts(id uuid primary key default gen_random_uuid(), body text not null, channels text[] not null, scheduled_at timestamptz, author uuid default auth.uid(), status text not null default 'draft' check (status in ('draft','needs_approval','approved','scheduled','published','paused','rejected')), legal_review boolean default false);
+create table ops.settings(key text primary key, value jsonb not null);
+alter table ops.accounts enable row level security; alter table ops.invoices enable row level security; alter table ops.social_posts enable row level security; alter table ops.settings enable row level security;
+create policy acc_read on ops.accounts for select using (ops.my_role() in ('ceo','cfo','finance','sales','revops','cs','partnerships'));
+create policy inv_read on ops.invoices for select using (ops.my_role() in ('ceo','cfo','finance'));
+create policy sp_read on ops.social_posts for select using (ops.my_role() in ('ceo','comms','social'));
+create policy sp_draft on ops.social_posts for insert with check (ops.my_role() in ('comms','social') and status in ('draft','needs_approval'));
+create policy sp_approve on ops.social_posts for update using (ops.my_role() = 'comms');
+create policy st_read on ops.settings for select using (ops.my_role() is not null);
+create policy st_crisis on ops.settings for update using (ops.my_role() in ('comms','ceo') and key = 'crisis_mode');
+-- Guard: ops staff without a campus profile can never read edu/community/market (they have no core.profiles row, so my_institution() is null).

@@ -45,6 +45,9 @@ import { rememberOpened } from '../../lib/opened';
  * opposite of what was asked.
  */
 function doneScreen(state: State): Screen {
+  // A link that brought somebody here named where it was going: setup does not
+  // get to take that away. (`lib/entrycontext.ts`.)
+  if (state.afterSetup) return state.afterSetup;
   return state.courses.length === 0 ? 'import' : firstScreen(state.nav);
 }
 
@@ -92,6 +95,7 @@ export function push(state: State, screen: Screen): State {
   return {
     ...state,
     screen,
+    workspaceView: null,
     history,
     recent: remember(state.recent, screen),
     // Written on the way in rather than counted: how many times somebody
@@ -135,11 +139,19 @@ export function navigate(state: State, action: Action): State | null {
     case 'customize':
       return { ...state, customize: action.open };
 
-    case 'go':
-      return push(
-        action.courseId ? { ...state, guideId: action.courseId } : state,
-        screenForRole(action.screen, state.role),
-      );
+    case 'go': {
+      const recoveryIntent = action.recoveryIntent ?? null;
+      let next = state;
+      if (action.courseId && action.courseId !== state.guideId) next = { ...next, guideId: action.courseId };
+      if (recoveryIntent !== state.recoveryIntent) next = { ...next, recoveryIntent };
+      return push(next, screenForRole(action.screen, state.role));
+    }
+
+    case 'openWorkspace':
+      return { ...push(state, screenForRole(action.screen, state.role)), workspaceView: action.view };
+
+    case 'setWorkspaceView':
+      return { ...state, workspaceView: action.view };
 
     /**
      * The browser went somewhere, so the app follows it there.
@@ -163,7 +175,7 @@ export function navigate(state: State, action: Action): State | null {
       state = dismiss(state);
       const landed = screenForRole(action.screen, state.role);
       const library = LIBRARIES.includes(landed);
-      if (landed === state.screen && !action.id && !action.mode && !library) return state;
+      if (landed === state.screen && !action.id && !action.mode && !library && (action.view ?? null) === state.workspaceView) return state;
       const back = state.history[state.history.length - 1] === landed;
       /*
        * Which field the id in the address belongs in.
@@ -178,7 +190,9 @@ export function navigate(state: State, action: Action): State | null {
       const field = action.id || library ? NAMED[landed] : undefined;
       return {
         ...state,
+        recoveryIntent: null,
         screen: landed,
+        workspaceView: action.view ?? null,
         history: back ? state.history.slice(0, -1) : state.history,
         // `|| null` for the library case: landing on the shelf means no file
         // is open, and leaving the old id in place would reopen it instead.
@@ -190,17 +204,22 @@ export function navigate(state: State, action: Action): State | null {
     case 'back': {
       const history = [...state.history];
       const prev = history.pop();
-      return { ...dismiss(state), screen: prev ?? 'home', history };
+      return { ...dismiss(state), recoveryIntent: null, screen: prev ?? 'home', workspaceView: null, history };
     }
 
     case 'openItem':
-      return push({ ...state, itemId: action.id, opened: rememberOpened(state.opened, { kind: 'item', id: action.id }) }, 'item');
+      return push({
+        ...state,
+        recoveryIntent: state.screen === 'behind' ? state.recoveryIntent : null,
+        itemId: action.id,
+        opened: rememberOpened(state.opened, { kind: 'item', id: action.id }),
+      }, 'item');
 
     case 'openCourse':
-      return push({ ...state, courseId: action.id, opened: rememberOpened(state.opened, { kind: 'course', id: action.id }) }, 'course');
+      return push({ ...state, recoveryIntent: null, courseId: action.id, opened: rememberOpened(state.opened, { kind: 'course', id: action.id }) }, 'course');
 
     case 'openEvent':
-      return push({ ...state, eventId: action.id }, 'event');
+      return push({ ...state, recoveryIntent: null, eventId: action.id }, 'event');
 
     case 'openCall': {
       /*
@@ -209,7 +228,7 @@ export function navigate(state: State, action: Action): State | null {
        * from the lobby changes the code without changing the screen, and the
        * early return would drop the code on the floor.
        */
-      const next = { ...state, callCode: action.code };
+      const next = { ...state, recoveryIntent: null, callCode: action.code };
       return state.screen === 'call' ? next : push(next, 'call' as Screen);
     }
 
@@ -217,6 +236,7 @@ export function navigate(state: State, action: Action): State | null {
       return push(
         {
           ...state,
+          recoveryIntent: null,
           guideId: action.id,
           mode: action.mode ?? state.mode,
           // Search can name a unit, and landing on the guide with it already
@@ -274,14 +294,21 @@ export function navigate(state: State, action: Action): State | null {
      */
     case 'onbNext':
       return state.onb >= ONB_STEPS - 1
-        ? { ...state, screen: doneScreen(state), history: [], seenOnboarding: true, onb: 0 }
+        ? { ...state, screen: doneScreen(state), history: [], seenOnboarding: true, onb: 0, afterSetup: null }
         : { ...state, onb: state.onb + 1 };
 
     case 'restartOnboarding':
       return { ...state, screen: 'onboarding', history: [], onb: 0 };
 
     case 'finishOnboarding':
-      return { ...state, screen: firstScreen(state.nav), history: [], seenOnboarding: true, onb: 0 };
+      return {
+        ...state,
+        screen: state.afterSetup ?? firstScreen(state.nav),
+        history: [],
+        seenOnboarding: true,
+        onb: 0,
+        afterSetup: null,
+      };
 
     case 'openLesson':
       return push({ ...state, lessonUnit: action.unit }, 'lesson');

@@ -114,8 +114,8 @@ describe('every message that says something went wrong', () => {
         // actually heard, and the one `components/FieldMessage.tsx` uses —
         // opens its container on the line above the condition, not below it.
         const shown = lines.slice(Math.max(0, i - 1), i + 12).join('\n');
-        // `ErrorState` is `role="alert"` itself — `components/unity/States.tsx`.
-        if (/<Trouble|<Problem|<ErrorState|role="alert"|role="status"|aria-live/.test(shown)) return;
+        // `ErrorState` and `Notice alert` render `role="alert"` themselves.
+        if (/<Trouble|<Problem|<ErrorState|<Notice\s+alert|role="alert"|role="status"|aria-live/.test(shown)) return;
         out.push(`${file}:${i + 1}`);
       });
     }

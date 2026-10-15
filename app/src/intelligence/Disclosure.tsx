@@ -13,7 +13,18 @@ const modeLabel = (mode: IntelligenceResponse['mode']) =>
   `${mode[0].toUpperCase()}${mode.slice(1)} mode`;
 
 /** The provenance receipt shown under an answer, owned by Semester's UI. */
-export function IntelligenceDisclosure({ response }: { response: IntelligenceResponse }) {
+export function IntelligenceDisclosure({
+  response,
+  onAskHuman,
+}: {
+  response: IntelligenceResponse;
+  /**
+   * Where a person can be reached about what this answer says. An assistant
+   * answer is not official (`TRUST_MEANING.ai_assisted`), so the way to
+   * someone who can say what is official sits with the answer, not in a menu.
+   */
+  onAskHuman?: () => void;
+}) {
   return (
     <div
       aria-label="Semester Intelligence answer details"
@@ -82,6 +93,25 @@ export function IntelligenceDisclosure({ response }: { response: IntelligenceRes
         {response.uncertainty && <p>Uncertainty: {response.uncertainty}</p>}
         {response.policyReason && <p>Policy: {response.policyReason}</p>}
       </details>
+
+      {onAskHuman ? (
+        <button
+          type="button"
+          className="bare"
+          onClick={onAskHuman}
+          style={{
+            width: 'auto',
+            minHeight: 44,
+            marginTop: 'var(--sp-2)',
+            fontSize: 'var(--type-xs)',
+            color: 'var(--app-accent-deep)',
+            textDecoration: 'underline',
+            textUnderlineOffset: 3,
+          }}
+        >
+          Not sure it’s right? See who can help
+        </button>
+      ) : null}
     </div>
   );
 }

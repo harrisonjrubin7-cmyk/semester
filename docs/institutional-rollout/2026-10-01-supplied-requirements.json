@@ -1,0 +1,157 @@
+{
+  "schema": 1,
+  "documents": [
+    {
+      "supplied_filename": "1EdTech specs vs NIST 800-53 Rev. 5 privacy contro(1).pdf",
+      "sha256": "1e83bf3336f1ba923b57b606bb188c7c9642e425bb0d1e0ff0f137e58a3d1d60",
+      "pages": 15,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "Audit 1EdTech specs against NIST 800-53 privacy co(1).pdf",
+      "sha256": "99c0983654e3419b346843ba96c8b238951b2d81200d8bb28b76863946d16de8",
+      "pages": 13,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "Build a UDL-aligned executive function weekly oper(1).pdf",
+      "sha256": "fee84fea1e71cbee0280bcd4e6e48c14347a5f67ef1f3943b831eaf2393e9cf6",
+      "pages": 11,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "Build an executive function operating rhythm with(1).pdf",
+      "sha256": "f0bd55455997044bf514196c6e2821c39f081e1b05171a92019a82c7b815eed7",
+      "pages": 12,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "Build an executive function toolkit and weekly ope(1).pdf",
+      "sha256": "5c427ea5d1ba2e4ed80c65cf542b7860f6f2f1c0273505cfa511856167f08ea4",
+      "pages": 13,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "Build an interactive 1EdTech vs NIST 800-53 compli(1).pdf",
+      "sha256": "530ee7dedbd1a182d11e5d854ea00f323a30fbfbafb7b05adcfd0c10167c3202",
+      "pages": 15,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "Core answer(1).pdf",
+      "sha256": "77884bcc7861f9d1921c91b55c5eafd84e6f4c69c62884b31db567d65331585b",
+      "pages": 9,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "GTM wedge strategy_ how to sequence LMS integratio(1).pdf",
+      "sha256": "f84d1104af4e5128f9fd9b9bd9aa12364321903b322168d27c7f418a7f41d692",
+      "pages": 15,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "How do we build the go-to-market wedge with everyt(1).pdf",
+      "sha256": "c12f69e22a88a62f2c5e17ff9026884f3681577aa02c3f5005be7476dfac7834",
+      "pages": 13,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "Institutional readiness audit_ cross-reference 1Ed(1).pdf",
+      "sha256": "f2ce6d618006575d2ba2ce487ff09b322080f7a2c018ef9a4525442beb164db8",
+      "pages": 14,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "LMS integration GTM playbook_ sequence LTI 1.3 wed(1).pdf",
+      "sha256": "3793b4035b85da82cc0afb65eff60bbd9e1c9e82a281bae4b8905173d4b2d292",
+      "pages": 14,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "LTI 1.3 GTM migration roadmap_ sequence LTI Advant(1).pdf",
+      "sha256": "4fcb1843e127e91c367bbe12b73adf1beb9a10f40ec7c84b19fc4117f5782f93",
+      "pages": 13,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "LTI 1.3 migration audit_ compare Canvas, Blackboar.pdf",
+      "sha256": "991577d29102bf1247fe318d8914bc406f0560edbbbe2c8ddff61731a1a78f33",
+      "pages": 10,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "LTI 1.3 migration roadmap_ sequence Deep Linking,(1).pdf",
+      "sha256": "dfd4388957dfcd9b4bb86dd2f755ccd8a18f5777a219212eb812b5b7a5e8b812",
+      "pages": 13,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "LTI 1.3 security audit_ mapping OAuth 1.0a key dep(1).pdf",
+      "sha256": "dbd38be591a97bf6be3df1ee55db9ecb44b8a0e74239dbaf27283b17063556e8",
+      "pages": 9,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "Migration matrix(1).pdf",
+      "sha256": "dba6a641cf54a56a562f61310f7ecb0e88cca2a15dd1c05a2f9244e058859b2f",
+      "pages": 8,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "Turn CAST UDL Guideline 6 into a weekly executive(1).pdf",
+      "sha256": "b9e14cc8aa27a91168e21d9521ed0734cea588caec35ffb0633498f82a91a668",
+      "pages": 7,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "anything else and other ways to increase cappablit copy(1).pdf",
+      "sha256": "4669d5a12dbd9d75f93a7998fe0269adccb59fd99df8e538b5e27a3891f30c43",
+      "pages": 16,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "anything else to finilize semester(1).pdf",
+      "sha256": "36826dec60f7adcab1cc8282e5fde9b4af1843fd267674b5fb82233296ef971a",
+      "pages": 9,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "anything or area i have not covered to make me the(1).pdf",
+      "sha256": "45254ef63e180fc6c686b210e96f9da672e37e97ae6d114a8176d62bc33db803",
+      "pages": 12,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    },
+    {
+      "supplied_filename": "semester-daily-executive-function-toolkit(1).pdf",
+      "sha256": "9c0c43983b89ae9371eb0354d1a6381b7d8418ccb32394c591045ea9a7126dc2",
+      "pages": 3,
+      "role": "Requirement source; not evidence of implementation, activation or compliance"
+    }
+  ],
+  "screenshots": [
+    {
+      "supplied_filename": "Screenshot 2026-10-01 at 10.35.47\u202fAM(1).png",
+      "sha256": "f16535c3dd18ca2c3416096315d0d18f6434c111b20675db1e762b74aa2fae0b"
+    },
+    {
+      "supplied_filename": "Screenshot 2026-10-01 at 10.35.53\u202fAM(1).png",
+      "sha256": "cce4bcf0bc1690ba5126fe2ee3217ec60b4f4a9d4060a10c9efd676de135abbe"
+    },
+    {
+      "supplied_filename": "Screenshot 2026-10-01 at 10.38.26\u202fAM(1).png",
+      "sha256": "8cca563732f843d8b1891df7c413c9cfe06ecc2e5b536df5698fd1dce874985f"
+    },
+    {
+      "supplied_filename": "Screenshot 2026-10-01 at 10.38.45\u202fAM(1).png",
+      "sha256": "c52bd58354c72edd2b8aaf0a5efc9b6c2a48e98d3ef28b9c2f7a8f8354900e1e"
+    },
+    {
+      "supplied_filename": "Screenshot 2026-10-01 at 10.38.50\u202fAM(1).png",
+      "sha256": "cbc8b926bbf601b9b13cd6317ede696bc46052e99715fdbaec55d69a24383f7c"
+    },
+    {
+      "supplied_filename": "Screenshot 2026-10-01 at 10.38.58\u202fAM(1).png",
+      "sha256": "a6b2ce078f0d9870b097f76b0d0a53dd64520f95320e085afedc3021b0543c3c"
+    }
+  ]
+}

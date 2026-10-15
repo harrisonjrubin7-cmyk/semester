@@ -103,7 +103,7 @@ export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_
         </div>
       </Blueprint>
 
-      <PathSnapshotCard />
+      <PathSnapshotCard onPrepareMeeting={advisorMeeting ? () => setTab('meeting') : undefined} />
 
       <Segmented
         options={[

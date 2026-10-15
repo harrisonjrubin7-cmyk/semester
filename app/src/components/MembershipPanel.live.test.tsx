@@ -4,9 +4,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
 /**
- * The panel with an account service and a catalog: Plus bought through a
- * consent the person ticks, at the catalog's price, and cancelled from the
- * same place. The server's side is `lib/billing/checkout.test.ts`.
+ * The panel keeps new Plus acquisition held while preserving subscription,
+ * cancellation and billing-history access for existing customers.
  */
 
 const mock = vi.hoisted(() => {
@@ -21,7 +20,7 @@ const mock = vi.hoisted(() => {
         (throwing.has(t) ? Promise.reject(new Error('fetch failed')) : Promise.resolve(failing.has(t) ? { data: null, error: { message: 'network' } } : { data: tables[t] ?? [], error: null })).then(ok, no) };
     return q;
   };
-  return { tables, failing, throwing, eqs, rpc: vi.fn(), from: vi.fn(from), start: vi.fn(), cancel: vi.fn(), account: { id: 'u1' } as { id: string } | null };
+  return { tables, failing, throwing, eqs, rpc: vi.fn(), from: vi.fn(from), start: vi.fn(), cancel: vi.fn(), portal: vi.fn(), account: { id: 'u1' } as { id: string } | null };
 });
 vi.mock('../lib/cloud', () => ({
   cloudConfigured: true,
@@ -29,7 +28,7 @@ vi.mock('../lib/cloud', () => ({
   currentSession: () => Promise.resolve({ access_token: 'tok' }),
 }));
 vi.mock('../state/store', () => ({ useStore: () => ({ account: mock.account, dispatch: () => {} }) }));
-vi.mock('../lib/membership', async (real) => ({ ...(await real<typeof import('../lib/membership')>()), startCheckout: mock.start, cancelMembership: mock.cancel }));
+vi.mock('../lib/membership', async (real) => ({ ...(await real<typeof import('../lib/membership')>()), startCheckout: mock.start, cancelMembership: mock.cancel, openBillingPortal: mock.portal }));
 const { MembershipPanel } = await import('./MembershipPanel');
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -49,6 +48,7 @@ beforeEach(() => {
   mock.rpc.mockReset();
   mock.start.mockReset();
   mock.cancel.mockReset();
+  mock.portal.mockReset();
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -65,60 +65,13 @@ const render = async () => {
   await act(async () => root.render(<MembershipPanel />));
 };
 
-it('names the catalog’s price, not the planned one', async () => {
+it('ignores stale catalog prices and exposes no new checkout', async () => {
   await render();
-  expect(host.textContent).toContain('Plus is $7.99 a month or $59 a year.');
-  expect(host.textContent).not.toContain('not on sale yet');
-});
-
-it('asks for consent before anything is sent, then follows Stripe’s page', async () => {
-  const go = vi.fn();
-  vi.stubGlobal('location', { ...window.location, search: '', assign: go });
-  try {
-    mock.start.mockResolvedValue({ kind: 'redirect', url: 'https://checkout.stripe.com/c/pay/cs_test_1' });
-    await render();
-    await act(async () => button(/^Upgrade$/)!.click());
-    await act(async () => button(/Continue to secure checkout/)!.click());
-    expect(host.querySelector('[role="alert"]')?.textContent).toMatch(/Tick the box/);
-    expect(mock.start).not.toHaveBeenCalled();
-
-    const box = host.querySelector('input[type="checkbox"]') as HTMLInputElement;
-    expect(box.parentElement?.textContent).toContain('$7.99 a month');
-    await act(async () => box.click());
-    await act(async () => button(/Continue to secure checkout/)!.click());
-    expect(mock.start).toHaveBeenCalledWith('tok', MONTH.id);
-    expect(go).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/cs_test_1');
-  } finally {
-    vi.unstubAllGlobals();
-  }
-});
-
-it('re-asks for consent when the price changes', async () => {
-  await render();
-  await act(async () => button(/^Upgrade$/)!.click());
-  const box = host.querySelector('input[type="checkbox"]') as HTMLInputElement;
-  await act(async () => box.click());
-  const yearly = [...host.querySelectorAll('input[type="radio"]')][1] as HTMLInputElement;
-  await act(async () => yearly.click());
-  expect((host.querySelector('input[type="checkbox"]') as HTMLInputElement).checked).toBe(false);
-  expect(host.textContent).toContain('$59 a year for Semester Plus');
-});
-
-it('says the function’s refusal in its own words', async () => {
-  mock.start.mockResolvedValue({ kind: 'refused', said: 'Checkout is not available yet.' });
-  await render();
-  await act(async () => button(/^Upgrade$/)!.click());
-  await act(async () => (host.querySelector('input[type="checkbox"]') as HTMLInputElement).click());
-  await act(async () => button(/Continue to secure checkout/)!.click());
-  expect(host.querySelector('[role="alert"]')?.textContent).toBe('Checkout is not available yet.');
-});
-
-it('asks a signed-out visitor to sign in rather than showing a checkout', async () => {
-  mock.account = null;
-  await render();
-  await act(async () => button(/^Upgrade$/)!.click());
-  expect(host.textContent).toContain('Sign in above to upgrade');
+  expect(host.textContent).toContain('Plus and Pro are not on sale');
+  expect(host.textContent).toContain('$7.99 a month or $59 a year (planned)');
   expect(button(/Continue to secure checkout/)).toBeUndefined();
+  expect(mock.start).not.toHaveBeenCalled();
+  expect(mock.eqs.some(([table]) => table === 'commercial_prices')).toBe(false);
 });
 
 it('shows Plus when paid, and cancels it from the same place', async () => {
@@ -136,9 +89,36 @@ it('shows Plus when paid, and cancels it from the same place', async () => {
   expect(button(/Cancel membership/)).toBeUndefined();
 });
 
+it('directs a missing-tax-location issue to the address portal without calling it a card failure', async () => {
+  mock.tables.subscriptions = [{
+    id: 's1', plan_code: 'plus', status: 'active', current_period_end: '2026-10-29T12:00:00Z',
+    cancel_at_period_end: false, billing_issue: 'address_required',
+  }];
+  await render();
+  expect(host.textContent).toContain('Stripe needs your current billing address to calculate tax');
+  expect(host.textContent).toContain('your card has not failed');
+  expect(host.textContent).not.toContain('Your last payment did not go through');
+  expect(button(/Receipts, invoices and payment method/)).toBeDefined();
+});
+
+it('opens hosted receipts and invoices for a current or former subscriber', async () => {
+  const go = vi.fn();
+  vi.stubGlobal('location', { ...window.location, search: '', assign: go });
+  try {
+    mock.tables.subscriptions = [{ id: 's0', plan_code: 'plus', status: 'ended', current_period_end: '2026-08-29T12:00:00Z' }];
+    mock.portal.mockResolvedValue({ kind: 'redirect', url: 'https://billing.stripe.com/p/session/live_1' });
+    await render();
+    await act(async () => button(/Receipts, invoices and payment method/)!.click());
+    expect(mock.portal).toHaveBeenCalledWith('tok');
+    expect(go).toHaveBeenCalledWith('https://billing.stripe.com/p/session/live_1');
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+
 it('uses only real, named buttons, none disabled', async () => {
   await render();
-  await act(async () => button(/^Upgrade$/)!.click());
+  await act(async () => button(/^View planned Plus$/)!.click());
   for (const b of host.querySelectorAll('button')) {
     expect(b.hasAttribute('disabled'), b.textContent ?? '').toBe(false);
     expect((b.textContent ?? '').trim().length).toBeGreaterThan(0);
@@ -187,15 +167,16 @@ it('keeps Plus on screen, and says why, when the cancellation is refused', async
   expect(button(/^Cancel Plus$/)).toBeDefined();
 });
 
-it('opens with the upgrade showing when Today’s “See Plus” brought the person here', async () => {
+it('consumes a stale upgrade handoff without exposing checkout', async () => {
   sessionStorage.setItem('semester.open-upgrade', '1');
   const scrolled = vi.fn();
   Element.prototype.scrollIntoView = scrolled;
   await render();
   expect(scrolled).toHaveBeenCalled();
   expect(document.activeElement?.getAttribute('aria-labelledby')).toBe('membership-title');
-  expect(button(/^Upgrade$/)!.getAttribute('aria-expanded')).toBe('true');
-  expect(button(/Continue to secure checkout/)).toBeDefined();
+  expect(button(/^View planned Plus$/)!.getAttribute('aria-expanded')).toBe('true');
+  expect(button(/Continue to secure checkout/)).toBeUndefined();
+  expect(host.textContent).toContain('Nothing has been charged');
   expect(sessionStorage.getItem('semester.open-upgrade')).toBeNull();
 });
 
@@ -245,10 +226,11 @@ it('shows no price to a signed-in person until their subscription has been read'
   }
 });
 
-it('does not leave a signed-in person on "Checking your plan" when the catalog read rejects', async () => {
+it('does not read the sale catalog while acquisition is held', async () => {
   mock.throwing.add('commercial_prices');
   await render();
   expect(host.textContent).not.toContain('Checking your plan');
-  expect(host.textContent).toContain('could not check your membership');
-  expect(button(/^Upgrade$/)).toBeUndefined();
+  expect(host.textContent).toContain('Plus and Pro are not on sale');
+  expect(button(/^View planned Plus$/)).toBeDefined();
+  expect(mock.eqs.some(([table]) => table === 'commercial_prices')).toBe(false);
 });

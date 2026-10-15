@@ -41,7 +41,10 @@ export function AdvisorSharedView({ signedIn }: { signedIn: boolean }) {
         if ((e.currentTarget as HTMLDetailsElement).open && list === null) load();
       }}
     >
-      <summary>For advisors: meetings shared with you</summary>
+      <summary>Caseload</summary>
+      <p className="portal-muted">
+        Plans students shared with you. This is not every student at your school, and nothing they did not choose to share is here.
+      </p>
       {error ? <p role="alert">{error}</p> : null}
       {open ? (
         <article className="advisor-view-share" aria-label={`Shared by ${open.row.shared_as || 'a student'}`}>

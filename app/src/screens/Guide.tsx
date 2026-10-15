@@ -1287,7 +1287,7 @@ function Worked({ example }: { example: Example }) {
             </li>
           ))}
         </ol>
-        <div style={{ ...body, color: 'var(--app-ink)' }}>{e.result}</div>
+        <div style={{ ...body, color: 'var(--app-fg)' }}>{e.result}</div>
       </>
     );
   }
@@ -1507,26 +1507,27 @@ function Script({
    */
   derived?: Transcript;
 }) {
-  const [script, setScript] = useState<Transcript | null>(null);
+  const [loaded, setLoaded] = useState<{ courseId: string; transcript: Transcript | null }>({
+    courseId: '',
+    transcript: null,
+  });
   const wanted = hasTranscript(courseId, episodeId);
+  const script =
+    derived?.episode === episodeId
+      ? derived
+      : loaded.courseId === courseId && loaded.transcript?.episode === episodeId
+        ? loaded.transcript
+        : null;
 
   useEffect(() => {
-    if (!wanted) {
-      setScript(null);
-      return;
-    }
-    // Nothing to fetch: a derived script is text already, so it is shown on
-    // the first paint rather than after a round trip that would not happen.
-    if (derived) {
-      setScript(derived.episode === episodeId ? derived : null);
-      return;
-    }
+    if (!wanted || derived) return;
+    // Derived text bypasses this effect and appears on the first paint. Only
+    // a stored transcript needs the asynchronous course lookup below.
     let live = true;
     void load(courseId).then((t) => {
-      // The episode is checked as well as the course: an edition without a
-      // script must not be given the podcast's, which would be a transcript
-      // of a different recording presented as this one's.
-      if (live) setScript(t?.episode === episodeId ? t : null);
+      // The render path checks both course and episode before presenting it:
+      // an edition without a script must not be given the podcast's.
+      if (live) setLoaded({ courseId, transcript: t });
     });
     return () => {
       live = false;
@@ -1633,7 +1634,10 @@ function Listen() {
   const { state, dispatch, catalog } = useStore();
   const { guide, updates } = useLive(state.guideId);
   const addedSince = updates.reduce((n, u) => n + u.cards.length, 0);
-  const pod = catalog.podcast[state.guideId];
+  // A deep link can render once before the dynamically loaded sample catalog
+  // arrives. Keep Listen usable during that hand-off instead of throwing into
+  // the screen boundary while `settleCourse` waits for the requested course.
+  const pod = catalog.podcast[state.guideId] ?? { blurb: '', editions: [] };
   /*
    * Drawn rather than native, and the element is not here.
    *

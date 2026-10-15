@@ -82,6 +82,26 @@ describe('with Registration Day Mode on', () => {
     expect(host.textContent).toContain('3 credits selected, 9 under your 12-credit target');
   });
 
+  it('estimates the term\'s load from the student\'s own numbers, as an estimate and never a verdict', () => {
+    mount(true);
+    const load = host.querySelector('#regday-load')!.closest('section')!;
+    expect(load.textContent).toContain('3 credits in the plan.');
+    expect(load.textContent).toContain('Estimated 6 hours a week');
+    expect(load.textContent).toContain('not a credit check');
+    expect(load.textContent).toContain('Not checked yet: your school’s credit limits');
+    expect(load.querySelector('[data-source="estimated"]')).not.toBeNull();
+    expect(load.textContent).not.toMatch(/not allowed|must|denied/i);
+
+    type(load.querySelector<HTMLInputElement>('input[aria-label="Fewest credits my school asks for full-time"]')!, '12');
+    type(load.querySelector<HTMLInputElement>('input[aria-label="Hours a week I can study after work and travel"]')!, '5');
+    expect(stored().minCredits).toBe(12);
+    expect(stored().studyHours).toBe(5);
+    const after = host.querySelector('#regday-load')!.closest('section')!;
+    expect(after.textContent).toContain('9 credits under the 12-credit minimum you entered');
+    expect(after.textContent).toContain('1 hour more than the 5 you said you have');
+    expect(after.textContent).toContain('Nothing here stops you from registering');
+  });
+
   it('keeps an https address for the official system and refuses anything else', () => {
     mount(true);
     const field = () => host.querySelector<HTMLInputElement>('input[aria-label="Your school’s registration system address"]')!;

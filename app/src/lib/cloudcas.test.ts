@@ -77,7 +77,18 @@ function makeDb() {
     return b;
   };
 
-  return { tables, refuse, db: { from } };
+  const identity = { id: 'u' };
+  return {
+    tables,
+    refuse,
+    identity,
+    db: {
+      from,
+      auth: {
+        getUser: async () => ({ data: { user: { id: identity.id } }, error: null }),
+      },
+    },
+  };
 }
 
 let harness: ReturnType<typeof makeDb>;
@@ -104,6 +115,17 @@ afterEach(() => {
 const econ = (note: string) => ({ id: 'econ', data: { code: 'ECON', note } });
 const stateData = () => harness.tables.state[0]?.data;
 const courseData = (id: string) => harness.tables.courses.find((r) => r.id === id)?.data;
+
+describe('an account read before authenticated identity is ready', () => {
+  it('refuses an empty-looking pull when the client proves a different account', async () => {
+    const { push, pull } = await load();
+    await push('u', { tasks: [{ id: 'remote', title: 'From the account' }] }, []);
+    harness.identity.id = 'another-account';
+
+    await expect(pull('u')).rejects.toThrow(/signed-in account changed/i);
+    expect(stateData()).toEqual({ tasks: [{ id: 'remote', title: 'From the account' }] });
+  });
+});
 
 describe('a push over a copy this device has read', () => {
   it('lands, and reports the stamp the database wrote', async () => {
@@ -237,5 +259,108 @@ describe('a write the database refuses outright', () => {
     const { code } = explainSync(e);
     expect(code).toBe('VALIDATION_ERROR');
     expect(retriesOnItsOwn(code)).toBe(false);
+  });
+});
+
+describe('a push sends only the courses that changed', () => {
+  /*
+   * Every push used to rewrite every course, and on the load harness that
+   * was where capacity gave first. A course the database already holds, at
+   * the stamp this device names, is not sent. The stamp it had is the one it
+   * keeps, in the table and in what the push returns.
+   */
+  const hist = (note: string) => ({ id: 'hist', data: { code: 'HIST', note } });
+  const stampOf = (id: string) => harness.tables.courses.find((r) => r.id === id)?.updated_at;
+
+  it('leaves an unchanged course unwritten and carries its stamp', async () => {
+    const { push } = await load();
+    const first = await push('u', { v: 1 }, [econ('a'), hist('a')]);
+    const histAt = stampOf('hist');
+    const second = await push('u', { v: 2 }, [econ('b'), hist('a')], [], first);
+    expect(stampOf('hist')).toBe(histAt);
+    expect(second.courses.hist).toBe(histAt);
+    expect(courseData('econ')).toEqual({ code: 'ECON', note: 'b' });
+    expect(second.courses.econ).not.toBe(first.courses.econ);
+    // And the carried stamp is good for the push after: no insert, no Stale.
+    await push('u', { v: 3 }, [econ('b'), hist('c')], [], second);
+    expect(courseData('hist')).toEqual({ code: 'HIST', note: 'c' });
+  });
+
+  it('knows a pulled course as unchanged, whatever order jsonb kept its keys in', async () => {
+    const { push, pull } = await load();
+    await push('u', {}, [hist('a')]);
+    // jsonb does not keep key order.
+    harness.tables.courses[0].data = { note: 'a', code: 'HIST' };
+    const read = (await pull('u')).seen;
+    const at = stampOf('hist');
+    await push('u', { v: 1 }, [hist('a')], [], read);
+    expect(stampOf('hist')).toBe(at);
+  });
+
+  it('still writes a course that changed back to what it was', async () => {
+    const { push } = await load();
+    const one = await push('u', {}, [hist('a')]);
+    const two = await push('u', {}, [hist('b')], [], one);
+    await push('u', {}, [hist('a')], [], two);
+    expect(courseData('hist')).toEqual({ code: 'HIST', note: 'a' });
+  });
+
+  it('writes an unchanged course again when the stamp it names is not the one it last confirmed', async () => {
+    // A device holding stamps it did not get from this module (restored from
+    // disk after a reload, say) cannot vouch that the row is unchanged, so the
+    // compare-and-swap runs and says Stale if the row moved.
+    const { push, isStale } = await load();
+    const one = await push('u', {}, [hist('a')]);
+    harness.tables.courses[0].data = { code: 'HIST', note: 'elsewhere' };
+    harness.tables.courses[0].updated_at = '2026-09-27T13:00:00.000000+00:00';
+    const fromDisk = { ...one, courses: { hist: '2026-09-27T12:59:00.000000+00:00' } };
+    await expect(push('u', {}, [hist('a')], [], fromDisk)).rejects.toSatisfy(isStale);
+    expect(courseData('hist')).toEqual({ code: 'HIST', note: 'elsewhere' });
+  });
+
+  it('loses nothing when another device changed the course it skips', async () => {
+    // The skipped row is not written, and the state row, which every push
+    // moves, refuses the push.
+    const { push, isStale } = await load();
+    const both = await push('u', { v: 'start' }, [hist('start')]);
+    // The phone, a module this one never hears from, pushes both rows.
+    harness.tables.state[0].data = { v: 'phone' };
+    harness.tables.state[0].updated_at = '2026-09-27T13:00:00.000000+00:00';
+    harness.tables.courses[0].data = { code: 'HIST', note: 'phone' };
+    harness.tables.courses[0].updated_at = '2026-09-27T13:00:01.000000+00:00';
+    await expect(push('u', { v: 'laptop' }, [hist('start')], [], both)).rejects.toSatisfy(isStale);
+    expect(stateData()).toEqual({ v: 'phone' });
+    expect(courseData('hist')).toEqual({ code: 'HIST', note: 'phone' });
+  });
+});
+
+describe('while the engine owns this device’s tasks', () => {
+  const owns = (on: boolean) =>
+    vi.stubGlobal('localStorage', { getItem: (k: string) => (on && k === 'semester.engine.tasks' ? 'on' : null), setItem() {}, removeItem() {} });
+
+  it('does not read the account’s old copy of them back, and still sends this device’s', async () => {
+    vi.stubEnv('VITE_OFFLINE_ENGINE_TASKS', 'production');
+    const { push, pull } = await load();
+    owns(true);
+    await push('u', { v: 1, tasks: [{ id: 'T1', title: 'mine' }] }, []);
+    // What is stored carries them — a device that has not opted in keeps receiving them.
+    expect(stateData()).toEqual({ v: 1, tasks: [{ id: 'T1', title: 'mine' }] });
+    // What is read back does not: another device's stale mirror must not resurrect what the engine deleted.
+    expect((await pull('u')).state).toEqual({ v: 1 });
+  });
+
+  it('reads them as ever when the build\'s module flag is off, even on a device that opted in', async () => {
+    const { push, pull } = await load();
+    owns(true);
+    await push('u', { v: 1, tasks: [{ id: 'T1', title: 'mine' }] }, []);
+    expect((await pull('u')).state).toEqual({ v: 1, tasks: [{ id: 'T1', title: 'mine' }] });
+  });
+
+  it('reads them as ever with the device switch off', async () => {
+    vi.stubEnv('VITE_OFFLINE_ENGINE_TASKS', 'production');
+    const { push, pull } = await load();
+    owns(false);
+    await push('u', { v: 1, tasks: [{ id: 'T1', title: 'mine' }] }, []);
+    expect((await pull('u')).state).toEqual({ v: 1, tasks: [{ id: 'T1', title: 'mine' }] });
   });
 });

@@ -29,6 +29,8 @@ export interface ExperienceFlags {
    * synthetic preview account must not send.
    */
   supportTickets: FeatureState;
+  /** Support-reply email notices; requires completed email-vendor approval. */
+  supportEmailNotices: FeatureState;
   /**
    * The staff campaign manager (lib/gtm, gtm_* tables). RLS decides what each
    * account sees; activation also needs `module.campaign_manager` in production.
@@ -40,6 +42,16 @@ export interface ExperienceFlags {
    */
   migrationCenter: FeatureState;
   /**
+   * The staff Workflow Builder (lib/workflow, workflow_versions, D-1018). RLS and
+   * the second-person publish rule decide what each account may do.
+   */
+  workflowBuilder: FeatureState;
+  /**
+   * The staff Configuration Studio (lib/config, school_config_versions, D-1011).
+   * RLS and the second-person publish rule decide what each account may do.
+   */
+  configurationStudio: FeatureState;
+  /**
    * The staff academic-record ledger (lib/record, academic_record_* tables,
    * D-145). RLS and the approval trigger decide what each account may do.
    */
@@ -49,21 +61,40 @@ export interface ExperienceFlags {
    * D-146). RLS and the approval trigger decide what each account may do.
    */
   studentAccounts: FeatureState;
+  /**
+   * Adding, ticking, moving and deleting a task go through `src/domains/tasks`
+   * (phase 4 of docs/architecture/modularization/03-refactoring-sequence.md,
+   * D-1149), which checks the title and the day and refuses a request the
+   * policy refuses. Only `production` switches it on; every other state is the
+   * legacy reducer, exactly as before. A domain refusal or exception falls back
+   * to the legacy dispatch, so no action is lost. Never inherited from an
+   * institutional preview: it is a developer's instrument.
+   */
+  domainTasks: FeatureState;
 }
 
 const STATES: readonly FeatureState[] = ['off', 'preview', 'sandbox', 'production'];
 
-function featureState(env: PreviewEnv, key: string, preview: boolean): FeatureState {
+function featureState(env: PreviewEnv, key: string, preview: boolean, fallback: FeatureState = 'off'): FeatureState {
   const value = env[key];
-  if (value === undefined) return preview ? 'preview' : 'off';
+  if (value === undefined) return preview ? 'preview' : fallback;
   return STATES.includes(value as FeatureState) ? (value as FeatureState) : 'off';
+}
+
+/** Exact opt-in for controls whose release gate is recorded as a boolean. */
+function booleanFeatureState(env: PreviewEnv, key: string): FeatureState {
+  return env[key] === 'true' ? 'production' : 'off';
 }
 
 export function experienceFlags(env: PreviewEnv): ExperienceFlags {
   const preview = institutionalPreview(env);
   return {
     semesterIntelligence: featureState(env, 'VITE_SEMESTER_INTELLIGENCE', preview),
-    journeyNavigation: featureState(env, 'VITE_JOURNEY_NAVIGATION', preview),
+    // D-003 is no longer a dormant experiment. The five destinations are the
+    // product's canonical information architecture; an explicit `off` remains
+    // available as a rollback, but a normal build now ships the one-system
+    // navigation instead of each device's legacy collection of tabs.
+    journeyNavigation: featureState(env, 'VITE_JOURNEY_NAVIGATION', preview, 'production'),
     adaptiveLearning: featureState(env, 'VITE_ADAPTIVE_LEARNING', preview),
     careerSkillsGraph: featureState(env, 'VITE_CAREER_SKILLS_GRAPH', preview),
     multimodalCapture: featureState(env, 'VITE_MULTIMODAL_CAPTURE', preview),
@@ -73,10 +104,14 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     institutionalOperations: featureState(env, 'VITE_INSTITUTIONAL_OPERATIONS', preview),
     privateBeta: featureState(env, 'VITE_PRIVATE_BETA', false),
     supportTickets: featureState(env, 'VITE_SUPPORT_TICKETS', false),
+    supportEmailNotices: booleanFeatureState(env, 'VITE_SUPPORT_EMAIL_NOTICES'),
     campaignManager: featureState(env, 'VITE_CAMPAIGN_MANAGER', preview),
     migrationCenter: featureState(env, 'VITE_MIGRATION_CENTER', preview),
+    workflowBuilder: featureState(env, 'VITE_WORKFLOW_BUILDER', preview),
+    configurationStudio: featureState(env, 'VITE_CONFIGURATION_STUDIO', preview),
     recordLedger: featureState(env, 'VITE_RECORD_LEDGER', preview),
     studentAccounts: featureState(env, 'VITE_STUDENT_ACCOUNTS', preview),
+    domainTasks: featureState(env, 'VITE_DOMAIN_TASKS', false),
   };
 }
 
@@ -114,6 +149,9 @@ export const MODULE_FLAG_ENV = {
   demand_forecasting: 'VITE_DEMAND_FORECASTING',
   semester_wrapped: 'VITE_SEMESTER_WRAPPED',
   offline_mode: 'VITE_OFFLINE_MODE',
+  // Personal tasks through the offline-sync engine (D-1190). Tasks only, on purpose: a flag whose reach grows
+  // silently is the kind this registry exists to prevent, so the next class gets its own.
+  offline_engine_tasks: 'VITE_OFFLINE_ENGINE_TASKS',
   trust_center: 'VITE_TRUST_CENTER',
   // Faculty Course Studio (docs/FACULTY-COURSE-STUDIO-DESIGN.md, D-100 F6):
   // the studio for faculty and, for students, the instructor's published rules
@@ -128,7 +166,11 @@ export type ModuleFlags = Record<ModuleFlag, FeatureState>;
 export function moduleFlags(env: PreviewEnv): ModuleFlags {
   const flags = {} as ModuleFlags;
   for (const name of MODULE_FLAG_NAMES) {
-    flags[name] = featureState(env, MODULE_FLAG_ENV[name], false);
+    // The shared Action Center is the default Today experience. It is the one
+    // action system all modules write into, not an optional product module.
+    // Keep the exact environment variable as a fail-safe rollback.
+    const fallback = name === 'today_action_center' ? 'production' : 'off';
+    flags[name] = featureState(env, MODULE_FLAG_ENV[name], false, fallback);
   }
   return flags;
 }

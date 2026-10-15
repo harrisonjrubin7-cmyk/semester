@@ -399,6 +399,7 @@ main:focus {
 
 .tool {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
   max-width: 760px;
 }
@@ -429,6 +430,14 @@ main:focus {
 
 textarea.tool-input {
   resize: vertical;
+}
+
+.tool-stack {
+  min-width: 60rem;
+}
+
+.tool-stack .tool-input {
+  width: 8rem;
 }
 
 .tool-rows {

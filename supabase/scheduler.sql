@@ -80,6 +80,42 @@ select cron.alter_job(
   active := false
 );
 
+-- ── Support reply email outbox ───────────────────────────────────────────
+--
+-- A reply commits its generic email-notice intent to
+-- `support_notification_outbox` in the same transaction. The browser asks
+-- for an immediate delivery, while this one-minute worker recovers a
+-- browser crash, lost connection or provider refusal. Resend's idempotency
+-- key is the message id, so overlapping immediate and scheduled attempts do
+-- not produce two notices. The existing first-party sender secret is reused;
+-- support-reply-notify accepts it only through CRON_SECRET.
+select cron.schedule(
+  'support-reply-notify',
+  '* * * * *',
+  $job$
+    select net.http_post(
+      url := 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/support-reply-notify',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || (
+          select decrypted_secret from vault.decrypted_secrets where name = 'push_cron_secret'
+        )
+      ),
+      body := '{}'::jsonb,
+      timeout_milliseconds := 20000
+    );
+  $job$
+);
+
+-- Delivery mechanics and sender configuration were exercised on 3 October
+-- 2026, but Resend's vendor review and executed terms/DPA are not on file.
+-- Keep the worker parked until that approval is recorded and the function's
+-- SUPPORT_NOTIFY_VENDOR_APPROVED switch is enabled.
+select cron.alter_job(
+  (select jobid from cron.job where jobname = 'support-reply-notify'),
+  active := false
+);
+
 
 -- ── Clearing out old tombstones ───────────────────────────────────────────
 --
@@ -127,6 +163,32 @@ select cron.schedule(
   'tombstones',
   '17 4 * * 0',
   $job$select public.sweep_tombstones('90 days')$job$
+);
+
+-- ── Support ticket retention ─────────────────────────────────────────────
+--
+-- Resolved and student-closed tickets age out after 180 days. The sweep
+-- preserves every ticket whose account is under an active legal hold; child
+-- messages and notification intents follow the ticket by foreign-key cascade.
+select cron.schedule(
+  'support-ticket-retention',
+  '43 5 * * *',
+  $job$select private.sweep_support_ticket_retention()$job$
+);
+select cron.alter_job(
+  (select jobid from cron.job where jobname = 'support-ticket-retention'),
+  active := true
+);
+
+-- Spent and stale hand-offs. A hand-off lives fifteen minutes at most and is used
+-- once, so a row that is consumed, expired or revoked is evidence of nothing a week
+-- later. `sweep_handoffs` marks the stale ones expired and deletes anything finished
+-- more than seven days ago. It needs no secret and no endpoint, and is revoked from
+-- every client role (20261006000000_onboarding_journeys_and_handoff.sql).
+select cron.schedule(
+  'handoffs',
+  '31 3 * * *',
+  $job$select public.sweep_handoffs()$job$
 );
 
 -- AI provider reservations expire after five minutes inside the budget
@@ -326,6 +388,64 @@ select cron.schedule(
 select cron.alter_job(
   (select jobid from cron.job where jobname = 'integration-sync'),
   active := true
+);
+
+-- ── Institution: the access saga worker ───────────────────────────────────
+--
+-- Every five minutes, pg_net calls the `access-saga-tick` Edge Function, which
+-- asks the database which access sagas are due (`public.access_saga_due`,
+-- 20261012030000) and runs one runner tick for each
+-- (`app/server/institution/access-saga-tick.ts`). Minutes 1, 6, 11 … 56: clear
+-- of `push` (:00, :15, :30, :45) and `integration-sync` (:07, :22, :37, :52),
+-- so no two ticks are in flight together. The runner's lease is 30 s and the
+-- tick's budget 20 s, both well inside the gap.
+--
+-- The bearer token is `access_saga_cron_secret`, generated below like
+-- `integration_cron_secret`, and like it never set on the function: the
+-- function asks the database whether a token matches
+-- (`public.access_saga_tick_authorized`, 20261012040000), so Vault is its
+-- only home and rotating it is one update to one row.
+--
+-- Nothing moves until participants are registered in
+-- `app/server/institution/access-saga-registry.ts`, which holds null; each
+-- tick then answers `outcome: unregistered` with the count of due sagas and
+-- claims none of them.
+do $$
+begin
+  if not exists (select 1 from vault.secrets where name = 'access_saga_cron_secret') then
+    perform vault.create_secret(
+      translate(encode(gen_random_bytes(32), 'base64'), '+/=', '-_'),
+      'access_saga_cron_secret',
+      'Bearer token the access-saga-worker pg_cron job sends to the access-saga-tick Edge Function, which checks it against this row.',
+      null
+    );
+  end if;
+end $$;
+
+select cron.schedule(
+  'access-saga-worker',
+  '1-56/5 * * * *',
+  $job$
+    select net.http_post(
+      url := 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/access-saga-tick',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || (
+          select decrypted_secret from vault.decrypted_secrets where name = 'access_saga_cron_secret'
+        )
+      ),
+      body := '{}'::jsonb,
+      timeout_milliseconds := 60000
+    );
+  $job$
+);
+
+-- Parked until the function is deployed and the runbook's test request has
+-- answered 200 with `outcome: unregistered` (DEPLOY.md → access-saga-worker),
+-- as `integration-sync` was. The one statement that unparks it is there.
+select cron.alter_job(
+  (select jobid from cron.job where jobname = 'access-saga-worker'),
+  active := false
 );
 
 -- ── Housekeeping the code was already waiting for ─────────────────────────

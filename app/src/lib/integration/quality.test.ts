@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { AdapterDeclaration, EntityMapping } from './adapter';
+import { governanceEnvelope } from './governance-envelope';
 import { MOCK_SIS, SIS_FIXTURES } from './mock-sis';
 import type { CanonicalReference, ExternalRecord, IngestError } from './pipeline';
 import { redactReference } from './redact';
@@ -180,7 +181,8 @@ describe('duplicate candidates', () => {
     tenantId: 'vu', canonicalEntity: 'course_section', canonicalId: 'c1', subjectUserId: null,
     sourceSystem: 'Mock SIS Fixture 1.0', sourceRecordId: 's1', sourceTimestamp: '2026-09-27T06:00:00Z',
     sourceOfTruth: 'Registrar / SIS', classification: 'T0', freshness: 'live', mappingVersion: 1, confidence: 1,
-    externalDeletedAt: null, values: { term: '202710', course: 'ECON 1010', section: '01' }, ...over,
+    externalDeletedAt: null, metadataOnly: false, values: { term: '202710', course: 'ECON 1010', section: '01' },
+    governance: governanceEnvelope(MOCK_SIS, MOCK_SIS.entities[0], 'conn_1', NOW), ...over,
   });
 
   it('groups two ids that name the same section, and suggests the more recent', () => {

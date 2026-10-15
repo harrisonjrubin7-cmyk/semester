@@ -433,11 +433,24 @@ export function decide(c: ModerationCase, actor: Actor, action: DecisionAction, 
   return audit(next, actor, `decided:${action}`, reasonCode, 'decided', now);
 }
 
+/**
+ * How long after a decision its subject may appeal it. Measured from the
+ * decision, not from the report. The same number is in the database
+ * (`appeal_community_decision`, `my_community_notices`), and
+ * `appealwindow.test.ts` holds the two to each other. The words are what the
+ * student notice says: it carries no digits, so that a number in it can only
+ * ever be a score.
+ */
+export const APPEAL_RULES = { filingWindowDays: 30, filingWindowWords: 'thirty days' } as const;
+
 export function fileAppeal(c: ModerationCase, byAccount: string, now: Date): ModerationCase {
   if (c.status !== 'decided') throw new ModerationRefused('Only a decided case can be appealed.');
   const last = c.decisions[c.decisions.length - 1];
   if (!last || last.action === 'allow' || last.action === 'close_no_action') {
     throw new ModerationRefused('There is nothing to appeal.');
+  }
+  if (now.getTime() - Date.parse(last.at) > APPEAL_RULES.filingWindowDays * 86_400_000) {
+    throw new ModerationRefused('The appeal window has closed.');
   }
   return audit({ ...c, appeal: { filedAt: now.toISOString() } }, { id: byAccount, kind: 'student' }, 'appeal_filed', 'appeal', 'appealed', now);
 }
@@ -465,7 +478,7 @@ export function studentNotice(c: ModerationCase): string | null {
   const last = c.appeal?.decision ?? c.decisions[c.decisions.length - 1];
   if (!last) return null;
   const appealable = !c.appeal && last.action !== 'allow' && last.action !== 'close_no_action';
-  const tail = appealable ? ' You can appeal this decision.' : '';
+  const tail = appealable ? ` You can appeal this decision within ${APPEAL_RULES.filingWindowWords}.` : '';
   switch (last.action) {
     case 'remove':
       return `Your post was removed because it broke the community rules (${last.reasonCode}).${tail}`;

@@ -1,7 +1,8 @@
 # Supporter and family privacy model
 
-Part 11 of the expansion command. Phase 5. **Needs a policy decision on minors
-before building** (see below).
+Part 11 of the expansion command. Phase 5. **Minimum age is decided (13, D-139,
+enforced); what a guardian may see and how a guardian is verified is not
+decided and needs counsel before the parent portal is built** (see below).
 
 ## What exists on main
 
@@ -24,7 +25,22 @@ access.
 
 ## In flight
 
-Nothing.
+Built and tested, not switched on for any school:
+
+- **Minimum age 13, and minors kept out of discovery, matching, messaging and
+  employer visibility until 18** (D-139; `supabase/migrations/20260929150000_minimum_age.sql`).
+  Enforced in the database.
+- **Guardian links for students 13 to 17**, recorded and verified by school
+  staff, readable only as the student's own and the guardian's own links,
+  ending on the day the student turns 18
+  (`supabase/migrations/20260930233000_k12_guardians.sql`,
+  `supabase/k12-guardians.check.sql`). `private.guardian_may_read` exists and
+  is tested; **nothing yet reads through it** — there is no parent portal.
+
+Not built, and not decided: the guardian consent model, what a guardian may
+see, and the evidence needed to verify a guardian (**[COUNSEL REQUIRED]**,
+P-06), and the wider minors posture in the privacy notice (**[COUNSEL
+REQUIRED]**, P-04). The supporter features below remain unbuilt.
 
 ## Entity plan
 

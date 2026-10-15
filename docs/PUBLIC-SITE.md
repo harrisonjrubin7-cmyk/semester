@@ -106,6 +106,19 @@ One page for the K–12 edition (D-141), printed from `lib/k12/edition.ts` and
 The site test holds the page to saying no district uses Semester, and to
 printing the baseline's answer rather than prose.
 
+## The advancement pages
+
+Two pages for alumni relations and fundraising (D-157), printed from
+`lib/advancement/edition.ts`:
+
+| Route | Says |
+|---|---|
+| `/solutions/advancement/` | *Alumni relations and fundraising.* Three parts, each *planned* with what it still needs; that no school uses it, no gift has been taken and no receipt issued; that wealth screening and predictive donor scoring are not planned; what it waits on (counsel, how a gift is paid, a price). |
+| `/alumni/` | *For graduates.* What a graduate can do today, which is not giving; what a school might add; that nothing on the page asks for a gift. |
+
+The site test holds both pages to saying nothing is built, forbids a
+solicitation, and holds the graduate page's "today" list free of giving.
+
 ## Rules the tests hold
 
 - One `<h1>`, one `<main>`, a skip link, and a unique title and description on
@@ -128,8 +141,13 @@ printing the baseline's answer rather than prose.
   time it cannot keep. Pricing states currency, billing period, tax,
   cancellation and refunds before anything is for sale. `/legal/` lists every
   policy with its status; none is in force, and the page says so.
-- The site sets no cookie, has no form (`form-action 'none'`), and stores
-  nothing anyone types.
+- **This describes the app's public pages** (`app/src/site/`, prerendered into
+  `app/dist-site/`): they set no cookie, have no form (`form-action 'none'`),
+  and store nothing anyone types. **It does not describe `company-site/`**, a
+  separate static site with lead forms that post to the `lead-intake` function
+  and are stored in `site_leads` (name, work email, organization, role,
+  message; no IP address). `site_leads` has no time-based purge and no retention
+  period is decided (`RETENTION.md`; **[COUNSEL REQUIRED]** for the period).
 - The site's colours equal the app's `:root` tokens.
 - Only tool pages have a script: exactly one, `tools/tools.js`, same-origin,
   nothing inline. Their policy is `script-src 'self'` and `connect-src 'none'`,

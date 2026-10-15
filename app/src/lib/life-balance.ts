@@ -4,7 +4,7 @@ import type { Action } from './actions';
 import { activityKind, type ActivityKind, type Commitment } from './activities';
 import type { AthleticEvent } from './athletics';
 import { dateToIso } from './date';
-import { finite, obj } from './device-library';
+import type { Settings } from './life-balance-storage';
 import { percentOf } from './grades';
 import { estimate, type Spent } from './pace';
 import type { Floor, Rest } from './rest';
@@ -14,6 +14,8 @@ import { appointmentsOn, lengthOf } from './select';
 import type { SourceLabel } from './source';
 import type { Appointment, DatedItem } from './types';
 import { WAKING_HOURS, type Window } from './windows';
+
+export { EMPTY_SETTINGS, LIFE_BALANCE_KEY, readSettings, type Commute, type Settings } from './life-balance-storage';
 
 /**
  * Academic life balance (Phase E, `academic_life_balance`) and the Crunch
@@ -59,38 +61,6 @@ export interface Span {
   source: SourceLabel;
   /** A rest block the student protected — theirs, not a commitment, so never part of a long run or a conflict. */
   rest?: boolean;
-}
-
-export interface Commute {
-  /** Weekdays it happens on, 0 = Sunday. */
-  days: number[];
-  /** One way. The day counts it twice. */
-  minutesEachWay: number;
-}
-
-export interface Settings {
-  commute: Commute | null;
-}
-
-export const EMPTY_SETTINGS: Settings = { commute: null };
-export const LIFE_BALANCE_KEY = 'semester.life-balance.v1';
-
-/** A reader for the device store; throws on anything it did not write, so the bytes are kept. */
-export function readSettings(value: unknown): Settings {
-  if (!obj(value)) throw new Error('Saved balance settings are not valid.');
-  if (value.commute === null || value.commute === undefined) return { commute: null };
-  const c = value.commute;
-  if (
-    !obj(c) ||
-    !Array.isArray(c.days) ||
-    c.days.length > 7 ||
-    !c.days.every((d) => Number.isInteger(d) && (d as number) >= 0 && (d as number) <= 6) ||
-    new Set(c.days).size !== c.days.length ||
-    !finite(c.minutesEachWay, 0, 240)
-  ) {
-    throw new Error('A saved commute is not valid.');
-  }
-  return { commute: { days: [...(c.days as number[])].sort(), minutesEachWay: c.minutesEachWay } };
 }
 
 export interface Input {
@@ -417,6 +387,68 @@ export function summarizeWeek(input: Input, start: Date): Week {
 /* ── Crunch Week Forecast ─────────────────────────────────────────────── */
 
 /** How far ahead the forecast looks: from a week out, so there is time to act, to four weeks. */
+export type WorkloadPressureState = 'clear' | 'manageable' | 'tight' | 'more_than_open' | 'unknown';
+
+/** One day's due-work estimate against the time the student has left open. */
+export interface WorkloadPressureDay {
+  iso: string;
+  estimatedMinutes: number;
+  openMinutes: number;
+  balanceMinutes: number;
+  known: number;
+  unknown: number;
+  state: WorkloadPressureState;
+  /** True only when every deadline in the figure was confirmed against its source. */
+  confirmed: boolean;
+}
+
+/**
+ * Planned work pressure, never a prediction about the student.
+ *
+ * The estimate comes only from the student's own completed work, through
+ * `pace.estimate`. A kind of work they have never timed stays unknown and
+ * contributes no invented minutes. Open time comes from the same work
+ * windows, commitments, calendar and protected rest used by the week view.
+ *
+ * Work is compared on its due day. That is deliberately conservative and
+ * explainable: this does not pretend to know when the student will do it, and
+ * a study block is not silently treated as completed work. The screen can
+ * offer an earlier block, but only the student can place one.
+ */
+export function workloadPressure(input: Input, start: Date): WorkloadPressureDay[] {
+  const week = summarizeWeek(input, start);
+  const byId = new Map(input.items.map((item) => [item.id, item]));
+
+  return week.days.map((day) => {
+    const estimates = day.deadlines.map((deadline) => {
+      const item = byId.get(deadline.id);
+      return item ? estimate(input.spent, item.c, item.kind) : { minutes: 0, from: 0, basis: '' as const };
+    });
+    const known = estimates.filter((row) => row.from > 0).length;
+    const unknown = estimates.length - known;
+    const estimatedMinutes = estimates.reduce((sum, row) => sum + (row.from > 0 ? row.minutes : 0), 0);
+    const openMinutes = Math.max(0, Math.round(day.hours.open * 60));
+    const balanceMinutes = openMinutes - estimatedMinutes;
+    let state: WorkloadPressureState = 'clear';
+    if (day.deadlines.length > 0 && known === 0) state = 'unknown';
+    else if (estimatedMinutes > openMinutes / 0.7) state = 'more_than_open';
+    else if (estimatedMinutes > openMinutes) state = 'tight';
+    else if (known > 0) state = 'manageable';
+
+    return {
+      iso: day.iso,
+      estimatedMinutes,
+      openMinutes,
+      balanceMinutes,
+      known,
+      unknown,
+      state,
+      confirmed: day.deadlines.length > 0 && day.deadlines.every((deadline) => deadline.source !== 'needs_review'),
+    };
+  });
+}
+
+/** How far ahead the crunch forecast looks: from a week out, so there is time to act, to four weeks. */
 export const FORECAST_FROM_DAYS = 7;
 export const FORECAST_TO_DAYS = 28;
 /** A crunch is at least this many major deadlines inside this many days. */

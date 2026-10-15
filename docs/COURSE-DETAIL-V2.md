@@ -4,7 +4,7 @@
 With it off, the registration workspace's side panel is exactly as before, and
 a test holds that.
 
-**Destination:** My Path → `yes` › Search & plan › Course search. A result
+**Destination:** My Path → `yes` › Term plan › Course search. A result
 opens the page as:
 
 - **Under 1180px, a modal sheet.** Escape and Close return focus to the result.

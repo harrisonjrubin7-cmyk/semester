@@ -24,6 +24,144 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Operators can inspect Semester as one connected ecosystem
+
+For operators holding the console grant, **Semester Operations** now has a read-only **Connected ecosystem** tab after **Finance model**. It maps the supplied Personal Education OS, Institution Operating OS and Semester Company OS into one platform view, and lets an operator inspect all 26 workspace, 281 screen and 122 capability contracts. The view labels the handoff as specification evidence and does not claim that a provider, institution, data connection or privileged operation is authorized or enabled. Students and school administrators will notice nothing.
+
+### Volunteer post-removal votes show their consequence before submission
+
+Student volunteer moderators now see the reported post, their selected reason and the possible outcome before submitting **Remove it**. Because practice cases stay deliberately hidden among real reports, the preview distinguishes their effects: onboarding answers help decide whether the volunteer advances to active status and starts receiving real cases, while recent post-onboarding practice accuracy can move standing among active, probation and paused, including pausing queue access. For a real report, a second independent removal vote can remove the post immediately, a first vote waits and a disagreement goes to a professional reviewer. Cancel submits nothing. It also says the answer cannot be withdrawn or edited, while the author’s account, other posts and retained review evidence stay unchanged by a real-report vote. Keeping a post or adding a label still follows the existing review flow.
+
+### Housing keeps track of repairs you reported
+
+**Housing** now has a **Repairs you reported** section on the **My housing** tab. After you report something to housing (their portal, front desk or phone line), choose **Record a repair** and note what is wrong, where, how urgent it is, how you reported it and the reference number housing gave you. Pick when to check back: Semester suggests a time, or use the one housing gave you. When that time passes, the repair appears on **Today** as something to follow up. Update it with **Visit scheduled**, **It is fixed**, **Still not fixed** or **No longer needed**; **Remove** can be undone. Choosing **Emergency** first tells you to call housing or campus safety. Semester does not send anything to housing, and nothing you need to do changes.
+
+### Revoking volunteer access shows the consequences first
+
+Senior Trust & Safety reviewers now see a preview before revoking a student volunteer. It names the volunteer, says their moderation access ends immediately, identifies the unanswered review actions that will leave their queue, shows the reason that will be kept in programme history, and says the action cannot be undone by sending them back to calibration. The reviewer must type the volunteer handle before **Revoke access** is available. Cancel changes nothing; other volunteers, moderation cases, completed reviews and school settings are unchanged.
+
+### Workspace links now open the connected tools that already exist
+
+The app directory now has **Your workspaces** with direct links to Teaching and University services while preserving the current account and university. Server-reported grants add **Semester Operations** only for platform operators and **External listings** only for the current university. Permission checks show loading, empty, failed and retry states separately; changing accounts discards old capability and course-policy results. Company, investor and developer workflows remain explicitly unavailable rather than appearing as placeholder workspaces.
+
+### Toolkit work can travel in a device workspace backup
+
+Device workspace backups now include the signed-in account's Toolkit work: assignment workspaces, Research Studio projects, AI-use declarations and the separate Data Studio projects with their original imported data. Restoring checks the entire backup before writing anything and restores those records into the account doing the restore, not the account name from the old device. Research Studio's source, claim and project removal previews now say to create a device workspace backup first if you may need to restore the removed work; without one, it must still be re-entered from the originals.
+
+### Research Studio now explains claim removal before changing a project
+
+In **Research Studio**, **Remove claim** now opens the standard consequence preview before changing the device workspace. It names the claim's current evidence status and linked-source count, says that the claim and its source links will be removed, and keeps the sources, research question, search plan and other claims unchanged. Cancel starts focused and changes nothing. The preview says a device workspace backup created before removal can restore it; without one, the claim and its source links must be re-entered.
+
+### Research Studio now explains source removal before changing a project
+
+In **Research Studio**, **Remove source** now opens the standard consequence preview before changing the device workspace. It says that the evidence row will be removed from the project and detached from every linked claim, while the claim text, research question, search plan, other sources and original files remain. Cancel starts focused and changes nothing. The preview says a device workspace backup created before removal can restore it; without one, the source must be re-entered from the original.
+
+### Stopping a claimed family share now shows the full consequence and waits for receipts
+
+On **Family**, **Stop sharing** now opens the standard consequence preview before changing the account. It says which person's selected family items lose access, that Semester's stored copies are removed, and that the family plan, other people's shares, unused codes and read history remain. It also says copies already saved outside Semester cannot be recalled and that sharing again requires a new confirmed share. Cancel starts focused and writes nothing. Semester reports success only after the account returns the exact revoked grants and removed copies; if access ends but copy cleanup fails, the dialog stays open and says that partial result instead of claiming sharing did not stop.
+
+### Calling off an unused family share code now asks first
+
+On **Family**, calling off an unused share code now shows what will happen before the account is changed. The preview says the code stops working immediately, claimed family access is unaffected, the family plan and other codes stay unchanged, and a new code can be made later. Cancel starts focused and changes nothing. If the account does not return the exact revoked code, Semester keeps the choice open for retry instead of claiming the code was called off.
+
+### Revoking an advisor share waits for the account to confirm it
+
+In **Advisor meeting** and **Your data**, revoking a live advisor share now keeps the confirmation open until the account returns the exact updated share. If the share is stale, unavailable or refused, Semester leaves the choice open and says to refresh and retry instead of claiming the advisor lost access. The preview also says that the share and access log stay in the account, meeting preparation and official advising records do not change, and revocation cannot be undone; you can make a new share later.
+
+### Privileged platform accounts verify MFA before Semester opens staff tools
+
+An account with a live `platform_admin` or `support_agent` grant now verifies a second factor before Semester mounts any capability-backed tool, including tools outside **Semester Operations**. An enrolled authenticator-app or phone-code factor can be challenged; if neither exists, the step offers authenticator-app enrolment. A failed factor lookup has its own retry. The database also keeps those two grants dormant at `aal1` for capability checks and role-based approval requests. Accounts without either privileged role are unchanged. Production authentication configuration and recovery still require separate operational verification.
+
+### Courses you type stay on this device, and you can put them on a meeting agenda
+
+On first run, **Build your registration plan** takes a term and course codes. They stay on this device. While no catalog is imported, the Term plan lists them and says each one is not a section, a seat, or an enrollment. On My Path, registration readiness has a **Courses you named** row. **Add to my meeting** puts each code and term on your own advisor-meeting agenda. Nothing else from your record is copied, and nothing is sent to an advisor. If this build has advisor meetings turned on, that opens the Advisor meeting tab; otherwise the row says the codes are on your agenda. Naming a course does not register you, and you do not have to do anything if you have not named one.
+
+### Staff get a way into the operations console
+
+If your account holds the operations console grant (`console:operate` at platform scope), **Me** shows a **Semester Operations** row that opens the console. Nobody else sees it, and typing `#/console` still shows a one-line notice without the grant. Nothing for you to do; granting access is a separate, reviewed step in [`docs/OPERATOR-PROVISIONING.md`](docs/OPERATOR-PROVISIONING.md).
+
+### Account says where you are signed in, and signs one place out
+
+On **Account**, under **Sign-in and security**, a new **Where you are signed in** list shows each browser or phone signed in to your account: what it is (for example “Safari on iPhone”), when it signed in and when it was last active. This device is marked **This device** and has no button. Every other one has **Sign out**, which asks first. Signing one out stops it renewing its sign-in; it can keep working until the sign-in it already holds runs out, up to an hour. Signing out one place no longer means signing out all of them, though **Sign out other devices** is still there. If the list cannot be read it says so and offers to try again; it does not say you are signed in nowhere else. You do not have to do anything.
+
+### Your data says who can see your things
+
+On **Your data**, under a new **Who can see your things** heading, there is one list of everything you have opened to someone else and not yet closed: a support window, an advisor share, an athletic support share, family access and a guardian link your school recorded. Each entry says what they can see, when it ends (or that it has no end date), and which screen to end it on. Ending one is still done on the screen that made it; this list only reads. If one kind could not be read, the list names it and says it may still be open, instead of saying nobody has access. You do not have to do anything.
+
+### Advisors open a Caseload of plans students shared
+
+On the degree meeting tab, the folded list that was “For advisors: meetings shared with you” is now Caseload. It still lists only plans a student chose to share, and it says it is not every student at the school. Nothing else about a student is added to it.
+
+### The operations console has a Trust controls tab
+
+For operators holding the console grant: a new **Trust controls** tab, after Launch readiness, lists the integrated controls that protect students and institutions: its family, whether it is enforced, partial, documented only or absent, the files that fail the build if the control is removed, and what is still missing. It is read-only and says it is a claim about the repository and its automated checks, not about production; nothing on it can change a state. Nothing else in the console moves, and you do not have to do anything.
+
+- **The bill says the figures are yours.** Under the total you track yourself, a “Student entered” label now says you typed these numbers in and the school has not confirmed them. Nothing else on the screen changed.
+
+### Your data now shows what the app can use on this device
+
+On **Your data**, under a new **On this device** heading, there is one entry each for **Camera**, **Microphone**, **Location** and **Notifications**. Each says whether it is **Allowed**, **Blocked**, **Not asked yet**, **Not reported** (some browsers say nothing about the camera or microphone until they have been asked) or **Not available here**, what it is used for, and what still works without it. You do not have to do anything, and nothing on this page asks for a permission; the app still asks only when you start something that needs one.
+
+If one is blocked, the entry says how to allow it again. If one is allowed, it says where to take it back: the camera, microphone and location are held by your browser, so the entry points you to your browser's site settings rather than showing a switch that would do nothing. Notifications link to the switch on **Alerts**. The entries update while the page is open if you change a setting in your browser. Searching Settings for "camera", "microphone", "location" or "permissions" now finds **Your data**.
+
+### Signing out other devices says it cannot be undone
+
+On Account, under Sign-in and security, the confirmation before **Sign out other devices** now says those devices will be asked to sign in again, that this device stays signed in and nothing is deleted, and that the sign-out cannot be undone — those devices sign in again themselves. The button still asks before it does it. Nothing else about the account changed.
+
+### Registration readiness opens with one line on where you stand
+
+At the top of the registration readiness list there is now a single status: **Ready**, **Almost ready**, **Getting ready**, **Blocked** or **Information unavailable**, with a sentence saying why. **Blocked** appears only when two courses in your schedule overlap, which the app can see for itself. Holds and prerequisites live in your school's system, so they never produce it. **Information unavailable** appears when no course catalog is loaded, or when a section you selected has no meeting times, so conflicts cannot be checked and the line will not say Ready. The Schedule conflicts step says the same. It is still preparation, not clearance: your registrar and official system decide the result. The steps below are unchanged and you do not have to do anything.
+
+### Operators see four more console tabs, and only the ones their grant allows
+
+Only an account holding the operator grant sees this, so students and school administrators will notice nothing. The operations console now has **Tenant operations**, **Privacy requests**, **Integration health** and **Release & incidents**. Each of those appears only when the signed-in operator holds that tab's own capability, and Support still appears only when tickets are on and the operator may answer them. A tab the operator cannot use is absent, and a saved view that names one does not open it. The tabs an operator with `console:operate` already had, including **Finance model**, **Releases and flags** and **Launch readiness**, are unchanged. You do not have to do anything.
+
+### Links from the company site into the app say which page they came from
+
+The "Start planning free", "Log in" and demo links on the company site now carry a few short, plain facts into the app's address: which page the click was on, the campaign link that brought you to the site (if there was one), and that the link is for a student. The app uses them to keep your place through first-run setup. They are not stored on a server, and nothing in them says who you are or what you can open; that stays with your account. Nothing about how the site looks or reads has changed, and you do not have to do anything.
+
+### The operations console has a Launch readiness tab
+
+For operators holding the console grant: a new **Launch readiness** tab, after Releases and flags, shows where the launch go/no-go stands. It lists the twelve launch gates (met, partial or unmet, the files that show it and what is still missing), the council seats with who holds each and whether it has signed, and the verdict worked out from them: go, go with conditions or no-go, with the reasons. It is read-only and says it is the repository's record as of a date, not a live check; nothing on it can mark a gate met. Nothing else in the console moves, and you do not have to do anything.
+
+### A link that names a screen keeps it through first-run setup
+
+If a link sends someone who has never used Semester to a particular screen (`?continue=calendar`), setting up no longer drops them on the import screen instead: the run, or Skip, ends on the screen the link named. Only the screens a `?screen=` link may already open are accepted, and a link can say where to go but cannot say who somebody is or what they may open. Nothing changes for anyone arriving without such a link, and you do not have to do anything.
+
+### Registration’s planner is named Term plan, and a clash is the first thing in the cart
+
+On Registration, the planning tab is now Term plan. In the cart, a time conflict is listed before the sections. A cart whose meetings do not overlap still has no conflict line. Official enrollment is unchanged, and it is still the Enrollment screen.
+
+### Leaving a university, and approving someone, says whether you can take it back
+
+The confirmation before you leave a university, and the one before staff approve a join request, now says what happens, what stays, and that you can undo it (claim the university again, or remove the person later). Nothing else about claiming a university changed.
+
+### Your browser stops filling your own details into other people's boxes
+
+Fields that take someone else's email address (an email's To, Cc and Bcc, a contact's, a family member's) now tell the browser not to autofill them, so your own address no longer appears in them. The two assistant key boxes in Settings tell it not to offer to save a key as a login. The two name boxes about you (on Profile, and what a call shows as your name) now say what they are for, so a browser or screen reader can help. Nothing was removed and you do not have to do anything.
+
+### The operations console has a Releases and flags tab
+
+For operators holding the console grant: a new **Releases and flags** tab, between Finance model and Evidence, lists the feature flags this build was made with (the experience, module, toolkit and community flags, and the four standalone ones) and the state of each — Off, Preview, Sandbox or On in production — most live first, with a filter box. It is read-only: a flag is fixed when a build is made, so there is nothing to switch here, and the tab says so. A flag the registry does not describe says that instead of guessing. Nothing else in the console moves, and you do not have to do anything.
+
+### Forms that find several problems now list them together
+
+On **Costs** (the bill and the out-of-pocket form), **Meals** and **Housing**, pressing the add button with more than one thing wrong now shows a short list above the form — "2 things need fixing" — with one line per problem. Each line is a link that takes you to that box. The message under each box and the move to the first wrong box are unchanged, and with only one problem nothing new appears. You do not have to do anything.
+
+### Support and the assistant now point you to a person
+
+On **Support**, each tab has a line under its introduction: "Not sure which door fits? See who can help with what". It opens Help, where the offices and what to bring are listed. In the assistant, under the sources of an answer, there is a new "Not sure it's right? See who can help" link to the same place, because an assistant answer is not an official answer. Nothing was removed and you do not have to do anything.
+
+### Semester staff get a finance planning tool in the operations console
+
+Only people holding the operator grant see this, so students and school administrators will notice nothing. The console has a new **Finance model** tab: a 36-month planning model with twelve scenarios, editable assumptions, two sensitivity grids, warnings for runway, margin, delivery capacity and AI cost, and downloads as CSV, JSON and Markdown. Every figure on it says it is a forecast on planning assumptions, it works on sample data only, and it saves nothing. No price, target or result in it is approved. You do not have to do anything.
+
+New business planning documents, a report build (`npm run generate:gtm-pdf` from `app/`) and four PDFs came with it; they are in `docs/business/` and `output/`, not in the app.
+
+### Moving an action to another day on the month calendar now offers Undo
+
+Tap the day-shift button on an action in the month view and you get "Action moved" with Undo for a few seconds, the way dragging it to another day already did. It used to move silently. Nothing else about adding, ticking, moving or deleting an action changes, and you do not have to do anything. Behind the scenes these now go through one place in the code, which a build can switch to the new rules with `VITE_DOMAIN_TASKS`; it is off, and with it off everything behaves exactly as before.
+
 ### Deleting something offline now sticks, and you can keep two sends for later
 
 A note, course, action, appointment, document, sheet or deck you delete on one
@@ -36,6 +174,91 @@ Offline, you can now keep an advisor share or your course plan to send yourself
 later. They wait on Account under "Waiting for you to send", and they do not go
 by themselves, even when you are back online. One that waits three days is not
 sent and has to be made again. Files you attach still do not sync between devices.
+### For school staff: a Workflows tab on University (off for now)
+
+Staff with workflow rights at a school get a **Workflows** tab for the ten
+processes a school runs: registration clearance, advisor approval, transfer-
+credit review, study-abroad approval, tutoring referral, scholarship
+deadlines, organization events, internship approval, course substitution and
+graduation application. Each starts from a template you change: its steps, who
+owns each, the checks a student must meet, and the office it hands off to. A
+preview shows what a student would be told. A change is a draft; a colleague
+who holds the publish role publishes it as a numbered version, and you cannot
+publish your own.
+
+It is switched off, and nothing in the app runs these definitions yet: the tab
+says so. It holds no student and no request. Students see no difference.
+### For school staff: a Configuration tab on University (off for now)
+
+Staff with configuration rights at a school get a **Configuration** tab in
+eleven domains — academic structure, workflows, roles, branding, content, AI,
+notifications, data, features, accessibility and reporting. A change is a
+draft; a colleague who holds the publish role publishes it as a numbered
+version, and you cannot publish your own. Old versions stay, and you can start
+a new draft from any of them.
+
+It is switched off, and nothing in the app reads these settings yet: the tab
+says so. Students see no difference.
+
+Nothing to do.
+
+### On the public site: alumni relations and fundraising, described and not built
+
+Two new pages, `/solutions/advancement/` and `/alumni/`, describe what an
+alumni and advancement office could one day run in Semester: alumni relations,
+giving, and the office's own console. They say plainly that none of it is
+built, that no school uses it, that no gift has been taken and no receipt
+issued, and that no price has been set. They also say what is not planned:
+wealth screening and predictive donor scoring. The graduate page lists what a
+graduate can do today (offer to mentor, take their data with them) and asks
+for nothing.
+
+Nothing to do.
+
+### A school can no longer be deleted; leaving is a step-by-step case
+
+Nothing you can see changes in the app. Behind it, a university's record can
+no longer be deleted by anyone, because doing so would have silently removed
+everything the school had (shares, requests, grants, roll-outs). A school
+leaves through a recorded case: sized first, approved by a person at the school
+and a person at Semester, access switched off (nothing deleted), the school's
+data exported and checked, then archived for at least thirty days. Every step
+until the last can be undone. Nothing has been offboarded, and there is still
+no way to purge a school's data. Nothing to do.
+
+### Advisor shares and planning screens say where things came from
+
+When you preview or send an advisor meeting, it now ends with "Where this comes
+from, and what it assumes": which parts you wrote, which are your own estimate,
+the day it was prepared, and that nothing in it comes from the school's records
+or is a degree audit. A share made before this still opens as it did. The
+graduation projection and the study-abroad credit picture now carry a source
+label and say plainly that they are not an official degree audit or credit
+evaluation. On the university settings page, the Modules tab no longer says its
+settings "could not be read" while they are still loading. Nothing to do.
+
+### Action Center: more snooze times, and say why you hid something
+
+Where the Action Center is switched on: beside "Snooze until tomorrow" there is
+now "More snooze times" (later today, next week, and the day before it is due
+when that is a real later moment), and "Not relevant" asks why first, with four
+reasons or "Hide without saying why". The reason is kept on your device and shown
+in the Hidden list so you remember. Registration Day Mode, where it is on, adds
+"How heavy this term is": it compares your credits with the limits and study
+hours you type, and estimates weekly hours at two per credit. It is an estimate
+from numbers you gave, not a rule of your school, and it never stops you doing
+anything. Nothing to do.
+
+### Today no longer plans around the sample semester until you say it is yours
+
+While the question under the header ("These are mine" / "Not mine") is still open,
+Today's next step, its briefing and its list of commitments leave out the shipped
+semester's assignments and classes, instead of telling you to "Prepare" someone
+else's paper. With nothing of your own yet, Today suggests starting your semester.
+Answer "These are mine" and the same dates appear as yours. Where an item has no
+recorded update time, its label now says "Update time not recorded" instead of
+saying nothing. Commitments name where each date came from (for example "Needs
+review · date not checked"). Nothing to do.
 
 ### On the public site: a page for the K–12 edition
 

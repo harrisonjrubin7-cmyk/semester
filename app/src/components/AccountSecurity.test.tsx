@@ -112,6 +112,9 @@ describe('account security', () => {
     expect(signOutOthers).not.toHaveBeenCalled();
     const dialog = document.querySelector('[role="dialog"]')!;
     expect(dialog).toBeTruthy();
+    expect(dialog.textContent).toContain('This can’t be undone.');
+    expect(dialog.textContent).toContain('Those devices sign in again themselves.');
+    expect(dialog.textContent).toContain('This device stays signed in, and nothing is deleted.');
     await click(button(/sign out other devices/i, dialog));
     expect(signOutOthers).toHaveBeenCalledTimes(1);
   });

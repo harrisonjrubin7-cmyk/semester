@@ -1,71 +1,32 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { checkoutEndpoint, startCheckout } from './membership';
+import { INDIVIDUAL_PAID_ACQUISITION_ENABLED, PILOT_NOTE, plan, priceLine } from './plans';
 
-/**
- * Nothing may say Plus cannot be bought while the app can sell it.
- *
- * D-128 put a checkout on the Account screen; for a day afterwards the known
- * limitations, three claims, two pricing sentences, the site's membership
- * preview and two tests still said "no checkout". The tests defended the old
- * claim, so fixing the copy turned them red. This holds every place that
- * speaks to a reader to what the code does: while `startCheckout` exists, the
- * stale sentences are refused, wherever they are.
- *
- * The Terms draft said "Semester for individuals is currently free … no
- * billing exists in the app today" until 29 September, a week after Plus
- * went on sale, because the legal drafts were not in the scan.
- */
 const root = join(import.meta.dirname, '../../..');
 
-const STALE: readonly RegExp[] = [
-  /nothing is for sale, and nothing can be bought/i,
-  /there is no checkout and no billing/i,
-  /no billing provider and no checkout/i,
-  /no billing exists yet/i,
-  /shown here once checkout exists/i,
-  /paid plans are not on sale yet/i,
-  /plus and pro are not on sale yet/i,
-  /nothing is on sale/i,
-  /there is no checkout on this site/i,
-  /no billing exists in the app/i,
-  /semester for individuals is currently free/i,
-];
-const stale = (text: string) => STALE.filter((re) => re.test(text)).map(String);
-
-function walk(dir: string, out: string[] = []): string[] {
-  for (const n of readdirSync(dir)) {
-    if (n === 'node_modules') continue;
-    const p = join(dir, n);
-    if (statSync(p).isDirectory()) walk(p, out);
-    else if (/\.(ts|tsx)$/.test(n) && !/\.test\.tsx?$/.test(n)) out.push(p);
-  }
-  return out;
-}
-
-describe('the copy about buying Semester', () => {
-  it('has a checkout to be honest about', () => {
-    expect(typeof startCheckout).toBe('function');
-    expect(checkoutEndpoint('https://x.supabase.co')).toContain('/functions/v1/billing-checkout');
+describe('the current individual-sale boundary', () => {
+  it('holds new paid acquisition and labels individual prices as planned', () => {
+    expect(INDIVIDUAL_PAID_ACQUISITION_ENABLED).toBe(false);
+    expect(PILOT_NOTE).toMatch(/planned, not on sale/i);
+    expect(priceLine(plan('plus'))).toMatch(/\(planned\)$/);
+    expect(priceLine(plan('pro'))).toMatch(/\(planned\)$/);
   });
 
-  it('can tell a stale sentence from a true one', () => {
-    expect(stale('Nothing is for sale, and nothing can be bought.')).toHaveLength(1);
-    expect(stale('Paid plans are not on sale yet.')).toHaveLength(1);
-    expect(stale('Plus can be bought from the Account screen; Pro is not on sale yet.')).toEqual([]);
-    expect(stale('Nothing can be bought on this site.')).toEqual([]);
+  it('fails the server checkout closed independent of environment configuration', () => {
+    const source = readFileSync(join(root, 'supabase/functions/billing-checkout/index.ts'), 'utf8');
+    expect(source).toContain('individualPaidAcquisitionApproved = false');
+    expect(source).toContain('liveEnabled: individualPaidAcquisitionApproved && billingOperationsRequested');
+    expect(source).not.toMatch(/liveEnabled:\s*Deno\.env/);
   });
 
-  it('is not contradicted by the app, the site, the company site, the pilot documents or the legal drafts', () => {
-    const files = [
-      ...walk(join(root, 'app/src')),
-      join(root, 'company-site/index.html'),
-      join(root, 'docs/pilot/KNOWN-LIMITATIONS.md'),
-      join(root, 'ops/claims/README.md'),
-      ...readdirSync(join(root, 'docs/legal')).filter((n) => n.endsWith('.md')).map((n) => join(root, 'docs/legal', n)),
-    ];
-    const found = files.flatMap((f) => stale(readFileSync(f, 'utf8')).map((re) => `${f.replace(root, '')}: ${re}`));
-    expect(found).toEqual([]);
+  it('does not advertise an available individual purchase on the public pricing surfaces', () => {
+    const pages = readFileSync(join(root, 'app/src/site/pages.tsx'), 'utf8');
+    const more = readFileSync(join(root, 'app/src/site/more.tsx'), 'utf8');
+    const claims = readFileSync(join(root, 'app/src/lib/ops/claims.ts'), 'utf8');
+    for (const text of [pages, more, claims]) {
+      expect(text).not.toMatch(/Plus (?:can be|is) bought/i);
+      expect(text).toMatch(/planned, not on sale|paid acquisition is held/i);
+    }
   });
 });

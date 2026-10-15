@@ -52,15 +52,15 @@ import { DEFAULT_ROLE, forRole, type Role } from './role';
  *
  * Standing was three screens and shrinking — the assistant screens moved to
  * Study and the calendar work moved to Semester, and what was left was Grades,
- * The degree and When you are behind. A shelf of three is worse than no shelf:
+ * The degree and Catching up. A shelf of three is worse than no shelf:
  * it costs a pill in the row and a tile in the grid to hold a third of what
  * every other shelf holds, and "which of these nine is it under" gets harder
  * for every shelf that exists, not just the full ones.
  *
- * Grades and When you are behind fold into Semester, where the question was
+ * Grades and Catching up fold into Semester, where the question was
  * already being asked — Reports is a Semester screen and carries the `stand`
  * tag. Semester is your term, and how it is going is part of your term. It
- * also puts The week ahead and When you are behind next to each other, which
+ * also puts The week ahead and Catching up next to each other, which
  * is where two screens that answer the same question in opposite directions
  * should always have been.
  *
@@ -155,6 +155,18 @@ export interface Destination {
   /** The tab this lives under, so navigation stays oriented inside it. */
   root: Screen;
 }
+
+/**
+ * A trusted, pre-resolved visibility decision for a registered route.
+ *
+ * Navigation deliberately knows nothing about release evidence, tenant
+ * entitlements, cohorts, or kill switches. Those inputs belong at the
+ * governance boundary; this callback is the narrow seam through which that
+ * boundary can remove a route without teaching the directory to recreate the
+ * policy. Callers that do not yet have an authoritative decision may omit it
+ * and retain the existing school-and-role behavior.
+ */
+export type NavigationExposureGate = (screen: Screen) => boolean;
 
 /**
  * The intentions, in the order they are shown.
@@ -569,8 +581,8 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'behind',
-    label: 'When you are behind',
-    short: 'Behind',
+    label: 'Catching up',
+    short: 'Catch up',
     blurb: 'What has gone by, what still fits, and the moves that are not working harder.',
     keywords: 'behind late overdue missed catch up caught up triage bad week overwhelmed stressed stress panic drowning too much falling behind help extension late policy recover crisis sick',
     group: 'Semester',
@@ -639,7 +651,7 @@ export const DESTINATIONS: Destination[] = [
     // the bar would read as a bug. `saysFor` names it everywhere with room.
     short: 'Register',
     blurb: 'Registration and class search — and paste your schedule straight back in.',
-    keywords: 'yes enrollment enrolment registration register student landing search classes schedule timetable transcript holds advisor commodore vanderbilt add drop credit hours section registration day time ticket window opens countdown backup backups plan b full section waitlist checklist crn crns copy section list',
+    keywords: 'yes enrollment enrolment registration register student landing search classes schedule timetable transcript holds advisor commodore vanderbilt add drop credit hours section registration day time ticket window opens countdown backup backups plan b full section waitlist checklist crn crns copy section list term plan conflicts',
     /*
      * Courses, not Campus, and the move came with University arriving.
      *
@@ -1199,13 +1211,26 @@ export function destinationsFor(
   group: Group,
   c: Capabilities,
   role: Role = DEFAULT_ROLE,
+  exposure?: NavigationExposureGate,
 ): Destination[] {
-  return destinationsIn(group).filter((d) => allowed(d.screen, c) && forRole(d.screen, role));
+  return destinationsIn(group).filter((d) => (
+    allowed(d.screen, c)
+    && forRole(d.screen, role)
+    && (exposure?.(d.screen) ?? true)
+  ));
 }
 
 /** Every destination the app can offer this person, across all groups. */
-export function offered(c: Capabilities, role: Role = DEFAULT_ROLE): Destination[] {
-  return DESTINATIONS.filter((d) => allowed(d.screen, c) && forRole(d.screen, role));
+export function offered(
+  c: Capabilities,
+  role: Role = DEFAULT_ROLE,
+  exposure?: NavigationExposureGate,
+): Destination[] {
+  return DESTINATIONS.filter((d) => (
+    allowed(d.screen, c)
+    && forRole(d.screen, role)
+    && (exposure?.(d.screen) ?? true)
+  ));
 }
 
 /*

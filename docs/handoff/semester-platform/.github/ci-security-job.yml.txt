@@ -1,0 +1,17 @@
+# Security CI job. Merge into .github/workflows/ci.yml.
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
+      - name: Dependency audit (fail on high)
+        run: cd app && npm ci && npm audit --audit-level=high
+      - name: Forbid service-role key in client code
+        run: "! grep -rn 'SUPABASE_SERVICE_ROLE' app/src --include=*.ts --include=*.tsx | grep -v 'server' "
+      - name: Forbid student-record fields in analytics events
+        run: "! grep -rnE 'track\\(.*(grade|gpa|ssn|student_id|dob)' app/src"
+      - name: RLS + command + AI red-team tests
+        run: npx supabase start && npx vitest run tests/rls.test.ts tests/security.test.ts tests/commands.test.ts tests/ai-redteam.test.ts

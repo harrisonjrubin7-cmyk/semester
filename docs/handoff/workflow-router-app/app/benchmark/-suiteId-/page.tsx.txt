@@ -1,0 +1,15 @@
+import { notFound } from 'next/navigation';
+import { requireUser } from '@/lib/supabase/server';
+import { aggregateGrades, leaderboard } from '@/lib/benchmark/scoring';
+import { PLATFORM_LABEL, PLATFORMS, type Platform } from '@/lib/benchmark/benchmark.config';
+import { Leaderboard } from '@/components/benchmark/leaderboard';
+export default async function Page({ params }: { params: Promise<{ suiteId: string }> }) {
+  const { suiteId } = await params; const { supabase, user } = await requireUser(); if (!user) notFound();
+  const { data: suite } = await supabase.from('benchmark_suites').select('id, name').eq('id', suiteId).single(); if (!suite) notFound(); // RLS hides other users' suites
+  const { data: tasks } = await supabase.from('benchmark_tasks').select('id, number, title, weights, benchmark_runs(id, platform, status, benchmark_grades(*))').eq('suite_id', suiteId).order('number');
+  const cells = (tasks ?? []).flatMap((t: any) => PLATFORMS.map((p) => { const run = (t.benchmark_runs ?? []).find((r: any) => r.platform === p); const sheets = (run?.benchmark_grades ?? []).map((g: any) => ({ correctness: g.correctness, codeQuality: g.code_quality, rendering: g.rendering, stateManagement: g.state_management, maintainability: g.maintainability, handoff: g.handoff, sandboxFit: g.sandbox_fit, persistence: g.persistence })); return { task: t, platform: p as Platform, run, s: aggregateGrades(sheets, t.weights ?? undefined) }; }));
+  return (<div className="grid gap-8"><div className="flex items-end justify-between"><h1 className="text-2xl font-semibold">{suite.name}</h1><div className="flex gap-2 text-sm"><a className="rounded border px-3 py-2" href={'/api/exports/benchmark?suite=' + suiteId + '&format=csv'}>CSV</a><a className="rounded border px-3 py-2" href={'/api/exports/benchmark?suite=' + suiteId + '&format=md'}>Markdown report</a></div></div>
+    <Leaderboard title="Aggregate platform leaderboard" rows={leaderboard(cells.map((c) => ({ key: PLATFORM_LABEL[c.platform], score: c.s.outOf5 })))} />
+    <div className="overflow-x-auto rounded border"><table className="w-full text-sm"><thead className="bg-neutral-100"><tr><th className="px-3 py-2 text-left">#</th><th className="px-3 py-2 text-left">Workflow</th>{PLATFORMS.map((p) => <th key={p} className="px-3 py-2 text-left">{PLATFORM_LABEL[p]}</th>)}</tr></thead>
+      <tbody>{(tasks ?? []).map((t: any) => <tr key={t.id} className="border-t"><td className="px-3 py-2 tabular-nums">{t.number}</td><td className="px-3 py-2">{t.title}</td>{PLATFORMS.map((p) => { const c = cells.find((x) => x.task.id === t.id && x.platform === p)!; return <td key={p} className="px-3 py-2 tabular-nums">{!c.run ? 'No run' : c.run.status !== 'completed' ? c.run.status : c.s.outOf100 === null ? 'Not graded' : c.s.outOf100 + ' · ' + c.s.graders + ' grader' + (c.s.graders === 1 ? '' : 's')}</td>; })}</tr>)}</tbody></table></div></div>);
+}

@@ -223,7 +223,7 @@ export const HECVAT: readonly HecvatRow[] = [
     ['Code review required', 'engineering', 'SDLC-1', 'designed', [['docs/BRANCH-PROTECTION.md', 'branch protection']], 'A document of the setting, not a reading of it.'],
     ['Dependency scanning runs in CI', 'engineering', 'SDLC-2', 'tested', [['app/src/lib/supplychain.test.ts', 'the licence and dependency policy'], ['docs/SUPPLY-CHAIN.md', 'the procedure']], 'None.'],
     ['Secret scanning runs in CI', 'engineering', 'SDLC-2', 'tested', [['app/src/lib/secrets.test.ts', 'the inventory and rotation log'], ['SECRETS.md', 'the inventory']], 'None.'],
-    ['SAST/DAST approach documented', 'security', 'VULN-2', 'designed', [['docs/trust/PENETRATION-TEST-PLAN.md', 'the test plan']], 'No DAST run and no independent test.'],
+    ['SAST/DAST approach documented', 'security', 'VULN-2', 'designed', [['docs/trust/PENETRATION-TEST-PLAN.md', 'the test plan'], ['.github/workflows/hawkscan.yml', 'local-preview DAST']], 'HawkScan is configured; the first run still requires the Actions secret and application-ID variable, and no independent test has occurred.'],
     ['Threat modeling for high-risk features', 'security', null, 'designed', [['docs/INTEGRATION-THREAT-MODEL.md', 'integrations']], 'Integrations only; no template for other features.'],
     ['RLS and database grants reviewed', 'security', 'TEN-1', 'tested', [['supabase/grants.check.sql', 'the grant allowlist'], ['supabase/rls-coverage.check.sql', 'coverage']], 'None.'],
     ['SECURITY DEFINER functions inventoried and approved', 'security', null, 'tested', [['app/src/lib/definerregister.test.ts', 'all 151 callable functions classified'], ['supabase/definer-sweep.check.sql', 'every one called by a stranger (DR-02, D-130)'], ['docs/DEFINER-RLS-REGISTER.md', 'the register']], 'DR-01 and DR-03 open, both low; the gtm_pilot_problems fix is live (D-129).'],
@@ -392,7 +392,7 @@ export const MIGRATION_ARTIFACTS: readonly { artifact: string; carriedBy: string
   { artifact: 'Data quality rules', carriedBy: 'app/src/lib/registration.ts', note: 'Rejects incomplete, duplicate and invalid rows atomically.' },
   { artifact: 'Duplicate and identity resolution rules', carriedBy: null, note: 'Account linking is by ticket (FERPA-IDENTITY-GUARDRAILS).' },
   { artifact: 'Sample data set and expected results', carriedBy: null, note: 'None.' },
-  { artifact: 'Migration runbook', carriedBy: null, note: 'MIGRATION_PLAYBOOK says customer migration does not exist.' },
+  { artifact: 'Migration runbook', carriedBy: null, note: 'MIGRATION_PLAYBOOK: evidence path and roster staging exist; no production load path for any domain.' },
   { artifact: 'Rollback plan', carriedBy: null, note: 'ROLLBACK.md is for releases, not imports.' },
   { artifact: 'Reconciliation report', carriedBy: 'docs/INTEGRATION-QUALITY-AND-RECONCILIATION.md', note: 'For integrations, not a one-time import.' },
   { artifact: 'Exception register', carriedBy: null, note: 'None.' },
@@ -738,7 +738,7 @@ export const DOD_QUESTIONS: readonly Item[] = rows('DOD', [
   ['Is it secure, privacy-safe, observable, testable and supportable?', 'building', [['app/src/lib/flags.test.ts', 'every flag has an owner and a rollback'], ['docs/operating-model/QUALITY-MANAGEMENT.md', 'the engineering definition of done']], 'Observable: no error tracking.'],
   ['Can it fail safely?', 'tested', [['app/src/lib/failure.test.ts', 'every failure read into a sentence'], ['app/src/lib/aikillswitch.test.ts', 'the AI can be switched off']], 'None.'],
   ['Can it be configured by an institution?', 'tested', [['supabase/tenant-plan.check.sql', 'the school’s plan'], ['supabase/intelligence-policy.check.sql', 'the school’s AI policy']], 'Most modules are build flags, not tenant settings.'],
-  ['Can it be migrated, audited, exported, retained and deleted appropriately?', 'building', [['app/src/lib/export.test.ts', 'exported'], ['supabase/retention-sweeps.check.sql', 'retained'], ['app/src/lib/deleteaccount.test.ts', 'deleted']], 'Customer data migration does not exist.'],
+  ['Can it be migrated, audited, exported, retained and deleted appropriately?', 'building', [['app/src/lib/export.test.ts', 'exported'], ['supabase/retention-sweeps.check.sql', 'retained'], ['app/src/lib/deleteaccount.test.ts', 'deleted']], 'No production load path for customer data exists; the Migration Center records evidence and roster staging is a foundation.'],
   ['Can the company honestly sell and support it?', 'tested', [['app/src/lib/ops/claims.test.ts', 'no label on the site the register does not know']], 'Support has no address yet.'],
 ]);
 

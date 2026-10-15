@@ -19,15 +19,20 @@ import { CRITERIA } from './scorecard';
  */
 const migrations = resolve(__dirname, '../../../../supabase/migrations');
 // The review fixes (#828) carry the approvers block; later files add to the
-// earlier, so both are read as one.
-const sql = ['20260927235000_governance_registries.sql', '20260927235500_governance_review_fixes.sql']
+// earlier, so all are read as one, and a registry a later file redefines is
+// read from the latest (launch_delay and change_notice, 20261004120000).
+const sql = [
+  '20260927235000_governance_registries.sql',
+  '20260927235500_governance_review_fixes.sql',
+  '20261004120000_incident_notice_launch_delay_and_change.sql',
+]
   .map((f) => readFileSync(resolve(migrations, f), 'utf8'))
   .join('\n');
 
 function block(name: string): string {
-  const m = sql.match(new RegExp(`-- registry:${name}\\n([\\s\\S]*?)-- end registry`));
-  if (!m) throw new Error(`no registry:${name} block in the migration`);
-  return m[1];
+  const all = [...sql.matchAll(new RegExp(`-- registry:${name}\\n([\\s\\S]*?)-- end registry`, 'g'))];
+  if (!all.length) throw new Error(`no registry:${name} block in the migration`);
+  return all[all.length - 1][1];
 }
 
 const quoted = (text: string) => [...text.matchAll(/'([^']+)'/g)].map((m) => m[1]);

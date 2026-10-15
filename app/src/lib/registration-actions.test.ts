@@ -19,7 +19,7 @@ const catalog = [psy, stat, econ, clash];
 
 const NOW = new Date(2027, 3, 1, 12, 0);
 const plan = (patch: Partial<RegistrationDayData> = {}): RegistrationDayData => ({
-  ...EMPTY_REGISTRATION_DAY, opensAt: '2027-04-06T08:00', ...patch,
+  ...EMPTY_REGISTRATION_DAY, opensAt: '2027-04-04T08:00', ...patch,
 });
 const ids = (d: RegistrationDayData, cart: CatalogCourse[]) => registrationActions(d, cart, catalog, NOW).map((a) => a.id);
 
@@ -49,7 +49,9 @@ describe('registration readiness as actions', () => {
   });
 
   it('becomes critical in the last three days, and ranks above an ordinary deadline then', () => {
-    const later = registrationActions(plan(), [stat], catalog, NOW).find((a) => a.id === 'regday:backup:stat')!;
+    // The mode now shows from 72 hours out on its own, so a window further away
+    // is only reachable when the student turned the mode on early.
+    const later = registrationActions(plan({ opensAt: '2027-04-06T08:00', manual: true }), [stat], catalog, NOW).find((a) => a.id === 'regday:backup:stat')!;
     expect(later.priority).toBe('high');
     const soon = registrationActions(plan({ opensAt: '2027-04-03T08:00' }), [stat], catalog, NOW).find((a) => a.id === 'regday:backup:stat')!;
     expect(soon.priority).toBe('critical');

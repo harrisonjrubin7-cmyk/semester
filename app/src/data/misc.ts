@@ -1,4 +1,3 @@
-import type { AppNotification } from '../lib/types';
 
 /** Which alerts the app can send. Toggled in onboarding and in Settings. */
 /**
@@ -60,38 +59,6 @@ export const DEFAULT_NOTIFS: Record<NotifKey, boolean> = {
    */
   bill: true,
 };
-
-/** The morning batch. A demonstration of the alert style, not a live feed. */
-export const NOTIFICATIONS: AppNotification[] = [
-  {
-    id: 'n1',
-    code: 'BUS 1600',
-    when: '7:02 AM',
-    title: 'Group Assignment 1 lands tonight',
-    body: 'ECOALF case, 11:59 PM. Your team hasn’t opened the doc.',
-  },
-  {
-    id: 'n2',
-    code: 'CORE 2500',
-    when: '7:02 AM',
-    title: 'Reflection #1 due before 1:15p',
-    body: 'Self-assessed. Rubric is attached in Brightspace.',
-  },
-  {
-    id: 'n3',
-    code: 'PSCI 1104',
-    when: '6:41 AM',
-    title: 'Class canceled today',
-    body: 'Prof. Trounstine is at APSA. 2:45p is yours.',
-  },
-  {
-    id: 'n4',
-    code: 'ECON 1020',
-    when: 'Yesterday',
-    title: 'PSet 1 posted',
-    body: 'Due Friday 11:59 PM on Gradescope. No extensions, ever.',
-  },
-];
 
 /**
  * Where the app's figures actually come from, shown in Settings › About.

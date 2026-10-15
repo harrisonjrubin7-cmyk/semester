@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXTRA_CONNECT, parsePolicy, uncoveredOrigins } from './cspheader';
+import { isAmbiguousStaticPath, staticHostHeaders } from './previewsecurity';
 
 /**
  * The response headers a host sends, written down for the hosts that let the
@@ -166,6 +167,27 @@ describe('host security headers', () => {
     // app records audio and scans barcodes, so these two must be seen.
     expect([...found]).toEqual(expect.arrayContaining(['microphone', 'camera']));
     expect(missing).toEqual([]);
+  });
+
+  it('gives the CI preview the static-host headers and rejects impossible asset subpaths', () => {
+    const raw = readFileSync(join(ROOT, 'public/_headers'), 'utf8');
+    const headers = new Map(
+      Object.entries(staticHostHeaders(raw, 'https://configured.example')).map(([name, value]) => [name.toLowerCase(), value]),
+    );
+    expect(headers.get('x-content-type-options')).toBe('nosniff');
+    expect(parsePolicy(headers.get('content-security-policy') ?? '').get('frame-ancestors')).toBeTruthy();
+    expect(headers.get('content-security-policy')).toContain('https://configured.example');
+    expect(headers.get('content-security-policy')).not.toContain(EXTRA_CONNECT);
+
+    expect(isAmbiguousStaticPath('/assets/app.js/random')).toBe(true);
+    expect(isAmbiguousStaticPath('/apple-touch-icon.png/random')).toBe(true);
+    expect(isAmbiguousStaticPath('/courses/fall-2026')).toBe(false);
+    expect(isAmbiguousStaticPath('/assets/app.js')).toBe(false);
+
+    const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
+    for (const asset of ['icon.svg', 'apple-touch-icon.png', 'manifest.webmanifest']) {
+      expect(html).toContain(`href="%BASE_URL%${asset}"`);
+    }
   });
 });
 

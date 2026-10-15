@@ -165,6 +165,12 @@ declare
     -- which re-checks every grant and logs the read.
     'make_family_share(want_categories text[], want_resources text[], want_days integer, want_items jsonb, want_shown_as text)',
     'read_family_share()',
+    -- 20261009230000_guardian_projection_foundation.sql: an online-only,
+    -- minimized calendar read that rechecks a verified guardian link and the
+    -- student's exact live consent before recording the decision. The second
+    -- entry returns only the caller-student's bounded access history.
+    'read_guardian_calendar_projection(wanted_student uuid, wanted_purpose text)',
+    'read_guardian_projection_access_history()',
     -- 20260928308000_support_shares.sql: an athlete shares with one person
     -- holding athletic_academic_support at their school; staff list and read
     -- through functions that re-check that role on every call and log reads.
@@ -197,14 +203,41 @@ declare
     -- creates consent and its bounded grant atomically, and lists only windows
     -- in which the caller is the student or the still-authorized supporter.
     'available_supporters()',
-    'create_support_access(want_supporter uuid, want_reason text, want_days integer)',
+    'available_case_supporters()',
+    'create_support_access(want_supporter uuid, want_reason text, want_days integer, want_ticket uuid)',
+    'read_support_case_signals(want_ticket uuid)',
     'revoke_support_access(want_grant uuid)',
     'support_access_windows()',
+    'support_case_access(want_ticket uuid)',
     -- Sets `profiles.school_id` from the address the server confirmed. The
     -- column's own UPDATE privilege is revoked from both API roles, so this
     -- function is the only way in and has to be callable by a signed-in
     -- account. See 20260921170000_schools.sql.
     'claim_school(want text)',
+    -- Course rooms limited to one university (20260930180000). Each is gated
+    -- inside its body; `school-membership.check.sql` walks the refusals.
+    'request_school_membership(want text, why text)',
+    'withdraw_school_request(req uuid)',
+    'decide_school_request(req uuid, approve boolean, why text)',
+    'leave_school()',
+    'revoke_school_membership(target uuid, why text)',
+    'school_enforcement_readiness(want text)',
+    'school_requests_for_admin(want text)',
+    'set_school_enforcement(want text, on_ boolean, acknowledge_locked_out integer)',
+    -- A school leaves in steps (20260930200000). Each is gated inside its body;
+    -- `school-offboarding.check.sql` walks the refusals.
+    'propose_offboarding(want_school text, why text, as_side text)',
+    'offboarding_preflight(want uuid)',
+    'approve_offboarding(want uuid)',
+    'cancel_offboarding(want uuid, why text)',
+    'record_offboarding_notice(want uuid, given_on date)',
+    'disable_school_access(want uuid)',
+    'record_offboarding_export(want uuid, manifest_sha256 text, counts jsonb, delivered_to text)',
+    'verify_offboarding_export(want uuid)',
+    'archive_school(want uuid, retain_days integer)',
+    'restore_school(want uuid, why text)',
+    'school_purge_eligibility(want uuid)',
+    'authorize_school_purge(want uuid, why text)',
 
     /*
      * Community (20260928032000_community.sql). Seventeen, because every write
@@ -357,6 +390,10 @@ declare
     -- 20260928010000: the caller's own live capabilities, same predicate as
     -- private.has_capability, so staff screens can open for staff.
     'my_capabilities()',
+    -- 20261008223000: the caller's own yes/no signal for whether a live
+    -- platform_admin or support_agent grant still needs aal2. It exposes no
+    -- role roster or capability and is used only to show the elevation gate.
+    'privileged_mfa_required()',
     -- 20260929070000: click-to-cancel. The owner of an individual
     -- subscription ends it at the period end in one call, reason optional;
     -- cancelling must be as easy as signing up. Refuses anyone else's.
@@ -423,19 +460,21 @@ declare
     'leave_beta(want_reason text, want_keeps_account boolean)',
     'forget_my_beta()',
 
-    -- The nine in 20260928210000_support_tickets.sql. The tables have no grant,
-    -- so these are the only way in. The first six act on the caller's own
-    -- tickets; the last three check `support:ticket` and return no column
+    -- The support-ticket RPCs. The tables have no grant, so these are the only
+    -- way in. Student routes act only on the caller's own tickets; the last
+    -- three check `support:ticket` and return no column
     -- that names the student.
-    'open_support_ticket(want_category text, want_subject text, want_body text, want_context jsonb)',
+    'open_support_ticket(want_category text, want_subject text, want_body text, want_context jsonb, want_email_notice boolean)',
     'my_support_tickets()',
+    'my_support_email_notices()',
     'my_support_thread(want_ticket uuid)',
     'reply_to_my_ticket(want_ticket uuid, want_body text)',
     'close_my_ticket(want_ticket uuid)',
     'forget_my_support_tickets()',
+    'set_support_email_notice(want_ticket uuid, want_enabled boolean)',
     'support_ticket_queue()',
     'support_ticket_thread(want_ticket uuid)',
-    'support_reply(want_ticket uuid, want_body text, want_status text)',
+    'support_reply(want_ticket uuid, want_body text, want_status text, want_operation uuid)',
 
     -- The four in 20260928090000_gtm_foundation.sql. Contacts, consent and
     -- sends have no API grant at all, so these are the only way a school's
@@ -498,6 +537,11 @@ declare
     'publish_course_guidance(want_course text, want_term text, want_body text)',
     'publish_study_pack(want_course text, want_term text, want_pack uuid, want_title text, want_note text, want_items jsonb, want_retired boolean)',
     'my_course_studio_courses()',
+    -- 20261009001500_course_material_retention_policy.sql: consumes one
+    -- independently approved tenant-policy request. The function rechecks
+    -- console:operate, fresh MFA, exact tenant/target/detail, request status,
+    -- expiry and actor participation before fail-closed audit plus append.
+    'publish_course_material_retention_policy(want_request uuid, want_correlation text)',
 
     -- 20260929310000_gradebook.sql: the gradebook of record. Each checks
     -- auth.uid(), the caller's own school and a course-scoped grades:*
@@ -529,6 +573,19 @@ declare
     -- sibling `erase_account(uuid)` takes an account id and so is
     -- service_role only, and is not here.
     'export_my_data()',
+    -- 20260930234000_data_subject_request_intake.sql: derives both subject and
+    -- tenant from auth.uid(), accepts only the four bounded request kinds, and
+    -- returns an existing open same-kind request instead of duplicating it.
+    -- `audit-and-subject-requests.check.sql` proves the caller and tenant
+    -- boundaries and that anon cannot execute it.
+    'raise_my_data_subject_request(requested_kind text, requested_detail text)',
+    -- 20261004200000_answer_data_subject_requests.sql: the two ways a rights
+    -- request is answered. Each refuses 42501 unless the caller holds
+    -- `data_request:handle` (the data_steward role) and is not the requester,
+    -- and each refuses an illegal move with 23514.
+    -- `answer-rights-requests.check.sql` attempts every refusal by code.
+    'verify_data_subject_request(request_id uuid, rung text)',
+    'answer_data_subject_request(request_id uuid, new_status text, resolution_text text)',
 
     -- The three in 20260929100000_console_control_plane.sql. Each checks
     -- `console:operate` itself and raises 42501 without it (never
@@ -542,6 +599,81 @@ declare
     'console_audit_read(since timestamp with time zone, want_limit integer)',
     'console_audit_status()',
     'console_figures(include_demo boolean)',
+
+    -- The read-only exception queue in 20260930180000. It checks
+    -- console:operate at platform scope inside the definer function, excludes
+    -- demo tenants by default, and is negatively tested in
+    -- console-command-center.check.sql.
+    'console_command_center(include_demo boolean)',
+
+    -- The bounded tenant access inventory in 20261005120000. The tenant and
+    -- optional subject are filters, not authority: the function checks a live
+    -- platform or exact-tenant capability before reading. Demo inclusion has
+    -- the separate tenant:implement gate. Its feature suite attempts no grant,
+    -- wrong tenant, expired grant, cross-tenant subject and demo escalation.
+    'console_tenant_access(want_tenant text, want_subject uuid, after_granted_at timestamp with time zone, after_id uuid, want_limit integer, include_demo boolean)',
+
+    -- Metadata-only tenant operations. It requires the platform console shell,
+    -- derives rows from live exact-school tenant:implement grants, excludes
+    -- demos by default and never accepts a tenant id from the caller.
+    'console_tenant_operations(include_demo boolean)',
+
+    -- The first query-side contract over the private tenant projections. It
+    -- checks platform console or exact-school tenant configuration authority,
+    -- bounds entitlement pagination, and computes freshness from private
+    -- watermarks without exposing either projection table.
+    'read_tenant_projection(want_tenant text, after_capability text, want_limit integer)',
+
+    -- Per read model: computed freshness, lag, events behind, dead letters,
+    -- last sanitized error and last rebuild with parity. It requires platform
+    -- console:operate (aal2), reads counts and ages from the outbox and never a
+    -- payload, aggregate or tenant id, and writes nothing.
+    'ops_projection_dashboard()',
+
+    -- Credential-free connector health. It requires the platform console
+    -- shell, derives tenants from exact-school integration:view grants,
+    -- excludes demos by default, and returns no credential, cursor, payload,
+    -- external-record or provider-message field.
+    'console_integration_health(include_demo boolean)',
+
+    -- Evidence-derived release and incident operations. It requires both the
+    -- platform console shell and platform incident:communicate, excludes demo
+    -- tenants without exact implementation scope, and performs no mutation.
+    'console_release_incidents(include_demo boolean)',
+
+    -- Protected incident-evidence metadata and hash-linked custody. Every
+    -- callable path requires platform console plus incident-response
+    -- authority and fresh MFA; the backing private tables have no client or
+    -- service-role grants.
+    'incident_evidence_custody(want_incident text)',
+    'record_incident_evidence(want_incident text, want_kind text, want_source_system text, want_evidence_locator text, want_sha256 text, want_byte_size bigint, want_captured_at timestamp with time zone, want_retention_until timestamp with time zone, want_classification text)',
+    'record_incident_evidence_custody(want_evidence text, want_action text, want_custodian text, want_reason_code text, want_observed_sha256 text)',
+
+    -- Identity-minimized, three-operator privileged role-grant review. These paths require
+    -- access_review:manage at platform scope and fresh MFA; the private
+    -- snapshot, decisions and signoff have no client or service-role grants.
+    'begin_privileged_access_review(want_request_key text, want_period_start date, want_period_end date, want_next_due date)',
+    'complete_privileged_access_review(want_review text)',
+    'decide_privileged_access_review_item(want_item text, want_decision text, want_reason_code text)',
+    'privileged_access_review(want_review text)',
+    'resolve_privileged_access_review_investigation(want_item text, want_resolution_code text)',
+
+    -- Identity-minimized privacy queue. It requires the platform console
+    -- shell, derives tenants from exact-school data_request:handle grants and
+    -- keeps subject ids and request content out of its result.
+    'console_privacy_requests(include_demo boolean)',
+
+    -- The privacy lifecycle in 20261005124000. Claim, sensitive-detail read,
+    -- identity verification and resolution all require fresh MFA, the
+    -- platform console shell and an exact-school data_request:handle grant.
+    -- Completed erasure additionally requires no legal hold and an executed
+    -- data-deletion approval for the exact tenant and request. The final
+    -- reader exposes only the signed-in subject's immutable certificates.
+    'claim_privacy_request(want_request uuid)',
+    'read_privacy_request_detail(want_request uuid)',
+    'verify_privacy_request(want_request uuid, want_basis text, want_evidence text)',
+    'resolve_privacy_request(want_request uuid, want_outcome text, want_resolution text, want_evidence text, want_approval uuid)',
+    'my_privacy_completion_certificates()',
 
     -- The eight in 20260929110000_console_approvals_and_break_glass.sql.
     -- Three writers on the approval path: requesting checks the duty's
@@ -564,6 +696,14 @@ declare
     'console_break_glass(include_demo boolean)',
     'console_customers(include_demo boolean)',
 
+    -- The approval-bound dead-letter operation in 20261008190000. It requires
+    -- console:operate, fresh MFA and a current two-person projection-replay
+    -- approval bound to the exact tenant, event and consumer. Its focused
+    -- suite proves wrong tenant/consumer, stale MFA and audit failure refuse
+    -- the reset. This is the human control path; worker transitions stay in
+    -- `private` and service-role only.
+    'replay_domain_event(want_event uuid, want_consumer text, want_approval uuid, want_correlation text)',
+
     -- The nine in 20260929300000_registration_transaction.sql. The three
     -- student writers act only on the caller's own enrollment at the
     -- caller's own school, behind writeback.registration_submit and
@@ -581,6 +721,15 @@ declare
     'registrar_put_section(want_term text, want_course text, want_section text, want_title text, want_credits numeric, want_capacity integer, want_waitlist integer, want_meetings jsonb, want_prerequisites text[], want_requires_approval boolean)',
     'registrar_grant_override(want_student uuid, want_section uuid, want_waives text[], want_reason text, want_key text)',
     'registrar_decide(want_enrollment uuid, want_approve boolean, want_reason text, want_key text)',
+
+    -- The two productivity workspace functions recovered from production.
+    -- Saving is security invoker and can only mutate the caller's RLS-owned
+    -- row. The aggregate is security definer, but it first requires an active
+    -- admin membership for the requested tenant and returns counts only after
+    -- the consenting cohort reaches ten; it never returns workspace content.
+    'save_productivity_workspace(p_expected bigint, p_data jsonb, p_tenant text, p_aggregate boolean)',
+    'productivity_readiness_aggregate(p_tenant text)',
+
     -- The nine in 20260929330000_dining.sql. Each takes the caller from
     -- auth.uid() and their school from profiles.school_id, never a
     -- parameter. The three that charge (placing, giving) also check the flag,
@@ -596,7 +745,29 @@ declare
     'dining_pool_summary()',
     'dining_order_queue()',
     'dining_disconnect_partner()',
-    'my_dining_balances()'
+    'my_dining_balances()',
+    -- Private, owner-scoped productivity sync and consented cohort reporting.
+    -- The save RPC derives the owner from auth.uid(); the aggregate RPC
+    -- requires an active tenant administrator and suppresses cohorts below 10.
+    -- `productivity_workspace.sql` exercises both authorization boundaries.
+    'save_productivity_workspace(p_expected bigint, p_data jsonb, p_tenant text, p_aggregate boolean)',
+    'productivity_readiness_aggregate(p_tenant text)',
+    -- The four in 20261006000000_onboarding_journeys_and_handoff.sql. Each
+    -- reads the caller from auth.uid() and raises without one; none takes a
+    -- tenant, a role or a user. The three onboarding writers act only on the
+    -- caller's own assignment and check the step against the journey version it
+    -- was made under; `consume_handoff` answers null for every way of failing.
+    -- `onboarding-journeys.check.sql` attempts each refusal.
+    'start_onboarding(p_journey text, p_entry jsonb, p_channel text)',
+    'complete_onboarding_step(p_assignment uuid, p_step text, p_step_version integer, p_channel text)',
+    'skip_onboarding_step(p_assignment uuid, p_step text, p_step_version integer, p_reason text, p_channel text)',
+    'consume_handoff(p_id uuid, p_nonce text)',
+    -- The two in 20261006160000_my_sessions.sql. Each reads the caller from
+    -- auth.uid() and takes no user; `end_my_session` deletes only the caller's
+    -- own other session and says "no such session" for anyone else's.
+    -- `my-sessions.check.sql` attempts each refusal as the account refused.
+    'my_sessions()',
+    'end_my_session(want uuid)'
   ];
   extra text;
   missing text;

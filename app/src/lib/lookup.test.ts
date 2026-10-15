@@ -643,3 +643,40 @@ describe('a connected calendar with a lot on it', () => {
     expect(out).toContain('and 8 more');
   });
 });
+
+describe('what a school has switched off', () => {
+  // Each lookup that reads a category `context.ts` can already withhold, asked
+  // with that category off. Before this, `runLookups` took no school setting at
+  // all, so a university that turned grades off still had them read out.
+  const CASES: [string, Record<string, unknown>, 'deadlines' | 'grades' | 'attendance' | 'coursework'][] = [
+    ['find_deadlines', { days: 30 }, 'deadlines'],
+    ['read_grades', { course: 'ECON 1020' }, 'grades'],
+    ['read_attendance', { course: 'ECON 1020' }, 'attendance'],
+    ['search_material', { query: 'demand' }, 'coursework'],
+  ];
+
+  for (const [name, input, off] of CASES) {
+    it(`${name} refuses when ${off} is off, and reads when it is not`, () => {
+      const refused = runLookup(call(name, input), { ...src(), off: [off] });
+      expect(refused.result.failed).toBe(true);
+      expect(refused.result.text).toContain('switched this off');
+      expect(refused.used).toBe('');
+
+      // The control: the same call with nothing off is not refused for that
+      // reason, so the refusal above is the setting and not the arguments.
+      const open = runLookup(call(name, input), src());
+      expect(open.result.text).not.toContain('switched this off');
+    });
+  }
+
+  it('an unrelated category being off does not refuse a lookup', () => {
+    const r = runLookup(call('read_grades', { course: 'ECON 1020' }), { ...src(), off: ['deadlines'] });
+    expect(r.result.text).not.toContain('switched this off');
+  });
+
+  it('runLookups answers every call even when all are refused', () => {
+    const r = runLookups([call('read_grades', { course: 'ECON 1020' })], { ...src(), off: ['grades'] });
+    expect(r.results).toHaveLength(1);
+    expect(r.results[0].failed).toBe(true);
+  });
+});

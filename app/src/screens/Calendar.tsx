@@ -1,6 +1,7 @@
-import { lazy, Suspense, useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
+import { lazy, Suspense, useMemo, useState, type CSSProperties, type HTMLAttributes } from 'react';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
+import { useTaskActions } from '../composition/taskactions';
 import { lastPulled, saysWhere, whereFeed, worthSaying } from '../lib/where';
 import { Page } from '../components/Page';
 import { DeadlineRow } from '../components/DeadlineRow';
@@ -8,6 +9,10 @@ import { MarkClass } from '../components/MarkClass';
 import { ApplyingOn } from '../components/Applying';
 import { standingOf } from '../lib/standing';
 import { FirstRun } from './FirstRun';
+import { useOnline } from '../lib/offline-mode';
+import { ReadState } from '../components/unity/ReadState';
+import { calendarEnvelope, countSources, itemSources } from '../lib/read/surfaces';
+import type { SourceLabel } from '../lib/source';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, ChipRow, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { CallIcon, ChevronLeft, ChevronRight } from '../components/Icons';
@@ -175,6 +180,7 @@ function DayView() {
   // A row's padding and hairline, from the layout rather than hard-coded.
   const dayRow = useRowStyle(12);
   const { state, dispatch, catalog, say, tint } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
   const moving = useCalendarMove();
   const [addAt, setAddAt] = useState<number | null>(null);
@@ -189,12 +195,7 @@ function DayView() {
   const taskDrag = useDragToMove<Movable>({
     onDrop: ({ payload, point }) => {
       if (!point || payload.kind !== 'task') return;
-      dispatch({
-        type: 'moveTask',
-        id: payload.id,
-        date: dateToIso(day),
-        time: timeLabel(point.minutes),
-      });
+      taskActions.reschedule(payload.id, dateToIso(day), timeLabel(point.minutes));
       say(`Moved · ${payload.title} to ${shownTime(timeLabel(point.minutes), point.minutes)}.`, 'mine');
     },
   });
@@ -643,12 +644,13 @@ function DayView() {
  */
 function DayTask({ task: t, drag }: { task: PersonalTask; drag?: HTMLAttributes<HTMLElement> }) {
   const taskRow = useRowStyle(8);
-  const { dispatch, courseCode, say } = useStore();
+  const { courseCode, say } = useStore();
+  const taskActions = useTaskActions();
   if (!t.date) return null;
 
   const move = (days: number) => {
     const to = shiftIso(t.date ?? '', days);
-    dispatch({ type: 'editTask', id: t.id, patch: { date: to } });
+    taskActions.reschedule(t.id, to);
     say(`Moved · ${t.title} to ${longLabel(isoToDate(to))}.`, 'mine');
   };
 
@@ -666,7 +668,7 @@ function DayTask({ task: t, drag }: { task: PersonalTask; drag?: HTMLAttributes<
       <button
         type="button"
         className="bare"
-        onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
+        onClick={() => taskActions.toggle(t.id)}
         aria-label={t.done ? `Mark ${t.title} not done` : `Mark ${t.title} done`}
         style={{ width: 20, flex: 'none' }}
       >
@@ -2056,18 +2058,13 @@ function SemesterView() {
    * landing it on the Monday of that week because the row could not say which
    * day would be the view inventing a precision it does not have.
    *
-   * Declared here, above the empty-state return below it: a hook that runs
-   * only on some renders is a hook that runs in a different order on the next
-   * one. `weeks` is read out of a ref rather than closed over for the same
-   * reason — it is built after this point.
+   * The drop target carries the week's ISO date, so the handler does not need
+   * a render-time ref to a list that is built further down this component.
    */
-  const weeksRef = useRef<{ start: Date }[]>([]);
   const drag = useDragToMove<Movable & { weekday: number }>({
     onDrop: ({ payload, target }) => {
-      const w = Number(target?.replace('w:', ''));
-      const week = weeksRef.current[w];
-      if (!week) return;
-      const to = new Date(week.start);
+      if (!target?.startsWith('w:')) return;
+      const to = isoToDate(target.slice(2));
       to.setDate(to.getDate() + payload.weekday);
       moving.move(payload, { date: dateToIso(to) });
     },
@@ -2276,8 +2273,6 @@ function SemesterView() {
     ? weeks.map((w) => w.classes).sort((a, b) => b - a)[Math.floor(weeks.length / 2)]
     : 0;
   const teachingVaries = weeks.some((w) => w.classes !== usualWeek);
-  weeksRef.current = weeks;
-
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
       <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-7)', textWrap: 'pretty' }}>
@@ -2319,10 +2314,11 @@ function SemesterView() {
         {weeks.map((w, i) => {
           const isNow = now >= w.start && now < w.end;
           const exams = w.items.filter((it) => it.kind === 'Exam');
+          const weekKey = `w:${dateToIso(w.start)}`;
           return (
             <div
-              key={i}
-              data-drop={`w:${i}`}
+              key={weekKey}
+              data-drop={weekKey}
               /* Two taps on a week is "put something in this week". There is no
                  day in a bar, so it opens on the Monday and says so. */
               onDoubleClick={(e) => {
@@ -2337,7 +2333,7 @@ function SemesterView() {
                 alignItems: 'flex-start',
                 ...weekRow,
                 background: isNow ? 'var(--app-panel)' : 'transparent',
-                outline: drag.over === `w:${i}` ? '2px solid var(--app-accent)' : undefined,
+                outline: drag.over === weekKey ? '2px solid var(--app-accent)' : undefined,
                 outlineOffset: -2,
               }}
             >
@@ -2827,7 +2823,29 @@ function CampusList() {
 }
 
 export function Calendar() {
-  const { state, dispatch, catalog } = useStore();
+  const { state, dispatch, catalog, loading } = useStore();
+  const now = useNow();
+  const online = useOnline();
+  const empty = nothingYet(catalog, state);
+  const sources = useMemo(
+    () =>
+      countSources([
+        ...itemSources(catalog.items.filter((i) => !state.done[i.id])),
+        ...state.tasks.map((): SourceLabel => 'student_entered'),
+        ...state.appointments.map((): SourceLabel => 'student_entered'),
+        ...state.feedEvents.map((): SourceLabel => 'imported'),
+      ]),
+    [catalog, state.done, state.tasks, state.appointments, state.feedEvents],
+  );
+  const env = calendarEnvelope({
+    loading,
+    empty,
+    count: Object.values(sources).reduce((a, b) => a + b, 0),
+    sources,
+    online,
+    now: now.getTime(),
+    hasCampusFeed: state.feedEvents.length > 0,
+  });
   /*
    * The week chip says what it will draw.
    *
@@ -2837,9 +2855,17 @@ export function Calendar() {
    * supposed to say where you are going.
    */
   const wide = useMedia(WIDE);
-  if (nothingYet(catalog, state)) return <FirstRun where="on the calendar" />;
 
   return (
+    <ReadState
+      env={env}
+      now={now.getTime()}
+      what="your calendar"
+      empty={{ title: 'Nothing on your calendar yet.', body: 'Add a course or an event to start.' }}
+      emptyNode={<FirstRun where="on the calendar" />}
+      inset
+    >
+      {() => (
     /*
      * `wide`, and no filter of its own.
      *
@@ -2918,6 +2944,8 @@ export function Calendar() {
         <MonthView />
       )}
     </Page>
+      )}
+    </ReadState>
   );
 }
 

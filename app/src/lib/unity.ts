@@ -23,14 +23,30 @@ import type { Screen } from './types';
 export interface SourceDetail {
   /** What this is about — "Midterm 2", "Statistics requirement". */
   title: string;
+  /** The shared object type — course, action, file, person, source, and so on. */
+  kind?: string;
+  /** Course, term, project, or institution this object sits inside. */
+  context?: string;
+  /** Plain-language state in addition to the provenance chip. */
+  status?: string;
   /** Where it came from, in the one vocabulary. */
   origin: StatusKey;
   /** The source by name — "Degree audit", "ECON 1020 syllabus". */
   sourceName?: string;
   /** When the source was last checked, as the words to show. */
   freshness?: string;
+  /** Verbatim supporting text already verified by the caller. */
+  excerpt?: string;
+  /** Exact source location when recorded, such as a page or section. */
+  location?: string;
+  /** Recorded owner; omit rather than infer one. */
+  owner?: string;
   /** Other places in the app that use this. */
   usedIn?: string[];
+  /** Objects this one is visibly connected to across Semester. */
+  relationships?: string[];
+  /** Recent student-visible events for this object. */
+  history?: { at: string; label: string }[];
   /** For AI-assisted or derived material: what it was made from. */
   sourcesUsed?: string[];
   /** What this cannot be relied on for. Shown whenever it is given. */
@@ -41,6 +57,8 @@ export interface SourceDetail {
   openSource?: { label: string; run: () => void };
   /** Report something wrong with it. */
   report?: () => void;
+  /** Safe object actions; no action is implied merely by opening details. */
+  actions?: { label: string; run: () => void }[];
 }
 
 export type Overlay =

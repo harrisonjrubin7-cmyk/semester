@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { useTaskActions } from '../composition/taskactions';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { Group, NavRow } from '../components/shell/Rows';
@@ -48,6 +49,7 @@ import {
 } from '../lib/skills-graph';
 import { EXPERIENCE_FLAGS, MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { CareerEvidence } from '../components/CareerEvidence';
+import { CredentialWallet } from '../components/CredentialWallet';
 
 /**
  * What is open, what you have done, and who you have spoken to.
@@ -107,6 +109,7 @@ const TABS = [
   { id: 'resume' as const, label: 'Résumé' },
   { id: 'skills' as const, label: 'Skills & fit' },
   { id: 'evidence' as const, label: 'Evidence' },
+  { id: 'wallet' as const, label: 'Wallet' },
   { id: 'network' as const, label: 'Contacts' },
   { id: 'abroad' as const, label: 'Abroad' },
   { id: 'library' as const, label: 'Library' },
@@ -155,6 +158,7 @@ export function Career({
 
 function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }: { storageKey: string; pathwayKey: string; careerSkillsGraph: boolean; careerEvidence: boolean }) {
   const { state, dispatch, catalog } = useStore();
+  const taskActions = useTaskActions();
   const lib = useDeviceLibrary(storageKey, readCareer, EMPTY_CAREER);
   const education = useDeviceLibrary(pathwayKey, readPathway, EMPTY_PATHWAY).value.profile.education;
 
@@ -296,7 +300,7 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
         need approved school services this app is not connected to.
       </p>
 
-      <Segmented options={TABS.filter(({ id }) => (id !== 'skills' || careerSkillsGraph) && (id !== 'evidence' || careerEvidence))} value={tab} onChange={setTab} style={{ marginBlock: 'var(--sp-5)' }} />
+      <Segmented options={TABS.filter(({ id }) => (id !== 'skills' || careerSkillsGraph) && ((id !== 'evidence' && id !== 'wallet') || careerEvidence))} value={tab} onChange={setTab} style={{ marginBlock: 'var(--sp-5)' }} />
 
       {/*
        * Where the Applications tab used to be, as a row rather than a second
@@ -949,6 +953,8 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
         />
       )}
 
+      {tab === 'wallet' && careerEvidence && <CredentialWallet claims={claims} />}
+
       {tab === 'skills' && careerSkillsGraph && (
         <>
           <SectionLabel style={{ marginBlock: '0 var(--sp-4)' }}>Skills</SectionLabel>
@@ -1238,16 +1244,13 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
                       setNotice('That follow-up is already an action.');
                       return;
                     }
-                    dispatch({
-                      type: 'addTask',
-                      task: {
-                        title: c.next || `Follow up with ${c.name}`,
-                        date: c.nextDate || null,
-                        time: '',
-                        note: c.organization,
-                        courseId: null,
-                        from,
-                      },
+                    taskActions.add({
+                      title: c.next || `Follow up with ${c.name}`,
+                      date: c.nextDate || null,
+                      time: '',
+                      note: c.organization,
+                      courseId: null,
+                      from,
                     });
                     setNotice('Added to your actions. No message was sent.');
                   }}

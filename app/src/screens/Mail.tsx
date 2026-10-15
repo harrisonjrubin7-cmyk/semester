@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNow, useStore } from '../state/store';
+import { useTaskActions } from '../composition/taskactions';
 import { WIDE, useMedia } from '../lib/media';
 import { secondLine } from '../lib/dim';
 import { typing } from '../lib/keys';
@@ -92,6 +93,7 @@ const PER_PAGE = 50;
  */
 export function Mail() {
   const { state, dispatch, catalog, account, say } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
   const wide = useMedia(WIDE);
   const trouble = useTrouble();
@@ -797,18 +799,15 @@ export function Mail() {
               onMenu={openMenu}
               onReply={reply}
               onTask={(mail) => {
-                dispatch({
-                  type: 'addTask',
-                  task: {
-                    title: mail.subject,
-                    // Undated: the email says what, not when, and a task
-                    // dated today because that is when it arrived is a task
-                    // that goes overdue tomorrow for no reason.
-                    date: null,
-                    time: '',
-                    note: `From ${mail.from.name || mail.from.address}. ${mail.snippet}`,
-                    courseId: mail.courseId ?? null,
-                  },
+                taskActions.add({
+                  title: mail.subject,
+                  // Undated: the email says what, not when, and a task
+                  // dated today because that is when it arrived is a task
+                  // that goes overdue tomorrow for no reason.
+                  date: null,
+                  time: '',
+                  note: `From ${mail.from.name || mail.from.address}. ${mail.snippet}`,
+                  courseId: mail.courseId ?? null,
                 });
                 say('Added to your actions.', 'mine');
               }}

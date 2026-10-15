@@ -229,4 +229,12 @@ describe('reading a lesson, one beat at a time', () => {
     stop();
     expect(heard).toEqual([]);
   });
+  it('reports synchronous browser refusal instead of leaving reading pending', async () => {
+    const { speakThen } = await import('./speak');
+    fitVoice();
+    window.speechSynthesis.speak = () => { throw new Error('Voice refused'); };
+    const heard: boolean[] = [];
+    speakThen('A sentence.', 1, spoke => heard.push(spoke));
+    expect(heard).toEqual([false]);
+  });
 });

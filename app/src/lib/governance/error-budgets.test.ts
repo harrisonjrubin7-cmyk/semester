@@ -86,6 +86,33 @@ describe('the registry', () => {
     for (const j of JOURNEYS) expect(() => allowedFailures(1, j.slo), j.id).not.toThrow();
   });
 
+  it('covers every journey the platform brief names, and says which figures nobody has adopted', () => {
+    const ids = JOURNEYS.map((j) => j.id);
+    for (const id of ['sign_in', 'today_load', 'calendar_view', 'course_access', 'assignment_draft_save', 'grade_retrieval', 'ask_semester', 'registration_submit', 'billing_statement_payment', 'communication_delivery', 'integration_sync']) {
+      expect(ids, id).toContain(id);
+    }
+    expect(JOURNEYS.filter((j) => j.proposed)).toHaveLength(7);
+    expect(JOURNEYS.filter((j) => !j.proposed)).toHaveLength(8);
+  });
+
+  it('gives each proposed journey its own bad events, and a registration refusal with a reason is not one of them', () => {
+    for (const j of JOURNEYS.filter((x) => x.proposed)) {
+      expect(j.bad?.length, j.id).toBeGreaterThan(1);
+      expect(new Set(j.bad).size, `${j.id} repeats a bad event`).toBe(j.bad!.length);
+    }
+    const reg = JOURNEYS.find((j) => j.id === 'registration_submit')!;
+    expect(reg.good).toMatch(/refused with a reason/);
+    expect(reg.bad).not.toContain('Is refused');
+    expect(reg.bad).toContain('Refuses without a reason the student can read');
+  });
+
+  it('reviews a proposed journey like an adopted one', () => {
+    // 99.95% over 100,000 allows 50; 40 bad leaves a fifth of it.
+    const r = review({ journey: 'registration_submit', eligible: 100_000, bad: 40 });
+    expect(r.state).toBe('at_risk');
+    expect(review({ journey: 'integration_sync', eligible: 10_000, bad: 51 }).state).toBe('breached'); // 99.5% allows 50
+  });
+
   it('reads burn from the window when no recent lookback is given', () => {
     const r = review({ journey: 'plan_save', eligible: 100_000, bad: 40 });
     expect(r.burn).toBeCloseTo(0.8);

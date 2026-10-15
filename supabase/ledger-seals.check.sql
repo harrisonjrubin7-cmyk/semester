@@ -282,7 +282,11 @@ begin
     pg_temp.error_as_role('anon', 'select private.ledger_chain_nightly()') like '%permission denied%');
 
   -- ── a school's removal takes its manifests with it ─────────────────────
+  -- The delete guard of 20260930200000 is off for this one proof of the
+  -- cascade, inside a transaction that is rolled back.
+  alter table public.schools disable trigger refuse_school_delete;
   delete from public.schools where id = 'sl-u';
+  alter table public.schools enable trigger refuse_school_delete;
   perform pg_temp.must('removing a school removes its chain, its manifests and nothing else',
     not exists (select 1 from private.ledger_chain_manifest where tenant_id = 'sl-u')
     and not exists (select 1 from private.ledger_chain where tenant_id = 'sl-u'));

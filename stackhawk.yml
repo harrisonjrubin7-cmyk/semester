@@ -1,0 +1,21 @@
+app:
+  applicationId: ${STACKHAWK_APPLICATION_ID}
+  host: ${APP_HOST:http://localhost:4173}
+  env: CI
+
+hawk:
+  startupTimeoutMinutes: 3
+  # The route tree is rendered by React, not present in the initial HTML.
+  # This adds frontend coverage; it does not scan the separate Supabase API.
+  spider:
+    ajax: true
+    maxDurationMinutes: 4
+    ajaxBrowser: CHROME_HEADLESS
+
+tags:
+  - name: _STACKHAWK_AGENT
+    value: ${HAWK_AGENT:none}
+  - name: _STACKHAWK_GIT_COMMIT_SHA
+    value: ${COMMIT_SHA:none}
+  - name: _STACKHAWK_GIT_BRANCH
+    value: ${BRANCH_NAME:none}

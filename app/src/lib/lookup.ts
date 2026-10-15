@@ -49,6 +49,7 @@
  * directly for them — returns any of it.
  */
 
+import { aiAllows, type AiOff } from './aiflags';
 import { budget, hasPolicy, tally } from './attend';
 import { blocksFor, type Catalog } from '../data/catalog';
 import type { ToolCall, ToolResult, ToolSpec } from './claude';
@@ -65,7 +66,22 @@ export interface Source {
   state: State;
   catalog: Catalog;
   now: Date;
+  /**
+   * What the school has switched off (`school.capabilities.aiOff`). `context.ts`
+   * honours it when it builds the preamble; a lookup is the same data read on
+   * demand, so it has to honour it too or a school that switched grades off
+   * would still have them read out by `read_grades`.
+   */
+  off?: readonly AiOff[];
 }
+
+/** The category a lookup reads from, where it has one. `read_tasks` and `read_timetable` read the student's own actions and timetable, which no category covers. */
+const LOOKUP_CATEGORY: Partial<Record<string, AiOff>> = {
+  find_deadlines: 'deadlines',
+  read_grades: 'grades',
+  read_attendance: 'attendance',
+  search_material: 'coursework',
+};
 
 /** One lookup, run. */
 export interface Looked {
@@ -666,6 +682,10 @@ export function runLookup(call: ToolCall, src: Source): Looked {
     saying: said,
   });
   if (!isLookup(call.name)) return fail(`There is no lookup called ${call.name}.`);
+  const category = LOOKUP_CATEGORY[call.name];
+  if (category && !aiAllows(src.off, category)) {
+    return fail('Your university has switched this off in the assistant. Say so, and do not guess the answer.');
+  }
   try {
     const run: Record<string, (s: Source, i: Record<string, unknown>) => { text: string; used: string }> = {
       find_deadlines: findDeadlines,
