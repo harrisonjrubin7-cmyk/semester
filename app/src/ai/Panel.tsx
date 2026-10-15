@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { focusablesIn, nextInRing } from '../a11y/modal';
 import { useStore } from '../state/store';
 import { useAI, useSeed } from './store';
 import { assemble } from './assemble';
-import { TOUCH, WIDE, useMedia } from '../lib/media';
+import { TOUCH, WIDE, useMedia, useTier } from '../lib/media';
 import { canSend, useConversation } from './converse';
 import { Composer, sendHint } from './Composer';
 import { useVoice } from './usevoice';
@@ -82,7 +82,13 @@ export function Panel() {
   const { dispatch } = useStore();
   const ai = useAI();
   const seed = useSeed();
-  const wide = useMedia(WIDE);
+  /*
+   * `wide` means a window with room for a docked column, which a phone on its
+   * side is not: `useTier` calls it a phone (`HANDHELD`) at any width, and the
+   * shell draws the phone frame for it, so it keeps the sheet.
+   */
+  const tier = useTier();
+  const wide = useMedia(WIDE) && tier !== 'phone';
   const touch = useMedia(TOUCH);
   const [full, setFull] = useState(false);
   const [draft, setDraft] = useState(seed.text);
@@ -224,7 +230,7 @@ export function Panel() {
    * cleanup is the close: the variable goes with the column. Opened out it is a
    * modal over a wash, and the page underneath keeps its full width.
    */
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!wide || full) return;
     const root = document.documentElement;
     root.style.setProperty('--assist-dock', DOCK_WIDTH);
@@ -293,6 +299,7 @@ export function Panel() {
           )}
           <div
             ref={sheet}
+            className="assistant-sheet"
             role="dialog"
             aria-label={`Ask about ${assembled.label}`}
             aria-modal={full}

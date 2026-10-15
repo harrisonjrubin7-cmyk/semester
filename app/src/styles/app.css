@@ -1666,6 +1666,18 @@ a:hover {
    Drop the frame, the rail and the chrome; keep the words. */
 @media print {
   /*
+   * The docked assistant is not part of the page. Its column comes off the
+   * paper, and the width it took from the page goes back with it.
+   */
+  .device.device-pane,
+  .device.deskwork {
+    padding-inline-end: 0;
+  }
+  .assistant-sheet {
+    display: none !important;
+  }
+
+  /*
    * A document prints as the page, never as the editor.
    *
    * The editor is a stack of cards with labels, move buttons and input
