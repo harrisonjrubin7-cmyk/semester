@@ -3,14 +3,29 @@ import { ConfirmDialog } from './ConfirmDialog';
 import { ErrorState, LoadingState } from './unity/States';
 import { ActionPreview } from './unity/ActionPreview';
 import { SemesterDesignSurface, SessionRow as DesignSessionRow } from './semester-design';
-import { dateFormatter } from '../lib/locale';
-import { deviceLabel, endSession, listSessions, type SessionRow as DeviceSession } from '../lib/devices';
+import {
+  deviceLabel,
+  endSession,
+  formatSessionTime,
+  listSessions,
+  type SessionRevocationReceipt,
+  type SessionRow as DeviceSession,
+} from '../lib/devices';
 
-type Load = { status: 'loading' } | { status: 'ready'; rows: DeviceSession[] } | { status: 'error' };
+type Load =
+  | { status: 'loading' }
+  | { status: 'ready'; rows: DeviceSession[]; checkedAt: string }
+  | { status: 'error' };
+
+type Operation =
+  | { status: 'pending'; requestKey: string }
+  | { status: 'refused'; requestKey: string }
+  | { status: 'unknown'; requestKey: string };
 
 const LINE = { fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' } as const;
 
-const when = (value: string) => dateFormatter({ dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+const newRequestKey = () => globalThis.crypto.randomUUID();
+const currentTime = () => new Date();
 
 /**
  * Every place this account is signed in, and a way to end one.
@@ -27,45 +42,64 @@ const when = (value: string) => dateFormatter({ dateStyle: 'medium', timeStyle: 
 export function SignedInDevices({
   list = listSessions,
   end = endSession,
+  requestKey = newRequestKey,
+  now = currentTime,
 }: {
   list?: () => Promise<DeviceSession[]>;
-  end?: (id: string) => Promise<boolean>;
+  end?: (id: string, requestKey: string) => Promise<SessionRevocationReceipt>;
+  requestKey?: () => string;
+  now?: () => Date;
 }) {
   const [load, setLoad] = useState<Load>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
   const [confirm, setConfirm] = useState<DeviceSession | null>(null);
   const [note, setNote] = useState('');
-  const [failure, setFailure] = useState('');
+  const [operations, setOperations] = useState<Record<string, Operation>>({});
 
   useEffect(() => {
     let live = true;
     list()
-      .then((rows) => live && setLoad({ status: 'ready', rows }))
+      .then((rows) => live && setLoad({ status: 'ready', rows, checkedAt: now().toISOString() }))
       .catch(() => live && setLoad({ status: 'error' }));
     return () => {
       live = false;
     };
-  }, [list, attempt]);
+  }, [list, attempt, now]);
 
   const retry = useCallback(() => {
     setLoad({ status: 'loading' });
     setAttempt((n) => n + 1);
   }, []);
 
-  const ending = async (row: DeviceSession) => {
+  const setOperation = (id: string, operation?: Operation) => {
+    setOperations((current) => {
+      const next = { ...current };
+      if (operation) next[id] = operation;
+      else delete next[id];
+      return next;
+    });
+  };
+
+  const ending = async (row: DeviceSession, retainedKey?: string) => {
+    const key = retainedKey ?? requestKey();
     setConfirm(null);
     setNote('');
-    setFailure('');
+    setOperation(row.id, { status: 'pending', requestKey: key });
     try {
-      const done = await end(row.id);
-      setNote(
-        done
-          ? `${deviceLabel(row.userAgent)} is signed out. It stops working within the hour at the latest.`
-          : `${deviceLabel(row.userAgent)} had already signed out.`,
-      );
-      retry();
-    } catch (err) {
-      setFailure(err instanceof Error ? err.message : 'That device was not signed out.');
+      const receipt = await end(row.id, key);
+      if (receipt.outcome === 'revoked') {
+        setOperation(row.id);
+        setNote(`${deviceLabel(row.userAgent)} is signed out. It stops working within the hour at the latest.`);
+        retry();
+      } else if (receipt.outcome === 'already_ended') {
+        setOperation(row.id);
+        setNote(`${deviceLabel(row.userAgent)} had already signed out.`);
+        retry();
+      } else {
+        setOperation(row.id, { status: 'refused', requestKey: key });
+      }
+    } catch {
+      setOperation(row.id, { status: 'unknown', requestKey: key });
     }
   };
 
@@ -86,20 +120,61 @@ export function SignedInDevices({
       {load.status === 'ready' ? (
         <>
           <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-            {load.rows.map((row) => (
-              <li key={row.id}>
-                <SemesterDesignSurface label={`${deviceLabel(row.userAgent)} session`}>
-                  <DesignSessionRow
-                    device={deviceLabel(row.userAgent)}
-                    lastActive={`Signed in ${when(row.startedAt)}. Last active ${when(row.lastActiveAt)}.`}
-                    current={row.isCurrent}
-                    onSignOut={row.isCurrent ? undefined : () => setConfirm(row)}
-                    confirmInline={false}
-                    signOutLabel={`Sign out ${deviceLabel(row.userAgent)}, signed in ${when(row.startedAt)}`}
-                  />
-                </SemesterDesignSurface>
-              </li>
-            ))}
+            {load.rows.map((row) => {
+              const operation = operations[row.id];
+              const label = deviceLabel(row.userAgent);
+              return (
+                <li key={row.id}>
+                  <SemesterDesignSurface label={`${label} session`}>
+                    <DesignSessionRow
+                      device={label}
+                      lastActive={`Signed in ${formatSessionTime(row.startedAt)}. Last active ${formatSessionTime(row.lastActiveAt)}.`}
+                      current={row.isCurrent}
+                      onSignOut={row.isCurrent ? undefined : () => setConfirm(row)}
+                      signingOut={operation?.status === 'pending'}
+                      confirmInline={false}
+                      signOutLabel={`Sign out ${label}, signed in ${formatSessionTime(row.startedAt)}`}
+                    />
+                    {operation?.status === 'pending' ? (
+                      <p role="status" aria-live="polite" style={{ ...LINE, marginBlock: 'var(--sp-3) 0' }}>
+                        Checking whether {label} signed out…
+                      </p>
+                    ) : null}
+                    {operation?.status === 'refused' ? (
+                      <div style={{ ...LINE, marginBlock: 'var(--sp-3) 0' }}>
+                        <p role="alert" style={{ margin: 0 }}>
+                          That device was not signed out. Refresh the list before trying again.
+                        </p>
+                        <button
+                          type="button"
+                          className="btn btn-sm"
+                          style={{ marginTop: 'var(--sp-3)' }}
+                          onClick={() => { setOperation(row.id); retry(); }}
+                        >
+                          Refresh list
+                        </button>
+                      </div>
+                    ) : null}
+                    {operation?.status === 'unknown' ? (
+                      <div style={{ ...LINE, marginBlock: 'var(--sp-3) 0' }}>
+                        <p role="alert" style={{ margin: 0 }}>
+                          We couldn&apos;t confirm the result. That device may or may not have signed out.
+                        </p>
+                        <button
+                          type="button"
+                          className="btn btn-sm"
+                          style={{ marginTop: 'var(--sp-3)' }}
+                          aria-label={`Check ${label} sign-out result again`}
+                          onClick={() => void ending(row, operation.requestKey)}
+                        >
+                          Check again
+                        </button>
+                      </div>
+                    ) : null}
+                  </SemesterDesignSurface>
+                </li>
+              );
+            })}
           </ul>
           {load.rows.length === 0 ? (
             <p role="status" style={{ ...LINE, margin: 0 }}>
@@ -111,6 +186,9 @@ export function SignedInDevices({
               This is the only device signed in to this account.
             </p>
           ) : null}
+          <p style={{ ...LINE, color: 'var(--app-dim)', marginBlock: 'var(--sp-4) 0' }}>
+            Source: Semester account sessions · checked {formatSessionTime(load.checkedAt)}
+          </p>
         </>
       ) : null}
 
@@ -119,7 +197,6 @@ export function SignedInDevices({
           {note}
         </p>
       ) : null}
-      {failure ? <p role="alert">{failure}</p> : null}
 
       {confirm ? (
         <ConfirmDialog

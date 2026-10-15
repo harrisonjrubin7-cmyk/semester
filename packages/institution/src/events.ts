@@ -71,6 +71,7 @@ export const EVENT_TYPES = {
   // Identity
   'identity.user_registered': spec(1, 'internal', 'audit'),
   'identity.session_authenticated': spec(1, 'internal', 'operational'),
+  'identity.session_revoked': spec(1, 'internal', 'audit'),
   'identity.role_granted': spec(1, 'internal', 'audit'),
   'identity.role_revoked': spec(1, 'internal', 'audit'),
   // Student and action
