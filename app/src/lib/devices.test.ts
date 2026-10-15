@@ -1,5 +1,18 @@
-import { describe, expect, it } from 'vitest';
-import { deviceLabel, orderSessions, sessionRows, type RawSession, type SessionRow } from './devices';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  deviceLabel,
+  endSession,
+  formatSessionTime,
+  listSessions,
+  orderSessions,
+  sessionRevocationReceipt,
+  sessionRows,
+  type RawSession,
+  type SessionRow,
+} from './devices';
+import { cloud } from './cloud';
+
+vi.mock('./cloud', () => ({ cloud: vi.fn() }));
 
 /**
  * The words for a device and the order of the list. The two RPC calls are one
@@ -17,6 +30,10 @@ const UA = {
   safariIpad: 'Mozilla/5.0 (iPad; CPU OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
   operaMac: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 OPR/115.0.0.0',
 };
+
+beforeEach(() => {
+  vi.mocked(cloud).mockReset();
+});
 
 describe('deviceLabel', () => {
   it.each([
@@ -75,5 +92,85 @@ describe('sessionRows', () => {
   it('only a true is_current counts', () => {
     const raw = [{ id: 's', created_at: 'c', last_active: 'l', user_agent: null, is_current: null as unknown as boolean }];
     expect(sessionRows(raw)[0].isCurrent).toBe(false);
+  });
+});
+
+describe('sessionRevocationReceipt', () => {
+  it.each(['revoked', 'already_ended', 'refused'] as const)(
+    'keeps the bounded %s outcome and timestamp',
+    (outcome) => {
+      expect(sessionRevocationReceipt([{ outcome, occurred_at: '2026-10-15T12:34:56.000Z' }])).toEqual({
+        outcome,
+        occurredAt: '2026-10-15T12:34:56.000Z',
+      });
+    },
+  );
+
+  it('treats malformed, ambiguous, and invalid-date results as unavailable', () => {
+    expect(sessionRevocationReceipt(null)).toBeNull();
+    expect(sessionRevocationReceipt([])).toBeNull();
+    expect(sessionRevocationReceipt([
+      { outcome: 'revoked', occurred_at: '2026-10-15T12:34:56.000Z' },
+      { outcome: 'revoked', occurred_at: '2026-10-15T12:34:56.000Z' },
+    ])).toBeNull();
+    expect(sessionRevocationReceipt([{ outcome: 'maybe', occurred_at: '2026-10-15T12:34:56.000Z' }])).toBeNull();
+    expect(sessionRevocationReceipt([{ outcome: 'revoked', occurred_at: 'not-a-date' }])).toBeNull();
+    expect(sessionRevocationReceipt([{ outcome: 'revoked', occurred_at: '2026-02-30T12:34:56.000Z' }])).toBeNull();
+    expect(sessionRevocationReceipt([{ outcome: 'revoked', occurred_at: '10/15/2026 12:34' }])).toBeNull();
+  });
+});
+
+describe('formatSessionTime', () => {
+  it('uses a safe fallback for invalid or absent values', () => {
+    expect(formatSessionTime('not-a-date')).toBe('Time unavailable');
+    expect(formatSessionTime('')).toBe('Time unavailable');
+    expect(formatSessionTime(null)).toBe('Time unavailable');
+    expect(formatSessionTime(undefined)).toBe('Time unavailable');
+    expect(formatSessionTime('2026-02-30T12:34:56.000Z')).toBe('Time unavailable');
+    expect(formatSessionTime('10/15/2026 12:34')).toBe('Time unavailable');
+  });
+
+  it('formats a valid timestamp', () => {
+    expect(formatSessionTime('2026-10-15T12:34:56.000Z')).not.toBe('Time unavailable');
+  });
+});
+
+describe('session RPC boundaries', () => {
+  it('sends one target and request key and returns only the bounded receipt', async () => {
+    const rpc = vi.fn().mockResolvedValue({
+      data: [{
+        outcome: 'revoked',
+        occurred_at: '2026-10-15T12:34:56.000Z',
+        raw_provider_message: 'must not escape',
+      }],
+      error: null,
+    });
+    vi.mocked(cloud).mockResolvedValue({ rpc } as never);
+
+    await expect(endSession('session-id', 'request-key')).resolves.toEqual({
+      outcome: 'revoked',
+      occurredAt: '2026-10-15T12:34:56.000Z',
+    });
+    expect(rpc).toHaveBeenCalledExactlyOnceWith('revoke_my_session', {
+      want: 'session-id',
+      request_key: 'request-key',
+    });
+  });
+
+  it('replaces RPC and malformed-result details with a stable internal error', async () => {
+    const rpc = vi.fn()
+      .mockResolvedValueOnce({ data: null, error: { message: 'secret account/session/cursor' } })
+      .mockResolvedValueOnce({ data: [{ outcome: 'surprise', occurred_at: 'raw-date' }], error: null });
+    vi.mocked(cloud).mockResolvedValue({ rpc } as never);
+
+    await expect(endSession('session-id', 'request-key')).rejects.toThrow('SESSION_REVOCATION_UNAVAILABLE');
+    await expect(endSession('session-id', 'request-key')).rejects.toThrow('SESSION_REVOCATION_UNAVAILABLE');
+  });
+
+  it('does not expose a provider list error', async () => {
+    vi.mocked(cloud).mockResolvedValue({
+      rpc: vi.fn().mockResolvedValue({ data: null, error: { message: 'secret account/session/cursor' } }),
+    } as never);
+    await expect(listSessions()).rejects.toThrow('SESSION_LIST_UNAVAILABLE');
   });
 });

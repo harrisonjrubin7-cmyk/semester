@@ -762,12 +762,16 @@ declare
     'complete_onboarding_step(p_assignment uuid, p_step text, p_step_version integer, p_channel text)',
     'skip_onboarding_step(p_assignment uuid, p_step text, p_step_version integer, p_reason text, p_channel text)',
     'consume_handoff(p_id uuid, p_nonce text)',
-    -- The two in 20261006160000_my_sessions.sql. Each reads the caller from
-    -- auth.uid() and takes no user; `end_my_session` deletes only the caller's
-    -- own other session and says "no such session" for anyone else's.
-    -- `my-sessions.check.sql` attempts each refusal as the account refused.
+    -- The two in 20261006160000_my_sessions.sql and the idempotent replacement
+    -- command in 20261015120000_session_revocation_receipt.sql. Each reads the
+    -- caller from auth.uid() and takes no user; the write commands delete only
+    -- the caller's own other session. The replacement also protects the
+    -- current session, makes missing and cross-account targets indistinguishable,
+    -- and binds unknown-outcome retries to one request key.
+    -- The session check suites attempt each refusal as the account refused.
     'my_sessions()',
-    'end_my_session(want uuid)'
+    'end_my_session(want uuid)',
+    'revoke_my_session(want uuid, request_key uuid)'
   ];
   extra text;
   missing text;

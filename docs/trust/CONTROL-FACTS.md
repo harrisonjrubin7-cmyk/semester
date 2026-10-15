@@ -12,14 +12,14 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 239 |
+| Migration files | 240 |
 | Tables created in `public` and not later dropped | 342 |
 | … of which enable row-level security in a migration | 342 |
-| Tables created in `private` and not later dropped | 50 |
-| … of which enable row-level security in a migration | 50 |
+| Tables created in `private` and not later dropped | 52 |
+| … of which enable row-level security in a migration | 52 |
 | Tables with no `enable row level security` statement found | 0 |
 | Tables named by at least one literal `create policy` statement | 276 |
-| Tables with RLS found and no literal policy statement | 116 |
+| Tables with RLS found and no literal policy statement | 118 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-155 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+156 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -167,6 +167,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/school-offboarding.check.sql` | A school leaves in steps (full-beta gate G3, 20260930200000). |
 | `supabase/schools.check.sql` | What removing a university does to the people who studied there. |
 | `supabase/scim-gateway.check.sql` | The SCIM gateway wrappers (20260928200000_scim_gateway.sql). |
+| `supabase/session-revocation.check.sql` | One remote account-session revoke, its durable request receipt, minimized audit/outbox evidence, and the first service-only event consumer. |
 | `supabase/share-audit.check.sql` | The advisor-share lifecycle on the common audit record (20260930190000). |
 | `supabase/space-availability.check.sql` | Room availability is a mapping target, and only one check guards the list. |
 | `supabase/student-accounts.check.sql` | Student accounts (D-146): nobody writes the ledger but the approval of someone other than the requester; above the threshold only a high-value approver approves; whoever put a payment on the ledger d… |
@@ -249,13 +250,13 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Catalogued event types | Count |
 | --- | --- |
-| All | 65 |
+| All | 66 |
 | retention `operational` | 13 |
 | retention `student_record` | 17 |
-| retention `audit` | 30 |
+| retention `audit` | 31 |
 | retention `commercial` | 5 |
 | classification `public` | 0 |
-| classification `internal` | 23 |
+| classification `internal` | 24 |
 | classification `student_private` | 27 |
 | classification `education_record` | 15 |
 
@@ -296,13 +297,13 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 241 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 241 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 242 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 242 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
-| Register rows in category `self-service` | 65 |
+| Register rows in category `self-service` | 66 |
 | Register rows in category `sharing` | 23 |
 | Register rows in category `admin` | 97 |
 | Register rows in category `integration` | 6 |

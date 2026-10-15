@@ -34,6 +34,15 @@ const good = (): SemesterEvent => makeEvent({
 });
 
 describe('the catalog', () => {
+  it('classifies a revoked account session as internal audit evidence', () => {
+    expect(EVENT_TYPES).toHaveProperty('identity.session_revoked');
+    expect(EVENT_TYPES['identity.session_revoked' as keyof typeof EVENT_TYPES]).toEqual({
+      version: 1,
+      classification: 'internal',
+      retention: 'audit',
+    });
+  });
+
   it('names every type as domain.name, and every classification and retention class is a known one', () => {
     for (const [type, s] of Object.entries(EVENT_TYPES)) {
       expect(type).toMatch(EVENT_TYPE_PATTERN);

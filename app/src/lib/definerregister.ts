@@ -320,6 +320,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['retire_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['reveal_alias_identity', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['review_break_glass', 'admin', ['auth.uid()', 'private.holds_seat']],
+  ['revoke_my_session', 'self-service', ['auth.uid()', 'user_id = $2']],
   ['revoke_school_membership', 'admin', ['private.has_capability']],
   ['revoke_support_access', 'sharing', ['auth.uid()']],
   ['save_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
@@ -549,6 +550,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261006160000_my_sessions.sql',
     functions: ['end_my_session', 'my_sessions'],
+  },
+  {
+    file: '20261015120000_session_revocation_receipt.sql',
+    functions: ['revoke_my_session'],
   },
 ];
 

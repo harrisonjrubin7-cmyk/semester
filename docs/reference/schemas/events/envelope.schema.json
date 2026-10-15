@@ -29,6 +29,7 @@
       "enum": [
         "identity.user_registered",
         "identity.session_authenticated",
+        "identity.session_revoked",
         "identity.role_granted",
         "identity.role_revoked",
         "action.created",
