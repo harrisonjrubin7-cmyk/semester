@@ -35,14 +35,30 @@ const isEmpty = (v) =>
   (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0);
 
 const LEVELS = ['low', 'medium', 'high', 'critical'];
+const EXPECTED_GATES = ['GATE-01', 'GATE-02', 'GATE-03', 'GATE-04', 'GATE-05', 'GATE-06'];
+// Fields that name an artifact: a value containing "/" is a file path, anything else is an artifact id.
+const REFERENCE_FIELDS = [
+  'workflow_definition', 'source_authority_record', 'data_contract', 'access_policy',
+  'UI_states', 'operational_runbook', 'release_evidence',
+];
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export function check(repo) {
   const errors = [];
   const warnings = [];
   const { model, graph, root } = repo;
+  const today = repo.today ?? new Date().toISOString().slice(0, 10);
   const states = model.delivery_states;
   const rank = (s) => states.indexOf(s);
   const nodes = new Map();
+  const artifactById = new Map(repo.artifacts.map(({ data }) => [data.id, data]));
+  // Returns why a reference does not resolve, or null when it does.
+  const referenceProblem = (value) => {
+    if (value.includes('/')) return existsSync(join(root, value)) ? null : 'does not exist on disk';
+    const artifact = artifactById.get(value);
+    if (!artifact) return 'is neither a file path nor a registry artifact id';
+    return artifact.state === 'approved' ? null : `is registered as ${artifact.state}, not approved`;
+  };
 
   // Dependency graph: unique nodes, known statuses, known edge endpoints, acyclic.
   for (const n of graph.nodes) {
@@ -73,14 +89,20 @@ export function check(repo) {
   };
   for (const id of nodes.keys()) visit(id, []);
 
-  // Quality gates: six gates, unique ids, each with checks.
+  // Quality gates: exactly GATE-01 to GATE-06, unique ids, each with checks.
   const gateIds = new Set();
   for (const g of repo.gates.gates) {
     if (gateIds.has(g.id)) errors.push(`quality-gates: duplicate ${g.id}`);
     gateIds.add(g.id);
     if (isEmpty(g.checks)) errors.push(`quality-gates: ${g.id} has no checks`);
   }
-  if (gateIds.size !== 6) errors.push(`quality-gates: expected 6 gates, found ${gateIds.size}`);
+  const missingGates = EXPECTED_GATES.filter((id) => !gateIds.has(id));
+  const unexpectedGates = [...gateIds].filter((id) => !EXPECTED_GATES.includes(id));
+  if (missingGates.length || unexpectedGates.length) {
+    errors.push(
+      `quality-gates: expected GATE-01..GATE-06; missing [${missingGates.join(', ')}]; unexpected [${unexpectedGates.join(', ')}]`,
+    );
+  }
 
   // Risks: enumerated levels, mitigations and an owner.
   for (const r of repo.risks.risks) {
@@ -109,9 +131,24 @@ export function check(repo) {
       continue;
     }
     const r = rank(inc.state);
-    if (r >= rank('approved_for_build')) {
+    const approved = r >= rank('approved_for_build');
+    if (approved) {
       const missing = model.every_increment_requires.filter((k) => isEmpty(inc[k]));
       if (missing.length) errors.push(`${label}: ${inc.state} requires ${missing.join(', ')}`);
+      // A missing list is not the same as a reviewed "no hard dependencies" decision.
+      if (!Array.isArray(inc.hard_dependencies)) {
+        errors.push(`${label}: ${inc.state} requires hard_dependencies to be declared as an array`);
+      }
+    }
+    for (const field of REFERENCE_FIELDS) {
+      const value = inc[field];
+      if (typeof value !== 'string' || value === '') continue;
+      const problem = referenceProblem(value);
+      if (!problem) continue;
+      // Before approval a broken reference is a gap to close; once approved it is a blocker.
+      const message = `${label}: ${field} ${value} ${problem}`;
+      if (approved) errors.push(message);
+      else warnings.push(message);
     }
     if (r >= rank('enabled') && isEmpty(inc.rollout_and_rollback_plan?.safe_off)) {
       errors.push(`${label}: ${inc.state} without a safe-off behavior`);
@@ -125,9 +162,9 @@ export function check(repo) {
     const required = model.hard_dependency_minimum_state[inc.state];
     // Before approval, report what still stands between the card and approved_for_build.
     const gate = required ?? 'approved_for_build';
-    const unmet = (inc.hard_dependencies ?? []).filter(
-      (d) => nodes.has(d) && rank(nodes.get(d).status) < rank(gate),
-    );
+    // A retired component is not ready: it ranks after the delivery states but cannot satisfy a gate.
+    const satisfies = (status) => status !== 'retired' && rank(status) >= rank(gate);
+    const unmet = (inc.hard_dependencies ?? []).filter((d) => nodes.has(d) && !satisfies(nodes.get(d).status));
     if (required && unmet.length) {
       errors.push(`${label}: ${inc.state} blocked; hard dependencies below ${required}: ${unmet.join(', ')}`);
     }
@@ -150,6 +187,13 @@ export function check(repo) {
       errors.push(`${label}: state ${a.state} but ${a.location} does not exist`);
     }
     if (a.release_critical && a.state !== 'approved') warnings.push(`${label}: release-critical and ${a.state}`);
+    // An approved artifact whose review date has passed is expired by the operating model's own rule.
+    const due = a.review?.next_due;
+    if (a.state === 'approved' && ISO_DATE.test(due ?? '') && due < today) {
+      errors.push(`${label}: approved but its review was due ${due}; it cannot support a release`);
+    } else if (a.state === 'approved' && !ISO_DATE.test(due ?? '')) {
+      warnings.push(`${label}: approved with no review date (next_due is ${due ?? 'unset'})`);
+    }
   }
 
   // Expansion scorecard: hard stops are defined and the no-override rule is stated.
@@ -162,6 +206,10 @@ export function check(repo) {
   if (isEmpty(repo.finance.principles)) errors.push('finance: no principles');
   for (const a of repo.finance.minimum_artifacts) {
     if (a.status === 'not_started') warnings.push(`finance: ${a.id} not started`);
+    // A "present" artifact must point at evidence in the repository, so the baseline cannot claim unbuilt work.
+    if (a.status === 'present' && (isEmpty(a.evidence) || !existsSync(join(root, a.evidence)))) {
+      errors.push(`finance: ${a.id} is marked present but its evidence ${a.evidence ?? '(none)'} does not exist`);
+    }
   }
 
   return { errors, warnings, blockedBy };

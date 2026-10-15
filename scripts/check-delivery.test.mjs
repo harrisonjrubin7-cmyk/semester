@@ -58,6 +58,7 @@ test('control: an artifact that claims approved but whose file is missing fails'
   const repo = loadRepo();
   const art = repo.artifacts.find((a) => a.data.id === 'ART-RDY-011');
   art.data.state = 'approved';
+  art.data.location = 'docs/none/INC-READINESS-001.yaml';
   const { errors } = check(repo);
   assert.ok(errors.some((e) => /ART-RDY-011: state approved but .* does not exist/.test(e)));
 });
@@ -73,5 +74,59 @@ test('control: a quality-gate set other than six gates fails', () => {
   const repo = loadRepo();
   repo.gates.gates.pop();
   const { errors } = check(repo);
-  assert.ok(errors.some((e) => /expected 6 gates/.test(e)));
+  assert.ok(errors.some((e) => /expected GATE-01..GATE-06; missing \[GATE-06\]/.test(e)));
+});
+
+test('control: a renamed quality gate with the same count fails', () => {
+  const repo = loadRepo();
+  repo.gates.gates[5].id = 'GATE-07';
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /missing \[GATE-06\]; unexpected \[GATE-07\]/.test(e)));
+});
+
+test('control: a hard dependency retired by its owner does not satisfy approval', () => {
+  const repo = loadRepo();
+  const { hard_dependencies: deps } = repo.increments.find((i) => i.data.id === 'RDY-INC-003').data;
+  for (const id of deps) repo.graph.nodes.find((n) => n.id === id).status = 'retired';
+  const promoted = withIncrement(repo, 'RDY-INC-003', (d) => { d.state = 'approved_for_build'; });
+  const { errors } = check(promoted);
+  assert.ok(errors.some((e) => /RDY-INC-003: approved_for_build blocked; hard dependencies below approved_for_build: .*source_authority_register/.test(e)));
+});
+
+test('control: an approved increment with no hard_dependencies declaration fails', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'approved_for_build'; delete d.hard_dependencies; });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /RDY-INC-003: approved_for_build requires hard_dependencies to be declared as an array/.test(e)));
+});
+
+test('control: an approved increment with a placeholder reference fails; a shaped one only warns', () => {
+  const placeholder = (state) => withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = state; d.workflow_definition = 'TBD-placeholder'; });
+  const approved = check(placeholder('approved_for_build'));
+  assert.ok(approved.errors.some((e) => /RDY-INC-003: workflow_definition TBD-placeholder is neither a file path nor a registry artifact id/.test(e)));
+  const shaped = check(placeholder('shaped'));
+  assert.ok(shaped.warnings.some((e) => /RDY-INC-003: workflow_definition TBD-placeholder/.test(e)));
+});
+
+test('control: an approved increment citing a file path that does not exist fails', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'approved_for_build'; d.data_contract = 'supabase/migrations/no_such_file.sql'; });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /data_contract supabase\/migrations\/no_such_file.sql does not exist on disk/.test(e)));
+});
+
+test('control: an approved artifact whose review date has passed fails', () => {
+  const repo = loadRepo();
+  const art = repo.artifacts.find((a) => a.data.id === 'ART-RDY-011');
+  art.data.state = 'approved';
+  art.data.review.next_due = '2020-01-01';
+  art.data.location = 'docs/pilot/registration-readiness/INC-READINESS-001.yaml';
+  repo.today = '2026-10-15';
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /ART-RDY-011: approved but its review was due 2020-01-01/.test(e)));
+});
+
+test('control: a finance artifact marked present without evidence on disk fails', () => {
+  const repo = loadRepo();
+  repo.finance.minimum_artifacts.find((a) => a.id === 'ledger_schema').evidence = 'supabase/migrations/none.sql';
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /finance: ledger_schema is marked present but its evidence supabase\/migrations\/none.sql does not exist/.test(e)));
 });
