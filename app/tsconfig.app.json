@@ -58,5 +58,5 @@
       "@semester/platform-control": ["../packages/platform-control/src/index.ts"]
     }
   },
-  "include": ["src", "../packages/contract/src", "../packages/institution/src", "../packages/offline-sync/src", "../packages/platform/src", "../packages/platform-control/src"]
+  "include": ["src", "../packages/contract/src", "../packages/domain-core/src","../packages/institution/src", "../packages/offline-sync/src", "../packages/platform/src", "../packages/platform-control/src"]
 }

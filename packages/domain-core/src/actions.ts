@@ -1,7 +1,7 @@
 // Student action center item. Source: brief "Today and Action Center" export type
 // StudentAction and ranking constraints.
 
-import type { Freshness, SourceLabel } from "./source";
+import type { Freshness, SourceLabel } from "./source.ts";
 
 export type StudentAction = {
   id: string;

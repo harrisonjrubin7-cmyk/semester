@@ -152,14 +152,42 @@ describe("validateAnswerFrame", () => {
   });
 
   it("requires limitations when there is no source", () => {
-    expect(validateAnswerFrame(answer({ sources: [], limitations: [] }))).toHaveLength(1);
-    expect(validateAnswerFrame(answer({ sources: [], limitations: ["No source found."] }))).toEqual(
-      [],
-    );
+    expect(validateAnswerFrame(answer({ sources: [], limitations: [], confidence: "limited" }))).toHaveLength(1);
+    expect(
+      validateAnswerFrame(
+        answer({ sources: [], limitations: ["No source found."], confidence: "limited" }),
+      ),
+    ).toEqual([]);
   });
 
   it("refuses high confidence on an unsourced claim", () => {
     const bad = answer({ sources: [{ label: "Unknown", authority: "none" }], confidence: "high" });
     expect(validateAnswerFrame(bad)).toHaveLength(1);
+  });
+
+  it("refuses high confidence when there are no sources at all", () => {
+    const bad = answer({ sources: [], limitations: ["No source found."], confidence: "high" });
+    expect(validateAnswerFrame(bad)).toHaveLength(1);
+    const limited = answer({ sources: [], limitations: ["No source found."], confidence: "limited" });
+    expect(validateAnswerFrame(limited)).toEqual([]);
+  });
+
+  it("refuses a blank answer", () => {
+    expect(validateAnswerFrame(answer({ answer: "   " }))).toHaveLength(1);
+  });
+
+  it("refuses a proposed action with a blank preview", () => {
+    const bad = answer({
+      proposedAction: { type: "delete", preview: " ", requiresHumanConfirmation: true },
+    });
+    expect(validateAnswerFrame(bad)).toHaveLength(1);
+    const good = answer({
+      proposedAction: {
+        type: "delete",
+        preview: "Removes the draft note from your list.",
+        requiresHumanConfirmation: true,
+      },
+    });
+    expect(validateAnswerFrame(good)).toEqual([]);
   });
 });
