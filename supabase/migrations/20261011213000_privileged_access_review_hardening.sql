@@ -77,6 +77,7 @@ create table if not exists private.privileged_access_review_remediation (
   decision_id uuid primary key references private.privileged_access_review_decision(id) on delete restrict,
   grant_id uuid not null,
   outcome text not null check (outcome = 'revoked-by-review'),
+  observed_state_sha256 text not null check (observed_state_sha256 ~ '^[0-9a-f]{64}$'),
   applied_by_sha256 text not null check (applied_by_sha256 ~ '^[0-9a-f]{64}$'),
   applied_at timestamptz not null default now()
 );
@@ -295,10 +296,16 @@ begin
   values (item.id, want_decision, want_reason_code, actor_hash, want_decision = 'revoke', clock_timestamp())
   returning id into decision_id;
   if want_decision = 'revoke' then
-    update public.role_grants set revoked_at = clock_timestamp() where id = item.grant_id;
+    update public.role_grants set revoked_at = clock_timestamp() where id = item.grant_id
+      returning * into grant_row;
     insert into private.privileged_access_review_remediation
-      (decision_id, grant_id, outcome, applied_by_sha256, applied_at)
-    values (decision_id, item.grant_id, 'revoked-by-review', actor_hash, clock_timestamp());
+      (decision_id, grant_id, outcome, observed_state_sha256, applied_by_sha256, applied_at)
+    values (decision_id, item.grant_id, 'revoked-by-review',
+      private.privileged_access_review_grant_state_sha256(
+        grant_row.subject, grant_row.role, grant_row.scope_kind, grant_row.scope_id,
+        grant_row.provenance, grant_row.granted_by, grant_row.granted_at,
+        grant_row.expires_at, grant_row.revoked_at, current_capabilities, false),
+      actor_hash, clock_timestamp());
   end if;
 end $$;
 
@@ -590,15 +597,14 @@ begin
       left join public.role_grants g on g.id = i.grant_id
       where i.review_id = review.id and d.decision = 'revoke'
         and not (
-          (x.decision_id is not null and (g.id is null or (
-            g.role = i.role and private.role_audit_sha256(g.subject::text) = i.subject_sha256
-            and g.scope_kind = i.scope_kind and g.scope_id = i.scope_id
-            and g.provenance = i.provenance
-            and (case when g.granted_by is null then null
-                      else private.role_audit_sha256(g.granted_by::text) end)
-                is not distinct from i.granted_by_sha256
-            and g.granted_at = i.granted_at
-            and g.expires_at is not distinct from i.expires_at and g.revoked_at is not null)))
+          (x.decision_id is not null and x.observed_state_sha256 =
+            private.privileged_access_review_grant_state_sha256(
+              g.subject, g.role, g.scope_kind, g.scope_id, g.provenance, g.granted_by,
+              g.granted_at, g.expires_at, g.revoked_at,
+              array(select distinct rc.capability from public.role_capabilities rc
+                where rc.role = g.role order by rc.capability),
+              g.id is not null and g.revoked_at is null
+                and (g.expires_at is null or g.expires_at > clock_timestamp())))
           or exists (
             select 1 from private.privileged_access_review_post_decision_resolution z
              where z.decision_id = d.id and z.observed_state_sha256 =

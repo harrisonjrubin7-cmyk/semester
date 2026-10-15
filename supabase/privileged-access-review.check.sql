@@ -29,6 +29,7 @@ declare
   review_ref text; retry_ref text; started_hash text; trust_items text[]; starter_item text; signer_item text;
   reviewer_item text; target_item text; deleted_item text; investigate_item text; steward_item text;
   signer_granted_at timestamptz;
+  original_remediation_state text; current_revoked_state text;
   steward_capabilities text[];
   table_owner text; mutation_error text;
   n bigint; retained_n bigint; revoked_n bigint; investigating_n bigint; remediated_n bigint;
@@ -112,6 +113,9 @@ begin
   perform pg_temp.must('state-resolution readers use insertion sequences rather than transaction timestamps',
     position('resolution_sequence desc' in lower(pg_get_functiondef(
       'public.privileged_access_review_evidence(text)'::regprocedure))) > 0);
+  perform pg_temp.must('revoke signoff binds remediation to the exact observed grant state',
+    position('x.observed_state_sha256 =' in lower(pg_get_functiondef(
+      'public.complete_privileged_access_review(text)'::regprocedure))) > 0);
 
   perform pg_temp.become(starter);
   review_ref := public.begin_privileged_access_review('access-review-2026q4', current_date - 90, current_date, current_date + 90);
@@ -194,6 +198,24 @@ begin
   perform pg_temp.must('the legacy reader reports atomic revoke remediation',
     (select bool_and(remediation_applied) from public.privileged_access_review(review_ref)
       where decision = 'revoke'));
+  select m.observed_state_sha256 into original_remediation_state
+    from private.privileged_access_review_remediation m
+    join private.privileged_access_review_decision d on d.id = m.decision_id
+    join private.privileged_access_review_item i on i.id = d.item_id
+   where i.public_id = target_item;
+  update public.role_grants set revoked_at = null
+   where subject = target and role = 'university_admin';
+  update public.role_grants set revoked_at = clock_timestamp()
+   where subject = target and role = 'university_admin';
+  select private.privileged_access_review_grant_state_sha256(
+      g.subject, g.role, g.scope_kind, g.scope_id, g.provenance, g.granted_by,
+      g.granted_at, g.expires_at, g.revoked_at,
+      array(select distinct rc.capability from public.role_capabilities rc
+        where rc.role = g.role order by rc.capability), false)
+    into current_revoked_state
+    from public.role_grants g where g.subject = target and g.role = 'university_admin';
+  perform pg_temp.must('reactivation and re-revocation invalidate the original remediation state',
+    current_revoked_state <> original_remediation_state);
   update public.role_grants set revoked_at = null
    where subject = target and role = 'university_admin';
   update public.role_grants set subject = starter
@@ -217,6 +239,9 @@ begin
   delete from auth.users where id = deleted_target;
   perform pg_temp.must('account deletion may remove an already-remediated grant',
     not exists (select 1 from public.role_grants where subject = deleted_target and role = 'moderator'));
+  perform pg_temp.become(starter);
+  perform public.resolve_privileged_access_review_post_decision_change(deleted_item);
+  reset role;
   update public.role_grants set role = 'data_steward'
    where subject = outsider and role = 'integration_admin';
   update public.role_grants set subject = starter
