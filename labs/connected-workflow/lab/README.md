@@ -11,3 +11,5 @@ No third-party runtime dependencies. SQLite database is created locally. Demo be
 6. Student remains unknown if prerequisite is missing. Registrar source.confirm_prerequisite with latest version makes the synthetic checklist ready_as_of; never enrolled.
 
 Existing official systems are not called. No official transcript/final-grade posting, AI provider, funds movement, institution SSO or live tenant provisioning exists in this lab. Map tested invariants into canonical TypeScript/Postgres systems; do not add this SQLite model as a second production authority.
+
+Schema note: the approvals table gained a `reason` column and grade approvals now bind the latest submission. Delete an existing synthetic database before running this version; `CREATE TABLE IF NOT EXISTS` does not migrate old files.

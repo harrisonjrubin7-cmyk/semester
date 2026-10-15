@@ -109,3 +109,29 @@ class TestLab(unittest.TestCase):
   with self.lab.db() as d:self.assertEqual(d.execute('SELECT count(*) FROM receipts').fetchone()[0],0)
  def test_empty_key(self):
   with self.assertRaises(Rejected):self.lab.execute('demo-a-student','onboarding.complete',{},'')
+
+class TestReviewFindings(unittest.TestCase):
+ def setUp(self):
+  self.dir=tempfile.TemporaryDirectory();self.lab=Lab(Path(self.dir.name)/'lab.sqlite');self.lab.seed();self.n=0
+ def tearDown(self):self.dir.cleanup()
+ def cmd(self,who,command,payload=None,key=None):
+  self.n+=1;return self.lab.execute('demo-'+who,command,payload or {},key or 'k'+str(self.n))
+ def test_faculty_sees_submitted_work(self):
+  self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'synthetic work'})
+  self.assertEqual([s['body'] for s in self.lab.view('demo-a-faculty')['submissions']],['synthetic work'])
+  self.assertNotIn('submissions',self.lab.view('demo-a-student'))
+ def test_new_submission_invalidates_grade_approval(self):
+  self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'first'})
+  g=self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})
+  a=self.cmd('a-faculty','grade.request_release',{'grade':g['grade'],'version':1,'reason':'Reviewed rubric'})
+  self.cmd('a-student','submission.create',{'body':'second'})
+  with self.assertRaises(Rejected):self.cmd('a-reviewer','grade.approve_release',{'approval':a['approval']})
+ def test_repeated_onboarding_keeps_version(self):
+  self.cmd('a-student','onboarding.complete');before=self.lab.view('demo-a-student')['student']['version']
+  self.cmd('a-student','onboarding.complete')
+  self.assertEqual(self.lab.view('demo-a-student')['student']['version'],before)
+ def test_approval_reason_visible_to_reviewer(self):
+  self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'work'})
+  g=self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})
+  self.cmd('a-faculty','grade.request_release',{'grade':g['grade'],'version':1,'reason':'Reviewed rubric'})
+  self.assertEqual([a['reason'] for a in self.lab.view('demo-a-reviewer')['approvals']],['Reviewed rubric'])
