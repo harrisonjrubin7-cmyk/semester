@@ -1,0 +1,15 @@
+{
+  "valid_synthetic_batch": "passed",
+  "negative_tests": {
+    "unknown_field": true,
+    "bad_state": true,
+    "bad_timestamp": true,
+    "zero_revision": true,
+    "fulfilled_without_receipt": true
+  },
+  "limitations": [
+    "No OpenAPI structural linter run",
+    "No server implementation tested",
+    "No semantic policy or legal validation performed"
+  ]
+}

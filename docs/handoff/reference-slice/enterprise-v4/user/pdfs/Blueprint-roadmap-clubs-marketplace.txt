@@ -1,0 +1,368 @@
+Computer
+Entity-relationship data model: student clubs, marketplace listings, study abroad applications,
+and campus social feeds in one architecture spec
+Computer
+Detail the study-abroad application tracker workflow
+Build the club event management and RSVP workflow spec
+Specify the marketplace listing creation and moderation flow
+Artifacts
+18
+Sources
+301
+Semester Campus should be designed as a connected campus life platform with four major
+systems working together: marketplace, clubs and events, study-abroad operations, and a
+social/feed layer. Existing student-engagement systems commonly combine organization
+management, rosters, RSVPs, event tracking, and communications, while privacy guidance
+requires careful separation between community activity and protected academic records.
+The architecture should separate domain modules while sharing identity, permissions, search,
+notifications, moderation, and analytics.
+Domain Core purpose Primary records
+Marketplace Publish and discover campus opportunities Listings, providers, applications,
+moderation reviews
+Clubs and events Manage organizations, rosters, applications, events, and
+attendance
+Organizations, memberships, roles,
+events, RSVPs
+Study abroad Run program discovery, applications, review, and pre-
+departure workflows
+Programs, terms, applications,
+documents, decisions
+Social and
+messaging
+Support community feeds, group spaces, and real-time
+messaging
+Posts, follows, communities,
+conversations, reports
+Shared services Identity, authorization, moderation, search, file upload,
+notifications
+Users, roles, files, audit events,
+preferences
+Blueprint roadmap: map out student clubs,
+marketplace, study abroad, and social feeds into a
+complete campus platform architecture spec
+[1] [2]
+[3]
+Platform architecture
+A core product rule should be that academic records and social/community records are not
+treated as one dataset. FERPA guidance emphasizes that institutions must protect student-
+record information and limit inappropriate disclosure.
+Study-abroad portals should function as guided workflow systems rather than simple forms.
+Institutional and provider processes commonly include submission, document collection,
+review, nomination or approval, and final commitment steps.
+Discover program
+→ Save / compare
+→ Start application
+→ Complete profile + essays + documents
+→ Submit
+→ Eligibility review
+→ Staff review / nomination
+→ External provider step, if applicable
+→ Decision
+→ Commit or withdraw
+→ Pre-departure requirements
+→ Active participant / completed
+State Student view Staff actions
+Dra In-progress checklist, missing items, save-and-
+resume No decision actions yet
+Submitted Timestamp, locked/partially locked sections,
+review queue status Initial completeness and eligibility check
+In eligibility review Visible “under review” status GPA/year/prerequisite/policy review
+Returned for edits Requested corrections and due date Staff comments and reopen controls
+Nominated / approved
+internally Visible internal outcome Send to provider or next workflow stage
+Provider pending External-step tracker Record partner handoff
+Accepted / waitlisted /
+declined Final decision and policy next steps Issue decision, conditions, and
+documentation
+Committed Pre-departure checklist appears Activate orientation, forms, travel steps
+Withdrawn Archived but visible history Retention and reporting only
+[3] [4]
+Study-abroad application tracker
+[5] [6] [7]
+Student workflow
+Detailed states
+Applications should support:
+Personal details and emergency contact.
+Academic profile and proposed term.
+Essays and short responses.
+Passport/legal-name fields where truly needed.
+Transcript or recommendation requests.
+File uploads and per-document status.
+Conditional questions by program or country.
+Consent, conduct, and risk acknowledgments.
+Advisor messaging and deadline reminders.
+A student dashboard should show checklist progress, latest staff messages, submission history,
+and outstanding items. Names and identity documents should be validated carefully because
+application guidance oen depends on records matching official documents.
+Submission received
+→ Completeness review
+→ Eligibility check
+→ Program-specific review
+→ Advisor/staff scoring or notes
+→ Nomination / decision
+→ Student notification
+→ Pre-departure activation
+Important staff controls:
+Multi-reviewer queues.
+Internal notes hidden from students.
+Deadline overrides and reopen actions.
+Capacity management.
+Document validation.
+Decision templates.
+Audit history for every status change.
+Export to approved institutional systems.
+Do not present automated checks as final admissions decisions. GPA thresholds and
+age/program requirements may exist, but human review and institutional policy still control
+the final outcome.
+Application composition
+[8]
+Staff review workflow
+[7]
+Student-organization tools typically support event creation, RSVP, attendance tracking, and
+roster coordination. That should be a baseline for Semester clubs.
+Draft event
+→ Add schedule, location, description, media, capacity
+→ Configure RSVP and check-in settings
+→ Submit for approval, if required
+→ Publish
+→ Students RSVP / join waitlist
+→ Event reminders
+→ Check-in / attendance capture
+→ Post-event recap and analytics
+Entity Required fields
+Event Organization, title, summary, description, category, visibility, host
+Event session Start/end, recurrence, location, virtual link, timezone
+Capacity rule Max seats, guest policy, waitlist enabled, check-in window
+RSVP User, response status, timestamp, attendance intent
+Attendance record User, check-in method, checked-in time, checked-out time
+Event approval Reviewer, policy state, notes, decision time
+Event message Reminder, update, cancellation, follow-up
+Invited / Discoverable
+→ Interested
+→ Going
+→ Waitlisted
+→ Checked in
+→ Attended / No-show / Cancelled
+Students should be able to:
+Discover events from clubs, campus offices, and communities.
+RSVP, cancel, or join a waitlist.
+Add events to calendar.
+Club event management and RSVP
+[9] [1]
+Event creation workflow
+Event entity model
+RSVP states
+Workflow requirements
+Receive reminders and location updates.
+Access tickets or QR check-in codes.
+See accessibility and accommodation details.
+Join temporary event discussion threads.
+Club leaders should be able to:
+Create and edit events.
+Duplicate recurring formats.
+Cap attendance and manage waitlists.
+Use QR, manual, or self-check-in.
+Export attendance if permitted.
+Send reminders and post-event follow-ups.
+View participation summaries.
+Attendance data must be scoped and purposeful. Engagement platforms oen track
+participation, but institutions still need to define who can view, export, and act on those
+records.
+Discover club
+→ Follow / request to join / apply
+→ Pending review
+→ Member accepted
+→ Role assignment
+→ Participation and event attendance
+→ Renewal / inactive / alumni
+Roster functions should include:
+Active, pending, former, and alumni member states.
+Officer roles with start/end dates.
+Member notes and tags, if approved.
+Application-based or open membership.
+Controlled exports and audit logs.
+Leadership transition tools.
+The marketplace should support listings for jobs, internships, study-abroad programs, services,
+events, student offers, and institutional opportunities. Student-engagement and community
+platforms oen centralize these discovery surfaces, but Semester should add explicit
+verification and moderation flows.
+[10] [11]
+Club roster workflow
+Marketplace listing creation and moderation
+[11] [12]
+Create draft
+→ Complete listing details
+→ Attach eligibility, deadlines, and contact methods
+→ Submit for review
+→ Approval / return for edits / rejection
+→ Publish
+→ Update / pause / fill / expire
+→ Archive
+Section Required capabilities
+Basics Title, type, summary, full description, media, tags
+Ownership Provider, organization, contact, verification source
+Timing Open date, deadline, event/program dates, expiration
+Eligibility Major, year, GPA, work authorization, location, skills
+Experience details Paid/unpaid, credit-bearing, remote/on-site, hours
+Safety/disclosures External site warning, fees, travel risk, documentation
+Actions Apply in Semester, external apply, RSVP, join interest list
+Moderation metadata Reviewer notes, risk flags, trust score, audit history
+Draft
+→ Submitted
+→ Triage
+→ Verified / needs edits / escalated / rejected
+→ Published
+→ Reported by users
+→ Re-review / pause / remove
+Use moderation layers:
+Automated triage for spam/risky patterns.
+Verification label assignment.
+Human review for sensitive categories.
+User reporting and appeal handling.
+Expiration and stale-listing sweeps.
+Listing creation flow
+Listing form requirements
+Moderation workflow
+Moderation rules
+Evidence and audit preservation.
+Important labels:
+Institution verified.
+Partner verified.
+Organization verified.
+Student-posted.
+External unverified link.
+That distinction is critical so students can tell whether an opportunity is school-vetted or
+simply allowed on the platform.
+A single architecture can support all four domains by sharing users, organizations, media, and
+workflow services.
+Entity Purpose
+users Identity and campus account link
+profiles Public-facing student/community profile
+roles Platform, organization, reviewer, advisor, moderator permissions
+files Uploaded documents, media, attachments
+notifications Feed, email, push, in-app alerts
+audit_events Immutable workflow and moderation history
+tags Cross-domain categorization
+preferences Privacy, notification, and personalization controls
+Entity Purpose
+organizations Club or campus group record
+organization_roles Officers, advisors, reviewers
+memberships Member state history
+club_applications Membership application records
+club_application_answers Versioned responses
+events Event definitions
+event_sessions Date/time occurrences
+Unified entity-relationship architecture
+Shared foundation entities
+Clubs and events entities
+Entity Purpose
+rsvps RSVP status and timestamps
+attendance_records Check-in/check-out evidence
+Entity Purpose
+listing_providers Employer, office, club, or partner owner
+listings Marketplace opportunities
+listing_versions Published edits and change history
+listing_eligibility_rules Structured filters and requirements
+listing_actions Apply, RSVP, save, external click
+listing_reports User safety/moderation reports
+listing_reviews Approval and moderation decisions
+Entity Purpose
+programs Study-abroad program catalog
+program_terms Term-specific dates, capacity, pricing
+program_applications Student applications
+application_documents Uploaded or requested files
+application_checklist_items Missing/completed steps
+application_reviews Reviewer decisions and notes
+program_decisions Acceptance, waitlist, decline, commit
+Entity Purpose
+communities Club, program, campus, or interest spaces
+posts Feed content
+post_media Images/video/file attachments
+comments Discussion threads
+reactions Likes and reaction types
+follows User-to-user, user-to-org, user-to-topic relationships
+Marketplace entities
+Study-abroad entities
+Social/feed/messaging entities
+Entity Purpose
+conversations DM, group, event, or organization chat
+conversation_members Membership and notification state
+messages Sent messages and edit/delete state
+reports Content or abuse reports
+moderation_cases Review, decisions, and appeals
+The daily feed should combine campus activity, opportunities, and communities without
+becoming a generic public social network.
+Official campus announcements.
+Club posts and events.
+Marketplace recommendations.
+Study-abroad and internship deadline reminders.
+Followed communities and saved-topic updates.
+Event chats and post-event recaps.
+Service reminders from approved offices.
+Rule Requirement
+Safety first Emergency and critical institutional notices override ranking
+Explicit interest first Followed orgs, saved searches, and opted-in topics rank above inferred content
+Explainability Every recommendation should display a reason
+Relevance limits Repetitive or low-quality posts should be throttled
+Sensitive-data exclusion No ranking from grades, accommodations, or private application outcomes
+FERPA and student-privacy guidance mean institutions should avoid using protected academic
+data casually in communication and online-service experiences.
+A practical messaging model is:
+conversations
+├─ conversation_members
+├─ messages
+Daily feed and messaging architecture
+Feed sources
+Feed ranking principles
+[4] [3]
+Real-time messaging schema
+├─ message_reactions
+├─ message_attachments
+├─ message_reports
+└─ conversation_events
+Key requirements:
+Direct messages, group chats, event chats, and organization channels.
+Message requests for non-connections.
+Block, mute, restrict, and report.
+Attachment scanning.
+Moderation review queues.
+Ephemeral typing/presence signals separate from retained records.
+Retention policies by conversation type.
+Organization directory and club profiles.
+Event management and RSVP.
+Marketplace listings and filtering.
+Program directory and basic study-abroad applications.
+Shared moderation, notifications, and search.
+Club applications and role workflows.
+Study-abroad review queues and document tracking.
+Marketplace verification and provider moderation.
+Daily feed with follows and official posts.
+Messaging with reporting and blocking.
+Advanced recommendation engine with explanations.
+Internship trackers and offer workflows.
+Cross-domain analytics and engagement dashboards.
+Mobility features such as pre-departure cohorts and ambassador communities.
+Richer real-time collaboration and temporary event spaces.
+Delivery roadmap
+Phase 1
+Phase 2
+Phase 3
+The right implementation pattern is a modular platform with shared trust-and-safety services,
+not a single monolithic “student app” table. Existing engagement tools prove the value of
+rosters, events, and communications, while privacy rules make careful boundary design
+essential.
+⁂
+1. https://www.suitable.co/products/student-organization-management
+2. https://about.lounge.live/
+3. https://studentprivacy.ed.gov/resources/protecting-student-privacy-while-using-online-educational-services-requirem
+ents-and-best
+4. https://studentprivacy.ed.gov/
+5. https://www.vanderbilt.edu/study-abroad/application-tips/
+6. https://www.intostudy.com/en/admissions
+7. https://www.iesabroad.org/study-abroad/application-process
+8. https://www.yourglobalmentors.com/blog/study-abroad-application-process-step-by-step-complete-guide-for-2026
+9. https://www.readyeducation.com/solutions/student-engagement/
+10. https://www.suitable.co/
+11. https://www.readyeducation.com/articles/student-engagement-in-higher-education-the-ultimate-guide/
+12. https://about.lounge.live/blog/top-student-engagement-platforms-how-they-compare
+[2] [1] [3]

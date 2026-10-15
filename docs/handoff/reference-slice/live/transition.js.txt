@@ -1,0 +1,47 @@
+export class WorkflowError extends Error {
+ constructor(code, message) { super(message); this.code = code; }
+}
+const fail = (code, message) => { throw new WorkflowError(code, message); };
+const permissions = { submit: 'document.submit', approve: 'document.review', request_changes: 'document.review', reject: 'document.review', request_signatures: 'document.sign_request', activate: 'document.activate', archive: 'document.archive' };
+export function transition(doc, command, context) {
+ const permission = permissions[command.action];
+ if (!permission) fail('INVALID_ACTION', 'Unknown workflow action');
+ if (!context.permissions.includes(permission)) fail('FORBIDDEN', 'Missing action permission');
+ if (command.expectedState !== doc.state) fail('STATE_CONFLICT', 'Refresh the document state');
+ if (!command.reason?.trim()) fail('INVALID_REQUEST', 'A reason is required');
+ const next = structuredClone(doc);
+ const reviewer = () => {
+  if (context.userId === doc.authorId) fail('SELF_REVIEW', 'Author cannot review own version');
+  if (!doc.reviewerIds.includes(context.userId)) fail('REVIEW_ASSIGNMENT_REQUIRED', 'Assigned reviewer required');
+  if (doc.approvalIds.includes(context.userId)) fail('ALREADY_DECIDED', 'Reviewer already approved');
+ };
+ switch(command.action) {
+  case 'submit': {
+   if (doc.state !== 'draft') fail('INVALID_TRANSITION', 'Draft required');
+   const ids = command.participants ?? [];
+   if (!ids.length || new Set(ids).size !== ids.length || ids.includes(doc.authorId) || ids.includes(context.userId)) fail('INVALID_REVIEWERS', 'Distinct independent reviewers required');
+   next.reviewerIds = [...ids]; next.approvalIds = []; next.state = 'in_review'; break;
+  }
+  case 'approve':
+   if (doc.state !== 'in_review') fail('INVALID_TRANSITION', 'Active review required');
+   reviewer(); next.approvalIds.push(context.userId);
+   next.state = next.reviewerIds.every(id => next.approvalIds.includes(id)) ? 'approved' : 'in_review'; break;
+  case 'request_changes': case 'reject':
+   if (doc.state !== 'in_review') fail('INVALID_TRANSITION', 'Active review required');
+   reviewer(); next.state = command.action === 'reject' ? 'rejected' : 'changes_requested'; break;
+  case 'request_signatures': {
+   if (doc.state !== 'approved' || !doc.requiresSignature) fail('INVALID_TRANSITION', 'Approved signing-required version needed');
+   const ids = command.participants ?? [];
+   if (!ids.length || new Set(ids).size !== ids.length) fail('INVALID_SIGNERS', 'Distinct signers required');
+   next.signerIds = [...ids]; next.state = 'awaiting_signature'; break;
+  }
+  case 'activate':
+   if (!((doc.state === 'approved' && !doc.requiresSignature) || (doc.state === 'awaiting_signature' && doc.signerIds.length && doc.signerIds.every(id => doc.signedIds.includes(id))))) fail('EVIDENCE_REQUIRED', 'Approval and required verified signatures needed');
+   next.state = 'effective'; break;
+  case 'archive':
+   if (!['rejected','superseded'].includes(doc.state)) fail('INVALID_TRANSITION', 'Rejected or superseded version required');
+   if (doc.legalHold) fail('LEGAL_HOLD', 'Document is on hold');
+   next.state = 'archived'; break;
+ }
+ return next;
+}

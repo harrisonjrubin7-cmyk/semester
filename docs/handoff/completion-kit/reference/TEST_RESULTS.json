@@ -1,0 +1,22 @@
+{
+  "executed": "Local in-memory assertions only",
+  "case_count": 15,
+  "cases": {
+    "valid": true,
+    "missing": true,
+    "killed": true,
+    "withdrawn": true,
+    "expired": true,
+    "future": true,
+    "wrong_target": true,
+    "wrong_operation": true,
+    "unaccepted": true,
+    "failed": true,
+    "duplicate": true,
+    "empty_contract": true,
+    "missing_reviewer": true,
+    "malformed_time": true,
+    "unresolved": true
+  },
+  "production_tests_run": 0
+}

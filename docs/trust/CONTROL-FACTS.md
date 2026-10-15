@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 242 |
+| Migration files | 244 |
 | Tables created in `public` and not later dropped | 346 |
 | … of which enable row-level security in a migration | 346 |
 | Tables created in `private` and not later dropped | 50 |
@@ -28,12 +28,13 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-154 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+156 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
 | `supabase/academic-record.check.sql` | The academic-record ledger (D-145): who may propose, decide and read; that nobody writes the ledger but the approval of someone other than the proposer; that each entry names the entry and value it r… |
 | `supabase/access-saga-store.check.sql` | The access saga's durable store (20261006180000_access_saga_store, 20261011200000 review fixes, 20261012030000 'access_saga_due'). |
+| `supabase/access-saga-tick-auth.check.sql` | The scheduler's token check for the access-saga-tick Edge Function, run as the roles that will and must not call it. |
 | `supabase/access.check.sql` | The log of who read your rows, which is only worth anything if it is yours. |
 | `supabase/activity.check.sql` | The pilot's three figures: what the ping may write, and what it may not. |
 | `supabase/admins.check.sql` | The admin list, and the account_role column that is deliberately not it. |
@@ -115,6 +116,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/intelligence-policy.check.sql` | Semester Intelligence tenant policy: real school-scoped grants are the boundary. |
 | `supabase/invites.check.sql` | The gate that decides whether an account can exist at all. |
 | `supabase/k12-guardians.check.sql` | K–12 guardian links (K12-002): who may record a guardian, who may read the link, and when the link stops counting. |
+| `supabase/killswitch-release.check.sql` | Releasing a platform kill switch needs two approvers (F-1). |
 | `supabase/ledger-chains.check.sql` | The hash chain over the academic-record and student-account ledgers: that a normal flow builds a chain the verifier accepts; that each kind of tampering it claims to catch is caught, and reported as… |
 | `supabase/ledger-seals.check.sql` | Signing the ledger chains: that a day is sealed once, per ledger and school, under a key no API role can read; that the seal check catches the attacker the link check cannot (one who rewrites an entr… |
 | `supabase/legal-holds.check.sql` | Legal holds (RM-02, RM-05): who may place one and over what, that it is released only by someone else with a reason, that it is never deleted or edited, that a held account cannot be deleted, and tha… |
@@ -266,6 +268,7 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Function | `verify_jwt` in `supabase/config.toml` | `getUser` in its entry file | Comment above its config block |
 | --- | --- | --- | --- |
+| `access-saga-tick` | false | no | (none) |
 | `billing-cancel` | false | yes | Stripe has no Supabase token; the Stripe-Signature over the raw body is the credential, and the function answers 503 until STRIPE_WEBHOOK_SECRET is s… |
 | `billing-checkout` | false | yes | (none) |
 | `billing-portal` | false | yes | (none) |
@@ -284,7 +287,7 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 | `support-reply-notify` | false | yes | A support agent's browser records the in-app reply first, then this function sends a generic email hint. It checks the caller's token and support gra… |
 | `trust-room` | false | no | The caller is a reviewer at a university with no Semester account; the link token in the POST body is the credential. See DEPLOY.md → trust-room. |
 
-17 function directories; 17 set `verify_jwt = false`; 0 set it to true.
+18 function directories; 18 set `verify_jwt = false`; 0 set it to true.
 
 **How counted.** Directories of `supabase/functions/` other than `_shared`, joined to the `[functions.<name>]` blocks of `supabase/config.toml`. The comment is the lines directly above the block.
 

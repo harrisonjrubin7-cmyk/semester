@@ -823,6 +823,8 @@ const MOCKS_MODULES = [
   'src/screens/trustroom.test.tsx',
   'src/screens/university.test.tsx',
   'src/screens/directory.workspaces.test.tsx',
+  'src/screens/directory.test.tsx',
+  'src/shell.workspaces.test.tsx',
   'src/screens/university.helpcount.test.tsx',
   'src/state/deeplink.test.tsx',
   'src/state/persist/firstrun.test.ts',
