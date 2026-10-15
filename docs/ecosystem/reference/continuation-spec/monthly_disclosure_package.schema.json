@@ -166,6 +166,32 @@
           }
         }
       }
+    },
+    {
+      "if": {
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "enum": [
+              "draft",
+              "in_review",
+              "approved"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "published_by": {
+            "type": "null"
+          },
+          "published_at": {
+            "type": "null"
+          }
+        }
+      }
     }
   ]
 }

@@ -67,8 +67,10 @@ create policy record_read on public.education_records for select to authenticate
  using(private.can_read_record(id,tenant_id,student_id,kind));
 create table private.audit_events(id bigint generated always as identity primary key,
  tenant_id uuid not null references private.tenants(id),actor_id uuid not null references auth.users(id),
- grant_id uuid references private.role_grants(id),record_id uuid not null,event text not null,
- policy_version text not null,occurred_at timestamptz not null default now());
+ grant_id uuid,record_id uuid not null,event text not null,
+ policy_version text not null,occurred_at timestamptz not null default now(),
+ foreign key(grant_id,tenant_id) references private.role_grants(id,tenant_id),
+ foreign key(record_id,tenant_id) references public.education_records(id,tenant_id));
 create table private.disclosure_records(id bigint generated always as identity primary key,
  tenant_id uuid not null,student_id uuid not null,event_kind text not null check(event_kind in('request','disclosure')),
  parties jsonb not null,legitimate_interest text not null,legal_basis text not null,
