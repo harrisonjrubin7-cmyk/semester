@@ -42,6 +42,18 @@ const REFERENCE_FIELDS = [
   'UI_states', 'operational_runbook', 'release_evidence',
 ];
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+// A string that is a real calendar date, not merely shaped like one (rejects 2026-02-30 and 9999-99-99).
+const isCalendarDate = (s) => {
+  if (!ISO_DATE.test(s)) return false;
+  const d = new Date(`${s}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+};
+// The seven finance controls the delivery specification requires before any finance workflow ships.
+const FINANCE_CONTROLS = [
+  'finance_component_passport', 'payment_event_contract', 'ledger_schema', 'reconciliation_runbook',
+  'refund_approval_policy', 'month_end_close_checklist', 'financial_access_review',
+];
+const CAPABILITY_DIR = 'packages/platform-control/registry/capabilities';
 
 export function check(repo) {
   const errors = [];
@@ -51,10 +63,29 @@ export function check(repo) {
   const states = model.delivery_states;
   const rank = (s) => states.indexOf(s);
   const nodes = new Map();
-  const artifactById = new Map(repo.artifacts.map(({ data }) => [data.id, data]));
-  // Returns why a reference does not resolve, or null when it does.
+  const trainIds = model.release_trains.map((t) => t.id);
+  const capabilityDir = join(root, CAPABILITY_DIR);
+  const capabilityKeys = existsSync(capabilityDir)
+    ? new Set(readdirSync(capabilityDir).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -'.json'.length)))
+    : null;
+  // Artifact ids must be unique and match their file names, so a reference resolves to exactly one record.
+  const artifactById = new Map();
+  for (const { path, data } of repo.artifacts) {
+    if (artifactById.has(data.id)) errors.push(`${data.id ?? path}: duplicate artifact id`);
+    else artifactById.set(data.id, data);
+    if (path !== `registry/artifacts/${data.id}.json`) errors.push(`${data.id ?? path}: file name must match id`);
+  }
+  // Returns why a reference does not resolve, or null when it does. A path that is a registered
+  // artifact's location inherits that artifact's state, so a draft runbook cannot pass as approved.
   const referenceProblem = (value) => {
-    if (value.includes('/')) return existsSync(join(root, value)) ? null : 'does not exist on disk';
+    if (value.includes('/')) {
+      if (!existsSync(join(root, value))) return 'does not exist on disk';
+      const registered = [...artifactById.values()].find((a) => a.location === value);
+      if (registered && registered.state !== 'approved') {
+        return `is registered artifact ${registered.id}, currently ${registered.state}, not approved`;
+      }
+      return null;
+    }
     const artifact = artifactById.get(value);
     if (!artifact) return 'is neither a file path nor a registry artifact id';
     return artifact.state === 'approved' ? null : `is registered as ${artifact.state}, not approved`;
@@ -114,7 +145,10 @@ export function check(repo) {
 
   // Decision rights: an unnamed holder is a warning until an institution names one.
   for (const d of repo.decisions.decisions) {
-    if (d.approver_holder === 'UNASSIGNED') warnings.push(`decision-rights: "${d.decision}" has no named approver`);
+    // Empty, null and the UNASSIGNED sentinel all mean nobody is named; a deleted field must not look reviewed.
+    if (!d.approver_holder || d.approver_holder === 'UNASSIGNED') {
+      warnings.push(`decision-rights: "${d.decision}" has no named approver`);
+    }
   }
 
   // Increments: required fields once approved, safe-off before enablement, hard dependencies gate progress.
@@ -139,6 +173,18 @@ export function check(repo) {
       if (!Array.isArray(inc.hard_dependencies)) {
         errors.push(`${label}: ${inc.state} requires hard_dependencies to be declared as an array`);
       }
+    }
+    if (approved || inc.release_train !== undefined) {
+      if (!trainIds.includes(inc.release_train)) {
+        errors.push(`${label}: release_train ${inc.release_train} is not a defined release train (${trainIds.join(', ')})`);
+      }
+    }
+    if (capabilityKeys && (approved || inc.capability_key)) {
+      if (!capabilityKeys.has(inc.capability_key)) {
+        errors.push(`${label}: capability_key ${inc.capability_key} is not in ${CAPABILITY_DIR}`);
+      }
+    } else if (!capabilityKeys && approved) {
+      warnings.push(`${label}: capability registry ${CAPABILITY_DIR} is absent, so capability_key is unchecked`);
     }
     for (const field of REFERENCE_FIELDS) {
       const value = inc[field];
@@ -169,7 +215,12 @@ export function check(repo) {
       errors.push(`${label}: ${inc.state} blocked; hard dependencies below ${required}: ${unmet.join(', ')}`);
     }
     if (unmet.length) blockedBy.set(label, unmet);
-    if (!isEmpty(inc.gaps)) warnings.push(`${label}: ${inc.gaps.length} open gap(s)`);
+    if (!isEmpty(inc.gaps)) {
+      // Approval means the gaps are closed; an open gap at or after approval is a blocker, before it a warning.
+      const message = `${label}: ${inc.gaps.length} open gap(s)`;
+      if (approved) errors.push(`${message}; ${inc.state} cannot carry open gaps`);
+      else warnings.push(message);
+    }
   }
 
   // Artifacts: a state other than missing needs a location on disk; missing must not exist.
@@ -189,10 +240,10 @@ export function check(repo) {
     if (a.release_critical && a.state !== 'approved') warnings.push(`${label}: release-critical and ${a.state}`);
     // An approved artifact whose review date has passed is expired by the operating model's own rule.
     const due = a.review?.next_due;
-    if (a.state === 'approved' && ISO_DATE.test(due ?? '') && due < today) {
+    if (a.state === 'approved' && isCalendarDate(due ?? '') && due < today) {
       errors.push(`${label}: approved but its review was due ${due}; it cannot support a release`);
-    } else if (a.state === 'approved' && !ISO_DATE.test(due ?? '')) {
-      warnings.push(`${label}: approved with no review date (next_due is ${due ?? 'unset'})`);
+    } else if (a.state === 'approved' && !isCalendarDate(due ?? '')) {
+      errors.push(`${label}: approved but next_due is not a valid calendar date (${due ?? 'unset'})`);
     }
   }
 
@@ -204,6 +255,9 @@ export function check(repo) {
 
   // Finance baseline: principles and minimum artifacts exist; unstarted artifacts are a warning.
   if (isEmpty(repo.finance.principles)) errors.push('finance: no principles');
+  const financeIds = repo.finance.minimum_artifacts.map((a) => a.id);
+  const missingControls = FINANCE_CONTROLS.filter((id) => !financeIds.includes(id));
+  if (missingControls.length) errors.push(`finance: minimum artifacts missing [${missingControls.join(', ')}]`);
   for (const a of repo.finance.minimum_artifacts) {
     if (a.status === 'not_started') warnings.push(`finance: ${a.id} not started`);
     // A "present" artifact must point at evidence in the repository, so the baseline cannot claim unbuilt work.

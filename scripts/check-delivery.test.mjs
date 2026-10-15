@@ -130,3 +130,61 @@ test('control: a finance artifact marked present without evidence on disk fails'
   const { errors } = check(repo);
   assert.ok(errors.some((e) => /finance: ledger_schema is marked present but its evidence supabase\/migrations\/none.sql does not exist/.test(e)));
 });
+
+test('control: two artifacts sharing one id fail', () => {
+  const repo = loadRepo();
+  repo.artifacts.push({ path: 'registry/artifacts/ART-RDY-011.json', data: clone(repo.artifacts[0].data) });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /ART-RDY-011: duplicate artifact id/.test(e)));
+});
+
+test('control: an approved increment citing a draft artifact by its path fails', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => {
+    d.state = 'approved_for_build';
+    d.operational_runbook = 'docs/pilot/registration-readiness/INC-READINESS-001.yaml';
+  });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /operational_runbook docs\/pilot\/registration-readiness\/INC-READINESS-001\.yaml is registered artifact ART-RDY-011, currently draft/.test(e)));
+});
+
+test('control: an approved increment with an undefined release train fails', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'approved_for_build'; d.release_train = 'readines'; });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /RDY-INC-003: release_train readines is not a defined release train/.test(e)));
+});
+
+test('control: an empty approver holder is reported like the UNASSIGNED sentinel', () => {
+  const repo = loadRepo();
+  repo.decisions.decisions[0].approver_holder = null;
+  const { warnings } = check(repo);
+  assert.ok(warnings.some((w) => /decision-rights: .* has no named approver/.test(w)));
+});
+
+test('control: an approved increment that still carries open gaps fails', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'approved_for_build'; });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /RDY-INC-003: 4 open gap\(s\); approved_for_build cannot carry open gaps/.test(e)));
+});
+
+test('control: a finance baseline missing a required control fails', () => {
+  const repo = loadRepo();
+  repo.finance.minimum_artifacts = repo.finance.minimum_artifacts.filter((a) => a.id !== 'ledger_schema');
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /finance: minimum artifacts missing \[ledger_schema\]/.test(e)));
+});
+
+test('control: an approved artifact with an impossible review date fails', () => {
+  const repo = loadRepo();
+  const art = repo.artifacts.find((a) => a.data.id === 'ART-RDY-011');
+  art.data.state = 'approved';
+  art.data.location = 'docs/pilot/registration-readiness/INC-READINESS-001.yaml';
+  art.data.review.next_due = '9999-99-99';
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /ART-RDY-011: approved but next_due is not a valid calendar date/.test(e)));
+});
+
+test('control: an approved increment with an unknown capability key fails', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'approved_for_build'; d.capability_key = 'registration.typo'; });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /capability_key registration.typo is not in packages\/platform-control/.test(e)));
+});
