@@ -660,7 +660,9 @@ declare
     'complete_privileged_access_review(want_review text)',
     'decide_privileged_access_review_item(want_item text, want_decision text, want_reason_code text)',
     'privileged_access_review(want_review text)',
+    'privileged_access_review_evidence(want_review text)',
     'resolve_privileged_access_review_investigation(want_item text, want_resolution_code text)',
+    'resolve_privileged_access_review_post_decision_change(want_item text)',
 
     -- Identity-minimized privacy queue. It requires the platform console
     -- shell, derives tenants from exact-school data_request:handle grants and

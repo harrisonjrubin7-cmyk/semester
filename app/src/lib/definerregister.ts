@@ -274,6 +274,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['open_support_ticket', 'self-service', ['auth.uid()']],
   ['ops_projection_dashboard', 'admin', ['auth.uid()', 'private.has_capability']],
   ['privileged_access_review', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
+  ['privileged_access_review_evidence', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['privileged_mfa_required', 'read-helper', ['auth.uid()']],
   ['productivity_readiness_aggregate', 'admin', ['auth.uid()', "'admin'=any(m.roles)", 'if owners<10']],
   ['propose_offboarding', 'admin', ['auth.uid()', 'private.is_app_admin', 'private.has_capability']],
@@ -318,6 +319,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['request_school_membership', 'self-service', ['auth.uid()', 'private.verified_account']],
   ['resolve_privacy_request', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed', 'private.account_is_held']],
   ['resolve_privileged_access_review_investigation', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
+  ['resolve_privileged_access_review_post_decision_change', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['restore_school', 'admin', ['private.offboarding_operator']],
   ['retire_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['reveal_alias_identity', 'moderation', ['auth.uid()', 'private.has_capability']],
@@ -479,8 +481,8 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
     functions: ['incident_evidence_custody', 'record_incident_evidence', 'record_incident_evidence_custody'],
   },
   {
-    file: '20261011160000_privileged_access_review.sql',
-    functions: ['begin_privileged_access_review', 'complete_privileged_access_review', 'decide_privileged_access_review_item', 'privileged_access_review', 'resolve_privileged_access_review_investigation'],
+    file: '20261011213000_privileged_access_review_hardening.sql',
+    functions: ['begin_privileged_access_review', 'complete_privileged_access_review', 'decide_privileged_access_review_item', 'privileged_access_review', 'privileged_access_review_evidence', 'resolve_privileged_access_review_investigation', 'resolve_privileged_access_review_post_decision_change'],
   },
   {
     file: '20261010150100_notification_inbox_client.sql',
