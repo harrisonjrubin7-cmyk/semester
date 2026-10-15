@@ -227,6 +227,8 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['integration_approve_connection', 'integration', ['auth.uid()', 'private.has_capability']],
   ['integration_approve_scope', 'integration', ['auth.uid()', 'private.has_capability']],
   ['integration_request_replay', 'integration', ['auth.uid()', 'private.has_capability']],
+  ['integration_revoke_connection', 'integration', ['private.has_capability']],
+  ['integration_revoke_scope', 'integration', ['private.has_capability']],
   ['integration_set_paused', 'integration', ['private.has_capability']],
   ['join_beta', 'self-service', ['auth.uid()', 'private.beta_my_membership', 'private.beta_confirmed_email']],
   ['join_community', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
@@ -444,7 +446,6 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
       'gradebook_file_regrade',
       'gradebook_moderate',
       'gradebook_queue_passback',
-      'gradebook_release',
       'gradebook_resolve_regrade',
       'gradebook_set_scheme',
     ],
@@ -470,7 +471,12 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * part of the exact register but are not retroactively counted in that
  * historical snapshot.
  */
-export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+/**
+ * `redefines`: the file replaces a function production already runs rather
+ * than adding one, so its row is held to this file (the winning body) but the
+ * function still counts among those applied on production.
+ */
+export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[]; redefines?: boolean }[] = [
   {
     file: '20261011000000_incident_evidence_custody.sql',
     functions: ['incident_evidence_custody', 'record_incident_evidence', 'record_incident_evidence_custody'],
@@ -494,6 +500,17 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261012000000_ops_projection_dashboard.sql',
     functions: ['ops_projection_dashboard'],
+  },
+  {
+    // Redefined, not added: the release now emits its outbox event in the
+    // same transaction, so the row is held to the file that last wrote it.
+    file: '20261012010000_gradebook_release_emits_event.sql',
+    functions: ['gradebook_release'],
+    redefines: true,
+  },
+  {
+    file: '20261012055000_provisioning_authority_hardening.sql',
+    functions: ['integration_revoke_connection', 'integration_revoke_scope'],
   },
   {
     file: '20261008223000_privileged_role_mfa.sql',
