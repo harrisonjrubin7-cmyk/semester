@@ -361,6 +361,30 @@
       "suite": "authority",
       "criterion": "Proposed authority acceptance criterion; runtime evidence required",
       "evidence_refs": []
+    },
+    {
+      "id": "approval_expiry",
+      "suite": "approval_expiry",
+      "criterion": "Proposed approval_expiry acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "unknown_outcome",
+      "suite": "unknown_outcome",
+      "criterion": "Proposed unknown_outcome acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "reconciliation",
+      "suite": "reconciliation",
+      "criterion": "Proposed reconciliation acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "correction",
+      "suite": "correction",
+      "criterion": "Proposed correction acceptance criterion; runtime evidence required",
+      "evidence_refs": []
     }
   ],
   "readiness": {

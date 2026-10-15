@@ -547,7 +547,11 @@
               "accessibility",
               "recovery",
               "privacy",
-              "authority"
+              "authority",
+              "approval_expiry",
+              "unknown_outcome",
+              "reconciliation",
+              "correction"
             ]
           },
           "criterion": {
@@ -1198,6 +1202,169 @@
                   "status": {
                     "const": "verified"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "scope": {
+            "properties": {
+              "tenant_scope": {
+                "const": "personal"
+              }
+            },
+            "required": [
+              "tenant_scope"
+            ]
+          }
+        },
+        "required": [
+          "scope"
+        ]
+      },
+      "then": {
+        "properties": {
+          "authority": {
+            "properties": {
+              "official_record_write": {
+                "const": false
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "scope": {
+            "properties": {
+              "tenant_scope": {
+                "const": "institution"
+              }
+            },
+            "required": [
+              "tenant_scope"
+            ]
+          },
+          "readiness": {
+            "properties": {
+              "production_enabled": {
+                "properties": {
+                  "status": {
+                    "const": "verified"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              }
+            },
+            "required": [
+              "production_enabled"
+            ]
+          }
+        },
+        "required": [
+          "scope",
+          "readiness"
+        ]
+      },
+      "then": {
+        "properties": {
+          "readiness": {
+            "properties": {
+              "institution_authorized": {
+                "properties": {
+                  "status": {
+                    "const": "verified"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "readiness": {
+            "properties": {
+              "tested": {
+                "properties": {
+                  "status": {
+                    "const": "verified"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              }
+            },
+            "required": [
+              "tested"
+            ]
+          }
+        },
+        "required": [
+          "readiness"
+        ]
+      },
+      "then": {
+        "properties": {
+          "acceptance_tests": {
+            "items": {
+              "properties": {
+                "evidence_refs": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "readiness": {
+            "properties": {
+              "production_enabled": {
+                "properties": {
+                  "status": {
+                    "const": "verified"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              }
+            },
+            "required": [
+              "production_enabled"
+            ]
+          }
+        },
+        "required": [
+          "readiness"
+        ]
+      },
+      "then": {
+        "properties": {
+          "acceptance_tests": {
+            "items": {
+              "properties": {
+                "evidence_refs": {
+                  "minItems": 1
                 }
               }
             }

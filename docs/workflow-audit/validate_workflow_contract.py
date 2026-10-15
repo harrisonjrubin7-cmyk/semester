@@ -58,9 +58,12 @@ def semantic_errors(doc):
         if doc['authority']['mode'] in ['personal', 'read_only', 'shadow']:
             errors.append('Official write forbidden in this mode')
         suites = {t['suite'] for t in doc['acceptance_tests']}
-        required = {'authority', 'tenant_isolation', 'role_denial', 'concurrency', 'replay', 'timeout', 'recovery'}
+        required = {'happy_path', 'authority', 'tenant_isolation', 'role_denial', 'concurrency', 'replay',
+                    'timeout', 'recovery', 'approval_expiry', 'unknown_outcome', 'reconciliation', 'correction'}
         if not required <= suites:
             errors.append('Missing consequential-write acceptance suites')
+    if doc['authority']['official_record_write'] and doc['scope']['tenant_scope'] == 'personal':
+        errors.append('Official write not permitted in personal scope')
     if doc['scope']['tenant_scope'] == 'personal' and doc['scope']['tenant_id'] is not None:
         errors.append('Personal scope must not bind an institutional tenant')
     return errors

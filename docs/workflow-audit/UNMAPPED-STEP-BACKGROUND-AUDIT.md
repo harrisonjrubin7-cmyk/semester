@@ -11,6 +11,7 @@ No executor, job, route, or deployment was verified.
 | Row count | 84, matches the audit pack |
 | Class counts | U 22, B 17, H 23, O 22 (sum 84), matches the PDF summary table |
 | Background-only list | The 17 `B` rows match the PDF's list exactly |
+| Provenance (Codex review) | All 84 step rows are `GAP` entries in `docs/master/SEMESTER_WORKFLOW_CATALOG.md` (84/84 match). The `source` column now cites that file. The earlier citation to `SEMESTER_GAP_REGISTER.md` was wrong for these rows. The 419 screen rows still cite the gap register; their origin is **unverified** (`SEMESTER_SCREEN_CATALOG.md` has no GAP rows and the blank-reference check did not confirm the 419 figure) |
 | Source disposition wording | The CSV rows carry the class-specific dispositions. The PDF's claim that the source register assigns "Add screen to catalog and render" to every step is **not supported**: that phrase does not appear in `docs/master/SEMESTER_GAP_REGISTER.md` (0 matches) |
 | Catalog references | `docs/native-platform/NATIVE_WORKFLOW_CATALOG.md` is cited by the PDF and by `registration.workflow.example.json` (`catalog_links`) but **does not exist** in this repo. It appears only in archive manifests. The example's catalog link is dangling |
 | Operations catalog | `docs/operations/OPERATIONS_WORKFLOW_CATALOG.md` exists |
@@ -64,3 +65,14 @@ visibility, and acceptance evidence.
 
 Actual background-job inventory, executor code, route bindings, test evidence, institution
 policies, external-system deduplication behavior, and named owners.
+
+## Contract hardening after Codex review
+
+Codex flagged five gaps in the contract tooling. All five were reproduced and fixed:
+
+- Official-record writes require 12 suites (adds happy_path, approval_expiry, unknown_outcome, reconciliation, correction). The example was extended to 16 tests.
+- Official-record writes are rejected in personal scope.
+- Institution-scoped contracts with `production_enabled` verified require `institution_authorized` verified, regardless of writes.
+- `readiness.tested` or `production_enabled` verified requires non-empty `evidence_refs` on every acceptance test.
+
+The 14 original negative cases and the 4 new cases were rerun against the edited schema and validator. The example still validates.
