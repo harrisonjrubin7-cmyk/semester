@@ -171,6 +171,10 @@ declare
     -- entry returns only the caller-student's bounded access history.
     'read_guardian_calendar_projection(wanted_student uuid, wanted_purpose text)',
     'read_guardian_projection_access_history()',
+    -- 20261010150000: caller-owned preferences and minimized inbox reads.
+    'mark_notification_inbox(want_id uuid, want_status text)',
+    'read_notification_inbox(want_limit integer)',
+    'set_notification_preference(want_school text, want_category text, want_channel text, want_enabled boolean, want_quiet_start time without time zone, want_quiet_end time without time zone, want_time_zone text)',
     -- 20260928308000_support_shares.sql: an athlete shares with one person
     -- holding athletic_academic_support at their school; staff list and read
     -- through functions that re-check that role on every call and log reads.
