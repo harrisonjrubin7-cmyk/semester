@@ -14,7 +14,7 @@ Scope: `app/src`. The branch is `claude/youthful-hopper-78agev`, based on `origi
 | Places that dispatch `type: 'go'` | 247 | `grep -rn "type: 'go'"` outside tests |
 | Files in `screens/` that hand-roll a `…row…` class | 6 files, 13 occurrences | `grep -rl` / `grep -rn` on `className="…row…"` |
 
-The brief said 59 screens and nine shelves. Both are out of date. The registry has 63 destinations (the parser counts "the institution" as a destination too, so the real figure may be 62), and the code comments already say eight shelves.
+The brief said 59 screens and nine shelves. Both are out of date. The registry has <!--screens-->sixty-three<!--/--> destinations (the parser counts "the institution" as a destination too, so the real figure may be 62), and the code comments already say eight shelves.
 
 ## Premises that do not match the code
 
