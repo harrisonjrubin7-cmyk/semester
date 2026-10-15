@@ -2,7 +2,7 @@
 
 Source: `Semester-entire-implementation-package.zip` (refreshed export, 2026-10-13, SHA-256 `636242fead2dbe74cbb94503453b6f9ae53b056d078e9a9a5237f8df5b0b67b4`), read from `implementation/registry.json`, `implementation/CATALOG-RECONCILIATION.csv`, `implementation/MATURITY-REGISTER.csv` and `implementation/EXECUTION-HANDOFF.md`. The ZIP itself is not committed; the hash identifies the export. Repository side: `app/src/data/ecosystem/capabilities.json` (generated 2026-10-06 from `ui_kits/capability-registry/registry.js`).
 
-**Status columns are archive-only.** The `archive_*` columns in the CSV copy the package's own boolean flags. They describe the archive model, not this repository. The current-evidence reconciliation, [`docs/design-system/REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md`](../design-system/REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md), is the source for repository status. In the CSV, `backend` is `unknown` where the source is `null`, not `false`.
+**Status columns are archive-only.** The `archive_*` columns in the CSV copy the `status` booleans in `app/src/data/ecosystem/capabilities.json`, which is the checked-in copy of the archive registry. They describe the archive model, not this repository's implementation. The current-evidence reconciliation, [`docs/design-system/REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md`](../design-system/REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md), is the source for repository status. In the CSV, `backend` is `unknown` where the source is `null`, not `false`.
 
 Per-capability matrix: [`capability-coverage-2026-10-13.csv`](capability-coverage-2026-10-13.csv) (122 rows).
 
