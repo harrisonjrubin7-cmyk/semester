@@ -26,6 +26,12 @@ end_of_pilot:
       use_when: value, authority, or feasibility does not justify continuation
       required_follow_up: safe-off, preserve evidence, follow retention and communication plan
 
+  decision_record:   # completed when the decision is made. All TBD until then.
+    selected_option: TBD   # one of renew_and_deepen, repeat, remediate, conclude_safely
+    decision_date: TBD
+    rationale: TBD
+    approving_owners: TBD
+
   prohibited_conclusion: >
     Do not claim general institutional readiness, broad compliance, or
     product-market fit from one bounded pilot.

@@ -16,6 +16,8 @@ launch_cadence:
         - escalation_contacts
         - escalation_response_targets_agreed   # P0/P1/P2 targets in escalation-matrix.yaml
         - named_owner_for_every_role           # scope-record.yaml named_owners
+        - sev_to_p_mapping_agreed              # escalation-matrix.yaml sev_to_p_mapping is no longer TBD
+        - measurement_windows_approved         # every observation_period in measurement-plan.yaml is set
     - id: stage_2_configure
       status: not_started
       exit_criteria:

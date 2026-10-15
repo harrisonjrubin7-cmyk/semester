@@ -43,6 +43,8 @@ release:
     - RLS_change
     - workflow_state_change
     - connector_change
+    - cohort_change
+    - approved_scope_change
     - material_UI_or_consequence_copy_change
 
   approvals:

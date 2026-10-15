@@ -43,13 +43,23 @@ measurement:
       owner: semester_operations_owner
       limitations: [queue_routing_rules, staff_availability]
 
+    time_to_triage:
+      definition: Elapsed time from case opened to first triage action, reported as median and 90th percentile in minutes.
+      numerator: none; reported as median and p90 of opened-to-triaged durations
+      denominator: cases that reached triage in the observation period
+      observation_period: TBD
+      scope: approved offices only
+      source: staff queue timestamps (opened_at, triaged_at)
+      owner: semester_operations_owner
+      limitations: [queue_routing_rules, weekend_coverage]
+
     reliability:
       definition: Connector freshness, workflow completion, safe-state activation, incident count, and time to containment.
       numerator: "per sub-measure: connector refreshes within expected window; workflow requests completed; safe-state activations that succeeded; incidents contained within target"
       denominator: "per sub-measure: connector refreshes attempted; workflow requests submitted; safe-state activations attempted; incidents opened"
       observation_period: TBD
       scope: approved source only
-      source: connector health records and incident log
+      source: connector health records, workflow state records, safe-state activation records, and the incident log
       owner: semester_operations_owner
       limitations: [freshness_thresholds_TBD, source_outages]
 
