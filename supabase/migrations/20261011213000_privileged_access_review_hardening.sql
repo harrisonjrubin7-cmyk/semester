@@ -440,22 +440,6 @@ begin
     and grant_row.expires_at is not distinct from item.expires_at and grant_row.revoked_at is null
     and (grant_row.expires_at is null or grant_row.expires_at > clock_timestamp())
     and not item.capabilities_backfilled and current_capabilities = item.capabilities;
-  if (decision.decision = 'retain' and grant_current)
-     or (decision.decision = 'revoke' and exists (
-       select 1 from private.privileged_access_review_remediation x where x.decision_id = decision.id
-     ) and (not grant_found or (
-       grant_row.role = item.role
-       and private.role_audit_sha256(grant_row.subject::text) = item.subject_sha256
-       and grant_row.scope_kind = item.scope_kind and grant_row.scope_id = item.scope_id
-       and grant_row.provenance = item.provenance
-       and (case when grant_row.granted_by is null then null
-                 else private.role_audit_sha256(grant_row.granted_by::text) end)
-           is not distinct from item.granted_by_sha256
-       and grant_row.granted_at = item.granted_at
-       and grant_row.expires_at is not distinct from item.expires_at
-       and grant_row.revoked_at is not null))) then
-    raise exception 'The decided grant has not changed since the snapshot.' using errcode = '22023';
-  end if;
   observed_state := private.privileged_access_review_grant_state_sha256(
     case when grant_found then grant_row.subject else null end,
     case when grant_found then grant_row.role else null end,
@@ -469,6 +453,13 @@ begin
     current_capabilities,
     grant_found and grant_row.revoked_at is null
       and (grant_row.expires_at is null or grant_row.expires_at > clock_timestamp()));
+  if (decision.decision = 'retain' and grant_current)
+     or (decision.decision = 'revoke' and exists (
+       select 1 from private.privileged_access_review_remediation x
+        where x.decision_id = decision.id and x.observed_state_sha256 = observed_state
+     )) then
+    raise exception 'The decided grant has not changed since the snapshot.' using errcode = '22023';
+  end if;
   select x.* into existing_resolution
     from private.privileged_access_review_post_decision_resolution x
    where x.decision_id = decision.id and x.observed_state_sha256 = observed_state;
