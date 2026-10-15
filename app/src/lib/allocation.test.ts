@@ -188,3 +188,60 @@ describe('room change', () => {
     expect(again.state).toBe(ended.state);
   });
 });
+
+describe('input guards', () => {
+  const base = { id: 'r1', key: 'k1', bedId: 'b1', studentId: 'A', expectedInventoryVersion: 1, now: 0, holdMs: HOLD };
+
+  it('refuses an empty key, so keyless requests never share one record', () => {
+    expect(reserve(oneBed(), { ...base, key: '  ' })).toEqual({ ok: false, refusal: 'invalid_input' });
+  });
+
+  it('refuses a hold that is zero, negative, NaN or infinite', () => {
+    for (const holdMs of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(reserve(oneBed(), { ...base, holdMs })).toEqual({ ok: false, refusal: 'invalid_input' });
+    }
+  });
+
+  it('does not resolve inherited object keys such as toString as beds', () => {
+    expect(reserve(oneBed(), { ...base, bedId: 'toString' })).toEqual({ ok: false, refusal: 'bed_unknown' });
+    expect(confirm(oneBed(), { id: 'a1', reservationId: 'constructor', studentId: 'A', now: 0 })).toEqual({
+      ok: false,
+      refusal: 'reservation_unknown',
+    });
+    expect(endAssignment(oneBed(), { assignmentId: 'toString', expectedInventoryVersion: 1, now: 0 })).toEqual({
+      ok: false,
+      refusal: 'assignment_unknown',
+    });
+  });
+
+  it('refuses a reservation id already in use, instead of overwriting the first hold', () => {
+    const first = must(reserve(initialState([{ id: 'b1', label: 'x' }, { id: 'b2', label: 'y' }]), base));
+    const reused = reserve(first.state, {
+      ...base, key: 'k2', bedId: 'b2', studentId: 'B', expectedInventoryVersion: first.state.inventoryVersion,
+    });
+    expect(reused).toEqual({ ok: false, refusal: 'duplicate_id' });
+    expect(first.state.reservations['r1']).toMatchObject({ bedId: 'b1', status: 'held' });
+  });
+
+  it('refuses an assignment id already in use, instead of overwriting an active assignment', () => {
+    const base2 = initialState([{ id: 'b1', label: 'x' }, { id: 'b2', label: 'y' }]);
+    const a = must(reserve(base2, base));
+    const aConfirmed = must(confirm(a.state, { id: 'a1', reservationId: 'r1', studentId: 'A', now: 1 }));
+    const b = must(reserve(aConfirmed.state, {
+      ...base, id: 'r2', key: 'k2', bedId: 'b2', studentId: 'B', expectedInventoryVersion: aConfirmed.state.inventoryVersion,
+    }));
+    expect(confirm(b.state, { id: 'a1', reservationId: 'r2', studentId: 'B', now: 2 })).toEqual({
+      ok: false,
+      refusal: 'duplicate_id',
+    });
+    expect(b.state.assignments['a1']).toMatchObject({ bedId: 'b1', studentId: 'A' });
+  });
+
+  it('refuses an override whose assignment id is already in use', () => {
+    const placed = must(override(oneBed(), { id: 'o1', bedId: 'b1', studentId: 'A', authority: 'RD', rationale: 'x', expectedInventoryVersion: 1, now: 0 }));
+    const dup = override(placed.state, {
+      id: 'o1', bedId: 'b1', studentId: 'B', authority: 'RD', rationale: 'x', expectedInventoryVersion: placed.state.inventoryVersion, now: 0,
+    });
+    expect(dup).toEqual({ ok: false, refusal: 'duplicate_id' });
+  });
+});

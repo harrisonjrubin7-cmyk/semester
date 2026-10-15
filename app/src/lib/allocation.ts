@@ -56,7 +56,9 @@ export type Refusal =
   | 'reservation_not_yours'
   | 'idempotency_conflict'
   | 'authority_missing'
-  | 'assignment_unknown';
+  | 'assignment_unknown'
+  | 'invalid_input'
+  | 'duplicate_id';
 
 export type Outcome =
   | { readonly ok: true; readonly state: AllocationState; readonly id: string }
@@ -64,6 +66,10 @@ export type Outcome =
 
 const accept = (state: AllocationState, id: string): Outcome => ({ ok: true, state, id });
 const refuse = (refusal: Refusal): Outcome => ({ ok: false, refusal });
+
+/** Own-property lookup, so an id such as "toString" never resolves to Object.prototype. */
+const own = <T>(record: Readonly<Record<string, T>>, id: string): T | undefined =>
+  Object.prototype.hasOwnProperty.call(record, id) ? record[id] : undefined;
 
 export function initialState(beds: readonly Bed[]): AllocationState {
   return {
@@ -114,6 +120,10 @@ export interface ReserveInput {
 
 /** Hold a bed for a student for a limited time, against the snapshot they chose from. */
 export function reserve(state: AllocationState, input: ReserveInput): Outcome {
+  // An empty key would match every other keyless request, so it is refused before lookup.
+  if (input.key.trim() === '' || input.id.trim() === '') return refuse('invalid_input');
+  // A hold must be bounded and positive: zero or NaN never blocks the bed, Infinity never lapses.
+  if (!Number.isFinite(input.holdMs) || input.holdMs <= 0) return refuse('invalid_input');
   const prior = Object.values(state.reservations).find((r) => r.key === input.key);
   if (prior) {
     if (prior.bedId !== input.bedId || prior.studentId !== input.studentId) {
@@ -124,7 +134,8 @@ export function reserve(state: AllocationState, input: ReserveInput): Outcome {
     return live ? accept(state, prior.id) : refuse('reservation_expired');
   }
   if (input.expectedInventoryVersion !== state.inventoryVersion) return refuse('stale_inventory');
-  if (!state.beds[input.bedId]) return refuse('bed_unknown');
+  if (!own(state.beds, input.bedId)) return refuse('bed_unknown');
+  if (own(state.reservations, input.id)) return refuse('duplicate_id');
   if (bedIsHeld(state, input.bedId, input.now)) return refuse('bed_taken');
   if (studentIsPlaced(state, input.studentId, input.now)) return refuse('student_placed');
 
@@ -151,7 +162,7 @@ export function confirm(
   state: AllocationState,
   input: { readonly id: string; readonly reservationId: string; readonly studentId: string; readonly now: number },
 ): Outcome {
-  const r = state.reservations[input.reservationId];
+  const r = own(state.reservations, input.reservationId);
   if (!r) return refuse('reservation_unknown');
   if (r.studentId !== input.studentId) return refuse('reservation_not_yours');
   if (r.status === 'confirmed' && r.assignmentId) return accept(state, r.assignmentId);
@@ -161,6 +172,7 @@ export function confirm(
   if (Object.values(state.assignments).some((a) => a.bedId === r.bedId && a.endedAt === null)) {
     return refuse('bed_taken');
   }
+  if (own(state.assignments, input.id)) return refuse('duplicate_id');
 
   const assignment: Assignment = {
     id: input.id,
@@ -197,8 +209,10 @@ export interface OverrideInput {
  */
 export function override(state: AllocationState, input: OverrideInput): Outcome {
   if (input.authority.trim() === '' || input.rationale.trim() === '') return refuse('authority_missing');
+  if (input.id.trim() === '') return refuse('invalid_input');
   if (input.expectedInventoryVersion !== state.inventoryVersion) return refuse('stale_inventory');
-  if (!state.beds[input.bedId]) return refuse('bed_unknown');
+  if (!own(state.beds, input.bedId)) return refuse('bed_unknown');
+  if (own(state.assignments, input.id)) return refuse('duplicate_id');
   if (bedIsHeld(state, input.bedId, input.now)) return refuse('bed_taken');
   if (studentIsPlaced(state, input.studentId, input.now)) return refuse('student_placed');
 
@@ -230,7 +244,7 @@ export function endAssignment(
   state: AllocationState,
   input: { readonly assignmentId: string; readonly expectedInventoryVersion: number; readonly now: number },
 ): Outcome {
-  const a = state.assignments[input.assignmentId];
+  const a = own(state.assignments, input.assignmentId);
   if (!a) return refuse('assignment_unknown');
   if (a.endedAt !== null) return accept(state, a.id);
   if (input.expectedInventoryVersion !== state.inventoryVersion) return refuse('stale_inventory');
