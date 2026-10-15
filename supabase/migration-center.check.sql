@@ -147,6 +147,7 @@ declare
   lead uuid; lead2 uuid; registrar uuid; admin uuid; researcher uuid; student uuid; far_lead uuid;
   m uuid; gone uuid;
   audits bigint;
+  held bigint;
 begin
   insert into public.schools (id, name, email_domains) values
     ('mc-u', 'Migration Center University', array['mc-u.example']),
@@ -305,7 +306,13 @@ begin
   perform pg_temp.says('one of two areas is not enough', pg_temp.move(lead, m, 'archive'), 'approvals');
   perform pg_temp.runs_clean('the administrator rejects for IT', pg_temp.decide(admin, m, 'it', 'rejected'));
   perform pg_temp.says('a rejection is named', pg_temp.move(lead, m, 'archive'), 'rejected');
+  -- Two approvals by one person on two areas, sent at once, each read the
+  -- other's absence and both passed. The trigger now serialises one approver's
+  -- approvals on a transaction lock; this watches it being taken.
+  select count(*) into held from pg_locks where locktype = 'advisory' and pid = pg_backend_pid();
   perform pg_temp.runs_clean('the administrator approves for IT', pg_temp.decide(admin, m, 'it', 'approved'));
+  perform pg_temp.counted('an approval takes its approver''s lock, so two sent at once are checked one after the other',
+    (select count(*) from pg_locks where locktype = 'advisory' and pid = pg_backend_pid()) - held, 1);
   perform pg_temp.counted('the approval is stamped with its approver',
     (select count(*) from public.migration_approvals where project_id = m and approver_id = admin), 2);
   perform pg_temp.says('one area named twice is one area',

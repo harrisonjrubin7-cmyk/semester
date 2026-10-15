@@ -13,6 +13,9 @@
 -- area stays allowed (a rejection followed by an approval is how a fix is
 -- recorded). Rejections are not limited: refusing to sign is always allowed.
 --
+-- Concurrent approvals by one person are serialised on a transaction-scoped
+-- advisory lock keyed on (migration, approver), so the check sees the first.
+--
 -- Not applied to production; see docs/execute/35-phase-5-enable-and-replace-report.md.
 
 create or replace function private.migration_approval_stamp()
@@ -26,6 +29,13 @@ begin
   end if;
   if p.created_by = auth.uid() then
     raise exception 'The person who created a migration does not approve its cutover.' using errcode = '42501';
+  end if;
+  if new.decision = 'approved' then
+    -- The check below reads, then decides. Two approvals by one person on
+    -- two areas, sent together, each read before the other committed and both
+    -- passed. One approver's approvals on one migration take a turn instead:
+    -- the second waits for the first to commit, then sees it.
+    perform pg_advisory_xact_lock(hashtextextended(new.project_id::text || ':' || auth.uid()::text, 0));
   end if;
   if new.decision = 'approved' and exists (
        select 1 from public.migration_approvals a
