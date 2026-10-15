@@ -1,0 +1,38 @@
+# Operations OS: one operator substrate before adding more consoles.
+operations_os:
+  phase_1_pilot:
+    consoles:
+      - support_handoffs
+      - reconciliation
+      - source_health
+      - release_status
+      - access_and_session_events
+      - incidents
+
+  phase_2_repeatability:
+    consoles:
+      - tenant_implementation
+      - configuration_changes
+      - connector_certification
+      - evidence_currency
+      - privacy_requests
+      - renewal_workflow
+
+  phase_3_scale:
+    consoles:
+      - partner_operations
+      - developer_operations
+      - finance_operations
+      - community_trust_and_safety
+      - data_quality_governance
+      - capacity_and_reliability_management
+
+  action_standard:
+    every_controlled_action_requires:
+      - actor_scope
+      - reason
+      - consequence_preview
+      - policy_check
+      - audit_event
+      - receipt
+      - undo_or_recovery_path_when_possible

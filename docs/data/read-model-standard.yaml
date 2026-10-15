@@ -1,0 +1,34 @@
+# Read-model governance: no screen may present a stale projection as live authority.
+read_models:
+  requirements:
+    - every_projection_has_source_version
+    - every_projection_has_observed_at
+    - every_projection_has_freshness_state
+    - every_projection_has_tenant_id
+    - every_projection_has_correlation_id
+    - every_projection_has_rebuild_strategy
+    - every_projection_has_authority_descriptor
+
+  # Runtime freshness states (app/src/lib/console/client.ts): fresh, stale,
+  # failed, unknown. Any other value is read as unknown.
+  # `updating` is not a stored state: it is a UI overlay shown while a rebuild
+  # is in flight on a fresh or stale projection.
+  UI_rules:
+    fresh:
+      behavior: show_available_action_when_policy_allows
+    updating_overlay:
+      behavior: show_updating_state_and_prevent_unsafe_assumption
+    stale:
+      behavior: show_stale_state_and_block_definitive_outcome
+    failed:
+      behavior: show_safe_fallback_and_handoff
+    unknown:
+      behavior: avoid_claim_and_offer_review_or_refresh
+
+  rebuild:
+    requirements:
+      - replay_safe
+      - idempotent
+      - tenant_scoped
+      - auditable
+      - reconciliation_after_rebuild

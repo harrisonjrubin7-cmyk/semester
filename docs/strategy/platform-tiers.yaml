@@ -1,0 +1,33 @@
+# Platform tiers: prove one trusted workflow, repeat it, then expand selectively.
+platform_tiers:
+  tier_1_trusted_wedge:
+    goal: >
+      Deliver one source-backed, policy-controlled, operationally supported
+      workflow that students and institutional staff can safely use.
+    initial_scope:
+      - registration_readiness
+      - student_action_center
+      - advisor_and_registrar_handoff
+      - privacy_and_session_controls
+      - institution_console_basics
+
+  tier_2_repeatable_institution_platform:
+    goal: >
+      Prove that the same foundation supports a second connected journey and a
+      second tenant or tenant-equivalent implementation.
+    candidate_scope:
+      - degree_planning_scenarios
+      - advising_collaboration
+      - course_studio_or_study_studio
+      - reusable_connector_program
+      - implementation_toolkit
+
+  tier_3_selective_native_education_platform:
+    goal: >
+      Add native systems only where Semester can own the authority boundary,
+      operational burden, commercial model, and long-term support obligation.
+    candidate_scope:
+      - native_finance_for_Semester_commerce
+      - partner_and_developer_platform
+      - governed_community_and_marketplace
+      - advanced_institution_operations
