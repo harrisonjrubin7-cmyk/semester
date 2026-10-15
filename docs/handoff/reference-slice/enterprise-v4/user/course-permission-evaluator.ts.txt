@@ -1,0 +1,229 @@
+// From "Interactive higher-ed ERD schema" PDF (6 Oct). Extracted from PDF text, so indentation was lost; NOT compiled. LTI roles add
+// candidate capabilities only; local membership, assignment, grant, purpose and field scope must all pass.
+export type CoursePermission =
+| "learning.resource.read"
+| "learning.practice.use"
+| "learning.roster.read_assigned"
+| "learning.submission.read_own"
+| "learning.submission.read_assigned"
+| "learning.grade.write_assigned"
+| "advising.course_progress.read_assigned";
+type Purpose =
+| "course_learning"
+| "course_instruction"
+| "academic_advising";
+type Actor = {
+registrar modules with live RBAC mapping
+tenantId: string;
+personId: string;
+sessionId: string;
+};
+type CourseResource = {
+tenantId: string;
+sectionId: string;
+resourceId: string;
+subjectPersonId?: string;
+};
+type VerifiedLtiContext = {
+tenantId: string;
+sectionId: string;
+personId: string;
+deploymentId: string;
+candidatePermissions: readonly CoursePermission[];
+deploymentPermissions: readonly CoursePermission[];
+};
+type ActiveGrant = {
+permission: CoursePermission;
+allowedFields: readonly string[];
+};
+type AuthorizationFacts = {
+activeMembership: boolean;
+activeLearnerEnrollment: boolean;
+activeInstructorAssignment: boolean;
+activeAdvisorAssignment: boolean;
+grants: readonly ActiveGrant[];
+policyVersion: string;
+evaluatedAt: string;
+};
+export type Decision = {
+allow: boolean;
+reason:
+| "ALLOWED"
+| "TENANT_MISMATCH"
+| "INACTIVE_MEMBERSHIP"
+| "LTI_CONTEXT_MISMATCH"
+| "LTI_CAPABILITY_DENIED"
+| "PERMISSION_MISSING"
+| "RELATIONSHIP_MISSING"
+| "PURPOSE_MISMATCH"
+| "FIELD_SCOPE_DENIED";
+permittedFields: readonly string[];
+policyVersion: string;
+};
+interface AuthorizationRepository {
+// Load through a trusted server connection.
+// Identity comes from the verified session.
+// Facts must apply to this actor, section and subject.
+loadFacts(input: {
+actor: Actor;
+resource: CourseResource;
+}): Promise<AuthorizationFacts>;
+}
+const PURPOSES: Record<CoursePermission, readonly Purpose[]> = {
+"learning.resource.read": [
+"course_learning",
+"course_instruction",
+],
+"learning.practice.use": ["course_learning"],
+"learning.roster.read_assigned": ["course_instruction"],
+"learning.submission.read_own": ["course_learning"],
+"learning.submission.read_assigned": ["course_instruction"],
+"learning.grade.write_assigned": ["course_instruction"],
+"advising.course_progress.read_assigned": [
+"academic_advising",
+],
+};
+function relationshipAllows(
+permission: CoursePermission,
+actor: Actor,
+resource: CourseResource,
+facts: AuthorizationFacts,
+): boolean {
+switch (permission) {
+case "learning.resource.read":
+return (
+facts.activeLearnerEnrollment ||
+facts.activeInstructorAssignment
+);
+case "learning.practice.use":
+return facts.activeLearnerEnrollment;
+case "learning.submission.read_own":
+return (
+facts.activeLearnerEnrollment &&
+resource.subjectPersonId === actor.personId
+);
+case "learning.roster.read_assigned":
+case "learning.submission.read_assigned":
+case "learning.grade.write_assigned":
+return facts.activeInstructorAssignment;
+case "advising.course_progress.read_assigned":
+return (
+resource.subjectPersonId !== undefined &&
+facts.activeAdvisorAssignment
+);
+}
+}
+export async function evaluateCoursePermission(
+input: {
+actor: Actor;
+resource: CourseResource;
+permission: CoursePermission;
+purpose: Purpose;
+requestedFields: readonly string[];
+lti?: VerifiedLtiContext;
+},
+repo: AuthorizationRepository,
+): Promise<Decision> {
+const deny = (
+reason: Decision["reason"],
+policyVersion = "not-evaluated",
+): Decision => ({
+allow: false,
+reason,
+permittedFields: [],
+policyVersion,
+});
+const { actor, resource, permission, purpose, lti } = input;
+if (actor.tenantId !== resource.tenantId) {
+return deny("TENANT_MISMATCH");
+}
+if (lti) {
+if (
+lti.tenantId !== actor.tenantId ||
+lti.personId !== actor.personId ||
+lti.sectionId !== resource.sectionId
+) {
+return deny("LTI_CONTEXT_MISMATCH");
+}
+if (
+!lti.candidatePermissions.includes(permission) ||
+!lti.deploymentPermissions.includes(permission)
+) {
+return deny("LTI_CAPABILITY_DENIED");
+}
+}
+const facts = await repo.loadFacts({ actor, resource });
+if (!facts.activeMembership) {
+return deny("INACTIVE_MEMBERSHIP", facts.policyVersion);
+}
+const applicableGrants = facts.grants.filter(
+grant => grant.permission === permission,
+);
+if (applicableGrants.length === 0) {
+return deny("PERMISSION_MISSING", facts.policyVersion);
+}
+if (!PURPOSES[permission].includes(purpose)) {
+return deny("PURPOSE_MISMATCH", facts.policyVersion);
+}
+if (
+!relationshipAllows(permission, actor, resource, facts)
+) {
+return deny("RELATIONSHIP_MISSING", facts.policyVersion);
+}
+const permittedFields = new Set(
+applicableGrants.flatMap(grant => grant.allowedFields),
+);
+if (
+input.requestedFields.some(
+field => !permittedFields.has(field),
+)
+) {
+return deny("FIELD_SCOPE_DENIED", facts.policyVersion);
+}
+return {
+allow: true,
+reason: "ALLOWED",
+permittedFields: [...new Set(input.requestedFields)],
+policyVersion: facts.policyVersion,
+};
+}
+Parse inputs against runtime schemas; TypeScript types alone do not validate HTTP
+requests.
+Construct actor from the verified session.
+Construct lti from validated server-side launch state.
+Select purpose from the approved operation—not arbitrary user text.
+Load grants aer checking effective dates, revocation, scope, and policy.
+Make advisor facts specific to the requested student.
+Filter response fields using permittedFields.
+Recheck authorization inside consequential write transactions.
+Persist an audit decision before or with sensitive access delivery.
+Do not let a cached decision outlive grant revocation.
+Integration requirements
+FERPA requires reasonable methods to restrict school officials to records in which they have
+legitimate educational interests. The relationship and field checks help implement that
+requirement.
+Scenario Expected result
+Faculty assigned to section A requests section B Deny
+Student requests another student’s submission Deny
+Advisor requests unassigned student Deny
+LTI deployment maps to another university Deny
+Instructor role exists but local grant is missing Deny
+Approved teaching grant requests financial fields Deny
+Expired advisor assignment Deny
+Valid assigned instructor requests permitted roster fields Allow
+Valid student requests own submission Allow
+A retention trigger should block premature destruction, not delete disclosure records
+automatically.
+Section 99.32 requires the applicable request/disclosure record to be maintained for as long as
+the studentʼs education records are maintained. Section 99.10 also prohibits destruction of
+education records while an inspection request is outstanding.
+Therefore:
+Education records remain → preserve required disclosure history
+Outstanding inspection → preserve applicable records
+Legal/institutional hold → preserve
+Unknown retirement state → preserve
+Approved retirement + no holds → eligible for reviewed disposition
+Operational security logs can have a different approved schedule. Do not apply that schedule to
+statutory disclosure records.
+Essential evaluator tests
+

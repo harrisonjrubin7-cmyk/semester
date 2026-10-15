@@ -2,14 +2,14 @@
 
 > **Type:** reference · **Audience:** implementers, operators · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/platform-reference.test.ts`
 
-This page lists the 17 Supabase edge functions in this repository, what each accepts, how each decides who is calling, and which environment variables and database functions each uses; stop reading if you want the secrets inventory ([`SECRETS.md`](../../SECRETS.md)) or the deploy steps ([`supabase/DEPLOY.md`](../../supabase/DEPLOY.md)).
+This page lists the 18 Supabase edge functions in this repository, what each accepts, how each decides who is calling, and which environment variables and database functions each uses; stop reading if you want the secrets inventory ([`SECRETS.md`](../../SECRETS.md)) or the deploy steps ([`supabase/DEPLOY.md`](../../supabase/DEPLOY.md)).
 
 **Status:** PARTIAL — each function carries its own word in the table below. Only the functions marked LIVE work for a real user without further owner, provider or university action. This page reads the repository, not the running project: it cannot say what is deployed or which secrets are set.
 
 ## How to read this page
 
 - **URL shape.** Every function is served at `https://<project-ref>.supabase.co/functions/v1/<function>`. `<project-ref>` is the Supabase project the deployment belongs to. `lti` also answers four sub-paths (see its section); `calendar` reads its credential from the last path segment.
-- **`verify_jwt`.** All 17 functions are `false` in [`supabase/config.toml`](../../supabase/config.toml). The platform check would reject a CORS preflight, which carries no `Authorization` header, so each function does its own check. The **Guard** column is the kind of credential each one answers to, taken from [`app/src/lib/edgeguards.ts`](../../app/src/lib/edgeguards.ts). A function with `verify_jwt = false` and no check of its own would be open; that register is what stops one being added without saying so.
+- **`verify_jwt`.** All 18 functions are `false` in [`supabase/config.toml`](../../supabase/config.toml). The platform check would reject a CORS preflight, which carries no `Authorization` header, so each function does its own check. The **Guard** column is the kind of credential each one answers to, taken from [`app/src/lib/edgeguards.ts`](../../app/src/lib/edgeguards.ts). A function with `verify_jwt = false` and no check of its own would be open; that register is what stops one being added without saying so.
 - **Status words** are the vocabulary of [`docs/FEATURE-TRUTH-TABLE.md`](../FEATURE-TRUTH-TABLE.md). Where that table has a row for the function, the section names it. Where it has none, the word is read from the function's own gating and the section says so.
 - **Environment variables** are names only. What each one controls, its default and where it is set is in [`CONFIGURATION.md`](CONFIGURATION.md).
 - **Deploy state.** [`supabase/DEPLOY.md`](../../supabase/DEPLOY.md) holds a dated snapshot of what the project reported. This page does not repeat it, and the snapshot is not evidence that a function is on today.
@@ -28,6 +28,7 @@ This page lists the 17 Supabase edge functions in this repository, what each acc
 | `delete-account` | LIVE | `POST` | `user-token` | `false` | `ALLOWED_ORIGIN`, `CORS_ALLOW_DEV`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | `erase_account` |
 | `fetchcal` | LIVE | `POST` | `user-token` | `false` | `ALLOWED_ORIGIN`, `CORS_ALLOW_DEV`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | none |
 | `integration-tick` | IMPLEMENTED_NOT_RELEASED | `POST` | `scheduler-token` | `false` | `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | `integration_refresh_governance`, `integration_tick_authorized`, `integration_tombstone_references` |
+| `access-saga-tick` | IMPLEMENTED_NOT_RELEASED | `POST` | `scheduler-token` | `false` | `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | `access_saga_claim`, `access_saga_due`, `access_saga_flag_recovery`, `access_saga_release`, `access_saga_save`, `access_saga_tick_authorized`, `access_saga_wake` |
 | `ops-projector` | IMPLEMENTED_NOT_RELEASED | `POST` | `shared-secret` | `false` | `OPS_PROJECTOR_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | `run_ops_projector` |
 | `lead-intake` | IMPLEMENTED_NOT_RELEASED | `POST` | `public` | `false` | `LEAD_IP_SALT`, `LEAD_NOTIFY_EMAIL`, `LEAD_NOTIFY_FROM`, `RESEND_API_KEY`, `SITE_ORIGINS`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | `submit_site_lead` |
 | `lti` | IMPLEMENTED_NOT_RELEASED | `GET`, `POST` | `flow-state` | `false` | `ALLOWED_ORIGIN`, `CORS_ALLOW_DEV`, `LTI_PRIVATE_KEY`, `SEMESTER_APP_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | `lti_launch_entitlement_facts`, `lti_launch_membership`, `lti_passback_decision`, `lti_record_context`, `spend_lti_nonce` |
@@ -36,7 +37,7 @@ This page lists the 17 Supabase edge functions in this repository, what each acc
 | `support-reply-notify` | IMPLEMENTED_NOT_RELEASED | `POST` | `user-token`, `shared-secret` | `false` | `ALLOWED_ORIGIN`, `CORS_ALLOW_DEV`, `CRON_SECRET`, `LEAD_NOTIFY_FROM`, `RESEND_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`, `SUPPORT_NOTIFY_ACTIVATED_AT`, `SUPPORT_NOTIFY_FROM`, `SUPPORT_NOTIFY_VENDOR_APPROVED`, `SUPPORT_RETURN_URL` | `claim_support_notifications` |
 | `trust-room` | IMPLEMENTED_NOT_RELEASED | `POST` | `link-token` | `false` | `ALLOWED_ORIGIN`, `CORS_ALLOW_DEV`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | `trust_room_open` |
 
-`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_ANON_KEY` are injected by the platform; nobody sets them. These browser-called functions answer a CORS preflight (`OPTIONS`): `billing-cancel`, `billing-checkout`, `billing-portal`, `canvas`, `claude`, `delete-account`, `fetchcal`, `lead-intake`, `productivity-sourcecheck`, `support-reply-notify`, `trust-room`, and `lti` on `/score`. `billing-webhook` refuses any request that carries an `Origin`. `calendar`, `integration-tick`, `ops-projector` and `push` have no browser caller. `push` has no method check at all: any method with the right bearer token runs it.
+`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_ANON_KEY` are injected by the platform; nobody sets them. These browser-called functions answer a CORS preflight (`OPTIONS`): `billing-cancel`, `billing-checkout`, `billing-portal`, `canvas`, `claude`, `delete-account`, `fetchcal`, `lead-intake`, `productivity-sourcecheck`, `support-reply-notify`, `trust-room`, and `lti` on `/score`. `billing-webhook` refuses any request that carries an `Origin`. `access-saga-tick`, `calendar`, `integration-tick`, `ops-projector` and `push` have no browser caller. `push` has no method check at all: any method with the right bearer token runs it.
 
 The table is held both ways by the test: every function directory is a row, every row is a directory, the `verify_jwt` and Guard cells equal `config.toml` and `edgeguards.ts`, and the environment and RPC cells equal what the function's source (its `index.ts` plus every `_shared` module it imports) actually reads and calls.
 
@@ -147,6 +148,16 @@ The 15-minute integration sync tick: pulls each approved connection that is due 
 - **Kill switches.** Syncs stop under the integration kill switches in [`docs/FEATURE-FLAG-REGISTRY.md`](../FEATURE-FLAG-REGISTRY.md). The operator steps are in [`docs/INTEGRATION-OPERATOR-RUNBOOK.md`](../INTEGRATION-OPERATOR-RUNBOOK.md).
 - **Source.** [`index.ts`](../../supabase/functions/integration-tick/index.ts), [`_shared/integrationtick.ts`](../../supabase/functions/_shared/integrationtick.ts), [`integrationtick.test.ts`](../../app/src/lib/integrationtick.test.ts). The worker code is `app/server/integration/` (a generated copy sits in `_shared/integration/`).
 
+## `access-saga-tick`
+
+The access saga worker's tick: the database lists the access sagas that are due and the runner moves each one a step. **Status** IMPLEMENTED_NOT_RELEASED. No participants are registered (`app/server/institution/access-saga-registry.ts` holds null), so each tick answers `outcome: unregistered` with the count of due sagas and claims none; the runner moves nothing in production until a real policy administrator and enforcement point are registered there.
+
+- **Request.** `POST` with `Authorization: Bearer <access_saga_cron_secret>`. No body is read. The caller is the `access-saga-worker` job in [`supabase/scheduler.sql`](../../supabase/scheduler.sql) at minutes 1, 6, 11 … 56 of every hour, with a 60 second timeout. That job is parked in the file until the function's first deployment answers the test request in [`supabase/DEPLOY.md`](../../supabase/DEPLOY.md).
+- **Auth.** The token is compared inside the database by `access_saga_tick_authorized`, against Vault. No copy of the secret is set on the function.
+- **Work.** `access_saga_due` lists the due sagas (a working state past its next attempt, a wait past its deadline, `ACTIVE` past its grant's expiry; never a finished or leased saga), and `runAccessSagaTick` runs one runner tick per saga within a cap of 50 and a budget of 20 seconds. The runner claims through `access_saga_claim`, saves through `access_saga_save`, releases through `access_saga_release`; `access_saga_flag_recovery` and `access_saga_wake` are the store's other two.
+- **Responses.** 200 the tick's counts (`outcome`, `due`, `ticked`, `failed`, `deferred`; no tenant, subject or person is named); 401 no or wrong token; 405 `POST only.`; 500 the tick failed; 503 service credentials missing or the database could not say whether the token is right.
+- **Source.** [`index.ts`](../../supabase/functions/access-saga-tick/index.ts), [`_shared/integrationtick.ts`](../../supabase/functions/_shared/integrationtick.ts) (the request handling, shared with `integration-tick`). The worker code is `app/server/institution/access-saga-tick.ts` over `postgres-access-saga.ts` and the runner in `packages/institution/src/access-saga.ts` (a generated copy sits in `_shared/access-saga/`, held to its source by [`edge-access-saga.test.ts`](../../app/scripts/edge-access-saga.test.ts)). SQL: [`20261012030000_access_saga_due.sql`](../../supabase/migrations/20261012030000_access_saga_due.sql), [`20261012040000_access_saga_tick_auth.sql`](../../supabase/migrations/20261012040000_access_saga_tick_auth.sql), [`access-saga-tick-auth.check.sql`](../../supabase/access-saga-tick-auth.check.sql).
+
 ## `ops-projector`
 
 Runs one bounded tenant-entitlement projection batch. **Status** IMPLEMENTED_NOT_RELEASED. It has no scheduler entry and remains dormant until an operator explicitly provisions its dedicated secret.
@@ -222,13 +233,14 @@ Serves the procurement room's files to a reviewer at a university who has no Sem
 
 ## Scheduled callers
 
-Three functions are called by `pg_cron` jobs defined in [`supabase/scheduler.sql`](../../supabase/scheduler.sql). The file is the intent; it is not evidence of what is running.
+Four functions are called by `pg_cron` jobs defined in [`supabase/scheduler.sql`](../../supabase/scheduler.sql). The file is the intent; it is not evidence of what is running.
 
 | Job | Function | Schedule | State in `scheduler.sql` | Bearer token |
 | --- | --- | --- | --- | --- |
 | `push` | `push` | every 15 minutes | parked (`active := false`) | Vault `push_cron_secret`, equal to the function's `CRON_SECRET` |
 | `support-reply-notify` | `support-reply-notify` | every minute | parked (`active := false`) | the same Vault secret |
 | `integration-sync` | `integration-tick` | minutes 7, 22, 37, 52 | active | Vault `integration_cron_secret`, checked in the database |
+| `access-saga-worker` | `access-saga-tick` | minutes 1, 6, 11 … 56 | parked (`active := false`) | Vault `access_saga_cron_secret`, checked in the database |
 
 ## Related
 

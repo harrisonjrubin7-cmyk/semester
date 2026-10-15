@@ -1,0 +1,67 @@
+// tests/finance.test.ts — state machine, ledger balance, approvals, webhook verification, and database guarantees from 090.
+import { describe, it, expect, beforeAll } from 'vitest';
+import { createClient } from '@supabase/supabase-js';
+import { assertTransition, ledgerFor, isBalanced, requiredApprovals, NEXT, type PaymentStatus } from '../lib/payments/state';
+import { asUser } from './helpers';
+
+describe('payment state machine', () => {
+  it('allows the happy path end to end', () => {
+    const p: PaymentStatus[] = ['draft', 'method_collected', 'auth_pending', 'authorized', 'captured', 'processing', 'settled', 'reconciled', 'entitlement_active'];
+    for (let i = 1; i < p.length; i++) expect(() => assertTransition(p[i - 1], p[i])).not.toThrow();
+  });
+  it('refuses skipping capture or reviving terminal states', () => {
+    expect(() => assertTransition('authorized', 'settled')).toThrow();
+    expect(() => assertTransition('refunded', 'entitlement_active')).toThrow();
+    expect(() => assertTransition('failed', 'captured')).toThrow();
+  });
+  it('every ledger effect is balanced', () => {
+    for (const from of Object.keys(NEXT) as PaymentStatus[]) for (const to of NEXT[from]) {
+      const l = ledgerFor(to, from, 6900, { deferred: true, feeCents: 230 }); if (l) expect(isBalanced(l)).toBe(true);
+    }
+  });
+  it('approval thresholds', () => { expect(requiredApprovals(10_000)).toBe(0); expect(requiredApprovals(10_001)).toBe(1); expect(requiredApprovals(500_001)).toBe(2); });
+});
+
+describe('webhook verification (sandbox)', () => {
+  beforeAll(() => { process.env.SANDBOX_WEBHOOK_SECRET = 'test-secret'; });
+  it('accepts a valid signature and rejects tampering', async () => {
+    const { sandboxAdapter, signSandbox } = await import('../lib/payments/sandbox-adapter');
+    const body = JSON.stringify({ id: 'evt_1', type: 'charge.captured', data: { ref: 'pi_x', amount: 6900, currency: 'USD' } });
+    await expect(sandboxAdapter.verifyWebhook({ headers: { 'x-sandbox-signature': signSandbox(body) }, rawBody: body })).resolves.toMatchObject({ type: 'payment.captured' });
+    await expect(sandboxAdapter.verifyWebhook({ headers: { 'x-sandbox-signature': signSandbox(body) }, rawBody: body.replace('6900', '1') })).rejects.toThrow();
+    await expect(sandboxAdapter.verifyWebhook({ headers: {}, rawBody: body })).rejects.toThrow();
+  });
+  it('rejects stale signatures', async () => {
+    const { sandboxAdapter, signSandbox } = await import('../lib/payments/sandbox-adapter');
+    const body = JSON.stringify({ id: 'evt_2', type: 'charge.captured', data: { ref: 'pi_x', amount: 1, currency: 'USD' } });
+    await expect(sandboxAdapter.verifyWebhook({ headers: { 'x-sandbox-signature': signSandbox(body, 1_000_000) }, rawBody: body })).rejects.toThrow(/tolerance/);
+  });
+});
+
+describe('ledger guarantees in the database', () => {
+  const svc = () => createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+  it('refuses an unbalanced journal', async () => {
+    const r = await svc().schema('api').rpc('post_journal', { p_memo: 'bad', p_source: 'test', p_idem: 'unbal-' + Date.now(), p_lines: [{ account: 'CASH', debit: 100 }, { account: 'AR', credit: 99 }] });
+    expect(r.error?.message).toMatch(/unbalanced/);
+  });
+  it('is idempotent and immutable', async () => {
+    const idem = 'idem-' + Date.now(); const lines = [{ account: 'CASH', debit: 100 }, { account: 'AR', credit: 100 }];
+    const a = await svc().schema('api').rpc('post_journal', { p_memo: 'ok', p_source: 'test', p_idem: idem, p_lines: lines });
+    const b = await svc().schema('api').rpc('post_journal', { p_memo: 'ok', p_source: 'test', p_idem: idem, p_lines: lines });
+    expect(a.error).toBeNull(); expect(b.data).toBe(a.data);
+    const del = await svc().schema('fin').from('ledger_lines').delete().eq('journal_id', a.data);
+    expect(del.error?.message).toMatch(/append-only/);
+  });
+  it('students cannot write to the ledger or read other people', async () => {
+    const s = await asUser('student@campus-a.test');
+    const w = await s.schema('api').rpc('post_journal', { p_memo: 'x', p_source: 'x', p_idem: 'stu-' + Date.now(), p_lines: [{ account: 'CASH', debit: 1 }, { account: 'AR', credit: 1 }] });
+    expect(w.error).not.toBeNull();
+    const r = await s.schema('fin').from('ledger_journals').select('person_id'); expect((r.data ?? []).every((j) => j.person_id === '00000000-0000-0000-0000-00000000a001')).toBe(true);
+  });
+  it('a requester cannot approve their own refund', async () => {
+    const cfo = await asUser('cfo@semester.test');
+    const { data: att } = await svc().schema('fin').from('payment_attempts').insert({ rail_id: 'sandbox_card', idempotency_key: 'att-' + Date.now(), amount_cents: 20000, status: 'entitlement_active' }).select().single();
+    const { data: rq } = await svc().schema('fin').from('refund_requests').insert({ attempt_id: att!.id, amount_cents: 20000, reason: 'test', requested_by: '00000000-0000-0000-0000-00000000c001', required_approvals: 1 }).select().single();
+    const r = await cfo.schema('api').rpc('approve_refund', { p_request: rq!.id }); expect(r.error?.message).toMatch(/cannot approve/);
+  });
+});

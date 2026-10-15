@@ -1,0 +1,221 @@
+{
+  "machine": "registrar_schedule_workflow",
+  "version": 1,
+  "source": "021_academic_operations.sql + your registrar PDFs (6 Oct). Data-driven policy: the server reads this, the DB enforces the same edges.",
+  "initialState": "draft",
+  "terminalStates": [
+    "locked",
+    "denied",
+    "archived"
+  ],
+  "roles": {
+    "department_scheduler": "schedule.department.edit",
+    "department_chair": "schedule.chair.approve",
+    "dean": "schedule.dean.approve",
+    "academic_affairs": "schedule.exception.approve",
+    "registrar_scheduler": "schedule.registrar.review",
+    "room_manager": "schedule.room.assign",
+    "registrar_admin": "schedule.registrar.publish",
+    "auditor": "audit.read",
+    "system": null
+  },
+  "transitions": [
+    {
+      "from": "draft",
+      "event": "submit",
+      "to": "validation_pending",
+      "role": "department_scheduler",
+      "guards": [
+        "required_fields"
+      ]
+    },
+    {
+      "from": "validation_pending",
+      "event": "pass",
+      "to": "department_ready",
+      "role": "system",
+      "guards": [
+        "detect_schedule_conflicts = {}"
+      ]
+    },
+    {
+      "from": "validation_pending",
+      "event": "fail",
+      "to": "validation_failed",
+      "role": "system",
+      "guards": []
+    },
+    {
+      "from": "validation_failed",
+      "event": "edit",
+      "to": "draft",
+      "role": "department_scheduler",
+      "guards": []
+    },
+    {
+      "from": "department_ready",
+      "event": "send_to_chair",
+      "to": "chair_review",
+      "role": "department_scheduler",
+      "guards": []
+    },
+    {
+      "from": "chair_review",
+      "event": "approve",
+      "to": "dean_review",
+      "role": "department_chair",
+      "guards": [
+        "not requester"
+      ]
+    },
+    {
+      "from": "chair_review",
+      "event": "return",
+      "to": "draft",
+      "role": "department_chair",
+      "guards": [
+        "reason"
+      ]
+    },
+    {
+      "from": "dean_review",
+      "event": "approve",
+      "to": "registrar_review",
+      "role": "dean",
+      "guards": [
+        "not requester"
+      ]
+    },
+    {
+      "from": "dean_review",
+      "event": "return",
+      "to": "draft",
+      "role": "dean",
+      "guards": [
+        "reason"
+      ]
+    },
+    {
+      "from": "registrar_review",
+      "event": "needs_room",
+      "to": "room_coordination",
+      "role": "registrar_scheduler",
+      "guards": []
+    },
+    {
+      "from": "registrar_review",
+      "event": "flag_exception",
+      "to": "academic_affairs_review",
+      "role": "registrar_scheduler",
+      "guards": [
+        "is_exception"
+      ]
+    },
+    {
+      "from": "registrar_review",
+      "event": "approve",
+      "to": "approved_for_publish",
+      "role": "registrar_scheduler",
+      "guards": [
+        "conflicts empty",
+        "not is_exception or exception approved"
+      ]
+    },
+    {
+      "from": "room_coordination",
+      "event": "assign",
+      "to": "registrar_review",
+      "role": "room_manager",
+      "guards": [
+        "no ROOM_OVERLAP",
+        "capacity ok"
+      ]
+    },
+    {
+      "from": "academic_affairs_review",
+      "event": "approve",
+      "to": "registrar_review",
+      "role": "academic_affairs",
+      "guards": [
+        "not requester"
+      ]
+    },
+    {
+      "from": "academic_affairs_review",
+      "event": "deny",
+      "to": "denied",
+      "role": "academic_affairs",
+      "guards": [
+        "reason"
+      ]
+    },
+    {
+      "from": "approved_for_publish",
+      "event": "publish",
+      "to": "published",
+      "role": "registrar_admin",
+      "guards": [
+        "term stage published or refine"
+      ]
+    },
+    {
+      "from": "published",
+      "event": "request_change",
+      "to": "change_requested",
+      "role": "department_scheduler",
+      "guards": [
+        "term stage refine"
+      ]
+    },
+    {
+      "from": "change_requested",
+      "event": "route",
+      "to": "chair_review",
+      "role": "system",
+      "guards": []
+    },
+    {
+      "from": "published",
+      "event": "lock",
+      "to": "locked",
+      "role": "registrar_admin",
+      "guards": []
+    },
+    {
+      "from": "locked",
+      "event": "override",
+      "to": "locked",
+      "role": "registrar_admin",
+      "guards": [
+        "schedule.override",
+        "reason",
+        "second approver"
+      ]
+    },
+    {
+      "from": "locked",
+      "event": "archive",
+      "to": "archived",
+      "role": "system",
+      "guards": [
+        "term archived"
+      ]
+    }
+  ],
+  "hooks": {
+    "beforeTransition": [
+      "authorize(role permission, scope)",
+      "expected_version matches",
+      "guards pass"
+    ],
+    "afterTransition": [
+      "write_audit (append-only, same transaction)",
+      "outbox_event → notifications (022) and webhooks"
+    ]
+  },
+  "webhooks": {
+    "delivery": "signed (HMAC-SHA256 over body + timestamp), at-least-once, receiver dedupes by event id",
+    "payload": "event id, type, section id, from, to, occurred_at; never student data",
+    "retries": "exponential backoff up to 24 h, then dead-letter"
+  }
+}

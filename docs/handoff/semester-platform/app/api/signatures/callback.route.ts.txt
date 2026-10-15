@@ -1,0 +1,49 @@
+// app/api/signatures/[provider]/callback/route.ts — signing-provider webhook. Strip .txt when copying.
+// Verifies the provider's HMAC over the RAW body before parsing, then calls docs.record_signature_event with the service role.
+// Duplicates return 200 so the provider stops retrying; hash mismatches return 200 with outcome so they're not retried either,
+// but they raise an audit row and an alert. Nothing here creates evidence from browser input.
+import { NextRequest, NextResponse } from 'next/server';
+import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
+import { createClient } from '@supabase/supabase-js';
+
+const PROVIDERS: Record<string, { secretEnv: string; header: string }> = {
+  docusign: { secretEnv: 'DOCUSIGN_CONNECT_HMAC', header: 'x-docusign-signature-1' },
+  dropboxsign: { secretEnv: 'DROPBOXSIGN_API_KEY', header: 'x-hellosign-signature' },
+};
+
+function verify(raw: string, sig: string | null, secret: string): boolean {
+  if (!sig) return false;
+  const expected = createHmac('sha256', secret).update(raw, 'utf8').digest('base64');
+  const a = Buffer.from(expected); const b = Buffer.from(sig);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+export async function POST(req: NextRequest, { params }: { params: { provider: string } }) {
+  const p = PROVIDERS[params.provider];
+  if (!p) return NextResponse.json({ error: 'NOT_FOUND' }, { status: 404 });
+  const secret = process.env[p.secretEnv];
+  if (!secret) return NextResponse.json({ error: 'INTERNAL_ERROR' }, { status: 500 });
+  const raw = await req.text();
+  if (raw.length > 512_000) return NextResponse.json({ error: 'INVALID_REQUEST' }, { status: 413 });
+  if (!verify(raw, req.headers.get(p.header), secret)) return NextResponse.json({ error: 'UNAUTHENTICATED' }, { status: 401 });
+
+  // Provider-specific mapping. Adapt field paths to the provider's real payload; reject anything missing.
+  const body = JSON.parse(raw);
+  const evt = {
+    eventId: String(body.eventId ?? body.event?.event_hash ?? ''),
+    requestId: String(body.metadata?.semesterSignatureRequestId ?? ''),
+    signedHash: String(body.metadata?.semesterContentSha256 ?? ''),
+    providerRef: String(body.envelopeId ?? body.signature_request?.signature_request_id ?? ''),
+    signedAt: String(body.completedAt ?? new Date().toISOString()),
+    certificateRef: body.certificateUrl ? String(body.certificateUrl) : null,
+  };
+  if (!evt.eventId || !evt.requestId || !/^[0-9a-f]{64}$/.test(evt.signedHash)) return NextResponse.json({ error: 'INVALID_REQUEST' }, { status: 400 });
+
+  const db = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+  const { data, error } = await db.schema('docs').rpc('record_signature_event', {
+    p_provider: params.provider, p_event_id: evt.eventId, p_payload_sha256: createHash('sha256').update(raw).digest('hex'),
+    p_request: evt.requestId, p_signed_hash: evt.signedHash, p_provider_ref: evt.providerRef, p_signed_at: evt.signedAt, p_certificate_ref: evt.certificateRef,
+  });
+  if (error) return NextResponse.json({ error: 'INTERNAL_ERROR' }, { status: 500 });          // provider retries; idempotent by event id
+  return NextResponse.json({ outcome: data }, { status: 200 });
+}

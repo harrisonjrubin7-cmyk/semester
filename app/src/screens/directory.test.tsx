@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { readFileSync } from 'node:fs';
@@ -8,6 +8,18 @@ import { StoreProvider } from '../state/store';
 import { loadSeed } from '../data/seed';
 import { fromHash } from '../lib/route';
 import { Directory } from './Directory';
+
+// This test follows the Teaching link, which only exists while the course studio module is on.
+// Switch that one flag on; every other module keeps its real value.
+vi.mock('../lib/experience-flags', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/experience-flags')>();
+  return {
+    ...actual,
+    MODULE_FLAGS: { ...actual.MODULE_FLAGS, course_studio: 'course-studio-on' },
+    moduleOn: (state: unknown) =>
+      state === 'course-studio-on' || actual.moduleOn(state as Parameters<typeof actual.moduleOn>[0]),
+  };
+});
 
 /**
  * One directory, and the three lists that only it draws.
@@ -60,6 +72,30 @@ afterEach(() => {
 const text = () => host.textContent ?? '';
 
 describe('the one directory', () => {
+  it('starts with honest links to the implemented shared workspaces', async () => {
+    expect(text()).toContain('Your workspaces');
+    expect(text()).toContain('Sign in to check connected access');
+
+    const teaching = [...host.querySelectorAll('button')].find((button) => button.textContent?.includes('Teaching'));
+    const university = [...host.querySelectorAll('button')].find((button) => button.textContent?.includes('University'));
+    expect(teaching).toBeTruthy();
+    expect(university).toBeTruthy();
+
+    await act(async () => teaching!.click());
+    expect(location.hash).toBe('#/account?view=course-studio');
+
+    await act(async () => {
+      history.pushState(null, '', '#/directory');
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    await act(async () => university!.click());
+    expect(location.hash).toBe('#/university?view=overview');
+
+    const labels = [...host.querySelectorAll('button')].map((button) => button.textContent ?? '').join('\n');
+    expect(labels).not.toMatch(/Company workspace|Investor workspace|Developer workspace/);
+    expect(text()).toContain('Company, investor and developer workflows are not implemented here yet.');
+  });
+
   it('restores the existing catalog-first layout when journey navigation is off', () => {
     act(() => root.render(<StoreProvider><Directory journeyNavigation={false} /></StoreProvider>));
     expect(host.querySelectorAll('[data-journey-id]')).toHaveLength(0);

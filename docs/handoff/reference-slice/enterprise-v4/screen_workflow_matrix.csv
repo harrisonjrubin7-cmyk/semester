@@ -1,0 +1,38 @@
+workspace,screen,route,roles,read_rule,command,records,workflow
+Student,Today,/app/student,student,Own authorized home projection,Open linked actions,tasks; calendar_events; assignments; service_cases,Aggregated status
+Student,Action center,/app/actions,student,Own or assigned actions,Complete source-domain action,tasks; service_cases,Open to resolved
+Student,Courses,/app/courses,student,Own enrollment,Open course,sections; enrollments,Active/past terms
+Student,Course home,/app/courses/:sectionId,student,Active enrollment,Open published content,modules; announcements; assignments,Published only
+Student,Lesson,/app/content/:id,student,Published content and parent module,Save personal note,content_items; notes,"Published, unavailable"
+Student,Assignment,/app/assignments/:id,student,Published in enrolled section,Save draft; submit_assignment,assignments; submissions,Draft/submitted/returned
+Student,Submission receipt,/app/submissions/:id,student,Own enrollment,View attempts,submissions,Submitted receipt
+Student,Grades,/app/grades,student,Own published grades,Request review through service workflow,grades; service_cases,Published only
+Student,Planner,/app/planner,student,Personal owner,Create/update task/event,tasks; calendar_events,Open/done
+Student,Notes,/app/notes,student,Personal owner,Create/update note,notes,Private
+Student,Advising,/app/advising,student,Own case,Request appointment,service_cases; appointments,Open/assigned/resolved
+Student,Services,/app/services,student,Institution member and own cases,Create service case,service_definitions; service_cases,Open/closed
+Student,Account,/app/account,student,Own-authorized account projection; not institution bill admin,View plan; authorized checkout handoff,billing records through DTO,Payment status
+Student,Privacy,/app/settings/privacy,student,Verified account subject,Submit export/sharing request,Privacy domain extension,Request lifecycle
+Faculty,Home,/app/faculty,faculty; scoped teaching assistant,Assigned teaching projection,Open section,sections,Draft/review/published
+Faculty,Course studio,/app/teaching/:id,faculty; scoped teaching assistant,course.manage scoped section,Publish content,modules; content_items,Draft/review/published
+Faculty,Roster,/app/teaching/:id/roster,faculty; scoped teaching assistant,roster.read scoped section,Authorized communication,enrollments,Draft/review/published
+Faculty,Assignments,/app/teaching/:id/assignments,faculty; scoped teaching assistant,assignment.manage scoped section,Publish assignment,assignments,Draft/review/published
+Faculty,Review queue,/app/teaching/:id/submissions,faculty; scoped teaching assistant,submission.read scoped section,Review submission,submissions,Draft/review/published
+Faculty,Gradebook,/app/teaching/:id/gradebook,faculty; scoped teaching assistant,grade.read scoped section,Approve/publish grades,grades; grade_revisions,Draft/review/published
+Faculty,Announcements,/app/teaching/:id/announcements,faculty; scoped teaching assistant,course.manage scoped section,Publish announcement,announcements,Draft/review/published
+Institution,Directory,/institution/people,institution admin,Directory domain extension,Invite verified member,memberships,Domain-specific transition
+Institution,Catalog,/institution/catalog,academic admin,member plus catalog scope,Approve catalog change,courses; course_versions,Domain-specific transition
+Institution,Enrollment,/institution/enrollment,registrar,Academic admin extension,Approve enrollment change,enrollments,Domain-specific transition
+Institution,Services,/institution/services,assigned staff,Assigned case,Resolve case,service_cases,Domain-specific transition
+Institution,Entitlements,/institution/account,billing contact; institution admin,entitlement.read,Request change,entitlements,Domain-specific transition
+Company,Sales,/company/sales,sales,crm.read,Manage opportunity,accounts; opportunities,Domain-specific transition
+Company,Documents,/company/documents,author; assigned reviewer,Document audience,Submit/review version,documents; review_tasks,Domain-specific transition
+Company,Implementation,/company/implementations,implementation specialist,implementation.read,Approve rollout,implementation_projects,Domain-specific transition
+Company,Support,/company/support,support specialist,support.read,Resolve/escalate,support_cases,Domain-specific transition
+Company,Billing,/company/billing,finance; account contact,billing.read or account ACL,Issue invoice/change subscription,subscriptions; invoices,Domain-specific transition
+Company,Ledger,/company/ledger,accountant,ledger.read,Post balanced journal,journal_entries; journal_lines,Domain-specific transition
+Company,People,/company/people,people admin,people.read; restricted permission,Employee lifecycle,employees; employment_records,Domain-specific transition
+Company,Vendors,/company/vendors,procurement,vendor.read,Approve order,vendors; purchase_orders,Domain-specific transition
+Operations,Health,/ops/services,operator,ops.read,Manage incident,services; incidents,Domain-specific transition
+Operations,Releases,/ops/releases,release operator,ops.read,Deploy approved release,deployments,Domain-specific transition
+Operations,Architecture,/ops/architecture,operator,ops.read,Maintain endpoint registry,api_endpoints,Domain-specific transition

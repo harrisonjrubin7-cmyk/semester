@@ -25,10 +25,12 @@ Dot-directories are included. Files at the root are listed after the table.
 | `extensions/` | `semester-capture`, a browser extension (`manifest.json`, `popup.html`, `popup.js`). |
 | `ops/` | Operating registers rendered from data under `app/src/lib/ops/`: billing, claims, customer commitments, master plan, operations console, strategic boundaries. See [`ops/README.md`](../../ops/README.md). |
 | `operations/` | The launch command center and the go/no-go scorecard (Phase 0 baseline): the ordered Phase 1 plan, stop conditions, dated exceptions. Sequences work; approves no launch. |
+| `operator/` | The Semester Operator: the agent team's runtime. Thirty-three agent contracts as data, five deterministic control modules (policy, approvals, scheduler, limits, audit and kill switch), isolated worktrees, and the operator CLI. An npm workspace of its own because it is Node code, not a browser-safe package. See [`operator/README.md`](../../operator/README.md). |
 | `output/` | Generated PDF reports built from `docs/business/` by `npm run generate:gtm-pdf` (from `app/`): the GTM playbook, executive summary, board and investor summary, and the customer-safe pilot pack. Generated files; edit the Markdown and the manifest in `app/scripts/gtm-pdf/`, then rebuild. |
 | `packages/` | Two source-only packages shared by the app and the servers: `contract` and `institution`. Neither is published. |
 | `pipeline/` | Syllabus to course tooling: ingest, lessons, slides, handouts, alignment, and `validate.mjs`, which CI runs. See [`pipeline/README.md`](../../pipeline/README.md). |
 | `project/` | The original Claude Design handoff: HTML prototypes and the design system. Reference material; the app does not import it. |
+| `registry/` | Machine-checked component passports: one JSON file per component under `passports/`. The shape is checked by `app/src/lib/registry/passport.ts`. See [`registry/README.md`](../../registry/README.md). |
 | `scripts/` | Scanners for the static company site (`company-site-scan-*.mjs`). Not the app's scripts; those are in `app/scripts/`. |
 | `supabase/` | The database and the edge functions, and the SQL that checks them. See below. |
 | `tasks/` | Planning notes (`plan.md`, `todo.md`). |

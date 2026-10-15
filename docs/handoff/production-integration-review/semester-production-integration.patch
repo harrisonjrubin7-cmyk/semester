@@ -1,0 +1,297 @@
+diff --git a/docs/production-integration/README.md b/docs/production-integration/README.md
+new file mode 100644
+--- /dev/null
++++ b/docs/production-integration/README.md
+@@ -0,0 +1,51 @@
++# Semester production integration brief
++
++## Status and scope
++Proposed repository patch against 4b4f8ca742242132f5b2dd254d23422ae70eaa7a. Production-oriented guidance, not a verified production-ready release. No remote changes. This patch adds documents and a local integration orchestrator only; no runtime feature, schema, dependency, package script or deployment configuration is changed. Existing documentation may contain dated observations: verify them against the target release.
++
++## Platform contract
++One account, Action Center, search, workspace, graph, source vocabulary and policy-controlled AI. Personal, institutional and company contexts remain separately authorized. Build native, integrate responsibly, transfer authority only by domain with evidence and institutional approval. Official, connected, personal and AI-assisted origin labels do not substitute for authority or freshness.
++
++## Baseline inspected
++SETUP.md; ROLLBACK.md; .github/workflows directory; ci.yml (returned excerpt); app/scripts/golden-path.mjs and account-sync.mjs (returned excerpts); docs directory. Prior turn inspected root/app manifests and infrastructure inventories. Main has advanced since the earlier production build inspection; do not assume matching versions. Truncated file returns are not full-file audits.
++
++## Developer setup
++Node requirement >=22 from root manifest; use the lockfile and current repository instructions.
++```sh
++npm ci
++npm run dev --workspace app
++npm run test --workspace app
++npm run build --workspace app
++npm run registry:validate
++npm run platform-control:test
++npm run release:check
++npm run release:report
++```
++These are read/previously verified script names, not executed results. Prefer root workspace install to historical app-only installation instructions. Existing root scripts generate registry/release reports; review their side effects.
++
++## Environment boundaries
++Personal local mode is documented in SETUP.md as usable without account/server. Account sync requires approved Supabase configuration. Public VITE_* values are browser-visible; never place provider/service secrets in them. Inspect app/.env.example and current server policy before configuring. Server credentials belong in approved secret stores; do not commit or print them.
++The setup guide contains historical deployment routes and provider decisions. A configured key does not establish provider activation. Identity-provider/domain claims do not establish real course enrollment or consequential authority.
++
++## Architecture and workflow links
++See ARCHITECTURE.md, ONBOARDING.md, MIGRATION.md, TEST-COVERAGE.md and DEPLOYMENT-ROLLBACK.md here. These coordinate existing records rather than create competing source-of-truth registries. Keep current activation in the existing platform-control registry.
++
++## Local integration execution
++Python 3.10+ orchestrator; npm, built preview, Playwright and browsers are prerequisites. This patch does not install them. Use existing CI preparation and golden-path/account-sync headers for exact harness setup. Do not test writes against production.
++```sh
++python docs/production-integration/run_integration.py --root . --mode personal-baseline --url http://localhost:4173/ --report /tmp/semester-baseline.json
++python docs/production-integration/run_integration.py --root . --mode personal-account --url http://localhost:4173/ --sync-url http://localhost:4174/ --report /tmp/semester-account.json
++python -m unittest discover -s docs/production-integration -p 'test_*.py' -v
++```
++Account scope requires SMOKE_SUPABASE_SERVICE_KEY from an ephemeral local stack; never pass production credentials. It also requires a separate build configured for that local stack, and locally served delete-account function dependencies. Consult existing account-sync CI for complete provisioning. Runner does not provision or deploy anything.
++
++## Report semantics
++Exit 0 means selected scope passed. Exit 1 means an assertion failed. Exit 2 means setup/instrument unavailable. Every report says production_ready=false because institutional, faculty, company and provider gates are outside these selected student suites. Child logs are captured but not included to avoid accidentally persisting credentials; run individual verified scripts directly for diagnostics in a safe environment.
++
++## Apply proposed diff
++From a clean worktree based on the pinned commit:
++```sh
++git apply --check semester-production-integration.patch
++git apply semester-production-integration.patch
++```
++Patch filename is the delivered proposed artifact. Rebase/review against newer main first. Exact diff adds this new docs subtree only, with no DDL. New paths are proposed; they were not present under docs at the inspected baseline.
+diff --git a/docs/production-integration/ARCHITECTURE.md b/docs/production-integration/ARCHITECTURE.md
+new file mode 100644
+--- /dev/null
++++ b/docs/production-integration/ARCHITECTURE.md
+@@ -0,0 +1,23 @@
++# Architecture workflow guide
++
++## Shared request flow — target contract
++Identity → workspace context → capability/policy → authorized source → domain command → durable transaction/outbox → worker → evidence/audit → reconciliation → receipt → permission-aware projection/search → UI.
++This is an architectural contract, not verification that every stage is implemented.
++
++## Student syllabus journey — existing test anchor
++Fresh profile → onboarding/account offer → syllabus paste → model request → source quote/date validation → human review → saved course → deadlines → personal action → Today/calendar → support → completion → local resume → file export/restore. golden-path.mjs stubs the model response and proves application behavior around it, not provider quality. account-sync.mjs separately uses local real auth/database for cross-device and privacy checks.
++
++## Course Studio — target workflow
++Course/section membership → scoped authoring → versioned draft → student preview → required validation/approval → publication snapshot → Action Center/calendar → submission version → durable receipt → authorized review → feedback release → official passback only under approved authority → archive. Do not map the local reference SQLite implementation into production without inspecting existing course services, memberships and schemas.
++
++## Registration — target workflow
++Read source and freshness → explain eligibility/holds → prepare request → evaluate policy and current inputs → consequential preview → approval/confirmation → idempotent command → reconcile unknown outcomes → authoritative receipt. Readiness is not enrollment. A timeout is not a definitive failure.
++
++## Privacy — target workflow
++Purpose explanation → preference/consent decision → OS permission where needed → authoritative grant → per-request enforcement → expiry/revocation → invalidate applicable sessions/cache/retrieval → verify → receipt. Browser preference, OS permission, consent and institutional processing authority remain distinct. Official retention/holds constrain deletion.
++
++## Board reporting — target workflow
++Reconciled business sources → versioned KPI observations and assumptions → approved aggregates → disclosure review → immutable monthly publication → audience-specific read model/data room. No raw student records. Actuals, targets and forecasts remain distinct.
++
++## Reliability
++Each durable command needs operation identity, idempotency rules, bounded retry, unknown-result state, compensation policy and reconciliation. Audit binds actor/context/resource/version. Projections expose freshness and never become authority merely by displaying data. Permission checks cover APIs, database/storage, exports, search and AI, not only navigation.
+diff --git a/docs/production-integration/ONBOARDING.md b/docs/production-integration/ONBOARDING.md
+new file mode 100644
+--- /dev/null
++++ b/docs/production-integration/ONBOARDING.md
+@@ -0,0 +1,28 @@
++# User onboarding and workspace setup
++
++## Individual student — existing documented path
++1. Open Semester; explain device-only work versus account sync.
++2. Complete study preferences without requiring optional device permissions.
++3. Create/sign into an account, or continue locally where supported.
++4. If confirmation is required, explain pending status and offer resend/recovery; do not claim signed-in sync prematurely.
++5. Add a syllabus or supported source. Explain any AI processing before sending content.
++6. Review extracted course information, quoted sources and deadlines; confirm before saving.
++7. Create a personal action and see it in Today/calendar.
++8. Explain private notes, submissions, official data and source labels.
++9. Offer sharing, notifications and connectors separately; declining must retain usable alternatives.
++10. Verify local persistence or actual account sync as appropriate.
++
++## Institution setup — proposed authorized flow
++Accountable sponsor/IT/data steward → tenant/environment decision → agreements and privacy map → identity/claim mapping → explicit grants and scopes → source mappings/freshness → test identities/fixtures → reconciliation → role training → approved activation. Claimed email domain does not prove enrollment. Institutional workspaces must not be provisioned from self-selected role labels.
++
++## Faculty and teaching team
++Accept approved membership → select course/section → inspect teaching delegation → import or author material → review accessibility and AI rules → student preview → publish under policy. Explain which grades are working versus official. Reject out-of-scope courses/sections.
++
++## Advisor/registrar/staff
++Assigned scope → role training → source and authority inspection → read-only practice → approved task → consequence preview → receipt/reconciliation. No universal staff browse privilege. Route exceptions to the accountable office.
++
++## Board/investor
++Approved invitation → required identity controls → explicit audience/access scope → read-only reporting → definitions/source/limitations → selected documents → expiry/revocation. Board permission does not confer institution access.
++
++## Completion evidence
++Correct context; authorized home; unauthorized routes denied; first useful action completed; source understood; preferences reversible; sync status truthful; support reachable. Record acceptance without unnecessary personal-data collection. Offboarding must revoke applicable access while respecting official retention and personal portability.
+diff --git a/docs/production-integration/MIGRATION.md b/docs/production-integration/MIGRATION.md
+new file mode 100644
+--- /dev/null
++++ b/docs/production-integration/MIGRATION.md
+@@ -0,0 +1,28 @@
++# Production migration plan
++
++## Exact proposed change
++Zero database migrations in this patch. It adds documentation and test orchestration. No SQLite schema is suitable for connected Supabase/PostgreSQL production. Naming a migration without a verified schema delta would be speculative.
++
++## Gate 0: resolve authority and target
++Database owner confirms project reference, region, environment, mapped application/functions, and migration executor. Match deployed public config and server configuration without exposing credentials. Distinguish semester, Semester2 and restore-drill environments. Stop if mapping is ambiguous.
++
++## Gate 1: compare histories and objects
++At the approved release commit, inventory supabase/migrations filenames/checksums; read target migration ledger; compare schema columns, constraints, indexes, functions, privileges and policies. Use existing fingerprint/rehearsal tools only after reading them. Do not repair migration history or create stubs to silence drift without reviewed evidence. ROLLBACK.md contains historical repairs, not current permission to repeat them.
++
++## Gate 2: design expand phase
++Specify new capability's exact schema/API need. Add backward-compatible tables/columns first; explicit RLS/grants; database constraints and versioning; indexes/lock impact assessed. Do not drop/rename columns needed by rollback candidates. Select migration version after the current remote maximum is verified. No timestamp is preassigned here.
++
++## Gate 3: rehearse
++Disposable local/preview PostgreSQL from repository migrations → synthetic existing-state fixtures → migration application → old and new application compatibility → denial tests → duplicate/retry/failure tests → schema fingerprint → restore rehearsal. Preserve result tied to commit, migration hash, schema fingerprint and environment.
++
++## Gate 4: authorize execution
++Record migration owner, approver, target, exact SQL hash, backup/restore evidence, lock/time limits, monitoring and abort conditions. Dashboard-based Supabase Branching may already apply on merge: verify executor and avoid a second competing db-push path. Approval precedes merge if merge triggers production mutation.
++
++## Gate 5: apply and reconcile
++Chosen sole executor applies reviewed migration → verify actual ledger and objects → deploy compatible app/functions → run authorized checks → observe → enable approved domain. A successful build or integration status is not schema verification.
++
++## Gate 6: contract later
++Only after observation window, data reconciliation, and retirement of incompatible rollback candidates: separately approve destructive cleanup. Application rollback does not reverse schema or restore data. Restore/forward correction is an explicit incident decision, not automatic down migration.
++
++## Required evidence
++Target mapping; before/after fingerprints; reviewed SQL; old/new compatibility; RLS denial; lock impact; backup restore; executor; approvals; observed application and domain receipts. Missing evidence blocks activation, not silently downgrades the test.
+diff --git a/docs/production-integration/TEST-COVERAGE.md b/docs/production-integration/TEST-COVERAGE.md
+new file mode 100644
+--- /dev/null
++++ b/docs/production-integration/TEST-COVERAGE.md
+@@ -0,0 +1,24 @@
++# End-to-end integration suite and coverage contract
++
++## Executable composition
++run_integration.py invokes existing app npm scripts instead of inventing routes/selectors.
++- smoke:cold: built-app cold navigation.
++- smoke:a11y: critical assembled accessibility regressions (not certification).
++- smoke:golden: local student workflow, model stub, persistence and file-carried resume.
++- smoke:sync: ephemeral local real auth/database, two devices, export/deletion/session/state proof.
++The runner requires loopback app URLs. The existing sync harness additionally verifies the account service is loopback before credentials are submitted. A local URL alone does not prove every underlying dependency is local: inspect test build configuration.
++
++## Test dependencies
++Built previews, Playwright/browser, local Supabase plus applied migrations and function dependencies, ephemeral credentials. Existing CI performs substantial setup; do not invoke auth tests against a production-configured build. Missing setup exits nonzero. Tests may create/delete synthetic local accounts.
++
++## Full production matrix — remaining domain suites
++Course: owner/delegation, roster denial, assignment version, concurrent edits, publish/projection, duplicate submissions, accommodations, feedback and passback reconciliation.
++Registration: stale eligibility, policy change between prepare/execute, duplicate command, unknown result, reconciliation, rollback.
++Consent: scoped sharing, expiry/revocation, cached/search/AI denial, actual session invalidation, retained records.
++Company: audience isolation, reconciled financial/KPI snapshots, immutable publication/correction, restricted data-room links.
++Institution: tenant isolation, SSO mapping, offboarding, role-specific home/actions, override authority.
++Operations: durable jobs, duplicate events, outbox recovery, worker crash, restore, migration compatibility.
++No endpoints/selectors are fabricated for these uninspected domains. These cases remain acceptance requirements until mapped to existing code and fixtures.
++
++## Evidence semantics
++The 12 runner unit tests use fake subprocess results; they test orchestration and safety, not application journeys. Browser/auth suites were not executed during artifact generation. Scope success must never be labeled universal readiness. Record release hash, build configuration hash, test backend, actual suite output and excluded gates in CI evidence.
+diff --git a/docs/production-integration/DEPLOYMENT-ROLLBACK.md b/docs/production-integration/DEPLOYMENT-ROLLBACK.md
+new file mode 100644
+--- /dev/null
++++ b/docs/production-integration/DEPLOYMENT-ROLLBACK.md
+@@ -0,0 +1,25 @@
++# Automated deployment and rollback map
++
++## Preserve existing automation
++Existing workflow inventory includes ci.yml, pages.yml, functions.yml, production-smoke.yml and infrastructure workflows. Vercel projects also exist. Confirm which delivery surface is authoritative; do not create a competing automatic deploy or database executor. Full deploy workflow internals/dashboard configuration require further inspection.
++
++## Automation stages
++1. Pull request: pinned checkout/setup actions; lockfile install; type/lint/unit/timezone/design gates; registry validity; local browser journeys; local policy/migration rehearsal. Capture exact outputs.
++2. Release candidate: immutable commit/build/migration manifest; release:check (blocking); approver and target mapping; restore/rollback evidence. Informational release:report is not release approval.
++3. Preview: production-equivalent base/CSP; separate local account build for destructive test fixtures; verified proposed domains.
++4. Approval: protected environment and authorized reviewer; no client-controlled enablement.
++5. Database expand: sole confirmed migration executor; compatible with prior app/function versions.
++6. Functions/API: compatible versions and contract checks.
++7. Application: approved existing delivery mechanism; verify artifact commit/config/route and observed role journeys.
++8. Enablement: institution/domain-specific grants and gates; staged observation under approved thresholds.
++9. Evidence: deployed versions, ledger/fingerprint, test receipts, monitoring and owner acceptance.
++
++## Rollback procedure
++Incident trigger → authorized containment → select previously verified compatible app/function versions → confirm schema compatibility → restore delivery pointers/redeploy prior ref through chosen surface → verify real page and cache/service-worker behavior → verify auth, writes, projections and receipts → reconcile in-flight commands → record incident and corrective work.
++Pages and Edge Functions roll back separately in the repository runbook. Vercel rollback is a distinct surface; inspect actual project/deployment/config and approve exact target. Do not assume one rollback controls all.
++
++## Database incident
++No automatic destructive down migration. Pause affected server-side commands through a verified control, preserve evidence, investigate, then approved forward fix or tested recovery plan. Frontend read-only alone is not enforcement. ROLLBACK.md documents VITE_READ_ONLY/SEMESTER_READ_ONLY controls, but current enforcement and activation must be reverified. Historical timings are not new service commitments.
++
++## Automation triggers and limits
++Authorization leak or corrupt writes require immediate incident escalation. Error/latency and observation thresholds must be approved from measured baselines, not invented here. An automated rollback may proceed only with preauthorized compatible target and tested mechanism; otherwise automated containment/alert with human decision. Approval is required before changing live external systems.
+diff --git a/docs/production-integration/run_integration.py b/docs/production-integration/run_integration.py
+new file mode 100644
+--- /dev/null
++++ b/docs/production-integration/run_integration.py
+@@ -0,0 +1,43 @@
++"""Local integration orchestration. Does not provision, migrate or deploy."""
++import argparse, json, os, subprocess, time
++from pathlib import Path
++from urllib.parse import urlsplit
++LOOPBACK={'localhost','127.0.0.1','::1'}
++def local_url(value):
++ u=urlsplit(value)
++ if u.scheme not in {'http','https'} or u.hostname not in LOOPBACK or u.username or u.password or u.query or u.fragment:
++  raise ValueError('Only explicit loopback test URLs without credentials/query/fragment are allowed')
++ return value.rstrip('/')+'/'
++def plan(mode,url,sync_url=None):
++ url=local_url(url)
++ jobs=[('cold','smoke:cold',url),('accessibility','smoke:a11y',url),('golden','smoke:golden',url)]
++ if mode=='personal-account':
++  if not sync_url:raise ValueError('Account scope requires a separately built local account URL')
++  jobs.append(('account-sync','smoke:sync',local_url(sync_url)))
++ elif mode!='personal-baseline':raise ValueError('Unsupported scope')
++ return jobs
++def execute(root,mode,url,sync_url=None,run=subprocess.run):
++ jobs=plan(mode,url,sync_url)
++ if mode=='personal-account' and not os.environ.get('SMOKE_SUPABASE_SERVICE_KEY'):
++  raise ValueError('Local account tests require the ephemeral local service key in the environment')
++ app=Path(root)/'app'
++ if not (app/'package.json').exists():raise ValueError('Repository app/package.json missing')
++ results=[]
++ for name,script,target in jobs:
++  env=os.environ.copy();env['SMOKE_URL']=target
++  start=time.monotonic()
++  try:
++   p=run(['npm','run',script],cwd=app,env=env,capture_output=True,text=True,timeout=900)
++   code=p.returncode;status='passed' if code==0 else 'failed' if code==1 else 'unavailable'
++  except subprocess.TimeoutExpired:code=2;status='unavailable'
++  results.append({'suite':name,'script':script,'status':status,'exit_code':code,'seconds':round(time.monotonic()-start,3)})
++ report={'scope':mode,'results':results,'scope_passed':all(x['status']=='passed' for x in results),'production_ready':False,'excluded':['institutional authority','faculty course publication/submission','company board disclosure','production provider quality','deployment and rollback']}
++ return report
++if __name__=='__main__':
++ p=argparse.ArgumentParser();p.add_argument('--root',default='.');p.add_argument('--mode',choices=['personal-baseline','personal-account'],required=True);p.add_argument('--url',required=True);p.add_argument('--sync-url');p.add_argument('--report',required=True);a=p.parse_args()
++ try:
++  result=execute(a.root,a.mode,a.url,a.sync_url)
++  path=Path(a.report);path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps(result,indent=2))
++  print('Selected scope passed' if result['scope_passed'] else 'Selected scope did not pass')
++  raise SystemExit(0 if result['scope_passed'] else 1 if any(x['status']=='failed' for x in result['results']) else 2)
++ except ValueError as e:print(str(e));raise SystemExit(2)
+diff --git a/docs/production-integration/test_run_integration.py b/docs/production-integration/test_run_integration.py
+new file mode 100644
+--- /dev/null
++++ b/docs/production-integration/test_run_integration.py
+@@ -0,0 +1,35 @@
++import unittest,tempfile,os,subprocess
++from pathlib import Path
++from unittest.mock import patch
++from types import SimpleNamespace
++from run_integration import local_url,plan,execute
++class RunnerTests(unittest.TestCase):
++ def test_public_rejected(self):
++  with self.assertRaises(ValueError):local_url('https://semester.example/')
++ def test_credentials_rejected(self):
++  with self.assertRaises(ValueError):local_url('http://user:pass@localhost:4173')
++ def test_query_rejected(self):
++  with self.assertRaises(ValueError):local_url('http://localhost:4173/?token=x')
++ def test_loopback(self):self.assertEqual(local_url('http://127.0.0.1:4173'),'http://127.0.0.1:4173/')
++ def test_missing_account_url(self):
++  with self.assertRaises(ValueError):plan('personal-account','http://localhost:4173')
++ def test_baseline(self):self.assertEqual(len(plan('personal-baseline','http://localhost:4173')),3)
++ def test_account_plan(self):self.assertEqual(len(plan('personal-account','http://localhost:4173','http://localhost:4174')),4)
++ def test_missing_key(self):
++  with patch.dict(os.environ,{},clear=True):
++   with self.assertRaises(ValueError):execute('.', 'personal-account','http://localhost:4173','http://localhost:4174')
++ def invoke(self,code):
++  with tempfile.TemporaryDirectory() as d:
++   app=Path(d)/'app';app.mkdir();(app/'package.json').write_text('{}')
++   return execute(d,'personal-baseline','http://localhost:4173',run=lambda *a,**k:SimpleNamespace(returncode=code))
++ def test_pass_does_not_claim_production(self):
++  r=self.invoke(0);self.assertTrue(r['scope_passed']);self.assertFalse(r['production_ready'])
++ def test_failure(self):self.assertFalse(self.invoke(1)['scope_passed'])
++ def test_unavailable(self):self.assertTrue(all(x['status']=='unavailable' for x in self.invoke(2)['results']))
++ def test_timeout(self):
++  with tempfile.TemporaryDirectory() as d:
++   app=Path(d)/'app';app.mkdir();(app/'package.json').write_text('{}')
++   def timeout(*a,**k):raise subprocess.TimeoutExpired('npm',900)
++   r=execute(d,'personal-baseline','http://localhost:4173',run=timeout)
++   self.assertFalse(r['scope_passed']);self.assertEqual(r['results'][0]['status'],'unavailable')
++if __name__=='__main__':unittest.main()

@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 11 of 120 · **Integration slice** 101 · **Date** 2026-10-11 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `228334812` · **Latest observed `origin/main`** `6e382ff13`
+**Automation pass** 11 of 120 · **Integration slice** 101 · **Date** 2026-10-15 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `228334812` · **Latest observed `origin/main`** `abfded42f`
 
 ## State
 
@@ -77,6 +77,23 @@ Phase 0 reconciliation is complete for the archive populations and includes the 
 - Token export passes 9/9; the combined design contracts pass 138/138, including the exact report set at 96/96. Design audit reports zero violations with 86 existing warnings and CSS remains within its ledger. The aggregate design-check wrapper cannot start its hardcoded missing `npm`; the report writes, then exits because its hardcoded `npx` is missing, so no aggregate-wrapper pass is claimed.
 - The active HawkScan skill stops at mandatory preflight: `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists and no local properties file was found. No target, scan, finding result or security pass exists.
 - Ordered and shuffled full suites were not rerun for this bounded recovery slice. No route, dependency, schema, policy, server operation, provider configuration, deployment, production data or external system changed. Safe in-scope work remains and requires another fresh dependency/recovery ranking.
+
+## Evidence locked in automation pass 1 / integration slice 91
+
+- The initial clean worktree fast-forwarded from `1eab79523` to `70f53e222` before implementation. A fresh promotion checkout started at `a8c8616d`, the exact four-file slice applied cleanly, and final promotion reconciliation merged current `origin/main` `d2d1db59`, including the separately reviewed duplicate-migration repair. Current-code and reducer inspection found the dining cancellation, calendar-feed removal and other initially ranked paths already protected by confirmation or shared Undo; no equivalent volunteer removal-vote preview existed.
+- A volunteer’s **Remove it** decision now opens the shared `ConfirmDialog` and `ActionPreview` before the existing `volunteer_decide` RPC. It shows the queued text and chosen reason, says that onboarding practice answers help decide whether the volunteer advances to active status and starts receiving real cases, and that recent post-onboarding practice accuracy can move standing among active, probation and paused, including pausing queue access. Conditionally for a real report, it says that a second independent removal vote can remove the post immediately, a first vote waits and disagreement routes to a professional reviewer.
+- Cancel receives initial focus through the shared dialog and performs no RPC. Only explicit **Submit removal vote** confirmation invokes the unchanged operation with the exact task id, `remove` action and selected reason. Keep and label decisions, server eligibility and recusal checks, two-volunteer agreement, professional routing, retained evidence and appeal authority remain unchanged.
+- The focused regression proves there is no call before confirmation or after cancel, then verifies the exact confirmed arguments and task removal. Volunteer, `ActionPreview`, modal and root-unmount coverage passes 30/30; the changed screen and test pass Oxlint and TypeScript.
+- HawkScan cannot start locally because `hawk runtime=false` and `HAWK_API_KEY=false`; no local DAST result is claimed. A hosted exact-head HawkScan remains required before merge. Ordered and shuffled full suites have not been rerun for this bounded UI slice. No route, dependency, schema, policy, server operation, provider configuration, deployment, production data or external system changed.
+
+## Evidence locked in current automation pass 2 / integration slice 52
+
+- The slice started from post-merge `origin/main` `69d1b583` and includes mainline through `e0578997`. The intervening Canvas, guardian-projection, registration-readiness, Vercel, Course Engine, MFA, offline attachment, production read-only wiring, privileged-access review, LTI passback, account-refresh, consequence/recovery, access-saga store, projection-dashboard, GitBook, verified workspace-context, inherited-CI repair, Course Engine recovery, official registration-handoff and workspace-directory work merged without changing the senior-reviewer volunteer card contract.
+- Revoking a volunteer now opens the shared `TypeToConfirm` surface before the existing `manage_volunteer` RPC. It names the volunteer, immediate access loss, removal of unanswered review actions, the retained reason and history, unaffected volunteers/cases/settings and the fact that a revoked volunteer cannot be recalibrated.
+- Cancel performs no RPC. **Revoke access** remains disabled until the reviewer types the exact volunteer handle; only that explicit confirmation invokes the unchanged senior-reviewer-authorized operation with the exact volunteer id and typed reason. Server authorization, audit event, completed review history and failure reporting remain unchanged.
+- The focused guard proves the RPC is not called before confirmation or after cancel, confirms the original call arguments after explicit confirmation and verifies that focus lands on the persistent volunteer card before the opener disappears. All 11 Volunteers tests pass, the changed screen and test pass Oxlint and the diff has no whitespace errors.
+- The repository-owned trust-document generator was refreshed after the mainline merge so `CONTROL-FACTS.md` matches the merged migration inventory.
+- HawkScan cannot start locally because `hawk runtime=false` and `HAWK_API_KEY=false`; no local DAST result is claimed. The hosted exact-head scan remains required. Permanent file purge and same-origin demo reset remain separate. Scanner/extractor-backed Import remains externally gated; the next slice requires a fresh dependency and consequence-path ranking.
 
 ## Evidence locked in automation pass 12 / integration slice 90
 

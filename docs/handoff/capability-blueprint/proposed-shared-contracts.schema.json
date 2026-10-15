@@ -1,0 +1,398 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Semester proposed shared contracts \u2014 design only",
+  "$defs": {
+    "FactEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fact_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tenant_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subject_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "predicate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {},
+        "authority": {
+          "enum": [
+            "official_institutional",
+            "instructor_published",
+            "student_owned",
+            "semester_derived",
+            "ai_generated",
+            "external",
+            "community",
+            "verified_credential",
+            "unknown"
+          ]
+        },
+        "classification": {
+          "enum": [
+            "public",
+            "internal",
+            "student_private",
+            "institutional_confidential",
+            "restricted",
+            "unclassified"
+          ]
+        },
+        "source_system": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_record_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "effective_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_updated_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "freshness_policy_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verification_state": {
+          "enum": [
+            "unverified",
+            "source_authenticated",
+            "institution_verified",
+            "conflicting"
+          ]
+        },
+        "lineage_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "owner_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retention_policy_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "fact_id",
+        "tenant_id",
+        "subject_id",
+        "predicate",
+        "value",
+        "authority",
+        "classification",
+        "source_system",
+        "source_record_id",
+        "source_version",
+        "observed_at",
+        "freshness_policy_id",
+        "verification_state",
+        "lineage_ids",
+        "owner_id",
+        "retention_policy_id"
+      ]
+    },
+    "Relationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "edge_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tenant_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "relation_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_fact_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "access_policy_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "grant_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "owner_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "valid_from": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "valid_until": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "retention_policy_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "edge_id",
+        "tenant_id",
+        "from_id",
+        "to_id",
+        "relation_type",
+        "version",
+        "source_fact_ids",
+        "access_policy_id",
+        "owner_id",
+        "valid_from",
+        "retention_policy_id"
+      ]
+    },
+    "SharingGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "grant_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tenant_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "grantor_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recipient_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recipient_type": {
+          "enum": [
+            "person",
+            "institution_role",
+            "application"
+          ]
+        },
+        "resource_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "read",
+              "comment",
+              "export",
+              "suggest"
+            ]
+          }
+        },
+        "issued_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "revoked_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "policy_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "export_rule_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "grant_id",
+        "tenant_id",
+        "grantor_id",
+        "recipient_id",
+        "recipient_type",
+        "resource_ids",
+        "purpose",
+        "capabilities",
+        "issued_at",
+        "expires_at",
+        "policy_version",
+        "export_rule_id"
+      ]
+    },
+    "ControlledAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tenant_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actor_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "command_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "content_digest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "preview_digest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "policy_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "approval_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "state": {
+          "enum": [
+            "requested",
+            "review_pending",
+            "approved",
+            "denied",
+            "expired",
+            "executing",
+            "pending_receipt",
+            "reconciled",
+            "failed",
+            "compensated"
+          ]
+        },
+        "authority_receipt_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reconciliation_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "action_id",
+        "tenant_id",
+        "domain",
+        "actor_id",
+        "command_type",
+        "target_ids",
+        "content_digest",
+        "preview_digest",
+        "policy_version",
+        "source_version",
+        "idempotency_key",
+        "expires_at",
+        "approval_ids",
+        "state"
+      ]
+    }
+  }
+}
