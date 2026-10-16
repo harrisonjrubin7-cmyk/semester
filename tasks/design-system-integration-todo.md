@@ -1566,6 +1566,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 27 — distinguishable goal-plan draft removals (slice 128)
+
+- [x] Re-fetch and merge current `origin/main` `b3dbb49fa`; inspect exact Goal Plan history and current code before editing.
+- [x] Make milestone removal names identify list position, title and readable due/no-date state.
+- [x] Make action removal names identify list position, title, completion state and current milestone relationship.
+- [x] Make proposed-calendar-block removal names identify list position, title, readable date and duration.
+- [x] Preserve the existing pure draft-removal helpers and separate **Save plan** persistence boundary; no provider or official record mutation was added.
+- [x] Prove the repeated-row regression red against the former labels, then pass 60/60 focused and adjacent Goal Plan, goal-domain, label and root-lifecycle tests.
+- [x] Pass TypeScript, lint/style/label/terms, university gateway typecheck, production build, 79/79 design-check constituents and 97/97 design-report contracts; design audit remains at zero violations and CSS stays within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded client accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — Hawk v6 and Docker runtimes, API key, app host and live target are unavailable; `stackhawk.yml` exists, but no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready Phase 3 consequence and accessibility gaps against current repository authority.
+- [ ] Keep durable server audit, authenticated Import/scanner wiring, provider calendars and official institution operations separate from this local draft-editor slice.
+
 ## 2026-10-11 account-scoped recoverable meal estimates — automation pass 10, integration slice 100
 
 - [x] Fetch `origin/main`, confirm required clean branch/base `1b86e0fcd` / `ba24569ab` and search history/current code for equivalent meal-estimate isolation or recovery work.

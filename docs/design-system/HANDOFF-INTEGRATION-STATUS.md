@@ -1353,6 +1353,18 @@ This local slice does not prove deployment, production execution, institutional 
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 27 / integration slice 128
+
+- Required-branch head `a6f451e6d` includes current `origin/main` `b3dbb49fa`; exact upstream history and current-code inspection found no equivalent Goal Plan removal-label work.
+- Milestone removal names now identify list position, complete title and readable due/no-date state. Action removal names identify position, title, completion state and current milestone relationship. Proposed-block removal names identify position, title, readable date and duration.
+- Existing pure draft helpers and the separate **Save plan** operation remain authoritative. Removing a row changes only the unsaved plan; no provider calendar, course, official record or institution system changes.
+- The repeated-row regression failed against the former position-only/title-only controls, then the focused Goal Plan, goal-domain, label and root-lifecycle set passes 60/60.
+- TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and all eight report contract files pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Ordered and shuffled full suites were not rerun; automation pass 2 remains the latest full-suite checkpoint.
+- Mandatory HawkScan preflight reports Hawk v6 and Docker runtimes absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` present and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 22 / integration slice 123
 
 - Required-branch head `462ad4873` was clean before the slice and already included current `origin/main` `06c2d5c74`. Exact upstream history/current-code inspection found no equivalent Maintenance removal-name guard.

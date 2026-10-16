@@ -1043,3 +1043,14 @@ No route, navigation, dependency, schema, policy, provider configuration or exte
 | DAST security verification | `stackhawk.yml`; active HawkScan skill | Blocked by environment | Hawk v6/config and Docker are absent, API-key/app-host values are unset and no live target exists. A local properties file was detected but not read; no scan or security pass is claimed. |
 
 No route, navigation, dependency, schema, grant, RLS policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, live provider behavior, institutional acceptance or production readiness.
+
+## Automation pass 27 mapping — distinguishable goal-plan draft removals (slice 128)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated goal-plan rows remain distinguishable at removal | `app/src/components/GoalPlan.tsx`; current in-memory `GoalPlan` draft | Existing but incomplete → existing and verified locally for this slice | Milestone, action and proposed-block removal names include collection position plus their represented date, status, relationship or duration. |
+| Preserve student control and the save boundary | Pure helpers in `app/src/lib/goal-plan.ts`; separate **Save plan** action | Existing and unchanged | Row removal changes only the current unsaved draft. No persistence occurs until the student explicitly saves; no calendar/provider/official record operation was introduced. |
+| Regression and repository gates | Extended `GoalPlan.test.tsx` plus goal-domain, label and root-lifecycle guards | Existing and verified locally for this slice | Red proof against position-only/title-only labels; 60/60 focused tests, both typechecks, lint, build, 79 design-check constituents and 97 report contracts pass. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6 and Docker runtimes, API key, app host and live target are unavailable. The checked-in configuration exists, but no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
