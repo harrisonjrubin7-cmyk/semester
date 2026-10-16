@@ -2296,3 +2296,21 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep citation verification, scanner-backed Import, provider activity and official academic records separate from this private student-authored library.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 distinguishable student-created link removals — automation pass 9, integration slice 110
+
+- [x] Start from clean required-branch head `68b9ef806`; fetch current `origin/main` `02ad46ff0`, confirm it is already included and inspect exact Links history/current code for overlap.
+- [x] Re-rank the private student-created Links workspace as the next bounded Phase 3 accessibility gap; keep external-site, campus-directory and provider activity outside the slice.
+- [x] Identify each removal by the exact student-entered name, resolved address and current group represented by the row.
+- [x] Preserve the existing exact-id `removeLink` reducer and shared eight-second Undo snapshot over `extraLinks` and `linkUrls`.
+- [x] Prove both removal-name assertions red against the former title-only control, then pass 167/167 focused and adjacent Links, grouping, reducer, Undo and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass 9/9 token export, 70/70 design contracts and the test-backed design report; retain zero audit violations, 86 existing warnings and the current CSS ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — the active skill stops at preflight because Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. `stackhawk.yml` and a local properties file exist, but credential material was not read; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep external-site behavior, campus-directory records, authentication and provider activity separate from this private shortcut library.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
