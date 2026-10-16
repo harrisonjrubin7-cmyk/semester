@@ -8,6 +8,7 @@ import { Launchpad } from './Launchpad';
 import { Support } from './Support';
 import { Opportunities } from './Opportunities';
 import { Hub } from './Hub';
+import { Nil } from './Nil';
 import { OperationsStudio } from '../components/institutional/OperationsStudio';
 
 /**
@@ -52,6 +53,18 @@ const button = (text: string) => {
 };
 
 const click = (el: Element) => act(() => (el as HTMLElement).click());
+
+const pickFile = async (body: string) => {
+  const input = host.querySelector<HTMLInputElement>('input[type="file"]');
+  if (!input) throw new Error('no file picker');
+  Object.defineProperty(input, 'files', {
+    configurable: true,
+    value: [new File([body], 'nil-record.json', { type: 'application/json' })],
+  });
+  await act(async () => {
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+};
 
 const type = (label: string, value: string) => {
   const field = host.querySelector(`[aria-label="${label}"]`) as HTMLInputElement | HTMLTextAreaElement | null;
@@ -128,7 +141,7 @@ describe('Support', () => {
     expect(host.textContent).toContain('Aunt Maya');
     expect(host.textContent).toContain('615-555-0142');
     expect(host.textContent).toContain('Other emergency contacts, access planning notes, routines');
-    expect(host.textContent).toContain('This Support workspace is not included in a device workspace backup.');
+    expect(host.textContent).toContain('Emergency contacts are intentionally excluded from device workspace backups.');
     expect(JSON.parse(localStorage.getItem('semester.support.v1:device')!).contacts).toHaveLength(1);
 
     click(button('Cancel'));
@@ -177,6 +190,64 @@ describe('Opportunities', () => {
     click(button('Delete opportunity'));
     expect(host.textContent).not.toContain('Water quality fellowship');
     expect(host.textContent).toContain('Nothing here yet.');
+  });
+});
+
+describe('NIL', () => {
+  const current = {
+    version: 1,
+    deals: [{
+      id: 'current-deal',
+      date: '2026-09-01',
+      counterparty: 'Current payer',
+      cents: 40000,
+      description: 'Current appearance',
+      associated: 'no',
+      reported: false,
+    }],
+  };
+  const incoming = {
+    version: 1,
+    deals: [{
+      id: 'restored-deal',
+      date: '2026-10-01',
+      counterparty: 'Restored payer',
+      cents: 75000,
+      description: 'Restored post',
+      associated: 'unsure',
+      reported: true,
+    }],
+  };
+
+  it('validates a private export and requires confirmation before replacing this account record', async () => {
+    localStorage.setItem('semester.nil.v1:device', JSON.stringify(current));
+    draw(<Nil />);
+
+    await pickFile('{"version":2,"deals":[]}');
+    expect(host.textContent).toContain('Use a version 1 NIL record');
+    expect(JSON.parse(localStorage.getItem('semester.nil.v1:device')!)).toEqual(current);
+
+    await pickFile(JSON.stringify(incoming));
+    expect(host.textContent).toContain('Replace this private NIL record?');
+    expect(host.textContent).toContain('replace 1 saved deal with 1 deal from the selected file');
+    expect(host.textContent).toContain('reminders already added to Actions');
+    expect(host.textContent).toContain('only from a separate private export made before replacement');
+    expect(JSON.parse(localStorage.getItem('semester.nil.v1:device')!)).toEqual(current);
+
+    click(button('Cancel'));
+    expect(JSON.parse(localStorage.getItem('semester.nil.v1:device')!)).toEqual(current);
+
+    await pickFile(JSON.stringify(incoming));
+    localStorage.setItem('semester.nil.v1:device', '{cannot read');
+    click(button('Replace record'));
+    expect(host.textContent).toContain('Replace this private NIL record?');
+    expect(host.textContent).not.toContain('Private NIL record restored on this device.');
+    expect(localStorage.getItem('semester.nil.v1:device')).toBe('{cannot read');
+
+    localStorage.setItem('semester.nil.v1:device', JSON.stringify(current));
+    click(button('Replace record'));
+    expect(JSON.parse(localStorage.getItem('semester.nil.v1:device')!)).toEqual(incoming);
+    expect(host.textContent).toContain('Private NIL record restored on this device.');
   });
 });
 
