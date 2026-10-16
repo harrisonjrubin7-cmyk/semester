@@ -363,7 +363,9 @@ describe('the press that reviews', () => {
     expect(seen.updates).toHaveLength(1);
 
     const remove = button(/^REMOVE$/);
-    expect(remove.getAttribute('aria-label')).toBe(`Remove ${seen.updates[0].title}`);
+    expect(remove.getAttribute('aria-label')).toMatch(
+      /^Remove material 1 of 1, What you pasted: Own unit · 2 cards · 0 files · from What you pasted · added /,
+    );
     act(() => remove.click());
 
     expect(seen.updates).toEqual([]);
@@ -543,6 +545,16 @@ describe('two files that share a name', () => {
     press(/^Review and add to/);
     press(/^Attach it to/);
     expect(seen.updates).toHaveLength(2);
+
+    const removals = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove material "]')];
+    expect(removals).toHaveLength(2);
+    expect(removals[0].getAttribute('aria-label')).toMatch(
+      /^Remove material 1 of 2, board\.png: On the course · 0 cards · 1 file · from board\.png · added /,
+    );
+    expect(removals[1].getAttribute('aria-label')).toMatch(
+      /^Remove material 2 of 2, board\.png: On the course · 0 cards · 1 file · from board\.png · added /,
+    );
+    expect(removals[0].getAttribute('aria-label')).not.toBe(removals[1].getAttribute('aria-label'));
   });
 
   it('still recognises the same file attached twice', async () => {

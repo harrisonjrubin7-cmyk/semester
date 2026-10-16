@@ -1193,3 +1193,15 @@ The existing removal journey and new duplicate-name regression both failed again
 Mandatory HawkScan preflight reports no Hawk v6 or Docker runtime and no live app host. `HAWK_API_KEY` is unset; a local Hawk properties file exists but was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 No route, dependency, schema, grant, RLS policy, server operation, provider configuration, deployment, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Distinguishable already-added course-material removals — automation pass 17, integration slice 118
+
+Required-branch head `7c3a3bf5c` was clean before the slice and already included current `origin/main` `8a29db78f`. Exact upstream history and current-code inspection found the existing atomic, recoverable `removeUpdate` path but no guard for repeated imported-material names. Re-ranking selected this bounded Phase 3/4 accessibility gap because two scans or photographs may intentionally share both filename and title while remaining separate imports.
+
+Each removal name now identifies its position in the current material list plus title, course/unit location, card and file counts, source and repository-formatted added date. Position keeps byte-distinct or otherwise identical-looking imports distinguishable. The existing exact-id `removeUpdate` reducer and shared eight-second Undo snapshot over `updates` and `courses` remain authoritative. Removing the material leaves its private stored files, other sources, unrelated course dates and every official LMS/institution record unchanged.
+
+The same-name regression failed against the former title-only control, then 216/216 focused and adjacent Add Material, reducer, live-merge, label and root-lifecycle tests passed. TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and report contracts pass 97/97; design audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun; automation pass 2 remains the latest full-suite checkpoint.
+
+Mandatory HawkScan preflight reports no Hawk v6/config command or Docker runtime, no API-key/app-host environment values and no runnable target. `stackhawk.yml` and a local properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+No route, dependency, schema, grant, RLS policy, server operation, provider configuration, deployment, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.

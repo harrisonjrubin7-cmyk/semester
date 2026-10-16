@@ -2451,3 +2451,21 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep device-only estimates, account-saved drafts and the registrar's official degree audit as separate authorities.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 distinguishable already-added course-material removals — automation pass 17, integration slice 118
+
+- [x] Start from clean required-branch head `7c3a3bf5c`; fetch current `origin/main` `8a29db78f`, confirm it is already included and inspect exact Add Material/removal history and current code for overlap.
+- [x] Re-rank repeated imported-material controls as the next bounded Phase 3/4 accessibility gap; keep scanner-backed ingestion, file purge, official LMS records and provider activity outside the slice.
+- [x] Name each removal with list position, title, course/unit location, card and file counts, source and repository-formatted added date.
+- [x] Preserve the exact-id `removeUpdate` operation and shared eight-second Undo snapshot over `updates` and `courses`.
+- [x] Prove the same-name import regression red against the former title-only controls, then pass 216/216 focused and adjacent Add Material, reducer, live-merge, label and root-lifecycle tests.
+- [x] Pass TypeScript, lint/style/label/terms checks, university gateway typecheck and production build; retain twelve existing warnings and the existing chunk-size warning.
+- [x] Pass 79/79 design-check constituents and 97/97 report contracts; preserve zero design violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no scanner runtime, live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep recoverable course-material metadata removal, permanent private-file purge and official LMS/source withdrawal as separate operations.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

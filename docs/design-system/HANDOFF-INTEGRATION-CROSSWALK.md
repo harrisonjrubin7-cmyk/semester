@@ -913,3 +913,16 @@ Both regressions failed against the former repeated **Clear** and time-only dele
 | Security verification after production behavior changes | `stackhawk.yml` | Blocked by environment | Hawk v6 and Docker are absent and no live app host is configured. `HAWK_API_KEY` is unset; a local properties file exists but was not read. No scan, finding result, fix/rescan loop or security pass exists. |
 
 No route, navigation, shared visual component, dependency, schema, policy, server operation or external system changed. The archive remains specification evidence only; this slice does not establish deployment, institutional acceptance or production readiness.
+
+## Automation pass 17 mapping — distinguishable already-added course-material removals (slice 118)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated student-added course sources remain distinguishable at removal | `app/src/screens/Update.tsx`; `app/src/screens/addmaterial.test.tsx` | Existing but incomplete -> existing and verified for this slice | Removal names now include list position and every represented summary fact. Position distinguishes otherwise identical same-name/source imports. |
+| Identify the exact represented material copy | `CourseUpdate`; `formatDate`; the current Already added row | Existing and verified for this slice | The accessible name reuses title, course/unit location, card count, file count, source and added date. |
+| Preserve exact mutation and recovery behavior | `removeUpdate`; `app/src/state/slices/library.ts`; `app/src/lib/undo.ts` | Existing and unchanged | The same exact id is removed and the shared snapshot restores `updates` and `courses`; unrelated sources and deadlines remain unchanged. |
+| Preserve storage, official-system and provider boundaries | Current Add Material copy and source authority contract | Intentionally unchanged | Stored file bytes are not purged, no scanner/extractor is claimed, and no LMS, provider or institution record changes. |
+| Regression and repository gates | `addmaterial.test.tsx` plus reducer/live/labels/root coverage | Existing and verified locally for this slice | Red proof against the title-only label; 216/216 adjacent tests, TypeScript, lint, university typecheck, build and 79/97 design contracts pass. Full ordered/shuffled suites and DAST remain open. |
+| Security verification after production behavior changes | `stackhawk.yml` | Blocked by environment | Hawk v6/config and Docker are absent; API key/app host are unset. A local properties file exists but was not read. No live target, scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared visual component, dependency, schema, policy, server operation or external system changed. The archive remains specification evidence only; this slice does not establish deployed ingestion, institutional acceptance or production readiness.
