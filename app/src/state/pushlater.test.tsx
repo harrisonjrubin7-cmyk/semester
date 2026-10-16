@@ -135,15 +135,16 @@ describe('a change after sign-in goes up to the account', () => {
     expect(last?.tone).toBe('minimal');
   }, 25_000);
 
-  // A browser without IndexedDB remains memory-only, but a signed-in change
-  // must still reach the account rather than being stranded in this tab.
-  it('pushes again without writing the account into clear-text localStorage', async () => {
+  // A browser without IndexedDB uses the filtered local fallback, but a
+  // signed-in change must still reach the account rather than being stranded.
+  it('pushes again while keeping appointments out of clear-text localStorage', async () => {
     dbUp = false;
     const { first, after, last } = await signedInThenChanged();
     expect(first).toBeGreaterThan(0);
     expect(after).toBeGreaterThan(first);
     expect(last?.tone).toBe('minimal');
-    expect(localStorage.getItem('semester.v1')).toBeNull();
+    const fallback = JSON.parse(localStorage.getItem('semester.v1') ?? '{}');
+    expect(fallback).not.toHaveProperty('appointments');
   }, 25_000);
 
   /*

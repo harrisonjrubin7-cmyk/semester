@@ -42,6 +42,7 @@ import type { Session } from '@supabase/supabase-js';
 import { loadSeed } from '../data/seed';
 import { fire } from '../lib/notify';
 import { remindersFor } from './reminders';
+import { save, trouble } from '../lib/keep';
 import { CHECK_EVERY_MS, WRITE_FAILED, room, roomLine } from '../lib/quota';
 import {
   acknowledgeRemoteWrite,
@@ -65,6 +66,7 @@ import { NAMED, fromHash, opensAccount, replaces, same, toHash, type Route } fro
 import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
+import { localFallback } from './localfallback';
 import { firstScreen } from '../lib/chrome';
 import { resolveSchool } from '../data/schools';
 import { ACCENT_TINT, anchorHue, tintsFor, type CourseTint } from '../lib/tint';
@@ -100,6 +102,7 @@ import { withEngine } from '../lib/sync/engine/tasks';
 import { useTaskEngine } from './useTaskEngine';
 import {
   DEFAULT_PERSISTED,
+  STORAGE_KEY,
   initialEphemeral,
   loadPersisted,
   forgetSyncMemory,
@@ -504,9 +507,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * every change is half of what this move is removing, and the diffing writer
    * compares references rather than text.
    */
-  const memoryOnly = !dbAvailable();
-  const persisted = useMemo(() => (memoryOnly ? JSON.stringify(picked) : ''), [memoryOnly, picked]);
-  /** What was last observed on the memory-only path, so an unchanged store is not reconsidered. */
+  const persisted = useMemo(
+    () => (dbAvailable() ? '' : JSON.stringify(localFallback(picked))),
+    [picked],
+  );
+  const fallbackSaid =
+    !dbAvailable() && picked.appointments.length > 0
+      ? 'This browser cannot open secure device storage, so appointments stay in this tab only and will not survive a reload.'
+      : '';
+  /** What was last written to localStorage, so an unchanged store is not rewritten. */
   const wrote = useRef('');
   /** When the browser was last asked how much room is left. */
   const checkedRoom = useRef(0);
@@ -529,8 +538,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [roomSaid, setRoomSaid] = useState('');
   const [writeFailing, setWriteFailing] = useState(false);
   useEffect(() => {
-    setSaveTrouble(writeFailing || memoryOnly ? WRITE_FAILED : roomSaid);
-  }, [memoryOnly, writeFailing, roomSaid]);
+    setSaveTrouble(writeFailing ? WRITE_FAILED : [fallbackSaid, roomSaid].filter(Boolean).join(' '));
+  }, [fallbackSaid, writeFailing, roomSaid]);
   /*
    * The writer says whether it is landing.
    *
@@ -624,11 +633,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
      * asynchronous, so nothing here blocks a render. There is no shedding,
      * because there is no 5MB ceiling to shed against.
      *
-     * A device with no usable database stays memory-only. Writing the full
-     * account to localStorage would leave appointments and student work in a
-     * clear-text, script-readable blob. The standing save warning above makes
-     * the durability loss explicit; the legacy key remains read-only so a
-     * later healthy database can still migrate it. See `state/persist/`.
+     * A device with no usable database keeps the non-sensitive workspace in
+     * localStorage. `localFallback` removes advising appointments before this
+     * string is built; those records remain memory-only on this path.
      */
     if (dbAvailable()) {
       if (applyingRemote.current || thisPersistenceRender <= skipPersistenceThrough.current) return;
@@ -656,10 +663,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // Unchanged text means nothing to write, which is what the string dep used
     // to give for free before the database path took the dep over.
     if (persisted === wrote.current) return;
-    // Keep the serialized value as the cloud-push dependency, but never place
-    // the account in clear-text localStorage. With no durable write there is
-    // also nothing for another tab to re-read or announce.
+    const quiet = fromOtherTab.current;
+    fromOtherTab.current = false;
     wrote.current = persisted;
+    const result = save(persisted, (value) => localStorage.setItem(STORAGE_KEY, value));
+    const said = trouble(result);
+    setSaveTrouble((was) => (was === said ? was : said));
+    if (!quiet) tellOtherTabs();
   }, [picked, persisted]);
 
   /**

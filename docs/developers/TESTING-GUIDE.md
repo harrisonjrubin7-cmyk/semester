@@ -22,6 +22,13 @@ The test that holds this page checks that every script, test file and CI step na
 | Course data | `node pipeline/validate.mjs`, from the repository root | Node only. |
 | Scheduled and operational probes | `npm run smoke:production`, `smoke:public-production`, `sweep:contrast`, `eval:model-quality` | Deployed URLs (`smoke:*production`), a browser and a running dev server (`sweep:contrast`), or a model key or proxy (`eval:model-quality`). Not part of a pull request. |
 
+The production build substitutes the deployment-specific CSP connection
+origins into `dist/_headers`. The Vite plugin opens that generated file once,
+then reads, truncates and rewrites it through the same descriptor so a path
+check cannot race a replacement file. `src/lib/hostheaders.test.ts` holds the
+placeholder and built-header contract; a production build proves the actual
+rewrite.
+
 ## How the Vitest suite is arranged
 
 `app/vite.config.ts` defines two Vitest projects.

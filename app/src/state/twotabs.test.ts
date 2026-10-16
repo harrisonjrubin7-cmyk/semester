@@ -40,8 +40,8 @@ const store = readFileSync('src/state/store.tsx', 'utf8');
 
 describe('two tabs of the same app', () => {
   it('marks a hydrate that came from another tab', () => {
-    // Inside the `onOtherTab` handler. The memory-only fallback has no durable
-    // write to announce; this guard is for the database path.
+    // Inside the `onOtherTab` handler. Both durable paths suppress the write
+    // that follows this incoming hydration.
     const from = store.indexOf('onOtherTab(');
     const handler = store.slice(from, store.indexOf('}),', from));
     expect(handler.length, 'the onOtherTab handler should be findable').toBeGreaterThan(100);
@@ -51,11 +51,11 @@ describe('two tabs of the same app', () => {
     ).toHaveLength(1);
   });
 
-  it('spends the mark on the database write it causes', () => {
+  it('spends the mark on whichever durable write it causes', () => {
     // Read *and* cleared, so the next write — this tab's own — speaks again.
     // A flag that is set and never cleared silences the tab for good, which
     // loses the other tab's updates instead of looping: quieter, and worse.
-    expect(store.match(/fromOtherTab\.current = false/g) ?? []).toHaveLength(1);
+    expect(store.match(/fromOtherTab\.current = false/g) ?? []).toHaveLength(2);
   });
 
   it('never announces a write on the way in', () => {
@@ -64,7 +64,10 @@ describe('two tabs of the same app', () => {
     // reads it writes back — over the change that had not landed yet. The
     // announcement is handed to `persist` and made by `flush`.
     expect(store).toContain('persistToDb(picked, quiet ? undefined : tellOtherTabs)');
-    // And nowhere unguarded or on the memory-only path.
+    // The synchronous filtered fallback announces only after it has written,
+    // and spends the same quiet flag before doing so.
+    expect(store).toContain('if (!quiet) tellOtherTabs();');
+    // Nowhere is an announcement made without either guard.
     for (const call of store.match(/^\s*tellOtherTabs\(\);/gm) ?? []) {
       expect.fail(`an unguarded ${call.trim()} would loop`);
     }

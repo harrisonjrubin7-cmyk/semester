@@ -17,9 +17,8 @@
  *
  * **Nothing here can break the app.** Every path resolves rather than throws,
  * and `available` reports honestly whether the database took. When it did not,
- * the caller may read a legacy localStorage copy for recovery but keeps new
- * changes in memory rather than writing student work back as one clear-text
- * browser-storage blob.
+ * the caller may read a legacy localStorage copy for recovery; the store's
+ * filtered fallback keeps appointments out of later clear-text writes.
  */
 
 import { readAll, isEmpty, held, open, write, MAPS_STORE, SETTINGS_STORE, type Write } from './db';
@@ -218,7 +217,7 @@ async function migrateFromLocalStorage(): Promise<FirstRun> {
  * Open the database, migrate if this is the first run, and read.
  *
  * Returns null when the database is unavailable, which is the caller's signal
- * to seed a memory-only session from any legacy localStorage copy. Unavailable
+ * to seed a filtered fallback session from any legacy localStorage copy. Unavailable
  * includes a database that opened and then did not answer: a read that hits
  * its limit is `null` rather than an empty store, and the whole load falls
  * back rather than migrating an account onto a handle that has just been
@@ -232,7 +231,7 @@ export async function load(): Promise<Persisted | null> {
   /*
    * The database stopped answering under the load. `db.ts` has let go of the
    * handle, and whatever this had read or written is not to be trusted as an
-   * account: the caller stays on its memory-only recovery path, exactly as if
+   * account: the caller stays on its filtered fallback path, exactly as if
    * the open had never answered.
    */
   const lost = (): null => {
