@@ -123,10 +123,11 @@ preserves the existing secure-origin, no-redirect, no-cookie and timeout rules;
 mutating calls receive one idempotency key per logical call; only safe reads or
 keyed writes retry. The gateway context now validates and carries that key to
 adapters. The local SQLite action journal and the repository's PostgreSQL
-journal both implement the shared persistent idempotency-store contract, but
-the legacy institution commit route is not wrapped with the store. That route
-therefore still opts out of network retry, preserving its
-unknown-outcome-to-reconciliation rule. The two older refusal shapes are translated at this
+journal both implement the shared persistent idempotency-store contract. The
+institution commit route now wraps keyed commits with that store and the browser
+may safely retry a network failure with the same key. An upstream `502`
+unknown outcome remains non-retryable and must go through reconciliation. The
+two older refusal shapes are translated at this
 migration boundary with a focused equivalence test. **Not done:** the edge
 functions have not adopted the envelope, and `environment`,
 tenant status and `verifiedBy` in the context are approximations the file says so about.

@@ -139,6 +139,8 @@ export interface RegistrySnapshot {
   workspaces?: WorkspaceRecord[];
   /** Optional while focused validator tests construct bounded snapshots. Full registry validation requires one gate per gated capability. */
   activationGates?: ActivationGate[];
+  /** Current, operated support and recovery proof. Repository controls alone may leave this explicitly not ready. */
+  operationsReadiness?: OperationsReadinessRecord[];
 }
 
 export const GATE_ITEM_STATUSES = ['passed', 'not_verified', 'failed'] as const;
@@ -161,6 +163,30 @@ export interface ActivationGate {
   status: 'not_ready' | 'ready';
   decision: { record: string | null; approvers: string[] };
   required: ActivationGateItem[];
+}
+
+export interface OperationsEvidenceItem {
+  id: string;
+  status: GateItemStatus;
+  evidence: string[];
+  /** Required for passed operated evidence; an expired proof fails closed. */
+  expires_at: string | null;
+  gap: string;
+}
+
+export interface OperationsReadinessRecord {
+  key: string;
+  capability: string;
+  owner: string;
+  status: 'not_ready' | 'ready';
+  roster: {
+    primary_owner: string | null;
+    backup_owner: string | null;
+    support_hours: string | null;
+    escalation_contacts_published: boolean;
+  };
+  required: OperationsEvidenceItem[];
+  gaps: string[];
 }
 
 export interface ValidationIssue {
