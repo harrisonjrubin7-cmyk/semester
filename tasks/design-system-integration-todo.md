@@ -1576,7 +1576,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove the repeated-row regression red against the former labels, then pass 60/60 focused and adjacent Goal Plan, goal-domain, label and root-lifecycle tests.
 - [x] Pass TypeScript, lint/style/label/terms, university gateway typecheck, production build, 79/79 design-check constituents and 97/97 design-report contracts; design audit remains at zero violations and CSS stays within its ledger.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded client accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
-- [ ] HawkScan DAST — Hawk v6 and Docker runtimes, API key, app host and live target are unavailable; `stackhawk.yml` exists, but no scan, finding result, fix/rescan loop or security pass exists.
+- [ ] HawkScan DAST — post-commit preflight for `502e72905` found Hawk v6 and Docker runtimes, API key, app host and live target unavailable; `stackhawk.yml` and a local properties file exist, but credentials were not read and no scan, finding result, fix/rescan loop or security pass exists.
 
 ### Next implementation boundary
 
