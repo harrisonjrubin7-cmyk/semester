@@ -7,6 +7,9 @@ from pathlib import Path
 from threading import Event, Thread
 from uuid import UUID, uuid4
 
+from celery import Celery
+from sqlalchemy import and_, delete, or_, select
+
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.extractors.files import extractor_for, safe_zip_members
@@ -33,8 +36,6 @@ from app.services.job_leases import (
 from app.services.malware import DevelopmentMalwareScanner
 from app.services.storage import ObjectStorage, sha256_file, validate_actual_mime
 from app.services.upload_dispatch import dispatch_upload_completion
-from celery import Celery
-from sqlalchemy import and_, delete, or_, select
 
 celery = Celery("course_engine", broker=settings.redis_url, backend=settings.redis_url)
 celery.conf.beat_schedule = {
