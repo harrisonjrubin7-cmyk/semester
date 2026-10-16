@@ -14,7 +14,7 @@ because it needs a human decision first.
 
 | # | Artifact | Status | File / blocker |
 |---|----------|--------|----------------|
-| 1 | component-passport.schema.json | open | Derivable from the passport fields. Next slice. |
+| 1 | component-passport.schema.json | written | `component-passport.schema.json`, aligned to the runtime passport validator and reference-prefix rules. |
 | 2 | registration-readiness.passport.yaml | written | `registration-readiness.passport.yaml` (owner names TBD) |
 | 3 | connection-states.yaml | written | `connection-states.yaml` |
 | 4 | source-verification.ts | open | Types are in the PDF. Needs a `.ts` file, a test, and a typecheck. Next slice. |
@@ -45,7 +45,7 @@ because it needs a human decision first.
 | 29 | pilot-results-template.md | open | Template only. Next slice. |
 | 30 | post-launch-review.md | open | Template only. Next slice. |
 
-Count: 12 written, 18 open.
+Count: 13 written, 17 open.
 
 ## Decisions this package depends on
 
@@ -73,7 +73,10 @@ Run from the repo root:
 
 ```bash
 python3 scripts/validate-pilot-artifacts.py   # parses every YAML file in this folder
+npm test --workspace app -- src/lib/registry/passport.test.ts
 ```
 
-The script checks that every YAML file parses. It does not check the content
-against the PDF, and it does not check any app behavior.
+The Python script checks that every YAML file parses. It does not check the
+content against the PDF or app behavior. The focused passport test keeps the
+JSON Schema's governed sections, passport types, and artifact-reference
+prefixes aligned with the runtime validator.
