@@ -1401,3 +1401,16 @@ This local slice does not prove deployment, production execution, provider conne
 - Mandatory HawkScan preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` present and a local properties file detected but unread. No target, DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 26 / integration slice 127
+
+- The clean required branch began at `c6908241a` and already included current `origin/main` `45d7260c4`; exact upstream/current-code inspection found the status-only moderation authority but no distinct action names or consequence preview.
+- Every publish/remove control now names its list position, complete title, listing kind and publisher scope. The shared cancel-first confirmation explains the school-visible or queue-removal consequence, exact represented facts, unchanged publisher words/other listings/official records and recovery boundary.
+- Existing `opportunity:moderate` capability enforcement, tenant/RLS rules and the status-only `moderate_opportunity` RPC remain authoritative. One pending moderation disables every row action; refusal preserves the row and retry path, and a post-write queue-refresh failure is distinguished from mutation failure.
+- The rendered behavior guard covers repeated-title distinction, cancel/no-write, explicit confirmation, pending-state guarding and refusal recovery. It is registered in `MOCKS_MODULES`; the focused ListingDesk/listing-domain/shared-preview/root-lifecycle/isolation set passes 31/31.
+- TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79, six design-report contracts pass, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- The aggregate report launcher writes its artifact but exits 1 because its hardcoded `npx` is unavailable. Ordered and shuffled full suites were not rerun; automation pass 2 remains the latest full-suite checkpoint.
+- Durable moderation history remains open: the current RPC constrains and applies status but does not append an immutable actor/action event.
+- Mandatory HawkScan preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` present and a local properties file detected but unread. No live target, DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.

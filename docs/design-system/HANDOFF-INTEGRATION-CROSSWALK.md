@@ -1030,3 +1030,16 @@ No route, navigation, dependency, schema, policy, provider configuration or exte
 | DAST security verification | `stackhawk.yml`; active HawkScan skill | Blocked by environment | Hawk v6/config and Docker are absent, API-key/app-host values are unset and no runnable target exists. A local properties file was detected but not read; no scan or security pass is claimed. |
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, live provider behavior, institutional acceptance or production readiness.
+
+## Automation pass 26 mapping — governed verified-listing moderation (slice 127)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Consequential staff moderation waits for a plain-language preview | `app/src/components/ListingDesk.tsx`; shared `ConfirmDialog` / `ActionPreview` | Existing but incomplete → existing and verified locally for this slice | Publish and remove now name the represented listing, outcome, exact deadline/link/eligibility summary, unchanged records and recovery boundary before any RPC call. Cancel writes nothing. |
+| Repeated-title moderation controls remain distinguishable | `ListingDesk` queue rows; `ListingDesk.moderation-preview.test.tsx` | Existing but incomplete → existing and verified locally for this slice | Accessible names include list position, title, kind and publisher scope, distinguishing otherwise repeated titles. |
+| Preserve server authority and retry truth | `app/src/lib/listings.ts`; `public.moderate_opportunity`; opportunity capability/RLS checks | Existing and unchanged | The status-only RPC remains authoritative. All row controls are guarded in flight; refusal preserves the represented row for retry and a refresh failure is not reported as a failed write. |
+| Durable moderation history | Current opportunity status; no append-only moderation event | Existing but incomplete | Current-state authorization and mutation are evidenced, but an immutable actor/action history remains a separate server/data-contract gap. |
+| Regression and focused verification | New rendered regression plus listing-domain/shared-preview/root/isolation guards | Existing and verified locally for this slice | 31/31 focused tests, both TypeScript gates, lint, build, 79 design-check constituents and six design-report contracts pass; audit has zero violations and CSS stays within its ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan skill | Blocked by environment | Hawk v6/config and Docker are absent, API-key/app-host values are unset and no live target exists. A local properties file was detected but not read; no scan or security pass is claimed. |
+
+No route, navigation, dependency, schema, grant, RLS policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, live provider behavior, institutional acceptance or production readiness.

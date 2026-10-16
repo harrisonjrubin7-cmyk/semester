@@ -2622,3 +2622,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep student-entered work windows, provider calendars and official institution schedules as separate authorities.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 26 update — governed verified-listing moderation (slice 127)
+
+- [x] Fetch current `origin/main`, verify the required branch is clean and confirm `45d7260c4` is already included before selecting the slice.
+- [x] Re-rank the capability-gated verified-listings queue as the next bounded Phase 7/10 consequence/accessibility gap; keep live provider configuration, institution activation and public claims outside the slice.
+- [x] Give every publish/remove control a distinguishable name containing list position, title, kind and publisher scope.
+- [x] Require the shared cancel-first consequence preview before either existing status-only moderation RPC call.
+- [x] Guard every moderation control while one server answer is pending; preserve the represented row and retry path after refusal, and distinguish successful mutation from refresh failure.
+- [x] Preserve existing `opportunity:moderate` capability enforcement, status-only security-definer RPC, tenant/RLS contracts and publisher-authored listing fields.
+- [x] Add a rendered regression for duplicate titles, cancel/no-write, explicit publish confirmation, in-flight guarding and server-refusal recovery.
+- [x] Register the mocked regression in `MOCKS_MODULES`, then pass 31/31 focused ListingDesk/listing-domain/shared-preview/root-lifecycle/isolation tests, both TypeScript gates, lint/style/label/terms checks and production build.
+- [x] Pass 79/79 design-check constituents, six design-report contracts, zero-violation audit and unchanged CSS ledger.
+- [ ] Aggregate design report launcher — writes the report and exits 1 because its hardcoded `npx` is unavailable; exact constituents pass and no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded moderation slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] Durable moderation audit — `moderate_opportunity` authorizes and constrains current status but does not append an immutable moderation-history event; keep this broader server/data-contract gap explicit.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep durable moderation audit, published-listing administration and institution/provider activation as separate server-authority work.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
