@@ -707,6 +707,9 @@ export function createGateway(config: Config) {
       };
 
       const idempotencyKey = context.request?.idempotencyKey;
+      if (path === '/actions/commit' && idempotencyKey && !config.idempotency) {
+        fail(503, 'Durable command replay is not configured.', 'unavailable');
+      }
       if (path === '/actions/commit' && idempotencyKey && config.idempotency) {
         const requestContext = context.request!;
         const command = 'institution.action.commit';
@@ -732,6 +735,22 @@ export function createGateway(config: Config) {
         }
         if (begun.kind === 'replay') {
           headers.set('Idempotent-Replayed', 'true');
+          if (begun.response.status >= 400) {
+            const stored = begun.response.body as {
+              code?: string;
+              message?: string;
+              user_action?: UserAction;
+              error?: { code?: string; message?: string; user_action?: UserAction };
+            };
+            const value = stored.error ?? stored;
+            const replayed = PlatformError.from(
+              begun.response.status,
+              value.code ?? 'error',
+              value.message ?? 'The request was refused.',
+              value.user_action ? { userAction: value.user_action } : {},
+            );
+            return Response.json(errorResponse(replayed, correlationId).body, { status: begun.response.status, headers });
+          }
           return Response.json(begun.response.body, { status: begun.response.status, headers });
         }
         try {
@@ -751,7 +770,14 @@ export function createGateway(config: Config) {
             ? await config.idempotency.complete(
                 scope,
                 begun.leaseId,
-                { status: error.status, body: errorResponse(error, correlationId).body },
+                {
+                  status: error.status,
+                  body: {
+                    code: error.code,
+                    message: error.message,
+                    ...(error.userAction ? { user_action: error.userAction } : {}),
+                  },
+                },
                 systemClock.now(),
               )
             : await config.idempotency.release(scope, begun.leaseId);

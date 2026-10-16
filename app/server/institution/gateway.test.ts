@@ -539,10 +539,17 @@ describe('university gateway boundaries', () => {
     const review = await f.prepare();
     const key = 'commit-refusal-key-0001';
     const unconfirmed = { reviewId: review.id };
-    expect((await f.request('/actions/commit', unconfirmed, { 'idempotency-key': key })).status).toBe(400);
-    const refusedReplay = await f.request('/actions/commit', unconfirmed, { 'idempotency-key': key });
+    expect((await f.request('/actions/commit', unconfirmed, {
+      'idempotency-key': key,
+      'x-correlation-id': 'first-correlation',
+    })).status).toBe(400);
+    const refusedReplay = await f.request('/actions/commit', unconfirmed, {
+      'idempotency-key': key,
+      'x-correlation-id': 'retry-correlation',
+    });
     expect(refusedReplay.status).toBe(400);
     expect(refusedReplay.headers.get('idempotent-replayed')).toBe('true');
+    expect((await refusedReplay.json()).error.correlation_id).toBe('retry-correlation');
 
     const activeKey = 'commit-active-key-00001';
     const body = { reviewId: review.id, confirmed: true };

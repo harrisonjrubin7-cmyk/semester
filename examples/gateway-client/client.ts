@@ -63,7 +63,7 @@ export function createClient(options: ClientOptions) {
           headers: {
             authorization: `Bearer ${await options.token()}`,
             'x-correlation-id': correlationId,
-            ...(method === 'POST' ? { 'idempotency-key': correlationId } : {}),
+            ...(method === 'POST' ? { 'idempotency-key': `semester-${correlationId}` } : {}),
             ...(body === undefined ? {} : { 'content-type': 'application/json' }),
           },
           ...(body === undefined ? {} : { body: JSON.stringify(body) }),
