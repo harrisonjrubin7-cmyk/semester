@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 12 of 120 · **Integration slice** 102 · **Date** 2026-10-16 · **Branch** `codex/handoff-integration-slice-92` · **Slice base** `2106fa1a` · **Latest observed `origin/main`** `02ad46ff0`
+**Automation pass** 12 of 120 · **Integration slice** 102 · **Date** 2026-10-16 · **Branch** `codex/handoff-integration-slice-92` · **Slice base** `2106fa1a` · **Latest observed `origin/main`** `8a29db78f`
 
 ## State
 
@@ -80,7 +80,7 @@ Phase 0 reconciliation is complete for the archive populations and includes the 
 
 ## Evidence locked in automation pass 12 / integration slice 102
 
-- The clean continuation branch started at `origin/main` `2106fa1a`. Final promotion reconciliation merged current `origin/main` `02ad46ff0`, including the separately reviewed slices through 101, notification foundation, ISBN permission preview, institution idempotency work, Course Engine browser acceptance and the shared design-system passport with refreshed Operator coverage. None changes the academic-record withdrawal contract. Fresh current-code ranking found that Drive purge, device erase and Toolkit deletion paths are already governed, while an academic-record proposer’s **Withdraw** action still removed a pending change from the independent decision queue on first press.
+- The clean continuation branch started at `origin/main` `2106fa1a`. Final promotion reconciliation merged current `origin/main` `8a29db78f`, including the separately reviewed slices through 101, notification foundation, ISBN permission preview, institution idempotency work, Course Engine browser acceptance, the shared design-system passport with refreshed Operator coverage, and the duplicate isolation-registry repair. None changes the academic-record withdrawal contract. Fresh current-code ranking found that Drive purge, device erase and Toolkit deletion paths are already governed, while an academic-record proposer’s **Withdraw** action still removed a pending change from the independent decision queue on first press.
 - Withdrawal now opens the shared `ConfirmDialog` and `ActionPreview`. It names the exact student, record kind, subject, proposed value and effective date; says the proposal leaves the decision queue; distinguishes the unchanged current academic record, record history and other proposals; and explains that a withdrawn proposal cannot be reopened but the same change can be proposed again with a fresh reason.
 - Cancel receives initial focus and performs no RPC. Only explicit **Withdraw proposal** confirmation calls the unchanged receipt-checked `RecordApi.withdraw` operation with the exact proposal id. Server ownership/RLS, independent approval, append-only record history and failure reporting remain authoritative and unchanged.
 - The behavioral guard failed against the prior first-press write. After final upstream reconciliation, RecordLedger, record-domain, `ActionPreview`, modal and root-unmount coverage passes 39/39; the changed component and test pass Oxlint, TypeScript passes and the diff has no whitespace errors.
