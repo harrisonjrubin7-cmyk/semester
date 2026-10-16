@@ -2334,3 +2334,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep saved-course deletion, official registrar/LMS records, authentication and provider activity separate from this unsaved course draft.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 distinguishable saved-course removal — automation pass 11, integration slice 112
+
+- [x] Start from clean required-branch head `05972433a`; fetch current `origin/main` `02ad46ff0`, confirm it is already included and inspect exact saved-course history/current code for overlap.
+- [x] Re-rank saved-course deletion as the next bounded Phase 3 consequence/accessibility gap; keep official registrar/LMS records, authentication and provider activity outside the slice.
+- [x] Name each removal control and its confirmation with the represented course code, course name, repository-formatted term and syllabus source.
+- [x] Preserve the existing irreversible `TypeToConfirm` consequence lines, course-code typing requirement and exact-id `removeCourse` reducer.
+- [x] Preserve the honest recovery boundary: course material can be re-imported, but removed answer history cannot be restored.
+- [x] Prove the same-code regression red against the former unnamed **REMOVE** controls, then pass 119/119 focused and adjacent saved-course, Me capability, reducer and root-lifecycle tests.
+- [x] Pass TypeScript, lint/style/label/terms checks, university gateway typecheck and production build; retain the existing chunk-size warning.
+- [x] Pass 79/79 design-check constituents and 97/97 report contracts; retain zero design violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility/consequence slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — the active loop stops at mandatory preflight because Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. `stackhawk.yml` exists and no local properties file was found; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official registrar/LMS course deletion, authentication and provider activity separate from this private saved-course copy.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

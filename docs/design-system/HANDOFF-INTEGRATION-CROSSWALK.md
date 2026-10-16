@@ -838,3 +838,15 @@ Both removal-name assertions failed against the former title-only control. Focus
 | Preserve official-system and data boundaries | Current course editor copy and explicit `replaceCourse` save operation | **Intentionally unchanged.** The slice adds no route, server operation, schema, provider call or institution mutation and does not reinterpret a syllabus or official record. |
 
 The regression fails against the former generic/title-only labels, then 52/52 focused and adjacent tests pass. TypeScript, lint, university gateway typecheck and production build pass. Design-check constituents pass 79/79, report contracts pass 97/97, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. HawkScan remains open because its mandatory preflight finds no Hawk v6 or Docker runtime and no API-key/app-host environment values; the detected local properties file was not read. No deployment or production execution is inferred.
+
+## Automation pass 11 — distinguishable saved-course removal (slice 112)
+
+| Reference requirement | Repository authority | Disposition and evidence |
+| --- | --- | --- |
+| Repeated saved-course controls remain distinguishable to assistive technology | `app/src/screens/Me.tsx`, `app/src/screens/me.course-removal-labels.test.tsx` | **Existing but incomplete → existing and verified for this slice.** Same-code rows now expose distinct removal names when their represented term or syllabus source differs. |
+| Identify the exact represented private course copy | `app/src/screens/Me.tsx`, `app/src/lib/term.ts` | **Existing and verified.** The control and dialog reuse course code/name/source plus the repository's readable term authority. |
+| Preserve irreversible consequence and exact mutation behavior | `app/src/components/TypeToConfirm.tsx`, `app/src/state/slices/library.ts`, `app/src/state/reducer.test.ts` | **Existing and unchanged.** The student must still type the course code; confirmation removes one exact id and does not offer a false Undo. |
+| Preserve official-system and provider boundaries | Current saved-course copy and import recovery language | **Intentionally unchanged.** No registrar/LMS record, provider, authentication state or external system changes. |
+| Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent and API key/app host are unset. No target, DAST scan, finding result, fix/rescan loop or security pass exists. |
+
+The regression failed against the former unnamed **REMOVE** controls, then focused and adjacent verification passes 119/119. TypeScript, lint, university gateway typecheck and production build pass. Design-check constituents pass 79/79 and report contracts pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Current `origin/main` `02ad46ff0` is included and contains no equivalent work. No route, dependency, schema, grant, RLS policy, server operation, provider configuration, deployment or external system changed.
