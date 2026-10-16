@@ -2218,3 +2218,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep official campus directories, organization membership and institution event systems separate from student-entered device planning.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 distinguishable out-of-pocket cost removals — automation pass 5, integration slice 106
+
+- [x] Start from clean required-branch head `055ea913f`; fetch current `origin/main` `822623170`, confirm it is included and inspect exact Costs history/current code for overlap.
+- [x] Re-rank duplicate accessible removal names in the student-entered out-of-pocket list as the next bounded Phase 6 gap; keep school-account records, money movement and provider systems outside the mutation.
+- [x] Name each removal with the represented course code, cost kind, optional rental/resale state and amount paid.
+- [x] Preserve the existing exact-id `dropCost` action and shared eight-second Undo receipt; add no confirmation, persistence path or financial-system claim.
+- [x] Prove the regression red against the former name-only controls, then pass 89/89 focused and adjacent Costs, Bill, arithmetic, reducer, Undo and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass the aggregate design-system check with 9/9 token tests and 70/70 contract tests, and pass the test-backed report with 97/97 contracts, zero violations, 86 existing warnings and the current CSS ledger.
+- [x] Commit the coherent code/test slice locally as `6be940d97` after confirming final `origin/main` remains included and non-overlapping.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility/consequence slice; pass 2's current-head checkpoint remains the latest full-suite evidence.
+- [ ] HawkScan DAST — mandatory post-commit preflight for `6be940d97` reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no scanner runtime, live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official school-account records, charges, payments, enrolled plans and provider integrations separate from student-entered device planning.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
