@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-16 · **Latest observed `origin/main`** `822623170` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-16 · **Latest observed `origin/main`** `8a29db78f` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -875,3 +875,16 @@ Both regression paths failed against the former generic/title-only controls, the
 | Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent and API key/app host are unset. A local properties file was detected but not read; no target, DAST scan, finding result, fix/rescan loop or security pass exists. |
 
 The regression failed against the former name-only control, then focused and adjacent verification passes 219/219. TypeScript, lint and university gateway typecheck pass with twelve existing warnings; production build passes with the existing chunk-size warning. Design-check constituents pass 79/79 and report contracts pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Current `origin/main` `8a29db78f` is included and contains no equivalent same-name formula guard. No deployment or production execution is inferred.
+
+## Automation pass 14 — distinguishable degree-planning removals (slice 115)
+
+| Reference requirement | Repository authority | Disposition and evidence |
+| --- | --- | --- |
+| Same-name requirement and same-code course controls remain distinguishable | `app/src/screens/Degree.tsx`, `app/src/screens/degree.requirement-removal.test.tsx` | **Existing but incomplete → existing and verified for this slice.** Repeated names/codes now expose distinct removal names when their represented planning facts differ. |
+| Identify the represented student-entered degree rule | `app/src/screens/Degree.tsx`, `app/src/lib/degree.ts` | **Existing and verified.** The accessible name reuses the program, count/unit and accepted-course rule already represented on the row and consequence preview. |
+| Identify the represented student-entered recorded course | `app/src/screens/Degree.tsx`, `app/src/lib/degree.ts` | **Existing and verified.** The accessible name reuses title, term, hours and grade/in-progress state already represented on the row and consequence preview. |
+| Preserve exact mutation, confirmation and recovery behavior | `app/src/screens/Degree.tsx`, `app/src/state/slices/mine.ts`, `app/src/lib/undo.ts` | **Existing and unchanged.** The same exact-id reducers run only after confirmation, and the shared eight-second snapshots remain the recovery path. |
+| Preserve official-system and data boundaries | Current student-entered planning copy and registrar fallback language | **Intentionally unchanged.** No official transcript or degree-audit record changes; no route, schema, server operation or provider call was added. |
+| Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk v6 and Docker are absent and no live app host is configured. A local properties file exists but was not read; `HAWK_API_KEY` is unset. No DAST scan, finding result, fix/rescan loop or security pass exists. |
+
+Both regressions failed against the former name/code-only controls, then focused and adjacent verification passes 196/196. TypeScript, lint and university gateway typecheck pass with twelve existing warnings; production build passes with the existing chunk-size warning. Token export passes 9/9, design contracts pass 70/70 and exact report contracts pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Current `origin/main` `8a29db78f` is included and contains no equivalent work. No deployment or production execution is inferred.

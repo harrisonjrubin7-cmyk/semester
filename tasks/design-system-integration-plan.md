@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-16 · **Latest observed `origin/main`** `02ad46ff0` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-16 · **Latest observed `origin/main`** `8a29db78f` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -1161,3 +1161,13 @@ Each removal name now reuses the formula's represented plain-text notation, pers
 The new same-name regression failed against the former name-only accessible control, then 219/219 focused and adjacent equation, maths, filing, reducer, Undo and root-lifecycle tests passed. TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and report contracts pass 97/97; design audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun; automation pass 2 remains the latest full-suite checkpoint.
 
 The mandatory HawkScan loop stops at preflight because Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. `stackhawk.yml` and a local properties file exist, but credential material was not read; no scanner runtime, live target, DAST scan, finding result, fix/rescan loop or security pass exists. No route, dependency, schema, policy, server operation, provider configuration, deployment, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Distinguishable degree-planning removals — automation pass 14, integration slice 115
+
+Required-branch head `e0dbfa633` was clean before the slice and already included current `origin/main` `8a29db78f`. Exact upstream history and current-code inspection found the existing consequence previews for student-entered requirement and recorded-course removal, but no guard for repeated requirement names or repeated course codes. Re-ranking selected this bounded Phase 3 accessibility gap because exact-id mutation, confirmation, planning-authority language and recovery boundaries are already verified.
+
+Requirement removal names now identify the represented program, count/unit and accepted-course rule. Recorded-course removal names identify the represented title, term, hours and grade/in-progress state. The existing `ConfirmDialog`/`ActionPreview`, exact-id `dropRequirement`/`dropTaken` reducers and shared eight-second Undo snapshots remain authoritative. Semester still treats both lists as student-entered planning copies; the registrar's official transcript and degree audit remain unchanged.
+
+Both regressions failed against the former name/code-only controls, then 196/196 focused and adjacent degree-domain, reducer, Undo, label-contract and root-lifecycle tests passed. TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning. Token export passes 9/9, design contracts pass 70/70 and the report's exact contracts pass 97/97; design audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. The aggregate report wrapper writes its artifact but exits 1 because it invokes unavailable `npx`; ordered and shuffled full suites were not rerun.
+
+The active HawkScan skill stops at mandatory preflight because Hawk v6 and Docker are absent and `HAWK_APP_HOST` is unset. A local Hawk properties file exists but was not read; `HAWK_API_KEY` is unset. No scanner runtime, live target, DAST scan, finding result, fix/rescan loop or security pass exists. No route, dependency, schema, policy, server operation, provider configuration, deployment, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.

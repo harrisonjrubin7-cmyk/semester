@@ -866,7 +866,7 @@ function TakenRow({ course: c }: { course: Taken }) {
         type="button"
         className="bare"
         onClick={() => setRemoving(true)}
-        aria-label={`Remove ${c.code}`}
+        aria-label={`Remove ${c.code}${c.title ? `: ${c.title}` : ''} · ${c.term || 'No term recorded'} · ${c.hours} ${c.hours === 1 ? 'hour' : 'hours'} · ${c.current ? 'in progress' : c.grade ? `grade ${c.grade}` : 'no grade recorded'}`}
         style={{ width: 'auto', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
       >
         Remove
@@ -1048,7 +1048,7 @@ function RequirementRow({ requirement: r }: { requirement: Requirement }) {
         type="button"
         className="bare"
         onClick={() => setRemoving(true)}
-        aria-label={`Remove ${r.name}`}
+        aria-label={`Remove ${r.name} requirement: ${r.programme} · ${r.count} ${r.need} · ${r.accepts.length > 0 ? `accepted courses: ${r.accepts.join(', ')}` : 'any course can count'}`}
         style={{ width: 'auto', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
       >
         Remove
