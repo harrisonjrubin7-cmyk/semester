@@ -9,6 +9,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID
 
+import pymupdf as fitz
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse
 from sqlalchemy import and_, delete, func, or_, select
@@ -71,6 +72,7 @@ from app.services.institution_commands import _is_active, submit_institution_com
 from app.services.job_leases import revoke_job
 from app.services.storage import (
     MIME_FAMILIES,
+    ObjectInspectionError,
     ObjectStorage,
     normalize_upload_mime,
     sha256_file,
@@ -270,7 +272,7 @@ def list_institution_commands(
                     CommandReceipt.created_at == anchor.created_at,
                     CommandReceipt.id < anchor.id,
                 ),
-            )
+            ),
         )
     receipts = db.scalars(
         statement.order_by(CommandReceipt.created_at.desc(), CommandReceipt.id.desc()).limit(
@@ -599,14 +601,73 @@ def source_view(
         .offset(offset)
         .limit(limit)
     ).all()
+    review_by_chunk_id: dict[str, ReviewItem] = {}
+    for item in db.scalars(
+        select(ReviewItem)
+        .where(
+            ReviewItem.document_id == doc.id,
+            ReviewItem.item_type == "extracted_evidence",
+        )
+        .order_by(ReviewItem.created_at.desc())
+    ).all():
+        chunk_id = item.payload.get("chunk_id") if isinstance(item.payload, dict) else None
+        if isinstance(chunk_id, str) and chunk_id not in review_by_chunk_id:
+            review_by_chunk_id[chunk_id] = item
+    serialized_chunks = []
+    for chunk in chunks:
+        serialized = serialize(chunk)
+        review = review_by_chunk_id.get(str(chunk.id))
+        serialized["review_item_id"] = str(review.id) if review else None
+        serialized["review_status"] = review.status.value if review else None
+        serialized["preview_available"] = (
+            Path(doc.filename).suffix.lower() == ".pdf"
+            and chunk.page_number is not None
+            and chunk.bounding_box is not None
+        )
+        serialized_chunks.append(serialized)
     return {
         "document": serialize(doc),
-        "chunks": [serialize(chunk) for chunk in chunks],
+        "chunks": serialized_chunks,
         "total": total,
         "offset": offset,
         "limit": limit,
         "has_more": offset + len(chunks) < total,
     }
+
+
+@router.get("/files/{file_id}/pages/{page_number}/preview")
+def source_page_preview(
+    file_id: UUID,
+    page_number: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    doc = db.get(SourceDocument, file_id)
+    if not doc or doc.deleted_at:
+        raise HTTPException(404)
+    owned_course(db, user, doc.course_id)
+    if Path(doc.filename).suffix.lower() != ".pdf":
+        raise HTTPException(415, "Page previews are available only for PDF sources")
+    try:
+        payload = storage.read_bytes(doc.storage_key, max_bytes=settings.max_upload_bytes)
+        with fitz.open(stream=payload, filetype="pdf") as document:
+            if page_number < 1 or page_number > document.page_count:
+                raise HTTPException(404, "Source page does not exist")
+            page = document.load_page(page_number - 1)
+            longest_edge = max(float(page.rect.width), float(page.rect.height), 1.0)
+            scale = min(2.0, 2048.0 / longest_edge)
+            preview = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False).tobytes("png")
+    except HTTPException:
+        raise
+    except ObjectInspectionError as exc:
+        raise HTTPException(502, "Original object could not be loaded") from exc
+    except (fitz.FileDataError, RuntimeError, ValueError) as exc:
+        raise HTTPException(422, "PDF preview could not be rendered") from exc
+    return Response(
+        content=preview,
+        media_type="image/png",
+        headers={"Cache-Control": "private, max-age=300"},
+    )
 
 
 @router.get("/files/{file_id}/download")

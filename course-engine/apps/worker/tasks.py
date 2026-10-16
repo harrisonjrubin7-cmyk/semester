@@ -258,7 +258,17 @@ def _commit_extraction(
             },
         ))
     if document.classification == "other" and materialized_rows:
-        sample = " ".join(row["content"] for row in materialized_rows[:5]).lower()
+        page_numbers = sorted({
+            row["page_number"]
+            for row in materialized_rows
+            if row["page_number"] is not None
+        })[:5]
+        sample_rows = (
+            [row for row in materialized_rows if row["page_number"] in page_numbers]
+            if page_numbers
+            else materialized_rows[:5]
+        )
+        sample = " ".join(row["content"] for row in sample_rows).lower()
         filename = document.filename.lower()
         if "syllabus" in filename or ("grading" in sample and "schedule" in sample):
             document.classification = "syllabus"
@@ -389,6 +399,7 @@ def extract_document(job_id: str) -> dict:
                 "cell_range": row.cell_range,
                 "start_seconds": row.start_seconds,
                 "end_seconds": row.end_seconds,
+                "bounding_box": row.bounding_box,
                 "confidence": row.confidence,
                 "metadata_json": metadata,
             })
