@@ -169,6 +169,12 @@ export interface OperationsEvidenceItem {
   id: string;
   status: GateItemStatus;
   evidence: string[];
+  /** When the target operation was observed; required for passed evidence. */
+  observed_at: string | null;
+  /** Named operated target, never `local`, `ci`, or repository-only proof. */
+  environment: string | null;
+  /** Exact deployed or exercised Git revision; required for passed evidence. */
+  revision: string | null;
   /** Required for passed operated evidence; an expired proof fails closed. */
   expires_at: string | null;
   gap: string;

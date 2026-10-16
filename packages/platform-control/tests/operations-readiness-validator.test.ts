@@ -14,8 +14,15 @@ const capability: CapabilityRecord = {
   owner: 'product-registration', risk: 'high', data_classification: 'restricted', roles: {}, systems: [], routes: [], commands: [], events: [], maturity, evidence: {},
 };
 const future = '2999-01-01T00:00:00.000Z';
+const evidenceById: Record<(typeof REQUIRED_OPERATIONS_EVIDENCE)[number], string> = {
+  'support.escalation_roster': 'docs/evidence/operations/2026-10-03-founder-readiness-tabletop.md',
+  'monitoring.synthetic_checks': 'docs/evidence/operations/2026-10-03-public-production-smoke.md',
+  'recovery.restore_drill': 'docs/evidence/restore/2026-09-30-logical-rehearsal.md',
+  'recovery.incident_exercise': 'docs/evidence/operations/2026-10-03-founder-readiness-tabletop.md',
+};
 const proofs = (changes: Partial<OperationsEvidenceItem> = {}): OperationsEvidenceItem[] => REQUIRED_OPERATIONS_EVIDENCE.map((id) => ({
-  id, status: 'passed', evidence: ['packages/platform-control/README.md'], expires_at: future, gap: '', ...changes,
+  id, status: 'passed', evidence: [evidenceById[id]], observed_at: '2026-10-15T00:00:00.000Z',
+  environment: 'production:semester', revision: 'a'.repeat(40), expires_at: future, gap: '', ...changes,
 }));
 const record = (changes: Partial<OperationsReadinessRecord> = {}): OperationsReadinessRecord => ({
   key: 'operations.registration.readiness', capability: 'registration.readiness', owner: 'platform-operations', status: 'ready',
@@ -54,6 +61,22 @@ test('required proof cannot drift or cite paths outside the repository', () => {
   const codes = validateOperationsReadiness(snapshot([drift])).map(({ code }) => code);
   assert.ok(codes.includes('operations_evidence_drift'));
   assert.ok(codes.includes('operations_evidence_path_invalid'));
+});
+
+test('a generic repository file cannot masquerade as operated evidence', () => {
+  const generic = record({ required: proofs({ evidence: ['packages/platform-control/README.md'] }) });
+  const codes = validateOperationsReadiness(snapshot([generic]), new Date('2026-10-16T00:00:00Z')).map(({ code }) => code);
+  assert.equal(codes.filter((code) => code === 'operations_evidence_scope_invalid').length, 4);
+  assert.ok(codes.includes('operations_status_mismatch'));
+});
+
+test('passed proof is bound to an observed target and exact revision', () => {
+  const unbound = record({ required: proofs({ observed_at: '2999-01-02T00:00:00Z', environment: 'ci', revision: 'main' }) });
+  const codes = validateOperationsReadiness(snapshot([unbound]), new Date('2026-10-16T00:00:00Z')).map(({ code }) => code);
+  assert.equal(codes.filter((code) => code === 'operations_observation_invalid').length, 4);
+  assert.equal(codes.filter((code) => code === 'operations_environment_invalid').length, 4);
+  assert.equal(codes.filter((code) => code === 'operations_revision_invalid').length, 4);
+  assert.ok(codes.includes('operations_status_mismatch'));
 });
 
 test('release stays closed when support and recovery operations are unready', async () => {
