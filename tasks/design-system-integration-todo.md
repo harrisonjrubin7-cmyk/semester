@@ -2170,7 +2170,8 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Pass the shuffled full suite with the same file/test totals and seed `1792165167022`.
 - [x] Pass production build with the existing chunk-size warning and complete the test-backed design report through a disposable local `npx` shim removed afterward.
 - [x] Fetch final `origin/main` `812960b5b`; confirm its net Course Engine/Support changes do not overlap and its intermediate ISBN isolation pair leaves this register unchanged from the slice base.
-- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file detected but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+- [x] Commit the coherent slice as `57bf99706`, merge final `origin/main` `812960b5b` cleanly as `687c91f95`, then pass 168/168 focused/adjacent/isolation tests, TypeScript and university gateway typecheck on the combined head.
+- [ ] HawkScan DAST — mandatory post-commit preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` present and no local Hawk properties file found; no target, scan, finding result, fix/rescan loop or security pass exists.
 
 ### Next implementation boundary
 
