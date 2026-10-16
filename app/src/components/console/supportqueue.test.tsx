@@ -93,11 +93,38 @@ function type(item: HTMLTextAreaElement | HTMLSelectElement, value: string) {
 }
 
 describe('the support operations queue', () => {
+  it('renders server-backed first-response targets through the shared SLA timer', async () => {
+    mock.queue.mockResolvedValue([
+      {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        category: 'accessibility', subject: 'Cannot reach Continue', status: 'open', priority: 'high',
+        createdAt: '2026-10-01T10:00:00Z', firstResponseDue: '2026-10-02T10:00:00Z', firstRespondedAt: null,
+        emailNoticeEnabled: true, overdue: true,
+      },
+      {
+        id: '223e4567-e89b-12d3-a456-426614174000',
+        category: 'bug', subject: 'Reply received', status: 'waiting_on_student', priority: 'normal',
+        createdAt: '2026-10-01T10:05:00Z', firstResponseDue: '2026-10-04T10:05:00Z', firstRespondedAt: '2026-10-01T11:00:00Z',
+        emailNoticeEnabled: true, overdue: false,
+      },
+    ]);
+
+    await draw();
+
+    const overdue = host.querySelector('[aria-label="First response target for SUP-123E-4567-E89B-12D3"]');
+    const met = host.querySelector('[aria-label="First response target for SUP-223E-4567-E89B-12D3"]');
+    expect(overdue?.getAttribute('data-semester-design')).toBe('archive-2026-10-08');
+    expect(overdue?.querySelector('[role="timer"]')?.getAttribute('data-state')).toBe('breach');
+    expect(overdue?.textContent).toContain('Overdue');
+    expect(met?.querySelector('[role="timer"]')?.getAttribute('data-state')).toBe('met');
+    expect(met?.textContent).toContain('Met');
+  });
+
   it('shows an identity-free prioritized ticket and only student-approved app context', async () => {
     await draw();
     expect(host.textContent).toContain('Identity-free queue');
     expect(host.textContent).toContain('SUP-123E-4567-E89B-12D3');
-    expect(host.textContent).toContain('OVERDUE');
+    expect(host.textContent).toContain('Overdue');
     expect(host.textContent).not.toMatch(/ada@example\.edu|user-123|vanderbilt-university/i);
 
     await click(button('Open conversation'));
