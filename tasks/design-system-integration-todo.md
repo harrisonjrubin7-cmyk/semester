@@ -2314,3 +2314,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep external-site behavior, campus-directory records, authentication and provider activity separate from this private shortcut library.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 distinguishable course-editor draft removals — automation pass 10, integration slice 111
+
+- [x] Start from clean required-branch head `c637ca5e5`; fetch current `origin/main` `02ad46ff0`, confirm it is included and inspect exact course-editor history/code for overlap.
+- [x] Re-rank repeated course-editor draft controls as the next bounded Phase 3 accessibility gap; keep saved-course removal, official course records and provider activity outside the slice.
+- [x] Name grading-row removals with the represented name and weight, including explicit language for unset fields.
+- [x] Name meeting removals with title, locale-aware full weekdays, time and optional status.
+- [x] Name deadline removals with title, locale-aware date, due time, kind and weight.
+- [x] Preserve the explicit-save boundary: removal changes only the in-memory draft until **Save the changes** is pressed.
+- [x] Prove the regression red against the former generic/title-only names, then pass 52/52 focused and adjacent edit, route, policy, label and root-lifecycle tests.
+- [x] Pass TypeScript, lint/style/label/terms checks, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass 79/79 design-check constituents and 97/97 report contracts; preserve zero design violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded draft-accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — the active skill stops at mandatory preflight because Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. `stackhawk.yml` and a local properties file exist, but credential material was not read; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep saved-course deletion, official registrar/LMS records, authentication and provider activity separate from this unsaved course draft.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
