@@ -389,6 +389,7 @@ def extract_document(job_id: str) -> dict:
                 "cell_range": row.cell_range,
                 "start_seconds": row.start_seconds,
                 "end_seconds": row.end_seconds,
+                "bounding_box": row.bounding_box,
                 "confidence": row.confidence,
                 "metadata_json": metadata,
             })
