@@ -4,6 +4,8 @@
 
 > **Claim ceiling.** This is a read of the code, not a test result. `exists` means a reachable implementation was found and opened; it does not mean RLS, accessibility, monitoring or release evidence exist (the 22-point definition in the release gate catalog). The design catalog's own "Status" column (Catalogued / Designed) is ignored: it is design status, not repo evidence.
 
+H-014 was revisited on 2026-10-16: product guidance is now present, with policy approval and institutional operation still open. The screen totals below include that one-row update to the original baseline.
+
 ## How each row was judged
 
 - **exists** — a user in the catalogued role can reach an implementation that does what the row says.
@@ -31,14 +33,14 @@
 | E · Registrar & academic operations | 13 | 19 | 3 | 35 |
 | F · Student accounts, aid & commerce | 20 | 8 | 1 | 29 |
 | G · Campus life | 17 | 13 | 5 | 35 |
-| H · Community & moderation | 20 | 6 | 3 | 29 |
+| H · Community & moderation | 20 | 7 | 2 | 29 |
 | I · Family & guardian | 7 | 3 | 2 | 12 |
 | J · Career, employer, alumni | 12 | 18 | 10 | 40 |
 | K · Institutional administration | 9 | 31 | 1 | 41 |
 | L · Integrations | 6 | 19 | 3 | 28 |
 | M · Trust, privacy, security | 20 | 22 | 6 | 48 |
 | N · Operations Command Center (/ops) | 12 | 66 | 3 | 81 |
-| **Total** | **260** | **272** | **57** | **589** |
+| **Total** | **260** | **273** | **56** | **589** |
 
 ## Summary — workflow steps (319)
 
@@ -445,7 +447,7 @@ These exist in the repo and are not evidence for any catalog row. They are the s
 | H-011 | Peer mentor directory | exists | `app/src/components/MentorFinder.tsx`<br>`app/src/lib/mentors.ts` | Mentor offers matched on interests, shown in Launchpad/Opportunities |
 | H-012 | Mentor requests | exists | `app/src/components/MentorFinder.tsx`<br>`app/src/lib/mentors.ts` | askMentor/answerRequest: mentee asks, mentor accepts |
 | H-013 | Organization communities | partial | `app/src/screens/Community.tsx`<br>`app/src/community/communities.ts` | student_organization community kind with verification; no org-specific hub |
-| H-014 | Community guidelines | missing | — | Searched guidelines/code of conduct in screens, components, community/: no page; doc only: docs/CAMPUS-MODERATION-SOP.md |
+| H-014 | Community guidelines | partial | app/src/components/community/Guidelines.tsx; app/src/screens/Community.test.tsx | Product guidance is connected in signed-out, disabled and member states; shared report categories and emergency notice; legal policy approval and institutional operation remain separate. |
 | H-015 | Report content | exists | `app/src/components/community/ReportSheet.tsx`<br>`app/src/community/moderation.ts` | Report form with 9 categories, imminent flag, crisis notice first |
 | H-016 | Appeal decision | exists | `app/src/screens/Community.tsx`<br>`app/src/community/client.ts` | NoticeList shows decision, appeal button, pending/granted/upheld status |
 | H-017 | Community safety resources | partial | `app/src/community/crisis.ts`<br>`app/src/components/community/ReportSheet.tsx` | CRISIS_NOTICE on report form and console; no resource list in Community itself |
