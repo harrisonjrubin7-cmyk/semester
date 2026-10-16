@@ -8,6 +8,15 @@ export const REQUIRED_OPERATIONS_EVIDENCE = [
   'recovery.incident_exercise',
 ] as const;
 
+const OPERATED_EVIDENCE_ROOTS: Record<(typeof REQUIRED_OPERATIONS_EVIDENCE)[number], string> = {
+  'support.escalation_roster': 'docs/evidence/operations/',
+  'monitoring.synthetic_checks': 'docs/evidence/operations/',
+  'recovery.restore_drill': 'docs/evidence/restore/',
+  'recovery.incident_exercise': 'docs/evidence/operations/',
+};
+
+const NON_OPERATED_ENVIRONMENTS = new Set(['ci', 'development', 'local', 'repository', 'repository-only', 'unknown']);
+
 function completeRoster(record: OperationsReadinessRecord): boolean {
   const roster = record.roster;
   return typeof roster?.primary_owner === 'string' && roster.primary_owner.trim() !== ''
@@ -61,10 +70,34 @@ export function validateOperationsReadiness(snapshot: RegistrySnapshot, now = ne
         if (item.status === 'passed' && evidence.length === 0) issues.push({ code: 'operations_passed_without_evidence', path: itemPath, message: 'Passed operations proof must cite retained evidence.' });
         for (const reference of evidence) if (!isRepositoryPath(reference)) issues.push({ code: 'operations_evidence_path_invalid', path: `${itemPath}.evidence`, message: `Evidence must be repository-relative, not ${JSON.stringify(reference)}.` });
       }
+      const expectedRoot = OPERATED_EVIDENCE_ROOTS[item.id as (typeof REQUIRED_OPERATIONS_EVIDENCE)[number]];
+      const evidenceScoped = Array.isArray(evidence) && typeof expectedRoot === 'string'
+        && evidence.some((reference) => typeof reference === 'string' && reference.startsWith(expectedRoot));
+      if (item.status === 'passed' && !evidenceScoped) {
+        issues.push({ code: 'operations_evidence_scope_invalid', path: `${itemPath}.evidence`, message: `Passed ${item.id} proof must retain an operated artifact under ${expectedRoot ?? 'its governed evidence area'}.` });
+      }
+
+      const observed = typeof item.observed_at === 'string' ? new Date(item.observed_at) : null;
+      const observationValid = observed !== null && !Number.isNaN(observed.valueOf()) && observed <= now;
+      if (item.status === 'passed' && !observationValid) {
+        issues.push({ code: 'operations_observation_invalid', path: `${itemPath}.observed_at`, message: 'Passed operated evidence must record a valid observation time that is not in the future.' });
+      }
+      const environment = typeof item.environment === 'string' ? item.environment.trim() : '';
+      const environmentValid = environment !== '' && !NON_OPERATED_ENVIRONMENTS.has(environment.toLowerCase());
+      if (item.status === 'passed' && !environmentValid) {
+        issues.push({ code: 'operations_environment_invalid', path: `${itemPath}.environment`, message: 'Passed operated evidence must name the target environment; local, CI, and repository-only proof do not qualify.' });
+      }
+      const revisionValid = typeof item.revision === 'string' && /^[a-f0-9]{40}$/i.test(item.revision);
+      if (item.status === 'passed' && !revisionValid) {
+        issues.push({ code: 'operations_revision_invalid', path: `${itemPath}.revision`, message: 'Passed operated evidence must name the exact 40-character revision that was exercised.' });
+      }
       const expiry = typeof item.expires_at === 'string' ? new Date(item.expires_at) : null;
+      const expiryValid = expiry !== null && !Number.isNaN(expiry.valueOf()) && expiry > now
+        && observed !== null && !Number.isNaN(observed.valueOf()) && observed <= expiry;
       const current = item.status === 'passed' && Array.isArray(evidence) && evidence.length > 0
-        && expiry !== null && !Number.isNaN(expiry.valueOf()) && expiry > now;
-      if (item.status === 'passed' && !current) issues.push({ code: 'operations_evidence_stale', path: `${itemPath}.expires_at`, message: 'Passed operated evidence must have a valid future expiry.' });
+        && evidenceScoped && observationValid && environmentValid && revisionValid
+        && expiryValid;
+      if (item.status === 'passed' && !expiryValid) issues.push({ code: 'operations_evidence_stale', path: `${itemPath}.expires_at`, message: 'Passed operated evidence must expire in the future and not before it was observed.' });
       if (item.status !== 'passed' && (typeof item.gap !== 'string' || item.gap.trim() === '')) issues.push({ code: 'operations_gap_missing', path: `${itemPath}.gap`, message: 'Unverified or failed operations proof must state its gap.' });
       allCurrent = allCurrent && current;
     }
