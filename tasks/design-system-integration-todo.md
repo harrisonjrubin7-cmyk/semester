@@ -2154,3 +2154,26 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep official transcript/degree-audit mutation separate from this student-entered planning copy.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 distinguishable complete meal-balance history — automation pass 2, integration slice 103
+
+- [x] Start from required-branch head `05cf1bb3d` with selection-time `origin/main` `c959de8e9` included; inspect exact meals history and upstream work for overlap.
+- [x] Re-rank the bounded Phase 6 history gap where meal money was omitted and repeated removal controls shared one accessible name.
+- [x] Render all represented student-entered balance fields through the existing meals authority: swipes or the honest absent-reading state, Commodore Cash and meal money.
+- [x] Give each removal control an exact accessible name containing the date and complete displayed balance line.
+- [x] Preserve the existing exact-id reducer operation and global eight-second Undo receipt; do not change plan, official-balance, payment or provider authority.
+- [x] Prove the regression red against the incomplete row/duplicate label, then pass the new focused guard and 166/166 adjacent meals, forms, undo, reducer and root-lifecycle tests.
+- [x] Remove two duplicate entries from the explicit isolated-worker register and pass its 2/2 structural guard without changing test behavior or coverage.
+- [x] Pass TypeScript, lint and university gateway typecheck; retain twelve existing lint warnings.
+- [x] Pass 9/9 token export, 70/70 design contracts and 97/97 report contracts; retain zero audit violations, 86 existing warnings and the current CSS ledger.
+- [x] Pass the corrected ordered full suite: 1,542 files passed, 2 skipped; 24,439 tests passed, 81 skipped.
+- [x] Pass the shuffled full suite with the same file/test totals and seed `1792165167022`.
+- [x] Pass production build with the existing chunk-size warning and complete the test-backed design report through a disposable local `npx` shim removed afterward.
+- [x] Fetch final `origin/main` `812960b5b`; confirm its net Course Engine/Support changes do not overlap and its intermediate ISBN isolation pair leaves this register unchanged from the slice base.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file detected but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official dining balances, plan enrollment, payments and provider integrations separate from student-entered device planning.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
