@@ -188,6 +188,7 @@ function fixture({
     refreshIdentity: async (current) => membershipActive ? { ...current, roles: membershipRoles } : null,
     adapters: [adapter],
     journal: journalStore,
+    idempotency: journal,
     loadSsoConfig: async () => ({ enabled: true, label: 'Vanderbilt', domain: 'vanderbilt.edu' }),
     intelligence: {
       status: 'configured-sandbox',
@@ -513,6 +514,33 @@ describe('university gateway boundaries', () => {
     );
     expect(committed.status).toBe(200);
     expect(f.executedIdempotencyKey()).toBe(key);
+  });
+
+  it('durably replays keyed action commits and rejects a key reused for another review', async () => {
+    const f = fixture();
+    const firstReview = await f.prepare();
+    const key = 'commit-key-durable-0001';
+    const body = { reviewId: firstReview.id, confirmed: true };
+
+    const first = await f.request('/actions/commit', body, { 'idempotency-key': key });
+    expect(first.status).toBe(200);
+    expect(first.headers.get('idempotent-replayed')).toBeNull();
+
+    const replay = await f.request('/actions/commit', body, { 'idempotency-key': key });
+    expect(replay.status).toBe(200);
+    expect(replay.headers.get('idempotent-replayed')).toBe('true');
+    expect(await replay.json()).toEqual(await first.json());
+    expect(f.calls()).toBe(1);
+
+    const secondReview = await f.prepare();
+    const conflict = await f.request(
+      '/actions/commit',
+      { reviewId: secondReview.id, confirmed: true },
+      { 'idempotency-key': key },
+    );
+    expect(conflict.status).toBe(422);
+    expect((await conflict.json()).error.code).toBe('idempotency_key_reused');
+    expect(f.calls()).toBe(1);
   });
 
   it('serializes concurrent confirmations across durable claims', async () => {
