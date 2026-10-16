@@ -704,14 +704,12 @@ export function createGateway(config: Config) {
       }
       };
 
-      if (path === '/actions/commit') {
+      if (path === '/actions/commit' && context.request?.idempotencyKey) {
         if (!config.idempotency) fail(503, 'Durable command replay is not configured.');
-        const requestContext = context.request;
-        if (!requestContext) fail(503, 'The verified request context is unavailable.');
         const result = await withIdempotency(
           config.idempotency,
           { clock: systemClock },
-          requestContext,
+          context.request,
           'institution.action.commit',
           body,
           async () => {
