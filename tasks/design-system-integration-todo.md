@@ -2612,6 +2612,8 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove the duplicate-label regression red against the former label-only controls, then pass 118/118 focused and adjacent WorkWindows, window-domain, storage, reducer, Undo, label, root-lifecycle and isolation tests.
 - [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
 - [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, 97 report contracts, zero violations, 86 existing warnings and CSS within its ledger.
+- [x] Commit the coherent slice as `529e1858f`, inspect final `origin/main` `45d7260c4` as non-overlapping production-smoke work, and merge it as `59af98c30` before combined-head verification.
+- [x] On merged head `59af98c30`, pass 151/151 focused, adjacent and upstream status-history tests, both TypeScript gates, lint/style/label/terms checks and a regenerated production build.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
 - [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
 

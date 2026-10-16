@@ -1397,6 +1397,7 @@ This local slice does not prove deployment, production execution, provider conne
 - The rendered regression failed against the former label-only control, then the focused and adjacent WorkWindows, window-domain, storage, reducer, Undo, label, root-lifecycle and isolation set passes 118/118.
 - TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning.
 - Aggregate design-system check passes 9 token tests and 70 design contracts. The test-backed report passes 97 contracts; audit remains at zero violations with 86 existing warnings and CSS within its ledger.
+- Slice commit `529e1858f` merges final non-overlapping `origin/main` `45d7260c4` as `59af98c30`; upstream changes only production-smoke workflow/docs and its status-history regression. The merged head passes 151/151 focused/adjacent/upstream tests, both TypeScript gates, lint and a regenerated production build.
 - Mandatory HawkScan preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` present and a local properties file detected but unread. No target, DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
