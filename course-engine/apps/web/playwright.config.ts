@@ -15,12 +15,15 @@ export default defineConfig({
   use: {
     ...devices["Desktop Chrome"],
     baseURL,
-    channel: process.env.CI ? undefined : "chrome",
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `exec env NEXT_PUBLIC_API_URL=${baseURL}/api/v1 node ./node_modules/next/dist/bin/next dev --hostname 127.0.0.1 --port 43107`,
+    command: "pnpm exec next dev --hostname 127.0.0.1 --port 43107",
+    env: {
+      ...process.env,
+      NEXT_PUBLIC_API_URL: `${baseURL}/api/v1`,
+    },
     gracefulShutdown: { signal: "SIGINT", timeout: 1_000 },
     reuseExistingServer: false,
     timeout: 120_000,
