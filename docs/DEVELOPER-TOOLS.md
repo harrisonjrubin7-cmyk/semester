@@ -28,13 +28,13 @@ the directory on exit.
 
 The public [developer-tools topic](https://github.com/topics/developer-tools)
 is volatile, so coverage is recorded against a dated snapshot rather than
-implied to be permanent. On 2026-10-15, a refreshed review of the first eleven
-topic pages displayed 220 repository cards covering 220 unique repositories.
+implied to be permanent. On 2026-10-16, a refreshed review of the first twelve
+topic pages displayed 240 repository cards covering 240 unique repositories.
 The ranking changed during the review: 21 repositories not present in the
 earlier three-page snapshot were reviewed in the page-four increment, followed
 by 20 repositories on page five, 20 on page six, 20 on page seven, 20 on page
-eight, 20 on page nine, 20 on page ten and 20 on page eleven. Every repository
-in the refreshed eleven-page snapshot is accounted for. ShellCheck closed the
+eight, 20 on page nine, 20 on page ten, 20 on page eleven and 20 on page twelve.
+Every repository in the refreshed twelve-page snapshot is accounted for. ShellCheck closed the
 standalone-script lint gap; the other repositories did not supply a new
 Semester product or CI requirement.
 
@@ -178,6 +178,15 @@ Semester product or CI requirement.
 | [modd](https://github.com/cortesi/modd) | Another filesystem watcher and process runner would duplicate Vite's development server and the repository's explicit scripts without adding deterministic build or CI evidence. |
 | [API Dash](https://github.com/foss42/apidash) | Like HTTPie, Bruno, Hoppscotch and Posting, another API client does not create the stable, owned and published API contract Semester needs first. Its generated integration code would still require independent review. |
 | [Qwen Audio Agent](https://github.com/QwenAudio/qwen-audio-agent) | A real-time voice-agent runtime would introduce audio capture, model/provider, latency, consent, retention and deployment boundaries. Semester has no approved voice-product requirement or operating path that justifies installing it. |
+| [Pro Workflow](https://github.com/rohitg00/pro-workflow), [Tons of Skills Marketplace](https://github.com/jeremylongshore/tons-of-skills-marketplace), [TeaQL Agent Kit](https://github.com/teaql/teaql-agent-kit), [Stop That Shit](https://github.com/lennney/stop-that-shit) and [pstack-claude](https://github.com/michael-denyer/pstack-claude) | Agent memory, skill, harness, hook and workflow bundles overlap Semester's reviewed development environment and repository instructions. Installing them would change agent execution or instruction boundaries without a measured product or CI gap. |
+| [powerline-go](https://github.com/justjanne/powerline-go), [Asset Catalog Tinkerer](https://github.com/insidegui/AssetCatalogTinkerer) and [Kint](https://github.com/kint-php/kint) | A shell prompt, Apple asset-catalog browser and PHP dumper are workstation or ecosystem-specific utilities. They do not serve Semester's TypeScript/Python application, build or release paths. |
+| [Convoy](https://github.com/frain-dev/convoy), [GLAuth](https://github.com/glauth/glauth) and [Djoser](https://github.com/sunscrapers/djoser) | Webhook delivery, LDAP and Django authentication are product infrastructure choices rather than general developer-tool installs. Semester has no named integration requiring these parallel services; adoption would need tenancy, identity, secrets, data-flow and lifecycle review. |
+| [Sponge](https://github.com/go-dev-frame/sponge), [React Sight](https://github.com/React-Sight/React-Sight) and [Aide](https://github.com/nicepkg/aide) | A Go service framework, a separate React visualization extension and an AI editor extension would create parallel framework or workstation paths without closing an uncovered application or CI requirement. |
+| [cargo-watch](https://github.com/watchexec/cargo-watch) | A Rust/Cargo watcher does not apply to Semester's current TypeScript and Python stacks, and the repository was archived when evaluated. |
+| [Tach](https://github.com/tach-org/tach) | Architectural dependency enforcement could become a gate only with an owned module-boundary model, baseline and failure policy. Semester has no measured Python dependency-boundary gap that justifies adding its Python/Rust toolchain today. |
+| [jcodemunch-mcp](https://github.com/jgravelle/jcodemunch-mcp) and [jevgrep](https://github.com/dzhng/jevgrep) | Agent-oriented code retrieval would create derived indexes or source-context copies. Existing repository-native search and inventories cover the current need; any persistent or external processing requires data-flow, retention, exclusion and access review. |
+| [Restfox](https://github.com/flawiddsouza/Restfox) | Like HTTPie, Bruno, Hoppscotch and Posting, another API client does not create the stable, owned and published API contract Semester needs first. |
+| [webcmd](https://github.com/agentrhq/webcmd) | A self-learning browser agent overlaps Semester's reviewed browser-development and Playwright paths while expanding browser-state, credential and execution boundaries without a measured testing gap. |
 
 Revisit a deferred tool only when a concrete product or engineering requirement
 exists, and repeat the ownership, licence, provenance, permissions, maintenance,
