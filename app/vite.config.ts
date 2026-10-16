@@ -704,9 +704,10 @@ function vercelUncovered(extra: string): string[] {
  */
 const MOCKS_MODULES = [
   'src/components/AboutMe.test.tsx',
+  'src/components/MyRules.test.tsx',
+  'src/components/ProductivityCloud.test.tsx',
   'src/components/TodayActionCenter.shadow.sources.test.tsx',
   'src/composition/react.mount.test.tsx',
-  'src/components/ProductivityCloud.test.tsx',
   'src/components/ProductivityPreparation.test.tsx',
   'src/lib/productivity-cloud.test.ts',
   'src/components/ProductivityWorkspace.test.tsx',
@@ -719,7 +720,6 @@ const MOCKS_MODULES = [
   'src/lib/courserules.account.test.tsx',
   'src/components/CourseStudio.test.tsx',
   'src/components/MembershipPanel.live.test.tsx',
-  'src/components/MyRules.test.tsx',
   'src/components/PlusPrompt.test.tsx',
   'src/components/institutional/ModulesPanel.test.tsx',
   'src/components/unity/rollout-b.test.tsx',
