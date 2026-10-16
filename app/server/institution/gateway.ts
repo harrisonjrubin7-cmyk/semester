@@ -569,8 +569,7 @@ export function createGateway(config: Config) {
       }
 
       const asked = body as { reviewId?: unknown; confirmed?: unknown };
-      // Commit needs an explicit `true`. Nothing else counts as confirmation.
-      if (!asked || (path === '/actions/commit' && asked.confirmed !== true) || typeof asked.reviewId !== 'string') {
+      if (!asked || typeof asked.reviewId !== 'string') {
         fail(400, 'Confirm the reviewed action before continuing.');
       }
       const row = await config.journal.get(asked.reviewId as string, who);
@@ -602,6 +601,12 @@ export function createGateway(config: Config) {
       }
 
       const commit = async (): Promise<Receipt> => {
+        // Commit needs an explicit `true`. Keeping this deterministic refusal
+        // inside the idempotency lease makes a keyed retry replay the same
+        // decision without weakening the confirmation requirement.
+        if (asked.confirmed !== true) {
+          fail(400, 'Confirm the reviewed action before continuing.');
+        }
         // Completed and pending rows already have the institution's answer.
         // Returning that exact receipt is safe and lets the idempotency layer
         // persist the legacy journal outcome on the first keyed retry.
@@ -686,10 +691,10 @@ export function createGateway(config: Config) {
       };
 
       const idempotencyKey = context.request?.idempotencyKey;
-      if (idempotencyKey) {
-        if (!config.idempotency) {
-          fail(503, 'Durable replay protection is unavailable. Nothing was sent.', 'idempotency_unavailable');
-        }
+      if (idempotencyKey && !config.idempotency) {
+        fail(503, 'Durable replay protection is unavailable. Nothing was sent.', 'idempotency_unavailable');
+      }
+      if (idempotencyKey && config.idempotency) {
         const requestContext = context.request!;
         const command = 'institution.action.commit';
         const scope = {
