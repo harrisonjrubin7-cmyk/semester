@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
-import { act } from 'react';
+import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadSeed } from '../data/seed';
 import { STORAGE_KEY } from '../state/shape';
-import { StoreProvider } from '../state/store';
+import { StoreProvider, useStore, type State } from '../state/store';
 import { EMERGENCY_GUIDANCE, newMaintenance, type MaintenanceRequest } from '../lib/maintenance';
 import { MaintenanceRequests } from './MaintenanceRequests';
 
@@ -21,6 +21,13 @@ import { MaintenanceRequests } from './MaintenanceRequests';
 const NOW = new Date(2026, 9, 12, 9, 0);
 let host: HTMLDivElement;
 let root: Root;
+let stateNow: State;
+
+function Snapshot() {
+  const { state } = useStore();
+  useEffect(() => { stateNow = state; }, [state]);
+  return null;
+}
 
 const seed = (maintenance: MaintenanceRequest[] = []) =>
   localStorage.setItem(
@@ -72,7 +79,7 @@ afterEach(async () => {
 });
 
 const render = async () => {
-  await act(async () => root.render(<StoreProvider><MaintenanceRequests /></StoreProvider>));
+  await act(async () => root.render(<StoreProvider><MaintenanceRequests /><Snapshot /></StoreProvider>));
 };
 const button = (name: string | RegExp) =>
   [...host.querySelectorAll('button')].find((b) => (typeof name === 'string' ? b.textContent?.trim() === name : name.test(b.textContent ?? '')));
@@ -104,7 +111,7 @@ const choose = async (label: string, value: string) => {
     el.dispatchEvent(new Event('change', { bubbles: true }));
   });
 };
-const stored = () => JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}').maintenance[0];
+const stored = () => stateNow.maintenance[0];
 
 describe('MaintenanceRequests', () => {
   it('starts empty, says Semester sends nothing, and offers to record a repair', async () => {
@@ -150,7 +157,7 @@ describe('MaintenanceRequests', () => {
     expect(list?.textContent).toContain('Heater clicks all night');
     expect(list?.textContent).toContain('Reference WO-77');
     expect(list?.textContent).toContain('not a promise from housing');
-    expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}').maintenance ?? null).not.toBeNull();
+    expect(stateNow.maintenance).toHaveLength(1);
   });
 
   it('asks before recording the same ticket twice', async () => {
@@ -213,7 +220,7 @@ describe('MaintenanceRequests, review findings on #1501', () => {
     seed([existing({ checkBackAt: NOW.getTime() - 60_000 })]);
     await render();
     await click('Remind me tomorrow');
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}').maintenance[0];
+    const saved = stored();
     expect(saved.checkBackAt).toBe(new Date(2026, 9, 13, 9, 0).getTime());
   });
 
@@ -232,7 +239,7 @@ describe('MaintenanceRequests, review findings on #1501', () => {
     expect(room.value).toHaveLength(40);
     await type('What is wrong', 'Window will not close');
     await click('Save repair');
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}').maintenance[0];
+    const saved = stored();
     expect(saved.room).toBe(room.value);
   });
 

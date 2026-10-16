@@ -40,6 +40,7 @@ import { useStore } from '../state/store';
 
 let host: HTMLDivElement;
 let root: Root;
+let stateNow: ReturnType<typeof useStore>['state'];
 
 beforeAll(async () => {
   await loadSeed();
@@ -89,7 +90,8 @@ function Heard() {
   const { state } = useStore();
   useEffect(() => {
     said = state.said ?? '';
-  }, [state.said]);
+    stateNow = state;
+  }, [state]);
   return null;
 }
 
@@ -112,11 +114,8 @@ async function blur(box: HTMLInputElement): Promise<void> {
 const boxesFor = (what: RegExp): HTMLInputElement[] =>
   [...host.querySelectorAll('input')].filter((i) => what.test(i.getAttribute('aria-label') ?? ''));
 
-/** What `state.grades` holds right now, straight out of storage. */
-const stored = (): Record<string, string> => {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  return raw ? ((JSON.parse(raw) as { grades?: Record<string, string> }).grades ?? {}) : {};
-};
+/** What `state.grades` holds in the mounted account right now. */
+const stored = () => stateNow.grades;
 
 describe('the block itself', () => {
   it('is on the screen, and says it keeps nothing', () => {

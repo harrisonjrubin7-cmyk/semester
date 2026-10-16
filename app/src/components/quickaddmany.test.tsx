@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { act } from 'react';
+import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { StoreProvider } from '../state/store';
+import { StoreProvider, useStore, type State } from '../state/store';
 import { loadSeed } from '../data/seed';
 import { STORAGE_KEY } from '../state/shape';
 import { QuickAdd } from './QuickAdd';
@@ -41,6 +41,13 @@ import { QuickAdd } from './QuickAdd';
 
 let host: HTMLDivElement;
 let root: Root;
+let stateNow: State;
+
+function Snapshot() {
+  const { state } = useStore();
+  useEffect(() => { stateNow = state; }, [state]);
+  return null;
+}
 
 beforeAll(async () => {
   // jsdom has no `matchMedia`, and the box asks for one to know whether it is
@@ -65,6 +72,7 @@ beforeEach(async () => {
     root.render(
       <StoreProvider>
         <QuickAdd onClose={() => {}} />
+        <Snapshot />
       </StoreProvider>,
     );
   });
@@ -90,12 +98,8 @@ async function typeIn(value: string): Promise<void> {
 const buttons = (label: string): HTMLButtonElement[] =>
   [...host.querySelectorAll('button')].filter((b) => (b.textContent ?? '').trim() === label);
 
-/** The tasks the app has actually written, straight out of storage. */
-const tasks = (): { title: string; date: string | null; courseId: string | null }[] => {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return [];
-  return (JSON.parse(raw) as { tasks?: typeof tasks extends never ? never : never[] }).tasks ?? [];
-};
+/** The tasks the mounted app has actually accepted. */
+const tasks = () => stateNow.tasks;
 
 describe('one thing, which is what this box is for', () => {
   it('uses a themed, touch-sized capture action and a reachable close control', () => {

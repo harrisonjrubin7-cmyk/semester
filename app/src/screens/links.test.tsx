@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { act } from 'react';
+import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { StoreProvider } from '../state/store';
+import { StoreProvider, useStore, type State } from '../state/store';
 import { STORAGE_KEY } from '../state/shape';
 import { loadSeed } from '../data/seed';
 import { OWN_GROUP } from '../lib/linkgroups';
@@ -22,6 +22,13 @@ import { Links } from './Links';
 
 let host: HTMLDivElement;
 let root: Root;
+let stateNow: State;
+
+function Snapshot() {
+  const { state } = useStore();
+  useEffect(() => { stateNow = state; }, [state]);
+  return null;
+}
 
 const mount = async (extraLinks: CampusLink[] = []) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 6, extraLinks }));
@@ -29,6 +36,7 @@ const mount = async (extraLinks: CampusLink[] = []) => {
     root.render(
       <StoreProvider>
         <Links />
+        <Snapshot />
       </StoreProvider>,
     );
   });
@@ -131,7 +139,7 @@ describe('headings a student names', () => {
     await type('Which group it goes under', 'Housing');
     await press('Add it');
 
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)!).extraLinks;
+    const saved = stateNow.extraLinks;
     expect(saved).toHaveLength(1);
     expect(saved[0].group).toBe('Housing');
     expect(under('Housing')).toEqual(['Landlord']);
@@ -141,7 +149,7 @@ describe('headings a student names', () => {
     await type('Its address', 'gym.example.com');
     await press('Add it');
 
-    const both = JSON.parse(localStorage.getItem(STORAGE_KEY)!).extraLinks;
+    const both = stateNow.extraLinks;
     // Left off the record rather than written in, so the default lives in one
     // place — see `groupName` in `lib/linkgroups.ts`.
     expect(both[1].group).toBeUndefined();
@@ -171,9 +179,9 @@ describe('re-filing a link you already added', () => {
     expect(under('Housing')).toEqual(['Gym']);
     expect(under('Rent')).toEqual(['Landlord']);
 
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)!).extraLinks;
-    expect(saved.find((l: CampusLink) => l.name === 'Landlord').group).toBe('Rent');
-    expect(saved.find((l: CampusLink) => l.name === 'Landlord').url).toBe('https://landlord.example.edu');
+    const saved = stateNow.extraLinks;
+    const landlord = saved.find((l: CampusLink) => l.name === 'Landlord');
+    expect(landlord).toMatchObject({ group: 'Rent', url: 'https://landlord.example.edu' });
   });
 
   /*
@@ -189,7 +197,7 @@ describe('re-filing a link you already added', () => {
     const box = host.querySelector<HTMLInputElement>('input[aria-label="Gym group"]');
     expect(box?.value).toBe('');
     await press('Save');
-    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).extraLinks[0].group).toBeUndefined();
+    expect(stateNow.extraLinks[0].group).toBeUndefined();
     expect(under(OWN_GROUP)).toEqual(['Gym']);
   });
 
@@ -203,7 +211,7 @@ describe('re-filing a link you already added', () => {
 
     expect(headings()).not.toContain('Sport');
     expect(under(OWN_GROUP)).toEqual(['Gym']);
-    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).extraLinks[0].group).toBeUndefined();
+    expect(stateNow.extraLinks[0].group).toBeUndefined();
   });
 
   /*

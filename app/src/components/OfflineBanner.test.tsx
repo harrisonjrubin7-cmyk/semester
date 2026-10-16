@@ -26,12 +26,14 @@ const flag = MODULE_FLAGS.offline_mode;
 let host: HTMLDivElement;
 let root: Root;
 let dispatchRef: ReturnType<typeof useStore>['dispatch'] | null = null;
+let stateNow: ReturnType<typeof useStore>['state'];
 
 function Probe() {
-  const { dispatch } = useStore();
+  const { dispatch, state } = useStore();
   useEffect(() => {
     dispatchRef = dispatch;
-  });
+    stateNow = state;
+  }, [dispatch, state]);
   return null;
 }
 
@@ -91,16 +93,18 @@ describe('the badge', () => {
 });
 
 describe('a change made offline', () => {
-  it('is saved on the device at once, and synced when the connection comes back', async () => {
+  it('stays in the mounted account and syncs when the connection comes back', async () => {
     const syncNow = vi.fn(async () => '');
     await render(<OfflineBanner signedIn syncNow={syncNow} />);
     await goOnline(false);
     await act(async () => dispatchRef!({ type: 'addTask', task: { title: 'Written on the train', date: '2026-10-02', time: '', courseId: null, note: '' } } as never));
-    // Saved on this device, with no network.
+    // Accepted by the mounted account, with no network. IndexedDB durability
+    // is covered by the persistence tests; this component test mounts without
+    // the application bootstrap that opens that database.
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50));
     });
-    expect(localStorage.getItem(STORAGE_KEY)).toContain('Written on the train');
+    expect(stateNow.tasks.map((task) => task.title)).toContain('Written on the train');
     expect(JSON.parse(localStorage.getItem(LEDGER)!).unsyncedSince).not.toBeNull();
     expect(syncNow).not.toHaveBeenCalled();
     await goOnline(true);

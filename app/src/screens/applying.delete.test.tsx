@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
-import { act } from 'react';
+import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadSeed } from '../data/seed';
 import type { Application } from '../lib/apply';
-import { StoreProvider } from '../state/store';
+import { StoreProvider, useStore, type State } from '../state/store';
 import { STORAGE_KEY } from '../state/shape';
 import { Applying } from './Applying';
 
@@ -29,6 +29,13 @@ const application: Application = {
 
 let host: HTMLDivElement;
 let root: Root;
+let stateNow: State;
+
+function Snapshot() {
+  const { state } = useStore();
+  useEffect(() => { stateNow = state; }, [state]);
+  return null;
+}
 
 const press = async (label: string) => {
   const button = [...host.querySelectorAll('button')].find((item) => item.textContent?.trim().startsWith(label));
@@ -48,7 +55,7 @@ beforeEach(async () => {
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
-  await act(async () => root.render(<StoreProvider><Applying /></StoreProvider>));
+  await act(async () => root.render(<StoreProvider><Applying /><Snapshot /></StoreProvider>));
 });
 
 afterEach(async () => {
@@ -74,11 +81,11 @@ describe('application deletion', () => {
 
     await press('Cancel');
     expect(host.textContent).toContain('Acme Analytics');
-    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).applications).toHaveLength(1);
+    expect(stateNow.applications).toHaveLength(1);
 
     await press('Delete');
     await press('Delete application');
     expect(host.textContent).not.toContain('Acme Analytics');
-    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).applications).toHaveLength(0);
+    expect(stateNow.applications).toHaveLength(0);
   });
 });

@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { act } from 'react';
+import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { StoreProvider } from '../state/store';
-import { STORAGE_KEY } from '../state/shape';
+import { StoreProvider, useStore, type State } from '../state/store';
 import { loadSeed } from '../data/seed';
 import {
   EMPTY_CAREER,
@@ -33,6 +32,13 @@ const PATHWAY_KEY = 'semester.pathway.v1:device';
 
 let host: HTMLDivElement;
 let root: Root;
+let stateNow: State;
+
+function Snapshot() {
+  const { state } = useStore();
+  useEffect(() => { stateNow = state; }, [state]);
+  return null;
+}
 
 beforeAll(async () => {
   await loadSeed();
@@ -48,6 +54,7 @@ const mount = async (lib: Partial<CareerLibrary> = {}, education = '') => {
     root.render(
       <StoreProvider>
         <Career careerSkillsGraph />
+        <Snapshot />
       </StoreProvider>,
     );
   });
@@ -258,8 +265,7 @@ describe('drafting a message to a contact', () => {
     await press('Draft an outreach message');
     // The draft is a document in Write, the way "Prepare" and the cover letter
     // already are. Nothing about the contact changed, and nothing was sent.
-    const written = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
-    const titles = (written.documents ?? []).map((d: { title: string }) => d.title);
+    const titles = stateNow.documents.map((document) => document.title);
     expect(titles).toContain('Messages to Priya');
     expect(JSON.parse(localStorage.getItem(KEY)!).contacts).toHaveLength(1);
   });
