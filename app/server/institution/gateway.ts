@@ -14,11 +14,15 @@ import {
   type UserAction,
 } from '../../../packages/institution/src/index.ts';
 import {
+  IDEMPOTENCY_TTL_EXTENDED_MS,
   PlatformError,
   errorResponse,
   isPlatformError,
   resolveCorrelationId,
+  systemClock,
+  withIdempotency,
   type ErrorEnvelope as PlatformErrorEnvelope,
+  type IdempotencyStore,
 } from '../../../packages/platform/src/index.ts';
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
 import { contextFor } from './context.ts';
@@ -93,6 +97,8 @@ interface Config {
   refreshIdentity?: (identity: UniversityIdentity, token: string) => Promise<UniversityIdentity | null>;
   adapters: InstitutionAdapter[];
   journal: ActionJournalStore;
+  /** Durable command replay storage. Required by `/actions/commit`. */
+  idempotency?: IdempotencyStore;
   intelligence?: IntelligenceService;
   loadSsoConfig?: () => Promise<PublicSsoConfig | null>;
   rateLimiter?: RateLimiter;
@@ -559,6 +565,7 @@ export function createGateway(config: Config) {
         return Response.json(review, { headers });
       }
 
+      const handleAction = async (): Promise<Response> => {
       const asked = body as { reviewId?: unknown; confirmed?: unknown };
       // Commit needs an explicit `true`. Nothing else counts as confirmation.
       if (!asked || (path === '/actions/commit' && asked.confirmed !== true) || typeof asked.reviewId !== 'string') {
@@ -695,6 +702,28 @@ export function createGateway(config: Config) {
           { label: 'Ask the institution to reconcile', kind: 'contact_support' },
         );
       }
+      };
+
+      if (path === '/actions/commit') {
+        if (!config.idempotency) fail(503, 'Durable command replay is not configured.');
+        const requestContext = context.request;
+        if (!requestContext) fail(503, 'The verified request context is unavailable.');
+        const result = await withIdempotency(
+          config.idempotency,
+          { clock: systemClock },
+          requestContext,
+          'institution.action.commit',
+          body,
+          async () => {
+            const response = await handleAction();
+            return await response.json() as unknown;
+          },
+          { ttlMs: IDEMPOTENCY_TTL_EXTENDED_MS },
+        );
+        if (result.replayed) headers.set('Idempotent-Replayed', 'true');
+        return Response.json(result.value, { headers });
+      }
+      return await handleAction();
     } catch (e) {
       /*
        * Three kinds of thrown thing, and the middle one used to be lost.

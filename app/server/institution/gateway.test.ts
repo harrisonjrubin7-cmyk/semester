@@ -188,6 +188,7 @@ function fixture({
     refreshIdentity: async (current) => membershipActive ? { ...current, roles: membershipRoles } : null,
     adapters: [adapter],
     journal: journalStore,
+    idempotency: journal,
     loadSsoConfig: async () => ({ enabled: true, label: 'Vanderbilt', domain: 'vanderbilt.edu' }),
     intelligence: {
       status: 'configured-sandbox',
@@ -212,6 +213,7 @@ function fixture({
     fields: { response: 'Private coursework response' },
   };
 
+  let requestNumber = 0;
   const request = async (path: string, body?: unknown, headers: Record<string, string> = {}) =>
     gateway(
       new Request(`http://local${path}`, {
@@ -220,6 +222,7 @@ function fixture({
           origin: 'http://localhost:5173',
           authorization: 'Bearer test-token',
           'content-type': 'application/json',
+          'idempotency-key': `gateway-request-${String(++requestNumber).padStart(4, '0')}`,
           ...headers,
         },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -483,8 +486,21 @@ describe('university gateway boundaries', () => {
     const f = fixture();
     const r = await f.prepare();
     const body = { reviewId: r.id, confirmed: true };
-    expect((await f.request('/actions/commit', body)).status).toBe(200);
-    expect((await (await f.request('/actions/commit', body)).json()).id).toBe('receipt-1');
+    const idempotency = { 'idempotency-key': 'commit-replay-key-0001' };
+    expect((await f.request('/actions/commit', body, idempotency)).status).toBe(200);
+    const replay = await f.request('/actions/commit', body, idempotency);
+    expect((await replay.json()).id).toBe('receipt-1');
+    expect(replay.headers.get('idempotent-replayed')).toBe('true');
+    expect(f.calls()).toBe(1);
+
+    const another = await f.prepare();
+    const conflict = await f.request(
+      '/actions/commit',
+      { reviewId: another.id, confirmed: true },
+      idempotency,
+    );
+    expect(conflict.status).toBe(422);
+    expect((await conflict.json()).error.code).toBe('idempotency_key_reused');
     expect(f.calls()).toBe(1);
 
     // The WAL too: a row can sit there unmerged, and plaintext in it is plaintext on disk.
