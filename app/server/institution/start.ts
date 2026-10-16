@@ -2,6 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { ActionJournal, type ActionJournalStore } from './journal.ts';
+import type { IdempotencyStore } from '../../../packages/platform/src/index.ts';
 import { PostgresActionJournal } from './postgres-journal.ts';
 import { MemoryRateLimiter, PostgresRateLimiter } from './rate-limit.ts';
 import { MemoryIntelligenceActionStore, PostgresIntelligenceActionStore } from './intelligence-action-store.ts';
@@ -156,7 +157,7 @@ const sharedStore = process.env.SEMESTER_GATEWAY_STORE === 'postgres';
 if (sharedStore && (!authUrl || !authServiceKey)) {
   throw new Error('SEMESTER_GATEWAY_STORE=postgres requires SEMESTER_AUTH_URL and SEMESTER_AUTH_SERVICE_KEY.');
 }
-const journal: ActionJournalStore = sharedStore
+const journal: ActionJournalStore & IdempotencyStore = sharedStore
   ? new PostgresActionJournal({ url: authUrl, serviceKey: authServiceKey, encryptionKey: key })
   : openJournal(key);
 const rateLimiter = sharedStore
@@ -235,6 +236,7 @@ const handler = createGateway({
   refreshIdentity: async (_identity, token) => authenticate(token),
   adapters: installed,
   journal,
+  idempotency: journal,
   rateLimiter,
   intelligence,
   loadSsoConfig,
