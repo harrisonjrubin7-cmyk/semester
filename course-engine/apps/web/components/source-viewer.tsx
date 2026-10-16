@@ -76,18 +76,19 @@ export function SourceViewer({ fileId, filename, onClose }: { fileId: string; fi
         source.refetch(),
         client.invalidateQueries({ queryKey: ["reviews"] }),
         client.invalidateQueries({ queryKey: ["course"] }),
+        client.invalidateQueries({ queryKey: ["assets"] }),
       ]);
     },
   });
 
   useEffect(() => {
     if (selectedChunkId || !source.data) return;
-    const firstLocatedChunk = source.data.chunks.find((chunk) => chunk.bounding_box && chunk.page_number);
+    const firstLocatedChunk = source.data.chunks.find((chunk) => chunk.preview_available && chunk.bounding_box && chunk.page_number);
     if (firstLocatedChunk) setSelectedChunkId(firstLocatedChunk.id);
   }, [selectedChunkId, source.data]);
 
   useEffect(() => {
-    if (!selectedChunk?.bounding_box || !selectedChunk.page_number) {
+    if (!selectedChunk?.preview_available || !selectedChunk.bounding_box || !selectedChunk.page_number) {
       setPreviewUrl("");
       setPreviewError("");
       return;
@@ -110,7 +111,7 @@ export function SourceViewer({ fileId, filename, onClose }: { fileId: string; fi
       controller.abort();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [fileId, selectedChunk?.bounding_box, selectedChunk?.page_number]);
+  }, [fileId, selectedChunk?.bounding_box, selectedChunk?.page_number, selectedChunk?.preview_available]);
 
   function beginCorrection(chunk: SourceChunk) {
     setEditingChunkId(chunk.id);
@@ -179,7 +180,7 @@ export function SourceViewer({ fileId, filename, onClose }: { fileId: string; fi
         {source.data ? <div className="p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex flex-wrap items-center gap-2"><SourceStatusBadge status={source.data.document.status} /><span className="muted text-xs">{source.data.total} extracted section{source.data.total === 1 ? "" : "s"}</span></div><button className="button button-secondary" disabled={downloading} onClick={() => void downloadOriginal()} type="button"><Download aria-hidden="true" size={17} />{downloading ? "Preparing…" : "Download original"}</button></div>
           {downloadError ? <p className="mt-3 text-sm text-[color:var(--danger)]" role="alert">{downloadError}</p> : null}
-          {selectedChunk?.bounding_box && selectedChunk.page_number ? <section aria-label={`Page ${selectedChunk.page_number} source preview`} className="panel mt-6 overflow-hidden p-4 sm:p-5">
+          {selectedChunk?.preview_available && selectedChunk.bounding_box && selectedChunk.page_number ? <section aria-label={`Page ${selectedChunk.page_number} source preview`} className="panel mt-6 overflow-hidden p-4 sm:p-5">
             <div className="mb-4 flex items-center justify-between gap-3"><div><p className="eyebrow">Exact source highlight</p><p className="mt-1 text-sm font-medium">Page {selectedChunk.page_number}</p></div><ScanSearch aria-hidden="true" className="text-[color:var(--semester-700)]" size={20} /></div>
             {previewUrl ? <div className="relative mx-auto max-w-3xl overflow-hidden rounded border border-[color:var(--border-strong)] bg-white"><img alt={`Page ${selectedChunk.page_number} of ${filename}`} className="block h-auto w-full" src={previewUrl} /><span aria-hidden="true" className="absolute border-2 border-[color:var(--semester-700)] bg-[color:var(--semester-100)]/40 shadow-[0_0_0_2px_rgba(255,255,255,0.75)]" data-testid="source-highlight" style={normalizedBoundingBoxStyle(selectedChunk.bounding_box)} /></div> : <div aria-live="polite" className="skeleton mx-auto aspect-[3/4] max-w-3xl" />}
             {previewError ? <p className="mt-3 text-sm text-[color:var(--danger)]" role="alert">{previewError}</p> : null}
@@ -195,7 +196,7 @@ export function SourceViewer({ fileId, filename, onClose }: { fileId: string; fi
                 <div className="flex flex-wrap gap-2"><button className="button button-primary" disabled={correctionMutation.isPending || !correction.trim() || !correctionNote.trim()} onClick={() => submitCorrection(chunk)} type="button"><Check aria-hidden="true" size={16} />Confirm correction</button><button className="button button-secondary" disabled={correctionMutation.isPending} onClick={() => setEditingChunkId(null)} type="button">Cancel</button></div>
                 {correctionMutation.isError ? <p className="text-sm text-[color:var(--danger)]" role="alert">{correctionMutation.error instanceof Error ? correctionMutation.error.message : "Correction could not be saved."}</p> : null}
               </div> : <div className="mt-5 flex flex-wrap gap-2 border-t border-[color:var(--border-default)] pt-4">
-                {chunk.bounding_box && chunk.page_number ? <button aria-pressed={selectedChunkId === chunk.id} className="button button-secondary" onClick={() => setSelectedChunkId(chunk.id)} type="button"><ScanSearch aria-hidden="true" size={16} />Show exact location</button> : null}
+                {chunk.preview_available && chunk.bounding_box && chunk.page_number ? <button aria-pressed={selectedChunkId === chunk.id} className="button button-secondary" onClick={() => setSelectedChunkId(chunk.id)} type="button"><ScanSearch aria-hidden="true" size={16} />Show exact location</button> : null}
                 <button className="button button-secondary" disabled={!chunk.review_item_id} onClick={() => beginCorrection(chunk)} type="button"><PencilLine aria-hidden="true" size={16} />Correct extraction</button>
               </div>}
             </article>)}

@@ -24,6 +24,7 @@ describe("source correction", () => {
       return { status: "confirmed" } as never;
     });
     const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+    const invalidate = vi.spyOn(client, "invalidateQueries");
     render(<QueryClientProvider client={client}><SourceViewer fileId="file-1" filename="notes.txt" onClose={vi.fn()} /></QueryClientProvider>);
 
     fireEvent.click(await screen.findByRole("button", { name: "Correct extraction" }));
@@ -41,5 +42,6 @@ describe("source correction", () => {
         corrected_payload: { content: "Corrected text" },
       }),
     }));
+    await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: ["assets"] }));
   });
 });

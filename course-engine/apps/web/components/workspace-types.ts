@@ -100,6 +100,7 @@ export type SourceChunk = {
   } | null;
   review_item_id?: string | null;
   review_status?: string | null;
+  preview_available?: boolean;
   confidence: number | null;
 };
 

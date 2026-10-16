@@ -101,6 +101,7 @@ def test_course_ownership_boundary_returns_not_found_for_other_user(monkeypatch,
         assert source.json()["chunks"][0]["page_number"] == 1
         assert source.json()["chunks"][0]["content"] == "Office hours are Tuesday at 2 PM."
         assert source.json()["chunks"][0]["bounding_box"]["x"] == 0.1
+        assert source.json()["chunks"][0]["preview_available"] is True
         assert source.json()["chunks"][0]["review_item_id"] == str(extracted_review_id)
         assert source.json()["has_more"] is False
         assert client.get(f"/api/v1/files/{document_id}/source-view", headers=second_headers).status_code == 404
@@ -111,7 +112,11 @@ def test_course_ownership_boundary_returns_not_found_for_other_user(monkeypatch,
             page = pdf.new_page()
             page.insert_text((72, 72), "Office hours are Tuesday at 2 PM.")
             pdf.save(pdf_path)
-        monkeypatch.setattr(api_routes.storage, "path", lambda _storage_key: pdf_path)
+        monkeypatch.setattr(
+            api_routes.storage,
+            "read_bytes",
+            lambda _storage_key, *, max_bytes: pdf_path.read_bytes(),
+        )
         preview = client.get(
             f"/api/v1/files/{document_id}/pages/1/preview",
             headers=first_headers,
@@ -128,6 +133,20 @@ def test_course_ownership_boundary_returns_not_found_for_other_user(monkeypatch,
             f"/api/v1/files/{document_id}/pages/2/preview",
             headers=first_headers,
         ).status_code == 404
+
+        with testing_session() as session:
+            archive = session.get(SourceDocument, document_id)
+            archive.filename = "course-materials.zip"
+            session.commit()
+        archive_source = client.get(
+            f"/api/v1/files/{document_id}/source-view",
+            headers=first_headers,
+        )
+        assert archive_source.json()["chunks"][0]["preview_available"] is False
+        assert client.get(
+            f"/api/v1/files/{document_id}/pages/1/preview",
+            headers=first_headers,
+        ).status_code == 415
 
         with testing_session() as session:
             review = ReviewItem(
