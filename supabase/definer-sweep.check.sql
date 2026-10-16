@@ -78,6 +78,7 @@ begin
     when 'bigint' then '1::bigint'
     when 'numeric' then '1::numeric'
     when 'timestamp with time zone' then 'now()'
+    when 'time without time zone' then quote_literal('00:00') || '::time'
     when 'date' then 'current_date'
     else null
   end;
