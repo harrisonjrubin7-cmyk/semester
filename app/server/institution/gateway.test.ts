@@ -11,6 +11,7 @@ import {
   Refusal,
   type UniversityRecord,
 } from '../../../packages/institution/src/index.ts';
+import { hashOf } from '../../../packages/platform/src/index.ts';
 import type { InstitutionAdapter } from './adapter.ts';
 import { trustedIdentity } from './auth.ts';
 import { createGateway } from './gateway.ts';
@@ -417,6 +418,8 @@ describe('university gateway boundaries', () => {
     expect(response.headers.get('access-control-allow-methods')).toBe('GET, POST, OPTIONS');
     expect(response.headers.get('access-control-allow-headers'))
       .toBe('Authorization, Content-Type, Idempotency-Key, X-Correlation-Id');
+    expect(response.headers.get('access-control-expose-headers'))
+      .toBe('X-Request-Id, X-Correlation-Id, Idempotent-Replayed, Retry-After');
   });
 
   it('keeps unconfigured services unavailable without inventing records', async () => {
@@ -529,6 +532,32 @@ describe('university gateway boundaries', () => {
     );
     expect(committed.status).toBe(200);
     expect(f.executedIdempotencyKey()).toBe(key);
+  });
+
+  it('marks replayed refusals and publishes the active lease retry delay', async () => {
+    const f = fixture();
+    const review = await f.prepare();
+    const key = 'commit-refusal-key-0001';
+    const unconfirmed = { reviewId: review.id };
+    expect((await f.request('/actions/commit', unconfirmed, { 'idempotency-key': key })).status).toBe(400);
+    const refusedReplay = await f.request('/actions/commit', unconfirmed, { 'idempotency-key': key });
+    expect(refusedReplay.status).toBe(400);
+    expect(refusedReplay.headers.get('idempotent-replayed')).toBe('true');
+
+    const activeKey = 'commit-active-key-00001';
+    const body = { reviewId: review.id, confirmed: true };
+    const command = 'institution.action.commit';
+    await f.journal.begin(
+      { tenantId: actor.institutionId, actorId: actor.userId, command, key: activeKey },
+      await hashOf({ command, body }),
+      new Date(),
+      60_000,
+      7 * 86_400_000,
+    );
+    const inProgress = await f.request('/actions/commit', body, { 'idempotency-key': activeKey });
+    expect(inProgress.status).toBe(409);
+    expect(Number(inProgress.headers.get('retry-after'))).toBeGreaterThan(0);
+    expect(f.calls()).toBe(0);
   });
 
   it('serializes concurrent confirmations across durable claims', async () => {

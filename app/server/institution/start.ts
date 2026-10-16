@@ -235,7 +235,7 @@ const handler = createGateway({
   refreshIdentity: async (_identity, token) => authenticate(token),
   adapters: installed,
   journal,
-  idempotency: journal,
+  ...(sharedStore ? {} : { idempotency: journal }),
   rateLimiter,
   intelligence,
   loadSsoConfig,

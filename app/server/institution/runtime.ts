@@ -103,7 +103,6 @@ export function createProductionInstitutionRuntime(
     refreshIdentity: async (_identity, token) => authenticate(token),
     adapters,
     journal,
-    idempotency: journal,
     rateLimiter,
     intelligence,
     registrationReadiness,

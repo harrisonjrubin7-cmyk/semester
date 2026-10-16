@@ -15,12 +15,14 @@ import {
 } from '../../../packages/institution/src/index.ts';
 import {
   IDEMPOTENCY_TTL_EXTENDED_MS,
+  IDEMPOTENCY_LEASE_MS,
   PlatformError,
   errorResponse,
+  hashOf,
+  isDeterministicRefusal,
   isPlatformError,
   resolveCorrelationId,
   systemClock,
-  withIdempotency,
   type ErrorEnvelope as PlatformErrorEnvelope,
   type IdempotencyStore,
 } from '../../../packages/platform/src/index.ts';
@@ -244,7 +246,7 @@ export function createGateway(config: Config) {
     if (origin) {
       headers.set('Access-Control-Allow-Origin', origin);
       // Without this a browser client can send the id but never read it back.
-      headers.set('Access-Control-Expose-Headers', 'X-Request-Id, X-Correlation-Id');
+      headers.set('Access-Control-Expose-Headers', 'X-Request-Id, X-Correlation-Id, Idempotent-Replayed, Retry-After');
     }
     if (request.method === 'OPTIONS') {
       headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, Idempotency-Key, X-Correlation-Id');
@@ -704,22 +706,58 @@ export function createGateway(config: Config) {
       }
       };
 
-      if (path === '/actions/commit' && context.request?.idempotencyKey) {
-        if (!config.idempotency) fail(503, 'Durable command replay is not configured.');
-        const result = await withIdempotency(
-          config.idempotency,
-          { clock: systemClock },
-          context.request,
-          'institution.action.commit',
-          body,
-          async () => {
-            const response = await handleAction();
-            return await response.json() as unknown;
-          },
-          { ttlMs: IDEMPOTENCY_TTL_EXTENDED_MS },
+      const idempotencyKey = context.request?.idempotencyKey;
+      if (path === '/actions/commit' && idempotencyKey && config.idempotency) {
+        const requestContext = context.request!;
+        const command = 'institution.action.commit';
+        const scope = {
+          tenantId: requestContext.tenantId,
+          actorId: requestContext.actor.personId,
+          command,
+          key: idempotencyKey,
+        };
+        const begun = await config.idempotency.begin(
+          scope,
+          await hashOf({ command, body }),
+          systemClock.now(),
+          IDEMPOTENCY_LEASE_MS,
+          IDEMPOTENCY_TTL_EXTENDED_MS,
         );
-        if (result.replayed) headers.set('Idempotent-Replayed', 'true');
-        return Response.json(result.value, { headers });
+        if (begun.kind === 'conflict') {
+          fail(422, 'That Idempotency-Key was already used for a different request.', 'idempotency_key_reused');
+        }
+        if (begun.kind === 'in_progress') {
+          headers.set('Retry-After', String(begun.retryAfterSeconds));
+          fail(409, 'The first attempt of this request is still running.', 'idempotency_in_progress');
+        }
+        if (begun.kind === 'replay') {
+          headers.set('Idempotent-Replayed', 'true');
+          return Response.json(begun.response.body, { status: begun.response.status, headers });
+        }
+        try {
+          const response = await handleAction();
+          const value = await response.json() as unknown;
+          const owned = await config.idempotency.complete(
+            scope,
+            begun.leaseId,
+            { status: response.status, body: value },
+            systemClock.now(),
+          );
+          if (!owned) fail(409, 'This request lost its idempotency lease. Retry with the same key.', 'idempotency_in_progress');
+          return Response.json(value, { status: response.status, headers });
+        } catch (error) {
+          const cacheable = isPlatformError(error) && isDeterministicRefusal(error) && error.status !== 409;
+          const owned = cacheable
+            ? await config.idempotency.complete(
+                scope,
+                begun.leaseId,
+                { status: error.status, body: errorResponse(error, correlationId).body },
+                systemClock.now(),
+              )
+            : await config.idempotency.release(scope, begun.leaseId);
+          if (!owned) fail(409, 'This request lost its idempotency lease. Retry with the same key.', 'idempotency_in_progress');
+          throw error;
+        }
       }
       return await handleAction();
     } catch (e) {
