@@ -1,4 +1,4 @@
-# Verification report — 2026-10-11
+# Verification report — through 2026-10-16
 
 ## Passed
 
@@ -8,7 +8,8 @@
 - `pnpm run typecheck`: passed.
 - `pnpm run build`: passed; all 15 course workspace routes compiled.
 - `pnpm test`: 28 frontend tests passed across eleven files, including the shell, command-palette focus, source/status vocabulary and locations, review correction and asset-cache refresh, calendar consequence preview/exact undo, upload job progress/cancellation/retry, card recall, validated cited guide rendering, authenticated document export lifecycle, quiz completion, rejected-asset exclusion, operational states, semantic token contracts, and an axe ready-state scan.
-- Rendered smoke check: the built landing route rendered at the default desktop viewport and at 320 px without visible horizontal overflow.
+- `pnpm run test:e2e`: 4 production-mode system-Chrome tests passed against deterministic API fixtures. They cover a zero-violation axe scan, 1440/390/320 px document-overflow checks, reviewed desktop/mobile screenshots, source-sheet focus and dismissal, review confirmation, calendar consequence preview, cited card recall, quiz completion, DOCX download naming, mobile command navigation, and console/page errors.
+- The browser suite is intentionally separated from Vitest and uses a dedicated port that was verified free before the final run, preventing the cross-worktree server collision found during implementation.
 - `alembic upgrade head`: passed against a clean SQLite verification database.
 - `scripts/seed_demo_course.py`: passed and produced an authenticated demo course.
 - Live smoke test: API `/health` returned 200; web `/` returned 200; seeded login returned a bearer token; authenticated course listing returned the seeded course.
@@ -32,7 +33,7 @@ Locally generated artifacts (intentionally ignored by Git):
 
 ## UI implementation pass
 
-The responsive shell uses the Semester Ink/Parchment/blue system without gradients or decorative AI imagery. Desktop navigation, labeled mobile tabs, context continuity, command search, reduced motion, forced colors, explicit source statuses, and loading/error/empty/offline states are implemented as reusable components. Automated axe runs exclude color contrast because jsdom has no layout/color engine; real-browser WCAG 2.2 AA contrast verification remains open.
+The responsive shell uses the Semester Ink/Parchment/blue system without gradients or decorative AI imagery. Desktop navigation, labeled mobile tabs, context continuity, command search, reduced motion, forced colors, explicit source statuses, and loading/error/empty/offline states are implemented as reusable components. The Chrome axe scan now exercises the rendered desktop ready state, while manual VoiceOver/NVDA, zoom, touch-device, and live-service accessibility validation remain open.
 The upload workspace now opens an owner-scoped, focus-managed source sheet and recovers current extraction state after reload. It polls only while queued or running work exists, displays progress, and gives the student explicit cancellation and failure-retry controls. Extracted chunks retain page, slide, sheet/cell, or media timestamp labels and confidence; exact PDF bounding-box overlays and correction actions remain open.
 
 The Review workspace can confirm, reject, or correct extracted payloads, records an optional decision note, refreshes course counts, and blocks malformed correction JSON before sending it. The Calendar workspace now previews changed fields and ICS consequences before saving, preserves unspecified times, and offers one-step session undo.

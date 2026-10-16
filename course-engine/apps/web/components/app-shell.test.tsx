@@ -7,6 +7,8 @@ describe("AppShell", () => {
     render(<AppShell courseId="course-1" courseTitle="Methods" mode="overview" offline={false} term="Fall 2026"><h1>Workspace</h1></AppShell>);
     expect(screen.getByRole("navigation", { name: "Course navigation" })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Mobile navigation" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "System context" })).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "Source records available" })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /Today/ })[0]).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("main")).toHaveTextContent("Workspace");
   });
@@ -23,7 +25,7 @@ describe("AppShell", () => {
 
   it("announces offline behavior", () => {
     render(<AppShell courseId="course-1" courseTitle="Methods" mode="uploads" offline><p>Body</p></AppShell>);
-    expect(screen.getByRole("status")).toHaveTextContent("Offline");
-    expect(screen.getByText("Changes pending")).toBeInTheDocument();
+    expect(screen.getByText(/Offline\. Existing content remains available/)).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "Changes pending" })).toBeInTheDocument();
   });
 });
