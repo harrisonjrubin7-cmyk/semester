@@ -926,3 +926,16 @@ No route, navigation, shared visual component, dependency, schema, policy, serve
 | Security verification after production behavior changes | `stackhawk.yml` | Blocked by environment | Hawk v6/config and Docker are absent; API key/app host are unset. A local properties file exists but was not read. No live target, scan, finding result, fix/rescan loop or security pass exists. |
 
 No route, navigation, shared visual component, dependency, schema, policy, server operation or external system changed. The archive remains specification evidence only; this slice does not establish deployed ingestion, institutional acceptance or production readiness.
+
+## Automation pass 18 mapping — exact Course Capture original removal (slice 119)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Captured course originals remain individually identifiable | `app/src/components/CourseCapture.tsx`; `CaptureOriginal`; `captureHash` | Existing but incomplete -> existing and verified for this slice | Stable session sequence ids and removal names now distinguish duplicate filenames with position, MIME type, byte count and hash prefix. |
+| One removal affects only the represented persisted copy | `CourseCapture.onFiles`; `CourseCapture.onRemovePersisted`; `Update.deleteFile` | Existing but incomplete -> existing and verified for this slice | Returned persisted ids are associated by input position with the exact original; removal sends a one-id array instead of every capture-session id. |
+| Failed storage mutation cannot fabricate completion | Course Capture status region and selected-row pending state | Missing and in scope -> existing and verified for this slice | The selected control is disabled while pending. Rejection keeps both the local row and persisted id represented and announces that the copies remain with a retry. |
+| Consent, data-authority and official-system boundaries remain separate | Effective capture policy; explicit consent control; current Course Capture copy | Existing and unchanged | Consent withdrawal remains session-wide; this row operation does not claim provider disposal, scanner/extractor execution or LMS/institution mutation. |
+| Regression and repository gates | `CourseCapture.test.tsx` plus capture-policy/domain/a11y/root tests | Existing and verified locally for this slice | Red proof against filename-only/all-ids removal; 26/26 adjacent tests, TypeScript, lint, university typecheck, build and 79/97 design contracts pass. Full ordered/shuffled suites and DAST remain open. |
+| Security verification after production behavior changes | `stackhawk.yml` | Blocked by environment | Hawk v6/config and Docker are absent; API key/app host are unset. A local properties file exists but was not read. No live target, scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared visual component, dependency, schema, policy, server authorization, provider configuration or external system changed. The archive remains specification evidence only; this slice does not establish deployed ingestion, institutional acceptance or production readiness.

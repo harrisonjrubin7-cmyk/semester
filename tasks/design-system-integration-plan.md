@@ -1205,3 +1205,15 @@ The same-name regression failed against the former title-only control, then 216/
 Mandatory HawkScan preflight reports no Hawk v6/config command or Docker runtime, no API-key/app-host environment values and no runnable target. `stackhawk.yml` and a local properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 No route, dependency, schema, grant, RLS policy, server operation, provider configuration, deployment, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Exact Course Capture original removal — automation pass 18, integration slice 119
+
+Required-branch head `38b10d756` was clean before the slice and already included current `origin/main` `8a29db78f`. Exact upstream history and current-code inspection found no equivalent Course Capture fix. Re-ranking selected this bounded Phase 4 storage/consequence gap adjacent to the completed course-material slice: duplicate filenames exposed indistinguishable controls, and removing either represented original queued every persisted capture id for deletion.
+
+Each capture now receives a stable session sequence id and a removal name containing list position, complete filename, MIME type, byte count and content-hash prefix. The persisted id returned for each file remains attached to that exact original. Removal disables the capture controls while one storage deletion is pending, sends only that persisted id to the existing deletion authority and removes the local row only after success. A refused storage deletion preserves both represented copies and announces a retry instead of reporting success. Consent withdrawal remains the separate all-capture boundary.
+
+The duplicate-name/exact-id regression failed against the former filename-only/all-ids behavior, then 26/26 focused and adjacent Course Capture, capture-domain, policy, label and root-lifecycle tests passed. TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and report contracts pass 97/97; design audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. The aggregate report launcher writes its artifact but exits 1 because it invokes unavailable `npx`; ordered and shuffled full suites were not rerun.
+
+The active HawkScan skill stops at mandatory preflight because Hawk v6/config and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. `stackhawk.yml` and a local properties file exist, but credential material was not read. No live target, DAST scan, finding result, fix/rescan loop or security pass exists.
+
+No route, navigation, dependency, schema, policy, authorization rule, provider configuration, deployment, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.

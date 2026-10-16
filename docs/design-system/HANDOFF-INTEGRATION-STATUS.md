@@ -1303,3 +1303,16 @@ This local slice does not prove deployment, production execution, institutional 
 - Mandatory HawkScan preflight reports `hawk runtime=false`, `hawk config=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. `stackhawk.yml` and a local properties file exist, but credential material was not read. No live target, DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployed ingestion, scanner/extractor availability, production execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh ranking.
+
+## Evidence locked in automation pass 18 / integration slice 119
+
+- Required-branch head `38b10d756` was clean before the slice and already included current `origin/main` `8a29db78f`. Exact upstream history/current-code inspection found no equivalent Course Capture removal fix.
+- Capture originals now have stable per-session sequence ids. Removal names identify position, filename, MIME type, byte count and content-hash prefix, including duplicate filenames.
+- Each storage id returned by the existing `onFiles` authority remains associated with its exact original. Removing one row submits only that id, waits for deletion and then removes the local row; it no longer queues every persisted capture id.
+- A refused persisted deletion preserves both represented copies and announces a retry. Consent withdrawal remains a separate session-wide boundary; provider disposal, scanner-backed ingestion and official LMS/course records remain outside this mutation.
+- The duplicate-name/exact-id regression failed against the former filename-only/all-ids behavior. Focused and adjacent capture, policy, label and root-lifecycle verification passes 26/26.
+- TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and exact report contracts pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- The aggregate report launcher writes its artifact but exits 1 because it invokes unavailable `npx`. Ordered and shuffled full suites were not rerun; automation pass 2 remains the latest full-suite checkpoint.
+- Mandatory HawkScan preflight reports `hawk runtime=false`, `hawk config=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`. `stackhawk.yml` and a local properties file exist, but credential material was not read. No live target, DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployed ingestion, provider disposal, production execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh ranking.

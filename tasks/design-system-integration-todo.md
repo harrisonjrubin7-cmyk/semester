@@ -2469,3 +2469,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep recoverable course-material metadata removal, permanent private-file purge and official LMS/source withdrawal as separate operations.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 exact Course Capture original removal — automation pass 18, integration slice 119
+
+- [x] Start from clean required-branch head `38b10d756`; fetch current `origin/main` `8a29db78f`, confirm it is already included and inspect exact Course Capture history/current code for overlap.
+- [x] Re-rank duplicate-name capture removal as the next bounded Phase 4 storage/consequence gap; keep consent withdrawal, permanent provider disposal and official LMS/course records outside this one-row operation.
+- [x] Give every session original a stable local sequence and name its control with list position, filename, MIME type, byte count and content-hash prefix.
+- [x] Associate each returned persisted id with its exact original and send only that id to the existing deletion handler.
+- [x] Await storage deletion before removing the local row; preserve both represented copies and provide retry language when storage refuses the operation.
+- [x] Prove the duplicate-name/exact-id regression red against the former filename-only/all-ids behavior, then pass 26/26 focused and adjacent capture, policy, label and root-lifecycle tests.
+- [x] Pass TypeScript, lint/style/label/terms checks, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass 79/79 design-check constituents and 97/97 report contracts; preserve zero design violations, 86 existing warnings and CSS within its ledger.
+- [ ] Aggregate design report launcher — writes the report, then exits 1 because it invokes unavailable `npx`; exact constituents pass and no wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded storage/accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no scanner runtime, live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep session-wide consent withdrawal, provider retention/disposal, scanner-backed ingestion and official LMS/course records separate from this exact persisted-copy removal.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
