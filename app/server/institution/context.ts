@@ -1,7 +1,13 @@
-import type { PolicyEnvironment, UniversityIdentity, UniversityRole } from '../../../packages/institution/src/index.ts';
+import {
+  UNIVERSITY_ROLES,
+  type PolicyEnvironment,
+  type UniversityIdentity,
+  type UniversityRole,
+} from '../../../packages/institution/src/index.ts';
 import {
   activateContext,
   buildRequestContext,
+  isId,
   PlatformError,
   systemClock,
   type ActiveContext,
@@ -11,7 +17,11 @@ import {
   type TrustedIdentity,
   type Workspace,
 } from '../../../packages/platform/src/index.ts';
-import type { VerifiedMembershipIdentity } from './membership.ts';
+import type {
+  ContextMembershipDirectory,
+  MembershipRecord,
+  VerifiedMembershipIdentity,
+} from './membership.ts';
 
 /**
  * The gateway's verified identity, as the platform's request context.
@@ -105,6 +115,86 @@ export function contextDirectoryForVerifiedIdentity(identity: VerifiedMembership
       roleGrantIds: Object.freeze([identity.membershipId]),
     })]),
   });
+}
+
+const unavailableDirectory = () => new PlatformError(
+  'forbidden',
+  'Your current university access does not permit this action.',
+);
+
+const sameRoles = (left: readonly UniversityRole[], right: readonly UniversityRole[]): boolean => {
+  const normalized = (roles: readonly UniversityRole[]) => [...new Set(roles)].sort();
+  return JSON.stringify(normalized(left)) === JSON.stringify(normalized(right));
+};
+
+/**
+ * Assemble all active memberships reloaded for the remotely verified account.
+ *
+ * The membership used during authentication must still be present and must
+ * still carry the same institution and roles. That makes loading the wider
+ * directory a second authorization check rather than a way to extend a stale
+ * session. Inactive rows are omitted; malformed or cross-account rows make the
+ * whole directory unavailable instead of being partially trusted.
+ */
+export function contextDirectoryForVerifiedMemberships(
+  identity: VerifiedMembershipIdentity,
+  rows: readonly MembershipRecord[],
+): ContextDirectory {
+  const seen = new Set<string>();
+  let currentMembershipProved = false;
+  const memberships = rows.flatMap((row) => {
+    if (
+      !isId(row.id)
+      || !isId(row.userId)
+      || !isId(row.tenantId)
+      || !isId(row.providerId)
+      || row.userId !== identity.userId
+      || seen.has(row.id)
+    ) {
+      throw unavailableDirectory();
+    }
+    seen.add(row.id);
+    if (row.status !== 'active') return [];
+
+    const roles = row.roles.filter((role): role is UniversityRole =>
+      UNIVERSITY_ROLES.includes(role as UniversityRole),
+    );
+    if (!roles.length || roles.length !== row.roles.length) throw unavailableDirectory();
+
+    if (row.id === identity.membershipId) {
+      if (row.tenantId !== identity.institutionId || !sameRoles(roles, identity.roles)) {
+        throw unavailableDirectory();
+      }
+      currentMembershipProved = true;
+    }
+    const workspaces = [...new Set(roles.map((role) => WORKSPACE_FOR_ROLE[role]))];
+    return [Object.freeze({
+      id: row.id,
+      tenantId: row.tenantId,
+      institutionId: row.tenantId,
+      personId: row.userId,
+      status: 'active' as const,
+      workspaces: Object.freeze(workspaces),
+      roleGrantIds: Object.freeze([row.id]),
+    })];
+  });
+
+  if (!currentMembershipProved) throw unavailableDirectory();
+  memberships.sort((left, right) => {
+    if (left.id === identity.membershipId) return -1;
+    if (right.id === identity.membershipId) return 1;
+    return left.tenantId.localeCompare(right.tenantId) || left.id.localeCompare(right.id);
+  });
+  return Object.freeze({
+    personId: identity.userId,
+    sessionExpiresAt: identity.sessionExpiresAt,
+    memberships: Object.freeze(memberships),
+  });
+}
+
+export function createContextDirectoryLoader(source: ContextMembershipDirectory) {
+  return async (identity: VerifiedMembershipIdentity): Promise<ContextDirectory> =>
+    contextDirectoryForVerifiedMemberships(identity, await source.membershipsForUser(identity.userId));
 }
 
 /** Only the request headers that the shared platform context is allowed to trust. */

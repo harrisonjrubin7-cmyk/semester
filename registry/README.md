@@ -18,6 +18,10 @@ validates every file here and proves the rules reject bad input.
 - `identity.id` uses an uppercase prefix, e.g. `CAP-`, `WF-`, `POL-`, `SCR-`, `API-`,
   `EVT-`, `TST-`, `EVD-`, `REL-`, `SLO-`.
 - `boundaries.allowed_uses` and `prohibited_uses` must both be non-empty.
+- A reference must carry the prefix of the artifact it names: `control_plane.policy_ids` → `POL-`,
+  `control_plane.required_evidence` → `EVD-`, `control_plane.release_gate` → `REL-`,
+  `quality.test_suites` → `TST-`, `quality.service_objectives` → `SLO-`.
+  `upstream`, `downstream` and `audit_events` are free text and are not prefix-checked.
 - A passport whose `lifecycle.current_status` is anything other than `proposed`
   must carry dated `created_at` and `last_reviewed_at` (`YYYY-MM-DD`).
 
