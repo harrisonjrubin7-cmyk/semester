@@ -938,4 +938,6 @@ No route, navigation, shared visual component, dependency, schema, policy, serve
 | Regression and repository gates | `CourseCapture.test.tsx` plus capture-policy/domain/a11y/root tests | Existing and verified locally for this slice | Red proof against filename-only/all-ids removal; 26/26 adjacent tests, TypeScript, lint, university typecheck, build and 79/97 design contracts pass. Full ordered/shuffled suites and DAST remain open. |
 | Security verification after production behavior changes | `stackhawk.yml` | Blocked by environment | Hawk v6/config and Docker are absent; API key/app host are unset. A local properties file exists but was not read. No live target, scan, finding result, fix/rescan loop or security pass exists. |
 
+Slice commit `f78ae804e` merges non-overlapping final `origin/main` `ee11c2789` as `09f395c8e`. The combined head passes 26/26 focused tests, TypeScript, university typecheck, regenerated production build and the refreshed performance-budget check.
+
 No route, navigation, shared visual component, dependency, schema, policy, server authorization, provider configuration or external system changed. The archive remains specification evidence only; this slice does not establish deployed ingestion, institutional acceptance or production readiness.

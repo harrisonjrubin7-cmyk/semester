@@ -2480,6 +2480,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove the duplicate-name/exact-id regression red against the former filename-only/all-ids behavior, then pass 26/26 focused and adjacent capture, policy, label and root-lifecycle tests.
 - [x] Pass TypeScript, lint/style/label/terms checks, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
 - [x] Pass 79/79 design-check constituents and 97/97 report contracts; preserve zero design violations, 86 existing warnings and CSS within its ledger.
+- [x] Commit the coherent slice as `f78ae804e`, merge non-overlapping final `origin/main` `ee11c2789` as `09f395c8e`, then pass 26/26 focused tests, TypeScript, university typecheck, regenerated build and refreshed performance budgets on the combined head.
 - [ ] Aggregate design report launcher — writes the report, then exits 1 because it invokes unavailable `npx`; exact constituents pass and no wrapper pass is claimed.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded storage/accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
 - [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no scanner runtime, live target, scan, finding result, fix/rescan loop or security pass exists.

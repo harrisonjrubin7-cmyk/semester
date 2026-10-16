@@ -1216,4 +1216,6 @@ The duplicate-name/exact-id regression failed against the former filename-only/a
 
 The active HawkScan skill stops at mandatory preflight because Hawk v6/config and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. `stackhawk.yml` and a local properties file exist, but credential material was not read. No live target, DAST scan, finding result, fix/rescan loop or security pass exists.
 
+Slice commit `f78ae804e` merged final `origin/main` `ee11c2789` cleanly as `09f395c8e`; the upstream change only refreshes measured performance budgets. The combined head passes the same 26/26 focused set, TypeScript, university gateway typecheck and a regenerated production build, then passes the refreshed route/first-load/largest-bundle budget check.
+
 No route, navigation, dependency, schema, policy, authorization rule, provider configuration, deployment, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
