@@ -287,4 +287,66 @@ describe('with cost_planner on', () => {
     expect(text()).toContain('Copied on');
     expect(host.querySelector('[data-source="institution_verified"]')).toBeNull();
   });
+
+  it('previews one cost-line removal and changes totals only after confirmation', () => {
+    localStorage.setItem(GRADUATION_KEY, JSON.stringify({
+      ...PLAN,
+      plan: {
+        ...PLAN.plan,
+        costLines: [
+          { id: 'tuition', label: 'Tuition', amount: 18_000, per: 'term', source: 'imported', from: 'Cost of attendance', on: '2026-08-01' },
+          { id: 'housing', label: 'Housing', amount: 5_000, per: 'term', source: 'student_entered' },
+        ],
+        costPerTerm: 23_000,
+        summerCost: 0,
+      },
+    }));
+    mount({ simulator: false, costs: true });
+
+    act(() => (host.querySelector('button[aria-label="Remove Tuition"]') as HTMLButtonElement).click());
+
+    const dialog = host.querySelector('[role="dialog"]')!;
+    expect(dialog.textContent).toContain('Remove this cost estimate?');
+    expect(dialog.textContent).toContain('Tuition · $18,000 each fall or spring term');
+    expect(dialog.textContent).toContain('The other cost lines, graduation scenarios, downloaded copies, financial-aid records and the registrar’s official degree audit stay unchanged');
+    expect(dialog.textContent).toContain('A device-workspace backup created before removal can restore the graduation plan; otherwise add this estimate again');
+    expect(stored().plan.costLines).toHaveLength(2);
+    expect(document.activeElement?.textContent).toBe('Cancel');
+
+    act(() => button(/^Remove cost$/)!.click());
+
+    expect(stored().plan.costLines?.map((line) => line.id)).toEqual(['housing']);
+    expect(stored().plan.costPerTerm).toBe(5_000);
+    expect(text()).toContain('“Tuition” removed from this device. Your estimated fall or spring total is now $5,000.');
+  });
+
+  it('keeps a refused cost-line removal represented for retry', () => {
+    localStorage.setItem(GRADUATION_KEY, JSON.stringify({
+      ...PLAN,
+      plan: {
+        ...PLAN.plan,
+        costLines: [{ id: 'tuition', label: 'Tuition', amount: 18_000, per: 'term', source: 'student_entered' }],
+        costPerTerm: 18_000,
+        summerCost: 0,
+      },
+    }));
+    const real = Storage.prototype.setItem;
+    const refused = vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(function (this: Storage, key: string, value: string) {
+      if (key === GRADUATION_KEY) throw new Error('device full');
+      return real.call(this, key, value);
+    });
+    onTestFinished(() => refused.mockRestore());
+    mount({ simulator: false, costs: true });
+    act(() => (host.querySelector('button[aria-label="Remove Tuition"]') as HTMLButtonElement).click());
+
+    act(() => button(/^Remove cost$/)!.click());
+
+    expect(host.querySelector('[role="dialog"]')).not.toBeNull();
+    expect(stored().plan.costLines?.map((line) => line.id)).toEqual(['tuition']);
+    expect(text()).toContain('“Tuition” could not be removed from this device. Retry or cancel.');
+
+    act(() => button(/^Remove cost$/)!.click());
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(stored().plan.costLines).toEqual([]);
+  });
 });
