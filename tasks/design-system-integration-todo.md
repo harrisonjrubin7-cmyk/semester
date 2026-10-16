@@ -2178,3 +2178,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep official dining balances, plan enrollment, payments and provider integrations separate from student-entered device planning.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 distinguishable student bill removals — automation pass 3, integration slice 104
+
+- [x] Start from clean required-branch head `fa96af5e9`; confirm selection-time `origin/main` `812960b5b` is included, then inspect final `822623170` and find no Bill/test/control-file overlap.
+- [x] Re-rank duplicate accessible removal names in the student-entered bill ledger as the next bounded Phase 6 gap; keep school-account records and money movement outside the mutation.
+- [x] Name charge removals with the represented title, category and amount.
+- [x] Name aid removals with the represented title, category, amount, financial meaning and current confirmation state.
+- [x] Name payment removals with the represented title, amount and paid date.
+- [x] Preserve the existing exact-id reducer actions and shared eight-second Undo receipt; add no confirmation or parallel persistence path.
+- [x] Prove the regression red against the former title-only names, then pass 94/94 focused and adjacent bill, arithmetic, Undo and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass 79/79 design-check constituents and 97/97 report contracts; retain zero audit violations, 86 existing warnings and the current CSS ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility/consequence slice; pass 2's current-head checkpoint remains the latest full-suite evidence.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official student-account records, awards, money movement, card data and provider integrations separate from student-entered device planning.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
