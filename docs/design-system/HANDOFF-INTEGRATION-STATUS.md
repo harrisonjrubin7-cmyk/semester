@@ -1388,3 +1388,15 @@ This local slice does not prove deployment, production execution, provider conne
 - Mandatory HawkScan preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` present and a local properties file detected but unread. No target, DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 25 / integration slice 126
+
+- The clean required branch began at `84abf6bf1` and already included current `origin/main` `5d857fcf1`; exact upstream and current-code inspection found no duplicate work-window guard.
+- Every removal now names its list position, complete label, selected weekday set, local time span and weekly hours. Otherwise identical student-authored windows remain distinguishable.
+- Existing exact-id `dropWindow`, persistent workspace state, window arithmetic and the eight-second Undo snapshot remain authoritative. Removing a work-window copy does not change a provider calendar or official institution schedule.
+- The rendered regression failed against the former label-only control, then the focused and adjacent WorkWindows, window-domain, storage, reducer, Undo, label, root-lifecycle and isolation set passes 118/118.
+- TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning.
+- Aggregate design-system check passes 9 token tests and 70 design contracts. The test-backed report passes 97 contracts; audit remains at zero violations with 86 existing warnings and CSS within its ledger.
+- Mandatory HawkScan preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` present and a local properties file detected but unread. No target, DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.

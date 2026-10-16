@@ -2602,3 +2602,21 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep protected-time planning, provider calendars and official institution schedules as separate authorities.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 25 update — distinguishable work-window removals (slice 126)
+
+- [x] Start from clean required-branch head `84abf6bf1`, fetch current `origin/main` `5d857fcf1`, confirm it is already included and inspect exact WorkWindows history/current code for overlap.
+- [x] Re-rank duplicate work-window labels as the next bounded Phase 3 accessibility gap; keep official schedules, provider calendars and institution records outside this device mutation.
+- [x] Name every removal with list position, complete label, selected weekdays, local time span and weekly hours.
+- [x] Preserve the existing exact-id `dropWindow` reducer, persistent workspace state, window arithmetic and eight-second Undo snapshot.
+- [x] Prove the duplicate-label regression red against the former label-only controls, then pass 118/118 focused and adjacent WorkWindows, window-domain, storage, reducer, Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, 97 report contracts, zero violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep student-entered work windows, provider calendars and official institution schedules as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

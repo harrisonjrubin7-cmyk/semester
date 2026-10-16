@@ -1272,6 +1272,18 @@ The active HawkScan skill stops at mandatory preflight because Hawk v6/config an
 
 No route, navigation, dependency, schema, policy, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Distinguishable work-window removals — automation pass 25, integration slice 126
+
+Required-branch head `84abf6bf1` was clean before the slice and already included current `origin/main` `5d857fcf1`. Exact upstream history and current-code inspection found the existing exact-id `dropWindow` reducer, persistent workspace state and eight-second Undo snapshot, but duplicate work-window labels exposed the same accessible removal name. Re-ranking selected this bounded Phase 3 accessibility gap because the student-authored device schedule and recovery boundary already exist and no server, provider or institutional write is involved.
+
+Each removal now identifies list position, complete label, selected weekday set, local time span and the window's weekly hours. Position distinguishes otherwise identical work windows while the schedule facts let the student identify the represented row. The existing exact-id reducer, window arithmetic, persistent workspace state and shared Undo receipt remain authoritative; editing, calculations and scheduling behavior do not change.
+
+The duplicate-label regression failed against the former label-only control, then 118/118 focused and adjacent WorkWindows, window-domain, storage, reducer, Undo, label, root-lifecycle and isolation tests passed. TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning. Aggregate design-system check passes 9 token tests and 70 design contracts; the test-backed report passes 97 contracts with zero violations, 86 existing warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun; automation pass 2 remains the latest full-suite checkpoint.
+
+The active HawkScan skill stops at mandatory preflight because Hawk v6/config and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. `stackhawk.yml` and a local properties file exist, but credential material was not read. No live target, DAST scan, finding result, fix/rescan loop or security pass exists.
+
+No route, navigation, dependency, schema, policy, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Distinguishable protected-time removals — automation pass 24, integration slice 125
 
 Required-branch head `e5b4cc64b` was clean before the slice and already included selection-time `origin/main` `06c2d5c74`. Exact upstream history and current-code inspection found the existing exact-id `dropRest` reducer and eight-second Undo snapshot, but duplicate protected-time labels exposed the same accessible removal name. Final fetched `origin/main` `5d857fcf1` changes only developer-tools documentation relative to that base and does not overlap this slice. Re-ranking selected this bounded Phase 3 accessibility gap because the student-authored device schedule and recovery boundary already exist and no server, provider or institutional write is involved.
