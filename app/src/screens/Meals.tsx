@@ -42,9 +42,9 @@ import { formatDate } from '../lib/locale';
  * one balance is a fact about today and says nothing about eating.
  */
 export function Meals() {
- const {state}=useStore();
+ const {state,account}=useStore();
  const [tab,setTab]=useState('mine');const [choice,setChoice]=useState('');
- return <div className="portal-workspace campus-workspace"><TabList label="Meals portal" className="portal-tabs" value={tab} onChange={id=>{setChoice('');setTab(id);}} tabs={([['mine','My meal plan'],['directory','Dining & meal plans'],['plan','Plan calculator']] as [typeof tab,string][]).map(([id,label])=>({id,label}))}/>{tab==='mine'?<MealsDetails key={state.term}/>:tab==='directory'?<CampusDirectory kind="dining" onPlan={item=>{setChoice(item.name);setTab('plan');}}/>:<MealPlanner key={state.term} choice={choice} term={state.term}/>}</div>;
+ return <div className="portal-workspace campus-workspace"><TabList label="Meals portal" className="portal-tabs" value={tab} onChange={id=>{setChoice('');setTab(id);}} tabs={([['mine','My meal plan'],['directory','Dining & meal plans'],['plan','Plan calculator']] as [typeof tab,string][]).map(([id,label])=>({id,label}))}/>{tab==='mine'?<MealsDetails key={state.term}/>:tab==='directory'?<CampusDirectory kind="dining" onPlan={item=>{setChoice(item.name);setTab('plan');}}/>:<MealPlanner key={`${account?.id||'device'}:${state.term}`} choice={choice} term={state.term} accountId={account?.id??null}/>}</div>;
 }
 function MealsDetails() {
   const { state, dispatch, school } = useStore();
