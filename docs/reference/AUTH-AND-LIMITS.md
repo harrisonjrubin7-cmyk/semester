@@ -97,9 +97,13 @@ membership role can manufacture company, operations, or developer access.
 100 rows, omits inactive rows, and refuses the whole directory unless the membership used
 for authentication is still active with the same tenant and roles. Every included row
 must have valid server ids, belong to that account, and contain only known institution
-roles. No route calls this loader, and `contextForVerifiedSelection` still builds only the
-currently authenticated institution's single-membership directory. This is therefore not
-a live cross-institution request context, workspace-switching API, UI, or client contract.
+roles. `createContextActivationRequester` can resolve an explicitly confirmed membership
+and workspace only after this fresh reload, but returns an `ActiveContext` rather than a
+gateway `RequestContext`. No route calls either function, and
+`contextForVerifiedSelection` still builds only the currently authenticated institution's
+single-membership directory. This is therefore not a live cross-institution request
+context, workspace-switching API, UI, client contract, adapter selection, or authorization
+grant.
 
 Both entry points re-run the token check at the moment of a commit (and of an intelligence confirm) and require the same user and institution as before. If the answer changed, the commit is `403 forbidden` ("Your current university access does not permit this action.").
 
