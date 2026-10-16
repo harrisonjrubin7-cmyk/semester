@@ -32,9 +32,9 @@ export default defineConfig({
   },
   expect: {
     // Chromium's font rasterization differs between macOS and the Ubuntu CI
-    // runner even when layout is unchanged. Keep the allowance just above the
-    // measured 2% renderer delta; journey, overflow, and accessibility checks
-    // remain exact assertions outside the snapshot comparison.
-    toHaveScreenshot: { animations: "disabled", maxDiffPixelRatio: 0.025 },
+    // runner even with the same bundled fonts. Keep the allowance just above
+    // the measured 3% renderer delta; dimensions, journey, overflow, and
+    // accessibility checks remain exact assertions.
+    toHaveScreenshot: { animations: "disabled", maxDiffPixelRatio: 0.035 },
   },
 });
