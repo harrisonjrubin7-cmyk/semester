@@ -694,14 +694,15 @@ function Rules() {
  * reason it is there — a draft that follows the thing while you are typing in
  * it is a draft that fights you.
  *
- * Remove stays on the row rather than moving inside the editor. On an
- * appointment it moved because it had been a two-letter button beside Join;
- * here it is already a worded control at the end of a row, which is not the
- * accident that rule exists to prevent.
+ * Remove stays on the row rather than moving inside the editor, but waits on
+ * an exact consequence preview. A recorded course feeds requirement progress,
+ * hours and GPA at once, so changing all three on the first press hides more
+ * than the word "Remove" says.
  */
 function TakenRow({ course: c }: { course: Taken }) {
   const { state, dispatch } = useStore();
   const [editing, setEditing] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [code, setCode] = useState(c.code);
   const [title, setTitle] = useState(c.title);
   const [term, setTerm] = useState(c.term);
@@ -864,12 +865,36 @@ function TakenRow({ course: c }: { course: Taken }) {
       <button
         type="button"
         className="bare"
-        onClick={() => dispatch({ type: 'dropTaken', id: c.id })}
+        onClick={() => setRemoving(true)}
         aria-label={`Remove ${c.code}`}
         style={{ width: 'auto', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
       >
         Remove
       </button>
+      {removing ? (
+        <ConfirmDialog
+          title="Remove this recorded course?"
+          preview={(
+            <ActionPreview
+              subject={`${c.code}${c.title ? ` · ${c.title}` : ''}`}
+              says="Removes this student-entered course and recalculates your planning progress, hours and GPA."
+              exactly={`${c.term || 'No term recorded'} · ${c.hours} ${c.hours === 1 ? 'hour' : 'hours'} · ${c.current ? 'in progress' : c.grade ? `grade ${c.grade}` : 'no grade recorded'}`}
+              doesNotChange="Your degree requirements, other recorded courses, graduation scenarios and the registrar’s official transcript stay unchanged."
+              subjectTo="Semester’s result is planning arithmetic. Check it against the registrar’s current transcript and degree audit before making an academic decision."
+              recovery={{
+                kind: 'none',
+                how: 'To restore this course, enter it again from the registrar’s current transcript.',
+              }}
+            />
+          )}
+          confirmLabel="Remove recorded course"
+          onCancel={() => setRemoving(false)}
+          onConfirm={() => {
+            dispatch({ type: 'dropTaken', id: c.id });
+            setRemoving(false);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

@@ -2135,3 +2135,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep recorded-course removal and official degree-audit operations separate from this one student-entered rule.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 governed recorded-course removal — automation pass 1, integration slice 102
+
+- [x] Start from clean required-branch head and current `origin/main` `c959de8e9`; inspect exact degree history and current code for overlap.
+- [x] Re-rank the student-entered recorded-course action as the next bounded Phase 3 consequence gap; keep registrar-owned transcript and degree-audit operations outside the mutation.
+- [x] Reuse `ConfirmDialog` and `ActionPreview` to identify course, title, term, hours, grade/current state, recalculated progress/hours/GPA, preserved records and manual recovery before any write.
+- [x] Keep Cancel side-effect free and initially focused through the shared modal contract.
+- [x] Preserve the existing exact-id reducer operation and remove only the confirmed student-entered row.
+- [x] Prove both regression tests red against the former first-press deletion, then pass 30/30 focused and adjacent degree, preview/modal, dead-end and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain twelve existing lint warnings and the build chunk-size warning.
+- [x] Pass 9/9 token export and 70/70 design contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger; write the test-backed design report.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded Phase 3 consequence slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` present and no local properties file found; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official transcript/degree-audit mutation separate from this student-entered planning copy.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

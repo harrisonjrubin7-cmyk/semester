@@ -112,3 +112,36 @@ describe('student-entered degree requirement removal', () => {
     expect(document.querySelector('[role="dialog"]')).toBeNull();
   });
 });
+
+describe('student-entered recorded course removal', () => {
+  it('previews the derived planning consequence and cancellation writes nothing', async () => {
+    await act(async () => button('Taken (1)').click());
+    await act(async () => button('Remove ECON 1010').click());
+
+    const dialog = document.querySelector('[role="dialog"]');
+    expect(dialog?.textContent).toContain('Remove this recorded course?');
+    expect(dialog?.textContent).toContain('ECON 1010 · Principles');
+    expect(dialog?.textContent).toContain('Fall 2026 · 3 hours · grade A');
+    expect(dialog?.textContent).toContain('recalculates your planning progress, hours and GPA');
+    expect(dialog?.textContent).toContain('degree requirements');
+    expect(dialog?.textContent).toContain('registrar’s official transcript');
+    expect(dialog?.textContent).toContain('stay unchanged');
+    expect(dialog?.textContent).toContain('enter it again from the registrar’s current transcript');
+    expect(document.activeElement?.textContent).toBe('Cancel');
+    expect(seen.taken.map((course) => course.id)).toEqual(['econ-1010']);
+
+    await act(async () => button('Cancel').click());
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    expect(seen.taken.map((course) => course.id)).toEqual(['econ-1010']);
+  });
+
+  it('removes only the confirmed recorded course', async () => {
+    await act(async () => button('Taken (1)').click());
+    await act(async () => button('Remove ECON 1010').click());
+    await act(async () => button('Remove recorded course').click());
+
+    expect(seen.taken).toEqual([]);
+    expect(seen.requirements.map((requirement) => requirement.id)).toEqual(['core-theory']);
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+  });
+});
