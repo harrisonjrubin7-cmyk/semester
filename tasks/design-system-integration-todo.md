@@ -2237,3 +2237,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep official school-account records, charges, payments, enrolled plans and provider integrations separate from student-entered device planning.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 distinguishable Support contact removals — automation pass 6, integration slice 107
+
+- [x] Start from clean required-branch head `309ddaaee`; fetch current `origin/main` `822623170`, confirm it is included and inspect exact Support history/current code for overlap.
+- [x] Re-rank duplicate accessible removal names in the private emergency-contact list as the next bounded Phase 3/6 gap; keep official support, safety and campus records outside the mutation.
+- [x] Name each removal with the exact contact name and phone number already represented on the row.
+- [x] Preserve the existing preview, cancellation, exact-id guarded device write, success receipt and no-backup recovery boundary.
+- [x] Prove the updated selectors and duplicate-name regression red against the former name-only controls, then pass 98/98 focused and adjacent Support journey, domain, backup, coverage and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass 9/9 token export, 70/70 design-check contracts and 97/97 report contracts; retain zero audit violations, 86 existing warnings and the current CSS ledger.
+- [x] Commit the coherent code/test slice locally as `4078f8e40` after confirming final `origin/main` remains included and non-overlapping.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility/consequence slice; pass 2's current-head checkpoint remains the latest full-suite evidence.
+- [ ] HawkScan DAST — mandatory post-commit preflight for `4078f8e40` reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no scanner runtime, live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official support/safety systems, campus records and provider integrations separate from private device contacts.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
