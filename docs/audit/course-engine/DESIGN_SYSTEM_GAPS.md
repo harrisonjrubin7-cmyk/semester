@@ -6,13 +6,14 @@
 - No gradients, stock imagery, decorative AI art, bounce, shimmer, or icon-only mobile destinations.
 - Hairline borders before elevation, 66-character reading width, tabular numeric treatment, reduced-motion, forced-colors, and increased-contrast contracts.
 - One visible H1 per course route, 44 px primary targets, visible focus, skip link, labeled nav regions, and responsive collapse below 900 px.
-- Barlow, Barlow Condensed, and Cinzel are self-hosted under the SIL Open Font License and covered by platform-specific visual snapshots.
+- Barlow, Barlow Condensed, and Cinzel are self-hosted under the SIL Open Font License with Latin and Latin Extended coverage and platform-specific visual snapshots.
 
 ## Remaining
 
 | Gap | State |
 |---|---|
 | Reconcile `course-engine/apps/web/app/tokens.css` with the generated `app/design-tokens/semester.tokens.json` source | documented |
+| Eliminate cold-load font metric shift when a swap outlasts the block period | designed |
 | Visual regression snapshots at 320, 768, 1024, and 1440 px | documented |
 | Full source sheet with highlighted location and focus trap | designed |
 | User-controlled reader ground, density, contrast, and low-stimulation preferences in the Next.js app | designed |
