@@ -1005,3 +1005,15 @@ No route, navigation, dependency, schema, policy, provider configuration or exte
 | DAST security verification | `stackhawk.yml`; active HawkScan skill | Blocked by environment | Hawk v6/config and Docker are absent, API-key/app-host values are unset and no runnable target exists. A local properties file was detected but not read; no scan or security pass is claimed. |
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, live provider behavior, institutional acceptance or production readiness.
+
+## Automation pass 24 mapping — distinguishable protected-time removals (slice 125)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated student-authored protected-time labels remain distinguishable at removal | `app/src/components/Capacity.tsx`; `app/src/components/capacity.removal-labels.test.tsx` | Existing but incomplete → existing and verified for this slice | Accessible names identify list position, complete label, selected weekday set and local time span. Position distinguishes otherwise identical rows. |
+| Preserve exact mutation, arithmetic and recovery | `dropRest`; `app/src/state/slices/mine.ts`; `app/src/lib/rest.ts`; `app/src/lib/undo.ts` | Existing and unchanged | The same exact-id reducer removes only the represented block; capacity recalculates from persisted state and the shared eight-second snapshot restores only `rest`. |
+| Preserve schedule authority boundaries | Workload settings; student-authored protected time | Intentionally unchanged | Removing a private device block does not change a provider calendar, official timetable, course record or institution system. |
+| Regression and focused verification | New rendered regression plus rest/reducer/Undo/label/root/isolation guards | Existing and verified locally for this slice | Red proof against the former label-only control; final 89/89 focused/adjacent tests, both typechecks, lint, build and aggregate design check/report pass. Final upstream changes only developer-tools documentation. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan skill | Blocked by environment | Hawk v6/config and Docker are absent, API-key/app-host values are unset and no runnable target exists. A local properties file was detected but not read; no scan or security pass is claimed. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, live provider behavior, institutional acceptance or production readiness.
