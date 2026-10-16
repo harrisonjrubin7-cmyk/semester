@@ -19,7 +19,7 @@ Exit: merge review, complete browser journey tests, run DAST in a credentialed e
 2. Review resolution and calendar editing are implemented with confirm/reject/correction decisions, optional notes, owner isolation, consequence preview, unspecified-time preservation, and one-step session undo. Durable cross-session undo remains a later enhancement.
 3. Worker polling/cancellation and failure recovery are implemented with an owner-scoped job feed, active-work polling, progress visibility, explicit cancellation, idempotent retry dispatch, and bounded redelivery of abandoned queued work.
 4. Cards, Read, Quiz, and Doc now use real stored asset shapes: cited card recall records progress, guide sections render as readable source-linked material, confirmed documents export through authenticated downloads, and self-graded cited quizzes persist an owned study session.
-5. Run browser accessibility, responsive, visual-regression, and end-to-end tests.
+5. Production-mode Chrome coverage is implemented for browser accessibility, responsive widths, reviewed visual baselines, keyboard/focus behavior, console errors, and the source/review/calendar/cards/quiz/export journey. The browser API is deterministic and fixture-backed; a seeded live-backend journey remains required for the phase exit.
 
 Exit: a seeded user can complete `upload → review → calendar → study → source inspection → export` without CLI intervention.
 
