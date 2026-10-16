@@ -1566,6 +1566,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-11 account-scoped recoverable meal estimates — automation pass 10, integration slice 100
+
+- [x] Fetch `origin/main`, confirm required clean branch/base `1b86e0fcd` / `ba24569ab` and search history/current code for equivalent meal-estimate isolation or recovery work.
+- [x] Replace the ambiguous term-only meal-estimate key with a shared account-and-term key authority; preserve the old key without adopting it because its owner is unknown.
+- [x] Pass the current account into the existing Meal planner and state the account/device persistence boundary.
+- [x] Add meal estimates to the validated workspace backup, selecting only the requested account, validating with `readMealDraft` and restoring only to the restoring account.
+- [x] Prove the UI never shows another account or legacy estimate and prove backup excludes both another account and the unowned legacy record.
+- [x] Preserve the existing financial-language boundary: the calculator remains a student-entered estimate and does not change an enrolled plan, official balance, charge or payment.
+- [x] Prove the former implementation red, then pass 68/68 focused and adjacent meal, form, account-isolation, backup and coverage tests (including the 44 core isolation/backup tests); pass TypeScript, lint, university typecheck, production build, 78 design-check constituent tests, 96 report-contract tests, design audit and CSS ledger checks.
+- [ ] Aggregate design-system wrappers — unavailable because they hardcode missing `npm`/`npx`; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account/term recovery slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory skill preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
+- [ ] Keep official dining/card-office data, charges, payments, provider operations and legacy-record adoption separate from this private estimate.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## 2026-10-11 recoverable Toolkit workspaces — automation pass 12, integration slice 90
 
 - [x] Start from clean required-branch head `bb70b1c7`; confirm selection-time `origin/main` `ec618dea` is already included, then inspect final `bbf94ea2` and confirm its production read-only wiring/reference files do not overlap the Toolkit, backup or integration-control slice.
@@ -1587,6 +1606,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep whole-account deletion, provider state, official records and external operations separate from this account-scoped device backup.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 account-scoped recoverable housing plans — automation pass 9, integration slice 99
+
+- [x] Fetch `origin/main`, confirm required clean branch/base `341dee26e` / `ba24569ab` and search history/current code for equivalent housing isolation or recovery work.
+- [x] Replace the ambiguous term-only housing-plan key with a shared account-and-term key authority; keep the old key intact and refuse automatic adoption because its owner is unknown.
+- [x] Pass the current account into the existing Housing planner and state the account/device persistence boundary without changing the official housing authority.
+- [x] Add housing plans to the validated workspace backup, selecting only the requested account, validating each record and restoring only to the restoring account.
+- [x] Prove the UI never shows another account or legacy draft and prove backup excludes both another account and the unowned legacy record.
+- [x] Run the 42 focused account-isolation, backup and coverage tests; run TypeScript, lint, university typecheck, production build, token export, 69 design contracts, 96 report contracts, design audit and CSS ledger checks.
+- [ ] Aggregate design-system wrappers and ordered/shuffled full suites — not run for this bounded account/term storage slice; no aggregate or full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready gaps; keep meal-plan portability separate because its stored estimate has different privacy and financial-language requirements.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
 ## 2026-10-10 truthful device-erase completion — automation pass 10, integration slice 75
@@ -1903,4 +1938,200 @@ Documentation only. Application code was not changed after the reset onto `d577a
 
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep broader Toolkit backup coverage, account/institution records, provider operations and whole-account deletion separate from this one device project.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 recoverable Launchpad progress — automation pass 1, integration slice 91
+
+- [x] Start from clean required-branch head `a4742f6b`; fetch `origin/main`, confirm the same exact head and inspect Launchpad/workspace-backup history and code for equivalent work.
+- [x] Re-rank the unresolved account-scoped Launchpad recovery gap ahead of later campus and career workspace stores; keep Hub display markers, Opportunities, housing, meals and provider/institution operations outside this slice.
+- [x] Add Launchpad progress and student-chosen setup to the validated account-scoped workspace backup, remapped only to the restoring account.
+- [x] Keep private reflection answers out of the portable file and preserve any reflections already on the restoring device.
+- [x] Use one exported `LAUNCHPAD_PREFIX` authority across Launchpad, Hub and workspace backup instead of duplicating the storage key.
+- [x] Prove the account-selection, reflection-redaction and restore-preservation assertions red against the former exclusion, then pass 74/74 focused workspace-backup, coverage and journey-reader tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the build chunk-size warning.
+- [x] Pass 9/9 token export, 138/138 combined design contracts and the exact 96/96 report contracts; keep the design audit at zero violations with 86 existing warnings and CSS within its ledger.
+- [ ] Aggregate design-system wrappers — `design-system:check` hardcodes unavailable `npm`; the report writes then exits after invoking unavailable `npx`. Exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-workspace recovery slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` exists, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
+- [ ] Keep Hub display markers, Opportunities, housing, meals and other unresolved device stores separate until their portability and privacy semantics are explicit.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 recoverable Opportunities workspace — automation pass 2, integration slice 92
+
+- [x] Start from clean required-branch head `bea8e91c6`; confirm selection-time `origin/main` `a4742f6b` is included, inspect Opportunities/workspace-backup history and code for equivalent work, then inspect final `ccf2d45ff` and confirm its account-pull/adoption changes do not overlap the slice.
+- [x] Re-rank the account-scoped Opportunities workspace ahead of mixed-semantics Hub markers and term-keyed campus plans; keep providers, offices and institution records outside this device recovery slice.
+- [x] Add portable opportunity items and the student's time budget to the existing validated account-scoped workspace backup.
+- [x] Remove the private `workStudy` choice from every exported item and preserve the same item's existing choice on the restoring device.
+- [x] Exclude other accounts and remap the validated record only to the restoring account.
+- [x] Export one `OPPORTUNITIES_PREFIX` authority and reuse it across Opportunities, Hub, the soft landing summary and backup code.
+- [x] Prove account selection, private-field redaction and restore preservation red against the former exclusion, then pass 89/89 focused and adjacent backup/privacy/journey tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the build chunk-size warning.
+- [x] Pass 147/147 exact combined design contracts and 96/96 exact report contracts; retain zero audit violations, 86 existing audit warnings and the existing CSS ledger.
+- [x] Commit the coherent slice as `19a7374c8`, merge final upstream `ccf2d45ff` cleanly as `d9dd47eb6`, then pass TypeScript and university gateway typecheck on the combined head.
+- [ ] Post-merge focused rerun — interrupted because a concurrent full-suite process held the shared Vitest worker pool; the pre-merge 89/89 focused result remains the claimed evidence.
+- [ ] Aggregate design-system wrappers — `design-system:check` hardcodes unavailable `npm`; the report writes then exits after invoking unavailable `npx`. Exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-workspace recovery slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file present but unread; no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
+- [ ] Keep Hub preferences/display markers, housing, meals and other unresolved device stores separate until their portability, privacy and term/account semantics are explicit.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 recoverable Hub delivery preferences — automation pass 3, integration slice 93
+
+- [x] Start from clean required-branch head `a075333d`; fetch current `origin/main` `ccf2d45ff`, confirm it is already included and inspect exact Hub/workspace-backup history and code for overlap.
+- [x] Separate portable delivery choices from device-specific display markers; keep official/course/provider records outside this device recovery slice.
+- [x] Add muted channels, quiet hours and digest cadence to the validated account-scoped workspace backup.
+- [x] Remove read, saved and follow-up message ids from the portable record and preserve the restoring device's current marker lists.
+- [x] Exclude other accounts, remap only to the restoring account and give a new device empty marker lists.
+- [x] Export one `HUB_PREFS_PREFIX` authority and reuse it in Hub and backup code.
+- [x] Prove account isolation, marker redaction and restore preservation red against the former exclusion, then pass 98/98 focused and adjacent backup, coverage, comms and Hub journey tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the build chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design-check contracts and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [ ] Aggregate design-system wrappers — `design-system:check` hardcodes unavailable `npm`; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-preference recovery slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` and app-host environment values unset and a local properties file present but unread; no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
+- [ ] Keep housing, meals and other unresolved term/device stores separate until their portability, privacy and account/term semantics are explicit.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 recoverable Support planning — automation pass 4, integration slice 94
+
+- [x] Start from clean required-branch head `bd1f1493`; fetch current `origin/main` `ccf2d45ff`, confirm it is already included and inspect exact Support/workspace-backup history and code for overlap.
+- [x] Re-rank the existing account-scoped Support workspace ahead of housing and meals, whose term-only keys still need an account/migration decision before portable recovery is safe.
+- [x] Add routines, continuity choices and commute planning to the validated account-scoped workspace backup.
+- [x] Exclude emergency contacts and access-planning notes from the portable file and preserve those private fields already on the restoring device.
+- [x] Exclude other accounts, remap only to the restoring account and give a new device empty private fields.
+- [x] Export one `SUPPORT_PREFIX` authority and reuse it in Support and backup code.
+- [x] Update the contact-removal preview so it still states the exact no-backup boundary for contacts after the rest of the Support workspace becomes portable.
+- [x] Prove the two recovery guards red against the former exclusion, then pass 54/54 focused and adjacent workspace-backup, coverage, Support journey and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the build chunk-size warning.
+- [x] Pass 78/78 design-check constituents and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [ ] Aggregate design-system wrappers — `npm`/`npx` are unavailable in this shell; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded account-workspace recovery slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` and an unread local properties file exist, but no target, scan, finding result or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
+- [ ] Keep housing and meals separate until their portability, privacy, legacy-key migration and account/term semantics are explicit.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 private NIL record restore — automation pass 5, integration slice 95
+
+- [x] Start from clean required-branch head `4960baab4`; fetch current `origin/main` `ccf2d45ff`, confirm it is already included and inspect exact NIL/export/backup history and code for overlap.
+- [x] Re-rank the explicit NIL export-without-restore gap ahead of housing and meal-plan drafts, whose term-only keys still lack a safe account ownership and legacy migration rule.
+- [x] Keep payer names, payment amounts and descriptions outside the general workspace backup and all server/provider state.
+- [x] Accept one explicit JSON selection, enforce the 3 MB device-library bound and validate the complete record through `readNil` before presenting any mutation.
+- [x] Reuse `ConfirmDialog` and `ActionPreview` to name current/incoming counts, exact replaced fields, unaffected reminders/official records and the pre-export-only recovery boundary.
+- [x] Keep invalid input and Cancel side-effect free; report completion only after the guarded account-keyed device write succeeds.
+- [x] Replace the generic NIL backup exemption with the exact dedicated-export/restore rationale.
+- [x] Prove the journey guard red against the former missing handoff, then pass 57/57 focused NIL, journey, backup-coverage, preview/modal and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the existing build chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design contracts and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [ ] Aggregate design-system report — the artifact regenerates, then the wrapper exits because it hardcodes unavailable `npx`; exact contracts pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace recovery slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; `stackhawk.yml` and an unread local properties file exist, but no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
+- [ ] Keep housing and meal-plan backup/migration closed until legacy term-only records have an explicit account ownership and safe migration rule.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 reversible athletics-hours removal — automation pass 6, integration slice 96
+
+- [x] Start from clean required-branch head `cb84b1707`; inspect selection-time `origin/main` `ccf2d45ff`, then inspect final `8107737a8` and confirm its access-saga files do not overlap athletics/CARA/Undo or the slice controls.
+- [x] Re-rank one student-authored CARA hours entry ahead of housing and meal-plan recovery, whose legacy term-only records still lack a safe account-ownership and migration rule.
+- [x] Give each removal an exact accessible name containing the recorded hours, activity kind and date.
+- [x] Offer an inline polite removal receipt and bounded Undo only after the guarded account/term-scoped device-library write succeeds.
+- [x] Restore the exact entry at its former position against the latest library state, preserving later log work, the weekly limit, season and all official/compliance records.
+- [x] Preserve the existing repository authority: the app records student-entered hours but does not decide countability, the applicable limit or compliance.
+- [x] Prove both component assertions red against the prior generic immediate removal, then pass 27/27 focused Cara, backup-coverage and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the build chunk-size warning.
+- [x] Pass 78/78 design-check constituents and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [x] Commit the coherent slice as `beda413e7`, merge final `origin/main` `8107737a8` cleanly as `f41dc507e`, then pass 27/27 focused tests, TypeScript and university gateway typecheck on the combined head.
+- [ ] Aggregate design-system wrappers — no real `npm`/`npx` executable is available in this shell; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace slice; no new full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep housing and meal-plan backup/migration closed until legacy term-only records have an explicit account ownership and safe migration rule.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 reversible athletics eligibility-requirement removal — automation pass 8, integration slice 98
+
+- [x] Start from clean required-branch head `d1c502690`; fetch current `origin/main` `8107737a8`, confirm it is already included and inspect exact athletics eligibility history/code for overlap.
+- [x] Re-rank one student-entered eligibility requirement ahead of housing and meal-plan portability, whose legacy term-only records still lack a safe account-ownership migration rule.
+- [x] Give every repeated removal control an exact accessible name containing the requirement and its student-entered authority/source.
+- [x] Offer a polite receipt and bounded eight-second Undo only after the validated account/term-scoped device-library write succeeds.
+- [x] Restore the exact requirement at its former position against the latest library state, preserving later eligibility work.
+- [x] Keep a refused write represented and avoid false completion or a false Undo offer.
+- [x] Preserve the existing athletics reader, workspace backup and explicit non-official eligibility boundary; add no rule set or eligibility determination.
+- [x] Reconcile all four current `vi.mock` omissions in the repository's explicit isolated-worker register and pass the isolation guard.
+- [x] Pass 7/7 focused eligibility, adjacent athletics-hours and isolation-policy tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the existing build chunk-size warning.
+- [x] Pass aggregate design-system check (9 token tests and 69 contracts) and the test-backed report; retain zero violations, 86 existing warnings and the existing CSS ledger.
+- [x] Commit the coherent slice as `88a86781a`, merge final upstream `ba24569ab` cleanly as `1948e3daa`, and confirm its access-saga, projection-dashboard and GitBook files do not overlap.
+- [x] Pass the same 7/7 focused tests, TypeScript and university gateway typecheck on the combined post-merge head.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace consequence slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` and app-host environment values unset and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready recovery and consequence gaps against current repository authority before choosing another bounded slice.
+- [ ] Keep housing and meal-plan backup/migration closed until legacy term-only records have an explicit account ownership and safe migration rule.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed graduation cost-line removal — automation pass 7, integration slice 97
+
+- [x] Start from clean required-branch head `9d627db64`; fetch current `origin/main` `8107737a8`, confirm it is already included and inspect exact cost-planner history and code for overlap.
+- [x] Re-rank one graduation cost estimate ahead of housing and meal-plan backup/migration, whose legacy term-only records still lack a safe account-ownership rule.
+- [x] Reuse `ConfirmDialog` and `ActionPreview` to name the exact label, amount, cadence, source, recalculated device totals, preserved records and recovery boundary before any write.
+- [x] Keep Cancel side-effect free with initial focus and route confirmation through the existing validated graduation device library.
+- [x] Keep a refused write and exact line represented for retry; announce success only after the exact-id removal is accepted and the affected total is recomputed.
+- [x] Preserve other cost lines, scenarios, downloaded copies, aid/official records, account drafts and provider state.
+- [x] Prove both regression assertions red against the former first-press removal, then pass 100/100 focused and adjacent graduation, cost, device-library, backup, preview/modal and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the existing build chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design contracts and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [x] Commit the coherent production/test/control slice locally as `633bfbfcb`; repeat mandatory post-commit HawkScan preflight for the exact SHA and retain the DAST gate as blocked.
+- [ ] Aggregate design-system check — its hardcoded `npm` launcher is unavailable; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-workspace consequence slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep housing and meal-plan backup/migration closed until legacy term-only records have an explicit account ownership and safe migration rule.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-11 governed degree-requirement removal — automation pass 11, integration slice 101
+
+- [x] Start from clean required-branch head `228334812`; fetch current `origin/main` `6e382ff13`, confirm it is already included and inspect exact degree-removal history/code for overlap.
+- [x] Re-rank one student-entered degree requirement as the earliest bounded Phase 3 consequence gap; keep recorded-course deletion and official registrar operations outside the mutation.
+- [x] Reuse `ConfirmDialog` and `ActionPreview` to identify the programme, rule, count, accepted courses, recalculated planning result, preserved records and manual recovery boundary before any write.
+- [x] Keep Cancel side-effect free and initially focused through the shared modal contract.
+- [x] Preserve the existing exact-id reducer operation and remove only the confirmed rule; do not imply that Semester changes or restores the registrar's official audit.
+- [x] Prove both regression tests red against the former first-press deletion, then pass 28/28 focused and adjacent degree, preview/modal, dead-end and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain eight existing lint warnings and the build chunk-size warning.
+- [x] Pass 9/9 token export, 69/69 design contracts and 96/96 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [ ] Aggregate design-system check — its hardcoded `npm` launcher is unavailable; exact constituents pass, but no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded Phase 3 consequence slice; no full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep recorded-course removal and official degree-audit operations separate from this one student-entered rule.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

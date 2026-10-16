@@ -177,6 +177,19 @@ describe('idempotency', () => {
     expect(replay).toEqual({ value: 3, replayed: true });
   });
 
+  it('lets the current lease holder persist a late result until a successor takes over', async () => {
+    const { c, store, ctx } = setup();
+    let reruns = 0;
+    const first = await withIdempotency(store, { clock: c }, ctx(TENANT_A, 'p'), 'x.y', {}, async () => {
+      c.advance(IDEMPOTENCY_LEASE_MS + 1);
+      return 1;
+    });
+    const replay = await withIdempotency(store, { clock: c }, ctx(TENANT_A, 'p'), 'x.y', {}, async () => ++reruns);
+    expect(first).toEqual({ value: 1, replayed: false });
+    expect(replay).toEqual({ value: 1, replayed: true });
+    expect(reruns).toBe(0);
+  });
+
   it('stores deterministic refusals and replays them; releases the key on a failure that may differ next time', async () => {
     const { c, store, ctx } = setup();
     let runs = 0;

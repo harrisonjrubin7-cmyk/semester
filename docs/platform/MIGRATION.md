@@ -106,17 +106,20 @@ membership or workspace requires explicit confirmation. The gateway now has an a
 the authenticated identity, carries the selected membership into `RequestContext`, and
 caps its role grants at the active-context expiry. Production authentication carries the
 authoritative membership row id and the signed session expiry after remote token
-validation. The gateway can now assemble that one proved membership into a context
-directory and authorize only the workspace classes implied by its current membership
-roles; it does not invent company, operations, or developer access. It still has no loader
-for additional memberships. No route or UI calls the adapter, so this remains an
-integration seam—not evidence of live context switching.
+validation. The gateway can assemble that one proved membership into a context directory
+and authorize only the workspace classes implied by its current membership roles; it does
+not invent company, operations, or developer access. An additive server-only directory
+loader now reloads all memberships by that remotely verified auth user id, bounds the
+result, omits inactive rows, and fails closed unless the authenticated membership still
+has the same tenant and roles. No route or UI calls the loader or adapter, and selected
+request contexts remain limited to the currently authenticated institution, so this is
+still an integration seam—not evidence of live cross-institution context switching.
 The browser's `lib/university.ts` now uses the shared SDK. Its transport
 preserves the existing secure-origin, no-redirect, no-cookie and timeout rules;
 mutating calls receive one idempotency key per logical call; only safe reads or
 keyed writes retry. The gateway context now validates and carries that key to
-adapters. The local SQLite action journal implements the shared persistent
-idempotency-store contract, but the production PostgreSQL journal does not and
+adapters. The local SQLite action journal and the repository's PostgreSQL
+journal both implement the shared persistent idempotency-store contract, but
 the legacy institution commit route is not wrapped with the store. That route
 therefore still opts out of network retry, preserving its
 unknown-outcome-to-reconciliation rule. The two older refusal shapes are translated at this

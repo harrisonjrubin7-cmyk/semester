@@ -47,6 +47,8 @@ import { GraduationSimulator } from '../components/GraduationSimulator';
 import { AdvisorMeeting } from '../components/AdvisorMeeting';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { PathSnapshotCard } from '../components/PathSnapshotCard';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ActionPreview } from '../components/unity/ActionPreview';
 import {
   fixFor,
   missingLine,
@@ -889,6 +891,7 @@ function TakenRow({ course: c }: { course: Taken }) {
 function RequirementRow({ requirement: r }: { requirement: Requirement }) {
   const { dispatch } = useStore();
   const [editing, setEditing] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [programme, setProgramme] = useState(r.programme);
   const [name, setName] = useState(r.name);
   const [count, setCount] = useState(String(r.count));
@@ -1019,12 +1022,36 @@ function RequirementRow({ requirement: r }: { requirement: Requirement }) {
       <button
         type="button"
         className="bare"
-        onClick={() => dispatch({ type: 'dropRequirement', id: r.id })}
+        onClick={() => setRemoving(true)}
         aria-label={`Remove ${r.name}`}
         style={{ width: 'auto', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
       >
         Remove
       </button>
+      {removing ? (
+        <ConfirmDialog
+          title="Remove this degree requirement?"
+          preview={(
+            <ActionPreview
+              subject={`${r.programme} · ${r.name}`}
+              says="Removes this student-entered rule and recalculates what Semester says is left in the degree plan."
+              exactly={`${r.count} ${r.need}${r.accepts.length > 0 ? ` · accepted courses: ${r.accepts.join(', ')}` : ' · any course can count'}`}
+              doesNotChange="Your recorded courses, other planning rules, graduation scenarios and the registrar’s official degree audit stay unchanged."
+              subjectTo="Semester’s result is planning arithmetic. Check it against the registrar’s current audit before making an academic decision."
+              recovery={{
+                kind: 'none',
+                how: 'To restore this rule, copy it again from the official audit.',
+              }}
+            />
+          )}
+          confirmLabel="Remove requirement"
+          onCancel={() => setRemoving(false)}
+          onConfirm={() => {
+            dispatch({ type: 'dropRequirement', id: r.id });
+            setRemoving(false);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

@@ -1,4 +1,10 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type {
+  BeginOutcome,
+  IdempotencyScope,
+  IdempotencyStore,
+  StoredResponse,
+} from '@semester/platform';
 import type { Receipt, UniversityIdentity } from '../../../packages/institution/src/index.ts';
 import type { ActionJournalStore, SavedReview } from './journal.ts';
 import type { IntelligenceAuditRecord } from './intelligence.ts';
@@ -30,7 +36,7 @@ function failed(error: unknown, operation: string): never {
  * enforce identity scope and atomic duplicate prevention without seeing the
  * action's form fields.
  */
-export class PostgresActionJournal implements ActionJournalStore {
+export class PostgresActionJournal implements ActionJournalStore, IdempotencyStore {
   private client: SupabaseClient;
   private key: Buffer;
 
@@ -65,6 +71,79 @@ export class PostgresActionJournal implements ActionJournalStore {
     } catch {
       return false;
     }
+  }
+
+  async begin(
+    scope: IdempotencyScope,
+    requestHash: string,
+    now: Date,
+    leaseMs: number,
+    ttlMs: number,
+  ): Promise<BeginOutcome> {
+    const rows = await this.rpc<Array<{
+      kind: BeginOutcome['kind'];
+      lease_id: string | null;
+      response_status: number | null;
+      response_body: string | null;
+      retry_after_seconds: number | null;
+    }>>('gateway_begin_idempotency', {
+      want_tenant: scope.tenantId,
+      want_actor: scope.actorId,
+      want_command: scope.command,
+      want_key: scope.key,
+      want_request_hash: requestHash,
+      want_now: now.toISOString(),
+      want_lease_ms: leaseMs,
+      want_ttl_ms: ttlMs,
+    }, 'begin an idempotent command');
+    const row = rows?.[0];
+    if (!row) failed(null, 'begin an idempotent command');
+    if (row.kind === 'started' && row.lease_id) return { kind: 'started', leaseId: row.lease_id };
+    if (row.kind === 'conflict') return { kind: 'conflict' };
+    if (row.kind === 'in_progress' && row.retry_after_seconds !== null) {
+      return { kind: 'in_progress', retryAfterSeconds: row.retry_after_seconds };
+    }
+    if (row.kind === 'replay' && row.response_status !== null && row.response_body) {
+      return {
+        kind: 'replay',
+        response: {
+          status: row.response_status,
+          body: openJournalRow(this.key, row.response_body),
+        },
+      };
+    }
+    failed(null, 'read an idempotent command outcome');
+  }
+
+  async complete(
+    scope: IdempotencyScope,
+    leaseId: string,
+    response: StoredResponse,
+    now: Date,
+  ): Promise<boolean> {
+    if (JSON.stringify(response.body) === undefined) {
+      throw new Error('The idempotent response body must be JSON-serialisable.');
+    }
+    return await this.rpc<boolean>('gateway_complete_idempotency', {
+      want_tenant: scope.tenantId,
+      want_actor: scope.actorId,
+      want_command: scope.command,
+      want_key: scope.key,
+      want_lease: leaseId,
+      want_status: response.status,
+      want_body: sealJournalRow(this.key, response.body),
+      want_now: now.toISOString(),
+    }, 'complete an idempotent command') === true;
+  }
+
+  async release(scope: IdempotencyScope, leaseId: string): Promise<boolean> {
+    return await this.rpc<boolean>('gateway_release_idempotency', {
+      want_tenant: scope.tenantId,
+      want_actor: scope.actorId,
+      want_command: scope.command,
+      want_key: scope.key,
+      want_lease: leaseId,
+    }, 'release an idempotent command') === true;
   }
 
   async save(row: SavedReview): Promise<void> {
