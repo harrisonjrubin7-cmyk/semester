@@ -7,7 +7,10 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
+    "pretest:e2e": "NEXT_PUBLIC_API_URL=http://127.0.0.1:43107/api/v1 pnpm build",
     "test:e2e": "playwright test",
+    "pretest:e2e:update": "NEXT_PUBLIC_API_URL=http://127.0.0.1:43107/api/v1 pnpm build",
+    "test:e2e:update": "playwright test --update-snapshots=all",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
