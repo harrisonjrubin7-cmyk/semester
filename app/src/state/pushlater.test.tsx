@@ -135,20 +135,22 @@ describe('a change after sign-in goes up to the account', () => {
     expect(last?.tone).toBe('minimal');
   }, 25_000);
 
-  // The control: the localStorage path always worked, and must go on working.
-  it('CONTROL: pushes again after a persisted change on the localStorage path', async () => {
+  // A browser without IndexedDB remains memory-only, but a signed-in change
+  // must still reach the account rather than being stranded in this tab.
+  it('pushes again without writing the account into clear-text localStorage', async () => {
     dbUp = false;
     const { first, after, last } = await signedInThenChanged();
     expect(first).toBeGreaterThan(0);
     expect(after).toBeGreaterThan(first);
     expect(last?.tone).toBe('minimal');
+    expect(localStorage.getItem('semester.v1')).toBeNull();
   }, 25_000);
 
   /*
    * The other half of the key: it must *not* move for state that is never
    * persisted, or every tab switch becomes a whole-account upload 2.5 s
    * later. (A navigation *does* push, on both paths: `recent` and `visited`
-   * are persisted fields, and the localStorage path always pushed for them.)
+   * are persisted fields, and the memory-only path still pushes them.)
    */
   it('does not push for a change to state that is not persisted', async () => {
     dbUp = true;

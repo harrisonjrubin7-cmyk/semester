@@ -17,8 +17,9 @@
  *
  * **Nothing here can break the app.** Every path resolves rather than throws,
  * and `available` reports honestly whether the database took. When it did not,
- * the caller keeps the localStorage path it has always had, shedding routine
- * and all.
+ * the caller may read a legacy localStorage copy for recovery but keeps new
+ * changes in memory rather than writing student work back as one clear-text
+ * browser-storage blob.
  */
 
 import { readAll, isEmpty, held, open, write, MAPS_STORE, SETTINGS_STORE, type Write } from './db';
@@ -118,8 +119,8 @@ async function readEverything(): Promise<Partial<Persisted> | null> {
 
 /**
  * Restore a remote snapshot whose owner changed (or whose final acknowledgement
- * was interrupted). Unknown journal shapes fail closed into the localStorage
- * fallback rather than exposing a possibly cross-account snapshot.
+ * was interrupted). Unknown journal shapes fail closed into the memory-only
+ * recovery path rather than exposing a possibly cross-account snapshot.
  */
 async function recoverRemoteWrite(): Promise<boolean> {
   const rows = await readAll(SETTINGS_STORE);
@@ -217,10 +218,11 @@ async function migrateFromLocalStorage(): Promise<FirstRun> {
  * Open the database, migrate if this is the first run, and read.
  *
  * Returns null when the database is unavailable, which is the caller's signal
- * to stay on localStorage. Unavailable includes a database that opened and
- * then did not answer: a read that hits its limit is `null` rather than an
- * empty store, and the whole load falls back rather than migrating an account
- * onto a handle that has just been dropped.
+ * to seed a memory-only session from any legacy localStorage copy. Unavailable
+ * includes a database that opened and then did not answer: a read that hits
+ * its limit is `null` rather than an empty store, and the whole load falls
+ * back rather than migrating an account onto a handle that has just been
+ * dropped.
  */
 export async function load(): Promise<Persisted | null> {
   const db = await open(COLLECTIONS as string[]);
@@ -230,8 +232,8 @@ export async function load(): Promise<Persisted | null> {
   /*
    * The database stopped answering under the load. `db.ts` has let go of the
    * handle, and whatever this had read or written is not to be trusted as an
-   * account: the caller stays on localStorage, exactly as if the open had
-   * never answered.
+   * account: the caller stays on its memory-only recovery path, exactly as if
+   * the open had never answered.
    */
   const lost = (): null => {
     ready = false;

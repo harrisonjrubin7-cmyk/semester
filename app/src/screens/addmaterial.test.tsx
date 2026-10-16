@@ -171,6 +171,17 @@ function press(named: RegExp) {
   });
 }
 
+/** Press a button whose visible label starts with this literal string. */
+function pressStarting(name: string) {
+  const el = [...host.querySelectorAll('button')].find(
+    (candidate) => (candidate.textContent ?? '').trim().startsWith(name),
+  );
+  if (!el) throw new Error(`no button starting with ${name}`);
+  act(() => {
+    (el as HTMLButtonElement).click();
+  });
+}
+
 /** Type into the material box the way React's own onChange sees it. */
 function paste(text: string) {
   const el = host.querySelector('textarea[aria-label="New material"]') as HTMLTextAreaElement;
@@ -612,7 +623,7 @@ describe('what the ticked changes reach', () => {
     // Untick both proposed cards. The file is not a proposal and does not
     // untick — a disabled button here used to lose it.
     for (const q of ['What does the four-hurdle test ask first?', 'What is a rival explanation?']) {
-      press(new RegExp(`^${q.replace(/\?/g, '\\?')}`));
+      pressStarting(q);
     }
     press(/^Attach the file only/);
 

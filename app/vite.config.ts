@@ -2,7 +2,7 @@ import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 import { configDefaults } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { EXTRA_CONNECT, parsePolicy, uncoveredOrigins } from './src/lib/cspheader.ts'
 import { privateHost, publicCalendarUrl } from './src/lib/publichost.ts'
@@ -586,8 +586,13 @@ const csp = (serving: boolean) => {
     closeBundle() {
       if (serving) return
       const file = join(outDir, '_headers')
-      if (!existsSync(file)) return
-      const text = readFileSync(file, 'utf8')
+      let text: string
+      try {
+        text = readFileSync(file, 'utf8')
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return
+        throw error
+      }
       if (!text.includes(EXTRA_CONNECT)) return
       writeFileSync(
         file,

@@ -209,8 +209,9 @@ finishAnyLaunch()
   // against a half-loaded store, which is what would send somebody who has
   // used this for a month back through onboarding.
   //
-  // A device that will not open a database gets null, and the app falls
-  // straight back to the localStorage path it has always had. See
+  // A device that will not open a database gets null. The app may seed the
+  // session from a legacy localStorage copy, but new changes remain in memory
+  // rather than returning student work to clear-text browser storage. See
   // `state/persist/`.
   .then(() => loadFromDb().catch((error: unknown) => {
     if (error instanceof OfflineRecoveryRequired) recoveryBlocked = true;

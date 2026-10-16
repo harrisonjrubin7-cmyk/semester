@@ -40,23 +40,22 @@ const store = readFileSync('src/state/store.tsx', 'utf8');
 
 describe('two tabs of the same app', () => {
   it('marks a hydrate that came from another tab', () => {
-    // Inside the `onOtherTab` handler, on both the database and the
-    // localStorage path — a device with no usable database loops just as
-    // readily as one with it.
+    // Inside the `onOtherTab` handler. The memory-only fallback has no durable
+    // write to announce; this guard is for the database path.
     const from = store.indexOf('onOtherTab(');
     const handler = store.slice(from, store.indexOf('}),', from));
     expect(handler.length, 'the onOtherTab handler should be findable').toBeGreaterThan(100);
     expect(
       handler.match(/fromOtherTab\.current = true/g) ?? [],
-      'both the db and the localStorage path must mark it',
-    ).toHaveLength(2);
+      'the database path must mark it',
+    ).toHaveLength(1);
   });
 
-  it('spends the mark on the write it causes, on both paths', () => {
+  it('spends the mark on the database write it causes', () => {
     // Read *and* cleared, so the next write — this tab's own — speaks again.
     // A flag that is set and never cleared silences the tab for good, which
     // loses the other tab's updates instead of looping: quieter, and worse.
-    expect(store.match(/fromOtherTab\.current = false/g) ?? []).toHaveLength(2);
+    expect(store.match(/fromOtherTab\.current = false/g) ?? []).toHaveLength(1);
   });
 
   it('never announces a write on the way in', () => {
@@ -65,10 +64,7 @@ describe('two tabs of the same app', () => {
     // reads it writes back — over the change that had not landed yet. The
     // announcement is handed to `persist` and made by `flush`.
     expect(store).toContain('persistToDb(picked, quiet ? undefined : tellOtherTabs)');
-    // The localStorage path is synchronous and already finished, so it may
-    // still call directly — but only when the write was this tab's own.
-    expect(store).toContain('if (!quiet) tellOtherTabs();');
-    // And nowhere unguarded.
+    // And nowhere unguarded or on the memory-only path.
     for (const call of store.match(/^\s*tellOtherTabs\(\);/gm) ?? []) {
       expect.fail(`an unguarded ${call.trim()} would loop`);
     }
