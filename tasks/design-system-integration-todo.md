@@ -2257,3 +2257,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep official support/safety systems, campus records and provider integrations separate from private device contacts.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 distinguishable People workspace removals — automation pass 7, integration slice 108
+
+- [x] Start from clean required-branch head `5058819a8`; fetch current `origin/main` `02ad46ff0`, confirm it is already included and inspect exact People history/current code for overlap.
+- [x] Re-rank the student-authored People workspace as the next bounded Phase 3 consequence/accessibility gap; keep communications, official applications and institution records outside the mutation.
+- [x] Identify each conversation removal by the person, recorded day and visible subject.
+- [x] Identify each recommendation-letter removal by purpose, recipient, deadline state and current request stage.
+- [x] Preserve the existing exact-id reducers and shared eight-second Undo without changing visible rows, persistence or letter workflow.
+- [x] Prove both regression paths red against the former date-only/generic controls, then pass 128/128 focused and adjacent People, reducer, Undo and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass 9/9 token export, 70/70 design contracts and 97/97 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility/consequence slice; pass 2's current-head checkpoint remains the latest full-suite evidence.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no scanner runtime, live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep recommender communications, official applications and institution records separate from private student-authored planning rows.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
