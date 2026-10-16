@@ -14,7 +14,7 @@
  * The export is the record on a date, headed "Not an official transcript",
  * because issuing one is not something this screen does.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { cloud } from '../../lib/cloud';
 import { download } from '../../lib/deliver';
 import { secondLine } from '../../lib/dim';
@@ -179,6 +179,7 @@ function StudentRecord({
   const [note, setNote] = useState('');
   const [on, setOn] = useState(day);
   const [line, setLine] = useState<string | null>(null);
+  const recordHeading = useRef<HTMLHeadingElement>(null);
   const { confirmFirst, dialog } = useConfirm();
 
   const fetch = useCallback(() => api.lookup(tenantId, studentRef), [api, tenantId, studentRef]);
@@ -214,7 +215,7 @@ function StudentRecord({
 
   return (
     <section aria-label={`Record of ${studentRef}`}>
-      <h3 style={h3}>Record of {studentRef}</h3>
+      <h3 ref={recordHeading} tabIndex={-1} style={h3}>Record of {studentRef}</h3>
       {!read ? (
         <p style={quiet}>Your account proposes changes to this record; it does not read the record itself.</p>
       ) : (
@@ -294,6 +295,7 @@ function StudentRecord({
                       setNote('');
                       try {
                         await api.withdraw(c.id);
+                        recordHeading.current?.focus({ preventScroll: true });
                         await reload();
                         setNote('Proposal withdrawn. The student’s academic record was not changed.');
                         onProposed();

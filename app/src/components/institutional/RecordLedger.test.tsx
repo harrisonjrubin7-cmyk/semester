@@ -206,6 +206,7 @@ describe('proposing', () => {
     expect(api.withdraw).toHaveBeenCalledWith(expect.stringMatching(/^c/));
     expect(host.textContent).not.toContain('Your proposals waiting for a decision');
     expect(host.textContent).toContain('Proposal withdrawn. The student’s academic record was not changed.');
+    expect(document.activeElement).toBe(host.querySelector('h3[tabindex="-1"]'));
   });
 });
 

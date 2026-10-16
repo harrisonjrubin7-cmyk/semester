@@ -26,7 +26,7 @@ will happily serve you the copy you already had.
 
 ### Academic-record proposals explain withdrawal before leaving the queue
 
-Staff who proposed a pending grade, enrollment or other academic-record change now see its exact student, record field, value and effective date before withdrawing it. The preview explains that the proposal leaves the independent decision queue, while the student’s current record, record history and other proposals remain unchanged. Cancel submits nothing. A withdrawn proposal cannot be reopened; seeking the same change later requires a new reasoned proposal and independent approval.
+Staff who proposed a pending grade, enrollment or other academic-record change now see its exact student, record field, value and effective date before withdrawing it. The preview explains that the proposal leaves the independent decision queue, while the student’s current record, record history and other proposals remain unchanged. Cancel submits nothing. After a confirmed withdrawal removes its button, keyboard focus stays with that student’s record instead of restarting at the top of the page. A withdrawn proposal cannot be reopened; seeking the same change later requires a new reasoned proposal and independent approval.
 
 ### Removing a degree requirement now explains the planning consequence first
 
