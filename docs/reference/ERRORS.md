@@ -400,6 +400,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/commit' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'X-Correlation-Id: docs-example-0033' \
+  -H 'Idempotency-Key: docs-example-0033' \
   -d '{"reviewId":"00000000-0000-4000-8000-000000000001","confirmed":true}'
 ```
 
@@ -430,6 +431,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/commit' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'X-Correlation-Id: docs-example-0034' \
+  -H 'Idempotency-Key: docs-example-0034' \
   -d '{"reviewId":"00000000-0000-4000-8000-000000000001","confirmed":true}'
 ```
 
@@ -507,6 +509,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/commit' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'X-Correlation-Id: docs-example-0038' \
+  -H 'Idempotency-Key: docs-example-0038' \
   -d '{"reviewId":"00000000-0000-4000-8000-000000000002","confirmed":true}'
 ```
 
@@ -533,6 +536,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/commit' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'X-Correlation-Id: docs-example-0039' \
+  -H 'Idempotency-Key: docs-example-0039' \
   -d '{"reviewId":"00000000-0000-4000-8000-000000000002","confirmed":true}'
 ```
 
@@ -587,6 +591,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/commit' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'X-Correlation-Id: docs-example-0042' \
+  -H 'Idempotency-Key: docs-example-0042' \
   -d '{"reviewId":"00000000-0000-4000-8000-000000000003","confirmed":true}'
 ```
 
@@ -615,6 +620,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/commit' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'X-Correlation-Id: docs-example-0044' \
+  -H 'Idempotency-Key: docs-example-0044' \
   -d '{"reviewId":"00000000-0000-4000-8000-000000000004","confirmed":true}'
 ```
 
