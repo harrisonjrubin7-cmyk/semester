@@ -199,6 +199,29 @@ def _mark_extracting(document: SourceDocument, detected_mime: str) -> None:
     }
 
 
+def classification_sample(materialized_rows: list[dict]) -> str:
+    """Keep every archive member represented while sampling page-granular text."""
+    rows_by_source: dict[str, list[dict]] = {}
+    for row in materialized_rows:
+        rows_by_source.setdefault(str(row["source_label"]), []).append(row)
+
+    sampled: list[dict] = []
+    for rows in rows_by_source.values():
+        seen_pages: set[int] = set()
+        member_sample: list[dict] = []
+        for row in rows:
+            page_number = row["page_number"]
+            if page_number is not None:
+                if page_number in seen_pages:
+                    continue
+                seen_pages.add(page_number)
+            member_sample.append(row)
+            if len(member_sample) == 5:
+                break
+        sampled.extend(member_sample)
+    return " ".join(str(row["content"])[:4000] for row in sampled).lower()
+
+
 def _commit_extraction(
     db,
     document_id: UUID,
@@ -258,17 +281,7 @@ def _commit_extraction(
             },
         ))
     if document.classification == "other" and materialized_rows:
-        page_numbers = sorted({
-            row["page_number"]
-            for row in materialized_rows
-            if row["page_number"] is not None
-        })[:5]
-        sample_rows = (
-            [row for row in materialized_rows if row["page_number"] in page_numbers]
-            if page_numbers
-            else materialized_rows[:5]
-        )
-        sample = " ".join(row["content"] for row in sample_rows).lower()
+        sample = classification_sample(materialized_rows)
         filename = document.filename.lower()
         if "syllabus" in filename or ("grading" in sample and "schedule" in sample):
             document.classification = "syllabus"

@@ -123,7 +123,7 @@ def test_course_ownership_boundary_returns_not_found_for_other_user(monkeypatch,
         )
         assert preview.status_code == 200
         assert preview.headers["content-type"] == "image/png"
-        assert preview.headers["cache-control"] == "private, max-age=300"
+        assert preview.headers["cache-control"] == "no-store"
         assert client.get(
             f"/api/v1/files/{document_id}/pages/1/preview",
             headers=second_headers,

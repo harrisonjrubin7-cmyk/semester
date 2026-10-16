@@ -669,7 +669,7 @@ def source_page_preview(
     return Response(
         content=preview,
         media_type="image/png",
-        headers={"Cache-Control": "private, max-age=300"},
+        headers={"Cache-Control": "no-store"},
     )
 
 
