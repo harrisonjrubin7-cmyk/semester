@@ -17,13 +17,54 @@ from app.extractors.base import ExtractedChunk
 from app.services.storage import ALLOWED_EXTENSIONS
 
 
+def normalized_pdf_bounds(page, coordinates: tuple[float, float, float, float]):
+    page_width = float(page.rect.width)
+    page_height = float(page.rect.height)
+    if page_width <= 0 or page_height <= 0:
+        return None
+    rect = fitz.Rect(*coordinates)
+    if page.rotation:
+        rect = rect * page.rotation_matrix
+    x0 = max(0.0, min(1.0, float(rect.x0) / page_width))
+    y0 = max(0.0, min(1.0, float(rect.y0) / page_height))
+    x1 = max(x0, min(1.0, float(rect.x1) / page_width))
+    y1 = max(y0, min(1.0, float(rect.y1) / page_height))
+    return {
+        "coordinate_space": "normalized",
+        "x": x0,
+        "y": y0,
+        "width": x1 - x0,
+        "height": y1 - y0,
+    }
+
+
 def extract_pdf(path: Path) -> list[ExtractedChunk]:
     chunks = []
     with fitz.open(path) as document:
         for index, page in enumerate(document, 1):
-            text = page.get_text("text").strip()
-            confidence = 1.0 if text else 0.0
-            chunks.append(ExtractedChunk(text or "[OCR required]", "page", page_number=index, confidence=confidence))
+            page_chunks = 0
+            for block in page.get_text("blocks"):
+                if len(block) < 7 or block[6] != 0:
+                    continue
+                text = str(block[4]).strip()
+                if not text:
+                    continue
+                x0, y0, x1, y1 = (float(value) for value in block[:4])
+                chunks.append(ExtractedChunk(
+                    text,
+                    "page_block",
+                    page_number=index,
+                    bounding_box=normalized_pdf_bounds(page, (x0, y0, x1, y1)),
+                    confidence=1.0,
+                ))
+                page_chunks += 1
+            if page_chunks == 0:
+                chunks.append(ExtractedChunk(
+                    "[OCR required]",
+                    "page",
+                    page_number=index,
+                    confidence=0.0,
+                ))
     return chunks
 
 

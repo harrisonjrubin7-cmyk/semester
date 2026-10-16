@@ -8,7 +8,7 @@ from threading import Event, Thread
 from uuid import UUID, uuid4
 
 from celery import Celery
-from sqlalchemy import and_, delete, or_, select
+from sqlalchemy import and_, delete, func, or_, select
 
 from app.core.config import settings
 from app.core.database import SessionLocal
@@ -258,7 +258,17 @@ def _commit_extraction(
             },
         ))
     if document.classification == "other" and materialized_rows:
-        sample = " ".join(row["content"] for row in materialized_rows[:5]).lower()
+        page_numbers = sorted({
+            row["page_number"]
+            for row in materialized_rows
+            if row["page_number"] is not None
+        })[:5]
+        sample_rows = (
+            [row for row in materialized_rows if row["page_number"] in page_numbers]
+            if page_numbers
+            else materialized_rows[:5]
+        )
+        sample = " ".join(row["content"] for row in sample_rows).lower()
         filename = document.filename.lower()
         if "syllabus" in filename or ("grading" in sample and "schedule" in sample):
             document.classification = "syllabus"
@@ -389,6 +399,7 @@ def extract_document(job_id: str) -> dict:
                 "cell_range": row.cell_range,
                 "start_seconds": row.start_seconds,
                 "end_seconds": row.end_seconds,
+                "bounding_box": row.bounding_box,
                 "confidence": row.confidence,
                 "metadata_json": metadata,
             })
@@ -500,7 +511,7 @@ def generate_study_asset(job_id: str) -> dict:
         heartbeat_started = True
         if not update_job_progress(db, lease, utc_now(), JOB_LEASE_TTL, 10):
             return {"status": "lease_lost"}
-        evidence = db.execute(
+        evidence_query = (
             select(Citation, SourceChunk, SourceDocument)
             .join(SourceChunk, Citation.chunk_id == SourceChunk.id)
             .join(SourceDocument, SourceChunk.document_id == SourceDocument.id)
@@ -509,8 +520,28 @@ def generate_study_asset(job_id: str) -> dict:
                 Citation.status == ReviewStatus.confirmed,
                 SourceDocument.deleted_at.is_(None),
             )
-            .limit(50)
-        ).all()
+            .order_by(
+                SourceDocument.id,
+                SourceChunk.page_number,
+                SourceChunk.slide_number,
+                SourceChunk.sheet_name,
+                SourceChunk.start_seconds,
+                SourceChunk.chunk_index,
+            )
+        )
+        evidence_count = db.scalar(
+            select(func.count()).select_from(evidence_query.subquery())
+        ) or 0
+        sample_size = min(50, evidence_count)
+        offsets = (
+            [0]
+            if sample_size == 1
+            else [round(index * (evidence_count - 1) / (sample_size - 1)) for index in range(sample_size)]
+        )
+        evidence = [
+            db.execute(evidence_query.offset(offset).limit(1)).one()
+            for offset in offsets
+        ]
         db.commit()
         if not evidence:
             raise ValueError("No confirmed citation-linked evidence is available")
