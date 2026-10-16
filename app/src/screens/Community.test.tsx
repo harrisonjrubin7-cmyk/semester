@@ -174,6 +174,36 @@ describe('Community', () => {
     expect(host.textContent).toContain('needs a signed-in account');
   });
 
+  it('offers reporting and appeal guidance without reading account data while signed out or switched off', async () => {
+    for (const state of ['signed-out', 'off']) {
+      mock.account = state === 'signed-out' ? null : { id: 'me' };
+      mock.on = state !== 'off';
+      await render();
+      const details = host.querySelector('details')!;
+      expect(details.querySelector('summary')?.textContent).toBe('Community guidelines');
+      expect(details.open).toBe(false);
+      act(() => details.querySelector('summary')!.click());
+      expect(details.open).toBe(true);
+      expect(details.textContent).toContain('Appeal this decision');
+      expect(details.textContent).toContain('not monitored as an emergency-response service');
+      expect(mock.loadCommunities).not.toHaveBeenCalled();
+      expect(mock.loadNotices).not.toHaveBeenCalled();
+      act(() => root.render(null));
+    }
+  });
+
+  it('keeps guidelines available inside a community and matches every report category', async () => {
+    await openCourse();
+    const details = host.querySelector('details')!;
+    expect(details.querySelector('summary')?.textContent).toBe('Community guidelines');
+    const { CATEGORY_TEXT } = await import('../components/community/ReportSheet');
+    for (const [, label] of CATEGORY_TEXT) expect(details.textContent).toContain(label);
+    expect(details.textContent).toContain('the appeal goes to a different reviewer');
+    expect(details.textContent).toContain('does not guarantee removal or a response time');
+    expect(mock.reportPost).not.toHaveBeenCalled();
+    expect(mock.appeal).not.toHaveBeenCalled();
+  });
+
   it('lists your communities and others at your school, with no people or counts', async () => {
     await render();
     expect(host.textContent).toContain('ECON 1010 · Course');

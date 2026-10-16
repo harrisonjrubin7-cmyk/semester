@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Find Community reporting and appeal guidance in one place
+
+**Community guidelines** now opens at the top of Community, including inside a community, while signed out and when Community is switched off. It explains course-policy and privacy checks before posting, lists the same reasons as the report form, and shows where to mute, block, leave or appeal a decision. Reading it changes nothing in your account. The emergency notice is the same one shown on the report form.
+
 ### Operators can inspect Semester as one connected ecosystem
 
 For operators holding the console grant, **Semester Operations** now has a read-only **Connected ecosystem** tab after **Finance model**. It maps the supplied Personal Education OS, Institution Operating OS and Semester Company OS into one platform view, and lets an operator inspect all 26 workspace, 281 screen and 122 capability contracts. The view labels the handoff as specification evidence and does not claim that a provider, institution, data connection or privileged operation is authorized or enabled. Students and school administrators will notice nothing.

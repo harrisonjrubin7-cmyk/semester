@@ -29,14 +29,14 @@ The handoff's seven-level ladder (`handoff/REPO-CROSSWALK.md` in the design expo
 | E · Registrar & academic operations | 32 | 3 | 0 | 1 | 0 | 0 |
 | F · Student accounts, aid & commerce | 28 | 1 | 0 | 0 | 0 | 0 |
 | G · Campus life | 30 | 4 | 0 | 3 | 1 | 0 |
-| H · Community & moderation | 26 | 2 | 0 | 6 | 1 | 0 |
+| H · Community & moderation | 27 | 1 | 0 | 6 | 1 | 0 |
 | I · Family & guardian | 10 | 2 | 0 | 1 | 0 | 0 |
 | J · Career, employer, alumni | 30 | 8 | 0 | 0 | 1 | 1 |
 | K · Institutional administration | 40 | 1 | 0 | 8 | 0 | 0 |
 | L · Integrations | 25 | 1 | 2 | 25 | 0 | 0 |
 | M · Trust, privacy, security | 42 | 5 | 1 | 0 | 0 | 0 |
 | N · Operations Command Center | 78 | 3 | 0 | 21 | 0 | 0 |
-| **Total (673)** | **534** | **44** | **4** | **84** | **6** | **1** |
+| **Total (673)** | **535** | **43** | **4** | **84** | **6** | **1** |
 
 The four blocked screens wait on something outside the repository: calendar booking (A-035), OneRoster REST sync (L-024), Edu-API configuration (L-025) and pen-test evidence (M-027).
 
@@ -66,12 +66,13 @@ The weakest areas by missing share are the advisor caseload (10 of 17), incident
 
 ## Prototype workspaces
 
-201 of the 281 prototype routes are **prototype only**: the route exists in the design project and no current app screen owns it. The workspaces with no current owner at all are applicant, advisor, finops, support, admissions, career, insights, family, alumni, success and clubs. The student workspace is the most covered (32 owned, 28 prototype only). A prototype route without an owner is not a missing feature by itself. Several duplicate catalog rows that are already owned, which is why the catalog's 44 missing screens and these 201 routes are different numbers.
+201 of the 281 prototype routes are **prototype only**: the route exists in the design project and no current app screen owns it. The workspaces with no current owner at all are applicant, advisor, finops, support, admissions, career, insights, family, alumni, success and clubs. The student workspace is the most covered (32 owned, 28 prototype only). A prototype route without an owner is not a missing feature by itself. Several duplicate catalog rows that are already owned, which is why the catalog's 43 missing screens and these 201 routes are different numbers.
 
 ## What this branch changes
 
 | Item | Before | After | Evidence |
 | --- | --- | --- | --- |
+| H-014 Community guidelines (2026-10-16 continuation) | Missing | Product guidance is code-present and connected to Community in signed-out, disabled and member states. Policy approval and institutional operation remain separate. | `app/src/components/community/Guidelines.tsx`; `app/src/screens/Community.test.tsx` |
 | G-010 Maintenance (screen) | Missing and in scope | Code-present, connected to the device store and Today's Action Center, tested locally. Not deployed. | `app/src/lib/maintenance.ts`, `app/src/lib/maintenance-actions.ts`, `app/src/components/MaintenanceRequests.tsx`; 37 tests |
 | Campus services · Submit housing maintenance request (workflow step) | Missing | **Partial.** The student keeps a record of a request submitted to housing elsewhere. Submitting it inside Semester needs a housing queue the school authorizes. | same |
 | Campus services · Housing staff accepts / Request resolved | Missing | Unchanged. Blocked on an institution-authorized staff queue. | — |

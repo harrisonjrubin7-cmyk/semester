@@ -47,6 +47,14 @@ A structural test checks that `feed.ts` never imports `safety-state.ts`.
 
 ## Student controls
 
+The **Community guidelines** disclosure at the top of Community describes the
+existing report, mute, block, leave and appeal controls. It remains available
+when signed out, when the feed is disabled and inside an open community.
+Its report categories come directly from the report form and its emergency
+notice from `CRISIS_NOTICE`. Opening it performs no account reads or writes.
+This is product help; the legal guidelines draft remains subject to its own
+approval and activation controls.
+
 | Control | Effect |
 | --- | --- |
 | Hide / Not relevant | Hides the item from this student's feed only. It never creates a report |
