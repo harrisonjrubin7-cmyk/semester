@@ -5,6 +5,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
 const mock = vi.hoisted(() => ({
   dropPart: vi.fn(async () => {}),
+  leaveGroup: vi.fn(async () => {}),
   groupsIn: vi.fn(async () => [
     { id: 'group-1', name: 'Case team', about: '', due: '2026-10-30', created_by: 'me', created_at: '2026-10-01T12:00:00Z' },
   ]),
@@ -30,6 +31,7 @@ const mock = vi.hoisted(() => ({
 vi.mock('../lib/classmates', async (original) => ({
   ...(await original<typeof import('../lib/classmates')>()),
   dropPart: mock.dropPart,
+  leaveGroup: mock.leaveGroup,
   groupsIn: mock.groupsIn,
   membersOf: mock.membersOf,
   partsOf: mock.partsOf,
@@ -64,6 +66,8 @@ const button = (name: string) => {
 beforeEach(async () => {
   mock.dropPart.mockReset();
   mock.dropPart.mockResolvedValue(undefined);
+  mock.leaveGroup.mockReset();
+  mock.leaveGroup.mockResolvedValue(undefined);
   mock.groupsIn.mockClear();
   mock.membersOf.mockClear();
   mock.partsOf.mockClear();
@@ -130,5 +134,50 @@ it('keeps the represented part and offers a retry when the server refuses remova
 
   expect(host.textContent).toContain('The group changed. Try again.');
   expect(button('Remove part 1 of 2, Draft findings: not done · assigned to Harrison · due 2026-10-20')).not.toBeNull();
+  expect(mock.partsOf).toHaveBeenCalledTimes(1);
+});
+
+it('previews leaving the shared group and cancellation performs no server write', async () => {
+  await act(async () => button('Leave Case team group').click());
+
+  const dialog = document.querySelector('[role="dialog"]');
+  expect(dialog?.textContent).toContain('Leave this shared group?');
+  expect(dialog?.textContent).toContain('Case team');
+  expect(dialog?.textContent).toContain('removes your membership from the shared Case team group');
+  expect(dialog?.textContent).toContain('You will no longer be able to see or edit its checklist');
+  expect(dialog?.textContent).toContain('2 checklist parts · 1 assigned to you · 2 current members');
+  expect(dialog?.textContent).toContain('The group, its parts, their assignments, the other members and official course records stay unchanged');
+  expect(dialog?.textContent).toContain('You can rejoin from this screen while you remain in the class');
+  expect(document.activeElement?.textContent).toBe('Cancel');
+  expect(mock.leaveGroup).not.toHaveBeenCalled();
+
+  await act(async () => button('Cancel').click());
+  expect(document.querySelector('[role="dialog"]')).toBeNull();
+  expect(mock.leaveGroup).not.toHaveBeenCalled();
+});
+
+it('leaves only after confirmation and does not reload a checklist that access just revoked', async () => {
+  await act(async () => button('Leave Case team group').click());
+  await act(async () => button('Leave group').click());
+  await flush();
+
+  expect(mock.leaveGroup).toHaveBeenCalledTimes(1);
+  expect(mock.leaveGroup).toHaveBeenCalledWith('me', 'group-1');
+  expect(mock.partsOf).toHaveBeenCalledTimes(1);
+  expect(document.querySelector('[role="dialog"]')).toBeNull();
+  expect(button('Join it')).not.toBeNull();
+  expect(host.textContent).not.toContain('Draft findings');
+});
+
+it('keeps membership represented and offers a retry when leaving is refused', async () => {
+  mock.leaveGroup.mockRejectedValueOnce(new Error('The membership changed. Try again.'));
+
+  await act(async () => button('Leave Case team group').click());
+  await act(async () => button('Leave group').click());
+  await flush();
+
+  expect(host.textContent).toContain('The membership changed. Try again.');
+  expect(button('Leave Case team group')).not.toBeNull();
+  expect(host.textContent).toContain('Draft findings');
   expect(mock.partsOf).toHaveBeenCalledTimes(1);
 });

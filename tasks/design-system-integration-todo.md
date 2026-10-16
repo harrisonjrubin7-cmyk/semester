@@ -2510,3 +2510,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep shared group-work mutations under current member-scoped server/RLS authority and preserve explicit recovery truth for actions that affect collaborators.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 governed shared group departure — automation pass 20, integration slice 121
+
+- [x] Start from clean required-branch head `2ff786b37`; confirm selection-time `origin/main` `ee11c2789` is included, inspect exact Group Work/membership/RLS history, then verify final `origin/main` `06c2d5c74` changes only Course Engine browser-journey evidence and does not overlap.
+- [x] Re-rank one-press shared-group departure as the next bounded Phase 4 consequence/recovery gap; keep other memberships, official course records and institution/provider activity outside the existing self-only server mutation.
+- [x] Name the leave control with the represented group and reuse `ConfirmDialog` / `ActionPreview` to state checklist-access loss, current member/part/assignment counts, unaffected records and the rejoin recovery path.
+- [x] Preserve the exact `(group_id, user_id)` delete and verified-student/class/self-only membership RLS; cancel writes nothing and a refused delete keeps membership/tasks represented with a retryable error.
+- [x] After successful deletion, remove only the signed-in member from the loaded roster and clear the inaccessible checklist locally instead of issuing the task read that RLS must now refuse.
+- [x] Prove all three behavior guards red against the former one-press/reload behavior, pass 76/76 focused and adjacent Group Work, classmates, room-key, signed-out and root-lifecycle tests, then pass the final 199/199 set including isolation and repository-map guards.
+- [x] Pass TypeScript, lint/style/label/terms checks, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through a temporary pnpm compatibility runtime: 9/9 token tests, 70/70 design contracts, zero design violations, 86 existing warnings and CSS within its ledger.
+- [ ] Durable group-membership history/audit — the current direct membership table delete records present state but no immutable leave/rejoin history; keep this broader server/data-contract gap explicit rather than claiming it in this UI slice.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded shared-action slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no scanner runtime, live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep group membership history/audit, group lifecycle administration and official course-team records as separate server-authority work.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

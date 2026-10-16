@@ -115,6 +115,13 @@ export function Groupwork() {
     groupId: string;
     groupName: string;
   } | null>(null);
+  const [leaving, setLeaving] = useState<{
+    groupId: string;
+    groupName: string;
+    partCount: number;
+    assignedCount: number;
+    memberCount: number;
+  } | null>(null);
 
   const term = termOf(now);
   /**
@@ -429,12 +436,14 @@ export function Groupwork() {
                 type="button"
                 className="btn btn-secondary"
                 disabled={busy}
-                onClick={() =>
-                  void guard(async () => {
-                    await leaveGroup(account.id, open.id);
-                    await loadOne(open.id);
-                  })
-                }
+                aria-label={`Leave ${open.name} group`}
+                onClick={() => setLeaving({
+                  groupId: open.id,
+                  groupName: open.name,
+                  partCount: parts.length,
+                  assignedCount: parts.filter((part) => part.owner === account.id).length,
+                  memberCount: members.length,
+                })}
                 style={{ flex: 1, height: 38, fontSize: 'var(--type-sm-plus)' }}
               >
                 Leave the group
@@ -616,6 +625,39 @@ export function Groupwork() {
             void guard(async () => {
               await dropPart(target.part.id);
               await loadOne(target.groupId);
+            });
+          }}
+        />
+      ) : null}
+      {leaving ? (
+        <ConfirmDialog
+          title="Leave this shared group?"
+          preview={
+            <ActionPreview
+              subject={leaving.groupName}
+              says={`This removes your membership from the shared ${leaving.groupName} group. You will no longer be able to see or edit its checklist.`}
+              exactly={`${leaving.partCount} checklist ${leaving.partCount === 1 ? 'part' : 'parts'} · ${leaving.assignedCount} assigned to you · ${leaving.memberCount} current ${leaving.memberCount === 1 ? 'member' : 'members'}`}
+              doesNotChange="The group, its parts, their assignments, the other members and official course records stay unchanged."
+              recovery={{ kind: 'undo', how: 'You can rejoin from this screen while you remain in the class. Rejoining restores access but does not change assignments.' }}
+            />
+          }
+          confirmLabel="Leave group"
+          onCancel={() => setLeaving(null)}
+          onConfirm={() => {
+            const target = leaving;
+            setLeaving(null);
+            void guard(async () => {
+              await leaveGroup(account.id, target.groupId);
+              // The membership delete immediately revokes task-list access.
+              // Reflect that successful write locally instead of issuing a
+              // parts read the server must now refuse.
+              setRoster((current) => current.id === target.groupId
+                ? {
+                    id: current.id,
+                    members: current.members.filter((member) => member.user_id !== account.id),
+                    parts: [],
+                  }
+                : current);
             });
           }}
         />
