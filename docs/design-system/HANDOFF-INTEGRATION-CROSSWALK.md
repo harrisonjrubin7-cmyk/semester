@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-11 · **Latest observed `origin/main`** `6e382ff13` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-16 · **Latest observed `origin/main`** `822623170` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -755,3 +755,15 @@ The regression failed against the prior incomplete row and duplicate accessible 
 | Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent, API key/app host are unset and a local properties file was detected without reading it. No target, DAST scan, finding result, fix/rescan loop or security pass exists. |
 
 The regression failed against the former title-only labels. Focused and adjacent verification passes 94/94; TypeScript, lint and university typecheck pass. Production build passes with the existing chunk-size warning. Design-check constituents pass 79/79 and report contracts pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Selection-time `origin/main` `812960b5b` is included; final `822623170` changes only separate design-system registry/passport files and contains no equivalent work. Slice commit `c84ba0b7d` merges it cleanly as `1ab849165`, and the combined head passes 94/94 focused tests plus both TypeScript gates. No route, dependency, schema, grant, RLS policy, server operation, provider configuration, deployment or external system changed.
+
+## Automation pass 4 update — distinguishable activity-commitment removals (slice 105)
+
+| Reference requirement | Current repository evidence | Disposition |
+| --- | --- | --- |
+| Distinguish repeated student-owned consequence controls | `app/src/screens/Activities.tsx`, `app/src/screens/activities.removal-labels.test.tsx` | **Existing but incomplete → existing and verified for this slice.** Commitments with the same name now expose distinct removal names when their represented facts differ. |
+| Identify the exact represented commitment | `app/src/lib/activities.ts`, `app/src/screens/Activities.tsx` | **Existing and verified.** The accessible name reuses the row's kind, optional role, fixed schedule or weekly-hours estimate, and optional location. |
+| Preserve exact mutation and recovery behavior | `app/src/state/slices/mine.ts`, `app/src/lib/undo.ts`, `app/src/screens/activities.removal-labels.test.tsx` | **Existing and unchanged.** Removal still targets one exact id and the shared eight-second Undo receipt remains the recovery path. |
+| Preserve institution authority | `app/src/components/CampusDirectory.tsx`, `app/src/screens/Activities.tsx` | **Existing and unchanged.** The row is student-entered device planning; no official directory, membership, event or institution record changes. |
+| Security verification after production behavior changes | `stackhawk.yml` | **Blocked by environment.** Hawk and Docker are absent, API key/app host are unset and a local properties file was detected without reading it. No scanner runtime, live target, DAST scan, finding result, fix/rescan loop or security pass exists. |
+
+The regression failed against the former name-only controls. Focused and adjacent verification passes 178/178; TypeScript, lint and university typecheck pass. Production build passes with the existing chunk-size warning. Token export passes 9/9, design-check contracts pass 70/70 and report contracts pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Current `origin/main` `822623170` is included and contains no equivalent work. The coherent code/test slice is commit `79abe524b`. No route, dependency, schema, grant, RLS policy, server operation, provider configuration, deployment or external system changed.

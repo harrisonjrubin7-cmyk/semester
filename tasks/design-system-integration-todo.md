@@ -2199,3 +2199,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep official student-account records, awards, money movement, card data and provider integrations separate from student-entered device planning.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 distinguishable activity-commitment removals — automation pass 4, integration slice 105
+
+- [x] Start from clean required-branch head `b1df341ae`; fetch `origin/main` `822623170`, confirm it is included and inspect exact Activities history/current code for overlap.
+- [x] Re-rank duplicate accessible removal names in the student-entered Activities week as the next bounded Phase 3/6 gap; keep official directories and institutional records outside the mutation.
+- [x] Reuse each represented row detail in its removal name: kind, optional role, fixed schedule or weekly-hours estimate, and optional location.
+- [x] Preserve the existing exact-id reducer action and shared eight-second Undo receipt; add no confirmation, parallel persistence or server claim.
+- [x] Prove the regression red against the former name-only controls, then pass 178/178 focused and adjacent Activities, activity arithmetic, reducer, Undo and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass 9/9 token export, 70/70 design-check contracts and 97/97 report contracts; retain zero audit violations, 86 existing warnings and the current CSS ledger.
+- [x] Commit the coherent code/test slice as `79abe524b`.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility/consequence slice; pass 2's current-head checkpoint remains the latest full-suite evidence.
+- [ ] HawkScan DAST — mandatory post-commit preflight for `79abe524b` reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no scanner runtime, live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official campus directories, organization membership and institution event systems separate from student-entered device planning.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
