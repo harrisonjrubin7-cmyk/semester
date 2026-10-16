@@ -2353,3 +2353,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep official registrar/LMS course deletion, authentication and provider activity separate from this private saved-course copy.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 distinguishable Mine workspace removals — automation pass 12, integration slice 113
+
+- [x] Start from clean required-branch head `fbad0d86c`; fetch selection-time `origin/main` `02ad46ff0`, confirm it is included and inspect exact Mine history/current code for overlap.
+- [x] Re-rank repeated student-owned task-step, action and appointment controls as the next bounded Phase 3 accessibility gap; keep official calendar and institution records outside the slice.
+- [x] Name step removals with position, containing action, text and completion state.
+- [x] Name action deletions with student-visible scope, date, time, repeat rule and step progress.
+- [x] Name appointment deletions with date, time, kind, location, duration/span and repeat rule.
+- [x] Preserve the exact-id `dropStep`, `deleteTask` and `deleteAppointment` operations and the shared eight-second Undo receipt.
+- [x] Prove both regression paths red against the former generic/title-only names, then pass 189/189 focused and adjacent Mine, dead-end, reducer, Undo, label and root-lifecycle tests.
+- [x] Pass TypeScript, lint/style/label/terms checks, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass 9/9 token export, 70/70 design contracts and 97/97 report contracts; preserve zero design violations, 86 existing warnings and CSS within its ledger.
+- [x] Fetch final `origin/main` `8a29db78f`; confirm its isolation-register cleanup is already present on this branch and does not overlap Mine or the integration controls.
+- [ ] Aggregate design report wrapper — writes the report, then exits 1 because it invokes unavailable `npx`; the exact 97 contracts pass and no wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — the active loop stops at mandatory preflight because Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. `stackhawk.yml` exists and no local properties file was detected; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official calendar, course and institution records separate from this student-owned device workspace.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
