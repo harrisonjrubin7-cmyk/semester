@@ -3,6 +3,7 @@ import { PlatformError, type ContextDirectory } from '../../../packages/platform
 import type { UniversityIdentity } from '../../../packages/institution/src/index.ts';
 import type { VerifiedMembershipIdentity } from './membership.ts';
 import {
+  createContextActivationRequester,
   createContextDirectoryLoader,
   contextDirectoryForVerifiedIdentity,
   contextDirectoryForVerifiedMemberships,
@@ -194,6 +195,77 @@ describe('the gateway selected active context', () => {
     });
 
     await expect(load(identity)).resolves.toEqual(contextDirectoryForVerifiedIdentity(identity));
+    expect(requestedUser).toBe(who.userId);
+  });
+
+  it('refuses an activation request without explicit confirmation and performs no directory lookup', async () => {
+    const identity: VerifiedMembershipIdentity = {
+      ...who,
+      roles: ['student'],
+      membershipId: 'membership-northstar-student',
+      sessionExpiresAt: '2099-01-01T02:00:00.000Z',
+    };
+    let lookups = 0;
+    const requestActivation = createContextActivationRequester({
+      membershipsForUser: async () => {
+        lookups += 1;
+        return [];
+      },
+    });
+
+    await expect(requestActivation(identity, {
+      membershipId: 'membership-vanderbilt-advisor',
+      workspace: 'staff',
+      confirmed: false,
+    })).rejects.toMatchObject({ code: 'conflict' });
+    expect(lookups).toBe(0);
+  });
+
+  it('activates a confirmed selection only after reloading the verified account directory', async () => {
+    const identity: VerifiedMembershipIdentity = {
+      ...who,
+      roles: ['student'],
+      membershipId: 'membership-northstar-student',
+      sessionExpiresAt: '2099-01-01T02:00:00.000Z',
+    };
+    let requestedUser = '';
+    const requestActivation = createContextActivationRequester({
+      membershipsForUser: async (userId) => {
+        requestedUser = userId;
+        return [
+          {
+            id: identity.membershipId,
+            userId,
+            tenantId: who.institutionId,
+            providerId: 'provider-northstar',
+            status: 'active',
+            roles: ['student'],
+          },
+          {
+            id: 'membership-vanderbilt-advisor',
+            userId,
+            tenantId: 'vanderbilt',
+            providerId: 'provider-vanderbilt',
+            status: 'active',
+            roles: ['advisor'],
+          },
+        ];
+      },
+    });
+
+    await expect(requestActivation(identity, {
+      membershipId: 'membership-vanderbilt-advisor',
+      workspace: 'staff',
+      confirmed: true,
+    })).resolves.toMatchObject({
+      tenantId: 'vanderbilt',
+      institutionId: 'vanderbilt',
+      personId: who.userId,
+      membershipId: 'membership-vanderbilt-advisor',
+      workspace: 'staff',
+      roleGrantIds: ['membership-vanderbilt-advisor'],
+      expiresAt: identity.sessionExpiresAt,
+    });
     expect(requestedUser).toBe(who.userId);
   });
 

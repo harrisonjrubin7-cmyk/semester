@@ -10,10 +10,10 @@
     "escalation_contacts_published": false
   },
   "required": [
-    {"id": "support.escalation_roster", "status": "not_verified", "evidence": ["docs/support/README.md"], "expires_at": null, "gap": "No backup, staffed hours, paging test, or published escalation contacts exist."},
-    {"id": "monitoring.synthetic_checks", "status": "not_verified", "evidence": ["docs/operations/launch-readiness.md"], "expires_at": null, "gap": "No target-environment synthetic support or recovery check is retained."},
-    {"id": "recovery.restore_drill", "status": "not_verified", "evidence": ["docs/evidence/restore/2026-09-30-logical-rehearsal.md"], "expires_at": null, "gap": "The repository has a historical logical rehearsal, not a current operated restore against the target."},
-    {"id": "recovery.incident_exercise", "status": "not_verified", "evidence": ["docs/INCIDENT-RECOVERY-PLAYBOOK.md"], "expires_at": null, "gap": "An incident playbook exists, but no current exercised incident record is retained for this capability."}
+    {"id": "support.escalation_roster", "status": "not_verified", "evidence": ["docs/support/README.md"], "observed_at": null, "environment": null, "revision": null, "expires_at": null, "gap": "No backup, staffed hours, paging test, or published escalation contacts exist."},
+    {"id": "monitoring.synthetic_checks", "status": "not_verified", "evidence": ["docs/operations/launch-readiness.md"], "observed_at": null, "environment": null, "revision": null, "expires_at": null, "gap": "No target-environment synthetic support or recovery check is retained."},
+    {"id": "recovery.restore_drill", "status": "not_verified", "evidence": ["docs/evidence/restore/2026-09-30-logical-rehearsal.md"], "observed_at": null, "environment": null, "revision": null, "expires_at": null, "gap": "The repository has a historical logical rehearsal, not a current operated restore against the target."},
+    {"id": "recovery.incident_exercise", "status": "not_verified", "evidence": ["docs/INCIDENT-RECOVERY-PLAYBOOK.md"], "observed_at": null, "environment": null, "revision": null, "expires_at": null, "gap": "An incident playbook exists, but no current exercised incident record is retained for this capability."}
   ],
   "gaps": [
     "Name and train a backup operator with staffed support hours.",
