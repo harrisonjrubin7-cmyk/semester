@@ -38,7 +38,7 @@ A browser-style `Origin` header is checked: if you send one, it must equal the g
 
 Use one id per thing a person did. The client reuses one id for the prepare, commit and reconcile of one action, and for every retry of one call. When you ask support about a failure, this is the id to quote.
 
-For a write, that same safe identifier is also sent as `Idempotency-Key`. The commit route requires it so a repeated request can replay the first completed response without executing the institutional action again.
+For a write, that same safe identifier is also sent as `Idempotency-Key`. A keyed commit can replay the first completed response without executing the institutional action again; unkeyed legacy callers retain the review journal's existing duplicate guard during migration.
 
 ## 3. Read status and records
 

@@ -120,9 +120,10 @@ mutating calls receive one idempotency key per logical call; only safe reads or
 keyed writes retry. The gateway context now validates and carries that key to
 adapters. The local SQLite action journal and the repository's PostgreSQL
 journal both implement the shared persistent idempotency-store contract. The
-legacy institution commit route now requires a key and wraps its whole commit
-decision with the seven-day academic TTL; replay is explicit in the response
-headers. The browser still opts that call out of automatic network retry until
+legacy institution commit route now wraps keyed commit decisions with the
+seven-day academic TTL; replay is explicit in the response headers, while
+unkeyed legacy callers retain the review journal's duplicate guard during the
+migration. The browser still opts that call out of automatic network retry until
 the PostgreSQL migration is independently deployed and verified, preserving
 the existing unknown-outcome-to-reconciliation rollout boundary. The two older refusal shapes are translated at this
 migration boundary with a focused equivalence test. **Not done:** the edge
