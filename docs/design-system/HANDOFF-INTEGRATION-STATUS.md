@@ -1364,3 +1364,15 @@ This local slice does not prove deployment, production execution, provider conne
 - Mandatory HawkScan preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` and app-host values unset, `stackhawk.yml` present and a local properties file detected but unread. No target, DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 23 / integration slice 124
+
+- The clean required branch began at `901dc4b7b` and already included current `origin/main` `06c2d5c74`; exact upstream and current-code inspection found no duplicate-source guard.
+- Every removal now names its list position, complete source name, one-time import/subscription/Canvas authority, imported event count and last read result without exposing a private subscription URL.
+- Existing exact-id `removeFeed`, the atomic `feeds` / `feedEvents` snapshot and eight-second Undo remain authoritative. Removing a local source does not revoke a provider or change an official calendar.
+- The rendered regression failed against the former name-only control, then the final focused and adjacent Connect, reducer, Undo, freshness, label, root-lifecycle and isolation set passes 184/184.
+- TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning.
+- Aggregate design-system check passes 9 token tests and 70 design contracts. The test-backed report passes; audit remains at zero violations with 86 existing warnings and CSS within its ledger.
+- Mandatory HawkScan preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` present and a local properties file detected but unread. No target, DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.

@@ -2566,3 +2566,21 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep official maintenance withdrawal, housing assignment changes and portal/provider integration outside this student-authored device record without current institution authority.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 23 update — distinguishable connected-calendar removals (slice 124)
+
+- [x] Start from clean required-branch head `901dc4b7b`, fetch current `origin/main` `06c2d5c74`, confirm it is already included and inspect exact Connect/calendar-removal history and current code for overlap.
+- [x] Re-rank duplicate calendar-source names as the next bounded Phase 3 accessibility gap; keep provider disconnect, official calendars and authenticated ingestion outside this device mutation.
+- [x] Name every removal with list position, source name, one-time import/subscription/Canvas authority, imported event count and last read result without exposing a private subscription URL.
+- [x] Preserve the existing exact-id `removeFeed` reducer, atomic `feeds` / `feedEvents` snapshot and eight-second Undo receipt.
+- [x] Prove the duplicate-source regression red against the former name-only control, then pass the final 184/184 focused and adjacent Connect, reducer, Undo, freshness, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, test-backed report, zero violations, 86 existing warnings and CSS within ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep local calendar-source removal, provider authorization revocation and official institutional calendar records as separate operations.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

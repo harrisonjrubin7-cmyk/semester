@@ -993,3 +993,15 @@ No route, navigation, dependency, schema, authorization policy, provider configu
 | DAST security verification | `stackhawk.yml`; active HawkScan skill | Blocked by environment | Hawk v6/config and Docker are absent, API-key/app-host values are unset and no runnable target exists. A local properties file was detected but not read; no scan or security pass is claimed. |
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, live provider behavior, institutional acceptance or production readiness.
+
+## Automation pass 23 mapping — distinguishable connected-calendar removals (slice 124)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated connected-source names remain distinguishable at removal | `app/src/screens/Connect.tsx`; `app/src/screens/connect.removal-labels.test.tsx` | Existing but incomplete → existing and verified for this slice | Accessible names identify list position, source name, import/subscription/Canvas authority, event count and read result. Private subscription URLs are not exposed in the name. |
+| Preserve exact mutation and recovery | `removeFeed`; `app/src/state/slices/library.ts`; `app/src/lib/undo.ts` | Existing and unchanged | The same exact-id reducer removes only the represented source and its `sourceId` events; the shared eight-second snapshot restores only `feeds` and `feedEvents`. |
+| Preserve external authority boundaries | Connect provider revocation flows; official calendar systems | Intentionally unchanged | Removing a device source does not revoke provider authorization, mutate an external calendar or claim an official institutional record changed. |
+| Regression and focused verification | New rendered regression plus reducer/Undo/freshness/label/root/isolation guards | Existing and verified locally for this slice | Red proof against the former name-only control; final 184/184 focused/adjacent tests, both typechecks, lint, build and aggregate design check/report pass. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan skill | Blocked by environment | Hawk v6/config and Docker are absent, API-key/app-host values are unset and no runnable target exists. A local properties file was detected but not read; no scan or security pass is claimed. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, live provider behavior, institutional acceptance or production readiness.
