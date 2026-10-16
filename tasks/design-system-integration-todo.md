@@ -2248,6 +2248,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Pass TypeScript, lint, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
 - [x] Pass 9/9 token export, 70/70 design-check contracts and 97/97 report contracts; retain zero audit violations, 86 existing warnings and the current CSS ledger.
 - [x] Commit the coherent code/test slice locally as `4078f8e40` after confirming final `origin/main` remains included and non-overlapping.
+- [x] Merge final non-overlapping `origin/main` `02ad46ff0` as `70ce0608a`, then pass 98/98 focused tests, TypeScript and university gateway typecheck on the combined head.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility/consequence slice; pass 2's current-head checkpoint remains the latest full-suite evidence.
 - [ ] HawkScan DAST — mandatory post-commit preflight for `4078f8e40` reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no scanner runtime, live target, scan, finding result, fix/rescan loop or security pass exists.
 
