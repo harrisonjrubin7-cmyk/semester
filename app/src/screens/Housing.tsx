@@ -43,9 +43,9 @@ import {
  * university credentials — which this app will never do.
  */
 export function Housing() {
- const {state}=useStore();
+ const {state,account}=useStore();
  const [tab,setTab]=useState('mine');const [choice,setChoice]=useState('');
- return <div className="portal-workspace campus-workspace"><TabList label="Housing portal" className="portal-tabs" value={tab} onChange={id=>{setChoice('');setTab(id);}} tabs={([['mine','My housing'],['directory','Find housing'],['plan','Application plan']] as [typeof tab,string][]).map(([id,label])=>({id,label}))}/>{tab==='mine'?<HousingDetails key={state.term}/>:tab==='directory'?<CampusDirectory kind="housing" onPlan={item=>{setChoice(item.name);setTab('plan');}}/>:<HousingPlanner key={state.term} choice={choice} term={state.term}/>}</div>;
+ return <div className="portal-workspace campus-workspace"><TabList label="Housing portal" className="portal-tabs" value={tab} onChange={id=>{setChoice('');setTab(id);}} tabs={([['mine','My housing'],['directory','Find housing'],['plan','Application plan']] as [typeof tab,string][]).map(([id,label])=>({id,label}))}/>{tab==='mine'?<HousingDetails key={state.term}/>:tab==='directory'?<CampusDirectory kind="housing" onPlan={item=>{setChoice(item.name);setTab('plan');}}/>:<HousingPlanner key={`${account?.id||'device'}:${state.term}`} choice={choice} term={state.term} accountId={account?.id??null}/>}</div>;
 }
 function HousingDetails() {
   const { state, dispatch, catalog } = useStore();

@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Removing a degree requirement now explains the planning consequence first
+
+On **My Path → Requirements**, **Remove** now opens the standard consequence preview before changing the plan. It names the programme, rule, count and accepted courses; says Semester will recalculate its planning-only “what is left” result; and confirms that recorded courses, other rules, scenarios and the registrar's official audit stay unchanged. Cancel starts focused and changes nothing. Removing the rule cannot be undone in Semester; copy it again from the current official audit if you need it back.
+
 ### Operators can inspect Semester as one connected ecosystem
 
 For operators holding the console grant, **Semester Operations** now has a read-only **Connected ecosystem** tab after **Finance model**. It maps the supplied Personal Education OS, Institution Operating OS and Semester Company OS into one platform view, and lets an operator inspect all 26 workspace, 281 screen and 122 capability contracts. The view labels the handoff as specification evidence and does not claim that a provider, institution, data connection or privileged operation is authorized or enabled. Students and school administrators will notice nothing.
