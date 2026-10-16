@@ -22,6 +22,13 @@ The test that holds this page checks that every script, test file and CI step na
 | Course data | `node pipeline/validate.mjs`, from the repository root | Node only. |
 | Scheduled and operational probes | `npm run smoke:production`, `smoke:public-production`, `sweep:contrast`, `eval:model-quality` | Deployed URLs (`smoke:*production`), a browser and a running dev server (`sweep:contrast`), or a model key or proxy (`eval:model-quality`). Not part of a pull request. |
 
+The production build substitutes the deployment-specific CSP connection
+origins into `dist/_headers`. The Vite plugin opens that generated file once,
+then reads, truncates and rewrites it through the same descriptor so a path
+check cannot race a replacement file. `src/lib/hostheaders.test.ts` holds the
+placeholder and built-header contract; a production build proves the actual
+rewrite.
+
 ## How the Vitest suite is arranged
 
 `app/vite.config.ts` defines two Vitest projects.
@@ -105,7 +112,7 @@ Other workflows:
 | Deploy to Pages | `pages.yml` | After `CI` completes on `main`, or by hand | Builds and publishes the app only if CI succeeded. |
 | Deploy Edge Functions | `functions.yml` | After `CI` completes on `main`, or by hand | Deploys the function directories the merge touched, only if CI succeeded. |
 | Contrast | `contrast.yml` | Nightly at 07:00 UTC, or by hand | The contrast sweep in a real browser against the dev server. Not a required check. |
-| Production smoke | `production-smoke.yml` | Hourly, or by hand | Probes the Vercel app using the repository's production app URL override, defaulting to the verified `https://semester-rose.vercel.app` production alias. Separately probes Pages and records its hourly availability on `status-data`. Institutional probes still require both configured production URLs. |
+| Production smoke | `production-smoke.yml` | Hourly, or by hand | Probes the Vercel app using the repository's production app URL override, defaulting to the verified `https://semester-rose.vercel.app` production alias. Separately probes Pages and records its hourly availability on `status-data`. The institutional probe uses the same app fallback and activates only when the production gateway URL variable is configured; until then, the gateway remains explicitly unverified. |
 | Infrastructure | `infra.yml` | Pull request and push to `main` that touch `infra/`, `scripts/infra/`, `.github/workflows/` or `.github/rulesets/` | Read-only: Terraform format, initialise and validate; the policy's own tests, and every workflow against the policy; a governed change carries its change record. |
 | Infrastructure drift | `drift.yml` | Daily at 07:17 UTC, or by hand | Plans each Terraform root against the live system. A root that cannot be planned is reported NOT CHECKED, never clean. Nothing has been applied yet (`infra/README.md`), so there is no live system to drift from. |
 | Infrastructure apply | `infra-apply.yml` | By hand only (`workflow_dispatch`), naming a Terraform root and an approved change record | The one way production infrastructure is changed: a plan job, then an apply job in a protected environment that applies exactly the saved plan. |

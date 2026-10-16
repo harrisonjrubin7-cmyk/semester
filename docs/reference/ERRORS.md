@@ -74,6 +74,7 @@ The "Emitted" column is `yes` when some call in the gateway source can produce t
 | `outcome_uncertain` | 409, 502 | yes | 502: execute failed and the school may have acted. 409: reconcile asked and the school has not answered. |
 | `read_only` | 503 | yes | Read-only mode is on and the call is a write. |
 | `adapter_not_configured` | 503 | yes | No adapter is installed for the caller's institution and area. |
+| `idempotency_unavailable` | 503 | yes | A keyed action commit cannot reach its durable replay store, so nothing is sent to the institution. |
 | `policy-disabled` | 503 | yes | No intelligence service is configured on this gateway. Note the hyphen: this code is spelled like the intelligence codes. |
 | `unavailable` | 503 | yes | Anything unexpected, and an adapter that cannot reconcile. One fixed sentence. |
 

@@ -1,4 +1,4 @@
-# Verification report — 2026-10-12
+# Verification report — through 2026-10-16
 
 ## Passed
 
@@ -8,8 +8,8 @@
 - `pnpm run typecheck`: passed.
 - `pnpm run build`: passed; all 15 course workspace routes compiled.
 - `pnpm test`: 28 frontend tests passed across eleven files, including the shell, command-palette focus, source/status vocabulary and locations, review correction and asset-cache refresh, calendar consequence preview/exact undo, upload job progress/cancellation/retry, card recall, validated cited guide rendering, authenticated document export lifecycle, quiz completion, rejected-asset exclusion, operational states, semantic token contracts, and an axe ready-state scan.
-- `pnpm run test:e2e`: 3 real-Chromium browser tests passed for the landing page and mocked-data course shell. They enforce a clean browser console, axe checks including browser color contrast, skip-link and command-palette focus behavior, labeled mobile navigation, 390 px viewport containment, and desktop/mobile screenshot evidence. CI installs pinned Chromium and retains the HTML report and failure evidence for 14 days.
-- Rendered smoke check: the built landing route rendered at the default desktop viewport and at 320 px without visible horizontal overflow.
+- `pnpm run test:e2e`: 7 production-mode Chromium tests passed for the landing page and deterministic fixture-backed course journeys. They enforce clean browser consoles, zero-violation axe scans with a real layout/color engine, skip-link and command-palette focus, labeled navigation, 1440/390/320 px containment, reviewed desktop/mobile baselines, source-sheet focus and dismissal, review confirmation, calendar consequence preview, cited card recall, quiz completion, and DOCX download naming. CI installs pinned Chromium and retains HTML and failure evidence for 14 days.
+- The browser suite is intentionally separated from Vitest and uses a dedicated port that was verified free before the final run, preventing the cross-worktree server collision found during implementation.
 - `alembic upgrade head`: passed against a clean SQLite verification database.
 - `scripts/seed_demo_course.py`: passed and produced an authenticated demo course.
 - Live smoke test: API `/health` returned 200; web `/` returned 200; seeded login returned a bearer token; authenticated course listing returned the seeded course.
@@ -33,7 +33,7 @@ Locally generated artifacts (intentionally ignored by Git):
 
 ## UI implementation pass
 
-The responsive shell uses the Semester Ink/Parchment/blue system without gradients or decorative AI imagery. Desktop navigation, labeled mobile tabs, context continuity, command search, reduced motion, forced colors, explicit source statuses, and loading/error/empty/offline states are implemented as reusable components. The jsdom axe scan still excludes color contrast, while the new Chromium suite runs axe with a real layout/color engine and verifies critical keyboard focus and mobile containment. Cross-browser, live-data, assistive-technology, and human visual-regression review remain open.
+The responsive shell uses the Semester Ink/Parchment/blue system without gradients or decorative AI imagery. Desktop navigation, labeled mobile tabs, context continuity, command search, reduced motion, forced colors, explicit source statuses, and loading/error/empty/offline states are implemented as reusable components. The jsdom axe scan still excludes color contrast, while the Chromium suite runs axe with a real layout/color engine and verifies critical keyboard focus, responsive containment, and reviewed visual baselines. Cross-browser, live-data, assistive-technology, zoom, and touch-device validation remain open.
 The upload workspace now opens an owner-scoped, focus-managed source sheet and recovers current extraction state after reload. It polls only while queued or running work exists, displays progress, and gives the student explicit cancellation and failure-retry controls. Extracted chunks retain page, slide, sheet/cell, or media timestamp labels and confidence; exact PDF bounding-box overlays and correction actions remain open.
 
 The Review workspace can confirm, reject, or correct extracted payloads, records an optional decision note, refreshes course counts, and blocks malformed correction JSON before sending it. The Calendar workspace now previews changed fields and ICS consequences before saving, preserves unspecified times, and offers one-step session undo.
