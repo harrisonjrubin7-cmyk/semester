@@ -4,7 +4,7 @@ const baseURL = "http://127.0.0.1:43107";
 
 export default defineConfig({
   testDir: "./e2e",
-  snapshotPathTemplate: "{testDir}/{testFilePath}-snapshots/{arg}{ext}",
+  snapshotPathTemplate: "{testDir}/{testFilePath}-snapshots/{arg}-{platform}{ext}",
   timeout: 60_000,
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),

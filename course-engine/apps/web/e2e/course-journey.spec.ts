@@ -82,10 +82,10 @@ test("workspace is accessible and responsive at supported widths", async ({ page
 test("desktop and mobile overview match reviewed visual snapshots", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/courses/course-1/overview");
-  await expect(page).toHaveScreenshot("overview-desktop.png", { fullPage: true });
+  await expect.soft(page).toHaveScreenshot("overview-desktop.png", { fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
-  await expect(page).toHaveScreenshot("overview-mobile.png", { fullPage: true });
+  await expect.soft(page).toHaveScreenshot("overview-mobile.png", { fullPage: true });
 });
 
 test("student completes the cited course journey without console errors", async ({ page }) => {
