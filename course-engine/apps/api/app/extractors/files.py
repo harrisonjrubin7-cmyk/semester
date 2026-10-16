@@ -21,9 +21,37 @@ def extract_pdf(path: Path) -> list[ExtractedChunk]:
     chunks = []
     with fitz.open(path) as document:
         for index, page in enumerate(document, 1):
-            text = page.get_text("text").strip()
-            confidence = 1.0 if text else 0.0
-            chunks.append(ExtractedChunk(text or "[OCR required]", "page", page_number=index, confidence=confidence))
+            page_width = float(page.rect.width)
+            page_height = float(page.rect.height)
+            page_chunks = 0
+            for block in page.get_text("blocks"):
+                if len(block) < 7 or block[6] != 0:
+                    continue
+                text = str(block[4]).strip()
+                if not text:
+                    continue
+                x0, y0, x1, y1 = (float(value) for value in block[:4])
+                chunks.append(ExtractedChunk(
+                    text,
+                    "page_block",
+                    page_number=index,
+                    bounding_box={
+                        "coordinate_space": "normalized",
+                        "x": max(0.0, min(1.0, x0 / page_width)),
+                        "y": max(0.0, min(1.0, y0 / page_height)),
+                        "width": max(0.0, min(1.0, (x1 - x0) / page_width)),
+                        "height": max(0.0, min(1.0, (y1 - y0) / page_height)),
+                    },
+                    confidence=1.0,
+                ))
+                page_chunks += 1
+            if page_chunks == 0:
+                chunks.append(ExtractedChunk(
+                    "[OCR required]",
+                    "page",
+                    page_number=index,
+                    confidence=0.0,
+                ))
     return chunks
 
 

@@ -7,6 +7,7 @@ from pathlib import Path
 from threading import Event, Thread
 from uuid import UUID, uuid4
 
+from app.services.malware import DevelopmentMalwareScanner
 from celery import Celery
 from sqlalchemy import and_, delete, or_, select
 
@@ -33,7 +34,6 @@ from app.services.job_leases import (
     recovery_candidates,
     update_job_progress,
 )
-from app.services.malware import DevelopmentMalwareScanner
 from app.services.storage import ObjectStorage, sha256_file, validate_actual_mime
 from app.services.upload_dispatch import dispatch_upload_completion
 
@@ -389,6 +389,7 @@ def extract_document(job_id: str) -> dict:
                 "cell_range": row.cell_range,
                 "start_seconds": row.start_seconds,
                 "end_seconds": row.end_seconds,
+                "bounding_box": row.bounding_box,
                 "confidence": row.confidence,
                 "metadata_json": metadata,
             })

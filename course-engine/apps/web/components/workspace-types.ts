@@ -91,6 +91,15 @@ export type SourceChunk = {
   cell_range?: string | null;
   start_seconds?: number | null;
   end_seconds?: number | null;
+  bounding_box?: {
+    coordinate_space: "normalized";
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null;
+  review_item_id?: string | null;
+  review_status?: string | null;
   confidence: number | null;
 };
 
