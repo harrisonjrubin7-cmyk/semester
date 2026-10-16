@@ -2549,3 +2549,20 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep official housing assignment changes and live portal/provider integration outside this device-only slice without current institution authority.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 22 update — distinguishable maintenance-request removals (slice 123)
+
+- [x] Start from clean required-branch head `462ad4873`, fetch current `origin/main` `06c2d5c74`, confirm it is already included and inspect exact Maintenance history/current code for overlap.
+- [x] Re-rank the adjacent student-authored maintenance tracker as the next bounded Phase 3 accessibility gap; keep official housing/provider operations outside the mutation.
+- [x] Name every removal with open/closed list position plus issue, place, urgency, status, reference state, report channel and report time.
+- [x] Preserve the existing exact-id `dropMaintenance` reducer, union/deletion reconciliation and shared eight-second Undo snapshot.
+- [x] Prove the duplicate-request regression red against the former generic controls, then pass 106/106 focused and adjacent Maintenance, domain, Undo and residence-removal tests.
+- [x] Pass the broader 109/109 set with root-lifecycle and isolation guards, both TypeScript gates, lint/style/label/terms checks and production build.
+- [x] Pass aggregate design-system check/report through a temporary local package-runner compatibility shim: 9 token tests, 70 contracts, all eight report contracts, zero violations, 86 existing warnings and CSS within ledger.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` and app-host values unset, `stackhawk.yml` present and a local properties file detected but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official maintenance withdrawal, housing assignment changes and portal/provider integration outside this student-authored device record without current institution authority.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-16 · **Latest observed `origin/main`** `8a29db78f` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-16 · **Latest observed `origin/main`** `06c2d5c74` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -1249,3 +1249,13 @@ The removal control now identifies the represented hall, optional room and reada
 Both behavior guards failed against the former generic one-press action, then the direct test passes 2/2 and the adjacent Housing form, maintenance, housing-domain and Undo set passes 74/74. The final focused set passes 198/198, including root-lifecycle, isolation and repository-map contracts. TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning. Aggregate design-system check passes 9 token tests and 70 design contracts; the test-backed report passes, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun; automation pass 2 remains the latest full-suite checkpoint.
 
 The active HawkScan skill stops at mandatory preflight because Hawk v6/config and Docker are absent, `HAWK_API_KEY` and the app-host environment values are unset, and there is no live target. `stackhawk.yml` and a local properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, dependency, schema, policy, authorization rule, provider configuration, deployment, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Distinguishable maintenance-request removals — automation pass 22, integration slice 123
+
+Required-branch head `462ad4873` was clean before the slice and already included current `origin/main` `06c2d5c74`. Exact upstream history and current-code inspection found the established student-authored maintenance tracker, union/deletion reconciliation and eight-second Undo snapshot, but every repair row still exposed the same accessible removal name, **Remove**.
+
+Each removal now identifies its open/closed collection position plus the represented issue, place, urgency, status, reference state, report channel and report time. Position distinguishes otherwise identical requests while the remaining facts let a student confirm the exact record. The existing exact-id `dropMaintenance` reducer and shared Undo receipt remain authoritative; visible rows, follow-up arithmetic, persistence and sync reconciliation do not change. Semester still does not file, withdraw or modify a request with housing.
+
+The duplicate-request regression failed against the former generic controls, then 106/106 focused and adjacent Maintenance, maintenance-domain, Undo and residence-removal tests passed; the broader root-lifecycle/isolation set passes 109/109. TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning. Aggregate design-system check passes 9 token tests and 70 design contracts; all eight test-backed report contracts pass with zero violations, 86 existing warnings and CSS within its ledger. Mandatory HawkScan preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` and app-host values unset, `stackhawk.yml` present and one local properties file detected but unread. No scanner target, DAST scan, finding result, fix/rescan loop or security pass exists.
+
+No route, navigation, shared component, dependency, schema, policy, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.

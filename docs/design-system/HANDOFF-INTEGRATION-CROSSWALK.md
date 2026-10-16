@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-16 · **Latest observed `origin/main`** `8a29db78f` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-16 · **Latest observed `origin/main`** `06c2d5c74` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -981,3 +981,15 @@ No route, navigation, dependency, schema, policy, grant, RLS rule, provider conf
 | DAST security verification | `stackhawk.yml`; active HawkScan skill | Blocked by environment | Hawk v6/config and Docker are absent, API-key/app-host values are unset and no live target exists. The local properties file was detected but not read. No scan or security pass is claimed. |
 
 No route, navigation, dependency, schema, authorization policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, live provider behavior, institutional acceptance or production readiness.
+
+## Automation pass 22 mapping — distinguishable maintenance-request removals (slice 123)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated student-recorded repair requests remain distinguishable at removal | `app/src/components/MaintenanceRequests.tsx`; `app/src/components/MaintenanceRequests.test.tsx` | Existing but incomplete → existing and verified for this slice | Accessible names now include collection position and all represented summary facts, distinguishing otherwise identical rows. |
+| Preserve exact mutation, reconciliation and recovery | `dropMaintenance`; `app/src/lib/deletions.ts`; `app/src/lib/merge.ts`; `app/src/lib/undo.ts` | Existing and unchanged | The same exact-id device mutation, deletion settlement and eight-second Undo snapshot remain authoritative. |
+| Preserve housing authority and emergency boundaries | `app/src/lib/maintenance.ts`; current Maintenance intro and guidance | Intentionally unchanged | Semester records what the student already reported; removal neither contacts housing nor withdraws an official request. |
+| Regression and focused verification | Maintenance component/domain/Undo, residence-removal, root-lifecycle and isolation tests | Existing and verified locally for this slice | Red proof against the generic name; 106/106 focused/adjacent and 109/109 broader tests pass with both typechecks, lint, build and aggregate design check/report. |
+| DAST security verification | `stackhawk.yml`; active HawkScan skill | Blocked by environment | Hawk v6/config and Docker are absent, API-key/app-host values are unset and no runnable target exists. A local properties file was detected but not read; no scan or security pass is claimed. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, live provider behavior, institutional acceptance or production readiness.
