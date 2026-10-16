@@ -1,0 +1,20 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {generateKeyPair,SignJWT,exportJWK,createLocalJWKSet,jwtVerify} from 'jose';
+const good=await generateKeyPair('RS256');
+const wrong=await generateKeyPair('RS256');
+const jwk=await exportJWK(good.publicKey);jwk.kid='test-key';jwk.alg='RS256';
+const jwks=createLocalJWKSet({keys:[jwk]});
+const opts={issuer:'https://synthetic-platform.example',audience:'semester-test',algorithms:['RS256']};
+async function sign(key=good.privateKey,issuer=opts.issuer,expiry='5m'){
+ return new SignJWT({nonce:'synthetic-nonce'}).setProtectedHeader({alg:'RS256',kid:'test-key'}).setIssuer(issuer).setAudience(opts.audience).setSubject('synthetic-user').setIssuedAt().setExpirationTime(expiry).sign(key);
+}
+test('valid signature and claims',async()=>{const r=await jwtVerify(await sign(),jwks,opts);assert.equal(r.payload.sub,'synthetic-user')});
+test('tampered payload rejected',async()=>{const parts=(await sign()).split('.');parts[1]=Buffer.from(JSON.stringify({iss:opts.issuer,aud:opts.audience,sub:'attacker'})).toString('base64url');await assert.rejects(()=>jwtVerify(parts.join('.'),jwks,opts))});
+test('wrong private key rejected',async()=>{await assert.rejects(()=>jwtVerify(awaitToken,jwks,opts));});
+const awaitToken=await sign(wrong.privateKey);
+test('wrong issuer rejected',async()=>{const t=await sign(good.privateKey,'https://wrong.example');await assert.rejects(()=>jwtVerify(t,jwks,opts))});
+test('expired token rejected',async()=>{const t=await sign(good.privateKey,opts.issuer,'-1m');await assert.rejects(()=>jwtVerify(t,jwks,opts))});
+// Run: node --test jwt-signature.test.mjs
+// These exercise jose locally, not remote JWKS, browser-bound state, nonce storage,
+// full validateLaunch integration, or actual Canvas/Blackboard signing keys.

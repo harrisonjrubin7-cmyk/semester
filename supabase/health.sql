@@ -151,6 +151,7 @@ select count(*) as ensure_rls_present from pg_event_trigger where evtname = 'ens
 
 with expected(jobname, parked) as (values
   ('abandoned-signups',             false),
+  ('access-saga-worker',            true),
   ('account-health',                false),
   ('ai-runtime-metadata',           false),
   ('audit-retention',               false),

@@ -7,6 +7,7 @@ from uuid import uuid4
 import pytest
 from alembic.config import Config
 from alembic.migration import MigrationContext
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, event, inspect, select
 from sqlalchemy.orm import Session
 
@@ -169,7 +170,7 @@ def test_confidence_migration_round_trip_preserves_evidence_and_fails_closed(
         expected_revision = (
             "0002_review_first_confidence"
             if engine.dialect.name == "sqlite"
-            else "0006_study_session_results"
+            else ScriptDirectory.from_config(_config(connection)).get_current_head()
         )
         assert MigrationContext.configure(connection).get_current_revision() == expected_revision
         assert connection.scalar(

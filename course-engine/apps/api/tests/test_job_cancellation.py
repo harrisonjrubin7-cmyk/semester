@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
@@ -298,6 +299,18 @@ def test_course_job_feed_keeps_all_active_jobs_beyond_terminal_history_limit():
         assert sum(row["status"] == JobStatus.completed.value for row in rows) == 1
     finally:
         app.dependency_overrides.clear()
+
+
+def test_job_snapshot_merge_deduplicates_a_job_seen_in_both_queries():
+    duplicate = BackgroundJob(
+        id=UUID("00000000-0000-0000-0000-000000000051"),
+        course_id=UUID("00000000-0000-0000-0000-000000000052"),
+        job_type="extract",
+        status=JobStatus.running,
+        created_at=datetime.now(UTC),
+    )
+
+    assert routes.merge_job_snapshots([duplicate], [duplicate]) == [duplicate]
 
 
 def test_cancelling_extraction_restores_document_to_uploaded_state():

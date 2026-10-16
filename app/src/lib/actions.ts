@@ -135,6 +135,13 @@ export interface Action {
   dueAt?: number | null;
   /** After this the action no longer applies, and it expires. */
   expiresAt?: number | null;
+  /**
+   * "Done" holds for the rest of the calendar day it was pressed, then the
+   * action is open again. For a reminder whose underlying record "Done" does
+   * not change — a repair still waiting on housing — so completing it cannot
+   * hide it for good. Snoozes and dismissals are unaffected.
+   */
+  reopensNextDay?: boolean;
   estimatedMinutes?: number | null;
   /** Actions in the same workflow group together ("Registration readiness"). */
   group?: string;
@@ -169,18 +176,32 @@ const DAY = 86_400_000;
  * Apply one event. Returns the new choice, or a sentence saying why not.
  * `until` is required for `snooze` and must be in the future.
  */
+/**
+ * A completion of a `reopensNextDay` action, read on a later calendar day.
+ * One reading for both `effectiveStatus` and `transition`, so a reminder the
+ * list shows as open again also moves as open — its Done is not refused as a
+ * second completion.
+ */
+function reopened(choice: Choice | undefined, now: number): boolean {
+  if (choice?.status !== 'completed') return false;
+  const done = [...choice.history].reverse().find((h) => h.event === 'complete')?.at;
+  if (typeof done !== 'number') return false;
+  const d = new Date(done);
+  return now >= new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime();
+}
+
 export function transition(
   current: Choice | undefined,
   event: ActionEvent,
   now: number,
-  options: { until?: number; note?: string } = {},
+  options: { until?: number; note?: string; reopensNextDay?: boolean } = {},
 ): Moved | Refused {
   // A snooze that has run out is open — `effectiveStatus` says so, and the
   // list shows it with an open action's controls. Moving it has to start from
   // the same place, or the "Snooze" button it shows is refused as a second
   // snooze of something still asleep.
   const awake = current?.status === 'snoozed' && typeof current.snoozedUntil === 'number' && current.snoozedUntil <= now;
-  const from: ActionStatus = awake ? 'open' : (current?.status ?? 'open');
+  const from: ActionStatus = awake || (options.reopensNextDay === true && reopened(current, now)) ? 'open' : (current?.status ?? 'open');
   const to = TRANSITIONS[from][event];
   if (!to) return { ok: false, why: `Cannot ${event} an action that is ${from.replace('_', ' ')}.` };
   if (event === 'snooze') {
@@ -211,6 +232,7 @@ export function transition(
 export function effectiveStatus(action: Action, choice: Choice | undefined, now: number): ActionStatus {
   const status = choice?.status ?? 'open';
   if (status === 'snoozed' && typeof choice?.snoozedUntil === 'number' && choice.snoozedUntil <= now) return 'open';
+  if (action.reopensNextDay && reopened(choice, now)) return 'open';
   const live = status === 'open' || status === 'in_progress' || status === 'blocked' || status === 'snoozed';
   if (live && typeof action.expiresAt === 'number' && action.expiresAt <= now) return 'expired';
   return status;

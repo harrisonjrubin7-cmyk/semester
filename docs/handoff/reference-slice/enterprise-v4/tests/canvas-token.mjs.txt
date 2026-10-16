@@ -1,0 +1,129 @@
+// Extracted from "Show the remaining verification logic" PDF (6 Oct). PDF text: indentation lost; prose between blocks may remain.
+// NOT compiled or run. Strip .txt and reformat (e.g. prettier) before use. Depends on node-jose; ESM.
+import jose from "node-jose";
+import { randomUUID } from "node:crypto";
+import { trustedUrl } from "./verification.mjs";
+export function createServiceTokenProvider(
+config,
+privateJwk
+) {
+const cache = new Map();
+const pending = new Map();
+return async function getToken(requestedScopes) {
+const scopes = [...new Set(requestedScopes)].sort();
+if (
+scopes.length === 0 ||
+scopes.some(scope =>
+!config.grantedScopes.includes(scope)
+)
+) {
+throw new Error("SCOPE_UNAVAILABLE");
+}
+const scopeKey = scopes.join(" ");
+const existing = cache.get(scopeKey);
+if (
+existing &&
+existing.expiresAt > Date.now() + 30_000
+) {
+return existing;
+
+
+}
+if (pending.has(scopeKey)) {
+return pending.get(scopeKey);
+}
+const operation = (async () => {
+const key = await jose.JWK.asKey(privateJwk);
+const now = Math.floor(Date.now() / 1000);
+const assertion = await jose.JWS.createSign(
+{
+format: "compact",
+fields: {
+alg: "RS256",
+typ: "JWT",
+kid: config.kid
+}
+},
+key
+)
+.update(JSON.stringify({
+iss: config.assertionIssuer,
+sub: config.clientId,
+aud: config.assertionAudience,
+iat: now,
+exp: now + 120,
+jti: randomUUID()
+}))
+.final();
+const response = await fetch(
+trustedUrl(
+config.tokenUrl,
+config.serviceOrigins
+),
+{
+method: "POST",
+redirect: "error",
+signal: AbortSignal.timeout(10_000),
+headers: {
+"Content-Type":
+"application/x-www-form-urlencoded"
+},
+body: new URLSearchParams({
+grant_type: "client_credentials",
+client_assertion_type:
+"urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+client_assertion: assertion,
+scope: scopeKey
+})
+}
+);
+if (!response.ok) {
+throw new Error(`TOKEN_HTTP_${response.status}`);
+
+
+}
+const body = await response.json();
+if (
+typeof body.access_token !== "string" ||
+!body.access_token ||
+body.token_type?.toLowerCase() !== "bearer" ||
+!Number.isFinite(body.expires_in) ||
+body.expires_in <= 30 ||
+typeof body.scope !== "string"
+) {
+throw new Error("TOKEN_RESPONSE_INVALID");
+}
+const effectiveScopes = body.scope.split(/\s+/);
+if (
+scopes.some(scope =>
+!effectiveScopes.includes(scope)
+)
+) {
+throw new Error("TOKEN_SCOPE_MISSING");
+}
+const token = {
+accessToken: body.access_token,
+expiresAt: Date.now() + body.expires_in * 1000,
+effectiveScopes
+};
+cache.set(scopeKey, token);
+return token;
+})();
+pending.set(scopeKey, operation);
+try {
+return await operation;
+} finally {
+pending.delete(scopeKey);
+}
+};
+}
+Keep assertionAudience explicitly configured. Canvasʼs documentation discusses accepted
+audience domains and provides a token-endpoint audience example; do not infer one universal
+audience from an arbitrary URL. Its assertion sub must identify the Developer Key client ID,
+and kid must match the configured tool key.
+The flow is:
+Approved scopes → cache lookup → signed assertion
+→ token request → effective-scope validation → cache
+
+
+No refresh token is used for this service flow.

@@ -1,0 +1,6 @@
+decision_condition,selection,recommended_integration
+Local Markdown and personal offline notes are mandatory,Obsidian,Keep vault as authoring source; import selected resources/links privately
+Shared structured course/task dashboards dominate,Notion,Link/import database entities; audit relation/formula loss before switching
+Live document collaboration and institution-owned files dominate,Google Workspace,Link-first resources; preserve institutional access and editors
+Official prerequisites or enrollment decisions are needed,Semester plus institution-authorized academic source,None of the three note/file tools is automatically authoritative
+Needs combine private notes and team documents,Hybrid: Obsidian or Notion plus Google Workspace,"Semester is proposed governed context/graph layer, not forced editor replacement"

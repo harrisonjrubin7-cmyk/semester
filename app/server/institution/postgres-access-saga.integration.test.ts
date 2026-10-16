@@ -12,6 +12,8 @@ import {
 } from '../../../packages/institution/src/index.ts';
 import { psql, psqlJson, type PsqlTarget } from '../productivity/psql-rpc.ts';
 import { PostgresAccessSagaStore } from './postgres-access-saga.ts';
+import { runAccessSagaTick, runScheduledAccessSagaTick } from './access-saga-tick.ts';
+import { SERVICES } from './access-saga-registry.ts';
 
 /**
  * The saga runner, through the adapter, against a real migrated Postgres.
@@ -58,16 +60,16 @@ async function asService(sql: string): Promise<{ data: unknown; error: { code?: 
 }
 
 /**
- * The slice of a Supabase service client the adapter uses, over `psql`: one
- * connection per call, as `service_role`. `access_saga_claim` returns a set, so
- * it comes back as the array PostgREST would send; the void functions come back
- * as null.
+ * The slice of a Supabase service client the adapter and the tick use, over
+ * `psql`: one connection per call, as `service_role`. `access_saga_claim` and
+ * `access_saga_due` return sets, so they come back as the array PostgREST would
+ * send; the void functions come back as null.
  */
 function serviceClient(): SupabaseClient {
   return {
     rpc: async (fn: string, args: Record<string, unknown> = {}) => {
       const named = Object.entries(args).map(([k, v]) => `${k} => ${literal(v)}`).join(', ');
-      if (fn === 'access_saga_claim') return asService(`select coalesce(jsonb_agg(t), '[]')::text from public.${fn}(${named}) t;`);
+      if (fn === 'access_saga_claim' || fn === 'access_saga_due') return asService(`select coalesce(jsonb_agg(t), '[]')::text from public.${fn}(${named}) t;`);
       return asService(`select public.${fn}(${named});`);
     },
     from: (table: string) => ({
@@ -266,5 +268,125 @@ describe.skipIf(!host)('the access saga runner through PostgresAccessSagaStore, 
     const w = worker();
     await expect(w.store.create(newSaga('s-bad', { requestDigest: 'not-a-digest' }))).rejects.toThrow(/could not create a saga/);
     expect(await psqlJson<unknown[]>(target, `select id from public.access_sagas where id = 's-bad'`)).toEqual([]);
+  });
+});
+
+/**
+ * The worker's tick over the same database: the due list is the database's,
+ * the moves are the runner's, and two ticks at once move each saga once. In
+ * this file, not one of its own, because both would truncate the same tables
+ * and Vitest runs files in parallel.
+ */
+describe.skipIf(!host)('the access saga worker tick, against a migrated database', () => {
+  beforeEach(async () => {
+    await psql(target, 'truncate public.access_saga_signals, public.access_saga_events, public.access_sagas;');
+  });
+
+  const all = () => psqlJson<{ id: string; state: AccessSagaState; revision: number; lease_token: string | null }[]>(target,
+    'select id, state, revision, lease_token from public.access_sagas order by id');
+
+  /** A saga already under way, written as a row: `create` only takes revision 0. */
+  const seed = (id: string, state: AccessSagaState, revision: number, over: { nextAttemptAt?: number; deadlineAt?: number; grantExpiresAt?: number } = {}) =>
+    psql(target, `insert into public.access_sagas (id, tenant_id, subject_id, intent_resource_id, intent_action, request_digest, definition_version,
+      state, revision, deadline_at, next_attempt_at, grant_id, grant_expires_at)
+      values ('${id}', 't1', 'u1', 'r1', 'registration.readiness.view', repeat('a', 64), '1', '${state}', ${revision},
+      ${over.deadlineAt ?? Date.now() + HOUR}, ${over.nextAttemptAt ?? 0}, ${over.grantExpiresAt ? "'g'" : 'null'}, ${over.grantExpiresAt ?? 'null'});`);
+
+  /** One tick as the scheduler would run it: a fresh client and the scripted participants, calls recorded. */
+  const tick = (w: Worker = worker()) => runAccessSagaTick({ client: serviceClient(), services: {
+    validate: async (_s, k) => { w.calls.push('validate'); w.keys.set('validate', [...(w.keys.get('validate') ?? []), k]); },
+    evaluate: async () => { w.calls.push('evaluate'); return { id: 'dec-1', outcome: 'allow' }; },
+    prepare: async (_s, k) => { w.calls.push('prepare'); return { id: `grant-for-${k}`, expiresAt: Date.now() + HOUR }; },
+    install: async () => { w.calls.push('install'); },
+    inspect: async () => { w.calls.push('inspect'); return { status: 'installed' }; },
+    revokePa: async () => 'confirmed',
+    removePep: async () => 'confirmed',
+    verifyCleanup: async () => ({ paRevoked: true, pepAbsent: true }),
+  }, runner: { random: () => 0, newId: () => `evt-${++n}` } });
+
+  it('the scheduled entry with the registry as it is: counts the due sagas and moves none, and with participants it is the tick', async () => {
+    const w = worker();
+    await seed('t-sched-due', 'VALIDATING', 1);
+    await seed('t-sched-done', 'DENIED', 3);
+    // What the Edge Function runs today: the registry holds null.
+    expect(await runScheduledAccessSagaTick(serviceClient(), SERVICES)).toEqual({ outcome: 'unregistered', due: 1, ticked: 0, failed: [], deferred: false });
+    expect(await all()).toEqual([
+      { id: 't-sched-done', state: 'DENIED', revision: 3, lease_token: null },
+      { id: 't-sched-due', state: 'VALIDATING', revision: 1, lease_token: null },
+    ]);
+    expect(await events('t-sched-due')).toEqual([]);
+    // With participants handed in, the same call is the tick.
+    const ran = await runScheduledAccessSagaTick(serviceClient(), {
+      validate: async () => { w.calls.push('validate'); }, evaluate: async () => ({ id: 'dec-1', outcome: 'allow' }),
+      prepare: async () => ({ id: 'g', expiresAt: Date.now() + HOUR }), install: async () => {}, inspect: async () => ({ status: 'installed' }),
+      revokePa: async () => 'confirmed', removePep: async () => 'confirmed', verifyCleanup: async () => ({ paRevoked: true, pepAbsent: true }),
+    }, { runner: { random: () => 0, newId: () => `evt-${++n}` } });
+    expect(ran).toEqual({ outcome: 'ran', due: 1, ticked: 1, failed: [], deferred: false });
+    expect((await all()).find((r) => r.id === 't-sched-due')).toEqual({ id: 't-sched-due', state: 'EVALUATING', revision: 2, lease_token: null });
+    expect(w.calls).toEqual(['validate']);
+  });
+
+  it('moves only the sagas the database says are due, one step each, and leaves no lease', async () => {
+    const w = worker();
+    await w.store.create(newSaga('t-due-1'));
+    await seed('t-due-2', 'VALIDATING', 1);
+    await w.store.create(newSaga('t-later', { nextAttemptAt: Date.now() + HOUR }));
+    await seed('t-done', 'DENIED', 3);
+    await seed('t-waiting', 'WAITING_APPROVAL', 2);
+    await seed('t-active', 'ACTIVE', 6, { grantExpiresAt: Date.now() + HOUR });
+    await seed('t-active-expired', 'ACTIVE', 6, { grantExpiresAt: Date.now() - 1 });
+    expect(await tick(w)).toEqual({ due: 3, ticked: 3, failed: [], deferred: false });
+    expect(await all()).toEqual([
+      { id: 't-active', state: 'ACTIVE', revision: 6, lease_token: null },
+      { id: 't-active-expired', state: 'REVOKING', revision: 7, lease_token: null },
+      { id: 't-done', state: 'DENIED', revision: 3, lease_token: null },
+      { id: 't-due-1', state: 'VALIDATING', revision: 1, lease_token: null },
+      { id: 't-due-2', state: 'EVALUATING', revision: 2, lease_token: null },
+      { id: 't-later', state: 'RECEIVED', revision: 0, lease_token: null },
+      { id: 't-waiting', state: 'WAITING_APPROVAL', revision: 2, lease_token: null },
+    ]);
+    expect(w.calls).toEqual(['validate']);
+    expect(w.keys.get('validate')).toEqual([JSON.stringify(['t-due-2', '1', 0, 'validate'])]);
+  });
+
+  it('ticked repeatedly, drives a saga to ACTIVE and then has nothing to do', async () => {
+    const w = worker();
+    await w.store.create(newSaga('t-s'));
+    const path: AccessSagaState[] = [];
+    for (let i = 0; i < 7; i += 1) {
+      await tick(w);
+      path.push((await all())[0]!.state);
+    }
+    expect(path).toEqual(['VALIDATING', 'EVALUATING', 'PREPARING', 'INSTALLING', 'VERIFYING', 'ACTIVE', 'ACTIVE']);
+    expect(await tick(w)).toEqual({ due: 0, ticked: 0, failed: [], deferred: false });
+    expect((await events('t-s')).map((e) => e.revision)).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+
+  it('a wake makes a saga due at the next tick, under its new generation', async () => {
+    const w = worker();
+    await seed('t-w', 'WAITING_APPROVAL', 2);
+    expect(await tick(w)).toMatchObject({ due: 0 });
+    await w.store.wake('t-w', 'sig-tick', 'requirements_changed');
+    expect((await all())[0]).toMatchObject({ state: 'VALIDATING', revision: 3 });
+    expect(await tick(w)).toMatchObject({ due: 1, ticked: 1 });
+    expect((await all())[0]).toMatchObject({ state: 'EVALUATING', revision: 4, lease_token: null });
+    expect(w.keys.get('validate')).toEqual([JSON.stringify(['t-w', '1', 1, 'validate'])]);
+  });
+
+  it('two ticks at once never move a saga twice for one revision, and leave no lease', async () => {
+    const w = worker();
+    for (let i = 0; i < 6; i += 1) await w.store.create(newSaga(`t-c-${i}`));
+    const [a, b] = await Promise.all([tick(worker()), tick(worker())]);
+    expect(a.failed).toEqual([]);
+    expect(b.failed).toEqual([]);
+    expect(a.ticked + b.ticked).toBe(a.due + b.due);
+    // Every saga moved at least once and never twice for one tick: each revision has
+    // exactly one event, no lease is left, and the two ticks together did at most two
+    // moves per saga (a saga one tick moved is due again when the other lists it).
+    const after = await all();
+    expect(after).toHaveLength(6);
+    expect(after.every((r) => r.revision >= 1 && r.revision <= 2 && r.lease_token === null)).toBe(true);
+    const count = await psqlJson<{ n: number }[]>(target, 'select count(*)::int as n from public.access_saga_events');
+    expect(count[0]!.n).toBe(after.reduce((sum, r) => sum + r.revision, 0));
   });
 });

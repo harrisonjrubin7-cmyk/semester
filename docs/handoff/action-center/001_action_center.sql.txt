@@ -1,0 +1,69 @@
+-- Action Center projection · REFERENCE SQL, not apply-ready.
+-- Source: uploads/Show me the code or schema for the Action Center_D.pdf (Oct 2026). Reconcile identity FKs,
+-- workspace references, RLS policies and the existing ctl.outbox before use. Never run against production as-is.
+create schema if not exists action_center;
+
+create table action_center.items (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid,                                   -- null = personal context, NOT global access
+  workspace_id uuid not null,
+  subject_person_id uuid not null,
+  source_system text not null,
+  source_object_type text not null,
+  source_object_id text not null,
+  action_key text not null,
+  kind text not null check (kind in ('assignment','registration','hold','bill','task','appointment','decision','opportunity','support')),
+  title text not null,
+  explanation text not null,
+  origin text not null check (origin in ('institution','connected','student','ai')),
+  authority text not null check (authority in ('authoritative','informational','derived')),
+  classification text not null check (classification in ('public','student_private','education_record','restricted')),
+  obligation text not null check (obligation in ('required','personal','suggested')),   -- versioned institutional rule decides dismissal
+  workflow_state text not null default 'open' check (workflow_state in ('open','blocked','awaiting_approval','submitted','outcome_unknown','fulfilled','cancelled')),
+  freshness text not null check (freshness in ('current','stale','unknown','conflicting')),
+  due_at timestamptz,
+  display_timezone text not null default 'UTC',
+  observed_at timestamptz not null,
+  valid_until timestamptz,
+  source_revision bigint not null check (source_revision >= 0),   -- monotonic per stream, assigned by the source adapter
+  projection_revision bigint not null default 1,
+  next_command_key text,                            -- gateway resolves it; never store arbitrary action URLs
+  next_resource_id text,
+  responsible_office_id uuid,
+  policy_version text not null,
+  fulfilled_at timestamptz,
+  receipt_id uuid,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (workspace_id, subject_person_id, source_system, source_object_type, source_object_id, action_key),
+  check (workflow_state <> 'fulfilled' or (fulfilled_at is not null and receipt_id is not null))
+);
+
+create table action_center.preferences (            -- presentation only: snoozing never changes the obligation
+  item_id uuid not null references action_center.items(id),
+  person_id uuid not null,
+  pinned boolean not null default false,
+  snoozed_until timestamptz,
+  hidden_at timestamptz,                            -- allowed only when obligation <> 'required' (enforce in the RPC)
+  revision bigint not null default 1,
+  updated_at timestamptz not null default now(),
+  primary key (item_id, person_id)
+);
+
+create table action_center.processed_events (       -- consumer dedupe; commits in the same transaction as the projection
+  consumer text not null,
+  event_id uuid not null,
+  processed_at timestamptz not null default now(),
+  primary key (consumer, event_id)
+);
+
+create index action_items_open_due on action_center.items (subject_person_id, workspace_id, due_at, id)
+  where workflow_state not in ('fulfilled','cancelled');
+
+alter table action_center.items enable row level security;
+alter table action_center.preferences enable row level security;
+alter table action_center.processed_events enable row level security;
+-- Safe baseline: no direct browser access. Add reviewed policies or constrained RPCs after authorization mapping.
+revoke all on all tables in schema action_center from anon, authenticated;
+-- A security-definer backend bypasses RLS: it must verify context + policy before every read and write.
+-- Counts, snippets, exports and notifications need the same authorization as full records.
