@@ -2,7 +2,7 @@ import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 import { configDefaults } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { closeSync, ftruncateSync, mkdirSync, openSync, readFileSync, writeFileSync, writeSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { EXTRA_CONNECT, parsePolicy, uncoveredOrigins } from './src/lib/cspheader.ts'
 import { privateHost, publicCalendarUrl } from './src/lib/publichost.ts'
@@ -586,13 +586,22 @@ const csp = (serving: boolean) => {
     closeBundle() {
       if (serving) return
       const file = join(outDir, '_headers')
-      if (!existsSync(file)) return
-      const text = readFileSync(file, 'utf8')
-      if (!text.includes(EXTRA_CONNECT)) return
-      writeFileSync(
-        file,
-        text.split(EXTRA_CONNECT).join(process.env.VITE_CSP_EXTRA_CONNECT ?? ''),
-      )
+      let descriptor: number
+      try {
+        descriptor = openSync(file, 'r+')
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return
+        throw error
+      }
+      try {
+        const text = readFileSync(descriptor, 'utf8')
+        if (!text.includes(EXTRA_CONNECT)) return
+        const policy = text.split(EXTRA_CONNECT).join(process.env.VITE_CSP_EXTRA_CONNECT ?? '')
+        ftruncateSync(descriptor, 0)
+        writeSync(descriptor, policy, 0, 'utf8')
+      } finally {
+        closeSync(descriptor)
+      }
     },
   }
 }

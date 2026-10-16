@@ -612,7 +612,7 @@ describe('what the ticked changes reach', () => {
     // Untick both proposed cards. The file is not a proposal and does not
     // untick — a disabled button here used to lose it.
     for (const q of ['What does the four-hurdle test ask first?', 'What is a rival explanation?']) {
-      press(new RegExp(`^${q.replace(/\?/g, '\\?')}`));
+      press(new RegExp(`^${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
     }
     press(/^Attach the file only/);
 
