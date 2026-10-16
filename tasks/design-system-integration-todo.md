@@ -2277,3 +2277,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep recommender communications, official applications and institution records separate from private student-authored planning rows.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 distinguishable source removals — automation pass 8, integration slice 109
+
+- [x] Start from clean required-branch head `8055a94ab`; fetch current `origin/main` `02ad46ff0`, confirm it is already included and inspect exact Sources history/current code for overlap.
+- [x] Re-rank the student-owned citation library as the next bounded Phase 3 accessibility gap; keep scanner-backed Import, provider activity and official records outside the slice.
+- [x] Replace the 40-character removal-name truncation with the complete student-entered citation represented by the row.
+- [x] Preserve the existing exact-id `dropSource` reducer, persisted source library and shared eight-second Undo receipt.
+- [x] Prove the duplicate-prefix regression red against the former truncated label, then pass 61/61 focused and adjacent Sources, source-domain, Undo and root-lifecycle tests.
+- [x] Pass TypeScript, lint, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass the aggregate design-system check with 9/9 token tests and 70/70 contracts and the test-backed report with 97/97 contracts; retain zero audit violations, 86 existing warnings and the current CSS ledger.
+- [x] Commit the coherent code/test slice locally as `04a6a4bae` after confirming final `origin/main` remains included and non-overlapping.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; pass 2's current-head checkpoint remains the latest full-suite evidence.
+- [ ] HawkScan DAST — mandatory post-commit preflight for `04a6a4bae` reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no scanner runtime, live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep citation verification, scanner-backed Import, provider activity and official academic records separate from this private student-authored library.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
