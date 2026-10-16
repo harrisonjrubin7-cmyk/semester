@@ -217,6 +217,7 @@
    "private.domain_outbox_events",
    "private.gateway_audit",
    "private.gateway_health_probe",
+   "private.gateway_idempotency",
    "private.gateway_intelligence_action",
    "private.gateway_intelligence_audit",
    "private.gateway_rate_limit",

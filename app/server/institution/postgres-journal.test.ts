@@ -27,6 +27,7 @@ function fakeClient() {
   let body = '';
   let state: SavedReview['state'] = 'ready';
   let failHealth = false;
+  let idempotencyBody = '';
   const client = {
     rpc: async (name: string, args: Record<string, unknown> = {}) => {
       calls.push({ name, args });
@@ -34,6 +35,22 @@ function fakeClient() {
         return failHealth ? { data: null, error: new Error('offline') } : { data: true, error: null };
       }
       if (name === 'gateway_retention_health') return { data: true, error: null };
+      if (name === 'gateway_begin_idempotency') {
+        if (args.want_request_hash === 'b'.repeat(64)) {
+          return { data: [{ kind: 'conflict', lease_id: null, response_status: null, response_body: null, retry_after_seconds: null }], error: null };
+        }
+        if (args.want_request_hash === 'c'.repeat(64)) {
+          return { data: [{ kind: 'in_progress', lease_id: null, response_status: null, response_body: null, retry_after_seconds: 17 }], error: null };
+        }
+        return idempotencyBody
+          ? { data: [{ kind: 'replay', lease_id: null, response_status: 201, response_body: idempotencyBody, retry_after_seconds: null }], error: null }
+          : { data: [{ kind: 'started', lease_id: '20000000-0000-4000-8000-000000000001', response_status: null, response_body: null, retry_after_seconds: null }], error: null };
+      }
+      if (name === 'gateway_complete_idempotency') {
+        idempotencyBody = String(args.want_body);
+        return { data: true, error: null };
+      }
+      if (name === 'gateway_release_idempotency') return { data: true, error: null };
       if (name === 'gateway_save_review') {
         body = String(args.want_body);
         return { data: true, error: null };
@@ -101,6 +118,31 @@ describe('Postgres action journal', () => {
     const journal = new PostgresActionJournal({ client: fake.client, encryptionKey: key });
     expect(await journal.retentionHealthy()).toBe(true);
     expect(fake.calls.at(-1)?.name).toBe('gateway_retention_health');
+  });
+
+  it('maps the fenced idempotency RPCs and keeps replay bodies encrypted', async () => {
+    const fake = fakeClient();
+    const journal = new PostgresActionJournal({ client: fake.client, encryptionKey: key });
+    const scope = {
+      tenantId: 'vanderbilt', actorId: 'student-1',
+      command: 'institution.action.commit', key: 'commit-key-00000001',
+    };
+    const now = new Date('2026-10-11T12:00:00Z');
+    expect(await journal.begin(scope, 'a'.repeat(64), now, 60_000, 86_400_000)).toEqual({
+      kind: 'started', leaseId: '20000000-0000-4000-8000-000000000001',
+    });
+    expect(await journal.complete(scope, '20000000-0000-4000-8000-000000000001', {
+      status: 201, body: { receipt: 'private-result' },
+    }, now)).toBe(true);
+    expect(JSON.stringify(fake.calls)).not.toContain('private-result');
+    expect(await journal.begin(scope, 'a'.repeat(64), now, 60_000, 86_400_000)).toEqual({
+      kind: 'replay', response: { status: 201, body: { receipt: 'private-result' } },
+    });
+    expect(await journal.release(scope, '20000000-0000-4000-8000-000000000001')).toBe(true);
+    expect(await journal.begin(scope, 'b'.repeat(64), now, 60_000, 86_400_000)).toEqual({ kind: 'conflict' });
+    expect(await journal.begin(scope, 'c'.repeat(64), now, 60_000, 86_400_000)).toEqual({
+      kind: 'in_progress', retryAfterSeconds: 17,
+    });
   });
 
   it('writes only metadata for governed intelligence audits', async () => {
