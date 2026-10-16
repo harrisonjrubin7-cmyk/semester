@@ -1,11 +1,14 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { validatePassport } from './passport';
+import { PASSPORT_TYPES, validatePassport } from './passport';
 
 const DIR = new URL('../../../../registry/passports/', import.meta.url);
 const files = readdirSync(DIR).filter((f) => f.endsWith('.json'));
 const load = (file: string) => JSON.parse(readFileSync(new URL(file, DIR), 'utf8'));
 const base = () => load('WF-READINESS-001.json');
+const schema = JSON.parse(
+  readFileSync(new URL('../../../../docs/pilot/registration-readiness/component-passport.schema.json', import.meta.url), 'utf8'),
+);
 
 describe('component passports on disk', () => {
   it('has at least one passport, so the check below is not vacuous', () => {
@@ -16,6 +19,32 @@ describe('component passports on disk', () => {
     const doc = load(file);
     expect(validatePassport(doc)).toEqual([]);
     expect(file).toBe(`${doc.passport.identity.id}.json`);
+  });
+});
+
+describe('the published component-passport schema', () => {
+  it('tracks the runtime validator sections and passport types', () => {
+    const passport = schema.properties.passport;
+    expect(schema.$schema).toBe('https://json-schema.org/draft/2020-12/schema');
+    expect(passport.required).toEqual([
+      'identity',
+      'accountability',
+      'boundaries',
+      'dependencies',
+      'control_plane',
+      'quality',
+      'lifecycle',
+    ]);
+    expect(passport.properties.identity.properties.type.enum).toEqual([...PASSPORT_TYPES]);
+  });
+
+  it('publishes the governed reference prefixes enforced at runtime', () => {
+    const defs = schema.$defs;
+    expect(defs.policyIds.items.pattern).toMatch('^POL-');
+    expect(defs.evidenceIds.items.pattern).toMatch('^EVD-');
+    expect(defs.testIds.items.pattern).toMatch('^TST-');
+    expect(defs.serviceObjectiveIds.items.pattern).toMatch('^SLO-');
+    expect(schema.properties.passport.properties.control_plane.properties.release_gate.pattern).toMatch('^REL-');
   });
 });
 
