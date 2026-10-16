@@ -1317,3 +1317,14 @@ This local slice does not prove deployed ingestion, scanner/extractor availabili
 - Coherent slice commit `f78ae804e` merges non-overlapping final `origin/main` `ee11c2789` as `09f395c8e`. The combined head passes 26/26 focused tests, TypeScript, university typecheck, regenerated production build and the refreshed performance-budget check.
 
 This local slice does not prove deployed ingestion, provider disposal, production execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh ranking.
+
+## Evidence locked in automation pass 19 / integration slice 120
+
+- Required-branch head `4bb81d578` was clean before the slice and already included current `origin/main` `ee11c2789`. Exact upstream history/current-code inspection found member-scoped group-task RLS and an existing delete client, but no preview or duplicate-title guard.
+- Shared-part removal names now identify list position, title, completion, assignment and deadline. The shared confirmation/preview explains the group-wide consequence, unaffected membership/other parts/official records and manual-only recovery before calling the existing exact-id server operation.
+- Cancel performs no write. Success reloads after the delete resolves; a refused write keeps the part represented and reports a retryable error. Existing verified-student, class-membership and group-membership RLS remains authoritative.
+- All three behavior guards failed against the former title-only one-press deletion. Focused and adjacent Group Work, room-key, signed-out-network and root-lifecycle verification passes 36/36; the final 181/181 set also passes isolation, integration-control and repository-map guards. The isolation registry now includes this test and the earlier omitted mocked Activities regression, and the empty temporary design-command directory found by the repository-map guard was removed.
+- TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing warnings and the existing chunk-size warning. Aggregate design-system check/report pass through a temporary `pnpm` compatibility shim: 9 token tests, 70 check contracts and 97 report contracts; audit remains at zero violations with 86 existing warnings and CSS within its ledger.
+- Ordered and shuffled full suites were not rerun. Mandatory HawkScan preflight reports no Hawk or Docker runtime, API key or app host; `stackhawk.yml` exists and no local properties file was detected. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh ranking.

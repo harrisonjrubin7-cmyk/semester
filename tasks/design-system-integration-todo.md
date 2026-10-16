@@ -2490,3 +2490,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep session-wide consent withdrawal, provider retention/disposal, scanner-backed ingestion and official LMS/course records separate from this exact persisted-copy removal.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 governed shared group-part removal — automation pass 19, integration slice 120
+
+- [x] Start from clean required-branch head `4bb81d578`; fetch current `origin/main` `ee11c2789`, confirm it is already included and inspect exact Group Work, delete-client and RLS history/current code for overlap.
+- [x] Re-rank one-press shared-part deletion as the next bounded Phase 4 consequence/accessibility gap; keep group membership, official course records and provider/institution activity outside this existing server mutation.
+- [x] Name duplicate-titled removals with list position, title, completion state, assignee/unclaimed state and part deadline.
+- [x] Reuse `ConfirmDialog` and `ActionPreview` to state the group-wide consequence, exact represented row, unaffected records and manual-only recovery before calling the existing `dropPart` operation.
+- [x] Preserve current verified-student, class-membership and group-membership RLS; cancel writes nothing, success reloads only after the server resolves and refusal keeps the part visible with a retryable error.
+- [x] Prove all three behavior guards red against the former one-press/title-only control, pass 36/36 focused and adjacent Group Work, room-key, signed-out-network and root-lifecycle tests, then pass the final 181/181 set including isolation, integration-control and repository-map guards.
+- [x] Add the new mocked test and the previously omitted mocked Activities regression to `MOCKS_MODULES`; remove the empty temporary design-command directory detected by the repository-map guard.
+- [x] Pass TypeScript, lint/style/label/terms checks, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through a temporary `pnpm` compatibility shim: 9/9 token tests, 70/70 design contracts and 97/97 report contracts; preserve zero design violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded shared-action slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` present and no local properties file detected; no scanner runtime, live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep shared group-work mutations under current member-scoped server/RLS authority and preserve explicit recovery truth for actions that affect collaborators.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

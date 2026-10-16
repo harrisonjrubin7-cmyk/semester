@@ -941,3 +941,16 @@ No route, navigation, shared visual component, dependency, schema, policy, serve
 Slice commit `f78ae804e` merges non-overlapping final `origin/main` `ee11c2789` as `09f395c8e`. The combined head passes 26/26 focused tests, TypeScript, university typecheck, regenerated production build and the refreshed performance-budget check.
 
 No route, navigation, shared visual component, dependency, schema, policy, server authorization, provider configuration or external system changed. The archive remains specification evidence only; this slice does not establish deployed ingestion, institutional acceptance or production readiness.
+
+## Automation pass 19 mapping — governed shared group-part removal (slice 120)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Shared academic actions identify the exact represented item | `app/src/screens/Groupwork.tsx`; `PartRow`; current group roster | Existing but incomplete -> existing and verified for this slice | Removal names include list position, title, completion, assignee/unclaimed state and deadline, distinguishing duplicate-titled rows. |
+| A consequential collaborator-visible deletion is previewed before execution | Shared `ConfirmDialog`; shared `ActionPreview`; `app/src/screens/groupwork.part-removal.test.tsx` | Missing and in scope -> existing and verified for this slice | Cancel starts focused and writes nothing; confirmation states the group-wide effect, exact row, unaffected records and manual-only recovery. |
+| Server authorization and failure truth remain authoritative | `dropPart`; `supabase/migrations/20260901000500_groups.sql` member policies | Existing and verified | The UI still invokes one exact-id delete under verified-student/class/group membership RLS. Refusal leaves the row visible and reports a retry instead of fabricating success. |
+| Official records and unrelated shared state stay outside the mutation | Current Group Work copy and preview boundary | Intentionally unchanged | Group membership, other parts, course records and provider/institution systems are not changed or claimed. |
+| Regression and repository gates | New Group Work removal test plus group-domain/room-key/signed-out/root/isolation/integration-control/repository-map guards | Existing and verified locally for this slice | Red proof against title-only one-press deletion; 36/36 adjacent and final 181/181 broader tests, TypeScript, lint, university typecheck, build and aggregate 9/70/97 design contracts pass. `MOCKS_MODULES` now covers this and the earlier omitted mocked Activities test. Full ordered/shuffled suites and DAST remain open. |
+| Security verification after production behavior changes | `stackhawk.yml` | Blocked by environment | Hawk and Docker are absent; API key/app host are unset and no local properties file was detected. No runnable target, scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, grant, RLS rule, provider configuration or external system changed. The archive remains specification evidence only; this slice does not establish deployment, institutional acceptance or production readiness.

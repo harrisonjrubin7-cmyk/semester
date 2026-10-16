@@ -6,6 +6,8 @@ import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { EmptyState, SectionLabel } from '../components/ui';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ActionPreview } from '../components/unity/ActionPreview';
 import {
   addPart,
   dropPart,
@@ -61,6 +63,11 @@ const asPart = (p: PartRow): Part => ({
 const NOBODY: Profile[] = [];
 const NOTHING: PartRow[] = [];
 
+function partRemovalDetails(part: Part, owner: Profile | undefined): string {
+  const ownership = part.owner ? `assigned to ${owner?.handle ?? 'a group member'}` : 'unclaimed';
+  return `${part.done ? 'done' : 'not done'} · ${ownership} · ${part.due ? `due ${part.due}` : 'no part deadline'}`;
+}
+
 export function Groupwork() {
   const { state, dispatch, account, catalog } = useStore();
   const now = useNow();
@@ -102,6 +109,12 @@ export function Groupwork() {
   const [newPart, setNewPart] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [removing, setRemoving] = useState<{
+    part: Part;
+    owner: Profile | undefined;
+    groupId: string;
+    groupName: string;
+  } | null>(null);
 
   const term = termOf(now);
   /**
@@ -461,8 +474,9 @@ export function Groupwork() {
               body="Write down the sections and the group can divide them."
             />
           ) : (
-            parts.map(asPart).map((p) => {
+            parts.map(asPart).map((p, index) => {
               const owner = members.find((m) => m.user_id === p.owner);
+              const removalDetails = partRemovalDetails(p, owner);
               return (
                 <div
                   key={p.id}
@@ -534,14 +548,9 @@ export function Groupwork() {
                     <button
                       type="button"
                       className="bare"
-                      aria-label={`Remove ${p.title}`}
+                      aria-label={`Remove part ${index + 1} of ${parts.length}, ${p.title}: ${removalDetails}`}
                       disabled={busy}
-                      onClick={() =>
-                        void guard(async () => {
-                          await dropPart(p.id);
-                          await loadOne(open.id);
-                        })
-                      }
+                      onClick={() => setRemoving({ part: p, owner, groupId: open.id, groupName: open.name })}
                       style={{ flex: 'none', width: 22, color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
                     >
                       ×
@@ -587,6 +596,30 @@ export function Groupwork() {
           </div>
         </>
       )}
+      {removing ? (
+        <ConfirmDialog
+          title="Remove this shared part?"
+          preview={
+            <ActionPreview
+              subject={removing.part.title}
+              says={`This removes this part from the shared ${removing.groupName} checklist for everyone in the group.`}
+              exactly={`${removing.part.owner ? `Assigned to ${removing.owner?.handle ?? 'a group member'}` : 'Unclaimed'} · ${removing.part.done ? 'done' : 'not done'} · ${removing.part.due ? `due ${removing.part.due}` : 'no part deadline'}`}
+              doesNotChange="Group membership, the other parts and official course records stay unchanged."
+              recovery={{ kind: 'none', how: 'A group member would need to add the part again and restore its assignment, deadline and completion state.' }}
+            />
+          }
+          confirmLabel="Remove part"
+          onCancel={() => setRemoving(null)}
+          onConfirm={() => {
+            const target = removing;
+            setRemoving(null);
+            void guard(async () => {
+              await dropPart(target.part.id);
+              await loadOne(target.groupId);
+            });
+          }}
+        />
+      ) : null}
     </Page>
   );
 }
