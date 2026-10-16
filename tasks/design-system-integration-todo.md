@@ -2268,8 +2268,9 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove both regression paths red against the former date-only/generic controls, then pass 128/128 focused and adjacent People, reducer, Undo and root-lifecycle tests.
 - [x] Pass TypeScript, lint, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
 - [x] Pass 9/9 token export, 70/70 design contracts and 97/97 report contracts; retain zero audit violations, 86 existing warnings and the existing CSS ledger.
+- [x] Commit the coherent production/test/control slice locally as `056cb667e` after confirming final `origin/main` remains included and non-overlapping.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility/consequence slice; pass 2's current-head checkpoint remains the latest full-suite evidence.
-- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no scanner runtime, live target, scan, finding result, fix/rescan loop or security pass exists.
+- [ ] HawkScan DAST — mandatory post-commit preflight for `056cb667e` reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no scanner runtime, live target, scan, finding result, fix/rescan loop or security pass exists.
 
 ### Next implementation boundary
 
