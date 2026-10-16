@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { ActivationGate, RegistrySnapshot } from '../types.ts';
+import type { ActivationGate, OperationsReadinessRecord, RegistrySnapshot } from '../types.ts';
 
 export const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const repositoryRoot = resolve(packageRoot, '../..');
@@ -28,7 +28,8 @@ export async function loadRegistry(): Promise<RegistrySnapshot> {
     loadGroup<NonNullable<RegistrySnapshot['manifests']>[number]>('manifests'), loadGroup<NonNullable<RegistrySnapshot['workspaces']>[number]>('workspaces'),
   ]);
   const activationGates = await loadGroup<ActivationGate>('activation-gates');
-  return { capabilities, systems, roles, screens, workflows, integrations, controls, documents, tenants, backlog, manifests, workspaces, activationGates };
+  const operationsReadiness = await loadGroup<OperationsReadinessRecord>('operations-readiness');
+  return { capabilities, systems, roles, screens, workflows, integrations, controls, documents, tenants, backlog, manifests, workspaces, activationGates, operationsReadiness };
 }
 
 export async function writeGenerated(name: string, value: unknown): Promise<void> {

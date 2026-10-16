@@ -1,0 +1,23 @@
+{
+  "key": "operations.registration.readiness",
+  "capability": "registration.readiness",
+  "owner": "platform-operations",
+  "status": "not_ready",
+  "roster": {
+    "primary_owner": "Founder, acting",
+    "backup_owner": null,
+    "support_hours": null,
+    "escalation_contacts_published": false
+  },
+  "required": [
+    {"id": "support.escalation_roster", "status": "not_verified", "evidence": ["docs/support/README.md"], "expires_at": null, "gap": "No backup, staffed hours, paging test, or published escalation contacts exist."},
+    {"id": "monitoring.synthetic_checks", "status": "not_verified", "evidence": ["docs/operations/launch-readiness.md"], "expires_at": null, "gap": "No target-environment synthetic support or recovery check is retained."},
+    {"id": "recovery.restore_drill", "status": "not_verified", "evidence": ["docs/evidence/restore/2026-09-30-logical-rehearsal.md"], "expires_at": null, "gap": "The repository has a historical logical rehearsal, not a current operated restore against the target."},
+    {"id": "recovery.incident_exercise", "status": "not_verified", "evidence": ["docs/INCIDENT-RECOVERY-PLAYBOOK.md"], "expires_at": null, "gap": "An incident playbook exists, but no current exercised incident record is retained for this capability."}
+  ],
+  "gaps": [
+    "Name and train a backup operator with staffed support hours.",
+    "Publish escalation contacts for the pilot institution.",
+    "Retain current synthetic-check, restore-drill, and incident-exercise evidence from the target environment."
+  ]
+}
