@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Notice, SectionLabel } from '../ui';
+import { SemesterDesignSurface, SlaTimer } from '../semester-design';
 import {
   CATEGORY_LABELS,
   CONTEXT_KEYS,
@@ -232,8 +233,16 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
           <div style={{ color: 'var(--app-dim)' }}>
             {CATEGORY_LABELS[ticket.category]} · {OPERATOR_STATUS_LABELS[ticket.status]} · {ticket.priority} priority
           </div>
-          <div>
-            First reply due {when(ticket.firstResponseDue)}{ticket.overdue ? ' · OVERDUE' : ''}
+          <div style={{ display: 'grid', gap: 'var(--sp-2)' }}>
+            <span>First reply due {when(ticket.firstResponseDue)}</span>
+            <SemesterDesignSurface label={`First response target for ${ticketReference(ticket.id)}`}>
+              <SlaTimer
+                due={ticket.firstResponseDue}
+                state={ticket.firstRespondedAt ? 'met' : ticket.overdue ? 'breach' : undefined}
+                met={ticket.firstRespondedAt !== null}
+                metAt={ticket.firstRespondedAt ? when(ticket.firstRespondedAt) : undefined}
+              />
+            </SemesterDesignSurface>
           </div>
           <button type="button" className="btn btn-secondary" aria-expanded={openId === ticket.id} onClick={() => open(openId === ticket.id ? null : ticket.id)}>
             {openId === ticket.id ? 'Close conversation' : 'Open conversation'}

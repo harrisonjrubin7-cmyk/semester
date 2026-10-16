@@ -33,3 +33,4 @@ this change adds no dependency, so passports are JSON with the same keys.
 | ID | Status | Notes |
 | --- | --- | --- |
 | `WF-READINESS-001` | `proposed` | Shape from the continuation brief. Owners are the brief's role labels, not confirmed people. Upstream `SIS-001` and `POL-READINESS-001` are not in this repo yet. |
+| `SVC-DESIGN-SYSTEM-001` | `implemented_not_release_verified` | Package authority, boundaries, CI checks, and safe-off path are registered. Component-level passport coverage and the referenced policy, evidence, test, and release artifacts are not complete. |
