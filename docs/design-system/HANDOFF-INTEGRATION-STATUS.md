@@ -1355,12 +1355,13 @@ This local slice does not prove deployment, production execution, provider conne
 
 ## Evidence locked in automation pass 27 / integration slice 128
 
-- Required-branch head `a6f451e6d` includes current `origin/main` `b3dbb49fa`; exact upstream history and current-code inspection found no equivalent Goal Plan removal-label work.
+- Required-branch head `a6f451e6d` included selection-time `origin/main` `b3dbb49fa`; exact upstream history and current-code inspection found no equivalent Goal Plan removal-label work.
 - Milestone removal names now identify list position, complete title and readable due/no-date state. Action removal names identify position, title, completion state and current milestone relationship. Proposed-block removal names identify position, title, readable date and duration.
 - Existing pure draft helpers and the separate **Save plan** operation remain authoritative. Removing a row changes only the unsaved plan; no provider calendar, course, official record or institution system changes.
 - The repeated-row regression failed against the former position-only/title-only controls, then the focused Goal Plan, goal-domain, label and root-lifecycle set passes 60/60.
 - TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and all eight report contract files pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
 - Ordered and shuffled full suites were not rerun; automation pass 2 remains the latest full-suite checkpoint.
+- Final non-overlapping `origin/main` `9bc8ee1a4` merges as `0c4a4ec5a`; the combined head passes 107/107 Goal Plan and upstream gateway tests plus both TypeScript gates.
 - Mandatory post-commit HawkScan preflight for slice commit `502e72905` reports Hawk v6 and Docker runtimes absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
