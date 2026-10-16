@@ -1267,3 +1267,15 @@ Mandatory HawkScan preflight reports no Hawk or Docker runtime and no `HAWK_API_
 - Mandatory HawkScan preflight reports no Hawk v6 or Docker runtime and no live app host. A local properties file exists but was not read; `HAWK_API_KEY` is unset. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh ranking.
+
+## Evidence locked in automation pass 15 / integration slice 116
+
+- The required branch was clean at `e9e292985`, already included current `origin/main` `8a29db78f`, and exact history/current-code inspection found device-only timer/alarm persistence but no same-label/same-time accessibility guard.
+- Timer clear names now identify label, total duration, current remainder and running/paused state. Alarm delete names identify time, label, repeat schedule and on/off state.
+- Existing exact-id `removeTimer` / `removeAlarm` reducers, device persistence and ringing behavior remain unchanged. No server, provider, academic record or institution operation was introduced.
+- Both regressions failed against the former repeated **Clear** and time-only delete names. Focused and adjacent Clocks, domain, reducer, Undo and root-lifecycle verification passes 182/182.
+- TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and report contracts pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Ordered and shuffled full suites were not rerun; automation pass 2 remains the latest full-suite checkpoint.
+- Mandatory HawkScan preflight reports no Hawk v6 or Docker runtime and no API-key/app-host environment values. A local properties file exists but was not read; no DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh ranking.

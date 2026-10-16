@@ -2413,3 +2413,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep official transcript and degree-audit mutation separate from these student-entered planning copies.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 distinguishable timer and alarm removals — automation pass 15, integration slice 116
+
+- [x] Start from clean required-branch head `e9e292985`; fetch current `origin/main` `8a29db78f`, confirm it is already included and inspect exact Clocks history/current code for overlap.
+- [x] Re-rank same-label timer and same-time alarm controls as the next bounded Phase 3 accessibility gap; keep work-session evidence, device notifications and external clock/provider systems outside the slice.
+- [x] Name timer clearing with label, total duration, current remainder and running/paused state.
+- [x] Name alarm deletion with time, label, repeat schedule and on/off state.
+- [x] Preserve the exact-id `removeTimer` / `removeAlarm` reducers and existing device persistence; add no confirmation, Undo or external claim.
+- [x] Prove both regressions red against the former repeated **Clear** and time-only delete names, then pass 182/182 focused and adjacent Clocks, domain, reducer, Undo and root-lifecycle tests.
+- [x] Pass TypeScript, lint/style/label/terms checks, university gateway typecheck and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass 79/79 design-check constituents and 97/97 report contracts; preserve zero design violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no scanner runtime, live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep ordinary device timers/alarms, academic work-session evidence and external notification/clock providers as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
