@@ -128,8 +128,7 @@ begin
      and i.command = want_command
      and i.idempotency_key = want_key
      and i.state = 'in_progress'
-     and i.lease_id = want_lease
-     and i.lease_until > clock_timestamp();
+     and i.lease_id = want_lease;
   return found;
 end $$;
 
@@ -145,8 +144,7 @@ begin
      and i.command = want_command
      and i.idempotency_key = want_key
      and i.state = 'in_progress'
-     and i.lease_id = want_lease
-     and i.lease_until > clock_timestamp();
+     and i.lease_id = want_lease;
   return found;
 end $$;
 

@@ -178,13 +178,6 @@ begin
      and actor_id = 'student-a'
      and command = 'institution.action.commit'
      and idempotency_key = 'commit-key-00000001';
-  if public.gateway_complete_idempotency(
-    'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
-    begun.lease_id, 200, repeat('s', 40), at_time + interval '61 seconds'
-  ) then raise exception 'FAILED: an expired worker completed before takeover'; end if;
-  if public.gateway_release_idempotency(
-    'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001', begun.lease_id
-  ) then raise exception 'FAILED: an expired worker released before takeover'; end if;
   select * into takeover from public.gateway_begin_idempotency(
     'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
     repeat('a', 64), at_time + interval '61 seconds', 60000, 86400000
@@ -214,6 +207,25 @@ begin
   if not public.gateway_release_idempotency(
     'gateway-a', 'student-b', 'institution.action.commit', 'commit-key-00000001', other_scope.lease_id
   ) then raise exception 'FAILED: the owner could not release active work'; end if;
+
+  select * into other_scope from public.gateway_begin_idempotency(
+    'gateway-a', 'student-late', 'institution.action.commit', 'commit-key-late-0001',
+    repeat('d', 64), now(), 1000, 86400000
+  );
+  update private.gateway_idempotency
+     set lease_until = statement_timestamp() - interval '1 second'
+   where tenant_id = 'gateway-a' and actor_id = 'student-late';
+  if not public.gateway_complete_idempotency(
+    'gateway-a', 'student-late', 'institution.action.commit', 'commit-key-late-0001',
+    other_scope.lease_id, 200, repeat('l', 40), now()
+  ) then raise exception 'FAILED: the current holder could not persist a late result'; end if;
+  select * into repeated from public.gateway_begin_idempotency(
+    'gateway-a', 'student-late', 'institution.action.commit', 'commit-key-late-0001',
+    repeat('d', 64), now(), 1000, 86400000
+  );
+  if repeated.kind <> 'replay' or repeated.response_body <> repeat('l', 40) then
+    raise exception 'FAILED: a late result was not replayed';
+  end if;
 
   select * into other_scope from public.gateway_begin_idempotency(
     'gateway-a', 'student-c', 'institution.action.commit', 'commit-key-expired-01',
