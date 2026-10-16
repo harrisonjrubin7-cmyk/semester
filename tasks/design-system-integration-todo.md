@@ -2432,3 +2432,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep ordinary device timers/alarms, academic work-session evidence and external notification/clock providers as separate authorities.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-16 distinguishable graduation-scenario removals — automation pass 16, integration slice 117
+
+- [x] Start from clean required-branch head `56c821a9f`; fetch current `origin/main` `8a29db78f`, confirm it is already included and inspect exact graduation-simulator history/current code for overlap.
+- [x] Re-rank repeated saved scenario names as the next bounded Phase 3 accessibility/consequence gap; keep account drafts and the registrar's official degree audit outside the device mutation.
+- [x] Name each removal with list position, scenario name, added/removed credits, fall/spring load, summer load and complete study-abroad assumptions/cost basis.
+- [x] Preserve the existing confirmation, consequence preview, exact-id `removeScenario` operation, guarded device persistence, failure state and device-backup-only recovery boundary.
+- [x] Prove the existing journey and duplicate-name regression red against the former name-only control, then pass 121/121 focused and adjacent graduation, scenario, device-library, degree, label and root-lifecycle tests.
+- [x] Pass TypeScript, lint/style/label/terms checks, university gateway typecheck and production build; retain twelve existing warnings and the existing chunk-size warning.
+- [x] Pass 9/9 token export, 70/70 design-check contracts and 97/97 report contracts; preserve zero design violations, 86 existing warnings and CSS within its ledger.
+- [ ] Aggregate design report wrapper — unavailable because it invokes absent `npx`; the exact 97 contracts pass and no wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility/consequence slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6 and Docker absent and `HAWK_APP_HOST` unset. `HAWK_API_KEY` is unset; a local properties file exists but was not read. No scanner runtime, live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep device-only estimates, account-saved drafts and the registrar's official degree audit as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

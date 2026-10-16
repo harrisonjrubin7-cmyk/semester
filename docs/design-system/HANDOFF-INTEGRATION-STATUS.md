@@ -1279,3 +1279,15 @@ This local slice does not prove deployment, production execution, institutional 
 - Mandatory HawkScan preflight reports no Hawk v6 or Docker runtime and no API-key/app-host environment values. A local properties file exists but was not read; no DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh ranking.
+
+## Evidence locked in automation pass 16 / integration slice 117
+
+- The required branch was clean at `56c821a9f`, already included current `origin/main` `8a29db78f`, and exact history/current-code inspection found governed scenario removal but no repeated-name accessibility guard.
+- Scenario removal names now identify list position, name, added/removed credits, fall/spring and summer loads, and complete study-abroad transfer/cost assumptions. Position distinguishes even otherwise identical duplicates.
+- Existing confirmation, consequence preview, exact-id `removeScenario`, guarded device persistence, failure state and backup-only recovery remain unchanged. Account drafts and the registrar's official degree audit stay outside the mutation.
+- The existing journey and duplicate-name regression failed against the former name-only control. Focused and adjacent graduation, scenario, device-library, degree, label and root-lifecycle verification passes 121/121.
+- TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing warnings and the existing chunk-size warning. Token export passes 9/9, design contracts pass 70/70 and exact report contracts pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- The aggregate report wrapper is unavailable because it invokes absent `npx`. Ordered and shuffled full suites were not rerun; automation pass 2 remains the latest full-suite checkpoint.
+- Mandatory HawkScan preflight reports no Hawk v6 or Docker runtime and no live app host. `HAWK_API_KEY` is unset; a local properties file exists but was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh ranking.
