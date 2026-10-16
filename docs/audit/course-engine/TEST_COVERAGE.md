@@ -5,14 +5,14 @@
 | Check | Result |
 |---|---|
 | Course-engine web unit/component tests | 28 passed across 11 files |
-| Production-mode Chrome journey tests | 4 passed with deterministic API fixtures |
+| Production-mode Chromium browser tests | 7 passed with deterministic API fixtures |
 | Browser axe scan | passed with zero violations at the desktop ready state |
 | TypeScript `tsc --noEmit` | passed |
 | Next.js production build | passed; root, Semester OS routes, and 15 dynamic course routes compiled |
 | Responsive browser checks | passed at 1440, 390, and 320 px with no document overflow |
 | Visual regression baselines | reviewed desktop and mobile overview snapshots recorded |
-| API pytest suite | previously passed on 2026-10-11: 84 tests with 41 subtests; backend was unchanged by this browser pass |
-| API Ruff/compileall | previously passed on 2026-10-11; backend was unchanged by this browser pass |
+| API pytest suite | previously passed on 2026-10-12: 85 tests with 41 subtests; backend was unchanged by this browser pass |
+| API Ruff/compileall | previously passed on 2026-10-12; backend was unchanged by this browser pass |
 
 ## Covered behaviors
 

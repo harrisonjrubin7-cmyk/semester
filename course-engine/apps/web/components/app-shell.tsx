@@ -82,7 +82,7 @@ export function AppShell({ courseId, courseTitle, term, mode, offline, children 
 
   return (
     <>
-      <a className="skip-link" href="#workspace-content">Skip to course content</a>
+      <nav aria-label="Accessibility shortcuts"><a className="skip-link" href="#workspace-content">Skip to course content</a></nav>
       <div className="workspace-shell">
         <aside aria-label="Semester course rail" className="desktop-rail">
           <div className="mb-7 flex items-start justify-between gap-3">
@@ -96,10 +96,10 @@ export function AppShell({ courseId, courseTitle, term, mode, offline, children 
         </aside>
         <div className="workspace-main">
           {offline ? <OfflineStrip /> : null}
-          <div className="context-bar" aria-label="System context" role="region">
+          <header className="context-bar" aria-label="System context" tabIndex={0}>
             <div className="flex items-center gap-2 whitespace-nowrap"><strong>{term || "Term not set"}</strong><span aria-hidden="true">/</span><span>{courseTitle}</span></div>
             <div aria-label={offline ? "Changes pending" : "Source records available"} className="context-status flex items-center gap-2 whitespace-nowrap" role="status"><ShieldCheck aria-hidden="true" size={15} /><span aria-hidden="true">{offline ? "Changes pending" : "Source records available"}</span></div>
-          </div>
+          </header>
           <main className="workspace-content" id="workspace-content" tabIndex={-1}>{children}</main>
         </div>
       </div>

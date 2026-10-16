@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
+import { source as axeSource } from "axe-core";
 
 const citationId = "00000000-0000-0000-0000-000000000010";
 const guideAsset = {
@@ -26,13 +26,23 @@ const sourceFile = { id: "file-1", filename: "syllabus.pdf", classification: "sy
 const review = { id: "review-1", title: "Confirm assignment date", item_type: "date_conflict", status: "needs_review", payload: { due_date: "2026-10-20" } };
 const event = { id: "event-1", title: "Reflection due", event_type: "assignment", event_date: "2026-10-20", all_day: true, status: "confirmed", time_unspecified: true };
 
+type AxeWindow = Window & {
+  axe: { run: (context: Document) => Promise<{ violations: unknown[] }> };
+};
+
+async function expectNoAccessibilityViolations(page: Page) {
+  await page.addScriptTag({ content: axeSource });
+  const violations = await page.evaluate(async () => (await (window as unknown as AxeWindow).axe.run(document)).violations);
+  expect(violations).toEqual([]);
+}
+
 async function json(route: Route, body: unknown, status = 200) {
   await route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
 }
 
 async function installApiFixtures(page: Page) {
   await page.addInitScript(() => localStorage.setItem("course_engine_token", "browser-test-token"));
-  await page.route("http://localhost:8000/api/v1/**", async (route) => {
+  await page.route("**/api/v1/**", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
     const path = url.pathname.replace("/api/v1", "");
@@ -49,7 +59,7 @@ async function installApiFixtures(page: Page) {
     if (path === "/calendar-events/event-1" && method === "PATCH") return json(route, event);
     if (path === "/flashcards/card-1/review" && method === "POST") return json(route, { id: "progress-1", attempts: 1, correct_attempts: 1, mastery_score: 1 });
     if (path === "/quizzes/quiz-1/attempts" && method === "POST") return json(route, { id: "session-1", recorded: true, answer_count: 1 });
-    if (path.startsWith("/study-assets/guide-1/exports/") && method === "POST") return route.fulfill({ status: 200, contentType: "application/octet-stream", headers: { "Access-Control-Allow-Origin": "http://127.0.0.1:3310", "Access-Control-Expose-Headers": "Content-Disposition", "Content-Disposition": "attachment; filename=coordination-guide.docx" }, body: "browser export fixture" });
+    if (path.startsWith("/study-assets/guide-1/exports/") && method === "POST") return route.fulfill({ status: 200, contentType: "application/octet-stream", headers: { "Access-Control-Expose-Headers": "Content-Disposition", "Content-Disposition": "attachment; filename=coordination-guide.docx" }, body: "browser export fixture" });
     return json(route, { detail: `Unhandled browser fixture: ${method} ${path}` }, 404);
   });
 }
@@ -66,8 +76,7 @@ test("workspace is accessible and responsive at supported widths", async ({ page
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/courses/course-1/overview");
-  const scan = await new AxeBuilder({ page }).analyze();
-  expect(scan.violations).toEqual([]);
+  await expectNoAccessibilityViolations(page);
 });
 
 test("desktop and mobile overview match reviewed visual snapshots", async ({ page }) => {
