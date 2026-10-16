@@ -80,6 +80,7 @@ test("workspace is accessible and responsive at supported widths", async ({ page
 });
 
 test("desktop and mobile overview match reviewed visual snapshots", async ({ page }) => {
+  test.skip(!["darwin", "linux"].includes(process.platform), "Reviewed visual baselines currently cover macOS and Linux.");
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/courses/course-1/overview");
   await expect.soft(page).toHaveScreenshot("overview-desktop.png", { fullPage: true });
