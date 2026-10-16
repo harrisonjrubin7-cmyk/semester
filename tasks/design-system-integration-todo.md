@@ -2530,3 +2530,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep group membership history/audit, group lifecycle administration and official course-team records as separate server-authority work.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 21 update — governed saved-residence removal (slice 122)
+
+- [x] Fetch current `origin/main`, verify the required build branch is clean and confirm `06c2d5c74` is already included before selecting the slice.
+- [x] Search upstream history and current code for an equivalent residence-removal preview or exact accessible name; none exists.
+- [x] Replace the generic **Remove this room** control name with the exact hall, optional room and readable term.
+- [x] Put the existing exact-id `dropResidence` mutation behind the shared cancel-first confirmation and consequence preview.
+- [x] State exactly what leaves the device and preserve maintenance requests, the separate application plan and the official housing assignment.
+- [x] Keep the existing eight-second Undo snapshot and validated workspace backup as the recovery boundary.
+- [x] Prove the guard red against the former behavior, then pass 2/2 direct behavior tests and 74/74 focused/adjacent Housing, maintenance, domain and Undo tests.
+- [x] Pass TypeScript, lint/style/label/terms, university gateway typecheck and production build with only the existing warnings.
+- [x] Pass the final 198/198 focused set including root-lifecycle, isolation and repository-map contracts, plus aggregate design-system check/report (9 token tests, 70 contracts, zero violations, 86 existing warnings, CSS within ledger).
+- [ ] HawkScan DAST — mandatory preflight reports Hawk/config and Docker absent, `HAWK_API_KEY` / app-host values unset, and no live target. `stackhawk.yml` and an unread local properties file exist; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official housing assignment changes and live portal/provider integration outside this device-only slice without current institution authority.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

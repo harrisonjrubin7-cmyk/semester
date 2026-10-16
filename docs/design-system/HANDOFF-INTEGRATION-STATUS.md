@@ -1340,3 +1340,15 @@ This local slice does not prove deployed ingestion, provider disposal, productio
 - Ordered and shuffled full suites were not rerun. Mandatory HawkScan preflight reports no Hawk or Docker runtime, API key or app host; `stackhawk.yml` exists and no local properties file was detected. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh ranking.
+
+## Evidence locked in automation pass 21 / integration slice 122
+
+- Required-branch head `fde2fe220` was clean before the slice, already included current `origin/main` `06c2d5c74`, and exact upstream/current-code inspection found no equivalent residence-removal preview.
+- My housing now names the exact hall, optional room and readable term before removal. The shared cancel-first confirmation states the move-out facts and device-only consequence.
+- Existing exact-id `dropResidence`, term ownership and eight-second Undo remain authoritative. Maintenance requests, the separate application plan and the official housing assignment remain outside the mutation; workspace backup remains the longer recovery path.
+- Both new behavior tests failed against the former generic one-press action. Direct verification passes 2/2 and the focused/adjacent Housing, maintenance, housing-domain and Undo set passes 74/74.
+- TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning.
+- The final focused set passes 198/198, including root-lifecycle, isolation and repository-map contracts. Aggregate design-system check passes 9 token tests and 70 design contracts; the test-backed report passes, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun; automation pass 2 remains the latest full-suite checkpoint.
+- The active HawkScan skill stops at mandatory preflight: Hawk v6/config and Docker are absent, `HAWK_API_KEY` and app-host environment values are unset, and no live target exists. `stackhawk.yml` and a local properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.

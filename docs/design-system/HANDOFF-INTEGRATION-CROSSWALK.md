@@ -968,3 +968,16 @@ No route, navigation, dependency, schema, policy, grant, RLS rule, provider conf
 | Security verification after production behavior changes | `stackhawk.yml` | Blocked by environment | Hawk/config and Docker are absent; API key/app host are unset. A local properties file exists but was not read. No live target, scan, finding result, fix/rescan loop or security pass exists. |
 
 No route, navigation, dependency, schema, policy, grant, RLS rule, provider configuration or external system changed. The archive remains specification evidence only; this slice does not establish deployment, production execution, institutional acceptance, legal review or production readiness.
+
+## Automation pass 21 — governed saved-residence removal
+
+| Requirement | Repository authority | Disposition | Evidence and boundary |
+|---|---|---|---|
+| Identify the exact saved room before removal | `app/src/screens/Housing.tsx`; current term-scoped `Residence` | Existing but incomplete → existing and verified locally | The control now names the hall, optional room and readable term instead of generic **Remove this room**. |
+| Preview the device-only consequence | Shared `ConfirmDialog`; shared `ActionPreview` | Existing but incomplete → existing and verified locally | Cancel starts focused and writes nothing. The preview names the term, move-out date and hours-after-final rule before any mutation. |
+| Preserve separate authorities | `dropResidence`; maintenance rows; account/term housing plan; official housing portal | Existing and verified for this slice | Confirmation removes only the represented residence id. Maintenance requests, the separate application plan and official assignment stay unchanged. No provider call exists. |
+| Keep recovery honest | Existing `dropResidence` entry in `app/src/lib/undo.ts`; validated workspace backup | Existing and verified | The existing eight-second residence snapshot remains available; a workspace backup is the longer recovery path. |
+| Regression and repository gates | `app/src/screens/housing.residence-removal.test.tsx` plus adjacent Housing/maintenance/domain/Undo coverage | Existing and verified locally for this slice | Both guards proved red against the one-press action; 2/2 direct, 74/74 adjacent and final 198/198 focused/root/isolation/repository-map tests pass with both typechecks, lint, build and aggregate design check/report. |
+| DAST security verification | `stackhawk.yml`; active HawkScan skill | Blocked by environment | Hawk v6/config and Docker are absent, API-key/app-host values are unset and no live target exists. The local properties file was detected but not read. No scan or security pass is claimed. |
+
+No route, navigation, dependency, schema, authorization policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, live provider behavior, institutional acceptance or production readiness.
