@@ -98,7 +98,7 @@ export function AppShell({ courseId, courseTitle, term, mode, offline, children 
           {offline ? <OfflineStrip /> : null}
           <header className="context-bar" aria-label="System context" tabIndex={0}>
             <div className="flex items-center gap-2 whitespace-nowrap"><strong>{term || "Term not set"}</strong><span aria-hidden="true">/</span><span>{courseTitle}</span></div>
-            <div className="flex items-center gap-2 whitespace-nowrap"><ShieldCheck aria-hidden="true" size={15} /><span>{offline ? "Changes pending" : "Source records available"}</span></div>
+            <div aria-label={offline ? "Changes pending" : "Source records available"} className="context-status flex items-center gap-2 whitespace-nowrap" role="status"><ShieldCheck aria-hidden="true" size={15} /><span aria-hidden="true">{offline ? "Changes pending" : "Source records available"}</span></div>
           </header>
           <main className="workspace-content" id="workspace-content" tabIndex={-1}>{children}</main>
         </div>
