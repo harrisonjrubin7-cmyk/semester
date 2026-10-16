@@ -11,6 +11,7 @@ import {
   Refusal,
   type UniversityRecord,
 } from '../../../packages/institution/src/index.ts';
+import { hashOf } from '../../../packages/platform/src/index.ts';
 import type { InstitutionAdapter } from './adapter.ts';
 import { trustedIdentity } from './auth.ts';
 import { createGateway } from './gateway.ts';
@@ -415,6 +416,8 @@ describe('university gateway boundaries', () => {
     expect(response.headers.get('access-control-allow-methods')).toBe('GET, POST, OPTIONS');
     expect(response.headers.get('access-control-allow-headers'))
       .toBe('Authorization, Content-Type, Idempotency-Key, X-Correlation-Id');
+    expect(response.headers.get('access-control-expose-headers'))
+      .toBe('X-Request-Id, X-Correlation-Id, Idempotent-Replayed, Retry-After');
   });
 
   it('keeps unconfigured services unavailable without inventing records', async () => {
@@ -540,6 +543,62 @@ describe('university gateway boundaries', () => {
     );
     expect(conflict.status).toBe(422);
     expect((await conflict.json()).error.code).toBe('idempotency_key_reused');
+    expect(f.calls()).toBe(1);
+  });
+
+  it('rebuilds replayed refusals for the current request and publishes active-lease retry timing', async () => {
+    const f = fixture();
+    const refusedReview = await f.prepare();
+    const refusedKey = 'commit-refusal-key-0001';
+    const refusedBody = { reviewId: refusedReview.id, confirmed: true };
+    f.mode('refuse-late');
+
+    const first = await f.request('/actions/commit', refusedBody, {
+      'idempotency-key': refusedKey,
+      'x-correlation-id': 'first-correlation',
+    });
+    expect(first.status).toBe(400);
+
+    const replay = await f.request('/actions/commit', refusedBody, {
+      'idempotency-key': refusedKey,
+      'x-correlation-id': 'retry-correlation',
+    });
+    expect(replay.status).toBe(400);
+    expect(replay.headers.get('idempotent-replayed')).toBe('true');
+    expect((await replay.json()).error.correlation_id).toBe('retry-correlation');
+    expect(f.calls()).toBe(1);
+
+    const activeReview = await f.prepare();
+    const activeKey = 'commit-active-key-00001';
+    const activeBody = { reviewId: activeReview.id, confirmed: true };
+    const command = 'institution.action.commit';
+    await f.journal.begin(
+      { tenantId: actor.institutionId, actorId: actor.userId, command, key: activeKey },
+      await hashOf({ command, body: activeBody }),
+      new Date(),
+      60_000,
+      7 * 86_400_000,
+    );
+    const inProgress = await f.request('/actions/commit', activeBody, { 'idempotency-key': activeKey });
+    expect(inProgress.status).toBe(409);
+    expect(Number(inProgress.headers.get('retry-after'))).toBeGreaterThan(0);
+  });
+
+  it('does not cache a transient commit conflict under the idempotency key', async () => {
+    const f = fixture();
+    const review = await f.prepare();
+    const key = 'commit-conflict-key-0001';
+    const body = { reviewId: review.id, confirmed: true };
+
+    f.title('Changed after review');
+    const conflict = await f.request('/actions/commit', body, { 'idempotency-key': key });
+    expect(conflict.status).toBe(409);
+    expect((await conflict.json()).error.code).toBe('review_changed');
+
+    f.title('Submit coursework');
+    const retried = await f.request('/actions/commit', body, { 'idempotency-key': key });
+    expect(retried.status).toBe(200);
+    expect(retried.headers.get('idempotent-replayed')).toBeNull();
     expect(f.calls()).toBe(1);
   });
 
