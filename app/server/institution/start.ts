@@ -298,7 +298,9 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(signal, () => {
     server.close(() => {
       clearInterval(sweep);
-      void (journal as { close?: () => void | Promise<void> }).close?.();
+      if ('close' in journal && typeof journal.close === 'function') {
+        void journal.close();
+      }
       sandboxStore?.close();
       process.exit(0);
     });
