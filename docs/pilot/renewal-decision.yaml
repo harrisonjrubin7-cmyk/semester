@@ -1,0 +1,41 @@
+# Renewal decision pack. Status: specified. No pilot has run, so no inputs exist yet.
+# End-of-pilot renewal is an evidence review, not a sales decision.
+
+renewal_review:
+  required_inputs:
+    - approved_pilot_scope
+    - adoption_metrics
+    - support_metrics
+    - reliability_metrics
+    - source_freshness_metrics
+    - reconciliation_metrics
+    - accessibility_findings
+    - privacy_security_findings
+    - institution_owner_feedback
+    - student_feedback
+    - open_risks
+    - expansion_cost_and_capacity
+
+  decision_options:
+    - renew_unchanged
+    - renew_with_remediation
+    - expand_scope
+    - extend_pilot
+    - pause
+    - conclude
+
+  expansion_blockers:
+    - unresolved_cross_tenant_access_finding
+    - unresolved_critical_accessibility_finding
+    - persistent_source_integrity_failure
+    - missing_institutional_owner
+    - no_evidence_for_required_control
+    - repeated_confusion_between_readiness_and_enrollment
+
+  outputs:
+    - signed_decision_record
+    - remediation_backlog
+    - updated_scope_and_source_register
+    - feature_flag_plan
+    - updated_training_and_communications
+    - archive_or_retention_plan

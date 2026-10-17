@@ -1,0 +1,60 @@
+# Tenant activation record. Status: specified. No tenant is activated.
+# Named owners, agreements and the institution are placeholders until the pilot is confirmed.
+tenant_activation:
+  id: TENANT-ACT-001
+  tenant: named_institution
+  capability: registration_readiness
+  state: planned
+
+  prerequisites:
+    legal:
+      - pilot_agreement_executed
+      - data_privacy_terms_executed
+      - authorized_institution_signatories_recorded
+
+    people:
+      - executive_sponsor_named
+      - registrar_business_owner_named
+      - technical_owner_named
+      - support_escalation_owner_named
+      - security_contact_named
+
+    identity:
+      - SSO_configuration_verified_or_approved_fallback
+      - role_mapping_reviewed
+      - deprovisioning_path_tested
+
+    data:
+      - source_authority_table_approved
+      - source_mapping_verified
+      - freshness_threshold_approved
+      - sample_reconciliation_completed
+      - retention_schedule_recorded
+
+    delivery:
+      - feature_flag_safe_off_verified
+      - production_monitoring_verified
+      - rollback_drill_completed
+      - support_queue_operational
+      - institution_training_complete
+
+  activation_steps:
+    - establish_tenant_record
+    - configure_institution_context
+    - configure_identity_and_roles
+    - validate_source_connections
+    - run_staging_journey_rehearsal
+    - attach_required_evidence
+    - approve_go_no_go
+    - enable_scoped_feature_flag
+    - verify_first_live_journey
+    - start_hypercare_window
+
+  completion:
+    required:
+      - first_student_journey_verified
+      - first_registrar_journey_verified
+      - first_receipt_verified
+      - first_audit_trail_verified
+      - monitoring_and_alerts_confirmed
+      - institution_owner_acknowledgement

@@ -1,0 +1,30 @@
+# Integration onboarding checklist and adapter contract. Status: specified. No source is activated.
+
+integration:
+  required_before_activation:
+    - provider_and_contact_recorded
+    - source_authority_approved
+    - data_elements_minimized
+    - authentication_method_reviewed
+    - sandbox_or_safe_test_available
+    - schema_mapping_versioned
+    - rate_limit_and_retry_rules_defined
+    - source_watermark_definition_agreed
+    - stale_threshold_agreed
+    - failure_notifications_routed
+    - reconciliation_method_tested
+    - disablement_and_data_cleanup_path_defined
+
+  adapter_contract:
+    must_provide:
+      - provider_event_id_or_equivalent_dedupe_key
+      - source_record_identifier
+      - observed_at
+      - source_updated_at_when_available
+      - schema_version
+      - correlation_or_trace_context_when_available
+    must_not:
+      - infer_missing_authoritative_values
+      - silently_coerce_invalid_enum_values
+      - overwrite_newer_authoritative_data_without_policy
+      - expose_provider_secrets_in_client_code
