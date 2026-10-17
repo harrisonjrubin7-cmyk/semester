@@ -16,6 +16,12 @@
  * fast someone answers (`submit_site_lead`); this decides only whether the
  * request is well-formed and from the site.
  *
+ * `plan_institution_launch` accepts only the bounded setup-request keys below.
+ * These are discovery metadata, not domain ownership, provider support,
+ * connection state, tenant authority or approval. Empty fields remain valid
+ * for the older contact form; adding a value makes its closed vocabulary and
+ * length checks mandatory.
+ *
  * ## What it refuses to do
  *
  * - **Answer a page it does not know.** The site's own origins are built in
@@ -73,6 +79,9 @@ export const SITE_PRODUCTION_ORIGINS: readonly string[] = [
   'https://www.semester.website',
   'https://semester.website',
   'https://semester-company-site.vercel.app',
+  // The owned GitHub Pages app hosts the University > Package intake form.
+  // Exact origin only: this does not admit arbitrary github.io projects.
+  'https://harrisonjrubin7-cmyk.github.io',
 ];
 
 /** The origin list this handler reads: the built-in origins, then the secret's. */
@@ -96,6 +105,71 @@ const ROUTE = /^[a-z][a-z0-9_]{1,59}$/;
 /** The shape the database's own check constraints use. */
 export const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const FIELD_KEY = /^[a-z][a-z0-9_]{0,39}$/;
+
+export const INSTITUTION_SETUP_FIELDS = [
+  // `topic` is the existing company-site contact form's selected label. Keep
+  // its current institutional value compatible while refusing arbitrary text.
+  'topic', 'requested_domain', 'requested_system', 'requested_provider', 'requested_product', 'data_mode', 'desired_launch_window',
+] as const;
+export const INSTITUTION_TOPICS = ['An institutional pilot'] as const;
+export const REQUESTED_SYSTEMS = ['identity', 'lms', 'sis', 'catalog', 'degree_audit', 'other'] as const;
+export const REQUESTED_PRODUCTS = ['semester_institutional'] as const;
+export const DATA_MODES = ['manual', 'connected'] as const;
+export const LAUNCH_WINDOWS = ['this_term', 'next_term', 'within_12_months', 'exploring'] as const;
+const DOMAIN_LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+
+function requestedDomain(value: string): string | null {
+  const raw = value.trim().toLowerCase().replace(/\.$/, '');
+  if (!raw || raw.length > 253 || /[\s%\\/:?#@]/.test(raw)) return null;
+  let domain: string;
+  try {
+    domain = new URL(`https://${raw}`).hostname;
+  } catch {
+    return null;
+  }
+  const labels = domain.split('.');
+  if (domain.length > 253 || /^\d+(?:\.\d+){3}$/.test(domain)) return null;
+  if (labels.length < 2 || !/[a-z]/.test(labels.at(-1) ?? '') || labels.some((label) => !DOMAIN_LABEL.test(label))) return null;
+  return domain;
+}
+
+type InstitutionalFieldsCheck = { fields: Record<string, string> } | { error: string };
+
+function institutionalFields(route: string, fields: Record<string, string>): InstitutionalFieldsCheck {
+  if (route !== 'plan_institution_launch') return { fields };
+  for (const key of Object.keys(fields)) {
+    if (!(INSTITUTION_SETUP_FIELDS as readonly string[]).includes(key)) {
+      return { error: 'An institutional setup field is not supported.' };
+    }
+  }
+  const normalized = { ...fields };
+  if (fields.topic && !(INSTITUTION_TOPICS as readonly string[]).includes(fields.topic)) {
+    return { error: 'Choose a supported institutional topic.' };
+  }
+  if (fields.requested_domain) {
+    const domain = requestedDomain(fields.requested_domain);
+    if (!domain) return { error: 'Please enter an institution domain, not a URL.' };
+    normalized.requested_domain = domain;
+  }
+  if (fields.requested_system && !(REQUESTED_SYSTEMS as readonly string[]).includes(fields.requested_system)) {
+    return { error: 'Choose a supported system category.' };
+  }
+  const providerHasControl = [...(fields.requested_provider ?? '')]
+    .some((character) => character.charCodeAt(0) <= 31 || character.charCodeAt(0) === 127);
+  if (fields.requested_provider && (fields.requested_provider.length > 120 || providerHasControl)) {
+    return { error: 'The requested provider must be 120 characters or fewer.' };
+  }
+  if (fields.requested_product && !(REQUESTED_PRODUCTS as readonly string[]).includes(fields.requested_product)) {
+    return { error: 'Choose a supported product request.' };
+  }
+  if (fields.data_mode && !(DATA_MODES as readonly string[]).includes(fields.data_mode)) {
+    return { error: 'Choose manual or connected data mode.' };
+  }
+  if (fields.desired_launch_window && !(LAUNCH_WINDOWS as readonly string[]).includes(fields.desired_launch_window)) {
+    return { error: 'Choose a supported launch window.' };
+  }
+  return { fields: normalized };
+}
 
 export type CommitteeRole =
   | 'executive_sponsor' | 'operational_owner' | 'cio' | 'ciso_privacy' | 'accessibility'
@@ -165,12 +239,15 @@ export function validateLead(body: Record<string, unknown>): Check {
       fields[k] = v.trim();
     }
   }
+  const checkedFields = institutionalFields(route, fields);
+  if ('error' in checkedFields) return { ok: false, error: checkedFields.error };
 
   return {
     ok: true,
     lead: {
       route, name: name.trim(), email: email.trim(),
-      organization: organization as string, role: role as string, message: message as string, page: page as string, fields,
+      organization: organization as string, role: role as string, message: message as string, page: page as string,
+      fields: checkedFields.fields,
     },
   };
 }

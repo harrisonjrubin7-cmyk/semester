@@ -170,13 +170,27 @@ begin
   perform pg_temp.answered('an institutional route needs an organization', o, 'organization_required');
 
   select * into lead from public.submit_site_lead('plan_institution_launch', 'Pat Provost', 'pat@state.example',
-                                                  'State University', 'Provost', 'executive_sponsor', 'Fall launch?', '{}', '/institutions', ip2);
+                                                  'State University', 'Provost', 'executive_sponsor', 'Fall launch?',
+                                                  '{"requested_domain":"state.example","requested_system":"lms","requested_provider":"Campus LMS","requested_product":"semester_institutional","data_mode":"connected","desired_launch_window":"next_term"}',
+                                                  '/institutions', ip2);
   perform pg_temp.answered('an institutional lead is accepted', lead.outcome, 'ok');
+  select fields into j from public.site_leads where reference = lead.reference;
+  perform pg_temp.answered('and keeps the bounded setup request as discovery metadata',
+    (j = '{"requested_domain":"state.example","requested_system":"lms","requested_provider":"Campus LMS","requested_product":"semester_institutional","data_mode":"connected","desired_launch_window":"next_term"}'::jsonb)::text,
+    'true');
   select count(*) into n from public.gtm_accounts where name = 'State University' and status = 'engaged';
   perform pg_temp.counted('and opens an engaged account in the pipeline', n, 1);
   select count(*) into n from public.gtm_stakeholders s join public.gtm_accounts a on a.id = s.account_id
    where a.name = 'State University' and s.committee_role = 'executive_sponsor';
   perform pg_temp.counted('with the sender as a stakeholder', n, 1);
+  select count(*) into n from public.schools where name = 'State University';
+  perform pg_temp.counted('the request creates no school or tenant authority', n, 0);
+  select count(*) into n from public.tenant_rollout r join public.schools s on s.id = r.tenant_id
+   where s.name = 'State University';
+  perform pg_temp.counted('and advances no tenant rollout', n, 0);
+  select count(*) into n from public.integration_connections c join public.schools s on s.id = c.tenant_id
+   where s.name = 'State University';
+  perform pg_temp.counted('and creates no provider connection', n, 0);
 
   select * into lead from public.submit_site_lead('request_procurement', 'pat provost', 'pat@state.example',
                                                   'state university', 'Provost', 'executive_sponsor', 'HECVAT please', '{}', '/trust', repeat('3', 64));
