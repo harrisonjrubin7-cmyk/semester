@@ -6,7 +6,6 @@ import { join } from 'node:path';
 import { audit, mappingPaths, readLedger, semanticNames } from '../../scripts/design-system-audit.mjs';
 // @ts-expect-error — plain ESM script, no types
 import { report } from '../../scripts/design-system-report.mjs';
-// @ts-expect-error — plain ESM script, no types
 import { componentEvidence, publicComponents } from '../../scripts/design-system-component-evidence.mjs';
 import { buildTokenExport, serialise } from './tokenexport';
 
