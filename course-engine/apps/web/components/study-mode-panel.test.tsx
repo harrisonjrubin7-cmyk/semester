@@ -55,6 +55,39 @@ describe("stored study asset interactions", () => {
     expect(screen.queryByText(/citation_ids/)).not.toBeInTheDocument();
   });
 
+  it("renders a citation-bound field guide as connected concepts instead of raw JSON", () => {
+    renderPanel("field-guide", { ...baseAsset, asset_type: "concept_map", content: {
+      sections: [{
+        heading: "Role clarity",
+        explanation: "Defined ownership reduces coordination ambiguity.",
+        key_points: ["Role clarity supports accountability.", "Accountability clarifies escalation."],
+        examples: ["A decision owner resolves final tradeoffs."],
+        citation_ids: [citationId],
+      }],
+      citations: baseAsset.content.citations,
+    } });
+
+    expect(screen.getByText((_content, element) => element?.tagName === "P" && element.textContent === "1 cited concept")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Role clarity" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Connections" })).toBeInTheDocument();
+    expect(screen.getByText("Role clarity supports accountability.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "In context" })).toBeInTheDocument();
+    expect(screen.getByText("A decision owner resolves final tradeoffs.")).toBeInTheDocument();
+    expect(screen.getByText("syllabus.pdf, p. 4")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open material" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/citation_ids/)).not.toBeInTheDocument();
+  });
+
+  it("fails closed when a field-guide concept has no resolvable citation", () => {
+    renderPanel("field-guide", { ...baseAsset, asset_type: "glossary", content: {
+      sections: [{ heading: "Uncited term", explanation: "This must not render.", citation_ids: ["missing-citation"] }],
+      citations: {},
+    } });
+
+    expect(screen.getByRole("status")).toHaveTextContent("no valid cited concepts");
+    expect(screen.queryByRole("heading", { name: "Uncited term" })).not.toBeInTheDocument();
+  });
+
   it("rejects malformed optional guide lists instead of crashing the panel", () => {
     renderPanel("read", { ...baseAsset, content: {
       ...baseAsset.content,
