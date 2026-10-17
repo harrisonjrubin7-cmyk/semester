@@ -1056,6 +1056,18 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
 
+## Automation pass 13 mapping — exact shared-photo removal and thumbnail lifetime (slice 142)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated prepared photos remain distinguishable at removal | `app/src/components/Capture.tsx`; caller-owned `ShotFile[]` | Existing but incomplete → existing and verified locally for this slice | Each removal name includes collection position/size, complete filename and prepared size. Position distinguishes otherwise identical camera-roll filenames. |
+| Preserve only the represented unsent draft | Existing index-scoped `onChange` transition | Existing and unchanged | Selecting the second duplicate removes only that prepared photo; the first remains. No read, upload, provider call, source-file deletion or institution mutation occurs. |
+| Keep thumbnail resources valid and bounded | `Capture` blob-preview ownership | Existing but incomplete → existing and verified locally for this slice | A list change revokes only removed blob URLs, preserves retained thumbnail URLs and releases the remainder on unmount. Data-URL previews are not treated as revocable object URLs. |
+| Regression and repository gates | New `Capture.test.tsx` plus camera/material/photo/root/isolation guards | Existing and verified locally for this slice | Red proof against filename-only controls; 40/40 focused tests, both typechecks, lint and build pass. Design constituents pass 79/79 and report contracts pass 97/97; audit stays at zero violations and CSS remains within its ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, model/provider execution, scanner/extractor availability, production execution, institutional acceptance or production readiness.
+
 ## Automation pass 12 mapping — distinguishable potential-schedule deletion (slice 141)
 
 | Archive/current requirement | Current repository evidence and disposition |

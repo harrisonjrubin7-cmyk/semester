@@ -1353,6 +1353,18 @@ This local slice does not prove deployment, production execution, institutional 
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 13 / integration slice 142
+
+- Required-branch head `ed04f81dd` was clean before selection and already included current `origin/main` `3ec04d742`; exact upstream/current-code inspection found no equivalent shared `Capture` label or preview-lifetime fix.
+- Every prepared photo removal now names its collection position and size, complete filename and prepared size. Duplicate camera-roll filenames therefore remain distinguishable.
+- Blob previews now have exact lifetime handling: a list change revokes only URLs no longer represented, retained thumbnail URLs stay valid, and unmount revokes every remaining blob URL. The caller's unsent prepared-photo array and explicit read/send action remain authoritative.
+- The regression failed against the prior filename-only control, then the focused Capture, Import camera, course-material, Solve photo, root-lifecycle and isolation set passed 40/40.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79; report contracts pass 97/97, audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the report regenerates successfully.
+- Ordered and shuffled full suites were not rerun for this bounded shared-component slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, API key/app-host values unset, `stackhawk.yml` present and a local properties file detected but unread. No live target, DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, model/provider execution, scanner/extractor availability, production execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 12 / integration slice 141
 
 - Required-branch head `a9ba835e2` was clean before selection and already included current `origin/main` `3ec04d742`; exact upstream and current-code inspection found no repeated-name saved-schedule guard.

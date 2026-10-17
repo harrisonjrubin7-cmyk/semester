@@ -1566,6 +1566,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 13 update — exact shared-photo removal and thumbnail lifetime (slice 142)
+
+- [x] Start from clean required-branch head `ed04f81dd`, fetch current `origin/main` `3ec04d742` and inspect exact shared-capture history/current code for overlap.
+- [x] Re-rank the shared device-photo picker as the next bounded Phase 3/4 accessibility and resource-lifetime gap; keep upload, model reading, storage and provider behavior outside the slice.
+- [x] Give every photo-removal control an exact accessible name containing position, collection size, complete filename and prepared size.
+- [x] Release only blob preview URLs that left the represented batch; preserve retained thumbnails across list changes and release the remainder on unmount.
+- [x] Preserve the existing index-scoped unsent-draft mutation and the caller's separate explicit read/send action.
+- [x] Prove the label regression red against the former filename-only controls, then pass 40/40 focused Capture, camera, material, photo-reading, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing lint warnings and the existing large-chunk warning.
+- [x] Pass 79/79 design-check constituents and 97/97 report contracts; keep the audit at zero violations with 86 existing warnings and CSS within its ledger; regenerate the report.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded shared-component slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, API key/app-host values unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep scanner/extractor-backed Import, model-provider reading and persisted source-file disposal as separate authority and environment gates.
+
 ## Automation pass 12 update — distinguishable potential-schedule deletion (slice 141)
 
 - [x] Start from clean required-branch head `a9ba835e2`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact saved-schedule history/current code for overlap.
