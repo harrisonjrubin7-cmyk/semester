@@ -46,6 +46,12 @@ function Citations({ ids, catalog }: { ids: string[]; catalog: Record<string, Ci
   </ul>;
 }
 
+function citationBoundSections(content: Record<string, unknown>, catalog: Record<string, CitationDetail>) {
+  return guideSections(content).filter((section) => (
+    section.citation_ids.length > 0 && section.citation_ids.every((id) => Boolean(catalog[id]))
+  ));
+}
+
 function AssetHeader({ asset }: { asset: Asset }) {
   return <header>
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -130,9 +136,7 @@ function ReadingView({ asset, courseId, mode }: { asset: Asset; courseId: string
 
 function FieldGuideView({ asset, courseId }: { asset: Asset; courseId: string }) {
   const catalog = citationCatalog(asset.content);
-  const sections = guideSections(asset.content).filter((section) => (
-    section.citation_ids.length > 0 && section.citation_ids.every((id) => Boolean(catalog[id]))
-  ));
+  const sections = citationBoundSections(asset.content, catalog);
   if (!sections.length) return <p className="muted mt-6" role="status">This field guide has no valid cited concepts.</p>;
   return <div className="mt-6">
     <p className="muted text-sm"><span className="mono">{sections.length}</span> cited {sections.length === 1 ? "concept" : "concepts"}</p>
@@ -149,6 +153,36 @@ function FieldGuideView({ asset, courseId }: { asset: Asset; courseId: string })
       </div> : null}
       <Citations catalog={catalog} ids={section.citation_ids} />
     </section>)}</div>
+    <Link className="button button-secondary mt-5 no-underline" href={`/courses/${courseId}/uploads`}><ExternalLink size={16} /> View source records</Link>
+  </div>;
+}
+
+function SlidesView({ asset, courseId }: { asset: Asset; courseId: string }) {
+  const catalog = citationCatalog(asset.content);
+  const slides = citationBoundSections(asset.content, catalog);
+  if (!slides.length) return <p className="muted mt-6" role="status">This lecture outline has no valid cited slides.</p>;
+  return <div className="mt-6">
+    <p className="muted text-sm"><span className="mono">{slides.length}</span> cited {slides.length === 1 ? "slide" : "slides"}</p>
+    <ol className="mt-4 grid gap-5">{slides.map((slide, index) => <li className="overflow-hidden rounded border border-[color:var(--border-strong)] bg-[color:var(--surface-canvas)]" key={`${slide.heading}-${index}`}>
+      <article aria-labelledby={`slide-${asset.id}-${index}`}>
+        <header className="border-b border-[color:var(--border-default)] bg-[color:var(--surface-panel)] px-5 py-3">
+          <p className="eyebrow">Slide {index + 1}</p>
+          <h3 className="mt-2 font-[family-name:var(--font-heading)] text-xl font-semibold" id={`slide-${asset.id}-${index}`}>{slide.heading}</h3>
+        </header>
+        <div className="p-5">
+          <p className="reading-width leading-7">{slide.explanation}</p>
+          {slide.key_points?.length ? <section className="mt-5" aria-labelledby={`slide-points-${asset.id}-${index}`}>
+            <h4 className="eyebrow" id={`slide-points-${asset.id}-${index}`}>Key points</h4>
+            <ul className="mt-3 list-disc space-y-2 pl-5">{slide.key_points.map((point) => <li key={point}>{point}</li>)}</ul>
+          </section> : null}
+          {slide.examples?.length ? <section className="mt-5 rounded border-l-4 border-[color:var(--semester-500)] bg-[color:var(--surface-panel)] p-4" aria-labelledby={`slide-examples-${asset.id}-${index}`}>
+            <h4 className="eyebrow" id={`slide-examples-${asset.id}-${index}`}>Examples</h4>
+            <div className="mt-2 space-y-2">{slide.examples.map((example) => <p key={example}>{example}</p>)}</div>
+          </section> : null}
+          <Citations catalog={catalog} ids={slide.citation_ids} />
+        </div>
+      </article>
+    </li>)}</ol>
     <Link className="button button-secondary mt-5 no-underline" href={`/courses/${courseId}/uploads`}><ExternalLink size={16} /> View source records</Link>
   </div>;
 }
@@ -189,6 +223,7 @@ function AssetBody({ asset, courseId, mode }: { asset: Asset; courseId: string; 
   if (mode === "cards") return <CardsView asset={asset} courseId={courseId} />;
   if (mode === "read" || mode === "doc") return <ReadingView asset={asset} courseId={courseId} mode={mode} />;
   if (mode === "field-guide") return <FieldGuideView asset={asset} courseId={courseId} />;
+  if (mode === "slides") return <SlidesView asset={asset} courseId={courseId} />;
   if (mode === "quiz") return <QuizView asset={asset} courseId={courseId} />;
   return <details className="mt-5 border-t border-[color:var(--border-default)] pt-4"><summary className="button button-primary cursor-pointer">Open material</summary><pre className="mt-4 max-h-96 overflow-auto whitespace-pre-wrap rounded bg-[color:var(--surface-canvas)] p-4 text-sm">{JSON.stringify(asset.content, null, 2)}</pre></details>;
 }
