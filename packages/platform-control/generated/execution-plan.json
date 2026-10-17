@@ -245,10 +245,14 @@
     ],
     "evidence": [
       "packages/institution/src/readiness.ts",
-      "packages/institution/src/readiness.test.ts"
+      "packages/institution/src/readiness.test.ts",
+      "app/server/institution/registration-readiness-commands.ts",
+      "app/server/institution/registration-readiness-commands.test.ts",
+      "app/server/institution/gateway.ts",
+      "app/server/institution/registration-readiness-gateway.test.ts"
     ],
     "blockers": [
-      "API and target-environment evidence remain open."
+      "An approved tenant-bound source adapter and target-environment evidence remain open."
     ],
     "execution_status": "sequencing_debt",
     "open_dependencies": [
@@ -272,7 +276,7 @@
     ],
     "evidence": [],
     "blockers": [
-      "SIS sandbox adapter and authoritative API are incomplete."
+      "An accepted SIS adapter and target-environment authoritative source connection are incomplete."
     ],
     "execution_status": "waiting",
     "open_dependencies": [
