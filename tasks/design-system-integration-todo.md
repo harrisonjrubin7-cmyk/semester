@@ -1566,6 +1566,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 21 update — distinguishable University readiness-step removals (slice 150)
+
+- [x] Start from clean required-branch head `4a71e2895`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact University preparation history/current code for overlap.
+- [x] Re-rank repeated University readiness steps as the next bounded Phase 3/5 accessibility gap; keep official records, institution submission and provider activity outside this device-draft slice.
+- [x] Name each removal with one-based position, list size, complete step text and done/not-done state.
+- [x] Preserve the existing account-and-term-scoped device library, validation, stable step ids and exact-id filtering.
+- [x] Prove the regression red against the former text-only label, then pass 51/51 focused University, domain, persistence, backup, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with only the existing warnings.
+- [x] Pass aggregate design-system check/report through temporary package-runner compatibility shims: 9 token tests, 70 design contracts, all eight report contracts, zero violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — Hawk v6/config/skills status and Docker runtimes, `HAWK_API_KEY`, `HAWK_APP_HOST`, `APP_HOST` and a live target are absent. `stackhawk.yml` and a local properties file exist but credential material was not read; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep institution submission, official record mutation and live provider activity separate from local University preparation drafts.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 20 update — distinguishable athletics-hours removals (slice 149)
 
 - [x] Start from clean required-branch head `3bafc0b953`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Cara Log history/current code for overlap.

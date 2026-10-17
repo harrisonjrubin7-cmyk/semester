@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 19 of 120 · **Integration slice** 148 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `928436a78` · **Latest observed `origin/main`** `116d8444e`
+**Automation pass** 21 of 120 · **Integration slice** 150 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `4a71e2895` · **Latest observed `origin/main`** `116d8444e`
 
 ## State
 
@@ -1352,6 +1352,19 @@ This local slice does not prove deployment, production execution, institutional 
 - The active HawkScan skill stops at mandatory preflight: Hawk v6/config and Docker are absent, `HAWK_API_KEY` and app-host environment values are unset, and no live target exists. `stackhawk.yml` and a local properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 21 / integration slice 150
+
+- Required-branch head `4a71e2895` was clean before selection and already included current `origin/main` `116d8444e`; exact University history/current-code inspection found no equivalent repeated-step removal identity guard.
+- Every University preparation readiness-step removal now names its list position/size, complete text and done/not-done state.
+- Existing stable ids, exact-id filtering, validated device-library persistence and account/term scope remain authoritative. Removing a row changes only the local preparation draft and does not submit a request, contact an institution or mutate an official record.
+- The regression failed against the former text-only name and proves the second repeated control removes only its stable ID, then 51/51 focused University, domain, persistence, backup, label, root-lifecycle and isolation tests passed.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Aggregate design-system check/report pass through temporary package-runner compatibility shims: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present and a local properties file detected but unread. No live target, DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, production execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
 ## Evidence locked in automation pass 20 / integration slice 149
 

@@ -1056,6 +1056,18 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
 
+## Automation pass 21 mapping — distinguishable University readiness-step removals (slice 150)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated preparation steps remain distinguishable at removal | `app/src/screens/University.tsx`; account-and-term-scoped University draft library | Existing but incomplete → existing and verified locally for this slice | Each accessible name includes list position/size, complete step text and done/not-done state. Position distinguishes otherwise identical student-entered rows. |
+| Preserve exact local-draft mutation | Existing stable step ids, `patch` and `useDeviceLibrary` persistence | Existing and unchanged | The regression removes the second repeated step and proves the first stable-id row remains unchanged in validated device storage. |
+| Preserve institutional authority | University preparation-draft boundary and separate official-record actions | Intentionally unchanged | Removing a checklist row changes only the local draft. It does not submit a request, contact an institution, remove the whole draft or mutate an official record. |
+| Regression and repository gates | Extended `university.test.tsx` plus domain, device-library, backup, label, lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against the text-only name; 51/51 focused/control tests, both typechecks, lint and build pass. Design checks pass 9 token and 70 contract tests, all eight report contracts pass, and the audit/CSS ledgers remain unchanged. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status and Docker, API key, app host and live target are absent. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
+
 ## Automation pass 20 mapping — distinguishable athletics-hours removals (slice 149)
 
 | Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |

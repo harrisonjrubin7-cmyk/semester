@@ -1478,6 +1478,16 @@ The new guard failed against the former position-only labels. Focused Advisor Me
 
 The active HawkScan skill stops at mandatory preflight: Hawk v6/config/skills status and Docker are absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` are unset, and no live target is configured. `stackhawk.yml` and a local Hawk properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Automation pass 21 — distinguishable University readiness-step removals (slice 150)
+
+Required-branch head `4a71e2895` was clean before selection and already included current `origin/main` `116d8444e`. Exact upstream history/current-code inspection found account-and-term-scoped University preparation drafts, validated device-library persistence and exact-id checklist filtering, but repeated readiness steps exposed the same text-only removal name.
+
+Every readiness-step removal now names its one-based position, list size, complete student-entered text and done/not-done state. The existing exact-id filter and `useDeviceLibrary` write remain authoritative. Removing a step changes only the selected local preparation draft; it does not remove the draft, submit a request, contact an institution or change an official record.
+
+The regression failed against the former generic label and proves the second repeated control removes only its stable step ID. Focused University, university-domain, device-library, workspace-backup, accessibility-label, root-lifecycle and isolation verification passes 51/51. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Aggregate design-system check/report pass through temporary package-runner compatibility shims: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun.
+
+The active HawkScan skill stops at mandatory preflight: Hawk v6/config/skills status and Docker are absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` are unset, and no live target is configured. `stackhawk.yml` and a local Hawk properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Automation pass 20 — distinguishable athletics-hours removals (slice 149)
 
 Required-branch head `3bafc0b953` was clean before selection and already included current `origin/main` `116d8444e`. Exact upstream history and current-code inspection found the existing stable-id hours removal and bounded Undo, but repeated entries with the same date, kind and hours exposed identical control names.
