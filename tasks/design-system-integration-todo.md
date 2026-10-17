@@ -2011,6 +2011,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove both regressions red against the former fact-complete-only controls, then pass 85/85 focused and adjacent People, letters, reducer/Undo, label, root-lifecycle and isolation tests.
 - [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
 - [x] Pass 79/79 design-check constituents, all eight design-report contracts, zero-violation design audit and the existing CSS ledger.
+- [x] Commit the coherent slice as `e56a643d3`, merge non-overlapping Course Engine slide work from `origin/main` `9c1f1f514` as `06cb40fe8`, then pass 85/85 People-focused tests, both app TypeScript gates, 10/10 upstream Study Mode tests and its web TypeScript gate on the combined head.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; no focused regression is red.
 - [ ] HawkScan DAST — preflight cannot start because the Hawk CLI, Docker, credentials/application id, host and live target are unavailable; the skill package is absent from the available catalog. No scan or security pass is claimed.
 

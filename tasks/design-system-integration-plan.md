@@ -1486,6 +1486,8 @@ Every conversation removal now names its one-based position and represented conv
 
 Both exact-duplicate regressions failed against the former complete-fact-only controls, then the focused People, letters, reducer/Undo, accessibility-label, root-lifecycle and isolation set passes 85/85. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Design-check constituents pass 79/79; all eight report contracts pass, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun.
 
+The coherent code/test/control slice is commit `e56a643d3`. Non-overlapping Course Engine lecture-slide `origin/main` `9c1f1f514` merges as `06cb40fe8`; the combined head passes the same 85/85 People-focused tests plus both application TypeScript gates. The upstream Study Mode panel passes 10/10 tests plus its web TypeScript gate.
+
 The active HawkScan requirement stops at mandatory preflight: the Hawk CLI and Docker are absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` is present; no local Hawk properties file or live default target exists. The active skill package is also not installed in the available skill catalog. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
 ## Automation pass 26 — distinguishable exact-duplicate emergency-contact removals (slice 155)
