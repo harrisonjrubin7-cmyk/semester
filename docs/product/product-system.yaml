@@ -1,0 +1,36 @@
+# Source: "Build the whole product" section of the Semester continuation brief.
+# Status: specification. Implementation status is tracked in docs/product/BUILD-COVERAGE.md.
+product_system:
+  workspaces:
+    - student
+    - staff
+    - institution
+    - external_audiences
+    - developer_partner
+    - company
+    - operations
+
+  shared_foundation:
+    - account_and_context
+    - tenant_and_membership
+    - consent_and_delegation
+    - source_authority_and_freshness
+    - policy_enforcement
+    - durable_workflows
+    - receipts_and_audit
+    - notifications
+    - search
+    - support_handoffs
+    - accessibility_and_preferences
+    - AI_gateway
+
+  expansion_rule: >
+    No domain ships as a standalone screen. It needs an authority boundary,
+    source model, role model, state machine, command/event contract, policy
+    checks, support path, accessibility proof, and release evidence.
+
+  authority_rule: >
+    Semester organizes, explains, and routes work. The institution retains
+    authority for official records, enrollment, grades, aid determinations,
+    housing assignments, and other institutional decisions unless a separately
+    approved command path exists.

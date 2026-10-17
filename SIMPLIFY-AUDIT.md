@@ -1,3 +1,27 @@
+# One app — the thirty-fifth pass: the audit before the merge (partial)
+
+Against `origin/main` at `fb51d663`. **63 destinations** in `lib/nav.ts`, not the 59 in the request. **No code changed.** This pass is Step 1 of "Make the app one app", and it is only partly done.
+
+## What was counted
+
+1. **Named overlap clusters.** The request names 22 ids. 12 are destinations in `lib/nav.ts`: home, brief, mine, calendar, ask, proof, me, help, import, edit, update, announce. **10 are not**: weekly, ahead, tonight, chat, grades, standing, worked, everything, springboard, check. Those 10 cannot be merged from the registry as written. Each must be traced first: a view inside a registered screen, or a name from another source.
+2. **Route count (partial).** Counted `type: 'go', screen: '<id>'` dispatches in non-test code. Top: home 16, courses 12, account 12, degree 9, import 8, edit 8, calendar 8, privacy 7, help 7, essay 7. Not yet counted: `openCourse`, `openItem`, `openEvent`, `openGuide`, `openLesson`, which are also pathways.
+3. **Settings writers.** `setLook` is called from 13 non-test files, and 9 of them are outside `screens/settings/`, which the brief's rule says must own appearance. `setNav` 2 files, `setTabs` 1, `setScale` 1, `setDayBudget` 1, `setCutoffs` 1. Each `setLook` site must be confirmed as a write, not a selector, before anything moves.
+4. **Not yet counted:** hand-rolled rows, headers, chip rows and empty states; `countScreens` and `DEFAULT_TABS` survivor inputs; saved-state migration in `state/shape.ts`.
+
+## Verdicts
+
+None yet. Verdicts (merge, subsume, keep, cut) follow the counts once the 10 absent ids are traced and the route and writer counts are complete. Merges have not started.
+
+## Next
+
+1. Trace the 10 absent ids against `screens/` and `lib/standing.ts`.
+2. Finish the route count with the `openX` call sites.
+3. Confirm each `setLook` call site as a write.
+4. Then merge, one per commit, each green.
+
+---
+
 # One app — the thirty-fourth pass: the warning outlived the fault
 
 Against `main` at `593c235`. **<!--screens-->sixty-three<!--/--> destinations**,

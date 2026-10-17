@@ -958,6 +958,9 @@ export default defineConfig(({ command, mode }) => {
         '@semester/contract': fileURLToPath(
           new URL('../packages/contract/src/index.ts', import.meta.url),
         ),
+        '@semester/domain-core': fileURLToPath(
+          new URL('../packages/domain-core/src/index.ts', import.meta.url),
+        ),
         '@semester/institution': fileURLToPath(
           new URL('../packages/institution/src/index.ts', import.meta.url),
         ),
@@ -1038,6 +1041,7 @@ export default defineConfig(({ command, mode }) => {
             isolate: false,
             include: [
               ...configDefaults.include,
+              '../packages/domain-core/src/**/*.test.ts',
               '../packages/institution/src/**/*.test.ts',
               '../packages/offline-sync/src/**/*.test.ts',
               '../packages/platform/src/**/*.test.ts',
