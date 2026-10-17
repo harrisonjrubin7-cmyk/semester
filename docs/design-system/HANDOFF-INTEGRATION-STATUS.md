@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 1 of 120 · **Integration slice** 130 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `4ac162f1c` · **Latest observed `origin/main`** `4ac162f1c`
+**Automation pass** 1 of 120 · **Integration slice** 130 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `4ac162f1c` · **Latest observed `origin/main`** `3ec04d742`
 
 ## State
 
@@ -1359,6 +1359,7 @@ This local slice does not prove deployment, production execution, provider conne
 - Every private concept/question removal now names collection position, type, complete title and current learning state. The existing cancel-first preview, exact-id account/term device mutation and workspace-backup recovery contract remain authoritative.
 - The repeated-concept regression failed against the former generic controls. Final focused Learning Map, Office Agenda, workspace-backup, label, root-lifecycle and isolation verification passes 31/31.
 - Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design contracts pass 148/148; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Slice commit `a4a166f01` merges final non-overlapping `origin/main` `3ec04d742` as `9c0fef73f`; upstream changes only the Course Engine field-guide panel, its tests/journey and roadmap. The combined head passes 53/53 app-focused/control tests plus app TypeScript and 8/8 upstream panel tests plus its TypeScript gate.
 - Aggregate design wrappers are not claimed because their hardcoded `npm` / `npx` launchers are unavailable. Ordered and shuffled full suites were not rerun for this bounded slice.
 - The active HawkScan skill stopped at mandatory preflight because Hawk v6/config and Docker are absent, `HAWK_API_KEY` / `HAWK_APP_HOST` are unset and no live target exists. `stackhawk.yml` and a local properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
 

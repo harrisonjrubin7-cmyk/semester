@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `4ac162f1c` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `3ec04d742` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -1063,7 +1063,7 @@ No route, navigation, dependency, schema, policy, provider configuration or exte
 | Repeated private concepts/questions remain distinguishable at removal | `app/src/components/LearningMap.tsx`; account/term-scoped `useDeviceLibrary` map | Existing but incomplete → existing and verified locally for this slice | Every accessible removal name includes collection position, concept/question type, complete title and current learning state. Position distinguishes otherwise identical rows. |
 | Preserve consequence and recovery boundaries | Existing `ConfirmDialog`, `ActionPreview` and device-workspace backup coverage | Existing and unchanged | Selection still opens the cancel-first preview; confirmation removes the exact id. Course-guide concepts, grades, plan actions and other private concepts remain unchanged, and recovery remains limited to a prior workspace backup. |
 | Regression and repository gates | Extended `LearningMap.delete.test.tsx` plus Office Agenda, backup, label, root-lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against generic controls; final focused set passes 31/31. Both typechecks, lint, build and 148 design contracts pass; audit remains at zero violations and CSS within ledger. Full ordered/shuffled suites remain open. |
-| Upstream reconciliation | Required branch and `origin/main` `4ac162f1c` | Existing and verified for selection | Exact history/current-code inspection found no equivalent repeated-row guard and no upstream divergence before the slice. |
+| Upstream reconciliation | Slice `a4a166f01`; final `origin/main` `3ec04d742`; merge `9c0fef73f` | Existing and verified for this slice | Exact history/current-code inspection found no equivalent repeated-row guard. The final upstream delta changes only the Course Engine field-guide panel, its tests/journey and roadmap and merges without overlap. Combined verification passes 53 app-focused/control tests plus app TypeScript and 8 upstream panel tests plus its TypeScript gate. |
 | DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.

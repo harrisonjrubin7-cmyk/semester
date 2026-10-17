@@ -1575,6 +1575,8 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove the repeated-concept regression red against the former generic controls, then pass the final 31/31 focused Learning Map, Office Agenda, workspace-backup, label, root-lifecycle and isolation tests.
 - [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
 - [x] Pass 148/148 design contracts, zero-violation audit with 86 existing warnings and the unchanged CSS ledger.
+- [x] Commit the coherent slice as `a4a166f01`, inspect final `origin/main` `3ec04d742` as non-overlapping Course Engine field-guide work, and merge it as `9c0fef73f` before combined-head verification.
+- [x] On merged head `9c0fef73f`, pass 53/53 app-focused/control tests and app TypeScript plus 8/8 upstream field-guide tests and its TypeScript gate.
 - [ ] Aggregate design check/report wrappers — their hardcoded `npm` / `npx` launchers are unavailable; exact constituents pass and no wrapper pass is claimed.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; no new full-suite result is claimed.
 - [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
