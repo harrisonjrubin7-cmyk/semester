@@ -14,7 +14,7 @@
  * The export is the record on a date, headed "Not an official transcript",
  * because issuing one is not something this screen does.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { cloud } from '../../lib/cloud';
 import { download } from '../../lib/deliver';
 import { secondLine } from '../../lib/dim';
@@ -25,6 +25,8 @@ import {
   asOf, explain, history, isOverride, proposalProblems,
   toCsv, type LedgerEntry, type Proposal, type RecordAction, type RecordChange, type RecordKind, type RecordSource,
 } from '../../lib/record/ledger';
+import { useConfirm } from '../ConfirmDialog';
+import { ActionPreview } from '../unity/ActionPreview';
 import { ActionButton, EmptyState, Notice, SectionLabel } from '../ui';
 
 export interface RecordLedgerProps {
@@ -177,6 +179,8 @@ function StudentRecord({
   const [note, setNote] = useState('');
   const [on, setOn] = useState(day);
   const [line, setLine] = useState<string | null>(null);
+  const recordHeading = useRef<HTMLHeadingElement>(null);
+  const { confirmFirst, dialog } = useConfirm();
 
   const fetch = useCallback(() => api.lookup(tenantId, studentRef), [api, tenantId, studentRef]);
   const reload = () =>
@@ -211,7 +215,7 @@ function StudentRecord({
 
   return (
     <section aria-label={`Record of ${studentRef}`}>
-      <h3 style={h3}>Record of {studentRef}</h3>
+      <h3 ref={recordHeading} tabIndex={-1} style={h3}>Record of {studentRef}</h3>
       {!read ? (
         <p style={quiet}>Your account proposes changes to this record; it does not read the record itself.</p>
       ) : (
@@ -274,7 +278,32 @@ function StudentRecord({
                 <button
                   type="button"
                   className="bare tappable"
-                  onClick={() => api.withdraw(c.id).then(reload).then(onProposed, (e: unknown) => setNote(errorText(e, 'Could not withdraw the change.')))}
+                  onClick={() => confirmFirst({
+                    title: `Withdraw this proposed ${KIND_LABEL[c.kind].toLowerCase()} change?`,
+                    preview: (
+                      <ActionPreview
+                        subject={`${KIND_LABEL[c.kind]} proposal for ${c.subject_key}`}
+                        says="Marks this proposal as withdrawn and removes it from the independent decision queue. An approver will no longer be able to approve or reject it."
+                        exactly={summary(c)}
+                        doesNotChange="The student’s current academic record, its history and other pending proposals stay unchanged. No approved record entry is reversed."
+                        recovery={{ kind: 'none', how: 'This proposal cannot be reopened. To seek the same change later, submit a new proposal with a fresh reason for independent approval.' }}
+                        whoCanHelp="Your registrar or academic-record administrator can help you decide whether to withdraw or replace the proposal."
+                      />
+                    ),
+                    confirmLabel: 'Withdraw proposal',
+                    run: async () => {
+                      setNote('');
+                      try {
+                        await api.withdraw(c.id);
+                        recordHeading.current?.focus({ preventScroll: true });
+                        await reload();
+                        setNote('Proposal withdrawn. The student’s academic record was not changed.');
+                        onProposed();
+                      } catch (e: unknown) {
+                        setNote(errorText(e, 'Could not withdraw the change.'));
+                      }
+                    },
+                  })}
                 >
                   Withdraw
                 </button>
@@ -285,6 +314,7 @@ function StudentRecord({
       )}
 
       {note && <Notice alert>{note}</Notice>}
+      {dialog}
       {propose && (
         <ProposeForm
           studentRef={studentRef}

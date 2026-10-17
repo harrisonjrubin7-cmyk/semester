@@ -28,6 +28,10 @@ will happily serve you the copy you already had.
 
 In **Mine**, screen readers now distinguish removal controls for repeated step text, same-title actions and same-title events. A step says its position, action and completion state; an action says its personal/course scope, date, time, repeat and step progress; and an event says its date, time, kind, location, length and repeat. Removal still changes only the exact device-workspace record and keeps the existing eight-second **Undo**.
 
+### Academic-record proposals explain withdrawal before leaving the queue
+
+Staff who proposed a pending grade, enrollment or other academic-record change now see its exact student, record field, value and effective date before withdrawing it. The preview explains that the proposal leaves the independent decision queue, while the student’s current record, record history and other proposals remain unchanged. Cancel submits nothing. After a confirmed withdrawal removes its button, keyboard focus stays with that student’s record instead of restarting at the top of the page. A withdrawn proposal cannot be reopened; seeking the same change later requires a new reasoned proposal and independent approval.
+
 ### Removing a degree requirement now explains the planning consequence first
 
 On **My Path → Requirements**, **Remove** now opens the standard consequence preview before changing the plan. It names the programme, rule, count and accepted courses; says Semester will recalculate its planning-only “what is left” result; and confirms that recorded courses, other rules, scenarios and the registrar's official audit stay unchanged. Cancel starts focused and changes nothing. Removing the rule cannot be undone in Semester; copy it again from the current official audit if you need it back.

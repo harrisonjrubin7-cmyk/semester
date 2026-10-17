@@ -27,6 +27,7 @@ reading:
     billing-portal    ACTIVE, v339, verify_jwt off  platform; remains off until configured as described below
     billing-webhook   ACTIVE, v480, verify_jwt off  platform
     lead-intake       ACTIVE, v479, verify_jwt off  platform
+    productivity-sourcecheck ACTIVE, v370, verify_jwt off platform
     support-reply-notify ACTIVE, v348, verify_jwt off, platform; delivery PARKED by SUPPORT_NOTIFY_VENDOR_APPROVED and SUPPORT_NOTIFY_ACTIVATED_AT pending Resend vendor approval and executed terms/DPA; provider acceptance was reached in the 3 October 2026 UAT, but that historical exercise is not current activation and Outlook inbox receipt remains pending. A future approved release must record a fresh UTC activation instant so parked-period intents are cancelled rather than delivered as backlog
 
 The same release defines `support-ticket-retention`, daily at 05:43 UTC, to

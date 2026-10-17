@@ -75,6 +75,8 @@
 # Management API's function list (the dashboard's Edge Functions page shows the
 # same versions), and the columns below are transcribed from it.
 
+# Management API reading on 17 October. All eighteen functions reported this
+# same platform deployment timestamp; versions are transcribed individually.
 claude                   692  platform  2026-10-17T14:22:49Z
 push                     640  platform  2026-10-17T14:22:49Z
 calendar                 636  platform  2026-10-17T14:22:49Z

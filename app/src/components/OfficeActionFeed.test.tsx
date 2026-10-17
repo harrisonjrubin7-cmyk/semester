@@ -32,7 +32,8 @@ const row = (over: Record<string, unknown> = {}) => ({
   target_eligibility: null,
   title: 'FAFSA verification documents are due October 15',
   why_it_matters: 'This may affect aid processing.',
-  due_at: '2026-10-15T23:59:00Z',
+  // A stable future Thursday: the fixture tests ranking, not calendar expiry.
+  due_at: '2099-10-15T23:59:00Z',
   official_url: 'https://aid.school.edu/verification',
   source_note: 'Financial Aid verification checklist',
   updated_at: new Date().toISOString(),
