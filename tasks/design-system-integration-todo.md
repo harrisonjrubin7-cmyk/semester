@@ -2709,8 +2709,9 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
 - [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts and 97 report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
 - [x] Pass the root-lifecycle and isolation guards as part of a 100/100 control-contract run.
+- [x] Re-fetch final `origin/main` `3ec04d742`, confirm no upstream movement or overlap, and commit the coherent slice as `d365f7512`.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
-- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no live target, scan, finding result, fix/rescan loop or security pass exists.
+- [ ] HawkScan DAST — mandatory post-commit preflight for `d365f7512` reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no live target, scan, finding result, fix/rescan loop or security pass exists.
 
 ### Next implementation boundary
 

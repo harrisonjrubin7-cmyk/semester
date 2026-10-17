@@ -1360,8 +1360,9 @@ This local slice does not prove deployment, production execution, provider conne
 - Existing exact-thread callbacks and local mailbox marks remain authoritative. Moving a conversation to Trash here does not delete provider mail, and the existing local folder action can move it back.
 - The repeated-thread regression failed against the former subject-only Trash names, then 88/88 focused List, mailbox, reducer, rules and paging tests passed.
 - Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Aggregate design-system check/report pass 9 token tests, 70 design contracts and 97 report contracts; audit remains at zero violations with 86 existing warnings and CSS within its ledger. Root-lifecycle and isolation guards also pass.
+- Final `origin/main` remained `3ec04d742` with no overlapping Mail work, and the coherent slice is committed locally as `d365f7512`.
 - Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
-- Mandatory HawkScan preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- Mandatory post-commit HawkScan preflight for `d365f7512` reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
