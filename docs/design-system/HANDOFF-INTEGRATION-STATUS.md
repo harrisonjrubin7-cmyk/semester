@@ -1808,3 +1808,14 @@ This local slice does not prove deployment, production execution, provider conne
 - Mandatory HawkScan preflight remains unavailable: Hawk and Docker runtimes, `HAWK_API_KEY`, `HAWK_APP_HOST` and a live target are absent. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 31 / integration slice 160
+
+- Required-branch head `f6f0c2db7` was clean before selection and already included current `origin/main` `caa9967fb`; exact People history/current-code inspection found no equivalent exact-duplicate removal-name guard.
+- Every conversation removal now names represented position/count, person, day and complete subject. Every actionable recommendation-letter removal names position/count, purpose, recipient, deadline and stage. Otherwise identical private planning rows remain distinguishable.
+- Existing stable ids, exact `dropVisit` / `dropLetter` reducers and shared eight-second Undo remain authoritative. No recommender is contacted and no official application, course, provider or institution record changes.
+- Both regressions failed against the former complete-fact-only controls, then the focused People, letters, reducer/Undo, label, root-lifecycle and isolation set passes 85/85.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Design-check constituents pass 79/79; all eight report contracts pass, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun.
+- Mandatory HawkScan preflight reports the Hawk CLI and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present, no local properties file, no live default target and no HawkScan package in the available skill catalog. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.

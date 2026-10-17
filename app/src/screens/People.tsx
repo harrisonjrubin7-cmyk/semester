@@ -209,7 +209,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
 
                   {theirs.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 'var(--sp-6)' }}>
-                      {theirs.map((v) => (
+                      {theirs.map((v, index) => (
                         <div
                           key={v.id}
                           style={{
@@ -242,7 +242,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                             type="button"
                             className="bare"
                             onClick={() => dispatch({ type: 'dropVisit', id: v.id })}
-                            aria-label={`Remove conversation with ${p.name} from ${new Date(v.at).toDateString().slice(4)}: ${v.what}`}
+                            aria-label={`Remove conversation ${index + 1} of ${theirs.length} with ${p.name} from ${new Date(v.at).toDateString().slice(4)}: ${v.what}`}
                             style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-lg)', ...secondLine() }}
                           >
                             ×
@@ -465,7 +465,7 @@ function LettersTab() {
         <>
           <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Wanting something from you</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))' }}>
-            {wanted.map((l) => {
+            {wanted.map((l, index) => {
               const left = daysLeft(l, now);
               const tight = short(l, now);
               return (
@@ -557,7 +557,7 @@ function LettersTab() {
                     <button
                       type="button"
                       className="bare"
-                      aria-label={`Remove ${l.forWhat} letter from ${nameOf(l.personId)}: ${l.due ? `due ${l.due}` : 'no deadline set'} · ${ASKS.find((ask) => ask.id === l.stage)?.label ?? l.stage}`}
+                      aria-label={`Remove letter ${index + 1} of ${wanted.length}, ${l.forWhat} from ${nameOf(l.personId)}: ${l.due ? `due ${l.due}` : 'no deadline set'} · ${ASKS.find((ask) => ask.id === l.stage)?.label ?? l.stage}`}
                       onClick={() => dispatch({ type: 'dropLetter', id: l.id })}
                       style={{ width: 'auto', paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
                     >

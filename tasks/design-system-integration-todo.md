@@ -2002,6 +2002,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep provider mailbox mutation, live account connection and sending as separate external-authority work.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-17 distinguishable exact-duplicate People removals — automation pass 31, integration slice 160
+
+- [x] Start from clean required-branch head `f6f0c2db7`; fetch current `origin/main` `caa9967fb`, confirm it is already included and inspect exact People history/current code for overlap.
+- [x] Re-rank exact-duplicate student-authored conversation and recommendation-letter removal names as the next bounded Phase 3 accessibility gap; keep communications and official records outside the mutation.
+- [x] Name every represented removal with one-based position and list size while retaining its complete existing person, date, subject, purpose, deadline and stage facts.
+- [x] Preserve stable-id `dropVisit` / `dropLetter`, shared eight-second Undo and private planning authority; no recommender, provider or institution is contacted.
+- [x] Prove both regressions red against the former fact-complete-only controls, then pass 85/85 focused and adjacent People, letters, reducer/Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
+- [x] Pass 79/79 design-check constituents, all eight design-report contracts, zero-violation design audit and the existing CSS ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; no focused regression is red.
+- [ ] HawkScan DAST — preflight cannot start because the Hawk CLI, Docker, credentials/application id, host and live target are unavailable; the skill package is absent from the available catalog. No scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+
 ## Automation pass 14 update — distinguishable Registration Day backup actions (slice 143)
 
 - [x] Merge current `origin/main` `116d8444e` into clean required-branch head `d10396349`, then select from combined head `36fbb71b4`.

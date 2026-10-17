@@ -57,7 +57,8 @@ beforeEach(async () => {
     ],
     visits: [
       { id: 'visit-grant', personId: 'professor', at: VISIT_AT, what: 'Grant proposal', working: '' },
-      { id: 'visit-thesis', personId: 'professor', at: VISIT_AT, what: 'Thesis outline', working: '' },
+      { id: 'visit-thesis-one', personId: 'professor', at: VISIT_AT, what: 'Thesis outline', working: '' },
+      { id: 'visit-thesis-two', personId: 'professor', at: VISIT_AT, what: 'Thesis outline', working: '' },
     ],
     letters: [
       {
@@ -73,6 +74,17 @@ beforeEach(async () => {
       },
       {
         id: 'letter-november',
+        personId: 'professor',
+        forWhat: 'Research fellowship',
+        due: '2027-11-15',
+        stage: 'asked',
+        askedOn: '2026-10-15',
+        sentMaterials: false,
+        thanked: false,
+        note: '',
+      },
+      {
+        id: 'letter-november-copy',
         personId: 'professor',
         forWhat: 'Research fellowship',
         due: '2027-11-15',
@@ -103,40 +115,48 @@ afterEach(async () => {
   localStorage.clear();
 });
 
-it('identifies duplicate conversation removals by person, day and recorded subject', async () => {
+it('identifies exact-duplicate conversation removals by represented position', async () => {
   await act(async () => buttonContaining('Dr. Rivera')?.click());
 
   const grant = host.querySelector<HTMLButtonElement>(
-    `button[aria-label="Remove conversation with Dr. Rivera from ${VISIT_DAY}: Grant proposal"]`,
+    `button[aria-label="Remove conversation 1 of 3 with Dr. Rivera from ${VISIT_DAY}: Grant proposal"]`,
   );
-  const thesis = host.querySelector<HTMLButtonElement>(
-    `button[aria-label="Remove conversation with Dr. Rivera from ${VISIT_DAY}: Thesis outline"]`,
+  const firstThesis = host.querySelector<HTMLButtonElement>(
+    `button[aria-label="Remove conversation 2 of 3 with Dr. Rivera from ${VISIT_DAY}: Thesis outline"]`,
+  );
+  const secondThesis = host.querySelector<HTMLButtonElement>(
+    `button[aria-label="Remove conversation 3 of 3 with Dr. Rivera from ${VISIT_DAY}: Thesis outline"]`,
   );
 
   expect(grant).not.toBeNull();
-  expect(thesis).not.toBeNull();
+  expect(firstThesis).not.toBeNull();
+  expect(secondThesis).not.toBeNull();
 
-  await act(async () => grant?.click());
+  await act(async () => secondThesis?.click());
 
-  expect(seen.visits.map((visit) => visit.id)).toEqual(['visit-thesis']);
+  expect(seen.visits.map((visit) => visit.id)).toEqual(['visit-grant', 'visit-thesis-one']);
   expect(seen.undone?.label).toBe('Conversation removed');
 });
 
-it('identifies duplicate letter removals by recipient, purpose, deadline and stage', async () => {
-  await act(async () => button('Letters (2)')?.click());
+it('identifies exact-duplicate letter removals by represented position', async () => {
+  await act(async () => button('Letters (3)')?.click());
 
   const thinking = host.querySelector<HTMLButtonElement>(
-    'button[aria-label="Remove Research fellowship letter from Dr. Rivera: due 2027-10-15 · Thinking about it"]',
+    'button[aria-label="Remove letter 1 of 3, Research fellowship from Dr. Rivera: due 2027-10-15 · Thinking about it"]',
   );
-  const asked = host.querySelector<HTMLButtonElement>(
-    'button[aria-label="Remove Research fellowship letter from Dr. Rivera: due 2027-11-15 · Asked"]',
+  const firstAsked = host.querySelector<HTMLButtonElement>(
+    'button[aria-label="Remove letter 2 of 3, Research fellowship from Dr. Rivera: due 2027-11-15 · Asked"]',
+  );
+  const secondAsked = host.querySelector<HTMLButtonElement>(
+    'button[aria-label="Remove letter 3 of 3, Research fellowship from Dr. Rivera: due 2027-11-15 · Asked"]',
   );
 
   expect(thinking).not.toBeNull();
-  expect(asked).not.toBeNull();
+  expect(firstAsked).not.toBeNull();
+  expect(secondAsked).not.toBeNull();
 
-  await act(async () => asked?.click());
+  await act(async () => secondAsked?.click());
 
-  expect(seen.letters.map((letter) => letter.id)).toEqual(['letter-october']);
+  expect(seen.letters.map((letter) => letter.id)).toEqual(['letter-october', 'letter-november']);
   expect(seen.undone?.label).toBe('Letter removed');
 });

@@ -1056,6 +1056,14 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
 
+## Automation pass 31 update — distinguishable exact-duplicate People removals (slice 160)
+
+| Archive requirement | Repository authority | Disposition | Evidence |
+| --- | --- | --- | --- |
+| Exact duplicate conversation removals remain distinguishable | `app/src/screens/People.tsx`, `app/src/screens/people.removal-labels.test.tsx`; current person's date-sorted `Visit[]` | Existing but incomplete → existing and verified locally for this slice | Removal names include represented position/count, person, recorded day and complete subject. The regression activates position 3 and proves the otherwise identical position-2 visit remains. |
+| Exact duplicate recommendation-letter removals remain distinguishable | `app/src/screens/People.tsx`, `app/src/screens/people.removal-labels.test.tsx`; current actionable `Letter[]` from `needing` | Existing but incomplete → existing and verified locally for this slice | Removal names include actionable-list position/count, purpose, recipient, deadline and stage. The regression activates position 3 and proves the otherwise identical position-2 request remains. |
+| Preserve exact private mutation and recovery | Existing stable ids, `dropVisit` / `dropLetter` reducers and shared Undo snapshot | Existing and unchanged | Only the represented private row is removed and the existing eight-second Undo remains available. No recommender is contacted and no official application, course, provider or institution record changes. |
+
 ## Automation pass 26 mapping — distinguishable exact-duplicate emergency-contact removals (slice 155)
 
 | Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
