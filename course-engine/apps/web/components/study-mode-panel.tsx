@@ -187,6 +187,30 @@ function SlidesView({ asset, courseId }: { asset: Asset; courseId: string }) {
   </div>;
 }
 
+function CasesView({ asset, courseId }: { asset: Asset; courseId: string }) {
+  const catalog = citationCatalog(asset.content);
+  const cases = citationBoundSections(asset.content, catalog);
+  if (!cases.length) return <p className="muted mt-6" role="status">This case set has no valid cited cases.</p>;
+  return <div className="mt-6">
+    <p className="muted text-sm"><span className="mono">{cases.length}</span> cited {cases.length === 1 ? "case" : "cases"}</p>
+    <div className="mt-4 grid gap-5">{cases.map((caseStudy, index) => <article className="rounded border border-[color:var(--border-default)] bg-[color:var(--surface-canvas)] p-5" key={`${caseStudy.heading}-${index}`}>
+      <p className="eyebrow">Case {index + 1}</p>
+      <h3 className="mt-2 font-[family-name:var(--font-heading)] text-xl font-semibold">{caseStudy.heading}</h3>
+      <p className="reading-width mt-3 leading-7">{caseStudy.explanation}</p>
+      {caseStudy.key_points?.length ? <section className="mt-5 border-t border-[color:var(--border-default)] pt-4">
+        <h4 className="eyebrow">Questions to consider</h4>
+        <ol className="mt-3 grid gap-2">{caseStudy.key_points.map((question, questionIndex) => <li className="flex gap-3" key={question}><span aria-hidden="true" className="mono text-[color:var(--semester-700)]">{questionIndex + 1}</span><span>{question}</span></li>)}</ol>
+      </section> : null}
+      {caseStudy.examples?.length ? <section className="mt-5 rounded border-l-4 border-[color:var(--semester-500)] bg-[color:var(--surface-panel)] p-4">
+        <h4 className="eyebrow">Applications</h4>
+        <div className="mt-2 space-y-2">{caseStudy.examples.map((application) => <p key={application}>{application}</p>)}</div>
+      </section> : null}
+      <Citations catalog={catalog} ids={caseStudy.citation_ids} />
+    </article>)}</div>
+    <Link className="button button-secondary mt-5 no-underline" href={`/courses/${courseId}/uploads`}><ExternalLink size={16} /> View source records</Link>
+  </div>;
+}
+
 function QuizView({ asset, courseId }: { asset: Asset; courseId: string }) {
   const questions = guideSections(asset.content);
   const catalog = citationCatalog(asset.content);
@@ -224,6 +248,7 @@ function AssetBody({ asset, courseId, mode }: { asset: Asset; courseId: string; 
   if (mode === "read" || mode === "doc") return <ReadingView asset={asset} courseId={courseId} mode={mode} />;
   if (mode === "field-guide") return <FieldGuideView asset={asset} courseId={courseId} />;
   if (mode === "slides") return <SlidesView asset={asset} courseId={courseId} />;
+  if (mode === "cases") return <CasesView asset={asset} courseId={courseId} />;
   if (mode === "quiz") return <QuizView asset={asset} courseId={courseId} />;
   return <details className="mt-5 border-t border-[color:var(--border-default)] pt-4"><summary className="button button-primary cursor-pointer">Open material</summary><pre className="mt-4 max-h-96 overflow-auto whitespace-pre-wrap rounded bg-[color:var(--surface-canvas)] p-4 text-sm">{JSON.stringify(asset.content, null, 2)}</pre></details>;
 }
