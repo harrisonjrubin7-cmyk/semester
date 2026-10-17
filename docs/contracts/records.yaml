@@ -1,0 +1,180 @@
+# Record passports for the registration-readiness pilot.
+#
+# Keys are table names. `schema` says where the table lives. The three
+# registration_readiness tables are the durable store on main (migration
+# 20261009160000_registration_readiness_store.sql); their RLS is enabled and
+# every grant is to service_role only, so reads and writes go through the
+# save/get RPCs.
+#
+# Required on every record: owner, authority, source_of_truth, sensitivity,
+# tenant_scoped, primary_key, foreign_keys, allowed_roles, retention.
+# Required when write_path is present: commands (may be empty when a named
+# writer owns the table), requires_audit.
+#
+# foreign_keys entries are "column -> table.column"; the target table must be a
+# key in this file. `operations` never reads student content.
+
+records:
+  schools:
+    schema: public
+    domain: platform
+    owner: platform_operations
+    authority: semester
+    source_of_truth: semester
+    sensitivity: moderate
+    tenant_scoped: false
+    primary_key: id
+    foreign_keys: []
+    allowed_roles:
+      institution_admin: tenant_scope
+      registrar: tenant_scope
+      operations: no_student_content
+    write_path:
+      commands: []
+      writer: institution_provisioning
+      requires_audit: true
+    retention:
+      class: contract_term
+      deletion: subject_to_legal_hold_and_contract
+
+  registration_readiness_evaluations:
+    schema: private
+    domain: registration_readiness
+    owner: registrar_product
+    authority: semester
+    source_of_truth: derived_from_institution_sources
+    sensitivity: high
+    tenant_scoped: true
+    subject: student
+    primary_key: id
+    # The table key is (tenant_id, id); subject_id is text, not a foreign key,
+    # because this store does not yet own a students table.
+    foreign_keys:
+      - tenant_id -> schools.id
+    allowed_roles:
+      student: own_only
+      advisor: assigned_caseload_only
+      registrar: tenant_scope
+      institution_admin: audited_read
+      operations: no_student_content
+    write_path:
+      commands:
+        - readiness.start
+        - readiness.transition
+      requires_policy: true
+      requires_audit: true
+    retention:
+      class: institution_policy_required
+      deletion: subject_to_legal_hold_and_contract
+
+  registration_readiness_tasks:
+    schema: private
+    domain: registration_readiness
+    owner: registrar_product
+    authority: semester
+    source_of_truth: derived_from_institution_sources
+    sensitivity: high
+    tenant_scoped: true
+    subject: student
+    primary_key: task_id
+    foreign_keys:
+      - tenant_id -> schools.id
+      - evaluation_id -> registration_readiness_evaluations.id
+    allowed_roles:
+      student: own_only
+      advisor: assigned_caseload_only
+      registrar: tenant_scope
+      institution_admin: audited_read
+      operations: no_student_content
+    write_path:
+      commands:
+        - readiness.transition
+      requires_policy: true
+      requires_audit: true
+    retention:
+      class: institution_policy_required
+      deletion: subject_to_legal_hold_and_contract
+
+  registration_readiness_receipts:
+    schema: private
+    domain: registration_readiness
+    owner: registrar_product
+    authority: semester
+    source_of_truth: workflow_receipt
+    sensitivity: high
+    immutable: true
+    tenant_scoped: true
+    subject: student
+    user_visible: true
+    primary_key: idempotency_key
+    foreign_keys:
+      - tenant_id -> schools.id
+      - evaluation_id -> registration_readiness_evaluations.id
+    # Copy the student sees beside a receipt. Not yet in any screen.
+    required_copy:
+      - "This receipt records your readiness check."
+      - "It is not confirmation that you are enrolled."
+    allowed_roles:
+      student: own_only
+      advisor: assigned_caseload_only
+      registrar: tenant_scope
+      institution_admin: audited_read
+      operations: no_student_content
+    write_path:
+      commands:
+        - readiness.start
+        - readiness.transition
+      requires_idempotency: true
+      requires_audit: true
+    retention:
+      class: institution_policy_required
+      deletion: subject_to_legal_hold_and_contract
+
+  domain_outbox_events:
+    schema: private
+    domain: platform
+    owner: platform_operations
+    authority: semester
+    source_of_truth: transactional_outbox
+    sensitivity: moderate
+    append_only: true
+    tenant_scoped: true
+    primary_key: id
+    foreign_keys:
+      - tenant_id -> schools.id
+    allowed_roles:
+      operations: delivery_status_only
+    write_path:
+      commands:
+        - readiness.start
+        - readiness.transition
+      requires_audit: true
+    retention:
+      class: operational
+      deletion: defined_before_pilot
+
+  gateway_audit:
+    schema: private
+    domain: platform_security
+    owner: platform_security
+    authority: semester
+    source_of_truth: audit_stream
+    sensitivity: high
+    immutable: true
+    tenant_scoped: true
+    primary_key: id
+    # Written by private.gateway_write_audit_v2 inside the save RPC. The target
+    # table name is not yet confirmed from that function; recorded as an open item.
+    foreign_keys:
+      - tenant_id -> schools.id
+    allowed_roles:
+      institution_admin: audited_read
+      operations: no_student_content
+    write_path:
+      commands:
+        - readiness.start
+        - readiness.transition
+      requires_audit: true
+    retention:
+      class: audit_retention_policy
+      deletion: append_only_retained_per_institution_contract
