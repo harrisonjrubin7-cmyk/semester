@@ -2,6 +2,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { OverridePattern } from '../../lib/governance/override-review';
 vi.mock('../../state/store', () => ({ useStore: () => ({ state: { shell: 'plain' } }) }));
 import { ControlPlane } from './ControlPlane';
 
@@ -32,5 +33,30 @@ describe('ControlPlane', () => {
     act(() => stage.click());
     expect(host.querySelector('[role="status"]')?.textContent).toContain('staged locally');
     expect(host.textContent).not.toContain('production receipt created');
+  });
+
+  it('offers override patterns only for a verified reviewer over the viewed tenant', async () => {
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    const load = vi.fn(async (_tenantId: string): Promise<OverridePattern[]> => []);
+    const input = {
+      tenantId: 'northstar', viewedTenantId: 'northstar', previewRole: 'admin', featureState: 'preview' as const,
+      gatewayStatus: 'sandbox tested' as const, approvedSourceCount: 2, activeConsentCount: 1, auditEventCount: 4,
+    };
+
+    await act(async () => root.render(<ControlPlane input={{
+      ...input,
+      verifiedCapabilities: [{ tenantId: 'another-school', capability: 'override:review', verified: true }],
+    }} loadPatterns={load} />));
+    expect(host.textContent).not.toContain('Override patterns');
+    expect(load).not.toHaveBeenCalled();
+
+    await act(async () => root.render(<ControlPlane input={{
+      ...input,
+      verifiedCapabilities: [{ tenantId: 'northstar', capability: 'override:review', verified: true }],
+    }} loadPatterns={load} />));
+    expect(host.textContent).toContain('Override patterns');
+    expect(load).toHaveBeenCalledWith('northstar');
   });
 });
