@@ -88,7 +88,9 @@ trust-room               539  platform  2026-10-17T14:22:49Z
 delete-account           516  platform  2026-10-17T14:22:49Z
 billing-cancel           451  platform  2026-10-17T14:22:49Z
 billing-checkout         480  platform  2026-10-17T14:22:49Z
-billing-portal           339  platform  2026-10-17T14:22:49Z
+# Later Management API observation on 17 October: ACTIVE, platform entrypoint;
+# records deployment provenance, not a live payment acceptance result.
+billing-portal           340  platform  2026-10-17T15:22:22Z
 billing-webhook          480  platform  2026-10-17T14:22:49Z
 lead-intake              479  platform  2026-10-17T14:22:49Z
 productivity-sourcecheck 370  platform  2026-10-17T14:22:49Z

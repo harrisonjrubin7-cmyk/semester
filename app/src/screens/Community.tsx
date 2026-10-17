@@ -5,6 +5,7 @@ import { ActionButton, Notice, SectionLabel } from '../components/ui';
 import { ConnectHub } from '../components/ConnectHub';
 import { Composer } from '../components/community/Composer';
 import { ReportSheet } from '../components/community/ReportSheet';
+import { CommunityGuidelines } from '../components/community/Guidelines';
 import { Sessions } from '../components/community/Sessions';
 import { AliasPanel } from '../components/community/AliasPanel';
 import { PostImage } from '../components/community/PostImage';
@@ -109,6 +110,7 @@ export function Community() {
           Community isn’t switched on in this build. It turns on only together with reporting, blocking and muting,
           so there is never a version of it without them.
         </Notice>
+        <CommunityGuidelines />
         <ConnectHub />
       </Page>
     );
@@ -117,6 +119,7 @@ export function Community() {
     return (
       <Page blurb="Study groups, course spaces and campus communities.">
         <Notice>Community needs a signed-in account at your school. Everything else in Semester works without one.</Notice>
+        <CommunityGuidelines />
         <ConnectHub />
       </Page>
     );
@@ -312,6 +315,7 @@ function CommunitySignedIn({ accountId, wide }: { accountId: string; wide: boole
 
   return (
     <Page blurb="Study groups, course spaces and campus communities — found by what you’re studying, not where you are.">
+      <CommunityGuidelines />
       {status && <Trouble said={status} />}
       {wide ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 1fr) 2fr', gap: 'var(--sp-7)', alignItems: 'start' }}>

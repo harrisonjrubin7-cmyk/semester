@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Find Community reporting and appeal guidance in one place
+
+**Community guidelines** now opens at the top of Community, including inside a community, while signed out and when Community is switched off. It explains course-policy and privacy checks before posting, lists the same reasons as the report form, and shows where to mute, block, leave or appeal a decision. Reading it changes nothing in your account. The emergency notice is the same one shown on the report form.
+
 ### Removing a degree requirement now explains the planning consequence first
 
 On **My Path → Requirements**, **Remove** now opens the standard consequence preview before changing the plan. It names the programme, rule, count and accepted courses; says Semester will recalculate its planning-only “what is left” result; and confirms that recorded courses, other rules, scenarios and the registrar's official audit stay unchanged. Cancel starts focused and changes nothing. Removing the rule cannot be undone in Semester; copy it again from the current official audit if you need it back.
