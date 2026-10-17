@@ -6,6 +6,8 @@ import { join } from 'node:path';
 import { audit, mappingPaths, readLedger, semanticNames } from '../../scripts/design-system-audit.mjs';
 // @ts-expect-error — plain ESM script, no types
 import { report } from '../../scripts/design-system-report.mjs';
+// @ts-expect-error — plain ESM script, no types
+import { componentEvidence, publicComponents } from '../../scripts/design-system-component-evidence.mjs';
 import { buildTokenExport, serialise } from './tokenexport';
 
 /**
@@ -111,5 +113,36 @@ describe('design-system audit', () => {
     const r = audit({ root: repo });
     expect(r.violations, report(r)).toEqual([]);
     expect(report(r)).toContain('✓ passing');
+  });
+});
+
+describe('public component evidence census', () => {
+  it('discovers every named export and its implementation path', () => {
+    expect(publicComponents("export { Button, IconButton } from './core/Button.jsx';\n")).toEqual([
+      { name: 'Button', source: 'core/Button', imported: 'Button' },
+      { name: 'IconButton', source: 'core/Button', imported: 'IconButton' },
+    ]);
+    const result = componentEvidence({ root: repo });
+    expect(result.summary.total).toBe(68);
+    expect(result.missing_by_requirement.typescript_api).toEqual([]);
+  });
+
+  it('keeps missing component proof explicit instead of converting specifications into verification', () => {
+    const result = componentEvidence({ root: repo });
+    expect(result.status).toBe('incomplete');
+    expect(result.summary.incomplete).toBeGreaterThan(0);
+    expect(result.missing_by_requirement.light_and_dark_coverage).toHaveLength(result.summary.total);
+    expect(result.claim_ceiling).toContain('does not prove human accessibility review');
+    expect(report(audit({ root: repo }), {}, result)).toContain('Public component evidence');
+  });
+
+  it('fails the typed API requirement when a JavaScript export loses its declaration', () => {
+    const root = fixture({
+      'app/src/components/semester-design/index.ts': "export { Button } from './core/Button.jsx';\n",
+      'app/src/components/semester-design/core/Button.jsx': 'export function Button() {}\n',
+    });
+    const result = componentEvidence({ root });
+    expect(result.missing_by_requirement.typescript_api).toEqual(['Button']);
+    expect(result.components[0].status).toBe('evidence_incomplete');
   });
 });
