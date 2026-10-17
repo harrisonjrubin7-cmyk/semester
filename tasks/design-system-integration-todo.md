@@ -2028,6 +2028,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove all three regressions red against the former fact-complete-only controls, then pass 57/57 focused and adjacent Clocks, reducer, label, root-lifecycle and isolation tests.
 - [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
 - [x] Pass 79/79 design-check constituents, 97/97 report contracts, zero-violation design audit and the existing CSS ledger.
+- [x] Commit the coherent slice as `1218e15ce`, merge non-overlapping registration-readiness evidence from `origin/main` `802c97c70` as `6d7834258`, then pass 57/57 Clocks/control tests and both app TypeScript gates on the combined head; pass the upstream platform-control registry's 63/63 tests, validation and TypeScript with the app-installed type root.
 - [ ] Aggregate design report launcher — writes the report, then exits 1 because its hardcoded `npx` is unavailable; exact constituents pass and no aggregate-wrapper pass is claimed.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
 - [ ] HawkScan DAST — mandatory preflight found the Hawk CLI and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` and a local properties file exist but credential material was not read; and no live target exists. No scan, finding result, fix/rescan loop or security pass exists.
