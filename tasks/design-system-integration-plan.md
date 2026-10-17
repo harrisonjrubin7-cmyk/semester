@@ -1347,3 +1347,13 @@ The repeated-thread regression failed against the former subject-only Trash name
 Slice commit `d365f7512` contains the coherent Mail behavior, regression and control-file update. Mandatory post-commit HawkScan preflight for that exact commit found no Hawk v6 or Docker runtime, API key, app host or live target; `stackhawk.yml` and a local properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 No route, navigation, shared component, dependency, schema, policy, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Automation pass 3 — distinguishable opened Semester Mail actions (slice 132)
+
+Required-branch head `488243d15` was clean before selection and already included current `origin/main` `3ec04d742`. Exact upstream history and current-code inspection found that the prior Mail slice covered list rows, while the opened reader still exposed generic Archive, Delete, Snooze, read-state and star names.
+
+The reader now derives one conversation identity from the existing mailbox authority: **from** participants for received mail, **to** recipients for sent/draft mail, complete subject and full timestamp. All five opened-conversation controls include that identity. The existing exact-thread callbacks, persisted mailbox marks, keyboard commands, provider links and read-only provider boundary remain unchanged; Trash is recoverable through the existing local folder action and never deletes provider mail.
+
+The new behavior guard failed against the former generic names. The focused Reader, List, mailbox, paging, root-lifecycle and isolation set then passed 55/55 with TypeScript. Lint/style/label/terms, university gateway typecheck and production build pass with twelve existing warnings and the existing chunk-size warning. Aggregate design-system check passes 9 token tests and 70 contracts; all eight report contracts pass, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+
+Mandatory HawkScan preflight remains blocked by the absence of Hawk and Docker runtimes, API key, app host and live target. No scan or security pass is claimed. No route, navigation, shared component, dependency, schema, policy, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.

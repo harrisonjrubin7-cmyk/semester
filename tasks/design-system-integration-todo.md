@@ -2718,3 +2718,21 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep provider mailbox mutation, live account connection and sending as separate external-authority work.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 3 update — distinguishable opened Semester Mail actions (slice 132)
+
+- [x] Start from clean required-branch head `488243d15`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Mail reader history/current code for overlap.
+- [x] Re-rank the generic opened-conversation controls as the next bounded Phase 3 accessibility gap; keep provider-mail mutation, sending, account connection and live provider configuration outside this local-mark slice.
+- [x] Name archive, Trash, snooze, read-state and star actions with participants, complete subject and full timestamp, retaining **from** / **to** semantics.
+- [x] Preserve the existing exact-thread callbacks, account-local mailbox marks, keyboard behavior, provider links and read-only provider boundary.
+- [x] Prove the opened-reader guard red against the former generic names, then pass 55/55 focused Reader, List, mailbox, paging, root-lifecycle and isolation tests plus TypeScript.
+- [x] Pass lint/style/label/terms checks, university gateway typecheck and production build with only the existing warnings.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, 8/8 report contracts, zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — Hawk and Docker runtimes, `HAWK_API_KEY`, `HAWK_APP_HOST` and a live target are absent; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep provider mailbox mutation, live account connection and sending as separate external-authority work.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

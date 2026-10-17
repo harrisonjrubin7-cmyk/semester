@@ -1463,3 +1463,15 @@ This local slice does not prove deployment, production execution, provider conne
 - Mandatory HawkScan preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` present and a local properties file detected but unread. No live target, DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 3 / integration slice 132
+
+- Required-branch head `488243d15` was clean before the slice and already included current `origin/main` `3ec04d742`; exact Mail reader history/current-code inspection found no equivalent opened-conversation action-label guard.
+- Every opened-conversation archive, Trash, snooze, read-state and star action now names the participants, complete subject and full timestamp. Incoming and outgoing conversations retain distinct **from** / **to** language.
+- Existing exact-thread callbacks and account-local mailbox marks remain authoritative. Moving a conversation to Trash here does not delete provider mail, and the existing local folder action can move it back.
+- The new regression failed against the former generic names, then 55/55 focused Reader, List, mailbox, paging, root-lifecycle and isolation tests passed with TypeScript.
+- Lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning. Aggregate design-system check passes 9 token tests and 70 design contracts; report contracts pass 8/8, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight remains unavailable: Hawk and Docker runtimes, `HAWK_API_KEY`, `HAWK_APP_HOST` and a live target are absent. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
