@@ -5,6 +5,9 @@ import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Group, ItemRow } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
+import { MaintenanceRequests } from '../components/MaintenanceRequests';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ActionPreview } from '../components/unity/ActionPreview';
 import { SectionLabel, TabList } from '../components/ui';
 import { TermSwitch } from '../components/TermSwitch';
 import { ErrorSummary, FieldMessage, useFieldErrors } from '../components/FieldMessage';
@@ -42,15 +45,16 @@ import {
  * university credentials — which this app will never do.
  */
 export function Housing() {
- const {state}=useStore();
+ const {state,account}=useStore();
  const [tab,setTab]=useState('mine');const [choice,setChoice]=useState('');
- return <div className="portal-workspace campus-workspace"><TabList label="Housing portal" className="portal-tabs" value={tab} onChange={id=>{setChoice('');setTab(id);}} tabs={([['mine','My housing'],['directory','Find housing'],['plan','Application plan']] as [typeof tab,string][]).map(([id,label])=>({id,label}))}/>{tab==='mine'?<HousingDetails key={state.term}/>:tab==='directory'?<CampusDirectory kind="housing" onPlan={item=>{setChoice(item.name);setTab('plan');}}/>:<HousingPlanner key={state.term} choice={choice} term={state.term}/>}</div>;
+ return <div className="portal-workspace campus-workspace"><TabList label="Housing portal" className="portal-tabs" value={tab} onChange={id=>{setChoice('');setTab(id);}} tabs={([['mine','My housing'],['directory','Find housing'],['plan','Application plan']] as [typeof tab,string][]).map(([id,label])=>({id,label}))}/>{tab==='mine'?<HousingDetails key={state.term}/>:tab==='directory'?<CampusDirectory kind="housing" onPlan={item=>{setChoice(item.name);setTab('plan');}}/>:<HousingPlanner key={`${account?.id||'device'}:${state.term}`} choice={choice} term={state.term} accountId={account?.id??null}/>}</div>;
 }
 function HousingDetails() {
   const { state, dispatch, catalog } = useStore();
   const now = useNow();
 
   const mine = useMemo(() => current(state.residences, state.term), [state.residences, state.term]);
+  const [removing, setRemoving] = useState(false);
 
   const [hall, setHall] = useState(mine?.hall ?? '');
   const [room, setRoom] = useState(mine?.room ?? '');
@@ -266,8 +270,8 @@ function HousingDetails() {
               <button
                 type="button"
                 className="bare"
-                aria-label="Remove this room"
-                onClick={() => dispatch({ type: 'dropResidence', id: mine.id })}
+                aria-label={`Remove ${mine.hall}${mine.room ? ` · ${mine.room}` : ''} for ${readTerm(mine.term).label}`}
+                onClick={() => setRemoving(true)}
                 style={{ width: 24, color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
               >
                 ×
@@ -277,6 +281,27 @@ function HousingDetails() {
         </Group>
       )}
 
+      {mine && removing ? (
+        <ConfirmDialog
+          title="Remove this saved room?"
+          preview={
+            <ActionPreview
+              subject={`${mine.hall}${mine.room ? ` · ${mine.room}` : ''}`}
+              says="This removes this saved room and its move-out calculation from this device."
+              exactly={`${readTerm(mine.term).label}${mine.moveOut ? ` · move out ${mine.moveOut}` : ''}${mine.hoursAfterLastExam ? ` · ${mine.hoursAfterLastExam} hours after the last exam` : ''}`}
+              doesNotChange="Your maintenance requests, application plan and official housing assignment stay unchanged."
+              recovery={{ kind: 'undo', how: 'Undo is available for eight seconds. A device workspace backup can also restore the saved room.' }}
+            />
+          }
+          confirmLabel="Remove saved room"
+          onCancel={() => setRemoving(false)}
+          onConfirm={() => {
+            dispatch({ type: 'dropResidence', id: mine.id });
+            setRemoving(false);
+          }}
+        />
+      ) : null}
+
       <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
         Nothing is fetched. The housing portal is behind single sign-on and publishes no interface a
         student can use, so reading it would mean holding your university credentials — which this
@@ -284,6 +309,7 @@ function HousingDetails() {
         the app keeps only the portal root, because a link with your token in it is a link that
         signs somebody else in as you.
       </div>
+      <MaintenanceRequests />
     </Page>
   );
 }

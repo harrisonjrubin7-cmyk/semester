@@ -1,0 +1,74 @@
+# PE participant's perspective: receives evaluation commands, emits results.
+# The PE adapter resolves contextRef from authorized trusted storage and verifies the command producer. A context reference is not proof of access.
+asyncapi: 3.0.0
+info:
+  title: Semester Policy Engine
+  version: 0.1.0
+channels:
+  evaluate:
+    address: semester.zta.pe.evaluate.v1
+    messages:
+      command: {$ref: '#/components/messages/EvaluateCommand'}
+  evaluated:
+    address: semester.zta.pe.evaluated.v1
+    messages:
+      result: {$ref: '#/components/messages/EvaluationResult'}
+operations:
+  receiveEvaluation:
+    action: receive
+    channel: {$ref: '#/channels/evaluate'}
+    messages: [{$ref: '#/channels/evaluate/messages/command'}]
+  publishEvaluation:
+    action: send
+    channel: {$ref: '#/channels/evaluated'}
+    messages: [{$ref: '#/channels/evaluated/messages/result'}]
+components:
+  messages:
+    EvaluateCommand:
+      contentType: application/json
+      correlationId: {location: '$message.payload#/sagaId'}
+      payload: {$ref: '#/components/schemas/EvaluateCommand'}
+    EvaluationResult:
+      contentType: application/json
+      correlationId: {location: '$message.payload#/sagaId'}
+      payload: {$ref: '#/components/schemas/EvaluationResult'}
+  schemas:
+    Envelope:
+      type: object
+      required: [messageId, sagaId, tenantId, generation, occurredAt]
+      properties:
+        messageId: {type: string}
+        sagaId: {type: string}
+        tenantId: {type: string}
+        generation: {type: integer, minimum: 1}
+        occurredAt: {type: string, format: date-time}
+    EvaluateCommand:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          required: [commandId, idempotencyKey, contextRef, requestDigest]
+          properties:
+            commandId: {type: string}
+            idempotencyKey: {type: string}
+            contextRef: {type: string}
+            requestDigest: {type: string}
+    EvaluationResult:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          required: [commandId, status]
+          properties:
+            commandId: {type: string}
+            status: {enum: [evaluated, unavailable, rejected]}
+            outcome: {enum: [allow, deny, require_step_up, require_approval]}
+            decisionId: {type: string}
+            policyRevision: {type: string}
+            expiresAt: {type: string, format: date-time}
+            errorCode: {type: string}
+          oneOf:
+            - properties:
+                status: {const: evaluated}
+              required: [outcome, decisionId, policyRevision, expiresAt]
+            - properties:
+                status: {enum: [unavailable, rejected]}
+              required: [errorCode]

@@ -9,16 +9,23 @@ import {
   validateActionFields,
   type ActionInput,
   type PolicyEnvironment,
+  type Receipt,
   type UniversityArea,
   type UniversityIdentity,
   type UserAction,
 } from '../../../packages/institution/src/index.ts';
 import {
+  IDEMPOTENCY_LEASE_MS,
   PlatformError,
+  IDEMPOTENCY_TTL_EXTENDED_MS,
   errorResponse,
+  hashOf,
+  isDeterministicRefusal,
   isPlatformError,
   resolveCorrelationId,
+  systemClock,
   type ErrorEnvelope as PlatformErrorEnvelope,
+  type IdempotencyStore,
 } from '../../../packages/platform/src/index.ts';
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
 import { contextFor } from './context.ts';
@@ -27,6 +34,10 @@ import type { IntelligenceService } from './intelligence.ts';
 import type { PublicSsoConfig } from './membership.ts';
 import { MemoryRateLimiter, type RateLimiter } from './rate-limit.ts';
 import type { ReadinessResult } from './readiness.ts';
+import {
+  readinessCommandContext,
+  type RegistrationReadinessCommandBoundary,
+} from './registration-readiness-commands.ts';
 
 /**
  * The gateway: everything that is the same whichever university it is.
@@ -89,10 +100,13 @@ interface Config {
   refreshIdentity?: (identity: UniversityIdentity, token: string) => Promise<UniversityIdentity | null>;
   adapters: InstitutionAdapter[];
   journal: ActionJournalStore;
+  /** Durable replay protection for keyed consequential writes. */
+  idempotency?: IdempotencyStore;
   intelligence?: IntelligenceService;
   loadSsoConfig?: () => Promise<PublicSsoConfig | null>;
   rateLimiter?: RateLimiter;
   readiness?: () => Promise<ReadinessResult>;
+  registrationReadiness?: RegistrationReadinessCommandBoundary;
   telemetry?: (event: GatewayTelemetryEvent) => void | Promise<void>;
   /**
    * Read-only mode: every write is refused with a 503 `read_only` that says
@@ -121,12 +135,16 @@ export interface GatewayTelemetryEvent {
 const TELEMETRY_ROUTES = new Set([
   '/health', '/health/live', '/health/ready', '/v1/auth/config',
   '/v1/intelligence/policy', '/v1/intelligence/respond',
+  '/v1/registration-readiness/evaluations',
   '/status', '/records', '/actions/prepare', '/actions/commit', '/actions/reconcile',
 ]);
 
 function telemetryRoute(pathname: string): string {
   if (/^\/v1\/intelligence\/actions\/[^/]+\/confirm$/.test(pathname)) {
     return '/v1/intelligence/actions/:id/confirm';
+  }
+  if (/^\/v1\/registration-readiness\/evaluations\/[^/]+\/evaluate$/.test(pathname)) {
+    return '/v1/registration-readiness/evaluations/:id/evaluate';
   }
   return TELEMETRY_ROUTES.has(pathname) ? pathname : '/unmatched';
 }
@@ -229,10 +247,10 @@ export function createGateway(config: Config) {
     if (origin) {
       headers.set('Access-Control-Allow-Origin', origin);
       // Without this a browser client can send the id but never read it back.
-      headers.set('Access-Control-Expose-Headers', 'X-Request-Id, X-Correlation-Id');
+      headers.set('Access-Control-Expose-Headers', 'X-Request-Id, X-Correlation-Id, Idempotent-Replayed, Retry-After');
     }
     if (request.method === 'OPTIONS') {
-      headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Correlation-Id');
+      headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, Idempotency-Key, X-Correlation-Id');
       headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       return new Response(null, { status: 204, headers });
     }
@@ -338,6 +356,50 @@ export function createGateway(config: Config) {
         signal: AbortSignal.timeout(20_000),
         request: contextFor(request, who, ids, config.environment, intelligencePurpose),
       };
+
+      const readinessStart = path === '/v1/registration-readiness/evaluations';
+      const readinessEvaluate = /^\/v1\/registration-readiness\/evaluations\/([^/]+)\/evaluate$/.exec(path);
+      if (request.method === 'POST' && (readinessStart || readinessEvaluate)) {
+        context.request = readinessCommandContext(context.request!, request);
+        if (!config.registrationReadiness) {
+          fail(503, 'Registration readiness is not configured for this university.');
+        }
+        if (!request.headers.get('content-type')?.startsWith('application/json')) fail(415, 'Send JSON.');
+        const text = await request.text();
+        if (Buffer.byteLength(text) > MAX_BODY) fail(413, 'Request is too large.');
+        let body: unknown;
+        try {
+          body = JSON.parse(text);
+        } catch {
+          fail(400, 'Invalid JSON.');
+        }
+        if (!config.refreshIdentity) {
+          fail(503, 'Current university membership cannot be verified.');
+        }
+        const current = await config.refreshIdentity(who, token);
+        if (!current || current.userId !== who.userId || current.institutionId !== who.institutionId) {
+          fail(403, 'Your current university access does not permit this action.');
+        }
+        who = current;
+        context.identity = current;
+        context.request = readinessCommandContext(
+          contextFor(request, current, ids, config.environment),
+          request,
+        );
+        if (readinessStart) {
+          const receipt = await config.registrationReadiness.start(context.request, current.roles, body);
+          return Response.json(receipt, { status: 202, headers });
+        }
+        if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body as Record<string, unknown>).length !== 0) {
+          fail(400, 'The evaluator command does not accept request fields.');
+        }
+        const receipt = await config.registrationReadiness.evaluate(
+          context.request,
+          current.roles,
+          readinessEvaluate![1],
+        );
+        return Response.json(receipt, { status: receipt.status === 'completed' ? 200 : 202, headers });
+      }
 
       const intelligenceConfirm = /^\/v1\/intelligence\/actions\/([^/]+)\/confirm$/.exec(path);
       if (request.method === 'GET' && path === '/v1/intelligence/policy') {
@@ -507,22 +569,19 @@ export function createGateway(config: Config) {
       }
 
       const asked = body as { reviewId?: unknown; confirmed?: unknown };
-      // Commit needs an explicit `true`. Nothing else counts as confirmation.
-      if (!asked || (path === '/actions/commit' && asked.confirmed !== true) || typeof asked.reviewId !== 'string') {
+      if (!asked || typeof asked.reviewId !== 'string') {
         fail(400, 'Confirm the reviewed action before continuing.');
       }
       const row = await config.journal.get(asked.reviewId as string, who);
       if (!row) fail(404, 'Review not found for this account.');
 
-      // Already done: hand back the same receipt rather than doing anything.
-      if (row.state === 'completed') return Response.json(row.receipt, { headers });
-
-      // Terminal, and there is nothing to look up: it was answered by a
-      // refusal, not left hanging. Said before the two generic 409s below,
-      // both of which would tell the person to reconcile it.
-      if (row.state === 'refused') fail(409, 'This action was refused. Prepare a new review.', 'review_refused');
-
       if (path === '/actions/reconcile') {
+        // Already done: hand back the same receipt rather than doing anything.
+        if (row.state === 'completed') return Response.json(row.receipt, { headers });
+        // Terminal, and there is nothing to look up: it was answered by a
+        // refusal, not left hanging. Said before the two generic 409s below,
+        // both of which would tell the person to reconcile it.
+        if (row.state === 'refused') fail(409, 'This action was refused. Prepare a new review.', 'review_refused');
         if (row.state === 'ready') fail(409, 'This action has not been submitted.');
         if (row.state === 'processing') fail(409, 'This action is still processing. Recheck its receipt shortly.');
         const adapter = await adapterFor(row.input.area);
@@ -541,107 +600,181 @@ export function createGateway(config: Config) {
         return Response.json(result, { headers });
       }
 
-      if (row.state === 'pending') return Response.json(row.receipt, { headers });
-      if (row.state !== 'ready') {
-        fail(409, 'This action is processing or needs reconciliation. Do not submit it again.');
-      }
-      if (Date.parse(row.review.expiresAt) <= now) {
-        fail(410, 'Review expired. Refresh and review the action again.', 'review_expired');
-      }
-
-      if (config.refreshIdentity) {
-        const current = await config.refreshIdentity(who, token);
-        if (!current || current.userId !== who.userId || current.institutionId !== who.institutionId) {
-          fail(403, 'Your current university access does not permit this action.');
+      const commit = async (): Promise<Receipt> => {
+        // Commit needs an explicit `true`. Keeping this deterministic refusal
+        // inside the idempotency lease makes a keyed retry replay the same
+        // decision without weakening the confirmation requirement.
+        if (asked.confirmed !== true) {
+          fail(400, 'Confirm the reviewed action before continuing.');
         }
-        who = current;
-        context.identity = current;
-        context.request = contextFor(request, current, ids, config.environment);
-      }
-
-      /*
-       * Everything checked again, at the moment of doing it.
-       *
-       * The record may have moved and the adapter's own answer may have
-       * changed since the review was written. Comparing the re-run review to
-       * what was shown is the check that the person is confirming the thing
-       * they actually read — not a different action wearing its id.
-       */
-      const adapter = await adapterFor(row.input.area, true);
-      await recordFor(adapter, row.input);
-      const checked = await adapter.review(context, row.input);
-      if (JSON.stringify(checked) !== JSON.stringify({ title: row.review.title, details: row.review.details })) {
-        fail(409, 'The action details changed. Prepare a new review.', 'review_changed');
-      }
-
-      /*
-       * The ladder, asked at the one place something is written.
-       *
-       * Everything above is what "confirm" and its four grounds are made of:
-       * the explicit `true`, write access to this area, an action the adapter
-       * offered for this record, and the correlation id the journal will hold
-       * the start of the action under. If any is missing the answer is a
-       * refusal that names it, before anything is claimed or sent.
-       */
-      const step = mayStep(
-        { from: 'confirm', to: 'execute' },
-        groundsFor({
-          confirmed: asked.confirmed,
-          institutionId: who.institutionId,
-          area: row.input.area,
-          actionId: row.input.actionId,
-          correlationId,
-        }),
-      );
-      if (!step.ok) {
-        await config.journal.audit(who, row.input.area, 'action.refused', row.review.id, correlationId);
-        fail(403, `This action cannot run yet: ${step.why}`, 'not_ready_to_execute');
-      }
-
-      if (!(await config.journal.claim(row.review.id, who, Date.now()))) {
-        fail(409, 'This action was already claimed or expired.', 'already_claimed');
-      }
-
-      try {
-        await config.journal.audit(who, row.input.area, 'action.started', row.review.id, correlationId);
-        const receipt = await adapter.execute(context, row.input, row.review.id);
-        if (!receipt.id || !['completed', 'pending'].includes(receipt.status) || !receipt.recordedAt) {
-          throw new Error('Invalid upstream receipt.');
+        // Completed and pending rows already have the institution's answer.
+        // Returning that exact receipt is safe and lets the idempotency layer
+        // persist the legacy journal outcome on the first keyed retry.
+        if (row.state === 'completed' || row.state === 'pending') {
+          if (!row.receipt) throw new Error('Settled action is missing its receipt.');
+          return row.receipt;
         }
-        await config.journal.finish(row, receipt.status === 'pending' ? 'pending' : 'completed', receipt);
-        await config.journal.audit(who, row.input.area, 'action.receipt', row.review.id, correlationId);
-        return Response.json(receipt, { headers });
-      } catch (e) {
+        if (row.state === 'refused') {
+          fail(409, 'This action was refused. Prepare a new review.', 'review_refused');
+        }
+        if (row.state !== 'ready') {
+          fail(409, 'This action is processing or needs reconciliation. Do not submit it again.');
+        }
+        if (Date.parse(row.review.expiresAt) <= now) {
+          fail(410, 'Review expired. Refresh and review the action again.', 'review_expired');
+        }
+
+        if (config.refreshIdentity) {
+          const current = await config.refreshIdentity(who, token);
+          if (!current || current.userId !== who.userId || current.institutionId !== who.institutionId) {
+            fail(403, 'Your current university access does not permit this action.');
+          }
+          who = current;
+          context.identity = current;
+          context.request = contextFor(request, current, ids, config.environment);
+        }
+
         /*
-         * A refusal at this point is the adapter saying it looked, said no,
-         * and wrote nothing — which is the whole meaning of the type. Twelve
-         * of the sandbox's refusals live here rather than in `review`, on
-         * purpose: a client does not have to prepare anything first, so the
-         * check has to be at the write as well as at the menu. Reporting
-         * those as an unknown outcome would send somebody to their registrar
-         * to reconcile an action that provably did not happen.
+         * Everything checked again, at the moment of doing it. The record may
+         * have moved and the adapter's answer may have changed since review.
          */
-        if (isRefusal(e)) {
-          await config.journal.finish(row, 'refused');
-          await config.journal.audit(who, row.input.area, 'action.refused', row.review.id, correlationId);
-          return fail(400, e.message, 'refused');
+        const adapter = await adapterFor(row.input.area, true);
+        await recordFor(adapter, row.input);
+        const checked = await adapter.review(context, row.input);
+        if (JSON.stringify(checked) !== JSON.stringify({ title: row.review.title, details: row.review.details })) {
+          fail(409, 'The action details changed. Prepare a new review.', 'review_changed');
         }
-        /*
-         * The one place this gateway refuses to guess.
-         *
-         * The school may have acted. Marking it failed could have somebody
-         * pay twice; marking it done could have them miss a deadline. So it
-         * is marked unknown, and only `/actions/reconcile` can resolve it.
-         */
-        await config.journal.finish(row, 'uncertain');
-        await config.journal.audit(who, row.input.area, 'action.uncertain', row.review.id, correlationId);
-        return fail(
-          502,
-          'The result could not be confirmed. Ask the institution to reconcile this action before submitting again.',
-          'outcome_uncertain',
-          { label: 'Ask the institution to reconcile', kind: 'contact_support' },
+
+        const step = mayStep(
+          { from: 'confirm', to: 'execute' },
+          groundsFor({
+            confirmed: asked.confirmed,
+            institutionId: who.institutionId,
+            area: row.input.area,
+            actionId: row.input.actionId,
+            correlationId,
+          }),
         );
+        if (!step.ok) {
+          await config.journal.audit(who, row.input.area, 'action.refused', row.review.id, correlationId);
+          fail(403, `This action cannot run yet: ${step.why}`, 'not_ready_to_execute');
+        }
+
+        if (!(await config.journal.claim(row.review.id, who, Date.now()))) {
+          fail(409, 'This action was already claimed or expired.', 'already_claimed');
+        }
+
+        try {
+          await config.journal.audit(who, row.input.area, 'action.started', row.review.id, correlationId);
+          const receipt = await adapter.execute(context, row.input, row.review.id);
+          if (!receipt.id || !['completed', 'pending'].includes(receipt.status) || !receipt.recordedAt) {
+            throw new Error('Invalid upstream receipt.');
+          }
+          await config.journal.finish(row, receipt.status === 'pending' ? 'pending' : 'completed', receipt);
+          await config.journal.audit(who, row.input.area, 'action.receipt', row.review.id, correlationId);
+          return receipt;
+        } catch (e) {
+          if (isRefusal(e)) {
+            await config.journal.finish(row, 'refused');
+            await config.journal.audit(who, row.input.area, 'action.refused', row.review.id, correlationId);
+            return fail(400, e.message, 'refused');
+          }
+          await config.journal.finish(row, 'uncertain');
+          await config.journal.audit(who, row.input.area, 'action.uncertain', row.review.id, correlationId);
+          return fail(
+            502,
+            'The result could not be confirmed. Ask the institution to reconcile this action before submitting again.',
+            'outcome_uncertain',
+            { label: 'Ask the institution to reconcile', kind: 'contact_support' },
+          );
+        }
+      };
+
+      const idempotencyKey = context.request?.idempotencyKey;
+      if (idempotencyKey && !config.idempotency) {
+        fail(503, 'Durable replay protection is unavailable. Nothing was sent.', 'idempotency_unavailable');
       }
+      if (idempotencyKey && config.idempotency) {
+        const requestContext = context.request!;
+        const command = 'institution.action.commit';
+        const scope = {
+          tenantId: requestContext.tenantId,
+          actorId: requestContext.actor.personId,
+          command,
+          key: idempotencyKey,
+        };
+        const begun = await config.idempotency.begin(
+          scope,
+          await hashOf({ command, body }),
+          systemClock.now(),
+          IDEMPOTENCY_LEASE_MS,
+          IDEMPOTENCY_TTL_EXTENDED_MS,
+        );
+        if (begun.kind === 'conflict') {
+          fail(422, 'That Idempotency-Key was already used for a different request.', 'idempotency_key_reused');
+        }
+        if (begun.kind === 'in_progress') {
+          headers.set('Retry-After', String(begun.retryAfterSeconds));
+          fail(409, 'The first attempt of this request is still running.', 'idempotency_in_progress');
+        }
+        if (begun.kind === 'replay') {
+          headers.set('Idempotent-Replayed', 'true');
+          if (begun.response.status >= 400) {
+            const stored = begun.response.body as {
+              code?: string;
+              message?: string;
+              user_action?: UserAction;
+              error?: { code?: string; message?: string; user_action?: UserAction };
+            };
+            const value = stored.error ?? stored;
+            const replayed = PlatformError.from(
+              begun.response.status,
+              value.code ?? 'error',
+              value.message ?? 'The request was refused.',
+              value.user_action ? { userAction: value.user_action } : {},
+            );
+            return Response.json(errorResponse(replayed, correlationId).body, { status: begun.response.status, headers });
+          }
+          return Response.json(begun.response.body, { status: begun.response.status, headers });
+        }
+        try {
+          const value = await commit();
+          const owned = await config.idempotency.complete(
+            scope,
+            begun.leaseId,
+            { status: 200, body: value },
+            systemClock.now(),
+          );
+          if (!owned) {
+            fail(409, 'This request lost its idempotency lease. Retry with the same key.', 'idempotency_in_progress');
+          }
+          return Response.json(value, { headers });
+        } catch (error) {
+          // A 409 can describe a transient claim or lease race, so it must not
+          // become the permanent answer for this key after a takeover.
+          const cacheable = isPlatformError(error) && isDeterministicRefusal(error) && error.status !== 409;
+          const owned = cacheable
+            ? await config.idempotency.complete(
+                scope,
+                begun.leaseId,
+                {
+                  status: error.status,
+                  body: {
+                    code: error.code,
+                    message: error.message,
+                    ...(error.userAction ? { user_action: error.userAction } : {}),
+                  },
+                },
+                systemClock.now(),
+              )
+            : await config.idempotency.release(scope, begun.leaseId);
+          if (!owned) {
+            fail(409, 'This request lost its idempotency lease. Retry with the same key.', 'idempotency_in_progress');
+          }
+          throw error;
+        }
+      }
+      return Response.json(await commit(), { headers });
     } catch (e) {
       /*
        * Three kinds of thrown thing, and the middle one used to be lost.

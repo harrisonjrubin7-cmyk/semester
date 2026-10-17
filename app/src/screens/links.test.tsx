@@ -150,6 +150,26 @@ describe('headings a student names', () => {
 });
 
 describe('re-filing a link you already added', () => {
+  it('names removal for the exact student-created link', async () => {
+    await mount([link('Landlord', 'Housing')]);
+    expect(host.querySelector('button[aria-label="Remove Landlord link: https://landlord.example.edu · Housing"]')).toBeTruthy();
+  });
+
+  it('distinguishes links with the same name by their resolved address and group', async () => {
+    await mount([
+      { ...link('Landlord', 'Housing'), id: 'landlord-portal' },
+      { ...link('Landlord', 'Lease'), id: 'landlord-lease', url: 'https://lease.example.edu' },
+    ]);
+
+    const names = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove Landlord link: "]')]
+      .map((button) => button.ariaLabel);
+    expect(names).toEqual([
+      'Remove Landlord link: https://landlord.example.edu · Housing',
+      'Remove Landlord link: https://lease.example.edu · Lease',
+    ]);
+    expect(new Set(names).size).toBe(2);
+  });
+
   it('moves it to the group typed, and leaves the address alone', async () => {
     await mount([link('Landlord', 'Housing'), link('Gym', 'Housing')]);
     expect(under('Housing')).toEqual(['Landlord', 'Gym']);

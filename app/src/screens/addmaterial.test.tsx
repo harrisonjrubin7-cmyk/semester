@@ -124,7 +124,11 @@ let root: Root;
 let reveals: Element[] = [];
 
 /** What the store and the merge say, read from inside the provider. */
-let seen: { updates: ReturnType<typeof useStore>['state']['updates']; live: Live };
+let seen: {
+  updates: ReturnType<typeof useStore>['state']['updates'];
+  undone: ReturnType<typeof useStore>['state']['undone'];
+  live: Live;
+};
 
 /**
  * Bumped to remount the screen while the store underneath it survives.
@@ -141,7 +145,7 @@ function Probe({ courseId }: { courseId: CourseId }) {
   // After the commit rather than during the render: reassigning a module
   // variable while rendering is a side effect, and oxlint says so.
   useEffect(() => {
-    seen = { updates: state.updates, live };
+    seen = { updates: state.updates, undone: state.undone, live };
   });
   return null;
 }
@@ -352,6 +356,22 @@ describe('the press that reviews', () => {
     expect(reveals.some((el) => el.contains(apply))).toBe(true);
   });
 
+  it('removes already-added material through the recoverable store action', () => {
+    paste(READING);
+    press(/^Review and add to/);
+    press(/^Add the/);
+    expect(seen.updates).toHaveLength(1);
+
+    const remove = button(/^REMOVE$/);
+    expect(remove.getAttribute('aria-label')).toMatch(
+      /^Remove material 1 of 1, What you pasted: Own unit · 2 cards · 0 files · from What you pasted · added /,
+    );
+    act(() => remove.click());
+
+    expect(seen.updates).toEqual([]);
+    expect(seen.undone?.label).toBe('Course material removed');
+  });
+
   it('leaves the button dead while there is nothing to review', () => {
     expect(button(/^Review and add to/).disabled).toBe(true);
   });
@@ -525,6 +545,16 @@ describe('two files that share a name', () => {
     press(/^Review and add to/);
     press(/^Attach it to/);
     expect(seen.updates).toHaveLength(2);
+
+    const removals = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove material "]')];
+    expect(removals).toHaveLength(2);
+    expect(removals[0].getAttribute('aria-label')).toMatch(
+      /^Remove material 1 of 2, board\.png: On the course · 0 cards · 1 file · from board\.png · added /,
+    );
+    expect(removals[1].getAttribute('aria-label')).toMatch(
+      /^Remove material 2 of 2, board\.png: On the course · 0 cards · 1 file · from board\.png · added /,
+    );
+    expect(removals[0].getAttribute('aria-label')).not.toBe(removals[1].getAttribute('aria-label'));
   });
 
   it('still recognises the same file attached twice', async () => {
@@ -594,7 +624,7 @@ describe('what the ticked changes reach', () => {
     // Untick both proposed cards. The file is not a proposal and does not
     // untick — a disabled button here used to lose it.
     for (const q of ['What does the four-hurdle test ask first?', 'What is a rival explanation?']) {
-      press(new RegExp(`^${q.replace(/\?/g, '\\?')}`));
+      press(new RegExp(`^${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
     }
     press(/^Attach the file only/);
 

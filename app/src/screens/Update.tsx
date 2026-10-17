@@ -549,16 +549,26 @@ export function AddMaterial({
    * putting the old one back. Said here rather than left to be discovered.
    */
   const undoImport = (u: (typeof updates)[number]) => {
-    dispatch({ type: 'deleteUpdate', id: u.id });
-    const module_ = state.courses.find((c) => c.course.id === courseId);
-    const added = u.addedItems ?? [];
-    if (module_ && added.length > 0) {
-      dispatch({
-        type: 'replaceCourse',
-        module: { ...module_, items: module_.items.filter((i) => !added.includes(i.id)) },
-      });
-    }
+    dispatch({ type: 'removeUpdate', id: u.id });
   };
+
+  const updateLocation = (u: (typeof updates)[number]) =>
+    u.unit !== null && guide.units[u.unit]
+      ? guide.units[u.unit].name.slice(0, 28)
+      : u.cards.length > 0
+        ? 'Own unit'
+        : 'On the course';
+
+  const updateRemovalLabel = (u: (typeof updates)[number], index: number) =>
+    `Remove material ${index + 1} of ${updates.length}, ${u.title}: ${[
+      updateLocation(u),
+      `${u.cards.length} ${u.cards.length === 1 ? 'card' : 'cards'}`,
+      `${u.fileIds.length} ${u.fileIds.length === 1 ? 'file' : 'files'}`,
+      u.source ? `from ${u.source}` : 'source not recorded',
+      u.created > 0
+        ? `added ${formatDate(u.created, { day: 'numeric', month: 'short' })}`
+        : 'date not recorded',
+    ].join(' · ')}`;
 
   /**
    * Show what pasting would change, and write nothing.
@@ -1279,7 +1289,7 @@ export function AddMaterial({
       {updates.length > 0 && (
         <>
           <SectionLabel>Already added</SectionLabel>
-          {updates.map((u) => (
+          {updates.map((u, index) => (
             <div
               key={u.id}
               style={{
@@ -1309,11 +1319,7 @@ export function AddMaterial({
                     — and this row named one, which is a place to go and look
                     for something that is not there.
                   */}
-                  {u.unit !== null && guide.units[u.unit]
-                    ? guide.units[u.unit].name.slice(0, 28)
-                    : u.cards.length > 0
-                      ? 'Own unit'
-                      : 'On the course'}
+                  {updateLocation(u)}
                   {u.cards.length > 0 && ` · ${u.cards.length} cards`}
                   {u.fileIds.length > 0 && ` · ${u.fileIds.length} files`}
                   {/* Where it came from, on the thing itself. "From Session 7
@@ -1328,6 +1334,7 @@ export function AddMaterial({
                 type="button"
                 className="bare"
                 onClick={() => undoImport(u)}
+                aria-label={updateRemovalLabel(u, index)}
                 style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none' }}
               >
                 REMOVE

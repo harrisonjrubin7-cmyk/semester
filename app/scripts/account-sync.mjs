@@ -264,6 +264,127 @@ async function held(page, service, text) {
   return false;
 }
 
+/** The server holds the named personal action and its completed tick, not merely an earlier open copy. */
+async function heldDone(page, service, title) {
+  const until = Date.now() + SETTLE;
+  while (Date.now() < until) {
+    const found = await page.evaluate(
+      async ({ origin, key, title }) => {
+        const session = JSON.parse(localStorage.getItem('semester.auth') || 'null');
+        const token = session?.access_token;
+        if (!token) return false;
+        const response = await fetch(`${origin}/rest/v1/state?select=data`, {
+          headers: { apikey: key, Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) return false;
+        const rows = await response.json();
+        const data = rows?.[0]?.data;
+        const task = data?.tasks?.find((candidate) => candidate?.title === title);
+        return task?.done === true;
+      },
+      { ...service, title },
+    );
+    if (found) return true;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return false;
+}
+
+/**
+ * What the signed-in device has actually persisted for one action.
+ *
+ * The sync label describes the last completed account request. It can already
+ * say "Synced" while React is applying the pull and the persistence effect is
+ * still writing its records. Waiting on that label and immediately asking the
+ * screen therefore races the state the journey is meant to prove.
+ *
+ * Ordinary browsers store each task in IndexedDB now. The localStorage read is
+ * the app's supported fallback when IndexedDB is unavailable; it is not used
+ * to paper over an IndexedDB record that exists with the wrong value.
+ */
+async function deviceTask(page, title) {
+  return page.evaluate(async ({ title }) => {
+    const fromLocalStorage = () => {
+      try {
+        const state = JSON.parse(localStorage.getItem('semester.v1') || 'null');
+        const task = state?.tasks?.find((candidate) => candidate?.title === title);
+        return task ? { source: 'localStorage', present: true, done: task.done === true } : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const records = await new Promise((resolve) => {
+      let answered = false;
+      const finish = (value) => {
+        if (answered) return;
+        answered = true;
+        clearTimeout(limit);
+        resolve(value);
+      };
+      const limit = setTimeout(() => finish(null), 1_500);
+      let request;
+      try {
+        request = indexedDB.open('semester-store');
+      } catch {
+        finish(null);
+        return;
+      }
+      request.onerror = () => finish(null);
+      request.onblocked = () => {};
+      request.onsuccess = () => {
+        const database = request.result;
+        if (!database.objectStoreNames.contains('tasks')) {
+          database.close();
+          finish(null);
+          return;
+        }
+        try {
+          const transaction = database.transaction('tasks', 'readonly');
+          const values = transaction.objectStore('tasks').getAll();
+          transaction.oncomplete = () => {
+            database.close();
+            finish(values.result);
+          };
+          transaction.onerror = () => {
+            database.close();
+            finish(null);
+          };
+          transaction.onabort = transaction.onerror;
+        } catch {
+          database.close();
+          finish(null);
+        }
+      };
+    });
+
+    if (Array.isArray(records)) {
+      const task = records.find((candidate) => candidate?.title === title);
+      return task
+        ? { source: 'indexedDB', present: true, done: task.done === true }
+        : { source: 'indexedDB', present: false, done: false };
+    }
+    return fromLocalStorage() ?? { source: 'unavailable', present: false, done: false };
+  }, { title });
+}
+
+/** Wait for the pulled record itself, so a green UI assertion proves the account copy landed. */
+async function deviceHasTask(page, title, requireDone = false) {
+  const until = Date.now() + SETTLE;
+  let last = { source: 'unavailable', present: false, done: false };
+  while (Date.now() < until) {
+    last = await deviceTask(page, title);
+    if (last.present && (!requireDone || last.done)) return { ok: true, state: last };
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return { ok: false, state: last };
+}
+
+/** Wait for the pulled record itself, so a green UI assertion proves the account copy landed. */
+async function deviceHasDoneTask(page, title) {
+  return deviceHasTask(page, title, true);
+}
+
 const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 async function addAction(page, title) {
@@ -279,6 +400,7 @@ async function journey(label, viewport) {
   const password = randomBytes(12).toString('base64url');
   const title = `Account sync check-in ${label} ${stamp}`;
   const reply = `Second device reply ${label} ${stamp}`;
+  const localTitle = `Second device local draft ${label} ${stamp}`;
   const open = (t) => new RegExp(`^Mark ${escape(t)} done$`);
   const done = (t) => new RegExp(`^Mark ${escape(t)} not done$`);
   const first = await device(viewport, errors);
@@ -330,24 +452,46 @@ async function journey(label, viewport) {
 
     // ── 3 · The server has it — read the way another device would ──────────
     at(STEPS[2]);
-    expect(await held(page, first.service, title), `the account's state row did not hold the action within ${SETTLE / 1000}s`);
+    expect(await heldDone(page, first.service, title), `the account's state row did not hold the finished action within ${SETTLE / 1000}s`);
 
     // ── 4 · A second device, checked empty first ───────────────────────────
     at(STEPS[3]);
     second = await device(viewport, errors);
     const other = second.page;
-    await other.goto(BASE, { waitUntil: 'domcontentloaded' });
-    expect(await visible(other.getByText('Your syllabi. One brain.')), 'the second device did not open on the adoption prompt');
-    await other.getByRole('button', { name: /^skip$/i }).first().click();
-    await go(other, '#/mine', 'Personal');
-    expect(
-      (await other.getByText(title, { exact: true }).count()) === 0,
-      'a fresh second context already had the action before signing in — the contexts are not separate',
-    );
+    if (label === 'phone') {
+      // A direct account link is a genuinely empty second device: no tour
+      // choices, route history or sample adoption can create local rows first.
+      // It deterministically exercises the automatic account-to-device pull.
+      await other.goto(`${BASE}#/login`, { waitUntil: 'domcontentloaded' });
+      expect(await visible(other.getByRole('textbox', { name: /email/i })), 'the empty second device did not open on sign in');
+      const blank = await deviceTask(other, title);
+      expect(!blank.present, 'the empty second device already persisted the account action before signing in');
+      notes.push(`${label}: exercised automatic pull onto an actually empty device`);
+    } else {
+      // Retain the existing both-copies adoption journey independently.
+      await other.goto(BASE, { waitUntil: 'domcontentloaded' });
+      expect(await visible(other.getByText('Your syllabi. One brain.')), 'the second device did not open on the adoption prompt');
+      await other.getByRole('button', { name: /^skip$/i }).first().click();
+      await go(other, '#/mine', 'Personal');
+      expect(
+        (await other.getByText(title, { exact: true }).count()) === 0,
+        'a fresh second context already had the action before signing in — the contexts are not separate',
+      );
+      await addAction(other, localTitle);
+      expect(
+        await visible(other.getByRole('button', { name: open(localTitle) })),
+        'the second device could not create its local side of the adoption decision',
+      );
+      const localBeforeSignIn = await deviceHasTask(other, localTitle);
+      expect(
+        localBeforeSignIn.ok && localBeforeSignIn.state.source === 'indexedDB',
+        `the second device's local action was not durable before sign in (last state: ${JSON.stringify(localBeforeSignIn.state)})`,
+      );
+    }
 
     // ── 5 · Sign in there, and the action arrives, still done ──────────────
     at(STEPS[4]);
-    await other.evaluate(() => { location.hash = '#/login'; });
+    if (label !== 'phone') await other.evaluate(() => { location.hash = '#/login'; });
     expect(await visible(other.getByRole('textbox', { name: /email/i })), '#/login drew no email field');
     await other.getByRole('textbox', { name: /email/i }).fill(email);
     await local(second.service);
@@ -360,12 +504,68 @@ async function journey(label, viewport) {
     // the other two would pass this step by discarding a side. Its confirm
     // button is named exactly that; the options' names carry their blurbs.
     const ask = other.getByRole('dialog', { name: 'Which copy to keep' });
-    if (await visible(ask, 5_000)) {
+    // The phone viewport can still be reconciling its first local copy after
+    // sign-in when the shell reports success. Give the adoption decision the
+    // same bounded window as the sync it controls instead of racing it with a
+    // five-second probe and then asserting against the pre-adoption copy.
+    const asked = await visible(ask, SETTLE);
+    if (label === 'phone') {
+      expect(!asked, 'an actually empty second device was incorrectly sent through adoption');
+    } else {
+      expect(asked, 'a device and account with different authored actions did not ask which copy to keep');
+    }
+    if (asked) {
       notes.push(`${label}: the second device asked which copy to keep; kept both`);
-      await ask.getByRole('button', { name: /^keep both$/i }).click();
-      await ask.waitFor({ state: 'hidden', timeout: WAIT });
+      // Prove the compact viewport can reach the real control. Playwright's
+      // normal click waits for the button to be visible, stable, enabled and
+      // unobstructed; bypassing those checks would let a mobile UI regression
+      // pass even though a student could not make the adoption choice.
+      const keepBoth = ask.getByRole('button', { name: /^keep both$/i });
+      try {
+        await keepBoth.scrollIntoViewIfNeeded({ timeout: WAIT });
+        await keepBoth.click({ timeout: SETTLE });
+        await ask.waitFor({ state: 'hidden', timeout: WAIT });
+      } catch (error) {
+        // The account pull can finish between the visibility probe above and
+        // this actionability check. In that case React removes the question
+        // and there is no decision left to click. Only accept that exact
+        // race; a dialog that remains on screen must still expose a normally
+        // reachable control, and its original Playwright error stays fatal.
+        if (await ask.isVisible().catch(() => false)) throw error;
+        notes.push(`${label}: the adoption question resolved before its control was reached`);
+      }
     }
     expect(await visible(other.getByText('Signed in', { exact: true })), 'signing in on the second device did not reach "Signed in"');
+    expect(
+      await visible(other.getByRole('status').filter({ hasText: /^Synced/ }), SETTLE),
+      'the second device did not finish pulling the account before the sync window closed',
+    );
+    const pulledTask = await deviceHasDoneTask(other, title);
+    expect(
+      pulledTask.ok,
+      `the second device did not persist the account's finished action within ${SETTLE / 1000}s `
+        + `(last state: ${JSON.stringify(pulledTask.state)})`,
+    );
+    if (label !== 'phone') {
+      const localAfterAdoption = await deviceHasTask(other, localTitle);
+      expect(
+        localAfterAdoption.ok,
+        `keeping both dropped the second device's local action (last state: ${JSON.stringify(localAfterAdoption.state)})`,
+      );
+    }
+    await other.reload({ waitUntil: 'domcontentloaded' });
+    const afterReload = await deviceHasDoneTask(other, title);
+    expect(
+      afterReload.ok,
+      `${label === 'phone' ? 'the automatic pull' : 'the adopted account copy'} did not survive reload (last state: ${JSON.stringify(afterReload.state)})`,
+    );
+    if (label !== 'phone') {
+      const localAfterReload = await deviceHasTask(other, localTitle);
+      expect(
+        localAfterReload.ok,
+        `the adopted local copy did not survive reload (last state: ${JSON.stringify(localAfterReload.state)})`,
+      );
+    }
     await go(other, '#/mine', 'Personal');
     expect(await visible(other.getByRole('button', { name: done(title) }), SETTLE), 'the second device, signed in, does not show the action as done');
 

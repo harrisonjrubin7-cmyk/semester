@@ -1,0 +1,21 @@
+import pg from 'pg';
+import { WorkflowError } from './transition.js';
+export const pool = new pg.Pool({connectionString:process.env.DATABASE_URL});
+export async function tx<T>(work:(db:pg.PoolClient)=>Promise<T>):Promise<T> {
+ const db=await pool.connect();
+ try {await db.query('BEGIN');const result=await work(db);await db.query('COMMIT');return result;}
+ catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}
+}
+export async function permissions(db:pg.PoolClient,tenant:string,user:string):Promise<string[]> {
+ // Membership SHARE lock serializes our membership/tenant suspension path with commands.
+ const membership=await db.query(`SELECT m.user_id FROM semester_live_private.memberships m JOIN semester_live.tenants t ON t.id=m.tenant_id WHERE m.tenant_id=$1 AND m.user_id=$2 AND m.active AND t.status='active' FOR SHARE OF m,t`,[tenant,user]);
+ if(!membership.rowCount)throw new WorkflowError('FORBIDDEN','Active tenant membership required');
+ const result=await db.query(`SELECT DISTINCT rp.permission FROM semester_live_private.assignments a JOIN semester_live_private.role_permissions rp ON rp.role_id=a.role_id WHERE a.tenant_id=$1 AND a.user_id=$2 AND (a.expires_at IS NULL OR a.expires_at>now())`,[tenant,user]);
+ return result.rows.map(r=>r.permission);
+}
+export function requirePermission(p:string[],permission:string){if(!p.includes(permission))throw new WorkflowError('FORBIDDEN','Missing permission');}
+export async function enqueue(db:pg.PoolClient,tenant:string,eventId:string,type:string,data:unknown){
+ const body=JSON.stringify({eventId,type,schemaVersion:1,tenantId:tenant,data});
+ await db.query(`INSERT INTO semester_live_private.outbox(id,tenant_id,event_type,body) VALUES($1,$2,$3,$4)`,[eventId,tenant,type,body]);
+ await db.query(`INSERT INTO semester_live.deliveries(tenant_id,event_id,endpoint_id) SELECT $1,$2,id FROM semester_live_private.endpoints WHERE tenant_id=$1 AND enabled AND $3=ANY(event_types) ON CONFLICT(event_id,endpoint_id) DO NOTHING`,[tenant,eventId,type]);
+}

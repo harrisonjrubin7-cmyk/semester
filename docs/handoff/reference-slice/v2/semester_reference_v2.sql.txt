@@ -1,0 +1,134 @@
+-- Semester reference v2: Supabase Auth; fresh database; trusted migration owner.
+-- NOT a complete SIS/ERP; no HTTP handlers, storage policies, or signing callback.
+BEGIN;
+CREATE SCHEMA semester;
+CREATE SCHEMA semester_private;
+REVOKE ALL ON SCHEMA semester,semester_private FROM PUBLIC,anon,authenticated;
+GRANT USAGE ON SCHEMA semester,semester_private TO authenticated;
+CREATE TYPE semester.document_state AS ENUM ('draft','in_review','changes_requested','approved','awaiting_signature','effective','rejected','superseded','archived');
+CREATE TABLE semester.tenants(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),name text NOT NULL,kind text NOT NULL CHECK(kind IN ('institution','company')),status text NOT NULL DEFAULT 'active' CHECK(status IN ('active','suspended','closed')));
+CREATE TABLE semester_private.memberships(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES semester.tenants(id),user_id uuid NOT NULL REFERENCES auth.users(id),status text NOT NULL DEFAULT 'active' CHECK(status IN ('active','suspended','ended')),UNIQUE(tenant_id,user_id),UNIQUE(tenant_id,id));
+CREATE TABLE semester_private.permissions(code text PRIMARY KEY);
+CREATE TABLE semester_private.roles(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES semester.tenants(id),code text NOT NULL,UNIQUE(tenant_id,code),UNIQUE(tenant_id,id));
+CREATE TABLE semester_private.role_permissions(role_id uuid NOT NULL REFERENCES semester_private.roles(id),permission_code text NOT NULL REFERENCES semester_private.permissions(code),PRIMARY KEY(role_id,permission_code));
+CREATE TABLE semester.sections(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES semester.tenants(id),title text NOT NULL,UNIQUE(tenant_id,id));
+CREATE TABLE semester_private.role_assignments(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,membership_id uuid NOT NULL,role_id uuid NOT NULL,section_id uuid,expires_at timestamptz,FOREIGN KEY(tenant_id,membership_id) REFERENCES semester_private.memberships(tenant_id,id),FOREIGN KEY(tenant_id,role_id) REFERENCES semester_private.roles(tenant_id,id),FOREIGN KEY(tenant_id,section_id) REFERENCES semester.sections(tenant_id,id));
+CREATE INDEX assignment_lookup ON semester_private.role_assignments(tenant_id,membership_id,section_id);
+INSERT INTO semester_private.permissions VALUES ('section.read'),('assignment.manage'),('submission.read_all'),('crm.read'),('implementation.read'),('endpoint.read'),('document.read'),('document.create'),('document.revise'),('document.submit'),('document.review'),('document.sign_request'),('document.activate'),('document.archive'),('document.audit');
+CREATE FUNCTION semester_private.member_active(t uuid,u uuid) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
+SELECT EXISTS(SELECT 1 FROM semester_private.memberships m JOIN semester.tenants x ON x.id=m.tenant_id WHERE m.tenant_id=t AND m.user_id=u AND m.status='active' AND x.status='active'); $$;
+CREATE FUNCTION semester_private.can(t uuid,p text,s uuid DEFAULT NULL) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
+SELECT EXISTS(SELECT 1 FROM semester_private.memberships m JOIN semester.tenants x ON x.id=m.tenant_id JOIN semester_private.role_assignments a ON a.tenant_id=m.tenant_id AND a.membership_id=m.id JOIN semester_private.role_permissions rp ON rp.role_id=a.role_id WHERE m.tenant_id=t AND m.user_id=auth.uid() AND m.status='active' AND x.status='active' AND rp.permission_code=p AND (a.expires_at IS NULL OR a.expires_at>now()) AND (a.section_id IS NULL OR a.section_id=s)); $$;
+CREATE TABLE semester.accounts(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES semester.tenants(id),name text NOT NULL,UNIQUE(tenant_id,id));
+CREATE TABLE semester.opportunities(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,account_id uuid NOT NULL,title text NOT NULL,stage text NOT NULL CHECK(stage IN ('discovery','evaluation','proposal','won','lost')),FOREIGN KEY(tenant_id,account_id) REFERENCES semester.accounts(tenant_id,id),UNIQUE(tenant_id,id));
+CREATE TABLE semester.implementations(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,account_id uuid NOT NULL,title text NOT NULL,status text NOT NULL CHECK(status IN ('planned','active','blocked','accepted','closed')),FOREIGN KEY(tenant_id,account_id) REFERENCES semester.accounts(tenant_id,id),UNIQUE(tenant_id,id));
+CREATE TABLE semester.resources(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES semester.tenants(id),account_id uuid,opportunity_id uuid,implementation_id uuid,CHECK(num_nonnulls(account_id,opportunity_id,implementation_id)=1),FOREIGN KEY(tenant_id,account_id) REFERENCES semester.accounts(tenant_id,id),FOREIGN KEY(tenant_id,opportunity_id) REFERENCES semester.opportunities(tenant_id,id),FOREIGN KEY(tenant_id,implementation_id) REFERENCES semester.implementations(tenant_id,id),UNIQUE(tenant_id,id));
+CREATE TABLE semester.documents(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES semester.tenants(id),title text NOT NULL CHECK(length(btrim(title))>0),document_type text NOT NULL,classification text NOT NULL DEFAULT 'business' CHECK(classification='business'),created_by uuid NOT NULL REFERENCES auth.users(id),created_at timestamptz NOT NULL DEFAULT now(),UNIQUE(tenant_id,id));
+CREATE TABLE semester.document_links(tenant_id uuid NOT NULL,document_id uuid NOT NULL,resource_id uuid NOT NULL,FOREIGN KEY(tenant_id,document_id) REFERENCES semester.documents(tenant_id,id),FOREIGN KEY(tenant_id,resource_id) REFERENCES semester.resources(tenant_id,id),PRIMARY KEY(tenant_id,document_id,resource_id));
+CREATE TABLE semester.document_versions(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,document_id uuid NOT NULL,version_number integer NOT NULL CHECK(version_number>0),state semester.document_state NOT NULL DEFAULT 'draft',storage_key text NOT NULL,content_hash text NOT NULL CHECK(content_hash ~ '^[0-9a-f]{64}$'),requires_signature boolean NOT NULL DEFAULT false,created_by uuid NOT NULL REFERENCES auth.users(id),created_at timestamptz NOT NULL DEFAULT now(),FOREIGN KEY(tenant_id,document_id) REFERENCES semester.documents(tenant_id,id),UNIQUE(tenant_id,id),UNIQUE(tenant_id,document_id,version_number));
+CREATE UNIQUE INDEX one_effective_version ON semester.document_versions(document_id) WHERE state='effective';
+CREATE TABLE semester.review_tasks(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,version_id uuid NOT NULL,reviewer_id uuid NOT NULL REFERENCES auth.users(id),decision text NOT NULL DEFAULT 'pending' CHECK(decision IN ('pending','approved','changes_requested','rejected')),reason text,created_at timestamptz NOT NULL DEFAULT now(),decided_at timestamptz,FOREIGN KEY(tenant_id,version_id) REFERENCES semester.document_versions(tenant_id,id),UNIQUE(tenant_id,version_id,reviewer_id));
+CREATE TABLE semester.signature_requests(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,version_id uuid NOT NULL,signer_id uuid NOT NULL REFERENCES auth.users(id),created_at timestamptz NOT NULL DEFAULT now(),FOREIGN KEY(tenant_id,version_id) REFERENCES semester.document_versions(tenant_id,id),UNIQUE(tenant_id,version_id,signer_id),UNIQUE(tenant_id,id,version_id));
+CREATE TABLE semester.signature_evidence(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,request_id uuid NOT NULL,version_id uuid NOT NULL,signed_hash text NOT NULL CHECK(signed_hash ~ '^[0-9a-f]{64}$'),provider_reference text NOT NULL,verified_at timestamptz NOT NULL,FOREIGN KEY(tenant_id,request_id,version_id) REFERENCES semester.signature_requests(tenant_id,id,version_id),UNIQUE(request_id));
+CREATE TABLE semester.legal_holds(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,document_id uuid NOT NULL,reason text NOT NULL,released_at timestamptz,FOREIGN KEY(tenant_id,document_id) REFERENCES semester.documents(tenant_id,id));
+CREATE TABLE semester.transition_events(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,version_id uuid NOT NULL,actor_id uuid NOT NULL REFERENCES auth.users(id),action text NOT NULL,from_state semester.document_state NOT NULL,to_state semester.document_state NOT NULL,reason text NOT NULL,occurred_at timestamptz NOT NULL DEFAULT now(),FOREIGN KEY(tenant_id,version_id) REFERENCES semester.document_versions(tenant_id,id));
+CREATE INDEX transition_version_time ON semester.transition_events(tenant_id,version_id,occurred_at);
+CREATE TABLE semester.api_endpoints(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES semester.tenants(id),method text NOT NULL CHECK(method IN ('GET','POST','PATCH','DELETE')),path text NOT NULL,capability text NOT NULL,implementation_status text NOT NULL CHECK(implementation_status IN ('specified','implemented','tested','deployed')),UNIQUE(tenant_id,method,path));
+CREATE TABLE semester_private.command_receipts(actor_id uuid NOT NULL REFERENCES auth.users(id),tenant_id uuid NOT NULL REFERENCES semester.tenants(id),request_key uuid NOT NULL,request_payload jsonb NOT NULL,response jsonb NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(actor_id,tenant_id,request_key));
+CREATE TABLE semester_private.outbox(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES semester.tenants(id),event_type text NOT NULL,payload jsonb NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),delivered_at timestamptz);
+CREATE TABLE semester.enrollments(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,section_id uuid NOT NULL,student_id uuid NOT NULL REFERENCES auth.users(id),status text NOT NULL CHECK(status IN ('active','ended')),FOREIGN KEY(tenant_id,section_id) REFERENCES semester.sections(tenant_id,id),FOREIGN KEY(tenant_id,student_id) REFERENCES semester_private.memberships(tenant_id,user_id),UNIQUE(tenant_id,section_id,student_id),UNIQUE(tenant_id,section_id,id));
+CREATE TABLE semester.assignments(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,section_id uuid NOT NULL,title text NOT NULL,publication_state text NOT NULL CHECK(publication_state IN ('draft','published','retired')),due_at timestamptz,FOREIGN KEY(tenant_id,section_id) REFERENCES semester.sections(tenant_id,id),UNIQUE(tenant_id,section_id,id));
+CREATE TABLE semester.submissions(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,section_id uuid NOT NULL,assignment_id uuid NOT NULL,enrollment_id uuid NOT NULL,attempt integer NOT NULL CHECK(attempt>0),submitted_at timestamptz NOT NULL,storage_key text NOT NULL,FOREIGN KEY(tenant_id,section_id,assignment_id) REFERENCES semester.assignments(tenant_id,section_id,id),FOREIGN KEY(tenant_id,section_id,enrollment_id) REFERENCES semester.enrollments(tenant_id,section_id,id),UNIQUE(assignment_id,enrollment_id,attempt));
+
+-- RLS: enable on every reference table. No policies/grants for private tables.
+DO $$ DECLARE r record; BEGIN FOR r IN SELECT schemaname,tablename FROM pg_tables WHERE schemaname IN ('semester','semester_private') LOOP EXECUTE format('ALTER TABLE %I.%I ENABLE ROW LEVEL SECURITY',r.schemaname,r.tablename); END LOOP; END $$;
+CREATE POLICY tenant_read ON semester.tenants FOR SELECT TO authenticated USING(semester_private.member_active(id,auth.uid()));
+CREATE POLICY enrollment_read ON semester.enrollments FOR SELECT TO authenticated USING(semester_private.member_active(tenant_id,auth.uid()) AND (student_id=auth.uid() OR semester_private.can(tenant_id,'section.read',section_id)));
+CREATE POLICY section_read ON semester.sections FOR SELECT TO authenticated USING(semester_private.can(tenant_id,'section.read',id) OR (semester_private.member_active(tenant_id,auth.uid()) AND EXISTS(SELECT 1 FROM semester.enrollments e WHERE e.section_id=sections.id AND e.student_id=auth.uid() AND e.status='active')));
+CREATE POLICY assignment_read ON semester.assignments FOR SELECT TO authenticated USING(semester_private.can(tenant_id,'assignment.manage',section_id) OR (publication_state='published' AND semester_private.member_active(tenant_id,auth.uid()) AND EXISTS(SELECT 1 FROM semester.enrollments e WHERE e.tenant_id=assignments.tenant_id AND e.section_id=assignments.section_id AND e.student_id=auth.uid() AND e.status='active')));
+CREATE POLICY submission_read ON semester.submissions FOR SELECT TO authenticated USING(semester_private.can(tenant_id,'submission.read_all',section_id) OR (semester_private.member_active(tenant_id,auth.uid()) AND EXISTS(SELECT 1 FROM semester.enrollments e WHERE e.id=submissions.enrollment_id AND e.student_id=auth.uid())));
+CREATE POLICY account_read ON semester.accounts FOR SELECT TO authenticated USING(semester_private.can(tenant_id,'crm.read'));
+CREATE POLICY opportunity_read ON semester.opportunities FOR SELECT TO authenticated USING(semester_private.can(tenant_id,'crm.read'));
+CREATE POLICY implementation_read ON semester.implementations FOR SELECT TO authenticated USING(semester_private.can(tenant_id,'implementation.read'));
+CREATE POLICY resource_read ON semester.resources FOR SELECT TO authenticated USING(((account_id IS NOT NULL OR opportunity_id IS NOT NULL) AND semester_private.can(tenant_id,'crm.read')) OR (implementation_id IS NOT NULL AND semester_private.can(tenant_id,'implementation.read')));
+DO $$ DECLARE n text; BEGIN FOREACH n IN ARRAY ARRAY['documents','document_versions','document_links','review_tasks','signature_requests','signature_evidence'] LOOP EXECUTE format('CREATE POLICY document_read ON semester.%I FOR SELECT TO authenticated USING(semester_private.can(tenant_id,''document.read''))',n); END LOOP; END $$;
+CREATE POLICY event_read ON semester.transition_events FOR SELECT TO authenticated USING(semester_private.can(tenant_id,'document.audit'));
+CREATE POLICY endpoint_read ON semester.api_endpoints FOR SELECT TO authenticated USING(semester_private.can(tenant_id,'endpoint.read'));
+REVOKE ALL ON ALL TABLES IN SCHEMA semester,semester_private FROM PUBLIC,anon,authenticated;
+GRANT SELECT ON semester.tenants,semester.sections,semester.enrollments,semester.assignments,semester.submissions,semester.accounts,semester.opportunities,semester.implementations,semester.resources,semester.documents,semester.document_versions,semester.document_links,semester.review_tasks,semester.signature_requests,semester.signature_evidence,semester.transition_events,semester.api_endpoints TO authenticated;
+
+CREATE FUNCTION semester.create_document_version(p_tenant uuid,p_title text,p_type text,p_storage_key text,p_hash text,p_requires_signature boolean DEFAULT false,p_document uuid DEFAULT NULL)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+DECLARE d uuid; v uuid; n integer; u uuid:=auth.uid(); BEGIN
+ IF u IS NULL THEN RAISE EXCEPTION 'unauthenticated'; END IF;
+ IF p_document IS NULL THEN
+  IF NOT semester_private.can(p_tenant,'document.create') THEN RAISE EXCEPTION 'forbidden'; END IF;
+  INSERT INTO semester.documents(tenant_id,title,document_type,created_by) VALUES(p_tenant,p_title,p_type,u) RETURNING id INTO d;
+ ELSE
+  IF NOT semester_private.can(p_tenant,'document.revise') THEN RAISE EXCEPTION 'forbidden'; END IF;
+  SELECT id INTO d FROM semester.documents WHERE tenant_id=p_tenant AND id=p_document FOR UPDATE;
+  IF d IS NULL THEN RAISE EXCEPTION 'not_found'; END IF;
+  IF EXISTS(SELECT 1 FROM semester.document_versions WHERE document_id=d AND state IN ('draft','in_review','approved','awaiting_signature')) THEN RAISE EXCEPTION 'unfinished_version_exists'; END IF;
+ END IF;
+ SELECT coalesce(max(version_number),0)+1 INTO n FROM semester.document_versions WHERE document_id=d;
+ INSERT INTO semester.document_versions(tenant_id,document_id,version_number,storage_key,content_hash,requires_signature,created_by) VALUES(p_tenant,d,n,p_storage_key,p_hash,p_requires_signature,u) RETURNING id INTO v;
+ INSERT INTO semester_private.outbox(tenant_id,event_type,payload) VALUES(p_tenant,'document.version_created',jsonb_build_object('documentId',d,'versionId',v));
+ RETURN jsonb_build_object('documentId',d,'versionId',v,'versionNumber',n,'state','draft');
+END $$;
+
+CREATE FUNCTION semester.transition_document(p_tenant uuid,p_version uuid,p_action text,p_expected semester.document_state,p_reason text,p_request_key uuid,p_participants uuid[] DEFAULT ARRAY[]::uuid[])
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+DECLARE u uuid:=auth.uid(); v semester.document_versions%ROWTYPE; target semester.document_state; permission text; doc uuid; prior record; payload jsonb; result jsonb; x uuid;
+BEGIN
+ IF u IS NULL THEN RAISE EXCEPTION 'unauthenticated'; END IF;
+ IF p_request_key IS NULL OR p_action IS NULL OR p_expected IS NULL OR p_participants IS NULL OR p_reason IS NULL OR length(btrim(p_reason))=0 THEN RAISE EXCEPTION 'invalid_request'; END IF;
+ permission:=CASE p_action WHEN 'submit' THEN 'document.submit' WHEN 'approve' THEN 'document.review' WHEN 'request_changes' THEN 'document.review' WHEN 'reject' THEN 'document.review' WHEN 'request_signatures' THEN 'document.sign_request' WHEN 'activate' THEN 'document.activate' WHEN 'archive' THEN 'document.archive' END;
+ IF permission IS NULL THEN RAISE EXCEPTION 'invalid_action'; END IF;
+ IF NOT semester_private.can(p_tenant,permission) THEN RAISE EXCEPTION 'forbidden'; END IF;
+ payload:=jsonb_build_object('version',p_version,'action',p_action,'expected',p_expected,'reason',p_reason,'participants',p_participants);
+ PERFORM pg_advisory_xact_lock(hashtextextended(u::text||p_tenant::text||p_request_key::text,0));
+ SELECT * INTO prior FROM semester_private.command_receipts WHERE actor_id=u AND tenant_id=p_tenant AND request_key=p_request_key;
+ IF FOUND THEN IF prior.request_payload<>payload THEN RAISE EXCEPTION 'idempotency_conflict'; END IF; RETURN prior.response; END IF;
+ SELECT document_id INTO doc FROM semester.document_versions WHERE tenant_id=p_tenant AND id=p_version;
+ IF doc IS NULL THEN RAISE EXCEPTION 'not_found'; END IF;
+ PERFORM 1 FROM semester.documents WHERE tenant_id=p_tenant AND id=doc FOR UPDATE;
+ SELECT * INTO v FROM semester.document_versions WHERE tenant_id=p_tenant AND id=p_version FOR UPDATE;
+ IF v.state<>p_expected THEN RAISE EXCEPTION 'state_conflict'; END IF;
+ target:=v.state;
+ IF p_action='submit' AND v.state='draft' THEN
+  IF cardinality(p_participants)=0 THEN RAISE EXCEPTION 'reviewers_required'; END IF;
+  FOREACH x IN ARRAY p_participants LOOP
+   IF x=u OR x=v.created_by OR NOT semester_private.member_active(p_tenant,x) THEN RAISE EXCEPTION 'invalid_reviewer'; END IF;
+   INSERT INTO semester.review_tasks(tenant_id,version_id,reviewer_id) VALUES(p_tenant,p_version,x);
+  END LOOP; target:='in_review';
+ ELSIF p_action IN ('approve','request_changes','reject') AND v.state='in_review' THEN
+  IF u=v.created_by THEN RAISE EXCEPTION 'self_review_forbidden'; END IF;
+  UPDATE semester.review_tasks SET decision=CASE p_action WHEN 'approve' THEN 'approved' WHEN 'request_changes' THEN 'changes_requested' ELSE 'rejected' END,reason=p_reason,decided_at=now() WHERE tenant_id=p_tenant AND version_id=p_version AND reviewer_id=u AND decision='pending';
+  IF NOT FOUND THEN RAISE EXCEPTION 'review_assignment_required'; END IF;
+  IF p_action='request_changes' THEN target:='changes_requested'; ELSIF p_action='reject' THEN target:='rejected';
+  ELSIF NOT EXISTS(SELECT 1 FROM semester.review_tasks WHERE version_id=p_version AND decision<>'approved') THEN target:='approved'; END IF;
+ ELSIF p_action='request_signatures' AND v.state='approved' AND v.requires_signature THEN
+  IF cardinality(p_participants)=0 THEN RAISE EXCEPTION 'signers_required'; END IF;
+  FOREACH x IN ARRAY p_participants LOOP
+   IF NOT semester_private.member_active(p_tenant,x) THEN RAISE EXCEPTION 'invalid_signer'; END IF;
+   INSERT INTO semester.signature_requests(tenant_id,version_id,signer_id) VALUES(p_tenant,p_version,x);
+  END LOOP; target:='awaiting_signature';
+ ELSIF p_action='activate' AND ((v.state='approved' AND NOT v.requires_signature) OR v.state='awaiting_signature') THEN
+  IF v.requires_signature AND (NOT EXISTS(SELECT 1 FROM semester.signature_requests WHERE version_id=p_version) OR EXISTS(SELECT 1 FROM semester.signature_requests r LEFT JOIN semester.signature_evidence e ON e.request_id=r.id WHERE r.version_id=p_version AND (e.id IS NULL OR e.signed_hash<>v.content_hash))) THEN RAISE EXCEPTION 'verified_signatures_required'; END IF;
+  INSERT INTO semester.transition_events(tenant_id,version_id,actor_id,action,from_state,to_state,reason) SELECT tenant_id,id,u,'supersede','effective','superseded','Replacement activated' FROM semester.document_versions WHERE document_id=doc AND state='effective';
+  INSERT INTO semester_private.outbox(tenant_id,event_type,payload) SELECT tenant_id,'document.superseded',jsonb_build_object('versionId',id,'replacementVersionId',p_version) FROM semester.document_versions WHERE document_id=doc AND state='effective';
+  UPDATE semester.document_versions SET state='superseded' WHERE document_id=doc AND state='effective'; target:='effective';
+ ELSIF p_action='archive' AND v.state IN ('rejected','superseded') THEN
+  IF EXISTS(SELECT 1 FROM semester.legal_holds WHERE tenant_id=p_tenant AND document_id=doc AND released_at IS NULL) THEN RAISE EXCEPTION 'legal_hold'; END IF; target:='archived';
+ ELSE RAISE EXCEPTION 'invalid_transition'; END IF;
+ UPDATE semester.document_versions SET state=target WHERE id=p_version;
+ INSERT INTO semester.transition_events(tenant_id,version_id,actor_id,action,from_state,to_state,reason) VALUES(p_tenant,p_version,u,p_action,v.state,target,p_reason);
+ INSERT INTO semester_private.outbox(tenant_id,event_type,payload) VALUES(p_tenant,'document.'||p_action,jsonb_build_object('versionId',p_version,'fromState',v.state,'toState',target));
+ result:=jsonb_build_object('versionId',p_version,'fromState',v.state,'state',target,'action',p_action);
+ INSERT INTO semester_private.command_receipts(actor_id,tenant_id,request_key,request_payload,response) VALUES(u,p_tenant,p_request_key,payload,result);
+ RETURN result;
+END $$;
+REVOKE ALL ON ALL FUNCTIONS IN SCHEMA semester,semester_private FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION semester_private.member_active(uuid,uuid),semester_private.can(uuid,text,uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION semester.create_document_version(uuid,text,text,text,text,boolean,uuid),semester.transition_document(uuid,uuid,text,semester.document_state,text,uuid,uuid[]) TO authenticated;
+COMMIT;

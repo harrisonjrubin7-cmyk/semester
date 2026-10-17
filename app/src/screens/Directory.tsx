@@ -55,6 +55,9 @@ import { JourneyCards } from '../components/JourneyCards';
 import { journeysFor } from '../lib/journeys';
 import type { Screen } from '../lib/types';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { WorkspaceEntry } from '../components/shell/WorkspaceNavigation';
+
+export { WorkspaceEntry };
 
 /**
  * Already reachable without this list, so repeating them here is noise.
@@ -216,6 +219,8 @@ export function Directory({
           {apps.length} apps, one semester
         </div>
       </div>
+
+      <WorkspaceEntry />
 
       {/*
         Three lists above the index, and only when you are not filtering.

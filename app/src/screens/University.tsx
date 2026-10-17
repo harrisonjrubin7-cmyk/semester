@@ -350,9 +350,14 @@ function Workspace({ storageKey }: { storageKey: string }) {
   const TABS = tabsFor(verified);
 
   // An Action Center "Ask for help" lands here with a seed waiting; open on it.
-  const [tab, setTab] = useState<Tab>(() =>
-    EXPERIENCE_FLAGS.humanHelp !== 'off' && helpSeedWaiting() ? 'help' : 'overview',
-  );
+  const [tab, setTab] = useState<Tab>(() => {
+    if (EXPERIENCE_FLAGS.humanHelp !== 'off' && helpSeedWaiting()) return 'help';
+    return state.workspaceView === 'drafts' ? 'drafts' : 'overview';
+  });
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- browser Back/Forward is an external navigation into this local tab set
+    if (state.workspaceView === 'drafts' || state.workspaceView === 'overview') setTab(state.workspaceView);
+  }, [state.workspaceView]);
   const [intent, setIntent] = useState<UniversityRole>(state.role);
   const [area, setArea] = useState<UniversityArea>('courses');
 
@@ -675,7 +680,13 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 : t.label,
         }))}
         value={tab}
-        onChange={setTab}
+        onChange={(next) => {
+          setTab(next);
+          dispatch({
+            type: 'setWorkspaceView',
+            view: next === 'drafts' ? 'drafts' : next === 'overview' ? 'overview' : null,
+          });
+        }}
         style={{ marginBlock: 'var(--sp-5)' }}
       />
 
@@ -700,7 +711,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <ActionButton
               onClick={() => {
                 if (drafts.length >= DRAFT_LIMITS.drafts) return;
-                setDrafts((ds) => [removed, ...ds]);
+                if (!setDrafts((ds) => [removed, ...ds])) return;
                 setRemoved(null);
                 setNotice('Draft restored.');
               }}
@@ -1140,8 +1151,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 </ActionButton>
                 <ActionButton
                   onClick={() => {
+                    if (!setDrafts((ds) => ds.filter((d) => d.id !== selected))) return;
                     setRemoved(draft);
-                    setDrafts((ds) => ds.filter((d) => d.id !== selected));
                     setSelected('');
                     setNotice('Draft removed. You can undo this.');
                   }}

@@ -1,0 +1,71 @@
+/** Proposed HTTP contracts. HTTP handlers and runtime validators are not included. */
+export type UUID = string;
+export type ISODateTime = string;
+export type DocumentState = 'draft' | 'in_review' | 'changes_requested' | 'approved'
+ | 'awaiting_signature' | 'effective' | 'rejected' | 'superseded' | 'archived';
+export type Permission = 'section.read' | 'assignment.read' | 'assignment.manage'
+ | 'submission.read_all' | 'document.read' | 'document.create' | 'document.revise'
+ | 'document.submit' | 'document.review' | 'document.sign_request'
+ | 'document.activate' | 'document.archive' | 'document.audit'
+ | 'crm.read' | 'implementation.read' | 'endpoint.read';
+export interface ApiError {
+ code: 'UNAUTHENTICATED' | 'FORBIDDEN' | 'NOT_FOUND' | 'INVALID_REQUEST'
+  | 'STATE_CONFLICT' | 'IDEMPOTENCY_CONFLICT' | 'INVALID_TRANSITION'
+  | 'REVIEW_ASSIGNMENT_REQUIRED' | 'SELF_REVIEW_FORBIDDEN'
+  | 'VERIFIED_SIGNATURES_REQUIRED' | 'LEGAL_HOLD' | 'INTERNAL_ERROR';
+ message: string; requestId: UUID;
+}
+export type ApiResult<T> = { ok: true; data: T; requestId: UUID }
+ | { ok: false; error: ApiError };
+export interface Page<T> { items: T[]; nextCursor: string | null }
+export interface CapabilityContext {
+ userId: UUID; activeTenantId: UUID;
+ workspaces: Array<'student' | 'faculty' | 'institution' | 'company' | 'operations'>;
+ tenantPermissions: Permission[];
+ sectionPermissions: Array<{ sectionId: UUID; permissions: Permission[] }>;
+}
+export interface Tenant { id: UUID; name: string; kind: 'company' | 'institution'; status: 'active' | 'suspended' | 'closed' }
+export interface Document { id: UUID; tenantId: UUID; title: string; documentType: string; classification: 'business'; createdBy: UUID; createdAt: ISODateTime }
+export interface DocumentVersion {
+ id: UUID; tenantId: UUID; documentId: UUID; versionNumber: number;
+ state: DocumentState; contentHash: string; requiresSignature: boolean;
+ createdBy: UUID; createdAt: ISODateTime;
+ // Storage keys are not download URLs. Authorized URL generation is a separate command.
+}
+export interface CreateDocumentVersionRequest {
+ title: string; documentType: string; storageKey: string; contentHash: string;
+ requiresSignature: boolean; documentId?: UUID;
+}
+export interface CreateDocumentVersionResponse { documentId: UUID; versionId: UUID; versionNumber: number; state: 'draft' }
+export type TransitionRequest =
+ | { action: 'submit'; expectedState: 'draft'; reason: string; participants: UUID[] }
+ | { action: 'approve' | 'request_changes' | 'reject'; expectedState: 'in_review'; reason: string; participants?: never }
+ | { action: 'request_signatures'; expectedState: 'approved'; reason: string; participants: UUID[] }
+ | { action: 'activate'; expectedState: 'approved' | 'awaiting_signature'; reason: string; participants?: never }
+ | { action: 'archive'; expectedState: 'rejected' | 'superseded'; reason: string; participants?: never };
+export interface TransitionResponse { versionId: UUID; fromState: DocumentState; state: DocumentState; action: TransitionRequest['action'] }
+export interface TransitionHeaders { 'Idempotency-Key': UUID }
+export interface Section { id: UUID; tenantId: UUID; title: string }
+export interface Enrollment { id: UUID; tenantId: UUID; sectionId: UUID; studentId: UUID; status: 'active' | 'ended' }
+export interface Assignment { id: UUID; tenantId: UUID; sectionId: UUID; title: string; publicationState: 'draft' | 'published' | 'retired'; dueAt: ISODateTime | null }
+export interface Submission { id: UUID; tenantId: UUID; sectionId: UUID; assignmentId: UUID; enrollmentId: UUID; attempt: number; submittedAt: ISODateTime }
+export interface Account { id: UUID; tenantId: UUID; name: string }
+export interface Opportunity { id: UUID; tenantId: UUID; accountId: UUID; title: string; stage: 'discovery' | 'evaluation' | 'proposal' | 'won' | 'lost' }
+export interface Implementation { id: UUID; tenantId: UUID; accountId: UUID; title: string; status: 'planned' | 'active' | 'blocked' | 'accepted' | 'closed' }
+export interface Endpoint { id: UUID; tenantId: UUID; method: 'GET' | 'POST' | 'PATCH' | 'DELETE'; path: string; capability: string; implementationStatus: 'specified' | 'implemented' | 'tested' | 'deployed' }
+export interface Contracts {
+ 'GET /api/v1/me/context': { request: undefined; response: ApiResult<CapabilityContext> };
+ 'GET /api/v1/tenants/:tenantId/documents': { request: { cursor?: string; limit?: number }; response: ApiResult<Page<Document>> };
+ 'POST /api/v1/tenants/:tenantId/document-versions': { request: CreateDocumentVersionRequest; response: ApiResult<CreateDocumentVersionResponse> };
+ 'POST /api/v1/tenants/:tenantId/document-versions/:versionId/transitions': { request: TransitionRequest; headers: TransitionHeaders; response: ApiResult<TransitionResponse> };
+ 'GET /api/v1/tenants/:tenantId/sections/:sectionId/assignments': { request: { cursor?: string }; response: ApiResult<Page<Assignment>> };
+ 'GET /api/v1/tenants/:tenantId/sections/:sectionId/submissions': { request: { cursor?: string }; response: ApiResult<Page<Submission>> };
+ 'GET /api/v1/tenants/:tenantId/accounts': { request: { cursor?: string }; response: ApiResult<Page<Account>> };
+ 'GET /api/v1/tenants/:tenantId/endpoints': { request: { cursor?: string }; response: ApiResult<Page<Endpoint>> };
+}
+/** Adapter mapping for the SQL RPC. Identity MUST come from authenticated context. */
+export function transitionRpcArgs(tenantId: UUID, versionId: UUID, key: UUID, body: TransitionRequest) {
+ return { p_tenant: tenantId, p_version: versionId, p_action: body.action,
+  p_expected: body.expectedState, p_reason: body.reason, p_request_key: key,
+  p_participants: body.participants ?? [] };
+}

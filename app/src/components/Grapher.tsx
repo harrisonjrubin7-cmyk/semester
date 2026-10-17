@@ -444,9 +444,9 @@ export function Grapher() {
         {lines.length > 0 ? (
           <ActionButton
             onClick={() => {
-              dispatch({ type: 'setPlot', lines: [] });
+              dispatch({ type: 'clearPlots' });
               setTrace(null);
-              say('The graph is clear.');
+              say('The graph is clear. You can undo that for eight seconds.');
             }}
             style={{ flex: 1 }}
           >
