@@ -1,10 +1,22 @@
 # Handoff integration status
 
-**Automation pass** 34 of 120 · **Integration slice** 163 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `23397032a` · **Latest observed `origin/main`** `802c97c70`
+**Automation pass** 36 of 120 · **Integration slice** 165 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `14eb02a63` · **Latest observed `origin/main`** `802c97c70`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Current consequence and recovery work also provides governed private-workspace removals, validated account-scoped recovery, account-and-term-scoped housing/meal planning, private NIL restore, governed and distinguishable degree-planning removals, complete/distinguishable meal and bill removal names, exact-duplicate-safe activity, out-of-pocket cost, course, course-material, Learning Map, Mine, saved-equation, residence, maintenance-request, connected-calendar, protected-time and Registration Day backup actions with exact-id recovery where available, and cancel-first shared group-part removal and membership departure. Sensitive fields remain outside general portable backup under their stronger boundaries. Durable group-membership history remains incomplete. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 36 / integration slice 165
+
+- Required-branch head `14eb02a63` was clean before selection and already included current `origin/main` `802c97c70`; exact SchoolPicker history/current-code inspection found no equivalent duplicate-profile action-name guard.
+- Every custom-school Forget action now names represented position/count, complete school name and selected/not-selected state. Otherwise identical student-created profiles remain distinguishable.
+- Existing stable ids, `forgetSchool` and shared eight-second Undo over only `mySchools` plus `schoolId` remain authoritative. The regression activates duplicate 2 and dispatches only `riverview-2`; bundled schools, institution packs and provider data remain unchanged.
+- The guard failed against the former name-only controls, then focused SchoolPicker, reducer/Undo, accessibility-label, root-lifecycle and isolation verification passes 162/162.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Design verification passes 9 token tests, 70 design contracts and all eight report files with 97/97 tests; audit remains at zero violations with 86 existing warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun.
+- The active HawkScan skill stops at mandatory preflight: the Hawk CLI and Docker are absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` and an unread local properties file are present; and no live target exists. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
 ## Evidence locked in automation pass 30 / integration slice 159
 

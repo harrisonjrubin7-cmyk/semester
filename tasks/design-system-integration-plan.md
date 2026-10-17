@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `116d8444e` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `802c97c70` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -1477,6 +1477,16 @@ Every preparation-line removal now names one-based position, list size and compl
 The new guard failed against the former position-only labels. Focused Advisor Meeting, advisor domain/share, device-library, workspace-backup, root-lifecycle and isolation verification passes 97/97. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing large-chunk warning. Aggregate design-system check/report pass through the temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun.
 
 The active HawkScan skill stops at mandatory preflight: Hawk v6/config/skills status and Docker are absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` are unset, and no live target is configured. `stackhawk.yml` and a local Hawk properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Automation pass 36 — distinguishable exact-duplicate custom-school removal (slice 165)
+
+Required-branch head `14eb02a63` was clean before selection and already included current `origin/main` `802c97c70`. Exact upstream and branch history/current-code inspection found the existing custom-school stable IDs and shared eight-second Undo over `mySchools` plus `schoolId`, but two student-created profiles with the same name exposed identical Forget action names.
+
+Every custom-school Forget action now names its one-based position and current filtered custom-school count, complete school name and selected/not-selected state. Position distinguishes otherwise identical profiles. The existing exact-id `forgetSchool` transition and Undo snapshot remain authoritative; removing the selected profile still clears only that selection, while Undo restores the exact profile, list order and former active selection without changing bundled schools, institution-authored packs or provider records.
+
+The new regression failed against the former name-only control, then the focused SchoolPicker, reducer/Undo, accessibility-label, root-lifecycle and isolation set passes 162/162. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Design verification passes 9 token tests, 70 design contracts and all eight report files with 97/97 tests; audit remains at zero violations with 86 existing warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun.
+
+The active HawkScan skill stops at mandatory preflight: the Hawk CLI and Docker are absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset, `stackhawk.yml` and an unread local properties file are present, and no live target is configured. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
 ## Automation pass 35 — distinguishable exact-duplicate waiting-send actions (slice 164)
 

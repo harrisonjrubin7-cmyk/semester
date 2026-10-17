@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `116d8444e` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `802c97c70` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -1487,3 +1487,15 @@ No route, navigation, shared component, dependency, schema, policy, server opera
 | DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk skill package, CLI, Docker, API key, application id, app host, local properties and live target are unavailable. No scan, finding result, fix/rescan loop or security pass exists. |
 
 No route, navigation, shared component, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish provider delivery, institutional receipt, deployment, production execution, institutional acceptance or production readiness.
+
+## Automation pass 36 mapping — distinguishable exact-duplicate custom-school removal (slice 165)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Same-named student-created school profiles remain distinguishable | `app/src/components/SchoolPicker.tsx`, `SchoolPicker.removal-labels.test.tsx`; device-held `mySchools` | Existing but incomplete → existing and verified locally for this slice | Each Forget action includes represented custom-school position/count, complete name and selected/not-selected state. Two otherwise identical profiles receive different names. |
+| Preserve exact private mutation and recovery | Stable school id; `forgetSchool`; `app/src/lib/undo.ts` | Existing and unchanged | The regression activates duplicate 2 and observes only `riverview-2` dispatched. Existing Undo snapshots only `mySchools` and `schoolId`, restoring the exact profile and former selection without overwriting unrelated work. |
+| Preserve school-data authority boundaries | Bundled schools and `SchoolPackDoor` institution-authored pack | Existing and unchanged | The action remains available only for `state.mySchools`; it cannot remove bundled or loaded-pack authority and adds no live directory/provider claim. |
+| Regression and repository gates | SchoolPicker/reducer/Undo/label/lifecycle/isolation tests plus standard design contracts | Existing and verified locally for this slice | Red proof against name-only actions; 162/162 focused tests, both typechecks, lint and build pass. Design verification passes 9 token tests, 70 design contracts and eight report files with 97/97 tests, zero audit violations and unchanged CSS ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | The Hawk skill is available, but the Hawk CLI, Docker, API key, application id, app host and live target are absent. A local properties file is present but unread. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish live school data, institution-pack approval, deployment, production execution, institutional acceptance or production readiness.

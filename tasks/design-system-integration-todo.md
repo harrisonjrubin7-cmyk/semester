@@ -3340,3 +3340,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep queued device requests, provider delivery, institutional receipt and provider configuration as separate authorities.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-17 distinguishable exact-duplicate custom-school removal — automation pass 36, integration slice 165
+
+- [x] Start from clean required-branch head `14eb02a63`; fetch current `origin/main` `802c97c70`, confirm it is already included and inspect exact SchoolPicker/history evidence for overlap.
+- [x] Re-rank identical custom-profile Forget names as the next bounded Phase 3 accessibility and recovery gap; keep institution-authored packs and provider/institution records outside this device-workspace slice.
+- [x] Name each Forget action with represented custom-school position/count, complete school name and selected/not-selected state.
+- [x] Preserve stable-id `forgetSchool` behavior and the shared eight-second Undo snapshot over only `mySchools` and `schoolId`.
+- [x] Prove the duplicate-row guard red against the former name-only actions, then prove choosing duplicate 2 dispatches only `riverview-2`.
+- [x] Pass 162/162 focused SchoolPicker, reducer/Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing warnings and the existing large-chunk warning.
+- [x] Pass 9 token tests, 70 design contracts, all eight report contract files with 97/97 tests, zero audit violations with 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility/identity slice.
+- [ ] HawkScan DAST — the active skill stops at mandatory preflight because the Hawk CLI and Docker are absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` and an unread local properties file are present; no live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep custom device profiles, institution-authored packs, live directory data and provider configuration as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
