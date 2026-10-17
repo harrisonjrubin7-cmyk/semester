@@ -1372,7 +1372,7 @@ This local slice does not prove deployment, provider execution, institution prog
 - Existing exact-id device-plan persistence, cancel-first consequence preview, recalculated totals, persistence-refusal retry and backup-only recovery remain authoritative. Financial aid, bills, downloaded copies and the registrar's official degree audit remain separate.
 - The regression failed against the former label-only controls and proves the second same-label estimate alone is removed. Focused Graduation Simulator, cost-plan and graduation-domain verification passes 45/45; the broader focused/control/design set passes 196/196.
 - Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing large-chunk warning. Design audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun.
-- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present, no local properties file and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local Hawk credentials file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 

@@ -1577,7 +1577,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
 - [x] Retain zero design-audit violations, 86 existing warnings and CSS within its ledger.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
-- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present, no local properties file and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local Hawk credentials file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
 
 ### Next implementation boundary
 
