@@ -2,7 +2,7 @@ import { capabilityReport } from '../validators/capability-validator.ts';
 import { buildExecutionPlan } from '../validators/backlog-validator.ts';
 import { loadRegistry, writeGenerated } from './registry-io.ts';
 import { validateSnapshot } from './validation.ts';
-import { componentEvidence } from '../../../app/scripts/design-system-component-evidence.mjs';
+import { componentEvidence } from '../src/design-system-component-evidence.ts';
 
 const snapshot = await loadRegistry();
 const issues = await validateSnapshot(snapshot);
