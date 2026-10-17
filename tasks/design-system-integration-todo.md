@@ -1605,6 +1605,26 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep provider mailbox mutation, live account connection and sending as separate external-authority work.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 5 update — distinguishable filed-feedback removals (slice 134)
+
+- [x] Start from clean required-branch head `05c19d68c`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Feedback inbox history/current code for overlap.
+- [x] Re-rank repeated filed-feedback deletion controls as the next bounded Phase 3 accessibility gap; keep returned-work systems, saved evidence, plan actions and provider/institution records outside this device mutation.
+- [x] Name every deletion with list position, complete work title, student-selected feedback category and filed date so otherwise identical entries remain distinguishable.
+- [x] Preserve the existing exact-id device-library update, cancel-first consequence preview, account/term storage scope and device-workspace backup boundary.
+- [x] Prove the repeated-entry regression red against the former unnamed controls and confirm deleting position 2 leaves the represented position-1 record intact.
+- [x] Pass 33/33 focused Feedback inbox, Learning hub, study-hierarchy, ActionPreview, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass design-check constituents: 9 token tests, 70 design contracts, zero audit violations with 86 existing warnings and CSS within its ledger; pass all eight report contract files at 97/97.
+- [ ] Aggregate design check/report launchers — unavailable because their hardcoded `npm` / `npx` commands are absent; exact constituents pass and no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight and exact final-commit result are recorded after the coherent slice commit.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep returned-work authority, saved evidence, plan actions and institutional feedback records separate from the private device inbox.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 28 update — distinguishable registration-cart removals (slice 129)
 
 - [x] Identify the duplicate accessible-name gap for different sections of the same course in the local registration cart.

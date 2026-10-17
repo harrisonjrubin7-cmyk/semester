@@ -1353,6 +1353,18 @@ This local slice does not prove deployment, production execution, institutional 
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 5 / integration slice 134
+
+- Required-branch head `05c19d68c` was clean before selection and already included current `origin/main` `3ec04d742`; exact Feedback inbox history/current-code inspection found no equivalent repeated-entry action-label guard.
+- Every filed-feedback deletion now names collection position, complete work title, student-selected feedback category and filed date. Otherwise identical entries remain distinguishable.
+- Existing exact-id account/term device persistence and the cancel-first consequence preview remain authoritative. Deleting one private filing does not change returned work, separately saved evidence, optional plan actions or provider/institution records.
+- The repeated-entry regression failed against the former unnamed controls and proves deleting position 2 leaves the represented position-1 record. The focused Feedback inbox, Learning hub, study hierarchy, ActionPreview, root-lifecycle and isolation set passes 33/33.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and all eight report contract files pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Aggregate design wrappers are not claimed because their hardcoded `npm` / `npx` launchers are unavailable. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight and exact final-commit status are recorded after the coherent slice commit; no DAST result or security pass is inferred.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 2 / integration slice 131
 
 - Required-branch head `815239aed` was clean before the slice and already included current `origin/main` `3ec04d742`; exact Mail history/current-code inspection found no equivalent repeated-thread action-label guard.

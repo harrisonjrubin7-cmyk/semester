@@ -1078,6 +1078,18 @@ No route, navigation, dependency, schema, policy, provider configuration or exte
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
 
+## Automation pass 5 mapping — distinguishable filed-feedback removals (slice 134)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated private feedback remains distinguishable at deletion | `app/src/components/FeedbackInbox.tsx`; account/term-scoped `useInboxLibrary` | Existing but incomplete → existing and verified locally for this slice | Each accessible deletion name includes collection position, complete work title, student-selected category and filed date. Position distinguishes otherwise identical records. |
+| Preserve exact device mutation and recovery | Existing feedback id, `useDeviceLibrary`, `ConfirmDialog`, `ActionPreview` and workspace backup coverage | Existing and unchanged | The regression deletes only position 2 and leaves position 1. Cancel remains first; confirmation removes the exact id, and recovery remains limited to a prior device-workspace backup. |
+| Preserve academic and user authority boundaries | Existing private Feedback inbox contract | Existing and unchanged | Returned work outside Semester, separately saved evidence, optional plan actions and provider/institution records remain unchanged. No theme, score or official record is inferred or written. |
+| Regression and repository gates | `FeedbackInbox.test.tsx` and adjacent learning/consequence/control guards | Existing and verified locally for this slice | Red proof against identical unnamed controls; 33/33 focused/control tests, both typechecks, lint and build pass. Design constituents pass 79/79, report contracts pass 97/97, audit stays at zero violations and CSS remains within its ledger. Full ordered/shuffled suites and DAST remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked pending final preflight record | Exact runtime, credential and target availability is recorded after the coherent slice commit; no scan result is inferred from local application gates. |
+
+No route, navigation, shared component, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
+
 ## Automation pass 4 mapping — distinguishable Semester Mail bulk actions (slice 133)
 
 | Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |

@@ -54,7 +54,7 @@ const controlFor = <T extends HTMLElement>(text: string) =>
 
 const stored = () => {
   const key = Object.keys(localStorage).find((k) => k.startsWith('semester.feedback-inbox.v1'));
-  return key ? (JSON.parse(localStorage.getItem(key)!) as { items: { courseId: string; work: string }[] }).items : [];
+  return key ? (JSON.parse(localStorage.getItem(key)!) as { items: { courseId: string; work: string; comment: string; filed: string }[] }).items : [];
 };
 
 async function mount() {
@@ -103,5 +103,28 @@ describe('the feedback inbox on a cold open', () => {
     await act(async () => confirm.click());
     expect(stored()).toHaveLength(0);
     expect(host.textContent).toContain('Feedback deleted from this device.');
+  });
+
+  it('distinguishes repeated filed-feedback entries and deletes only the represented one', async () => {
+    await mount();
+    for (const comment of ['First copy', 'Second copy']) {
+      await type(controlFor<HTMLInputElement>('Piece of work'), 'Essay 1');
+      await type(controlFor<HTMLTextAreaElement>('The comment'), comment);
+      for (let i = 0; i < 30 && !host.querySelector('.feedback-inbox form select option'); i++) await act(async () => void (await new Promise((r) => setTimeout(r, 10))));
+      await act(async () => void (host.querySelector('.feedback-inbox form') as HTMLFormElement).requestSubmit());
+    }
+
+    const entries = stored();
+    const buttons = [...host.querySelectorAll('button')].filter((button) => button.textContent === 'Delete this feedback');
+    expect(buttons).toHaveLength(2);
+    expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual([
+      `Delete filed feedback 1 of 2, Essay 1, Conceptual understanding, filed ${entries[0].filed}`,
+      `Delete filed feedback 2 of 2, Essay 1, Conceptual understanding, filed ${entries[1].filed}`,
+    ]);
+
+    await act(async () => (buttons[1] as HTMLButtonElement).click());
+    const confirm = [...host.querySelectorAll('[role="dialog"] button')].find((button) => button.textContent === 'Delete it') as HTMLButtonElement;
+    await act(async () => confirm.click());
+    expect(stored().map((item) => item.comment)).toEqual(['Second copy']);
   });
 });
