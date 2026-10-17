@@ -22,6 +22,8 @@ import { StoreProvider } from '../state/store';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+const DUE_AT = new Date(Date.now() + 7 * 86_400_000).toISOString();
+
 const row = (over: Record<string, unknown> = {}) => ({
   id: 'a1',
   office: 'financial_aid',
@@ -32,7 +34,9 @@ const row = (over: Record<string, unknown> = {}) => ({
   target_eligibility: null,
   title: 'FAFSA verification documents are due October 15',
   why_it_matters: 'This may affect aid processing.',
-  due_at: '2026-10-15T23:59:00Z',
+  // Keep the fixture inside the Action Center's live window. An absolute date
+  // made this ranking test expire even though expiry is not what it exercises.
+  due_at: DUE_AT,
   official_url: 'https://aid.school.edu/verification',
   source_note: 'Financial Aid verification checklist',
   updated_at: new Date().toISOString(),
@@ -75,7 +79,7 @@ vi.mock('../lib/office-actions-remote', async (importOriginal) => {
   };
 });
 
-const { OfficeActionFeed } = await import('./OfficeActionFeed');
+const { OfficeActionFeed, dueLine } = await import('./OfficeActionFeed');
 const { OfficeActionDesk } = await import('./OfficeActionDesk');
 const { TodayActionCenter } = await import('./TodayActionCenter');
 const { TodayDecisionSurface } = await import('./TodayDecisionSurface');
@@ -166,7 +170,7 @@ describe('with office_action_feed on', () => {
     await render(<OfficeActionFeed enabled accountId="u1" />);
     const card = host.querySelector('[aria-label="Financial Aid: FAFSA verification documents are due October 15"]')!;
     expect(card).not.toBeNull();
-    expect(text(card)).toContain('Due Thu, Oct 15');
+    expect(text(card)).toContain(dueLine(Date.parse(DUE_AT))!);
     expect(text(card)).toContain('This may affect aid processing.');
     expect(text(card)).toContain('Institution verified');
     expect(text(card)).toContain('Updated');
