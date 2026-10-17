@@ -1566,6 +1566,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 12 update — distinguishable potential-schedule deletion (slice 141)
+
+- [x] Start from clean required-branch head `a9ba835e2`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact saved-schedule history/current code for overlap.
+- [x] Re-rank repeated student-entered potential-schedule names as the next bounded Phase 3 accessibility gap; keep enrollment, official registration and institution/provider operations outside the device mutation.
+- [x] Name every deletion with collection position and size, complete name, section count, copied credit total and time-conflict count.
+- [x] Preserve the existing cancel-first shared consequence preview, exact-id registration-library update and backup-only recovery boundary.
+- [x] Prove the repeated-name regression red against the former name-only controls, then pass 102/102 focused Registration Portal, registration-domain, ActionPreview, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
+- [x] Pass 79/79 design-check constituents and 97/97 report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger, and regenerate the report successfully.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local Hawk properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep potential-schedule deletion, cart changes and official registration as separate operations.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 11 update — distinguishable cost-estimate removals (slice 140)
 
 - [x] Start from clean required-branch head `1623d8ecb`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Cost Planner history/current code for overlap.

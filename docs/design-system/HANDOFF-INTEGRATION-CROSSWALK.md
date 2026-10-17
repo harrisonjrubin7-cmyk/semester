@@ -1056,6 +1056,16 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
 
+## Automation pass 12 mapping — distinguishable potential-schedule deletion (slice 141)
+
+| Archive/current requirement | Current repository evidence and disposition |
+|---|---|
+| Distinguish repeated private schedule choices | `app/src/components/RegistrationPortal.tsx`, `app/src/components/RegistrationPortal.delete.test.tsx` — **Existing but incomplete → existing and verified for this bounded slice.** Delete controls identify one-based position and collection size, complete name, section count, copied credit total and conflict count; identical names remain distinguishable. |
+| Exact represented mutation | The existing exact plan id still drives the registration-library filter. The rendered regression confirms deleting the second same-named schedule preserves the first schedule id. |
+| Consequence, authority and recovery | Existing shared `ConfirmDialog` / `ActionPreview` remains cancel-first and names copied sections. The current cart, catalog, other schedules and official registration remain unchanged; recovery remains limited to a prior device-workspace backup. No enrollment or institution/provider operation is added. |
+| Verification boundary | The guard was proved red against the former name-only controls. Focused Registration Portal, registration-domain, shared-preview, label, root-lifecycle and isolation verification passes 102/102. Both typechecks, lint and build pass; 79/79 design-check constituents and 97/97 report contracts pass, audit remains at zero violations with 86 existing warnings, CSS stays within ledger and the report regenerates. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | **Blocked by environment.** Hawk v6/config/skills status and Docker are absent, API-key/app-host values are unset and no live target exists. A local properties file was detected but not read. No scan, finding result, fix/rescan loop or security pass exists. |
+
 ## Automation pass 7 mapping — distinguishable remembered-line deletion (slice 136)
 
 | Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |

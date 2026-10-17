@@ -1353,6 +1353,18 @@ This local slice does not prove deployment, production execution, institutional 
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 12 / integration slice 141
+
+- Required-branch head `a9ba835e2` was clean before selection and already included current `origin/main` `3ec04d742`; exact upstream and current-code inspection found no repeated-name saved-schedule guard.
+- Every potential-schedule deletion now names one-based position and collection size, complete student-entered name, section count, copied credit total and time-conflict count.
+- Existing cancel-first `ConfirmDialog` / `ActionPreview`, exact-id device-library persistence and device-workspace backup recovery remain authoritative. The current cart, imported catalog, other schedules and official registration remain unchanged.
+- The repeated-name regression failed against the former name-only controls and proves confirmation of the second deletion preserves the first same-named schedule. The focused Registration Portal, registration-domain, ActionPreview, label, root-lifecycle and isolation set passes 102/102.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing large-chunk warning. Design-check constituents pass 79/79, report contracts pass 97/97, audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the report regenerates successfully.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local Hawk properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 10 / integration slice 139
 
 - Required-branch head `09bbed065` was clean before selection and already included current `origin/main` `3ec04d742`; exact Mentor Finder history/current-code inspection found no equivalent repeated-request action-name guard.
