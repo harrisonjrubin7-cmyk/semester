@@ -351,15 +351,11 @@ describe('the assistant button, and what it sits on', () => {
   it('is what the delete buttons in Mine are marked with', () => {
     const mine = src('../screens/Mine.tsx');
     // One per row editor — a task's and an appointment's.
-    const markers = [...mine.matchAll(/data-danger=""/g)];
-    expect(markers).toHaveLength(2);
-    for (const marker of markers) {
-      const buttonAt = mine.lastIndexOf('<button', marker.index);
-      expect(buttonAt, 'a destructive marker is on a button').toBeGreaterThan(-1);
-      const opening = mine.slice(buttonAt, marker.index);
-      expect(opening, 'a destructive marker belongs to an accessible delete button').toMatch(
-        /aria-label=\{`Delete[\s\S]*?\.title/,
-      );
+    expect(mine.match(/data-danger=""/g) ?? []).toHaveLength(2);
+    for (const label of ['`Delete action ${t.title}: ${[', '`Delete appointment ${a.title}: ${[']) {
+      const at = mine.indexOf(label);
+      expect(at, `${label} is still there`).toBeGreaterThan(-1);
+      expect(mine.slice(at, at + 800), `${label} carries the marker`).toContain('data-danger');
     }
   });
 });
