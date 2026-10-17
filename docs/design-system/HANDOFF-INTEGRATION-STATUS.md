@@ -1366,6 +1366,18 @@ This local slice does not prove deployment, production execution, provider conne
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 4 / integration slice 133
+
+- Required-branch head `d0fe548a0` was clean before the slice and already included current `origin/main` `3ec04d742`; exact Mail toolbar history/current-code inspection found no equivalent selected-set action-label guard.
+- Every bulk Archive, Trash, Move, Snooze and Mark read action now names the exact selected conversation count and ordered positions. A one-row selection or opened-thread fallback retains direction, participants, complete subject and full timestamp.
+- Existing exact-message reducer inputs and account-local mailbox marks remain authoritative. Moving selected conversations to Trash here does not delete provider mail, and the existing local folder action can move them back.
+- The new regression failed against the former generic names, then 76/76 focused Mail, reader/list, mailbox, reducer, paging, root-lifecycle and isolation tests passed.
+- TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-system check passes 9 token tests and 70 design contracts; the test-backed report passes 8/8 contracts, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight stopped because the Hawk v6 executable is absent; `hawk config` and `hawk skills status` cannot run. Docker, `HAWK_API_KEY`, `HAWK_APP_HOST` and a live target are also absent. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 1 / integration slice 130
 
 - Required-branch head and current `origin/main` were both `4ac162f1c` with a clean tree; exact Learning Map history/current-code inspection found no equivalent repeated-row removal guard.

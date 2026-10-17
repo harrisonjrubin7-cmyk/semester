@@ -1078,6 +1078,18 @@ No route, navigation, dependency, schema, policy, provider configuration or exte
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
 
+## Automation pass 4 mapping — distinguishable Semester Mail bulk actions (slice 133)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Bulk Mail actions retain the exact selected-set identity | `app/src/screens/Mail.tsx`; current filtered `Thread[]` and `picked` ids | Existing but incomplete → existing and verified locally for this slice | Archive, Trash, Move, Snooze and Mark read names include selected conversation count plus ordered positions; a one-row or opened-thread target adds direction, participants, complete subject and full timestamp. |
+| Preserve exact local-mail mutation and recovery | Existing `chosen` message ids, Mail callbacks and mailbox-mark reducer | Existing and unchanged | The regression selects positions 1 and 3, invokes only that bulk Trash action and proves the unselected row remains. Trash moves the selected conversations locally and the existing folder action can move them back. |
+| Preserve provider authority | `app/src/lib/mailbox.ts`; read-only provider scopes | Existing and unchanged | No bulk action deletes, archives, snoozes, moves or marks provider mail; provider links, account state and message bodies remain unchanged. |
+| Regression and repository gates | `Mail.bulk-action-labels.test.tsx`, existing Mail and control tests | Existing and verified locally for this slice | Red proof against generic names; 76/76 focused/control tests, both typechecks, lint and build pass. Design checks pass 9 token and 70 contract tests, all eight report contracts pass, and the existing audit/CSS ledgers remain unchanged. Full ordered/shuffled suites and DAST remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Mandatory preflight found the Hawk v6 executable absent, so `hawk config` and `hawk skills status` cannot run. Docker, API key, app host and live target are also absent; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
+
 ## Automation pass 1 mapping — distinguishable Learning Map concept removals (slice 130)
 
 | Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |

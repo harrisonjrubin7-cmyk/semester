@@ -1587,6 +1587,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep course-guide concepts, official grades/records and provider learning systems separate from this private device map.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 4 update — distinguishable Semester Mail bulk actions (slice 133)
+
+- [x] Start from clean required-branch head `d0fe548a0`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Mail toolbar history/current code for overlap.
+- [x] Re-rank the generic selected-set toolbar controls as the next bounded Phase 3 accessibility gap; keep provider-mail mutation, sending, account connection and live provider configuration outside this local-mark slice.
+- [x] Name Archive, Trash, Move, Snooze and Mark read with the exact selected conversation count and ordered positions; retain complete conversation identity for one selected or opened conversation.
+- [x] Preserve the existing exact-message reducer inputs, account-local mailbox marks, folder recovery, provider links and read-only provider boundary.
+- [x] Prove the bulk-toolbar guard red against the former generic names, then pass 76/76 focused Mail, reader/list, mailbox, reducer, paging, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript builds, lint/style/label/terms checks and production build with only the existing warnings.
+- [x] Pass design-system check/report: 9 token tests, 70 design contracts, 8/8 report contracts, zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight stopped because the Hawk v6 executable is absent; `hawk config` and `hawk skills status` cannot run, Docker is absent, `HAWK_API_KEY` / `HAWK_APP_HOST` are unset and no live target exists. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep provider mailbox mutation, live account connection and sending as separate external-authority work.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 28 update — distinguishable registration-cart removals (slice 129)
 
 - [x] Identify the duplicate accessible-name gap for different sections of the same course in the local registration cart.
