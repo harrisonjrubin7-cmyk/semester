@@ -1530,6 +1530,8 @@ Every removal now names its one-based position and represented course-list size 
 
 The exact-duplicate regression failed against the former complete-fact-only controls, then the focused Costs, Bill, arithmetic, reducer/Undo, accessibility-label, root-lifecycle and isolation set passes 182/182 and integration-control verification passes 42/42. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Aggregate design-system check/report pass through a temporary package-runner compatibility launcher: 9 token tests, 70 design contracts and all eight report contracts; audit remains at zero violations with 86 existing warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun.
 
+The coherent code/test/control slice is commit `64c9de65d`; the final fetch confirms `origin/main` remains `caa9967fb` with no overlapping Costs work.
+
 The active HawkScan requirement stops at mandatory preflight: Hawk and Docker are absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` and an unread local properties file are present; and the default local target is unavailable. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
 ## Automation pass 23 — distinguishable exact-duplicate citation removals (slice 152)
