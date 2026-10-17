@@ -1575,9 +1575,9 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove the exact-duplicate regression red against the former name/phone-only controls, then pass 78/78 Support journey, workspace-backup, label, root-lifecycle and isolation tests.
 - [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing large-chunk warning.
 - [x] Pass aggregate design-system check/report through a temporary package-runner compatibility launcher: 9 token tests, 70 design contracts, all eight report contracts, zero violations, 86 existing warnings and CSS within its ledger.
-- [ ] Commit the coherent code/test/control slice locally after confirming final `origin/main` has no overlap.
+- [x] Commit the coherent code/test/control slice locally as `57705f3e1` after confirming final `origin/main` remains `116d8444e` with no overlap.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
-- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` present; no local properties file; and the default local target unavailable. No scan, finding result, fix/rescan loop or security pass exists.
+- [ ] HawkScan DAST — mandatory post-commit preflight for `57705f3e1` reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` present; no local properties file; and the default local target unavailable. No scan, finding result, fix/rescan loop or security pass exists.
 
 ### Next implementation boundary
 
