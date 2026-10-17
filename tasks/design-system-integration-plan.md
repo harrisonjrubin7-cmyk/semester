@@ -1317,3 +1317,11 @@ Milestone removal names now include list position, complete title and readable d
 The regression failed against the former position-only/title-only controls. Focused and adjacent Goal Plan, goal-domain, label and root-lifecycle verification passes 60/60. TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and the eight report contract files pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun; automation pass 2 remains the latest full-suite checkpoint.
 
 The mandatory post-commit HawkScan loop for slice commit `502e72905` stops at preflight because Hawk v6 and Docker runtimes are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. `stackhawk.yml` and a local properties file exist, but credential material was not read; no scanner tool or live target is available, so no DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, dependency, schema, policy, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Automation pass 28 — distinguishable registration-cart removals (slice 129)
+
+The interrupted runner found that two sections of the same course could expose identical course-code-only removal names in the Term plan cart. The bounded fix adds section, title, term and meeting schedule to each accessible name while preserving the exact-id local cart transition.
+
+The regression proves section 02 can be removed without removing section 01. The recovered focused registration, saved-schedule, course-detail, label and root-lifecycle set passes 27/27; the interrupted run had also passed both TypeScript gates, lint and production build. Final combined-head verification remains required after current-main reconciliation.
+
+This remains a device-side planning action. It does not enroll, drop, reserve a seat or mutate an institution/provider system. HawkScan remains open because its runtime, credentials, app host and live target are unavailable; no DAST pass is claimed.

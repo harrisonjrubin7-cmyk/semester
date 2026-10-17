@@ -1353,6 +1353,16 @@ This local slice does not prove deployment, production execution, institutional 
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 28 / integration slice 129
+
+- The interrupted runner selected a bounded Registration Portal accessibility gap: same-course cart rows exposed the same course-code-only removal name even when section and meeting facts differed.
+- Each removal now names the represented course, section, title, term and meeting schedule. The existing exact-id `toggle(c.id)` transition remains authoritative; the regression confirms removing section 02 leaves section 01 in the local cart.
+- The new behavior guard proved red against the former name and the recovered focused registration, saved-schedule, course-detail, label and root-lifecycle set passes 27/27.
+- Before interruption, both TypeScript gates, lint/style/label/terms checks and production build passed with the existing warning baseline. Final combined-head verification remains required after current-main reconciliation.
+- HawkScan stops at preflight because Hawk and Docker runtimes, `HAWK_API_KEY`, `HAWK_APP_HOST` and a live target are unavailable. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice changes only device-side planning identification. It does not enroll, drop, reserve a seat, contact a provider or prove deployment, institutional acceptance, legal review or production readiness.
+
 ## Evidence locked in automation pass 27 / integration slice 128
 
 - Required-branch head `a6f451e6d` included selection-time `origin/main` `b3dbb49fa`; exact upstream history and current-code inspection found no equivalent Goal Plan removal-label work.

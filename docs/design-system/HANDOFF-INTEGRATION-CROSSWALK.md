@@ -1055,3 +1055,15 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 | DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Post-commit preflight for `502e72905` found Hawk v6 and Docker runtimes, API key, app host and live target unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
+
+## Automation pass 28 mapping — distinguishable registration-cart removals (slice 129)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Same-course cart rows remain distinguishable at removal | `app/src/components/RegistrationPortal.tsx`; `RegistrationPortal.conflicts.test.tsx` | Existing but incomplete → existing and verified locally for this slice | Each removal name includes course, section, title, term and meeting schedule, so two sections of one course are distinguishable. |
+| Preserve exact device-cart mutation | Existing `toggle(c.id)` registration state transition | Existing and unchanged | Choosing section 02 removes only its exact id; section 01 remains in the device cart. |
+| Preserve registration authority boundaries | Planning-only cart and exported registration plan | Intentionally unchanged | The control changes a local planning copy only. It does not enroll, drop, reserve a seat or call an institution system. |
+| Regression and repository gates | Registration conflict/delete/detail/named-plan, label and root-lifecycle tests | Existing and verified locally for this slice | Red proof against the former course-code-only name; recovered verification passes 27/27 focused tests. The interrupted runner had also passed both typechecks, lint and production build; final combined-head gates remain required after upstream reconciliation. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk and Docker runtimes, API key, app host and live target are unavailable. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.

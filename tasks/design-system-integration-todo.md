@@ -1566,6 +1566,21 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 28 update — distinguishable registration-cart removals (slice 129)
+
+- [x] Identify the duplicate accessible-name gap for different sections of the same course in the local registration cart.
+- [x] Name each removal with course, section, title, term and meeting schedule while preserving exact-id `toggle(c.id)` behavior.
+- [x] Prove the regression red against the former course-code-only label and confirm section 02 removal leaves section 01 intact.
+- [x] Pass the recovered 27/27 focused registration, saved-schedule, course-detail, label and root-lifecycle tests.
+- [ ] Reconcile current `origin/main`, rerun combined-head gates and record the exact final SHA.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — runtime, API key, app host and live target are unavailable; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps after current-main reconciliation.
+- [ ] Keep device-side planning, official registration and institution/provider activation as separate authorities.
+
 ## Automation pass 27 — distinguishable goal-plan draft removals (slice 128)
 
 - [x] Re-fetch and merge current `origin/main` `b3dbb49fa`; inspect exact Goal Plan history and current code before editing.
