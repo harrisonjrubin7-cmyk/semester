@@ -77,6 +77,8 @@ import type { Quiet } from '../lib/notify';
 import type { RecoveryIntent } from '../lib/academic-recovery';
 import { DEFAULTS as DEFAULT_CONTROLS, type Controls } from '../lib/controls';
 import { DEFAULT_ROLE, roleOf, type Role } from '../lib/role';
+import { HELD_KEY, clearIngressDrops, droppedOnRead, heldInSaved, noteIngressDrops } from '../lib/deletions';
+import { forgetCarried } from '../lib/carried';
 import type { Balance } from '../lib/meals';
 import type { Residence } from '../lib/housing';
 import { readMaintenance, type MaintenanceChange, type MaintenanceRequest } from '../lib/maintenance';
@@ -1796,8 +1798,10 @@ export function loadPersisted(): Persisted {
      */
     const moved = migrate(JSON.parse(raw));
     lastMigration = moved;
-    const saved = moved.state as Partial<Persisted>;
-    return {
+    // A note the saved copy carried for the sync (`withIngressNote`) is read
+    // below and is never part of the state.
+    const { [HELD_KEY]: _held, ...saved } = moved.state as Partial<Persisted> & { [HELD_KEY]?: unknown };
+    const read: Persisted = {
       ...DEFAULT_PERSISTED,
       ...saved,
       notifs: { ...DEFAULT_PERSISTED.notifs, ...record(saved.notifs) },
@@ -1980,6 +1984,16 @@ export function loadPersisted(): Persisted {
       // silently dropped on the next reload.
       ...readLook(saved as Look),
     };
+    /*
+     * Rows a reader above could not keep, in a list deletions are settled
+     * for. Noted so the first sync puts the account's copies back instead of
+     * reading the gap as a deletion. See `ingressDrops` in `lib/deletions.ts`.
+     */
+    noteIngressDrops([
+      ...droppedOnRead(saved as Record<string, unknown>, read as unknown as Record<string, unknown>),
+      ...heldInSaved(moved.state as Record<string, unknown>),
+    ]);
+    return read;
   } catch {
     // A private window, or storage disabled. Run with defaults.
     return { ...DEFAULT_PERSISTED };
@@ -2050,6 +2064,9 @@ export function rememberSyncedAs(id: string): void {
  * list. Not the semester itself, which is the student's and stays.
  */
 export function forgetSyncMemory(): void {
+  forgetCarried();
+  // In memory too: the next account must not hold back its own deletions for this one's damage.
+  clearIngressDrops();
   for (const key of [SEEN_KEY, SYNCED_KEY, 'semester.base', 'semester.review']) {
     try {
       localStorage.removeItem(key);

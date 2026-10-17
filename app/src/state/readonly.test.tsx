@@ -46,6 +46,7 @@ vi.mock('./persist', () => ({
   persist: () => {},
   flushNow: async () => {},
   flushOnLeave: () => {},
+  releaseHeldNote: async () => {},
   whileWriting: () => {},
   load: async () => null,
 }));
