@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { asset } from './asset';
 import { formatBytes } from './files';
 import { newId } from './idb';
-import { blobOf, numbered, zipOf } from './deliver';
+import { blobOf, download, numbered, zipOf } from './deliver';
 import { clockOf, explainMicError, micSupported, recordingName } from './mic';
 import { MAX_SHOTS, ShotError, weigh } from './shots';
 import { chime } from './chime';
@@ -25,6 +25,7 @@ import { WIDE } from './media';
  */
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
 });
@@ -146,6 +147,32 @@ describe('blobOf and zipOf', () => {
 
   it('makes an empty archive rather than failing on nothing', async () => {
     expect((await zipOf([])).type).toBe('application/zip');
+  });
+});
+
+describe('download', () => {
+  it('encodes the DOM URL boundary and gives untrusted text a safe filename', () => {
+    vi.useFakeTimers();
+    const anchor = document.createElement('a');
+    const click = vi.spyOn(anchor, 'click').mockImplementation(() => {});
+    const remove = vi.spyOn(anchor, 'remove');
+    vi.spyOn(document, 'createElement').mockReturnValueOnce(anchor);
+    const createObjectURL = vi.fn(() => 'blob:https://example.test/id?<img>');
+    const revokeObjectURL = vi.fn();
+    vi.stubGlobal('URL', { createObjectURL, revokeObjectURL });
+
+    download({
+      name: '<img src=x onerror=alert(1)>.html',
+      body: '<h1>Notes</h1>',
+      mime: 'text/html',
+    });
+
+    expect(anchor.href).toBe('blob:https://example.test/id?%3Cimg%3E');
+    expect(anchor.download).toBe('img-srcx-onerroralert1.html');
+    expect(click).toHaveBeenCalledOnce();
+    expect(remove).toHaveBeenCalledOnce();
+    vi.advanceTimersByTime(30_000);
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:https://example.test/id?%3Cimg%3E');
   });
 });
 
