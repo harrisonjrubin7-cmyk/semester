@@ -1644,6 +1644,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep provider mailbox mutation, live account connection and sending as separate external-authority work.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 9 update — distinguishable Operating Rhythm simulator removals (slice 138)
+
+- [x] Start from clean required-branch head `2fd29ab2f`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Operating Rhythm history/current code for overlap.
+- [x] Re-rank repeated simulator commitments as the next bounded Phase 3 accessibility gap; keep saved rhythm plans, provider calendars and official commitments outside this unsaved scenario edit.
+- [x] Name every removal with one-based collection position, collection size, complete title or untitled state, context and duration.
+- [x] Preserve the existing index-scoped draft transition and confirm removing the middle Admin row leaves both represented Writing rows.
+- [x] Prove the guard red against the former position-only controls, then pass 65/65 focused Operating Rhythm, domain, ActionPreview, label, root-lifecycle, isolation and integration-control tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
+- [x] Pass 79/79 design-check constituents and 97/97 report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Aggregate design check/report wrappers — their hardcoded `npm` / `npx` launchers are unavailable; exact constituents pass and no wrapper result is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep the unsaved simulator, persisted rhythm plans, provider calendars and official institution records as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 8 update — distinguishable Student Operating saved-item deletion (slice 137)
 
 - [x] Start from clean required-branch head `0819ff74c`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Student Operating history/current code for overlap.

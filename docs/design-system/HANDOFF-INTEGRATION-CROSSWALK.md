@@ -1103,6 +1103,18 @@ No route, navigation, shared component, dependency, schema, policy, provider con
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
 
+## Automation pass 9 mapping — distinguishable Operating Rhythm simulator removals (slice 138)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated private planning commitments remain distinguishable at removal | `app/src/components/OperatingRhythmWorkspace.tsx`; component-local simulator `tasks` state | Existing but incomplete → existing and verified locally for this slice | Every accessible removal name includes collection position, complete title or untitled state, context and duration. Position distinguishes otherwise identical rows. |
+| Preserve exact draft mutation | Existing index-scoped `setTasks` transition | Existing and unchanged | The regression removes only the middle Admin row and leaves both represented Writing rows. No saved plan or device-library record changes until the separate explicit save action. |
+| Preserve authority and persistence boundaries | Existing private simulator copy and saved-rhythm contract | Existing and unchanged | The change affects only the current unsaved scenario. Official commitments, provider calendars, institution records and persisted rhythm plans remain unchanged. |
+| Regression and repository gates | Extended `OperatingRhythm.test.tsx` plus domain, preview, label, root-lifecycle, isolation and integration-control guards | Existing and verified locally for this slice | Red proof against position-only names; 65/65 focused/control tests, both typechecks, lint and build pass. Design constituents pass 79/79, report contracts pass 97/97, audit stays at zero violations and CSS remains within its ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, provider configuration, persisted production data or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
+
 ## Automation pass 8 mapping — distinguishable Student Operating saved-item deletion (slice 137)
 
 | Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |

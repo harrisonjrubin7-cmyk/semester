@@ -1353,6 +1353,18 @@ This local slice does not prove deployment, production execution, institutional 
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 9 / integration slice 138
+
+- Required-branch head `2fd29ab2f` was clean before the slice and already included current `origin/main` `3ec04d742`; exact Operating Rhythm history/current-code inspection found no equivalent simulator-removal identity guard.
+- Every simulator commitment removal now names one-based collection position, collection size, complete title or untitled state, context and duration. Otherwise identical private draft rows remain distinguishable.
+- Existing index-scoped component state remains authoritative. Removing a simulator row does not mutate the saved rhythm plan, official commitments, provider calendars or institution records.
+- The regression failed against the former position-only controls and proves removing the middle Admin row leaves both represented Writing rows. The focused Operating Rhythm, domain, ActionPreview, label, root-lifecycle, isolation and integration-control set passes 65/65.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing large-chunk warning. Design-check constituents pass 79/79 and report contracts pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Aggregate design wrappers are not claimed because their hardcoded `npm` / `npx` launchers are unavailable. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 8 / integration slice 137
 
 - Required-branch head `0819ff74c` was clean before the slice and already included current `origin/main` `3ec04d742`; exact Student Operating history/current-code inspection found no equivalent repeated-item deletion-label guard.
