@@ -1,0 +1,131 @@
+{
+  "status": "Proposed; reconcile existing tables and policy registries, do not create duplicates",
+  "work_item": {
+    "identity": [
+      "id",
+      "source_domain",
+      "source_record_id",
+      "source_version",
+      "dedup_key"
+    ],
+    "scope": [
+      "company_or_institution",
+      "tenant_id_when_applicable",
+      "classification",
+      "permitted_capabilities"
+    ],
+    "work": [
+      "type",
+      "state",
+      "owner",
+      "due_at",
+      "sla_policy_version",
+      "priority_reason",
+      "dependencies"
+    ],
+    "action": [
+      "allowed_command_refs",
+      "approval_policy_ref",
+      "expected_version",
+      "payload_hash",
+      "accepted_receipt_ref",
+      "committed_receipt_ref"
+    ],
+    "closure": [
+      "authoritative_result_ref",
+      "reconciliation_state",
+      "customer_confirmation_when_applicable",
+      "reopen_rule",
+      "audit_ref"
+    ]
+  },
+  "document": {
+    "fields": [
+      "id",
+      "type",
+      "version",
+      "content_hash",
+      "owner",
+      "reviewer",
+      "audience",
+      "legal_basis",
+      "effective_from",
+      "effective_until",
+      "supersedes",
+      "obligations",
+      "review_evidence",
+      "actual_file_ref"
+    ],
+    "states": [
+      "requested",
+      "classified",
+      "draft",
+      "in_review",
+      "changes_requested",
+      "approved_for_signature_or_publication",
+      "signed_or_published",
+      "effective",
+      "superseded",
+      "expired",
+      "terminated",
+      "archived"
+    ],
+    "rules": [
+      "No unsigned draft treated as operative agreement",
+      "Published content immutable; correction creates new version",
+      "Legal hold can block deletion but not justify unauthorized readership",
+      "Signature/publish approval bound to exact content and recipient scope"
+    ]
+  },
+  "metric": {
+    "fields": [
+      "id",
+      "definition_version",
+      "unit",
+      "numerator",
+      "denominator",
+      "cohort",
+      "period",
+      "source_ref",
+      "source_as_of",
+      "calculation_version",
+      "actual_or_forecast",
+      "missing_reason",
+      "privacy_rule",
+      "reviewer"
+    ],
+    "rules": [
+      "Not measured is not zero",
+      "Pilot fee is not automatically recurring revenue",
+      "Forecast pipeline is not booked revenue",
+      "Cash/runway source comes from reconciled finance inputs",
+      "Aggregate safety includes differencing and audience checks"
+    ]
+  },
+  "activation": {
+    "fields": [
+      "capability_id",
+      "code_revision",
+      "environment",
+      "tenant_domain_cohort",
+      "designed",
+      "implemented",
+      "tested",
+      "deployed",
+      "institution_authorized",
+      "production_enabled",
+      "evidence_refs",
+      "reviewers",
+      "expires_at",
+      "revalidation_triggers",
+      "kill_switch",
+      "rollback_or_correction_owner"
+    ],
+    "rules": [
+      "Separate maturity facts, not one green status",
+      "Evidence expiration or changed authority invalidates affected activation",
+      "Requester and independent approver are distinct people",
+      "Failed compensation remains owned and open"
+    ]
+  }
+}
