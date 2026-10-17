@@ -295,7 +295,7 @@ An action is never done in one request. The route order is:
 3. `POST /actions/commit` with the review id and `confirmed: true`. The gateway checks everything again, then asks the adapter to execute the action.
 4. If the outcome of step 3 is unknown, `POST /actions/reconcile` asks the institution what happened. It never performs the action again.
 
-These routes accept an optional `Idempotency-Key` using the platform's 16–128-character safe-key format. The gateway validates it and carries it in the adapter's request context; an invalid key is `400 invalid_request`. The single-host SQLite `ActionJournal` and the repository's PostgreSQL journal implementation implement the shared idempotency-store contract durably, including scoped keys, request-hash conflicts, fenced leases, encrypted completed-response replay and expiry. A keyed `POST /actions/commit` is wrapped by that store for seven days: a replay returns the stored receipt with `Idempotent-Replayed: true`, and reuse for a different request is `422 idempotency_key_reused`. A worker that loses its lease cannot publish or release the successor's result and receives `409 idempotency_in_progress` instead of returning a divergent response. The browser may retry a network failure with the same key, but a `502 outcome_uncertain` remains non-retryable and must be reconciled. Unkeyed legacy commits retain the review id as their durable duplicate guard. The PostgreSQL migration still requires independent promotion evidence before a production environment may claim this behavior.
+These routes accept an optional `Idempotency-Key` using the platform's 16–128-character safe-key format. The gateway validates it and carries it in the adapter's request context; an invalid key is `400 invalid_request`. The single-host SQLite `ActionJournal` and the repository's PostgreSQL journal implementation implement the shared idempotency-store contract durably, including scoped keys, request-hash conflicts, fenced leases, encrypted completed-response replay and expiry. A keyed `POST /actions/commit` is wrapped by that store for seven days: a replay returns the stored receipt or deterministic refusal with `Idempotent-Replayed: true`, and reuse for a different request is `422 idempotency_key_reused`. An active or lost lease returns `409 idempotency_in_progress`; an active lease also carries `Retry-After`. A keyed commit fails closed with `503 idempotency_unavailable` when durable replay storage is not configured. The browser may retry a network failure with the same key, but a `502 outcome_uncertain` remains non-retryable and must be reconciled. Unkeyed legacy commits retain the review id as their durable duplicate guard. The PostgreSQL migration still requires independent promotion evidence before a production environment may claim this behavior.
 
 ### Prepare
 
@@ -369,6 +369,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/commit' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'X-Correlation-Id: docs-example-0003' \
+  -H 'Idempotency-Key: docs-example-0003' \
   -d '{"reviewId":"00000000-0000-4000-8000-000000000003"}'
 ```
 
@@ -406,6 +407,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/commit' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'X-Correlation-Id: docs-example-0004' \
+  -H 'Idempotency-Key: docs-example-0004' \
   -d '{"reviewId":"00000000-0000-4000-8000-000000000003","confirmed":true}'
 ```
 
@@ -431,6 +433,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/commit' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'X-Correlation-Id: docs-example-0005' \
+  -H 'Idempotency-Key: docs-example-0005' \
   -d '{"reviewId":"00000000-0000-4000-8000-000000000003","confirmed":true}'
 ```
 

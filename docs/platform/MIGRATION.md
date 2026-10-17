@@ -113,7 +113,11 @@ loader now reloads all memberships by that remotely verified auth user id, bound
 result, omits inactive rows, and fails closed unless the authenticated membership still
 has the same tenant and roles. No route or UI calls the loader or adapter, and selected
 request contexts remain limited to the currently authenticated institution, so this is
-still an integration seam—not evidence of live cross-institution context switching.
+still an integration seam—not evidence of live cross-institution context switching. A
+server-only `createContextActivationRequester` now adds the next seam: it requires an
+explicit confirmation naming the membership and workspace, reloads the verified account
+directory, and returns only an `ActiveContext`. It does not build a `RequestContext`,
+select an adapter, expose a route or UI, or authorize an action.
 The browser's `lib/university.ts` now uses the shared SDK. Its transport
 preserves the existing secure-origin, no-redirect, no-cookie and timeout rules;
 mutating calls receive one idempotency key per logical call; only safe reads or

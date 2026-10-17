@@ -197,6 +197,33 @@ export function createContextDirectoryLoader(source: ContextMembershipDirectory)
     contextDirectoryForVerifiedMemberships(identity, await source.membershipsForUser(identity.userId));
 }
 
+export interface ContextActivationRequest extends ContextSelection {
+  confirmed: boolean;
+}
+
+/**
+ * Resolve one explicitly confirmed selection against a freshly reloaded
+ * server-side membership directory.
+ *
+ * This returns only the selected `ActiveContext`. It deliberately does not
+ * build a gateway `RequestContext`, select an adapter, expose a route, or
+ * authorize an action. Those boundaries need the selected membership's role
+ * evidence and their own adoption contract before cross-institution requests
+ * can become live.
+ */
+export function createContextActivationRequester(source: ContextMembershipDirectory) {
+  const loadDirectory = createContextDirectoryLoader(source);
+  return async (
+    identity: VerifiedMembershipIdentity,
+    selection: ContextActivationRequest,
+  ): Promise<ActiveContext> => {
+    if (!selection.confirmed) {
+      throw new PlatformError('conflict', 'Confirm the membership and workspace before activating context.');
+    }
+    return activateContext(await loadDirectory(identity), selection, systemClock.now().getTime());
+  };
+}
+
 /** Only the request headers that the shared platform context is allowed to trust. */
 function platformHeaders(
   request: Request,
