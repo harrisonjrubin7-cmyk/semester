@@ -8,7 +8,7 @@ from threading import Event, Thread
 from uuid import UUID, uuid4
 
 from celery import Celery
-from sqlalchemy import and_, delete, func, or_, select
+from sqlalchemy import and_, delete, or_, select
 
 from app.core.config import settings
 from app.core.database import SessionLocal
@@ -542,19 +542,15 @@ def generate_study_asset(job_id: str) -> dict:
                 SourceChunk.chunk_index,
             )
         )
-        evidence_count = db.scalar(
-            select(func.count()).select_from(evidence_query.subquery())
-        ) or 0
+        candidates = db.execute(evidence_query).all()
+        evidence_count = len(candidates)
         sample_size = min(50, evidence_count)
         offsets = (
             [0]
             if sample_size == 1
             else [round(index * (evidence_count - 1) / (sample_size - 1)) for index in range(sample_size)]
         )
-        evidence = [
-            db.execute(evidence_query.offset(offset).limit(1)).one()
-            for offset in offsets
-        ]
+        evidence = [candidates[offset] for offset in offsets]
         db.commit()
         if not evidence:
             raise ValueError("No confirmed citation-linked evidence is available")

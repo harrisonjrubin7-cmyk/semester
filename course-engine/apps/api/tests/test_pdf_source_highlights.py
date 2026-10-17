@@ -1,5 +1,6 @@
 import pymupdf as fitz
 
+from app.extractors import files as file_extractors
 from app.extractors.files import extract_pdf, normalized_pdf_bounds
 
 
@@ -58,3 +59,36 @@ def test_pdf_bounds_skip_degenerate_pages():
         rotation = 0
 
     assert normalized_pdf_bounds(DegeneratePage(), (0, 0, 0, 0)) is None
+
+
+def test_pdf_extraction_caps_page_blocks_with_review_marker(tmp_path, monkeypatch):
+    path = tmp_path / "many-blocks.pdf"
+    with fitz.open() as document:
+        page = document.new_page(width=600, height=800)
+        page.insert_text((60, 80), "First block")
+        page.insert_text((60, 700), "Second block")
+        document.save(path)
+    monkeypatch.setattr(file_extractors, "MAX_PDF_BLOCKS_PER_PAGE", 2)
+
+    chunks = extract_pdf(path)
+
+    assert len(chunks) == 2
+    assert chunks[-1].content_type == "page_overflow"
+    assert chunks[-1].confidence == 0.0
+    assert chunks[-1].metadata == {"truncated": True, "reason": "page_block_limit"}
+
+
+def test_pdf_extraction_caps_document_blocks_with_review_marker(tmp_path, monkeypatch):
+    path = tmp_path / "many-pages.pdf"
+    with fitz.open() as document:
+        for page_number in range(3):
+            page = document.new_page(width=600, height=800)
+            page.insert_text((60, 80), f"Page {page_number + 1}")
+        document.save(path)
+    monkeypatch.setattr(file_extractors, "MAX_PDF_BLOCKS_PER_DOCUMENT", 2)
+
+    chunks = extract_pdf(path)
+
+    assert len(chunks) == 2
+    assert chunks[-1].content_type == "page_overflow"
+    assert chunks[-1].metadata == {"truncated": True, "reason": "document_block_limit"}

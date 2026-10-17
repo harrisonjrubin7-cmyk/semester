@@ -7,6 +7,7 @@ import os
 import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from threading import Lock
 from uuid import UUID
 
 import pymupdf as fitz
@@ -83,6 +84,24 @@ from app.services.upload_dispatch import dispatch_upload_completion
 
 router = APIRouter()
 storage = ObjectStorage()
+_preview_pdf_cache_lock = Lock()
+_preview_pdf_cache_key: tuple[str, str, str] | None = None
+_preview_pdf_cache_payload: bytes | None = None
+
+
+def preview_pdf_payload(doc: SourceDocument) -> bytes:
+    global _preview_pdf_cache_key, _preview_pdf_cache_payload
+
+    key = (str(doc.id), doc.sha256, doc.storage_key)
+    with _preview_pdf_cache_lock:
+        if key == _preview_pdf_cache_key and _preview_pdf_cache_payload is not None:
+            return _preview_pdf_cache_payload
+
+    payload = storage.read_bytes(doc.storage_key, max_bytes=settings.max_upload_bytes)
+    with _preview_pdf_cache_lock:
+        _preview_pdf_cache_key = key
+        _preview_pdf_cache_payload = payload
+    return payload
 
 
 def owned_course(db: Session, user: User, course_id: UUID) -> Course:
@@ -652,7 +671,7 @@ def source_page_preview(
     if Path(doc.filename).suffix.lower() != ".pdf":
         raise HTTPException(415, "Page previews are available only for PDF sources")
     try:
-        payload = storage.read_bytes(doc.storage_key, max_bytes=settings.max_upload_bytes)
+        payload = preview_pdf_payload(doc)
         with fitz.open(stream=payload, filetype="pdf") as document:
             if page_number < 1 or page_number > document.page_count:
                 raise HTTPException(404, "Source page does not exist")

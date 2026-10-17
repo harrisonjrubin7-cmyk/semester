@@ -16,6 +16,19 @@ from app.core.config import settings
 from app.extractors.base import ExtractedChunk
 from app.services.storage import ALLOWED_EXTENSIONS
 
+MAX_PDF_BLOCKS_PER_PAGE = 200
+MAX_PDF_BLOCKS_PER_DOCUMENT = 2_000
+
+
+def pdf_overflow_chunk(page_number: int, reason: str) -> ExtractedChunk:
+    return ExtractedChunk(
+        "[Additional PDF text requires manual review]",
+        "page_overflow",
+        page_number=page_number,
+        confidence=0.0,
+        metadata={"truncated": True, "reason": reason},
+    )
+
 
 def normalized_pdf_bounds(page, coordinates: tuple[float, float, float, float]):
     page_width = float(page.rect.width)
@@ -49,6 +62,13 @@ def extract_pdf(path: Path) -> list[ExtractedChunk]:
                 text = str(block[4]).strip()
                 if not text:
                     continue
+                if len(chunks) >= MAX_PDF_BLOCKS_PER_DOCUMENT - 1:
+                    chunks.append(pdf_overflow_chunk(index, "document_block_limit"))
+                    return chunks
+                if page_chunks >= MAX_PDF_BLOCKS_PER_PAGE - 1:
+                    chunks.append(pdf_overflow_chunk(index, "page_block_limit"))
+                    page_chunks += 1
+                    break
                 x0, y0, x1, y1 = (float(value) for value in block[:4])
                 chunks.append(ExtractedChunk(
                     text,
@@ -59,6 +79,9 @@ def extract_pdf(path: Path) -> list[ExtractedChunk]:
                 ))
                 page_chunks += 1
             if page_chunks == 0:
+                if len(chunks) >= MAX_PDF_BLOCKS_PER_DOCUMENT - 1:
+                    chunks.append(pdf_overflow_chunk(index, "document_block_limit"))
+                    return chunks
                 chunks.append(ExtractedChunk(
                     "[OCR required]",
                     "page",

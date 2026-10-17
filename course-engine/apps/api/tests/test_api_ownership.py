@@ -111,11 +111,18 @@ def test_course_ownership_boundary_returns_not_found_for_other_user(monkeypatch,
         with fitz.open() as pdf:
             page = pdf.new_page()
             page.insert_text((72, 72), "Office hours are Tuesday at 2 PM.")
+            pdf.new_page()
             pdf.save(pdf_path)
+        preview_reads = []
+
+        def read_preview(_storage_key, *, max_bytes):
+            preview_reads.append(max_bytes)
+            return pdf_path.read_bytes()
+
         monkeypatch.setattr(
             api_routes.storage,
             "read_bytes",
-            lambda _storage_key, *, max_bytes: pdf_path.read_bytes(),
+            read_preview,
         )
         preview = client.get(
             f"/api/v1/files/{document_id}/pages/1/preview",
@@ -124,13 +131,19 @@ def test_course_ownership_boundary_returns_not_found_for_other_user(monkeypatch,
         assert preview.status_code == 200
         assert preview.headers["content-type"] == "image/png"
         assert preview.headers["cache-control"] == "no-store"
+        second_page = client.get(
+            f"/api/v1/files/{document_id}/pages/2/preview",
+            headers=first_headers,
+        )
+        assert second_page.status_code == 200
+        assert preview_reads == [api_routes.settings.max_upload_bytes]
         assert client.get(
             f"/api/v1/files/{document_id}/pages/1/preview",
             headers=second_headers,
         ).status_code == 404
         assert client.get(f"/api/v1/files/{document_id}/pages/1/preview").status_code == 401
         assert client.get(
-            f"/api/v1/files/{document_id}/pages/2/preview",
+            f"/api/v1/files/{document_id}/pages/3/preview",
             headers=first_headers,
         ).status_code == 404
 
