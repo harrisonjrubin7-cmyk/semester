@@ -1376,6 +1376,16 @@ This local slice does not prove deployment, production execution, provider conne
 - Post-commit HawkScan cannot start because the CLI and Docker are absent, headless API key/application ID and host overrides are unset, and the configured default target is not running. `stackhawk.yml` exists; no credential file was read and no DAST result or security pass is claimed.
 - No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 25 / integration slice 154
+
+- Clean required-branch head `36584daf0` already includes current `origin/main` `116d8444e`; exact history/current-code inspection found no equivalent exact-duplicate dining-balance removal guard.
+- Each device balance-reading removal now names position/list size before complete timestamp, swipe, Commodore Cash and meal-money facts. Exact duplicates remain distinguishable while the visible reading stays unchanged.
+- The existing stable reading ID still drives `dropBalance`; shared Undo snapshots `balances`. Removal changes only the term-filtered device history and does not change an official meal account, money, provider credential or institution record.
+- The regression was red against the prior fact-only controls. Focused Meals/meal-domain/Undo/accessibility/lifecycle/isolation verification passes 65/65; both typechecks, lint and production build pass.
+- Design constituents pass 79/79 and the test-backed report passes with zero violations, 86 existing warnings and CSS within its ledger. Ordered and shuffled full suites remain open.
+- HawkScan cannot start because the CLI and Docker are absent, headless API key/application ID and host overrides are unset, and the configured default target is not running. `stackhawk.yml` and a local properties file exist, but no credential material was read and no DAST result or security pass is claimed.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, money, production data or external system changed. Safe in-scope work remains and requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 22 / integration slice 151
 
 - Required-branch head `3ba001e28` was clean before selection and already included current `origin/main` `116d8444e`; exact Bill history/current-code inspection found no position guard for otherwise exact duplicate rows.

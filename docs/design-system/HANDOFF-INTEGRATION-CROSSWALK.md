@@ -1081,6 +1081,18 @@ No route, navigation, dependency, schema, policy, server operation, provider con
 
 No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
 
+## Automation pass 25 mapping — distinguishable exact-duplicate dining balance removals (slice 154)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Exact duplicate device balance readings remain distinguishable at removal | `app/src/screens/Meals.tsx`; term-filtered `state.balances` | Existing but incomplete → existing and verified locally for this slice | Every removal name includes position/list size before complete timestamp, swipe, Commodore Cash and meal-money facts. Position distinguishes otherwise identical readings. |
+| Preserve exact recoverable local mutation | Stable reading ID; `dropBalance`; `UNDOABLE.dropBalance` | Existing and unchanged | The regression activates the second exact-duplicate control and proves only its ID is removed. The shared eight-second Undo restores the device-history snapshot. |
+| Preserve finance and institution authority boundaries | `app/src/lib/meals.ts`; explicit no-provider-fetch contract | Existing and unchanged | Removal changes no official meal account, money, payment, credential, provider connection or institution record. |
+| Regression and repository gates | Extended `app/src/screens/meals.balance-removal.test.tsx` plus meal-domain, Undo, label, lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against fact-only labels; 65/65 focused tests, both typechecks, lint and build pass. Design constituents pass 79/79; the test-backed report passes with zero violations, 86 existing warnings and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | HawkScan CLI, Docker, API key, application ID, host override and live default target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, money or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
 ## Automation pass 22 mapping — distinguishable exact-duplicate Bill removals (slice 151)
 
 | Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |

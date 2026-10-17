@@ -1604,6 +1604,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep private Mail-rule mutation separate from provider mailbox mutation, live account connection and institution records.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 25 update — distinguishable exact-duplicate dining balance removals (slice 154)
+
+- [x] Start from clean required-branch head `36584daf0`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Meals history/current code for overlap.
+- [x] Re-rank exact-duplicate dining balance readings as the next bounded Phase 6 accessibility gap; keep meal accounts, money, provider credentials and institution records outside the device-history mutation.
+- [x] Name every removal with one-based position, represented-list size and the existing complete timestamp, swipe, Commodore Cash and meal-money facts.
+- [x] Preserve the existing exact-id `dropBalance` reducer, term filtering, device persistence and eight-second Undo receipt.
+- [x] Prove the exact-duplicate regression red against the former fact-only controls, then pass 65/65 Meals, meal-domain, Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing chunk-size warning.
+- [x] Pass 79/79 design-check constituents and regenerate the passing test-backed report; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Commit the coherent code/test/control slice locally after confirming final `origin/main` has no overlap.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight finds `hawk` and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, and the default `http://localhost:4173` target unavailable. `stackhawk.yml` and a local properties file exist but credential material was not read; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep student-entered dining history separate from official meal accounts, money movement, provider access and institution records.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 22 update — distinguishable exact-duplicate Bill removals (slice 151)
 
 - [x] Start from clean required-branch head `3ba001e28`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Bill history/current code for overlap.

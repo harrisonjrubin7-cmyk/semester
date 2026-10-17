@@ -11,8 +11,6 @@ import { Meals } from './Meals';
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const FIRST_AT = new Date(2026, 9, 15, 12).getTime();
-const SECOND_AT = new Date(2026, 9, 8, 12).getTime();
-
 let host: HTMLDivElement;
 let root: Root;
 let seen: State;
@@ -36,7 +34,7 @@ beforeEach(async () => {
     term: '2026FA',
     balances: [
       { id: 'newer', at: FIRST_AT, swipes: 42, cashCents: 1250, diningCents: 1800, term: '2026FA' },
-      { id: 'older', at: SECOND_AT, swipes: 55, cashCents: 900, diningCents: -1, term: '2026FA' },
+      { id: 'duplicate', at: FIRST_AT, swipes: 42, cashCents: 1250, diningCents: 1800, term: '2026FA' },
     ],
   }));
   host = document.createElement('div');
@@ -58,15 +56,21 @@ afterEach(async () => {
   localStorage.clear();
 });
 
-it('identifies a balance removal with every value in the represented reading', async () => {
-  const name = `Remove balance reading from ${formatDate(FIRST_AT)}: 42 swipes · $12.50 Commodore Cash · $18.00 meal money`;
-  const remove = host.querySelector<HTMLButtonElement>(`button[aria-label="${name}"]`);
+it('distinguishes exact-duplicate balance readings and removes only the selected stable id', async () => {
+  const facts = `from ${formatDate(FIRST_AT)}: 42 swipes · $12.50 Commodore Cash · $18.00 meal money`;
+  const first = host.querySelector<HTMLButtonElement>(
+    `button[aria-label="Remove balance reading 1 of 2 ${facts}"]`,
+  );
+  const second = host.querySelector<HTMLButtonElement>(
+    `button[aria-label="Remove balance reading 2 of 2 ${facts}"]`,
+  );
 
   expect(host.textContent).toContain('42 swipes · $12.50 Commodore Cash · $18.00 meal money');
-  expect(remove).not.toBeNull();
+  expect(first).not.toBeNull();
+  expect(second).not.toBeNull();
 
-  await act(async () => remove?.click());
+  await act(async () => second?.click());
 
-  expect(seen.balances.map((reading) => reading.id)).toEqual(['older']);
+  expect(seen.balances.map((reading) => reading.id)).toEqual(['newer']);
   expect(seen.undone?.label).toBe('Reading removed');
 });
