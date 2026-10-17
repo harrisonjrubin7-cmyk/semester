@@ -117,7 +117,7 @@ function loadWorker() {
     const waits: Promise<unknown>[] = [];
     let answered: Promise<unknown> = Promise.resolve();
     handlers.get('fetch')?.({
-      request: { url: `${ORIGIN}${path}`, mode: 'no-cors', method: 'GET' },
+      request: { url: `${ORIGIN}${path}`, mode: 'no-cors', method: 'GET', headers: new Headers() },
       respondWith: (p: Promise<unknown>) => {
         answered = p;
       },

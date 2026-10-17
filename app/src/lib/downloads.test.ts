@@ -167,7 +167,7 @@ group('reading what is downloaded', () => {
     const store = fakeCaches({
       'semester-v1-shell': [{ url: at('/semester/index.html'), bytes: 4_000 }],
       'semester-shared': [{ url: at('/semester/__shared'), bytes: 900_000 }],
-      'semester-v1-media': [
+      'semester-v1-scope-semester-media': [
         { url: at('/semester/audio/lessons/psci/unit-0.mp3'), bytes: 2_000_000 },
         { url: at('/semester/decks/psci.pptx'), bytes: 240_000 },
       ],
@@ -183,15 +183,15 @@ group('reading what is downloaded', () => {
 
   it('takes an older worker’s media cache too, before activate has swept it', async () => {
     const store = fakeCaches({
-      'semester-v1-media': [{ url: at('/audio/lessons/econ/unit-1.mp3'), bytes: 1_000 }],
-      'semester-v2-media': [{ url: at('/audio/lessons/econ/unit-2.mp3'), bytes: 2_000 }],
+      'semester-v1-scope-semester-media': [{ url: at('/audio/lessons/econ/unit-1.mp3'), bytes: 1_000 }],
+      'semester-v2-scope-semester-media': [{ url: at('/audio/lessons/econ/unit-2.mp3'), bytes: 2_000 }],
     });
     expect(totalBytes(await readDownloads(store))).toBe(3_000);
   });
 
   it('falls back to the blob when the response carries no length', async () => {
     const store = fakeCaches({
-      'semester-v1-media': [{ url: at('/audio/psci-full.mp3'), blob: 7_654_321 }],
+      'semester-v1-scope-semester-media': [{ url: at('/audio/psci-full.mp3'), blob: 7_654_321 }],
     });
     expect(totalBytes(await readDownloads(store))).toBe(7_654_321);
   });
@@ -205,33 +205,42 @@ group('reading what is downloaded', () => {
   it('keeps what it read when a later cache will not open', async () => {
     const store = fakeCaches(
       {
-        'semester-v1-media': [{ url: at('/audio/lessons/bus/unit-0.mp3'), bytes: 5_000 }],
-        'semester-v2-media': [{ url: at('/audio/lessons/bus/unit-1.mp3'), bytes: 5_000 }],
+        'semester-v1-scope-semester-media': [{ url: at('/audio/lessons/bus/unit-0.mp3'), bytes: 5_000 }],
+        'semester-v2-scope-semester-media': [{ url: at('/audio/lessons/bus/unit-1.mp3'), bytes: 5_000 }],
       },
-      { refuse: 'semester-v2-media' },
+      { refuse: 'semester-v2-scope-semester-media' },
     );
     expect(totalBytes(await readDownloads(store))).toBe(5_000);
   });
 });
 
 group('clearing', () => {
-  it('deletes every media cache and no others', async () => {
+  it('deletes only media caches for the supported app scopes', async () => {
     const store = fakeCaches({
       'semester-v1-shell': [{ url: at('/semester/index.html'), bytes: 4_000 }],
       'semester-shared': [{ url: at('/semester/__shared'), bytes: 900_000 }],
-      'semester-v1-media': [{ url: at('/semester/audio/psci-podcast.mp3'), bytes: 9_000_000 }],
+      'semester-v1-scope-semester-media': [{ url: at('/semester/audio/psci-podcast.mp3'), bytes: 9_000_000 }],
+      'semester-v1-media': [{ url: at('/audio/legacy.mp3'), bytes: 8_000_000 }],
+      'semester-v1-scope-nested%2Fapp-media': [{ url: at('/nested/app/audio/other.mp3'), bytes: 7_000_000 }],
+      'unrelated-media': [{ url: at('/other.mp3'), bytes: 6_000_000 }],
     });
 
     expect(await clearDownloads(store)).toBe(true);
     expect(await readDownloads(store)).toEqual([]);
     // The two that must survive: one is what makes the app open with no
     // signal, the other is a file in mid-handover from the share target.
-    expect(await store.keys()).toEqual(['semester-v1-shell', 'semester-shared']);
+    expect(await store.keys()).toEqual([
+      'semester-v1-shell',
+      'semester-shared',
+      'semester-v1-media',
+      'semester-v1-scope-nested%2Fapp-media',
+      'unrelated-media',
+    ]);
   });
 
   it('clears one course and leaves the rest playable', async () => {
     const store = fakeCaches({
-      'semester-v1-media': [
+      'semester-v1-scope-semester-media': [
         { url: at('/semester/audio/lessons/psci/unit-0.mp3'), bytes: 1_000 },
         { url: at('/semester/audio/lessons/psci/lessons.json'), bytes: 10 },
         { url: at('/semester/decks/psci.pptx'), bytes: 100 },
@@ -250,7 +259,7 @@ group('clearing', () => {
     expect(await clearDownloads(undefined as unknown as CacheStorage)).toBe(false);
     expect(await clearCourse('psci', undefined as unknown as CacheStorage)).toBe(false);
 
-    const refusing = fakeCaches({ 'semester-v1-media': [] }, { refuse: 'semester-v1-media' });
+    const refusing = fakeCaches({ 'semester-v1-scope-semester-media': [] }, { refuse: 'semester-v1-scope-semester-media' });
     expect(await clearCourse('psci', refusing)).toBe(false);
   });
 });
@@ -276,7 +285,7 @@ group('the cap, and what it took', () => {
   it('reads back what the worker threw out', async () => {
     const shed = { at: 1_764_600_000_000, bytes: 3_000_000, paths: ['/semester/audio/lessons/psci/unit-0.mp3'] };
     const store = fakeCaches({
-      'semester-v1-media': [
+      'semester-v1-scope-semester-media': [
         { url: at(`/semester/${LEDGER_NAME}`), bytes: 200, body: { played: {}, shed } },
         { url: at('/semester/audio/lessons/econ/unit-0.mp3'), bytes: 1_000 },
       ],
@@ -288,7 +297,7 @@ group('the cap, and what it took', () => {
   it('leaves the ledger out of the list and out of the total', async () => {
     // It is the worker's bookkeeping, not something anybody chose to keep.
     const store = fakeCaches({
-      'semester-v1-media': [
+      'semester-v1-scope-semester-media': [
         { url: at(`/semester/${LEDGER_NAME}`), bytes: 200, body: { played: {}, shed: null } },
         { url: at('/semester/audio/lessons/econ/unit-0.mp3'), bytes: 1_000 },
       ],
@@ -301,7 +310,7 @@ group('the cap, and what it took', () => {
 
   it('answers null where nothing has ever been over the cap', async () => {
     const store = fakeCaches({
-      'semester-v1-media': [{ url: at('/semester/decks/psci.pptx'), bytes: 1_000 }],
+      'semester-v1-scope-semester-media': [{ url: at('/semester/decks/psci.pptx'), bytes: 1_000 }],
     });
     expect(await readShed(store)).toBeNull();
     expect(await readShed(undefined as unknown as CacheStorage)).toBeNull();
@@ -309,7 +318,7 @@ group('the cap, and what it took', () => {
 
   it('ignores a ledger it cannot read rather than failing the screen', async () => {
     const store = fakeCaches({
-      'semester-v1-media': [{ url: at(`/semester/${LEDGER_NAME}`), bytes: 9 }],
+      'semester-v1-scope-semester-media': [{ url: at(`/semester/${LEDGER_NAME}`), bytes: 9 }],
     });
     expect(await readShed(store)).toBeNull();
   });
