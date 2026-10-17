@@ -1478,6 +1478,16 @@ The new guard failed against the former position-only labels. Focused Advisor Me
 
 The active HawkScan skill stops at mandatory preflight: Hawk v6/config/skills status and Docker are absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` are unset, and no live target is configured. `stackhawk.yml` and a local Hawk properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Automation pass 19 — distinguishable timer resets (slice 148)
+
+Required-branch head `928436a78` was clean before selection and already included current `origin/main` `116d8444e`. Exact upstream history and current-code inspection found the earlier full-fact names for timer clearing and alarm deletion, but each timer reset still exposed only the generic name **Reset**.
+
+Every timer reset now names the represented label, total duration, current remainder and running/paused state. The existing exact-id `patchTimer` reducer and pure `reset` function remain authoritative: reset returns only the selected device timer to its requested duration and paused state. Other timers, alarms, coursework, deadlines and official institution records are outside the operation.
+
+The rendered behavior guard failed against the former generic controls, then the focused Clocks, clock-domain, timer reducer, label, root-lifecycle and isolation set passed 66/66. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Aggregate design-system check/report pass through the temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+
+The active HawkScan skill stops at mandatory preflight: Hawk v6/config/skills status and Docker are absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` are unset, `stackhawk.yml` is present and no live target exists. A local properties file exists but was not read. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Automation pass 18 — distinguishable Workflow Builder draft removals (slice 147)
 
 Required-branch head `708863314` was clean before selection and already included current `origin/main` `116d8444e`. Exact upstream history and current-code inspection found the existing tenant-scoped, capability-gated Workflow Builder and exact-position draft edits, but step and eligibility-check removal names exposed only their positions.

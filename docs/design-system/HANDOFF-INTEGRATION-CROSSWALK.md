@@ -1056,6 +1056,18 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
 
+## Automation pass 19 mapping — distinguishable timer resets (slice 148)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated timer actions identify the exact represented item | `app/src/screens/Clocks.tsx`; typed timer state and `app/src/lib/clocks.ts` vocabulary | Existing but incomplete → existing and verified locally for this slice | Reset names include the label, total duration, current remainder and running/paused state, matching the facts already exposed by timer-clear controls. |
+| Preserve exact device-timer mutation | Existing exact-id `patchTimer` reducer and pure `reset` function | Existing and unchanged | The rendered regression resets the represented long timer and proves the short timer and both alarms remain unchanged. Reset restores the requested duration and paused state; it does not delete the timer. |
+| Preserve academic and institutional authority boundaries | Clocks' explicit standalone device-tool contract | Existing and unchanged | Timers remain unrelated to coursework, grades, deadlines, provider calendars and official institution schedules. No server, provider or institutional record is invoked. |
+| Regression and repository gates | Extended `clocks.removal-labels.test.tsx` plus clock-domain, reducer, label, lifecycle and isolation contracts | Existing and verified locally for this slice | Red proof against the former generic names; 66/66 focused/control tests, both typechecks, lint and build pass. Design checks pass 9 token and 70 contract tests, all eight report contracts pass, and existing audit/CSS ledgers remain unchanged. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status and Docker are absent, API key and app-host values are unset, and no live target exists. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
+
 ## Automation pass 18 mapping — distinguishable Workflow Builder draft removals (slice 147)
 
 | Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |

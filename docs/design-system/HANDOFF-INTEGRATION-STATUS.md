@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 14 of 120 · **Integration slice** 143 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `36fbb71b4` · **Latest observed `origin/main`** `116d8444e`
+**Automation pass** 19 of 120 · **Integration slice** 148 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `928436a78` · **Latest observed `origin/main`** `116d8444e`
 
 ## State
 
@@ -1352,6 +1352,18 @@ This local slice does not prove deployment, production execution, institutional 
 - The active HawkScan skill stops at mandatory preflight: Hawk v6/config and Docker are absent, `HAWK_API_KEY` and app-host environment values are unset, and no live target exists. `stackhawk.yml` and a local properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 19 / integration slice 148
+
+- Required-branch head `928436a78` was clean before selection and already included current `origin/main` `116d8444e`; exact Clocks history/current-code inspection found the distinguishable timer-clear and alarm-delete names, but no equivalent timer-reset guard.
+- Every timer reset now names the represented label, total duration, current remainder and running/paused state. Timers with the same label therefore remain distinguishable to assistive technology.
+- The existing exact-id `patchTimer` reducer and pure reset arithmetic remain authoritative: reset restores only the selected timer to its requested duration and paused state. Other timers, alarms, course work, deadlines and official records remain unchanged.
+- The new behavior guard failed against the former generic **Reset** controls, then the final focused Clocks, clock-domain, timer reducer, label, root-lifecycle and isolation set passed 66/66.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing large-chunk warning. Aggregate design-system check/report pass through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present and no live target. A local properties file exists but was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
 ## Evidence locked in automation pass 18 / integration slice 147
 

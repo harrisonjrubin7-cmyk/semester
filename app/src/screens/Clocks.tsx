@@ -277,7 +277,12 @@ function TimerRow({ t, at }: { t: Timer; at: number }) {
           {running(t) ? 'Pause' : 'Resume'}
         </Small>
         <Small onClick={() => swap((now) => stretch(t, 60, now))}>+1 min</Small>
-        <Small onClick={() => swap(() => reset(t))}>Reset</Small>
+        <Small
+          ariaLabel={`Reset timer ${t.label || lengthLine(t.seconds)} · ${lengthLine(t.seconds)} total · ${clockFace(left)} remaining · ${running(t) ? 'running' : 'paused'}`}
+          onClick={() => swap(() => reset(t))}
+        >
+          Reset
+        </Small>
         <Small
           ariaLabel={`Clear timer ${t.label || lengthLine(t.seconds)} · ${lengthLine(t.seconds)} total · ${clockFace(left)} remaining · ${running(t) ? 'running' : 'paused'}`}
           onClick={() => {

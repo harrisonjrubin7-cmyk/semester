@@ -109,6 +109,27 @@ it('distinguishes same-label timers by their represented duration, remainder and
   expect(seen.alarms.map((alarm) => alarm.id)).toEqual(['morning-class', 'lab-shift']);
 });
 
+it('distinguishes same-label timer resets by their represented duration, remainder and state', async () => {
+  const names = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Reset timer Pasta "]')]
+    .map((button) => button.ariaLabel);
+
+  expect(names).toEqual([
+    'Reset timer Pasta · 10 minutes total · 7:00 remaining · paused',
+    'Reset timer Pasta · 15 minutes total · 13:00 remaining · paused',
+  ]);
+  expect(new Set(names).size).toBe(2);
+
+  await act(async () => host.querySelector<HTMLButtonElement>(
+    'button[aria-label="Reset timer Pasta · 15 minutes total · 13:00 remaining · paused"]',
+  )?.click());
+
+  expect(seen.timers.map(({ id, left }) => ({ id, left }))).toEqual([
+    { id: 'pasta-short', left: 420 },
+    { id: 'pasta-long', left: 900 },
+  ]);
+  expect(seen.alarms.map((alarm) => alarm.id)).toEqual(['morning-class', 'lab-shift']);
+});
+
 it('distinguishes same-time alarms by their represented label, schedule and state', async () => {
   const alarms = [...host.querySelectorAll<HTMLButtonElement>('button')]
     .find((button) => button.textContent === 'Alarms (2)');
