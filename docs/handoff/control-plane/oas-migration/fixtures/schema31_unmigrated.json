@@ -1,0 +1,1 @@
+{"type":"object","required":["receiptId"],"properties":{"receiptId":{"type":"string","nullable":true}},"additionalProperties":false}
