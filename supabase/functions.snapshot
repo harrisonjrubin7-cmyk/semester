@@ -1,6 +1,6 @@
 # Which pipeline last deployed each Edge Function, read off the project at
-# 21:27 UTC on 29 September 2026. Every function, billing-cancel included,
-# last deployed by the platform at 21:10:28Z.
+# 14:23 UTC on 17 October 2026. Every function, access-saga-tick included,
+# last deployed by the platform at 14:22:49Z.
 #
 # Four columns: slug, version, the pipeline that deployed that version, and when.
 # `app/src/lib/functionsdeployed.test.ts` holds `supabase/functions/` to this

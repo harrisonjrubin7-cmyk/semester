@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Notice, SectionLabel } from '../ui';
-import { SemesterDesignSurface, SlaTimer } from '../semester-design';
+import { FilterChips, SemesterDesignSurface, SlaTimer } from '../semester-design';
 import {
+  CATEGORIES,
   CATEGORY_LABELS,
   CONTEXT_KEYS,
   CONTEXT_LABELS,
@@ -11,6 +12,7 @@ import {
   supportThread,
   readSupportCaseSignals,
   ticketReference,
+  type Category,
   type SupportCaseAccess,
   type SupportCaseSignal,
   type SupportMessage,
@@ -35,6 +37,7 @@ const OPERATOR_STATUS_LABELS: Record<SupportQueueTicket['status'], string> = {
  */
 export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
   const [tickets, setTickets] = useState<SupportQueueTicket[] | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [queueFailed, setQueueFailed] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [thread, setThread] = useState<SupportMessage[] | null>(null);
@@ -114,17 +117,34 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
   // oxlint-disable-next-line react/set-state-in-effect
   useEffect(() => { void refresh(); }, [refresh]);
 
+  const categoryOptions = useMemo(() => CATEGORIES.map((category) => ({
+    id: category,
+    label: CATEGORY_LABELS[category],
+    count: (tickets ?? []).filter((ticket) => ticket.category === category).length,
+  })), [tickets]);
+
   const shown = useMemo(
-    () => (tickets ?? []).filter((ticket) => matches(
-      filter,
-      ticketReference(ticket.id),
-      ticket.subject,
-      CATEGORY_LABELS[ticket.category],
-      OPERATOR_STATUS_LABELS[ticket.status],
-      ticket.priority,
+    () => (tickets ?? []).filter((ticket) => (
+      (categories.length === 0 || categories.includes(ticket.category))
+      && matches(
+        filter,
+        ticketReference(ticket.id),
+        ticket.subject,
+        CATEGORY_LABELS[ticket.category],
+        OPERATOR_STATUS_LABELS[ticket.status],
+        ticket.priority,
+      )
     )),
-    [tickets, filter],
+    [tickets, filter, categories],
   );
+
+  const toggleCategory = (id: string) => {
+    if (!(CATEGORIES as readonly string[]).includes(id)) return;
+    const category = id as Category;
+    setCategories((current) => current.includes(category)
+      ? current.filter((item) => item !== category)
+      : [...current, category]);
+  };
 
   const open = (id: string | null) => {
     threadRequest.current += 1;
@@ -219,6 +239,18 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
         Identity-free queue. This view receives no student name, email, account, handle or tenant. It shows only the question and app context the student chose to send.
       </Notice>
       <SectionLabel aside={tickets === null ? 'reading' : `${shown.length} open`}>Support queue</SectionLabel>
+      {tickets !== null && (
+        <SemesterDesignSurface label="Support queue request types">
+          <FilterChips
+            options={categoryOptions}
+            selected={categories}
+            onToggle={toggleCategory}
+            onClear={() => setCategories([])}
+            resultCount={shown.length}
+            label="Filter support queue by request type"
+          />
+        </SemesterDesignSurface>
+      )}
       <button type="button" className="btn btn-secondary" onClick={() => { void refreshVisible(); }}>Refresh support queue</button>
       {queueFailed && (
         <div style={{ display: 'grid', gap: 'var(--sp-2)' }}>
