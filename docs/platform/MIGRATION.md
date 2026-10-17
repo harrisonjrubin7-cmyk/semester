@@ -113,16 +113,21 @@ loader now reloads all memberships by that remotely verified auth user id, bound
 result, omits inactive rows, and fails closed unless the authenticated membership still
 has the same tenant and roles. No route or UI calls the loader or adapter, and selected
 request contexts remain limited to the currently authenticated institution, so this is
-still an integration seam—not evidence of live cross-institution context switching.
+still an integration seam—not evidence of live cross-institution context switching. A
+server-only `createContextActivationRequester` now adds the next seam: it requires an
+explicit confirmation naming the membership and workspace, reloads the verified account
+directory, and returns only an `ActiveContext`. It does not build a `RequestContext`,
+select an adapter, expose a route or UI, or authorize an action.
 The browser's `lib/university.ts` now uses the shared SDK. Its transport
 preserves the existing secure-origin, no-redirect, no-cookie and timeout rules;
 mutating calls receive one idempotency key per logical call; only safe reads or
 keyed writes retry. The gateway context now validates and carries that key to
 adapters. The local SQLite action journal and the repository's PostgreSQL
-journal both implement the shared persistent idempotency-store contract, but
-the legacy institution commit route is not wrapped with the store. That route
-therefore still opts out of network retry, preserving its
-unknown-outcome-to-reconciliation rule. The two older refusal shapes are translated at this
+journal both implement the shared persistent idempotency-store contract. The
+institution commit route now wraps keyed commits with that store and the browser
+may safely retry a network failure with the same key. An upstream `502`
+unknown outcome remains non-retryable and must go through reconciliation. The
+two older refusal shapes are translated at this
 migration boundary with a focused equivalence test. **Not done:** the edge
 functions have not adopted the envelope, and `environment`,
 tenant status and `verifiedBy` in the context are approximations the file says so about.

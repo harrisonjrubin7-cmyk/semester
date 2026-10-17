@@ -17,7 +17,7 @@ because it needs a human decision first.
 | 1 | component-passport.schema.json | written | `component-passport.schema.json`, aligned to the runtime passport validator and reference-prefix rules. |
 | 2 | registration-readiness.passport.yaml | written | `registration-readiness.passport.yaml` (owner names TBD) |
 | 3 | connection-states.yaml | written | `connection-states.yaml` |
-| 4 | source-verification.ts | open | Types are in the PDF. Needs a `.ts` file, a test, and a typecheck. Next slice. |
+| 4 | source-verification.ts | written | `app/src/lib/source-verification.ts`, with a fail-closed definitive-result rule and focused test. |
 | 5 | source-freshness-policy.yaml | open | Needs freshness thresholds. The PDF does not give them. Decision needed. |
 | 6 | data-classification.yaml | open | Needs classification levels. The PDF does not give them. Decision needed. |
 | 7 | feature-flags.yaml | written | `feature-flags.yaml`. Spec only; the flag is not wired into app code. |
@@ -45,7 +45,7 @@ because it needs a human decision first.
 | 29 | pilot-results-template.md | open | Template only. Next slice. |
 | 30 | post-launch-review.md | open | Template only. Next slice. |
 
-Count: 13 written, 17 open.
+Count: 14 written, 16 open.
 
 ## Decisions this package depends on
 
@@ -74,6 +74,7 @@ Run from the repo root:
 ```bash
 python3 scripts/validate-pilot-artifacts.py   # parses every YAML file in this folder
 npm test --workspace app -- src/lib/registry/passport.test.ts
+npm test --workspace app -- src/lib/source-verification.test.ts
 ```
 
 The Python script checks that every YAML file parses. It does not check the
