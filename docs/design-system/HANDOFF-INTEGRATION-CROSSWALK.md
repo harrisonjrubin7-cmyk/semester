@@ -1056,6 +1056,18 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
 
+## Automation pass 15 mapping — distinguishable Advisor Meeting preparation removals (slice 144)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated preparation rows remain distinguishable at removal | `app/src/components/AdvisorMeeting.tsx`; account/device-scoped meeting library | Existing but incomplete → existing and verified locally for this slice | Agenda, question and follow-up removals name position/list size and complete student-entered text. Questions add answer state; follow-ups add completion and due-date state. |
+| Preserve exact device mutation and tenant scope | Existing `LineList` id filter; `useDeviceLibrary(meetingKey(accountId), readMeetings, EMPTY_MEETINGS)` | Existing and unchanged | The regression activates the second same-text follow-up and proves the first id/value remains persisted. Signed-in preparations remain account-keyed; signed-out preparation remains device-keyed. |
+| Preserve advisor and official-record boundaries | `sharePayload`; explicit share confirmation; private-note exclusion | Existing and unchanged | Removing an editor line changes only the current preparation. It does not modify a prior share, contact an advisor/provider, or change an official advising record. |
+| Regression and repository gates | Extended `AdvisorMeeting.test.tsx` plus domain/share/storage/backup/lifecycle/isolation guards | Existing and verified locally for this slice | Red proof against position-only labels; 97/97 focused tests, both typechecks, lint and build pass. Aggregate design check/report pass 9 token, 70 design and eight report contracts with zero audit violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
 ## Automation pass 14 mapping — distinguishable Registration Day backup actions (slice 143)
 
 | Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |

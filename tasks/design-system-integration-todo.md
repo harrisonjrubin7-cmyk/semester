@@ -1566,6 +1566,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 15 — distinguishable Advisor Meeting preparation removals (slice 144)
+
+- [x] Start from clean required-branch head `bef213ba9`, fetch current `origin/main` `116d8444e` and confirm no equivalent Advisor Meeting preparation-line identity guard landed.
+- [x] Re-rank the remaining dependency-ready gaps and select the bounded device-owned meeting editor; keep advisor-share mutations, official advising records and provider/institution operations outside this slice.
+- [x] Reuse the existing `LineList` and identify each removal by one-based position, list size and complete student-entered text.
+- [x] Include recorded answer/absence for questions and completion/due-date state for follow-ups; preserve the current account/device-scoped `useDeviceLibrary` authority.
+- [x] Prove the guard red against the former position-only labels, then remove the second same-text follow-up and verify the first exact row remains persisted and rendered.
+- [x] Pass 97/97 focused Advisor Meeting, domain/share, device-library, backup, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through the temporary package-runner shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing warnings and CSS within ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — preflight confirms Hawk v6/config/skills status and Docker are absent, API key/app-host values are unset and no live target exists. The local properties file was not read; no scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep advisor-share mutation, official advising records, provider connectivity and institution operations as separate authority boundaries.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 13 update — exact shared-photo removal and thumbnail lifetime (slice 142)
 
 - [x] Start from clean required-branch head `ed04f81dd`, fetch current `origin/main` `3ec04d742` and inspect exact shared-capture history/current code for overlap.
