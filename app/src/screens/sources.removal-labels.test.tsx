@@ -58,6 +58,19 @@ beforeEach(async () => {
         project: 'Student support paper',
         created: 2,
       },
+      {
+        id: 'source-advising-copy',
+        raw: `${SHARED_PREFIX}: advising practice. https://example.edu/advising`,
+        author: 'Rivera, Amara',
+        year: '2026',
+        title: 'Institutional memory and equitable student support',
+        container: '',
+        url: 'https://example.edu/advising',
+        role: 'Evidence for the advising section',
+        courseId: null,
+        project: 'Student support paper',
+        created: 3,
+      },
     ],
   }));
   host = document.createElement('div');
@@ -79,18 +92,19 @@ afterEach(async () => {
   localStorage.clear();
 });
 
-it('identifies source removals by the complete student-entered citation', async () => {
-  const removals = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove source: "]')];
+it('identifies source removals by position and the complete student-entered citation', async () => {
+  const removals = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove source "]')];
 
-  expect(removals.map((button) => button.ariaLabel).sort()).toEqual([
-    `Remove source: ${SHARED_PREFIX}: advising practice. https://example.edu/advising`,
-    `Remove source: ${SHARED_PREFIX}: financial-aid practice. https://example.edu/aid`,
-  ].sort());
-  expect(new Set(removals.map((button) => button.ariaLabel)).size).toBe(2);
+  expect(removals.map((button) => button.ariaLabel)).toEqual([
+    `Remove source 1 of 3: ${SHARED_PREFIX}: advising practice. https://example.edu/advising`,
+    `Remove source 2 of 3: ${SHARED_PREFIX}: financial-aid practice. https://example.edu/aid`,
+    `Remove source 3 of 3: ${SHARED_PREFIX}: advising practice. https://example.edu/advising`,
+  ]);
+  expect(new Set(removals.map((button) => button.ariaLabel)).size).toBe(3);
 
-  const advising = removals.find((button) => button.ariaLabel?.includes('advising practice'));
-  await act(async () => advising?.click());
+  const financialAid = removals[1];
+  await act(async () => financialAid?.click());
 
-  expect(seen.sources.map((source) => source.id)).toEqual(['source-financial-aid']);
+  expect(seen.sources.map((source) => source.id)).toEqual(['source-advising', 'source-advising-copy']);
   expect(seen.undone?.label).toBe('Source removed');
 });

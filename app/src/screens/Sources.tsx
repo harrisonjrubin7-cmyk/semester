@@ -204,7 +204,7 @@ export function Sources() {
               <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
                 {completeness(list)}
               </div>
-              {list.map((s) => {
+              {list.map((s, index) => {
                 const missing = gaps(s);
                 return (
                   <Blueprint plain key={s.id} style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginBottom: 'var(--sp-4)' }}>
@@ -251,7 +251,7 @@ export function Sources() {
                         type="button"
                         className="bare"
                         onClick={() => dispatch({ type: 'dropSource', id: s.id })}
-                        aria-label={`Remove source: ${s.raw}`}
+                        aria-label={`Remove source ${index + 1} of ${list.length}: ${s.raw}`}
                         style={{ paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))', color: 'var(--app-dim)', fontSize: 'var(--type-sm)' }}
                       >
                         Remove

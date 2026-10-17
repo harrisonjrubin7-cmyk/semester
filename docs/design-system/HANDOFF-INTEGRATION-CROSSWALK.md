@@ -1056,6 +1056,18 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
 
+## Automation pass 23 mapping — distinguishable exact-duplicate citation removals (slice 152)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Exact duplicate private citations remain distinguishable at removal | `app/src/screens/Sources.tsx`; persisted `state.sources` rows | Existing but incomplete → existing and verified locally for this slice | Each accessible name now includes one-based position/list size plus the complete student-entered citation. Position distinguishes rows whose represented citations are identical. |
+| Preserve exact mutation and recovery | `app/src/state/reducer.ts`; `app/src/lib/undo.ts` | Existing and unchanged | The represented stable id still reaches `dropSource`; the global eight-second Undo remains the recovery receipt. |
+| Preserve source and academic authority boundaries | `app/src/screens/Sources.tsx`; `app/src/lib/sources.ts` | Intentionally unchanged | No citation is normalized or verified, no official academic record changes, no provider is contacted and no source content is sent to an AI service. |
+| Regression and repository gates | Extended `app/src/screens/sources.removal-labels.test.tsx` plus source-domain, reducer, Undo, label, root and isolation guards | Existing and verified locally for this slice | Red proof against citation-only labels; focused/control verification passes 204/204. Both typechecks, lint, build, 9 token tests, 70 design contracts and all eight report contracts pass; audit remains at zero violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Pending post-commit preflight | No scan result or security pass is claimed before the coherent slice commit. |
+
+No route, navigation, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
+
 ## Automation pass 22 mapping — distinguishable exact-duplicate Bill removals (slice 151)
 
 | Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |

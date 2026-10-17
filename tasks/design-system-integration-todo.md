@@ -1566,6 +1566,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 23 update — distinguishable exact-duplicate citation removals (slice 152)
+
+- [x] Start from clean required-branch head `de1abfb06`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Sources history/current code for overlap.
+- [x] Re-rank exact-duplicate student-entered citations as the next bounded Phase 3 accessibility gap; keep official academic records, provider access and AI use outside the private source-library mutation.
+- [x] Name every source removal with one-based position, represented-list size and the complete citation exactly as the student entered it.
+- [x] Preserve the existing exact-id `dropSource` reducer, private persistence, project/course filters, exports and eight-second Undo receipt.
+- [x] Prove the exact-duplicate regression red against the former citation-only names, then pass 204/204 Sources, source-domain, reducer, Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts and all eight report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory post-commit preflight remains to be run; no scan result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep citation-library mutation separate from official academic records, provider access and AI use.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 22 update — distinguishable exact-duplicate Bill removals (slice 151)
 
 - [x] Start from clean required-branch head `3ba001e28`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Bill history/current code for overlap.

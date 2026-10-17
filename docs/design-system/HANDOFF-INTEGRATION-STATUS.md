@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 21 of 120 · **Integration slice** 150 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `4a71e2895` · **Latest observed `origin/main`** `116d8444e`
+**Automation pass** 23 of 120 · **Integration slice** 152 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `de1abfb06` · **Latest observed `origin/main`** `116d8444e`
 
 ## State
 
@@ -1350,6 +1350,18 @@ This local slice does not prove deployment, production execution, institutional 
 - TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning.
 - The final focused set passes 198/198, including root-lifecycle, isolation and repository-map contracts. Aggregate design-system check passes 9 token tests and 70 design contracts; the test-backed report passes, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun; automation pass 2 remains the latest full-suite checkpoint.
 - The active HawkScan skill stops at mandatory preflight: Hawk v6/config and Docker are absent, `HAWK_API_KEY` and app-host environment values are unset, and no live target exists. `stackhawk.yml` and a local properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 23 / integration slice 152
+
+- Required-branch head `de1abfb06` was clean before selection and already included current `origin/main` `116d8444e`; exact Sources history/current-code inspection found the earlier complete-citation name but no identity guard for otherwise exact duplicate rows.
+- Every private citation removal now names one-based position, list size and the complete student-entered citation. Exact duplicates remain distinguishable without changing the visible row.
+- The existing exact-id `dropSource` reducer, persisted private source library and eight-second Undo remain authoritative. Nothing normalizes or verifies a citation, changes an official academic record, contacts a provider or sends source content to an AI service.
+- The new exact-duplicate regression failed against the former citation-only names, then 204/204 focused Sources, source-domain, reducer, Undo, label, root-lifecycle and isolation tests passed.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing chunk-size warning. Aggregate design-system check/report pass through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- HawkScan DAST remains pending the mandatory post-commit preflight; no scan result or security pass is claimed here.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
