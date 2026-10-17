@@ -117,7 +117,7 @@ function Now({ lib, set, chunk }: { lib: SupportLibrary; set: (p: Partial<Suppor
       {lib.contacts.map((c) => (
         <div key={c.id} className="jx-row">
           <a href={`tel:${c.phone}`}>{c.name} · {c.phone}</a>
-          <button type="button" className="bare" aria-label={`Remove ${c.name}`} onClick={() => setRemoving(c)}>
+          <button type="button" className="bare" aria-label={`Remove ${c.name}: ${c.phone}`} onClick={() => setRemoving(c)}>
             ×
           </button>
         </div>
