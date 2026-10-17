@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 28 of 120 · **Integration slice** 157 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `aa7cb2bf0` · **Latest observed `origin/main`** `35474ac5b`
+**Automation pass** 28 of 120 · **Integration slice** 157 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `aa7cb2bf0` · **Latest observed `origin/main`** `caa9967fb`
 
 ## State
 
@@ -13,7 +13,7 @@ Phase 0 reconciliation is complete for the archive populations and includes the 
 - Existing `dropTaken` / `dropRequirement` stable-id reducers and cancel-first `ConfirmDialog` / `ActionPreview` remain authoritative. The regressions activate position 2 and prove only that exact duplicate id is removed; the registrar's official transcript and degree audit remain unchanged.
 - Both guards failed against the former complete-fact-only controls. Degree-domain, reducer/Undo, graduation/advisor, accessibility-label, dead-end, root-lifecycle and isolation verification passes 142/142; both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning.
 - Token export passes 9/9, design contracts pass 70/70, the report is generated, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
-- Coherent slice commit `8bd874312` precedes final non-overlapping `origin/main` `35474ac5b`, merged as `54c5120e4`. The merged head still passes 142/142 Degree/control tests; the upstream Course Engine source-viewer set passes 6/6 plus web TypeScript. Its four focused API files remain locally unverified because the available Python runtime has no `pytest` module.
+- Coherent slice commit `8bd874312` precedes non-overlapping Course Engine `origin/main` `35474ac5b`, merged as `54c5120e4`, and final non-overlapping membership-context `origin/main` `caa9967fb`, merged as `f9d987d91`. The reconciled head passes 142/142 Degree/control tests, 6/6 Course Engine source-viewer tests plus web TypeScript, and 29/29 final Degree/context tests plus university typecheck. Four focused Course Engine API files remain locally unverified because the available Python runtime has no `pytest` module.
 - Mandatory HawkScan preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` present; and the default local target unavailable. No DAST scan, finding result, fix/rescan loop or security pass exists.
 - No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
 
