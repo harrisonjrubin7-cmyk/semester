@@ -272,10 +272,27 @@ export async function myProfile(userId: string): Promise<Profile | null> {
 export async function saveProfile(userId: string, handle: string, about: string): Promise<void> {
   const problem = handleProblem(handle);
   if (problem) throw new Error(problem);
-  const { error } = await (await cloud())
+  const db = await cloud();
+  const fields = { handle: cleanHandle(handle), about: about.slice(0, 140) };
+  // user_id is insertable but not updatable. A merge-upsert asks PostgREST
+  // to update every submitted column, including that pinned owner. Insert
+  // without replacing a conflict, then edit only the fields we may change.
+  const { data: created, error: createError } = await db
     .from('profiles')
-    .upsert({ user_id: userId, handle: cleanHandle(handle), about: about.slice(0, 140) });
+    .upsert({ user_id: userId, ...fields }, { onConflict: 'user_id', ignoreDuplicates: true })
+    .select('user_id');
+  if (createError) throw new Error(explain(createError.message));
+  if (created?.length) return;
+
+  const { data: saved, error } = await db
+    .from('profiles')
+    .update(fields)
+    .eq('user_id', userId)
+    .select('user_id');
   if (error) throw new Error(explain(error.message));
+  // A concurrent deletion or lost permission must not read as a saved name.
+  // Do not insert again: that could bring a deliberately deleted row back.
+  if (!saved?.length) throw new Error('Your profile could not be saved. Refresh and try again.');
 }
 
 export async function myRooms(userId: string, term: string): Promise<string[]> {
@@ -503,7 +520,8 @@ export async function react(
     .from('message_reactions')
     .upsert(
       { message_id: messageId, user_id: userId, emoji, term, code },
-      { onConflict: 'message_id,user_id,emoji' },
+      // Repeating the same reaction is a no-op; this table has no UPDATE policy.
+      { onConflict: 'message_id,user_id,emoji', ignoreDuplicates: true },
     );
   if (error) throw new Error(explain(error.message));
 }
@@ -792,7 +810,11 @@ export async function setGroup(id: string, patch: Partial<Pick<GroupRow, 'name' 
 export async function joinGroup(userId: string, groupId: string): Promise<void> {
   const { error } = await (await cloud())
     .from('group_members')
-    .upsert({ group_id: groupId, user_id: userId }, { onConflict: 'group_id,user_id' });
+    .upsert(
+      { group_id: groupId, user_id: userId },
+      // A repeated join needs no UPDATE permission on membership rows.
+      { onConflict: 'group_id,user_id', ignoreDuplicates: true },
+    );
   if (error) throw new Error(explain(error.message));
 }
 

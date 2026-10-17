@@ -99,6 +99,51 @@ alter default privileges in schema public
 alter default privileges in schema public
   grant all on tables to anon, authenticated, service_role;
 
+-- Fresh previews no longer inherit CRUD on postgres-owned public tables.
+-- Keep the legacy profile above for its over-grant regression coverage;
+-- opt into the observed table defaults before applying any migration.
+-- This is only a table-grant profile, not a replica of hosted Supabase Auth,
+-- functions, sequences or extensions. Direct invocations remain legacy.
+\if :{?semester_explicit_table_grants}
+\else
+\set semester_explicit_table_grants 0
+\endif
+\if :semester_explicit_table_grants
+alter default privileges in schema public
+  revoke select, insert, update, delete on tables from anon, authenticated, service_role;
+\endif
+
+-- Assert the chosen profile for the migration creator, not any ACL owner.
+-- A supabase_admin default must never stand in for postgres's defaults.
+-- Session-local to this psql invocation; no database setting is persisted.
+select set_config('semester.fixture_explicit_table_grants',
+                  :'semester_explicit_table_grants', false);
+do $$
+declare
+  role_name text;
+  verb text;
+  actual boolean;
+  expected boolean := not current_setting('semester.fixture_explicit_table_grants')::boolean;
+begin
+  foreach role_name in array array['anon', 'authenticated', 'service_role'] loop
+    foreach verb in array array['SELECT', 'INSERT', 'UPDATE', 'DELETE'] loop
+      select exists (
+        select 1 from pg_default_acl d
+          cross join lateral aclexplode(d.defaclacl) a
+         where d.defaclrole = (select oid from pg_roles where rolname = current_user)
+           and d.defaclnamespace = 'public'::regnamespace
+           and d.defaclobjtype = 'r'
+           and a.grantee = (select oid from pg_roles where rolname = role_name)
+           and a.privilege_type = verb
+      ) into actual;
+      if actual is distinct from expected then
+        raise exception 'FAILED: local table-default profile for % has % = %, expected %',
+          role_name, verb, actual, expected;
+      end if;
+    end loop;
+  end loop;
+end $$;
+
 -- Only the columns the check suites actually write. A real `auth.users` has
 -- many more, and none of them are reachable from a policy in this schema.
 create table if not exists auth.users (

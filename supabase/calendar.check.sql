@@ -116,9 +116,15 @@ begin
   get diagnostics n = row_count;
   perform pg_temp.counted('a stranger cannot overwrite your calendar', n, 0);
 
-  delete from public.calendar_feeds;
-  get diagnostics n = row_count;
-  perform pg_temp.counted('a stranger cannot unpublish your calendar', n, 0);
+  -- A legacy project may reach RLS; a fresh explicit-grant project refuses
+  -- DELETE at the relation boundary. Both must leave the owner's feed alone.
+  begin
+    delete from public.calendar_feeds;
+    get diagnostics n = row_count;
+    perform pg_temp.counted('a stranger cannot unpublish your calendar', n, 0);
+  exception when insufficient_privilege then
+    raise notice 'ok  a stranger cannot unpublish your calendar (no DELETE grant)';
+  end;
 end $$;
 
 -- ── The signed-out role, which is what the shipped key maps to ────────────

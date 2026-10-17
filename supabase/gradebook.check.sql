@@ -144,7 +144,7 @@ declare
   prof uuid; coprof uuid; ta uuid; chair uuid; registrar uuid; other_prof uuid; elsewhere uuid;
   ana uuid; ben uuid; cal uuid; dual uuid;
   next_prof uuid; untermed uuid; dan uuid; eve uuid;
-  ps1 uuid; mid uuid; req uuid; req2 uuid; sp1 uuid; n bigint;
+  ps1 uuid; mid uuid; req uuid; req2 uuid; sp1 uuid; n bigint; passback_id uuid;
   scheme constant text := $q$select public.gradebook_set_scheme('econ 1020', '2026FA',
       '[{"key":"problem-sets","name":"Problem sets","weight":40,"drop_lowest":1},
         {"key":"exams","name":"Exams","weight":60}]'::jsonb,
@@ -385,11 +385,15 @@ begin
   perform pg_temp.counted('the instructor can', pg_temp.seen(prof, 'select * from public.grade_passbacks'), 1);
   perform pg_temp.refused('a signed-in account recording a passback', prof,
     $q$select public.gradebook_record_passback((select id from public.grade_passbacks limit 1), 'sent', '')$q$);
+  -- Fixture observation belongs to the test owner. The sender contract here
+  -- is the service-only RPC, not an undeclared direct queue-read privilege.
+  select id into strict passback_id from public.grade_passbacks
+   where item_id = ps1 and student_id = ana;
   execute 'set local role service_role';
   perform pg_temp.said('the sender records it sent',
-    public.gradebook_record_passback((select id from public.grade_passbacks limit 1), 'sent', 'ok'), 'sent');
+    public.gradebook_record_passback(passback_id, 'sent', 'ok'), 'sent');
   perform pg_temp.said('and a late failure report does not unsend it',
-    public.gradebook_record_passback((select id from public.grade_passbacks limit 1), 'failed', 'timeout'), 'already-sent');
+    public.gradebook_record_passback(passback_id, 'failed', 'timeout'), 'already-sent');
   execute 'reset role';
   perform pg_temp.said('it stays sent', (select status from public.grade_passbacks), 'sent');
 
