@@ -1,0 +1,23 @@
+{
+  "function": "redact",
+  "cases": [
+    {
+      "input": {
+        "token": "secret",
+        "request_id": "r",
+        "student_name": "X"
+      },
+      "expected": {
+        "request_id": "r"
+      }
+    },
+    {
+      "input": {
+        "status": 503
+      },
+      "expected": {
+        "status": 503
+      }
+    }
+  ]
+}

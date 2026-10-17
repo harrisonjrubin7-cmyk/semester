@@ -1,0 +1,37 @@
+{
+  "function": "paginate",
+  "cases": [
+    {
+      "input": {
+        "items": [
+          1,
+          2,
+          3
+        ],
+        "offset": 1,
+        "limit": 1
+      },
+      "expected": [
+        2
+      ]
+    },
+    {
+      "input": {
+        "items": [],
+        "offset": 0,
+        "limit": 10
+      },
+      "expected": []
+    },
+    {
+      "input": {
+        "items": [
+          1
+        ],
+        "offset": 0,
+        "limit": 0
+      },
+      "expected": "!ValueError"
+    }
+  ]
+}

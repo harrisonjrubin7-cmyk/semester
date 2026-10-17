@@ -1,0 +1,171 @@
+{
+  "reference_grader_runs": [
+    {
+      "lab": 1,
+      "passed": 3,
+      "total": 3,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    },
+    {
+      "lab": 2,
+      "passed": 2,
+      "total": 2,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    },
+    {
+      "lab": 3,
+      "passed": 3,
+      "total": 3,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    },
+    {
+      "lab": 4,
+      "passed": 3,
+      "total": 3,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    },
+    {
+      "lab": 5,
+      "passed": 3,
+      "total": 3,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    },
+    {
+      "lab": 6,
+      "passed": 3,
+      "total": 3,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    },
+    {
+      "lab": 7,
+      "passed": 2,
+      "total": 2,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    },
+    {
+      "lab": 8,
+      "passed": 1,
+      "total": 1,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    },
+    {
+      "lab": 9,
+      "passed": 3,
+      "total": 3,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    },
+    {
+      "lab": 10,
+      "passed": 2,
+      "total": 2,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    },
+    {
+      "lab": 11,
+      "passed": 2,
+      "total": 2,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    },
+    {
+      "lab": 12,
+      "passed": 3,
+      "total": 3,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    },
+    {
+      "lab": 13,
+      "passed": 4,
+      "total": 4,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    },
+    {
+      "lab": 14,
+      "passed": 2,
+      "total": 2,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    },
+    {
+      "lab": 15,
+      "passed": 2,
+      "total": 2,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    },
+    {
+      "lab": 16,
+      "passed": 2,
+      "total": 2,
+      "correctness_points": 30.0,
+      "manual_points_available": 70,
+      "final_grade": null,
+      "error": null,
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+    }
+  ],
+  "openapi_structural_checks": {
+    "unique_operation_ids": true,
+    "schema_references_resolved": true,
+    "full_semantic_validation": false
+  },
+  "browser_e2e_tested": false,
+  "deployed": false
+}

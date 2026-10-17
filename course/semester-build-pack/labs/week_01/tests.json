@@ -1,0 +1,23 @@
+{
+  "function": "classify_record",
+  "cases": [
+    {
+      "input": {
+        "kind": "draft"
+      },
+      "expected": "private"
+    },
+    {
+      "input": {
+        "kind": "grade"
+      },
+      "expected": "official"
+    },
+    {
+      "input": {
+        "kind": "fixture"
+      },
+      "expected": "synthetic"
+    }
+  ]
+}

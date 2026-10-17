@@ -1,0 +1,27 @@
+{
+  "function": "evidence_ready",
+  "cases": [
+    {
+      "input": {
+        "artifact_digest": "d",
+        "contract_version": "1",
+        "fixture_version": "1",
+        "tests": {
+          "contract": true,
+          "isolation": true,
+          "revocation": true,
+          "accessibility": true,
+          "recovery": true
+        }
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "artifact_digest": "d",
+        "tests": {}
+      },
+      "expected": false
+    }
+  ]
+}
