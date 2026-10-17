@@ -1604,6 +1604,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep device graph lines, provider activity and official academic records as separate authority boundaries.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 17 — distinguishable eligibility-requirement removals (slice 146)
+
+- [x] Start from clean required-branch head `84cb004bd`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Eligibility Check history/current code for overlap.
+- [x] Re-rank repeated student-entered eligibility rules as the next bounded Phase 3/6 accessibility gap; keep official eligibility determinations, provider activity and institution records outside this device-row mutation.
+- [x] Identify every removal by one-based position, list size, complete rule/source, required course-or-hour count, accepted-course scope and source note/no-note state.
+- [x] Preserve the existing exact-id device-library update, refused-write representation and eight-second Undo snapshot.
+- [x] Prove the guard red against the former name/source-only label and verify the second same-name/same-source control removes only its represented requirement ID.
+- [x] Pass 63/63 focused Eligibility, Athletics, device-library, Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through the temporary package-runner shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — active-skill preflight confirms Hawk v6/config/skills status and Docker are absent, API key/app-host values are unset and no live target exists. The local properties file was not read; no scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep student-entered eligibility planning, official compliance determinations, provider activity and institution records as separate authority boundaries.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 13 update — exact shared-photo removal and thumbnail lifetime (slice 142)
 
 - [x] Start from clean required-branch head `ed04f81dd`, fetch current `origin/main` `3ec04d742` and inspect exact shared-capture history/current code for overlap.

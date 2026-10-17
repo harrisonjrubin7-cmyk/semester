@@ -1379,6 +1379,19 @@ This local slice does not prove deployment, provider execution, institutional ac
 
 This local slice does not prove deployment, provider execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 17 / integration slice 146
+
+- Required-branch head `84cb004bd` was clean before selection and already included current `origin/main` `116d8444e`; exact Eligibility Check history/current-code inspection found the existing exact-id/Undo behavior but no same-name/same-source identity guard.
+- Every eligibility-rule removal now names its list position/size, complete student-entered rule and source, required course-or-hour count, accepted-course scope and source note/no-note state.
+- Existing exact-id device-library persistence, refused-write behavior and eight-second Undo remain authoritative. Removing a row does not determine eligibility, change another repeated rule, contact a compliance office/provider or mutate an official academic record.
+- The regression failed against the former name/source-only label, then 63/63 focused Eligibility, Athletics, device-library, Undo, label, root-lifecycle and isolation tests passed.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing chunk-size warning. Aggregate design-system check/report pass through the temporary package-runner shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- The active HawkScan skill stops at mandatory preflight: Hawk v6/config/skills status and Docker are absent, API key/app-host values are unset and no live target is configured. `stackhawk.yml` and a local Hawk properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, provider execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 14 / integration slice 143
 
 - Required-branch head `36fbb71b4` was clean before selection and already included current `origin/main` `116d8444e`; exact Registration Day history/current-code inspection found no equivalent cross-primary backup-action identity guard.

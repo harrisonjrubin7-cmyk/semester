@@ -1478,6 +1478,16 @@ The new guard failed against the former position-only labels. Focused Advisor Me
 
 The active HawkScan skill stops at mandatory preflight: Hawk v6/config/skills status and Docker are absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` are unset, and no live target is configured. `stackhawk.yml` and a local Hawk properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Automation pass 17 — distinguishable eligibility-requirement removals (slice 146)
+
+Required-branch head `84cb004bd` was clean before selection and already included current `origin/main` `116d8444e`. Exact upstream history and current-code inspection found the existing exact-id removal, refused-write behavior and bounded Undo, but two student-entered rules with the same name and source still exposed identical control names.
+
+Every eligibility-requirement removal now names one-based position, list size, complete student-entered rule and source, required course-or-hour count, accepted-course scope and source note/no-note state. The existing exact-id device-library update and eight-second Undo snapshot remain authoritative. Removing a row changes only that student-entered planning copy; Semester still does not determine eligibility, contact a compliance provider or change an official academic record.
+
+The new regression failed against the former name/source-only label and proves the second same-name/same-source control removes only its stable requirement ID. Focused Eligibility, Athletics, device-library, Undo, label, root-lifecycle and isolation verification passes 63/63. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Aggregate design-system check/report pass through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun.
+
+The active HawkScan skill stops at mandatory preflight: Hawk v6/config/skills status and Docker are absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` are unset, and no live target is configured. `stackhawk.yml` and a local Hawk properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Automation pass 16 — distinguishable graph-line removals (slice 145)
 
 Required-branch head `8dabfa54e` was clean before selection and already included current `origin/main` `116d8444e`. Exact upstream history and current-code inspection found stable plot IDs, recoverable `dropPlot` behavior and position-only graph-line removal names, with no equivalent identity guard on main.

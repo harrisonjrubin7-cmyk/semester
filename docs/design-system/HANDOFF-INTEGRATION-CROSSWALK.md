@@ -1080,6 +1080,18 @@ No route, navigation, shared component, dependency, schema, policy, server opera
 
 No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
 
+## Automation pass 17 mapping — distinguishable eligibility-requirement removals (slice 146)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated student-entered eligibility rules remain distinguishable at removal | `app/src/components/EligibilityCheck.tsx`; device-scoped Athletics library | Existing but incomplete → existing and verified locally for this slice | Every removal name includes position/list size, complete rule and source, required course-or-hour count, accepted-course scope and source note/no-note state. |
+| Preserve exact recoverable device mutation | Stable requirement ID; validated Athletics-library `update`; bounded Undo snapshot | Existing and unchanged | The regression activates the second same-name/same-source control and proves only its ID is removed. Refused writes keep the row represented; existing Undo restores the exact rule at its former position. |
+| Preserve compliance and official-record boundaries | `NotOfficial`; shared Degree arithmetic over student-recorded courses | Existing and unchanged | Removing a rule changes only a student-entered device copy. It does not determine eligibility, contact a compliance office/provider, or change a course, transcript or official academic record. |
+| Regression and repository gates | Extended `EligibilityCheck.test.tsx` plus Athletics/storage/Undo/label/lifecycle/isolation guards | Existing and verified locally for this slice | Red proof against the former name/source-only label; 63/63 focused tests, both typechecks, lint and build pass. Aggregate design check/report pass 9 token, 70 design and eight report contracts with zero audit violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
 ## Automation pass 14 mapping — distinguishable Registration Day backup actions (slice 143)
 
 | Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
