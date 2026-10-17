@@ -159,7 +159,7 @@ describe('asking a person for help', () => {
     await act(async () => root.render(<GetHelp account={ME} />));
     expect(host.textContent).toContain('Opened 2 times by the office');
     expect(host.textContent).toContain('Prepare for it: Tuesday 2pm');
-    await act(async () => button('Withdraw and erase')!.click());
+    await act(async () => { button('Withdraw and erase')!.click(); });
     expect(mock.withdraw).toHaveBeenCalledWith('req-1');
   });
 

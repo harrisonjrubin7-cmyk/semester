@@ -267,7 +267,7 @@ function CommunitySignedIn({ accountId, wide }: { accountId: string; wide: boole
                 await refresh();
                 setOpenId(id);
               })
-              .catch((e: unknown) => setStatus(e instanceof Error ? e.message : 'Could not create the group.'));
+              .catch((e: unknown) => { setStatus(e instanceof Error ? e.message : 'Could not create the group.'); });
           }}
         >
           <label style={{ display: 'grid', gap: 'var(--sp-2)' }}>
@@ -349,7 +349,7 @@ function NoticeList({ notices, onChange }: { notices: DecisionNotice[]; onChange
                   setBusy(true);
                   void appeal(n.postId)
                     .then(onChange)
-                    .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Could not appeal.'))
+                    .catch((e: unknown) => { setError(e instanceof Error ? e.message : 'Could not appeal.'); })
                     .finally(() => setBusy(false));
                 }}
               >

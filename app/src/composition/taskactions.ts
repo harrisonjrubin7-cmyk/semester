@@ -64,7 +64,7 @@ export function makeTaskActions(
   domains: Domains | null,
   dispatch: (action: Action) => void,
   flag: FeatureState,
-  log: (message: string) => void = (message) => console.warn(message),
+  log: (message: string) => void = (message) => { console.warn(message); },
 ): TaskActions {
   const legacy: TaskActions = {
     add: (task) => dispatch({ type: 'addTask', task }),
@@ -142,7 +142,7 @@ export function makeTaskActions(
     remove: (id) =>
       orLegacy(async () => {
         const gone = await domains.tasks.remove(id);
-        if (refused(gone)) await viaLegacy(() => legacy.remove(id));
+        if (refused(gone)) await viaLegacy(() => { legacy.remove(id); });
       }, () => legacy.remove(id)),
   };
 }

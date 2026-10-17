@@ -576,7 +576,7 @@ function Workspace({ who }: { who: string }) {
                       className="input"
                       value={pending.value}
                       onChange={(e) =>
-                        setPending({ ...pending, value: e.target.value })
+                        { setPending({ ...pending, value: e.target.value }); }
                       }
                     />
                   </Field>
@@ -768,7 +768,7 @@ function Workspace({ who }: { who: string }) {
                 type={key === 'due' ? 'date' : 'text'}
                 value={capture[key]}
                 onChange={(e) =>
-                  setCapture({ ...capture, [key]: e.target.value })
+                  { setCapture({ ...capture, [key]: e.target.value }); }
                 }
               />
             </Field>

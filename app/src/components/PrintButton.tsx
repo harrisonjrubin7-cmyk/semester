@@ -24,7 +24,7 @@ export function PrintButton({
     <button
       type="button"
       className="btn btn-secondary btn-block no-print"
-      onClick={() => window.print()}
+      onClick={() => { window.print(); }}
       style={{ height: 42, ...style }}
     >
       {label}

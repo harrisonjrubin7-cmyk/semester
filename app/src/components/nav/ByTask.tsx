@@ -107,7 +107,7 @@ export function ByTask() {
   const filtering = q.trim() !== '';
   const opened = open === null ? null : (sections.find((s) => s.tag === open) ?? null);
 
-  const go = (screen: Screen) => dispatch({ type: 'go', screen });
+  const go = (screen: Screen) => { dispatch({ type: 'go', screen }); };
 
   return (
     <>

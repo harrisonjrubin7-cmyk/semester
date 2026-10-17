@@ -22,7 +22,7 @@ beforeEach(() => {
 
 /* No root outlives the test that made it. See `src/rootunmount.test.ts`. */
 afterEach(() => {
-  act(() => root.unmount());
+  act(() => { root.unmount(); });
   host.remove();
 });
 

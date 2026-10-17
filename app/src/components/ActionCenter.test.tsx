@@ -308,7 +308,7 @@ it('with offline mode on, does not open an official site offline, and does onlin
     MODULE_FLAGS.offline_mode = 'production';
     Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => false });
     render([external]);
-    act(() => button(/^Open the aid portal/)!.click());
+    act(() => button(/^Open the aid portal/)?.click());
     expect(opened).not.toHaveBeenCalled();
     expect(confirm).not.toHaveBeenCalled();
     expect(alerted.mock.calls[0][0]).toContain('nothing was sent');

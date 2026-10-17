@@ -197,7 +197,7 @@ describe('ErrorSummary', () => {
   const links = () => [...host.querySelectorAll<HTMLAnchorElement>('.error-summary a')];
 
   it('draws nothing before a submit, and nothing for a single problem', () => {
-    act(() => root.render(<Form summary />));
+    act(() => { root.render(<Form summary />); });
     expect(host.querySelector('.error-summary')).toBeNull();
     type(box('Name'), 'Book');
     type(box('Amount'), 'lots');

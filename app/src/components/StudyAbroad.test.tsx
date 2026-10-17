@@ -29,7 +29,7 @@ const field = (label: RegExp, n = 0) =>
 const set = (el: HTMLInputElement | HTMLSelectElement, value: string) =>
   act(() => {
     const proto = el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
-    Object.getOwnPropertyDescriptor(proto, 'value')!.set!.call(el, value);
+    Object.getOwnPropertyDescriptor(proto, 'value')!.set?.call(el, value);
     el.dispatchEvent(new Event(el instanceof HTMLSelectElement ? 'change' : 'input', { bubbles: true }));
   });
 const stored = () => JSON.parse(localStorage.getItem(KEY) ?? '{}');

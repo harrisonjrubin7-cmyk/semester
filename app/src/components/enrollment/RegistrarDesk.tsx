@@ -301,7 +301,7 @@ export function RegistrarDesk({ term, calendar, onTermSaved }: { term: string; c
           <Sub>For {term}. Saving a course and section that already exist changes it; raising its seats gives them to the students waiting.</Sub>
           <Field label="Course code" hint="As ECON 1020.">
             {(ids) => (
-              <input id={ids.id} aria-describedby={ids.hint} className="input" value={sectionForm.course} onChange={(e) => setSectionForm((s) => ({ ...s, course: e.target.value }))} required />
+              <input id={ids.id} aria-describedby={ids.hint} className="input" value={sectionForm.course} onChange={(e) => { setSectionForm((s) => ({ ...s, course: e.target.value })); }} required />
             )}
           </Field>
           <Field label="Section">

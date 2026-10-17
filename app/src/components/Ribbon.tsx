@@ -252,7 +252,7 @@ export function FormulaBar({
       <input
         className="fx-name"
         value={typed}
-        onChange={(e) => setTyped(e.target.value)}
+        onChange={(e) => { setTyped(e.target.value); }}
         onFocus={(e) => e.currentTarget.select()}
         onBlur={() => setTyped('')}
         onKeyDown={(e) => {

@@ -168,7 +168,7 @@ export function Toolkit({
             <div className="portal-form-grid">
               <label>
                 Course or project
-                <select className="input" value={courseCode} onChange={(e) => setCourseCode(e.target.value)}>
+                <select className="input" value={courseCode} onChange={(e) => { setCourseCode(e.target.value); }}>
                   {courses.map((c) => (
                     <option key={c.code} value={c.code}>
                       {c.code} · {c.name}

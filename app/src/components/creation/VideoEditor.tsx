@@ -152,7 +152,7 @@ export function VideoEditor({
           if (alive) setUrl(objectUrl);
           else URL.revokeObjectURL(objectUrl);
         })
-        .catch((e) => setNotice((e as Error).message));
+        .catch((e: unknown) => setNotice((e as Error).message));
     } else {
       setUrl('');
     }
@@ -541,7 +541,7 @@ export function VideoEditor({
               max={clip.duration}
               value={clip.end}
               onChange={(e) =>
-                patch({ end: Math.max(clip.start + 0.01, Math.min(clip.duration, Number(e.target.value) || clip.duration)) })
+                { patch({ end: Math.max(clip.start + 0.01, Math.min(clip.duration, Number(e.target.value) || clip.duration)) }); }
               }
               style={input}
             />

@@ -402,7 +402,7 @@ function Row({
             paddingBottom: 'var(--sp-5)',
           }}
         >
-          <Item onClick={() => onPin(row.key, !row.pinned)}>
+          <Item onClick={() => { onPin(row.key, !row.pinned); }}>
             <StarIcon on={row.pinned} size={12} /> {row.pinned ? 'Unpin' : 'Pin'}
           </Item>
           <Item onClick={() => onMute(row.key, !row.muted)}>{row.muted ? 'Unmute' : 'Mute'}</Item>

@@ -164,7 +164,7 @@ describe('with career_evidence on', () => {
     expect(preview).not.toContain('Research ·');
     expect(preview).toContain('Nothing is sent anywhere.');
     expect(document.activeElement?.textContent).toBe('Cancel');
-    await act(async () => button(/^Open in Write$/).click());
+    await act(async () => { button(/^Open in Write$/).click(); });
     expect(seen!.documents.length).toBe(before + 1);
     expect(seen!.documents[0].title).toBe('Research roles — résumé');
   });

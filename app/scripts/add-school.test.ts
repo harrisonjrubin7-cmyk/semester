@@ -50,7 +50,7 @@ describe('the id, against the constraint it has to satisfy', () => {
   });
 
   it('accepts exactly what the table accepts', () => {
-    const table = new RegExp(declared![1]);
+    const table = new RegExp(declared?.[1]);
     const candidates = [
       'vanderbilt',
       'uc-berkeley',
@@ -169,7 +169,7 @@ describe('what it was asked to do', () => {
       'alumni.vanderbilt.edu',
     ]);
     expect(got.ok).toBe(false);
-    expect(got.ok === false && got.why).toContain('Domains are set separately');
+    expect(!got.ok && got.why).toContain('Domains are set separately');
   });
 
   it('refuses an id the table would refuse, before the round trip', () => {

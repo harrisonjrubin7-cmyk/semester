@@ -440,7 +440,7 @@ export function GraduationSimulator({
         <div className="portal-actions">
           <button
             className="portal-primary"
-            onClick={() => download({ name: 'Semester graduation scenarios.txt', body: text, mime: 'text/plain' })}
+            onClick={() => { download({ name: 'Semester graduation scenarios.txt', body: text, mime: 'text/plain' }); }}
           >
             Download summary
           </button>

@@ -36,7 +36,7 @@ export default function Respond({ id }: { id: string }) {
     openForm(id)
       .then((f) => {
         if (!live) return;
-        if (!f) return setState('gone');
+        if (!f) { setState('gone'); return; }
         setForm(f);
         setState('ready');
       })

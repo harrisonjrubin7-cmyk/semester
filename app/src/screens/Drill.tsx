@@ -1074,7 +1074,7 @@ export function Quiz() {
               key={i}
               type="button"
               className="bare"
-              onClick={() => dispatch({ type: 'pickAnswer', index: i })}
+              onClick={() => { dispatch({ type: 'pickAnswer', index: i }); }}
               disabled={answered}
               style={{
                 display: 'flex',

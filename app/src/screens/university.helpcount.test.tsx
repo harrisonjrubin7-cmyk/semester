@@ -129,7 +129,7 @@ it('drops the count when a request is marked seen in the inbox', async () => {
   await act(async () => button(/student will see this/i)!.click());
   // The database now holds one request as seen; the inbox reloads after the move.
   mock.load.mockResolvedValue([inbox([item('a', 'acknowledged'), item('b', 'sent')])]);
-  await act(async () => button(/^mark as seen$/i)!.click());
+  await act(async () => button(/^mark as seen$/i)?.click());
 
   expect(mock.answer).toHaveBeenCalledWith('a', 'sent', 'acknowledged', '');
   expect(helpTab()).toBe('Get help (1\u00a0new)');

@@ -186,7 +186,7 @@ function RuleForm({
         />
         <Tick
           on={draft.folder === 'trash'}
-          onPress={() => set({ folder: draft.folder === 'trash' ? undefined : 'trash' })}
+          onPress={() => { set({ folder: draft.folder === 'trash' ? undefined : 'trash' }); }}
           label="Send it to the bin"
         />
       </fieldset>

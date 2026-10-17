@@ -101,7 +101,7 @@ describe('what a shared row carries for a screen reader', () => {
 
     const row = host.querySelector('button');
     expect(row, 'a row with an onClick should be a button').toBeTruthy();
-    expect(row!.getAttribute('role')).toBe('switch');
+    expect(row?.getAttribute('role')).toBe('switch');
     expect(row!.getAttribute('aria-checked')).toBe('true');
     expect(row!.getAttribute('aria-label')).toBe('Unmute ECON 1020');
   });
@@ -126,7 +126,7 @@ describe('what a shared row carries for a screen reader', () => {
     const row = host.querySelector('[role="status"]');
     expect(row, 'a role on a div row was dropped').toBeTruthy();
     expect(row!.tagName).toBe('DIV');
-    expect(row!.getAttribute('aria-label')).toBe('Two courses silenced');
+    expect(row?.getAttribute('aria-label')).toBe('Two courses silenced');
   });
 
   /*

@@ -115,7 +115,7 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  act(() => root.unmount());
+  act(() => { root.unmount(); });
   host.remove();
 });
 

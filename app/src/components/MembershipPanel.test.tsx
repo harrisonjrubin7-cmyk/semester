@@ -48,7 +48,7 @@ it('says you are on Free and that nothing is for sale', () => {
 
 it('explains upgrade and cancel rather than doing either', () => {
   render();
-  act(() => button(/^View planned Plus$/).click());
+  act(() => { button(/^View planned Plus$/).click(); });
   expect(button(/^View planned Plus$/).getAttribute('aria-expanded')).toBe('true');
   expect(host.querySelector('[role="status"]')?.textContent).toMatch(/Nothing has been charged/);
   act(() => button(/Cancel membership/).click());

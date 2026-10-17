@@ -185,7 +185,7 @@ export function TabChooser() {
               ways={['left', 'right']}
               atStart={i === 0}
               atEnd={i === chosen.length - 1}
-              onUp={() => set(moveTab(tabs, id, -1))}
+              onUp={() => { set(moveTab(tabs, id, -1)); }}
               onDown={() => set(moveTab(tabs, id, 1))}
             />
             <button

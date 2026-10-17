@@ -362,7 +362,7 @@ export function MembershipPanel() {
         {ALWAYS_INCLUDED.map((i) => <li key={i}>{i}</li>)}
       </ul>
       <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap', marginBottom: 'var(--sp-4)' }}>
-        <button type="button" className="btn btn-ghost" onClick={() => dispatch({ type: 'go', screen: 'export' })}>
+        <button type="button" className="btn btn-ghost" onClick={() => { dispatch({ type: 'go', screen: 'export' }); }}>
           Export your data
         </button>
         <button type="button" className="btn btn-ghost" onClick={() => dispatch({ type: 'go', screen: 'privacy' })}>

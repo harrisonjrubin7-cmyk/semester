@@ -183,7 +183,7 @@ function Controls({
         <button type="button" className="workspace-text-button" onClick={() => act(id, 'start')}>Start</button>
       )}
       <button type="button" className="workspace-text-button" onClick={() => act(id, 'complete')}>Done</button>
-      <button type="button" className="workspace-text-button" onClick={() => act(id, 'snooze', undefined, undefined, 'Snoozed until tomorrow morning.')}>Snooze until tomorrow</button>
+      <button type="button" className="workspace-text-button" onClick={() => { act(id, 'snooze', undefined, undefined, 'Snoozed until tomorrow morning.'); }}>Snooze until tomorrow</button>
       {!compact && others.length > 0 && (
         <button
           type="button"

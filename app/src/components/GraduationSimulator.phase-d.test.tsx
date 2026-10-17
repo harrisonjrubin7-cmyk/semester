@@ -56,7 +56,7 @@ beforeEach(() => {
   removed.length = 0;
 });
 afterEach(() => {
-  act(() => root.unmount());
+  act(() => { root.unmount(); });
   host.remove();
   localStorage.clear();
   wide = false;
@@ -256,7 +256,7 @@ describe('with cost_planner on', () => {
   it('builds the cost per term from labelled lines, and the projection follows', () => {
     mount({ simulator: false, costs: true });
     expect(text()).toContain('costs before any aid');
-    act(() => button(/^Add$/)!.click());
+    act(() => button(/^Add$/)?.click());
     // The figures typed before itemising come along as lines of their own,
     // rather than being replaced by the new line's zero.
     expect(stored().plan.costPerTerm).toBe(20_000);

@@ -638,7 +638,7 @@ function Rules() {
       <textarea
         className="input"
         value={list}
-        onChange={(e) => setList(e.target.value)}
+        onChange={(e) => { setList(e.target.value); }}
         placeholder="ECON 3010, ECON 3012 — or just ECON for any course in it. Blank means anything."
         aria-label="Which courses satisfy it"
         style={{

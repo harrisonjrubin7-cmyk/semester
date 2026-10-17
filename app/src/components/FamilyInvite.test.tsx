@@ -126,7 +126,7 @@ it('makes nothing until the full confirmation is accepted, then shows the code t
 
   type(/Your name, as Mom will see it/, ' Sam ');
   mock.rpc.mockResolvedValue({ data: 'K7M2Q9ZP', error: null });
-  await act(async () => button(/Create the code/)!.click());
+  await act(async () => { button(/Create the code/)!.click(); });
   expect(mock.rpc).toHaveBeenCalledTimes(1);
   expect(mock.rpc).toHaveBeenCalledWith('make_family_share', {
     want_categories: ['finances'],

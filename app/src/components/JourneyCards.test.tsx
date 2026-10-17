@@ -40,7 +40,7 @@ describe('JourneyCards', () => {
 
     const card = host.querySelector('[data-journey-id="learn-practice"]') as HTMLButtonElement;
     card.focus();
-    act(() => card.click());
+    act(() => { card.click(); });
     expect(document.activeElement).toBe(card);
     expect(onOpen).toHaveBeenCalledWith('study');
 

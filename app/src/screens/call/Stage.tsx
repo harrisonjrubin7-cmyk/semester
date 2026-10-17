@@ -1155,7 +1155,7 @@ export function Stage({
               aria-label="Say something to the call"
               className="input"
               value={draft}
-              onChange={(e) => setDraft(e.target.value)}
+              onChange={(e) => { setDraft(e.target.value); }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') say();
               }}

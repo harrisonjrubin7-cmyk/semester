@@ -404,7 +404,7 @@ export function Talk({
                   key={hit.id}
                   type="button"
                   className="bare tappable"
-                  onClick={() => jump(hit.id)}
+                  onClick={() => { jump(hit.id); }}
                   style={{
                     width: '100%',
                     textAlign: 'left',
@@ -505,7 +505,7 @@ export function Talk({
                       void unsay(id)
                         .then(() => setMessages((all) => all.filter((x) => x.id !== id)))
                         .catch((e: unknown) =>
-                          setError(e instanceof Error ? e.message : String(e)),
+                          { setError(e instanceof Error ? e.message : String(e)); },
                         )
                     }
                     onReport={(id) => {
@@ -662,7 +662,7 @@ export function Talk({
                     onClick={() =>
                       void block(me, person.user_id)
                         .then(() =>
-                          setMessages((all) => all.filter((x) => x.user_id !== person.user_id)),
+                          { setMessages((all) => all.filter((x) => x.user_id !== person.user_id)); },
                         )
                         /*
                          * Blocking is a safety control, so a block that did

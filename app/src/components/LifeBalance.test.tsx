@@ -173,7 +173,7 @@ describe('the balance view in Plan', () => {
     expect(dialog.textContent).toContain('as a Study event on your Semester calendar');
     expect(dialog.textContent).toContain('It does not change the due date');
     expect(document.activeElement?.textContent).toBe('Cancel');
-    expect(seen!.appointments).toHaveLength(before);
+    expect(seen?.appointments).toHaveLength(before);
     await act(async () => button(/^Cancel$/).click());
     expect(seen!.appointments).toHaveLength(before);
 
@@ -221,7 +221,7 @@ describe('the crunch card on Today', () => {
 
   it('explains itself, and snoozes for a week in the Action Center’s own store', async () => {
     await mountToday(true);
-    await act(async () => button(/^Why this\?$/).click());
+    await act(async () => { button(/^Why this\?$/).click(); });
     expect(text()).toContain('Why now?');
     expect(text()).toContain('What Semester can’t tell you');
     await act(async () => button(/^Close$/).click());

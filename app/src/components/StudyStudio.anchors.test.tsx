@@ -63,7 +63,7 @@ const button = (text: string | RegExp) =>
   [...host.querySelectorAll('button')].find((b) => (typeof text === 'string' ? b.textContent?.trim() === text : text.test(b.textContent ?? '')));
 
 async function upload(name: string) {
-  act(() => root.render(<StudyStudio courseId="econ" onClose={() => {}} />));
+  act(() => { root.render(<StudyStudio courseId="econ" onClose={() => {}} />); });
   const input = host.querySelector('input[type=file]') as HTMLInputElement;
   Object.defineProperty(input, 'files', { value: [new File(['x'], name)], configurable: true });
   await act(async () => {

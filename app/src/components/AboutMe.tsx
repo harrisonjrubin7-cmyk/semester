@@ -208,7 +208,7 @@ export function AboutMe() {
             />
           )}
           confirmLabel="Forget"
-          onCancel={() => setForgetting(null)}
+          onCancel={() => { setForgetting(null); }}
           onConfirm={() => {
             const id = forgetting.id;
             setForgetting(null);

@@ -139,7 +139,7 @@ describe('a note edited on both devices', () => {
     const before = push.mock.calls.length;
     const keep = host.querySelector('button[aria-label="Keep the this device version of Week 6 notes"]') as HTMLButtonElement;
     expect(keep, 'no Keep button for this device').toBeTruthy();
-    await act(async () => keep.click());
+    await act(async () => { keep.click(); });
 
     expect(bodies()).toEqual(['on the bus']);
     expect(store.state.notes.find((n) => n.id === 'n1')!.updated).toBeGreaterThan(300);

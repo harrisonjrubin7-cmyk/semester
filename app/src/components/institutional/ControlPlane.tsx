@@ -43,7 +43,7 @@ export function ControlPlane({ input, onApply }: { input: ControlPlaneInput; onA
           onClick={() => {
             setMessage('Applying through the verified gateway…');
             void onApply?.().then(
-              ({ receiptId }) => setMessage(`Verified production receipt ${receiptId} returned by the institution gateway.`),
+              ({ receiptId }) => { setMessage(`Verified production receipt ${receiptId} returned by the institution gateway.`); },
               () => setMessage('The gateway did not return a verified receipt. Nothing is shown as applied.'),
             );
           }}

@@ -71,7 +71,7 @@ export function DisclosurePanel({ library, course }: { library: ReturnType<typeo
         <pre>{declarationText(d)}</pre>
       </details>
       <div className="portal-actions">
-        <button disabled={gaps.length > 0} onClick={() => download({ name: 'AI-use declaration.txt', mime: 'text/plain', body: declarationText(d) })}>
+        <button disabled={gaps.length > 0} onClick={() => { download({ name: 'AI-use declaration.txt', mime: 'text/plain', body: declarationText(d) }); }}>
           Download declaration
         </button>
         <button disabled={gaps.length > 0} onClick={() => void navigator.clipboard?.writeText(declarationText(d))}>

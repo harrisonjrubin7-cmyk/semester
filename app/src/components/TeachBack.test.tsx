@@ -31,7 +31,7 @@ const SOURCES: StudySource[] = [
 
 const render = (ready: boolean) => act(() => root.render(<TeachBack courseId="econ" sources={SOURCES} ready={ready} />));
 const type = (label: string, value: string) => {
-  const el = [...host.querySelectorAll('label')].find((l) => l.textContent?.startsWith(label))!.querySelector('input, textarea') as HTMLInputElement;
+  const el = [...host.querySelectorAll('label')].find((l) => l.textContent?.startsWith(label))?.querySelector('input, textarea') as HTMLInputElement;
   const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
   act(() => {
     Object.getOwnPropertyDescriptor(proto, 'value')!.set!.call(el, value);

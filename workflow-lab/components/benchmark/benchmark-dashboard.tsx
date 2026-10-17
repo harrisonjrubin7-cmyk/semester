@@ -71,7 +71,7 @@ export function BenchmarkDashboard({ bundle, viewer, exportSuiteId }: { bundle: 
       )}
 
       <AggregateLeaderboard rows={summary.aggregate} />
-      <WorkflowMatrix tasks={summary.tasks} onOpenTask={(n) => setView({ kind: "task", number: n })} onOpenRun={(n, p) => setView({ kind: "run", number: n, platform: p })} />
+      <WorkflowMatrix tasks={summary.tasks} onOpenTask={(n) => { setView({ kind: "task", number: n }); }} onOpenRun={(n, p) => setView({ kind: "run", number: n, platform: p })} />
 
       <Drawer
         open={view !== null && current !== undefined}

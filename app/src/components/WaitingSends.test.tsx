@@ -45,7 +45,7 @@ let host: HTMLDivElement;
 let root: Root;
 const setOnline = async (on: boolean) => {
   net.online = on;
-  await act(async () => net.subs.forEach((s) => s(on)));
+  await act(async () => { net.subs.forEach((s) => s(on)); });
 };
 const flush = () => act(async () => { for (let i = 0; i < 8; i++) await Promise.resolve(); });
 const button = (name: RegExp) => [...host.querySelectorAll('button')].find((b) => name.test(b.getAttribute('aria-label') ?? b.textContent ?? '')) as HTMLButtonElement | undefined;

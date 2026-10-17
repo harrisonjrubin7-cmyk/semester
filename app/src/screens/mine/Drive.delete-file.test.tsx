@@ -78,7 +78,7 @@ beforeEach(async () => {
     await Promise.resolve();
   });
   await click('Bin');
-  await act(async () => void (await Promise.resolve()));
+  await act(async () => (await Promise.resolve()));
 });
 
 afterEach(async () => {

@@ -294,7 +294,7 @@ describe('About this screen', () => {
     const region = document.getElementById(toggle.getAttribute('aria-controls')!);
     expect(region).not.toBeNull();
     expect(region!.hidden).toBe(true);
-    await act(async () => toggle.click());
+    await act(async () => { toggle.click(); });
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     expect(document.getElementById(toggle.getAttribute('aria-controls')!)).not.toBeNull();
     for (const q of ['What is this?', 'Why does it matter?', 'Where does this information come from?', 'What can I do next?']) {
@@ -371,7 +371,7 @@ describe('workspace modes', () => {
     const focused = [...host.querySelectorAll('input[type="radio"]')].find(
       (r) => (r as HTMLInputElement).value === 'focused',
     ) as HTMLInputElement;
-    await act(async () => focused.click());
+    await act(async () => { focused.click(); });
     expect(host.querySelector('[aria-label="Focus mode"]')).not.toBeNull();
     await press('Exit focus');
     expect(seen.workspaceMode).toBe('guided');

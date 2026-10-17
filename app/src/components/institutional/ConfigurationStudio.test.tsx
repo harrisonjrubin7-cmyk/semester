@@ -143,7 +143,7 @@ describe('drafting', () => {
   it('shows the change against the version in force, in words', async () => {
     await mount(fake([published('workflows', 1, { approval_sla_days: 5 })], EDITOR), EDITOR, EDIT);
     await open(/^Workflows/);
-    await act(async () => type(byId('approval_sla_days'), '9'));
+    await act(async () => { type(byId('approval_sla_days'), '9'); });
     expect(host.textContent).toContain('Changes from version 1:');
     expect(host.textContent).toContain('Days an approval may wait: 5 → 9');
   });

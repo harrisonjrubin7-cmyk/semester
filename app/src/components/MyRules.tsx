@@ -149,7 +149,7 @@ export function MyRules() {
         <button
           type="button"
           className="btn btn-secondary btn-block"
-          onClick={() => set(addRule(rules))}
+          onClick={() => { set(addRule(rules)); }}
           style={{ height: 42, marginTop: 'var(--sp-6)' }}
         >
           Add a reminder rule

@@ -415,7 +415,7 @@ describe('in a real store, against the legacy reducer', () => {
   it('deletes like the legacy reducer', async () => {
     const rows = seed([{}, { title: 'Keep me' }]);
     await mount('production', rows);
-    await act(async () => actions.remove('t0'));
+    await act(async () => { actions.remove('t0'); });
     await flush();
     expect(strip(tasks)).toEqual(strip(legacyOnly(rows, [{ type: 'deleteTask', id: 't0' }])));
     expect(tasks.map((t) => t.id)).toEqual(['t1']);

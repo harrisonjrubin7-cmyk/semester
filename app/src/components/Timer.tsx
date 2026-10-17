@@ -202,7 +202,7 @@ export function Timer({
             <button
               type="button"
               className="bare tappable"
-              onClick={() => start(null, Date.now())}
+              onClick={() => { start(null, Date.now()); }}
               style={{
                 width: 'auto',
                 paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',

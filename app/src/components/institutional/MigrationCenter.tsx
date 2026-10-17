@@ -444,7 +444,7 @@ function RecordForm({ row, editable, busy, onSave }: { row: MigrationProject; ed
       </label>
       <label style={label}>
         Cutover date
-        <input className="input" type="date" readOnly={!editable} value={d.cutover_date ?? ''} onChange={(e) => set('cutover_date', e.target.value || null)} />
+        <input className="input" type="date" readOnly={!editable} value={d.cutover_date ?? ''} onChange={(e) => { set('cutover_date', e.target.value || null); }} />
       </label>
       {text('rollback_plan', 'Rollback plan', true)}
       <Checks

@@ -794,7 +794,7 @@ export function Command({ onClose }: { onClose: () => void }) {
                 <button
                   type="button"
                   className="bare tappable"
-                  onClick={() => setMore(!more)}
+                  onClick={() => { setMore(!more); }}
                   style={{
                     width: size.tileBox,
                     display: 'flex',
