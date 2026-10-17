@@ -1475,3 +1475,15 @@ No route, navigation, dependency, schema, policy, provider configuration or exte
 | DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk CLI, Docker, API key, application id, app host, local properties and live target are unavailable. No scan, finding result, fix/rescan loop or security pass exists. |
 
 No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
+
+## Automation pass 35 mapping — distinguishable exact-duplicate waiting-send actions (slice 164)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Fact-identical held requests remain distinguishable | `app/src/components/WaitingSends.tsx`, `WaitingSends.test.tsx`; D-155 device-held outbox | Existing but incomplete → existing and verified locally for this slice | Send, Discard and sent-row removal names include represented position/count, request kind and complete persisted summary. Two fact-identical rows receive different names. |
+| Preserve explicit-send and exact-row authority | `app/src/lib/sync/useOutbox.ts`; `app/src/lib/sync/outbox.ts`; stable entry id | Existing and unchanged | The regression discards duplicate 2, observes only `ob-second` removed from IndexedDB and leaves `ob-first` represented. Reconnection still sends nothing automatically; no provider call is added. |
+| Preserve failure, identity and delivery boundaries | Account-scoped load; durable pre-send state; `unknown` confirmation path | Existing and unchanged | Another account cannot see or send a row. Ambiguous delivery still requires the existing explicit confirmation, and live provider receipt/configuration remain separate. |
+| Regression and repository gates | WaitingSends/outbox/classification/lifecycle/isolation tests plus standard design contracts | Existing and verified locally for this slice | Red proof against summary-only names; 54/54 focused tests, both typechecks, lint and build pass. Design verification passes 9 token tests, 70 design contracts, eight report files with 97/97 tests, zero audit violations and unchanged CSS ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk skill package, CLI, Docker, API key, application id, app host, local properties and live target are unavailable. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish provider delivery, institutional receipt, deployment, production execution, institutional acceptance or production readiness.

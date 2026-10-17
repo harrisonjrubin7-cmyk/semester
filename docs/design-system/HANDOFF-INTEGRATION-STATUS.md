@@ -1430,6 +1430,18 @@ This local slice does not prove deployment, production execution, provider conne
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 35 / integration slice 164
+
+- Required-branch head `22c66fe02` was clean before selection and already included current `origin/main` `802c97c70`; exact upstream and branch history/current-code inspection found no equivalent duplicate waiting-send identity guard.
+- Every Send, Discard and sent-row removal name now includes represented position/count, request kind and complete persisted summary. Otherwise identical queued requests remain distinguishable.
+- Existing stable request ids, exact `sendOne` / `drop`, account isolation, durable-before-send state, ambiguous-delivery confirmation and explicit student send remain authoritative. The regression discards duplicate 2, proves only `ob-second` leaves IndexedDB and proves `ob-first` remains available. Nothing sends automatically.
+- The guard failed against the former summary-only controls, then focused WaitingSends, outbox/classification, root-lifecycle and isolation verification passes 54/54. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning.
+- Design verification passes 9 token tests, 70 design contracts, all eight report files with 97/97 tests, zero audit violations with 86 existing warnings, CSS within its ledger and the generated test-backed report. Ordered and shuffled full suites were not rerun.
+- Mandatory HawkScan preflight reports the active skill absent from the callable catalog, Hawk CLI and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present, and no local properties file or live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove provider delivery, institutional receipt, deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 24 / integration slice 153
 
 - Clean required-branch head `dc64a71e8` already includes current `origin/main` `116d8444e`; exact history/current-code inspection found no equivalent exact-duplicate Mail-rule removal guard.
