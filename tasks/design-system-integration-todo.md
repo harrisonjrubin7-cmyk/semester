@@ -1613,9 +1613,9 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove the exact-duplicate regression red against the former fact-only controls, then pass 65/65 Meals, meal-domain, Undo, label, root-lifecycle and isolation tests.
 - [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing chunk-size warning.
 - [x] Pass 79/79 design-check constituents and regenerate the passing test-backed report; retain zero audit violations, 86 existing warnings and CSS within its ledger.
-- [ ] Commit the coherent code/test/control slice locally after confirming final `origin/main` has no overlap.
+- [x] Commit the coherent code/test/control slice locally as `874d3fa39` after confirming final `origin/main` remains `116d8444e` with no overlap.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
-- [ ] HawkScan DAST — mandatory preflight finds `hawk` and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, and the default `http://localhost:4173` target unavailable. `stackhawk.yml` and a local properties file exist but credential material was not read; no scan, finding result, fix/rescan loop or security pass exists.
+- [ ] HawkScan DAST — mandatory post-commit preflight for `874d3fa39` finds `hawk` and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, and the default `http://localhost:4173` target unavailable. `stackhawk.yml` and a local properties file exist but credential material was not read; no scan, finding result, fix/rescan loop or security pass exists.
 
 ### Next implementation boundary
 
