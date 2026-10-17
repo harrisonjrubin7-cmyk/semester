@@ -745,9 +745,13 @@ export function createGateway(config: Config) {
             { status: 200, body: value },
             systemClock.now(),
           );
-          if (!owned) fail(409, 'This request lost its idempotency lease. Retry with the same key.', 'idempotency_in_progress');
+          if (!owned) {
+            fail(409, 'This request lost its idempotency lease. Retry with the same key.', 'idempotency_in_progress');
+          }
           return Response.json(value, { headers });
         } catch (error) {
+          // A 409 can describe a transient claim or lease race, so it must not
+          // become the permanent answer for this key after a takeover.
           const cacheable = isPlatformError(error) && isDeterministicRefusal(error) && error.status !== 409;
           const owned = cacheable
             ? await config.idempotency.complete(
@@ -764,7 +768,9 @@ export function createGateway(config: Config) {
                 systemClock.now(),
               )
             : await config.idempotency.release(scope, begun.leaseId);
-          if (!owned) fail(409, 'This request lost its idempotency lease. Retry with the same key.', 'idempotency_in_progress');
+          if (!owned) {
+            fail(409, 'This request lost its idempotency lease. Retry with the same key.', 'idempotency_in_progress');
+          }
           throw error;
         }
       }
