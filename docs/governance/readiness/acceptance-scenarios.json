@@ -1,0 +1,82 @@
+{
+  "$comment": "Acceptance scenarios for registration readiness. Each scenario names the controls it exercises. A scenario is specified until a test implements it, implemented when the test exists, and verified only when that test passes in CI with its result linked to evidence. Every scenario here is specified. Validated by app/src/lib/governance/readiness-governance.test.ts.",
+  "required_fields": ["id", "title", "given", "when", "then", "controls", "status"],
+  "statuses": ["specified", "implemented", "verified"],
+  "scenarios": [
+    {
+      "id": "AT-RDY-001",
+      "title": "Student sees a current ready result",
+      "given": [
+        "active_student_membership",
+        "authorized_tenant_context",
+        "current_authoritative_sources",
+        "all_readiness_checks_pass"
+      ],
+      "when": ["student_requests_readiness_evaluation"],
+      "then": [
+        "readiness_state_is_ready",
+        "every_check_has_source_and_observed_time",
+        "receipt_states_not_enrollment",
+        "audit_event_exists",
+        "outbox_event_exists"
+      ],
+      "controls": ["CTRL-SOURCE-002"],
+      "status": "specified"
+    },
+    {
+      "id": "AT-RDY-002",
+      "title": "Stale SIS input prevents definitive ready result",
+      "given": ["SIS_snapshot_age_exceeds_threshold"],
+      "when": ["student_requests_readiness_evaluation"],
+      "then": [
+        "readiness_state_is_stale_or_needs_review",
+        "no_definitive_ready_claim_is_rendered",
+        "refresh_or_support_path_is_present",
+        "stale_source_audit_event_exists"
+      ],
+      "controls": ["CTRL-SOURCE-002"],
+      "status": "specified"
+    },
+    {
+      "id": "AT-RDY-003",
+      "title": "Advisor cannot access a student outside caseload",
+      "given": ["advisor_membership", "target_student_outside_assigned_scope"],
+      "when": ["advisor_requests_case_detail"],
+      "then": [
+        "response_is_403_or_empty_by_policy",
+        "no_sensitive_fields_returned",
+        "access_denial_is_logged"
+      ],
+      "controls": ["CTRL-ACCESS-001"],
+      "status": "specified"
+    },
+    {
+      "id": "AT-RDY-004",
+      "title": "Duplicate submission creates one evaluation",
+      "given": ["valid_idempotency_key"],
+      "when": ["same_evaluate_command_sent_twice"],
+      "then": [
+        "one_readiness_case_version_created",
+        "one_receipt_created",
+        "second_response_returns_existing_result",
+        "no_duplicate_outbox_effect"
+      ],
+      "controls": ["CTRL-WORKFLOW-003"],
+      "status": "specified"
+    },
+    {
+      "id": "AT-RDY-005",
+      "title": "Revoked staff access blocks late action",
+      "given": ["registrar_starts_route_action", "membership_or_grant_revoked_before_commit"],
+      "when": ["command_reaches_policy_gate"],
+      "then": [
+        "command_is_denied",
+        "state_is_unchanged",
+        "denial_audit_event_exists",
+        "user_receives_safe_error"
+      ],
+      "controls": ["CTRL-ACCESS-001", "CTRL-WORKFLOW-003"],
+      "status": "specified"
+    }
+  ]
+}
