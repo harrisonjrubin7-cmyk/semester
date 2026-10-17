@@ -98,3 +98,11 @@ https://app.stackhawk.com/scans/6fc1ebe8-c6ef-48ce-8b94-6c3c52cce27d.
 The successful scanner job does not clear these findings or establish
 authenticated/backend coverage. Security remediation and final hosted
 validation remain open; no production promotion is claimed.
+
+Main subsequently advanced to `d05f95e` with PR #1621's deployment inventory
+refresh and a rolling-date office-action fixture. Integration commit
+`088bfc3` preserves those upstream fixes and drops this branch's duplicate
+fixed-calendar change. The missing Community evidence registration remains;
+the billing-portal row retains the later directly observed version 340. The
+earlier fixed-calendar test run above describes an intermediate commit, not
+the final implementation.
