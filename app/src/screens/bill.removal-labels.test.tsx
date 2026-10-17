@@ -32,15 +32,15 @@ beforeEach(async () => {
     term: '2026FA',
     charges: [
       { id: 'charge-1', term: '2026FA', what: 'Tuition', kind: 'tuition', cents: 324150, at: 1 },
-      { id: 'charge-2', term: '2026FA', what: 'Tuition', kind: 'fees', cents: 2750, at: 2 },
+      { id: 'charge-2', term: '2026FA', what: 'Tuition', kind: 'tuition', cents: 324150, at: 2 },
     ],
     aid: [
       { id: 'aid-1', term: '2026FA', what: 'Need-based award', kind: 'grant', cents: 125000, pending: true, at: 3 },
-      { id: 'aid-2', term: '2026FA', what: 'Need-based award', kind: 'loan', cents: 400000, pending: false, at: 4 },
+      { id: 'aid-2', term: '2026FA', what: 'Need-based award', kind: 'grant', cents: 125000, pending: true, at: 4 },
     ],
     payments: [
       { id: 'payment-1', term: '2026FA', what: 'Instalment', cents: 50000, on: '2026-10-15', at: 5 },
-      { id: 'payment-2', term: '2026FA', what: 'Instalment', cents: 75000, on: '2026-11-15', at: 6 },
+      { id: 'payment-2', term: '2026FA', what: 'Instalment', cents: 50000, on: '2026-10-15', at: 6 },
     ],
   }));
   host = document.createElement('div');
@@ -62,15 +62,15 @@ afterEach(async () => {
   localStorage.clear();
 });
 
-it('identifies duplicate ledger removals by their complete represented facts', async () => {
+it('identifies exact duplicate ledger removals by position and complete represented facts', async () => {
   const charge = host.querySelector<HTMLButtonElement>(
-    'button[aria-label="Remove charge Tuition: Tuition · $3,241.50"]',
+    'button[aria-label="Remove charge 2 of 2, Tuition: Tuition · $3,241.50"]',
   );
   const aid = host.querySelector<HTMLButtonElement>(
-    'button[aria-label="Remove aid Need-based award: Grant · $1,250.00 · not yet confirmed"]',
+    'button[aria-label="Remove aid 2 of 2, Need-based award: Grant · $1,250.00 · not yet confirmed"]',
   );
   const payment = host.querySelector<HTMLButtonElement>(
-    'button[aria-label="Remove payment Instalment: $500.00 paid Thu Oct 15"]',
+    'button[aria-label="Remove payment 2 of 2, Instalment: $500.00 paid Thu Oct 15"]',
   );
 
   expect(charge).not.toBeNull();
@@ -82,6 +82,6 @@ it('identifies duplicate ledger removals by their complete represented facts', a
 
   await act(async () => payment?.click());
 
-  expect(seen.payments.map((row) => row.id)).toEqual(['payment-2']);
+  expect(seen.payments.map((row) => row.id)).toEqual(['payment-1']);
   expect(seen.undone?.label).toBe('Payment record removed');
 });

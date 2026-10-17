@@ -1353,6 +1353,18 @@ This local slice does not prove deployment, production execution, institutional 
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 22 / integration slice 151
+
+- Required-branch head `3ba001e28` was clean before selection and already included current `origin/main` `116d8444e`; exact Bill history/current-code inspection found no position guard for otherwise exact duplicate rows.
+- Every student-entered charge, aid and payment removal now names one-based position, list size and all existing represented financial facts. Exact duplicates remain distinguishable.
+- Existing exact-id reducers, eight-second Undo, calculations, export and `student_entered` provenance remain authoritative. Nothing changes a school account, official award, money movement, card data, provider or institution record.
+- The new regression failed against the former fact-only names, then 298/298 focused Bill, arithmetic, Undo, export, reducer, root-lifecycle and isolation tests passed.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing chunk-size warning. Aggregate design-system check/report pass through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- The active HawkScan capability is unavailable. Preflight reports Hawk and Docker runtimes absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 21 / integration slice 150
 
 - Required-branch head `4a71e2895` was clean before selection and already included current `origin/main` `116d8444e`; exact University history/current-code inspection found no equivalent repeated-step removal identity guard.

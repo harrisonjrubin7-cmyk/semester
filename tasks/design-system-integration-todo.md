@@ -1566,6 +1566,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 22 update — distinguishable exact-duplicate Bill removals (slice 151)
+
+- [x] Start from clean required-branch head `3ba001e28`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Bill history/current code for overlap.
+- [x] Re-rank exact-duplicate student-entered Bill rows as the next bounded Phase 6 accessibility gap; keep school accounts, official aid decisions, money movement and provider systems outside the slice.
+- [x] Name every charge, aid and payment removal with one-based position, represented-list size and the existing complete financial facts.
+- [x] Preserve the existing exact-id reducers, global eight-second Undo, `student_entered` provenance, calculations, export coverage and official-payment boundary.
+- [x] Prove the exact-duplicate regression red against the former fact-only names, then pass 298/298 Bill, arithmetic, Undo, export, reducer, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts and all eight report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — the HawkScan capability is unavailable; preflight reports Hawk and Docker runtimes absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present and no live target. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official student accounts, aid decisions, payments and provider reconciliation separate from student-entered device planning.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 21 update — distinguishable University readiness-step removals (slice 150)
 
 - [x] Start from clean required-branch head `4a71e2895`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact University preparation history/current code for overlap.
