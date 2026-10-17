@@ -20,9 +20,10 @@ const assets = [
   guideAsset,
   { ...guideAsset, id: "cards-1", asset_type: "flashcards", title: "Coordination cards", content: { cards: [{ id: "card-1", front: "Who owns the decision?", back: "The named role.", difficulty: 3, citation_ids: [citationId] }], citations: guideAsset.content.citations } },
   { ...guideAsset, id: "field-guide-1", asset_type: "concept_map", title: "Coordination field guide", content: { sections: [{ heading: "Role clarity", explanation: "Defined ownership reduces coordination ambiguity.", key_points: ["Role clarity supports accountability."], examples: ["A decision owner resolves final tradeoffs."], citation_ids: [citationId] }], citations: guideAsset.content.citations } },
+  { ...guideAsset, id: "slides-1", asset_type: "lecture_outline", title: "Coordination lecture", content: { sections: [{ heading: "Decision ownership", explanation: "A named owner keeps the decision path legible.", key_points: ["Separate input from final authority."], examples: ["A product lead owns the launch decision."], citation_ids: [citationId] }], citations: guideAsset.content.citations } },
   { ...guideAsset, id: "quiz-1", asset_type: "practice_quiz", title: "Coordination quiz" },
 ];
-const course = { id: "course-1", title: "Organizational Behavior", term: "Fall 2026", timezone: "America/Chicago", counts: { files: 1, review_items: 1, study_assets: 4, calendar_events: 1 } };
+const course = { id: "course-1", title: "Organizational Behavior", term: "Fall 2026", timezone: "America/Chicago", counts: { files: 1, review_items: 1, study_assets: 5, calendar_events: 1 } };
 const sourceFile = { id: "file-1", filename: "syllabus.pdf", classification: "syllabus", status: "confirmed", size_bytes: 4096, mime_type: "application/pdf", page_count: 8 };
 const review = { id: "review-1", title: "Confirm assignment date", item_type: "date_conflict", status: "needs_review", payload: { due_date: "2026-10-20" } };
 const event = { id: "event-1", title: "Reflection due", event_type: "assignment", event_date: "2026-10-20", all_day: true, status: "confirmed", time_unspecified: true };
@@ -127,6 +128,14 @@ test("student completes the cited course journey without console errors", async 
   await expect(page.getByRole("heading", { name: "Role clarity" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Connections" })).toBeVisible();
   await expect(page.getByText("Role clarity supports accountability.")).toBeVisible();
+  await expect(page.getByText("syllabus.pdf, p. 4")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open material" })).toHaveCount(0);
+
+  await page.getByRole("link", { name: /Slides Lecture review/ }).click();
+  await expect(page.getByText("Slide 1")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Decision ownership" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Key points" })).toBeVisible();
+  await expect(page.getByText("Separate input from final authority.")).toBeVisible();
   await expect(page.getByText("syllabus.pdf, p. 4")).toBeVisible();
   await expect(page.getByRole("button", { name: "Open material" })).toHaveCount(0);
 
