@@ -1585,6 +1585,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep citation-library mutation separate from official academic records, provider access and AI use.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 24 update — distinguishable exact-duplicate Mail rule removals (slice 153)
+
+- [x] Start from clean required-branch head `dc64a71e8`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Mail-rule history/current code for overlap.
+- [x] Re-rank exact-duplicate private Mail rules as the next bounded Phase 3 accessibility gap; keep provider mail, account connection and institution records outside the local-rule mutation.
+- [x] Name every deletion with one-based position, represented-list size, complete rule name, search/action sentence and on/off state.
+- [x] Preserve the existing exact-id `dropMailRule` reducer, private persisted overlay, explicit-message-mark precedence and eight-second Undo receipt.
+- [x] Prove the exact-duplicate regression red against the former rule-name-only controls, then pass 199/199 Mail-rule, reducer, Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing chunk-size warning.
+- [x] Pass 79/79 design-check constituents and the test-backed report's eight contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight finds `hawk` and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, and the default `http://localhost:4173` target unavailable. `stackhawk.yml` exists; no credential file was read and no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep private Mail-rule mutation separate from provider mailbox mutation, live account connection and institution records.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 22 update — distinguishable exact-duplicate Bill removals (slice 151)
 
 - [x] Start from clean required-branch head `3ba001e28`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Bill history/current code for overlap.

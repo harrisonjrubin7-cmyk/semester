@@ -1068,6 +1068,18 @@ No route, navigation, dependency, schema, policy, provider configuration or exte
 
 No route, navigation, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
 
+## Automation pass 24 mapping — distinguishable exact-duplicate Mail rule removals (slice 153)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Exact duplicate private Mail rules remain distinguishable at deletion | `app/src/components/mail/Rules.tsx`; persisted `state.mailRules` | Existing but incomplete → existing and verified locally for this slice | Every deletion name includes position/list size, complete rule name, search/action sentence and on/off state. Position distinguishes otherwise identical rules. |
+| Preserve exact recoverable local mutation | Stable rule ID; `dropMailRule`; `UNDOABLE.dropMailRule` | Existing and unchanged | The regression activates the second exact-duplicate control and proves only its ID is sent. Undo restores the rule without reverting later explicit message marks. |
+| Preserve provider and institutional authority boundaries | `app/src/lib/mailrules.ts`; read-only mailbox-provider contract | Existing and unchanged | Rules are local search overlays beneath explicit user marks. Deletion writes no provider mailbox, provider configuration or institution record. |
+| Regression and repository gates | New `Rules.removal-labels.test.tsx` plus reducer/Undo/label/lifecycle/isolation guards | Existing and verified locally for this slice | Red proof against rule-name-only controls; 199/199 focused tests, both typechecks, lint and build pass. Design constituents pass 79/79, all eight report contracts pass, audit has zero violations and CSS stays within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | HawkScan CLI, Docker, API key, application ID, host override and live default target are unavailable. No credential file was read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
 ## Automation pass 22 mapping — distinguishable exact-duplicate Bill removals (slice 151)
 
 | Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
