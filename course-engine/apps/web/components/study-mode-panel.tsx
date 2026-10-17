@@ -128,6 +128,31 @@ function ReadingView({ asset, courseId, mode }: { asset: Asset; courseId: string
   </div>;
 }
 
+function FieldGuideView({ asset, courseId }: { asset: Asset; courseId: string }) {
+  const catalog = citationCatalog(asset.content);
+  const sections = guideSections(asset.content).filter((section) => (
+    section.citation_ids.length > 0 && section.citation_ids.every((id) => Boolean(catalog[id]))
+  ));
+  if (!sections.length) return <p className="muted mt-6" role="status">This field guide has no valid cited concepts.</p>;
+  return <div className="mt-6">
+    <p className="muted text-sm"><span className="mono">{sections.length}</span> cited {sections.length === 1 ? "concept" : "concepts"}</p>
+    <div className="mt-4 grid gap-4">{sections.map((section, index) => <section className="rounded border border-[color:var(--border-default)] bg-[color:var(--surface-canvas)] p-5" key={`${section.heading}-${index}`}>
+      <h3 className="font-[family-name:var(--font-heading)] text-xl font-semibold">{section.heading}</h3>
+      <p className="reading-width mt-3 leading-7">{section.explanation}</p>
+      {section.key_points?.length ? <div className="mt-5 border-t border-[color:var(--border-default)] pt-4">
+        <h4 className="eyebrow">Connections</h4>
+        <ul className="mt-3 grid gap-2">{section.key_points.map((point) => <li className="rounded border-l-4 border-[color:var(--semester-500)] bg-[color:var(--surface-panel)] px-4 py-3" key={point}>{point}</li>)}</ul>
+      </div> : null}
+      {section.examples?.length ? <div className="mt-5 border-t border-[color:var(--border-default)] pt-4">
+        <h4 className="eyebrow">In context</h4>
+        <div className="mt-3 space-y-2">{section.examples.map((example) => <p key={example}>{example}</p>)}</div>
+      </div> : null}
+      <Citations catalog={catalog} ids={section.citation_ids} />
+    </section>)}</div>
+    <Link className="button button-secondary mt-5 no-underline" href={`/courses/${courseId}/uploads`}><ExternalLink size={16} /> View source records</Link>
+  </div>;
+}
+
 function QuizView({ asset, courseId }: { asset: Asset; courseId: string }) {
   const questions = guideSections(asset.content);
   const catalog = citationCatalog(asset.content);
@@ -163,6 +188,7 @@ function QuizView({ asset, courseId }: { asset: Asset; courseId: string }) {
 function AssetBody({ asset, courseId, mode }: { asset: Asset; courseId: string; mode: string }) {
   if (mode === "cards") return <CardsView asset={asset} courseId={courseId} />;
   if (mode === "read" || mode === "doc") return <ReadingView asset={asset} courseId={courseId} mode={mode} />;
+  if (mode === "field-guide") return <FieldGuideView asset={asset} courseId={courseId} />;
   if (mode === "quiz") return <QuizView asset={asset} courseId={courseId} />;
   return <details className="mt-5 border-t border-[color:var(--border-default)] pt-4"><summary className="button button-primary cursor-pointer">Open material</summary><pre className="mt-4 max-h-96 overflow-auto whitespace-pre-wrap rounded bg-[color:var(--surface-canvas)] p-4 text-sm">{JSON.stringify(asset.content, null, 2)}</pre></details>;
 }
