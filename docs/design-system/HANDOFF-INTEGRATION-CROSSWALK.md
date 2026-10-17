@@ -1069,6 +1069,18 @@ No route, navigation, dependency, schema, policy, provider configuration or exte
 
 No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
 
+## Automation pass 29 mapping — distinguishable exact-duplicate activity removals (slice 158)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Exact-duplicate student-owned commitments remain distinguishable at removal | `app/src/screens/Activities.tsx`; persisted `state.commitments` | Existing but incomplete → existing and verified locally for this slice | Every accessible name includes one-based represented-list position/size before complete name, kind, role, schedule and place facts. Position distinguishes otherwise identical rows. |
+| Preserve exact mutation and bounded recovery | Stable commitment id; `app/src/state/slices/mine.ts`; `app/src/lib/undo.ts` | Existing and unchanged | The regression activates position 3 and proves only that id is removed. The shared eight-second Undo restores the `commitments` snapshot. |
+| Preserve campus and institution authority | Student-owned device plan; `app/src/components/CampusDirectory.tsx` | Existing and unchanged | Removal changes no official directory, membership, event, provider connection or institution record. |
+| Regression and repository gates | Extended `app/src/screens/activities.removal-labels.test.tsx` plus activity-domain, reducer, Undo, label, lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against complete-fact-only names; focused/control verification passes 222/222. Both typechecks, lint and build pass. Aggregate design verification passes 9 token tests, 70 design contracts and all eight report contracts with zero audit violations and unchanged CSS ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk and Docker are absent; API key, application ID, host override and live default target are unavailable. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
 ## Automation pass 28 mapping — distinguishable exact-duplicate degree-planning removals (slice 157)
 
 | Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |

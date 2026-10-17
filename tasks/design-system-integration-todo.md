@@ -1624,6 +1624,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep student-entered planning copies separate from the registrar's official transcript and degree audit.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 29 update — distinguishable exact-duplicate activity removals (slice 158)
+
+- [x] Start from clean required-branch head `7740794bf`, fetch current `origin/main` `caa9967fb`, confirm it is already included and inspect exact Activities history/current code for overlap.
+- [x] Re-rank exact-duplicate student-owned commitments as the next bounded Phase 3/6 accessibility gap; keep official directories, memberships, events, providers and institution records outside the device mutation.
+- [x] Name every removal with one-based represented-list position/size before the complete name, kind, role, schedule and place facts.
+- [x] Preserve the existing exact-id `removeCommitment` reducer, device persistence and eight-second Undo snapshot over `commitments`.
+- [x] Prove both regression paths red against the former complete-fact-only controls, then pass 222/222 focused Activities, activity-domain, reducer/Undo, accessibility-label, root-lifecycle and isolation tests.
+- [x] Run both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing large-chunk warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility launcher: 9 token tests, 70 design contracts and all eight report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Re-fetch `origin/main`, reconcile any movement, commit the coherent code/test/control slice locally and rerun affected checks.
+- [ ] Ordered and shuffled full suites — not yet run for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` present; and the default local target unavailable. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep student-owned activity planning, official campus directories/memberships/events and provider or institution records as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 23 update — distinguishable exact-duplicate citation removals (slice 152)
 
 - [x] Start from clean required-branch head `de1abfb06`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Sources history/current code for overlap.
