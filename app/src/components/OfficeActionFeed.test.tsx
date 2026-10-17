@@ -110,6 +110,7 @@ afterEach(async () => {
   await act(async () => root.unmount());
   host.remove();
   localStorage.clear();
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -233,10 +234,16 @@ describe('with office_action_feed on', () => {
   });
 
   it('ranks an office action in the Action Center, and leaves out one marked done', async () => {
+    // The seeded action deliberately expires after its 15 October due date.
+    // Keep this ranking scenario on the date it describes so the wall clock
+    // cannot silently turn it into an expiry test. Only Date is faked; the
+    // async feed still uses real timers.
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-10-01T12:00:00Z') });
     feed = readOfficeActions([row(), row({ id: 'a2', title: 'Housing deposit confirmed', done_at: new Date().toISOString() })]);
     await render(<TodayActionCenter officeActions officeAccountId="u1" />);
     expect(text()).toContain('FAFSA verification documents are due October 15');
     expect(text()).not.toContain('Housing deposit confirmed');
+    vi.useRealTimers();
   });
 
   it('shows the first three on the briefing Today', async () => {
