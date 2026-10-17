@@ -1585,6 +1585,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep emergency contacts device-only and excluded from portable backup; keep provider and official campus records as separate authorities.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 27 update — distinguishable exact-duplicate student shortcut removals (slice 156)
+
+- [x] Start from clean required-branch head `02116b01a`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Links history/current code for overlap.
+- [x] Re-rank exact-duplicate private shortcuts as the next bounded Phase 3 accessibility gap; keep external destinations, campus directories and provider/institution records outside the device mutation.
+- [x] Name every removal with one-based collection position/size, complete name, resolved address/no-address state and current group.
+- [x] Preserve the existing stable-id `removeLink` reducer, private `extraLinks` / `linkUrls` persistence and eight-second Undo snapshot over only those fields.
+- [x] Prove the exact-duplicate regression red against the former complete-fact-only controls, then pass 191/191 Links, grouping, school-link, reducer, Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing large-chunk warning.
+- [x] Pass 79/79 design-check constituents and all eight test-backed report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` and a local properties file present but unread; and the default local target unavailable. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep private shortcut mutation separate from external navigation, campus-directory data, authentication and provider/institution records.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 23 update — distinguishable exact-duplicate citation removals (slice 152)
 
 - [x] Start from clean required-branch head `de1abfb06`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Sources history/current code for overlap.

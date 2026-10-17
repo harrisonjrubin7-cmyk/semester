@@ -112,6 +112,7 @@ export function Links() {
               // `groupName` applied, so reading the group off `link` would put
               // "Yours" in a box the student left empty.
               const own = state.extraLinks.find((l) => l.id === link.id);
+              const ownIndex = own ? state.extraLinks.findIndex((l) => l.id === link.id) : -1;
               return (
                 <div
                   key={link.id}
@@ -182,7 +183,7 @@ export function Links() {
                       <button
                         type="button"
                         className="bare"
-                        aria-label={`Remove ${link.name} link: ${url || 'no address set'} · ${group}`}
+                        aria-label={`Remove link ${ownIndex + 1} of ${state.extraLinks.length}, ${link.name}: ${url || 'no address set'} · ${group}`}
                         onClick={() => dispatch({ type: 'removeLink', id: link.id })}
                         style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
                       >
