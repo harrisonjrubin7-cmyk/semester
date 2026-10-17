@@ -212,3 +212,7 @@ and your summary names the files changed, the existing assets reused, the
 states and accessibility covered, and the design-system gaps still open. Three
 skills do this work: `/build-semester-ui`, `/audit-semester-design-sync` (read
 only until asked to implement) and `/create-semester-component`.
+
+## Registrar schema package (not in CI)
+
+`app/scripts/registrar-schema/` is Python and no workflow runs it. Run it by hand: `cd app/scripts/registrar-schema && python3 -m unittest -v test_registrar_schemas` (needs `pip install -r requirements.txt`). Nothing imports it; production activation is held.

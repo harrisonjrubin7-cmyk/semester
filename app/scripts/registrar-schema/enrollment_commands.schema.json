@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "termCode": {
+          "type": "string",
+          "pattern": "^[0-9]{4}(FA|SP|SU)$",
+          "minLength": 6,
+          "maxLength": 6
+        },
+        "expectedScheduleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "operation": {
+          "const": "add"
+        },
+        "sectionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "minLength": 36,
+            "maxLength": 36
+          },
+          "minItems": 1,
+          "maxItems": 12,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "studentId",
+        "termCode",
+        "expectedScheduleVersion",
+        "operation",
+        "sectionIds"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "termCode": {
+          "type": "string",
+          "pattern": "^[0-9]{4}(FA|SP|SU)$",
+          "minLength": 6,
+          "maxLength": 6
+        },
+        "expectedScheduleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "operation": {
+          "const": "drop"
+        },
+        "fromEnrollmentIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "minLength": 36,
+            "maxLength": 36
+          },
+          "minItems": 1,
+          "maxItems": 12,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "studentId",
+        "termCode",
+        "expectedScheduleVersion",
+        "operation",
+        "fromEnrollmentIds"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "termCode": {
+          "type": "string",
+          "pattern": "^[0-9]{4}(FA|SP|SU)$",
+          "minLength": 6,
+          "maxLength": 6
+        },
+        "expectedScheduleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "operation": {
+          "const": "swap"
+        },
+        "sectionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "minLength": 36,
+            "maxLength": 36
+          },
+          "minItems": 1,
+          "maxItems": 12,
+          "uniqueItems": true
+        },
+        "fromEnrollmentIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "minLength": 36,
+            "maxLength": 36
+          },
+          "minItems": 1,
+          "maxItems": 12,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "studentId",
+        "termCode",
+        "expectedScheduleVersion",
+        "operation",
+        "sectionIds",
+        "fromEnrollmentIds"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "termCode": {
+          "type": "string",
+          "pattern": "^[0-9]{4}(FA|SP|SU)$",
+          "minLength": 6,
+          "maxLength": 6
+        },
+        "expectedScheduleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "operation": {
+          "const": "withdraw"
+        },
+        "fromEnrollmentIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "minLength": 36,
+            "maxLength": 36
+          },
+          "minItems": 1,
+          "maxItems": 12,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "studentId",
+        "termCode",
+        "expectedScheduleVersion",
+        "operation",
+        "fromEnrollmentIds"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}
