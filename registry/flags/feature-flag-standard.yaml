@@ -1,0 +1,49 @@
+# Feature flags are part of the policy and release boundary, not rollout tooling.
+# Machine-checked by scripts/verify/feature-flags.ts.
+feature_flags:
+  required_metadata:
+    - flag_key
+    - capability_id
+    - owner
+    - tenant_scope
+    - cohort_scope
+    - environment_scope
+    - created_at
+    - expiry_or_review_date
+    - safe_off_effect
+    - release_id
+    - monitoring_query
+    - rollback_runbook
+  safe_off_effects:
+    - hide_entry_point
+    - block_new_commands
+    - pause_worker
+    - disable_connector
+    - full_capability_safe_off
+  environments:
+    - local
+    - preview
+    - staging
+    - production
+  lifecycle:
+    - proposed
+    - approved
+    - staged
+    - active
+    - retired
+  prohibited:
+    - permanent_unowned_flags
+    - global_enablement_of_unverified_capability
+    - flag_changes_without_audit_event
+    - flags_that_bypass_authorization_or_RLS
+    - flags_that_mask_required_safety_failure
+# TypeScript shape for reviewers:
+#   export type FeatureFlag = {
+#     key: string;
+#     capabilityId: string;
+#     releaseId: string;
+#     scope: { environments: Array<"local" | "preview" | "staging" | "production">; tenantIds?: string[]; cohortIds?: string[] };
+#     safeOffEffect: "hide_entry_point" | "block_new_commands" | "pause_worker" | "disable_connector" | "full_capability_safe_off";
+#     owner: string;
+#     reviewBy: string;
+#   };

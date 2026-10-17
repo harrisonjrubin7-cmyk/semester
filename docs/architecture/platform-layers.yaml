@@ -1,0 +1,56 @@
+# Platform layers. Product experiences never bypass tenant context, policy
+# enforcement, authority/freshness rules, workflow durability, audit records,
+# or operational controls. The institution remains the system of record; AI
+# does not receive student records.
+platform_layers:
+  experience:
+    responsibilities:
+      - role_specific_workspaces
+      - accessibility
+      - source_and_status_disclosure
+      - consequence_previews
+      - receipts_and_safe_next_steps
+  edge_and_identity:
+    responsibilities:
+      - session_validation
+      - tenant_resolution
+      - membership_context
+      - environment_and_feature_scope
+      - request_correlation
+  application:
+    responsibilities:
+      - API_contract_enforcement
+      - command_validation
+      - policy_enforcement_point
+      - authorization_decision_binding
+      - idempotency
+  domain:
+    responsibilities:
+      - capability_rules
+      - state_transitions
+      - authority_boundaries
+      - record_envelopes
+      - business_invariants
+  workflow:
+    responsibilities:
+      - durable_jobs
+      - retries_and_deadlines
+      - compensation
+      - reconciliation
+      - outbox_delivery
+  data:
+    responsibilities:
+      - tenant_isolation
+      - RLS
+      - migrations
+      - source_snapshots
+      - audit_evidence
+      - retention
+  operations:
+    responsibilities:
+      - observability
+      - incidents
+      - releases
+      - access_reviews
+      - backups_and_recovery
+      - controls_and_evidence

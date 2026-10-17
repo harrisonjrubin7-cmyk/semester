@@ -1,0 +1,52 @@
+# Environment separation is a product control, not a developer convenience.
+environments:
+  local:
+    permitted_data:
+      - synthetic_fixtures
+      - anonymized_contract_samples
+    prohibited_data:
+      - production_student_records
+      - production_secrets
+      - institution_export_files
+  preview:
+    permitted_data:
+      - synthetic_fixtures
+      - approved_masked_samples_when_necessary
+    requirements:
+      - per_change_expiry
+      - authentication_for_nonpublic_routes
+      - no_production_connector_credentials
+  staging:
+    permitted_data:
+      - synthetic_fixtures
+      - approved_nonproduction_institution_test_data
+    requirements:
+      - production_like_policy_and_RLS
+      - integration_sandbox_or_test_tenant
+      - drill_and_release_validation
+      - controlled_access
+  production:
+    permitted_data:
+      - tenant_authorized_operational_data
+    requirements:
+      - tenant_isolation
+      - audited_access
+      - release_gate
+      - secrets_management
+      - monitoring
+      - backup_and_recovery
+      - controlled_break_glass_process
+# Safe environment workflow (command names from the continuation spec; the
+# repository currently exposes equivalent npm scripts, see package.json).
+safe_environment_workflow:
+  - pnpm env:check --environment local
+  - pnpm db:seed:safe
+  - pnpm test
+  - pnpm deploy:preview
+  - pnpm env:check --environment preview
+  - pnpm test:e2e
+  - pnpm deploy:staging
+  - pnpm release:validate --environment staging
+  - pnpm drills:run --release REL-READINESS-001
+  - pnpm deploy:production --release REL-READINESS-001
+  - pnpm release:verify-live --release REL-READINESS-001
