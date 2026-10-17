@@ -1617,7 +1617,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Pass design-check constituents: 9 token tests, 70 design contracts, zero audit violations with 86 existing warnings and CSS within its ledger; pass all eight report contract files at 97/97.
 - [ ] Aggregate design check/report launchers — unavailable because their hardcoded `npm` / `npx` commands are absent; exact constituents pass and no aggregate-wrapper pass is claimed.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
-- [ ] HawkScan DAST — mandatory preflight and exact final-commit result are recorded after the coherent slice commit.
+- [ ] HawkScan DAST — mandatory preflight for commit `9f8373dd8` reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
 
 ### Next implementation boundary
 

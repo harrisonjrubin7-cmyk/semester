@@ -1361,7 +1361,7 @@ This local slice does not prove deployment, production execution, provider conne
 - The repeated-entry regression failed against the former unnamed controls and proves deleting position 2 leaves the represented position-1 record. The focused Feedback inbox, Learning hub, study hierarchy, ActionPreview, root-lifecycle and isolation set passes 33/33.
 - Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and all eight report contract files pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
 - Aggregate design wrappers are not claimed because their hardcoded `npm` / `npx` launchers are unavailable. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
-- Mandatory HawkScan preflight and exact final-commit status are recorded after the coherent slice commit; no DAST result or security pass is inferred.
+- The coherent slice is commit `9f8373dd8`. Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` present and a local properties file detected but unread. No target, DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
