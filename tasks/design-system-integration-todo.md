@@ -1566,6 +1566,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 7 update — distinguishable remembered-line deletion (slice 136)
+
+- [x] Start from clean required-branch head `a39c56fb0`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact About Me history/current code for overlap.
+- [x] Re-rank identical remembered-line deletion names as the next bounded Phase 3 Profile accessibility gap; keep provider prompts, sync policy, whole-account erasure and external systems outside this exact-record mutation.
+- [x] Name every deletion with one-based collection position, collection size and complete remembered text so otherwise identical lines remain distinguishable.
+- [x] Preserve the existing cancel-first consequence preview, exact-id `dropFact` mutation, account-sync merge authority, export behavior and no-automatic-restore boundary.
+- [x] Prove the repeated-line guard red against the former text-only names, then pass 156/156 focused About Me, Trust Center, ActionPreview, root-lifecycle, fact, export and private-backup tests plus the 2/2 isolation guard.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts and 97 report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep whole-account erasure, sync-provider changes and assistant-provider requests outside this exact-record accessibility slice.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 6 update — distinguishable custom-reminder deletion (slice 135)
 
 - [x] Start from clean required-branch head `4669bb5aa`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact My Rules history/current code for overlap.

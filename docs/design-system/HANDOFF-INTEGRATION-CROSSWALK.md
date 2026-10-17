@@ -1056,6 +1056,18 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
 
+## Automation pass 7 mapping — distinguishable remembered-line deletion (slice 136)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated student-authored assistant context remains distinguishable at deletion | `app/src/components/AboutMe.tsx`; `state.aboutMe` | Existing but incomplete → existing and verified locally for this slice | Each accessible deletion name includes one-based collection position, collection size and complete remembered text. Position distinguishes otherwise identical lines. |
+| Preserve exact mutation, consequence and recovery boundaries | Existing `dropFact`, `ConfirmDialog`, `ActionPreview`, account sync and full-data export | Existing and unchanged | The regression activates position 2 and proves only its id is removed after confirmation. Cancel writes nothing. A prior export may retain the earlier copy, but no automatic restore is claimed. |
+| Preserve assistant/provider and unrelated-data boundaries | Existing About Me and Trust & Data contracts | Existing and unchanged | Other remembered lines, conversations, notes and plans remain unchanged. This slice sends no provider prompt, changes no sync policy and invokes no external system. |
+| Regression and repository gates | `AboutMe.test.tsx` and adjacent trust/export/accessibility/lifecycle/isolation guards | Existing and verified locally for this slice | Red proof against identical text-only names; 156/156 focused tests and 2/2 isolation tests pass. Both typechecks, lint and build pass. Aggregate design check/report pass 9 token, 70 design and 97 report contracts with zero audit violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status and Docker are absent, API key and app-host values are unset, and no live target exists. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish provider execution, deployment, institutional acceptance or production readiness.
+
 ## Automation pass 6 mapping — distinguishable custom-reminder deletion (slice 135)
 
 | Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |

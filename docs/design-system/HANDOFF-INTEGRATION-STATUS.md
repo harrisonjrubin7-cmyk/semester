@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 2 of 120 · **Integration slice** 131 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `815239aed` · **Latest observed `origin/main`** `3ec04d742`
+**Automation pass** 7 of 120 · **Integration slice** 136 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `a39c56fb0` · **Latest observed `origin/main`** `3ec04d742`
 
 ## State
 
@@ -1352,6 +1352,18 @@ This local slice does not prove deployment, production execution, institutional 
 - The active HawkScan skill stops at mandatory preflight: Hawk v6/config and Docker are absent, `HAWK_API_KEY` and app-host environment values are unset, and no live target exists. `stackhawk.yml` and a local properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 7 / integration slice 136
+
+- Required-branch head `a39c56fb0` was clean before selection and already included current `origin/main` `3ec04d742`; exact About Me history/current-code inspection found no equivalent repeated-line deletion-label guard.
+- Every remembered-line deletion now names one-based collection position, collection size and complete remembered text. Otherwise identical student-authored lines remain distinguishable.
+- Existing exact-id `dropFact`, cancel-first consequence preview, account-sync merge authority and full-data export remain authoritative. Other remembered lines, conversations, notes and plans remain unchanged, and no provider prompt or external-system request is introduced.
+- The repeated-line regression failed against the former text-only names and proves deleting position 2 preserves position 1. Focused About Me, Trust Center, ActionPreview, root-lifecycle, fact, export and private-backup verification passes 156/156; isolation passes 2/2.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Aggregate design-system check/report pass through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts and 97 report contracts; audit remains at zero violations with 86 existing warnings and CSS within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, provider execution, production operation, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
 ## Evidence locked in automation pass 6 / integration slice 135
 
