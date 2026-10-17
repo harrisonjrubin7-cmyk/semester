@@ -1,6 +1,6 @@
 import { formatDate, formatDateTime } from '../lib/locale';
 import { useEffect, useRef, useState } from 'react';
-import { shareState, type ShareRow } from '../lib/advisor-shares';
+import type { ShareEvent, ShareRow, ShareState } from '../lib/advisor-shares';
 import { myShares, revokeShare } from '../lib/advisor-shares';
 import { record, yours } from '../lib/journal';
 import { clearAll as clearConversations, load as loadThreads, loadArchive } from '../lib/threads';
@@ -16,7 +16,53 @@ import { SourceBadge } from './SourceBadge';
 import { ActionPreview } from './unity/ActionPreview';
 
 const when = (at: number) => formatDateTime(new Date(at), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-const day = (iso: string) => formatDate(new Date(iso), { month: 'short', day: 'numeric', year: 'numeric' });
+const ISO_INSTANT = /^(\d{4})-(\d{2})-(\d{2})T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,9})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/;
+const dateFrom = (iso: string) => {
+  const match = ISO_INSTANT.exec(iso);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const dayOfMonth = Number(match[3]);
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (year < 1 || month < 1 || month > 12 || dayOfMonth < 1 || dayOfMonth > daysInMonth[month - 1]) return null;
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+const day = (iso: string) => {
+  const date = dateFrom(iso);
+  return date ? formatDate(date, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Date unavailable';
+};
+const time = (iso: string) => {
+  const date = dateFrom(iso);
+  return date ? formatDateTime(date, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Date unavailable';
+};
+
+type DisplayShareState = ShareState | 'unavailable';
+
+const displayShareState = (share: ShareRow, now: number): DisplayShareState => {
+  if (share.revoked_at !== null) return dateFrom(share.revoked_at) ? 'revoked' : 'unavailable';
+  const expires = dateFrom(share.expires_at);
+  if (!expires) return 'unavailable';
+  return expires.getTime() <= now ? 'expired' : 'active';
+};
+
+const SHARE_STATE_TEXT: Record<DisplayShareState, string> = {
+  active: 'Active',
+  expired: 'Expired',
+  revoked: 'Revoked',
+  unavailable: 'State unavailable',
+};
+
+function accessHistory(events: ShareEvent[]): string {
+  if (events.length === 0) return 'No recorded advisor opens.';
+  const valid = events.map((event) => dateFrom(event.read_at)).filter((date): date is Date => date !== null);
+  if (valid.length !== events.length) {
+    return `${events.length} recorded ${events.length === 1 ? 'open' : 'opens'}. Latest date unavailable.`;
+  }
+  const latest = valid.sort((a, b) => b.getTime() - a.getTime())[0];
+  return `${events.length} recorded ${events.length === 1 ? 'open' : 'opens'}. Latest ${when(latest.getTime())}.`;
+}
 
 /** Conversations kept on this device (`lib/threads.ts`), counted; null when there are none. */
 function conversationsOnDevice(): { threads: number; messages: number } | null {
@@ -40,10 +86,11 @@ const NOTIFY: Record<ReturnType<typeof permission>, string> = {
  *
  * One place that says what Semester holds and who can see it, with the
  * control beside each: connected sources and when they last synced; the five
- * source labels; imported materials and which of them AI may use; every live
- * share, with its expiry and a revoke; what Semester remembers, each line
- * forgettable; notifications; export; and, below it on the same page, account
- * deletion and erasing this device.
+ * source labels; imported materials and which of them AI may use; every loaded
+ * advisor share, with its state and access history, and revocation for active
+ * shares; what Semester remembers, each line forgettable; notifications;
+ * export; and, below it on the same page, account deletion and erasing this
+ * device.
  *
  * Nothing here is a new store of anything. It reads the stores that already
  * exist, and every change it makes — revoke, forget, delete — confirms first
@@ -58,6 +105,7 @@ export function TrustCenter({ accountId }: { accountId?: string | null } = {}) {
   const registration = useDeviceLibrary(REGISTRATION_KEY, readRegistration, EMPTY_REGISTRATION).value;
   const locker = useDeviceLibrary(LOCKER_KEY, readLocker, EMPTY_LOCKER).value;
   const [shares, setShares] = useState<ShareRow[] | null | 'error'>(null);
+  const [shareEvents, setShareEvents] = useState<ShareEvent[]>([]);
   const [round, setRound] = useState(0);
   const [conversation, setConversation] = useState(() => conversationsOnDevice());
   const [confirm, setConfirm] = useState<Confirm | null>(null);
@@ -70,16 +118,22 @@ export function TrustCenter({ accountId }: { accountId?: string | null } = {}) {
     if (!userId) return;
     let live = true;
     myShares()
-      .then((r) => live && setShares(r.shares))
-      .catch(() => live && setShares('error'));
+      .then((result) => {
+        if (!live) return;
+        setShares(result.shares);
+        setShareEvents(result.events);
+      })
+      .catch(() => {
+        if (!live) return;
+        setShares('error');
+        setShareEvents([]);
+      });
     return () => {
       live = false;
     };
   }, [userId, round]);
 
   const lastSync = state.lastSync?.at ?? (sync.status === 'synced' ? sync.at : 0);
-  const activeShares = Array.isArray(shares) ? shares.filter((s) => shareState(s, now) === 'active') : [];
-  const pastShares = Array.isArray(shares) ? shares.filter((s) => shareState(s, now) !== 'active') : [];
   const go = (screen: 'export' | 'notifs' | 'profile' | 'family') => dispatch({ type: 'go', screen });
 
   const confirmed = async () => {
@@ -182,23 +236,35 @@ export function TrustCenter({ accountId }: { accountId?: string | null } = {}) {
           <p role="status">Checking your shares…</p>
         ) : shares === 'error' ? (
           <p role="alert">Could not load your shares. Try again later.</p>
+        ) : shares.length === 0 ? (
+          <p>No advisor shares are available in this account view.</p>
         ) : (
           <>
-            {activeShares.length ? (
-              <ul className="trust-list">
-                {activeShares.map((s) => (
-                  <li key={s.id}>
-                    <strong>{s.title}</strong> — shared with your advisor, until {day(s.expires_at)}.{' '}
-                    <button type="button" className="balance-button" onClick={() => { setFailed(''); setConfirm({ kind: 'revoke', share: s }); }}>
-                      Revoke…
-                    </button>
+            <p className="portal-muted">This list covers advisor shares only. Family and supporter access is managed separately.</p>
+            <ul className="trust-list" aria-label="Advisor share history">
+              {shares.map((share) => {
+                const status = displayShareState(share, now);
+                const events = shareEvents.filter((event) => event.share_id === share.id);
+                return (
+                  <li key={share.id}>
+                    <details>
+                      <summary><strong>{share.title}</strong> — {SHARE_STATE_TEXT[status]}</summary>
+                      <p>Created {time(share.created_at)}.</p>
+                      {status === 'active' ? <p>Expires {day(share.expires_at)}.</p> : null}
+                      {status === 'expired' ? <p>Expired {day(share.expires_at)}.</p> : null}
+                      {status === 'revoked' ? <p>Revoked {time(share.revoked_at!)}.</p> : null}
+                      {status === 'unavailable' ? <p>The share state is unavailable because a required date could not be read.</p> : null}
+                      <p>{accessHistory(events)}</p>
+                      {status === 'active' ? (
+                        <button type="button" className="balance-button" onClick={() => { setFailed(''); setConfirm({ kind: 'revoke', share }); }}>
+                          Revoke…
+                        </button>
+                      ) : null}
+                    </details>
                   </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No advisor can open anything of yours right now.</p>
-            )}
-            {pastShares.length ? <p className="portal-muted">{pastShares.length} earlier share{pastShares.length === 1 ? ' has' : 's have'} expired or been revoked.</p> : null}
+                );
+              })}
+            </ul>
           </>
         )}
         <p>
