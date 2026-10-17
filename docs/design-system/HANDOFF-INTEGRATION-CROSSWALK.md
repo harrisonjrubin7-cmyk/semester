@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `3ec04d742` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `116d8444e` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -1055,6 +1055,18 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 | DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Post-commit preflight for `502e72905` found Hawk v6 and Docker runtimes, API key, app host and live target unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
+
+## Automation pass 14 mapping — distinguishable Registration Day backup actions (slice 143)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated backup sections remain distinguishable across primary plans | `app/src/components/RegistrationDay.tsx`; `semester.registration-day.v1` device plan | Existing but incomplete → existing and verified locally for this slice | Every Up, Down and Remove name includes backup rank/list size, complete course/section/title/term and the primary course/section/title it belongs to. |
+| Preserve exact mutation and validation | `moveBackup` / `removeBackup`; `useDeviceLibrary`; `readRegistrationDay` | Existing and unchanged | The regression activates the second cross-primary Remove control and proves only that primary mapping changes; the first representation remains persisted and rendered. Refused writes continue through the shared device-library error state. |
+| Preserve official-system and freshness boundaries | Existing Registration Day planning copy and imported-catalog source language | Existing and unchanged | The operation changes a student-held device plan only. It does not enroll, drop, reserve a seat, refresh seat data or call an institution/provider system. |
+| Regression and repository gates | Extended `RegistrationDay.test.tsx` plus mode/card/domain/label/lifecycle/isolation guards | Existing and verified locally for this slice | Red proof against the former code/section-only controls; 77/77 focused tests pass. Both typechecks, lint and build pass. Aggregate design check/report pass 9 token and 70 design contracts with zero audit violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status and Docker are absent, API key/app-host values are unset and no live target exists. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, enrollment, provider execution, institutional acceptance or production readiness.
 
 ## Automation pass 13 mapping — exact shared-photo removal and thumbnail lifetime (slice 142)
 

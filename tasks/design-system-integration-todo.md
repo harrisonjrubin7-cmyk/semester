@@ -1699,6 +1699,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep provider mailbox mutation, live account connection and sending as separate external-authority work.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 14 update — distinguishable Registration Day backup actions (slice 143)
+
+- [x] Merge current `origin/main` `116d8444e` into clean required-branch head `d10396349`, then select from combined head `36fbb71b4`.
+- [x] Inspect exact upstream history and current Registration Day code; find exact-primary/exact-backup mutations but no equivalent cross-primary action-name guard.
+- [x] Name every Up, Down and Remove action with backup rank/list size, course, section, title and term plus its primary course and section.
+- [x] Preserve the existing `moveBackup` / `removeBackup` device-plan authority, validation, persistence and planning-only official-registration boundary.
+- [x] Prove the new guard red against the former backup-code/section-only controls and prove removing the second representation leaves the first primary's backup intact.
+- [x] Pass 77/77 focused Registration Day, mode/card, domain, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing warnings and the existing large-chunk warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner shim: 9 token tests, 70 design contracts, zero audit violations, 86 existing warnings and CSS within ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, API key/app-host values unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep device registration planning, official enrollment, seat availability and institution-provider operations as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 10 update — distinguishable mentor-request actions (slice 139)
 
 - [x] Start from clean required-branch head `09bbed065`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Mentor Finder history/current code for overlap.

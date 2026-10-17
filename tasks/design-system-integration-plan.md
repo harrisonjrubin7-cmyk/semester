@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `3ec04d742` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `116d8444e` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -1457,3 +1457,13 @@ Each removal now identifies its one-based position, collection size, complete fi
 The duplicate-name regression failed against the former filename-only controls. The final focused Capture, Import camera, course-material, Solve photo, root-lifecycle and isolation set passes 40/40, including exact removal, retained-preview lifetime and unmount cleanup. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Design-check constituents pass 79/79, all eight report files pass 97/97, audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the report regenerates successfully. Ordered and shuffled full suites were not rerun.
 
 Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local Hawk properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Automation pass 14 — distinguishable Registration Day backup actions (slice 143)
+
+Required-branch head `36fbb71b4` was clean before selection and includes current `origin/main` `116d8444e`. Exact upstream history and current-code inspection found the existing exact-primary/exact-backup device-plan mutations but no guard for one catalog section represented as a backup under two different primary courses.
+
+Every Up, Down and Remove action now identifies the backup's one-based rank and list size, complete course, section, title and term, plus the primary course and section it belongs to. The existing `moveBackup` and `removeBackup` operations, validated device-library persistence, planning-only copy and official-registration boundary remain authoritative. Removing the second represented backup changes only that primary plan; the same section remains under the first primary.
+
+The regression failed against the former backup-code/section-only controls. The focused Registration Day, mode/card, domain, label, root-lifecycle and isolation set passes 77/77. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Aggregate design-system check/report pass through a temporary package-runner shim: 9 token tests, 70 design contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun.
+
+The active HawkScan skill stops at mandatory preflight because Hawk v6/config/skills status and Docker are absent and `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` are unset. `stackhawk.yml` and a local Hawk properties file exist, but credential material was not read and no live target is configured. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
