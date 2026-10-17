@@ -1572,7 +1572,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Name each removal with course, section, title, term and meeting schedule while preserving exact-id `toggle(c.id)` behavior.
 - [x] Prove the regression red against the former course-code-only label and confirm section 02 removal leaves section 01 intact.
 - [x] Pass the recovered 27/27 focused registration, saved-schedule, course-detail, label and root-lifecycle tests.
-- [x] Commit as `4b9575afb`, merge final `origin/main` `857f98f74` cleanly as `69ae653d6` after a normal promotion race, then pass 390/390 focused and upstream tests, both app TypeScript gates, lint, production build, 63/63 platform-control tests and its TypeScript gate using the app's installed type roots.
+- [x] Commit as `4b9575afb`, merge final `origin/main` `4e1a043f1` cleanly as `d78048709` after two normal promotion races; pass 390/390 focused and upstream tests, both app TypeScript gates, lint, production build, 63/63 platform-control tests and its TypeScript gate, then pass the final race delta with 7/7 Registration/readiness-schema tests and app TypeScript.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
 - [ ] HawkScan DAST — runtime, API key, app host and live target are unavailable; no scan, finding result, fix/rescan loop or security pass exists.
 
