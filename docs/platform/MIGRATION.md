@@ -117,7 +117,11 @@ still an integration seam—not evidence of live cross-institution context switc
 server-only `createContextActivationRequester` now adds the next seam: it requires an
 explicit confirmation naming the membership and workspace, reloads the verified account
 directory, and returns only an `ActiveContext`. It does not build a `RequestContext`,
-select an adapter, expose a route or UI, or authorize an action.
+select an adapter, expose a route or UI, or authorize an action. The companion
+`createVerifiedContextActivationRequester` preserves that boundary while carrying an
+immutable server-only authority record from the selected membership row, including its
+fresh roles and provider id. This gives a later request-context adoption step evidence to
+authorize without inheriting the originally authenticated institution's roles.
 The browser's `lib/university.ts` now uses the shared SDK. Its transport
 preserves the existing secure-origin, no-redirect, no-cookie and timeout rules;
 mutating calls receive one idempotency key per logical call; only safe reads or
