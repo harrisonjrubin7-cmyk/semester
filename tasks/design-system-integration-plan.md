@@ -1322,6 +1322,6 @@ The mandatory post-commit HawkScan loop for slice commit `502e72905` stops at pr
 
 The interrupted runner found that two sections of the same course could expose identical course-code-only removal names in the Term plan cart. The bounded fix adds section, title, term and meeting schedule to each accessible name while preserving the exact-id local cart transition.
 
-The regression proves section 02 can be removed without removing section 01. The recovered focused registration, saved-schedule, course-detail, label and root-lifecycle set passes 27/27; the interrupted run had also passed both TypeScript gates, lint and production build. Final combined-head verification remains required after current-main reconciliation.
+The regression proves section 02 can be removed without removing section 01. The recovered focused registration, saved-schedule, course-detail, label and root-lifecycle set passes 27/27. Slice commit `4b9575afb` merges current `origin/main` `03345c0b8` cleanly as `c68e39d12`; the combined head passes 318/318 focused and upstream tests, both app TypeScript gates, lint, production build, 63/63 platform-control tests and its TypeScript gate using the app's installed type roots.
 
 This remains a device-side planning action. It does not enroll, drop, reserve a seat or mutate an institution/provider system. HawkScan remains open because its runtime, credentials, app host and live target are unavailable; no DAST pass is claimed.

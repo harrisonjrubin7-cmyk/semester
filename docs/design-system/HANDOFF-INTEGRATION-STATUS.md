@@ -1358,7 +1358,8 @@ This local slice does not prove deployment, production execution, provider conne
 - The interrupted runner selected a bounded Registration Portal accessibility gap: same-course cart rows exposed the same course-code-only removal name even when section and meeting facts differed.
 - Each removal now names the represented course, section, title, term and meeting schedule. The existing exact-id `toggle(c.id)` transition remains authoritative; the regression confirms removing section 02 leaves section 01 in the local cart.
 - The new behavior guard proved red against the former name and the recovered focused registration, saved-schedule, course-detail, label and root-lifecycle set passes 27/27.
-- Before interruption, both TypeScript gates, lint/style/label/terms checks and production build passed with the existing warning baseline. Final combined-head verification remains required after current-main reconciliation.
+- Slice commit `4b9575afb` merges current `origin/main` `03345c0b8` cleanly as `c68e39d12`. Final combined-head verification passes 318/318 focused and upstream tests, both app TypeScript gates, lint/style/label/terms checks and production build with the existing warning baseline.
+- Upstream platform-control readiness verification passes 63/63 tests and TypeScript using the app's installed type roots. The release gate remains intentionally fail-closed; this is not activation evidence.
 - HawkScan stops at preflight because Hawk and Docker runtimes, `HAWK_API_KEY`, `HAWK_APP_HOST` and a live target are unavailable. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice changes only device-side planning identification. It does not enroll, drop, reserve a seat, contact a provider or prove deployment, institutional acceptance, legal review or production readiness.
