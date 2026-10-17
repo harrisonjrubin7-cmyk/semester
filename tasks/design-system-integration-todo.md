@@ -1566,6 +1566,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 26 update — distinguishable exact-duplicate emergency-contact removals (slice 155)
+
+- [x] Start from clean required-branch head `b35714eae`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Support history/current code for overlap.
+- [x] Re-rank exact-duplicate emergency contacts as the next bounded Phase 3 accessibility gap; keep provider contacts and official campus records outside this device-only mutation.
+- [x] Name every removal with list position/size, complete contact name and phone number.
+- [x] Preserve the existing exact-id Support-library write, cancel-first consequence preview and intentional exclusion from portable backup.
+- [x] Prove the exact-duplicate regression red against the former name/phone-only controls, then pass 78/78 Support journey, workspace-backup, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing large-chunk warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility launcher: 9 token tests, 70 design contracts, all eight report contracts, zero violations, 86 existing warnings and CSS within its ledger.
+- [ ] Commit the coherent code/test/control slice locally after confirming final `origin/main` has no overlap.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` present; no local properties file; and the default local target unavailable. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep emergency contacts device-only and excluded from portable backup; keep provider and official campus records as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 23 update — distinguishable exact-duplicate citation removals (slice 152)
 
 - [x] Start from clean required-branch head `de1abfb06`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Sources history/current code for overlap.

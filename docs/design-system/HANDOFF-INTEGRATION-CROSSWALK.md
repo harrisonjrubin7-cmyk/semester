@@ -1056,6 +1056,18 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
 
+## Automation pass 26 mapping — distinguishable exact-duplicate emergency-contact removals (slice 155)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Exact-duplicate private contacts remain distinguishable at removal | `app/src/screens/Support.tsx`; account/device-scoped Support library | Existing but incomplete → existing and verified locally for this slice | Each accessible removal name includes one-based collection position, list size, complete contact name and phone number. Position distinguishes otherwise identical student-entered rows. |
+| Preserve exact device mutation and consequence preview | Stable contact id; Support library `set`; shared `ConfirmDialog` and `ActionPreview` | Existing and unchanged | The regression activates position 2 and proves only its id is removed. Cancel writes nothing; refusal retains the represented contact under the existing device-library contract. |
+| Preserve privacy, recovery and institutional boundaries | `app/src/lib/support.ts`; workspace-backup exclusion | Existing and unchanged | Emergency contacts remain device-only and deliberately excluded from portable backup. Other contacts, access notes, routines, continuity choices, official campus records and provider systems remain unchanged. |
+| Regression and repository gates | Extended `app/src/screens/journey.test.tsx` plus backup, label, lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against name/phone-only labels; 78/78 focused/control tests, both typechecks, lint and build pass. Aggregate design check/report pass with 9 token tests, 70 contracts, all eight report contracts, zero audit violations and unchanged CSS ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk and Docker are absent; required environment values and a live target are unavailable; no local properties file was found. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
 ## Automation pass 23 mapping — distinguishable exact-duplicate citation removals (slice 152)
 
 | Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
