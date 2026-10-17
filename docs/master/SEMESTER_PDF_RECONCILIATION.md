@@ -10,7 +10,7 @@
 | `…now_provide_prompt_and_comand_to_go_along_with_the.pdf` (21 pp) | all | The ten-phase master execution command and the Phase 0 output format |
 | `…expand_and_devlop_how_i_build_these_into_semester.pdf` (14 pp) | all | Design brief text, content/voice rules, screenshots/route-map requests, finalization prompt, traceability-matrix format |
 | `list-every-artifact-and-thing-for-claud-to-genrate.pdf` | **not attached** | unreconciled |
-| `expand-evan-further-provide-prompt-and-comand-to-e.pdf` | **not attached** | unreconciled |
+| `expand-evan-further-provide-prompt-and-comand-to-e.pdf` | named as reference 1 of the 22-page native Education OS brief; the file itself was not in this checkout | The 22-page brief was read and reconciled in [`docs/native-platform/`](../native-platform/MASTER_CURRENT_STATE.md). That pass does not mark any domain authoritative. |
 
 The task names four PDFs; the three above are the ones supplied. The repo's own record of earlier PDF reconciliation is `docs/PDF-EVIDENCE-GAP-MATRIX.md` (rendered from `app/src/lib/ops/pdfgaps.ts`), which covers a different set of six readiness PDFs.
 
