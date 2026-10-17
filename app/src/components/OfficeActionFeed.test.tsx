@@ -233,7 +233,14 @@ describe('with office_action_feed on', () => {
   });
 
   it('ranks an office action in the Action Center, and leaves out one marked done', async () => {
-    feed = readOfficeActions([row(), row({ id: 'a2', title: 'Housing deposit confirmed', done_at: new Date().toISOString() })]);
+    // Keep the ranking fixture live whenever the suite runs. The fixed
+    // October 15 display fixture is allowed to expire in production, but this
+    // test is about ranking and completion rather than expiry.
+    const dueSoon = new Date(Date.now() + 7 * 86_400_000).toISOString();
+    feed = readOfficeActions([
+      row({ due_at: dueSoon }),
+      row({ id: 'a2', title: 'Housing deposit confirmed', due_at: dueSoon, done_at: new Date().toISOString() }),
+    ]);
     await render(<TodayActionCenter officeActions officeAccountId="u1" />);
     expect(text()).toContain('FAFSA verification documents are due October 15');
     expect(text()).not.toContain('Housing deposit confirmed');
