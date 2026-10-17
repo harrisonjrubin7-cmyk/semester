@@ -1,5 +1,5 @@
 # Which pipeline last deployed each Edge Function, read off the project at
-# 14:22 UTC on 17 October 2026. Every function in this reading was active and
+# 14:23 UTC on 17 October 2026. Every function, access-saga-tick included,
 # last deployed by the platform at 14:22:49Z.
 #
 # Four columns: slug, version, the pipeline that deployed that version, and when.

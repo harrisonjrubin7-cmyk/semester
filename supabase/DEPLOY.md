@@ -7,7 +7,7 @@ are missing.
 
 ## What is live
 
-Read off the project at 14:22 UTC on 17 October 2026, not remembered. The
+Read off the project at 14:23 UTC on 17 October 2026, not remembered. The
 last column is which pipeline deployed that version, and it is the one worth
 reading:
 
@@ -19,15 +19,14 @@ reading:
     lti               ACTIVE, v680, verify_jwt off  platform
     integration-tick  ACTIVE, v537, verify_jwt off  platform
     access-saga-tick  ACTIVE, v56, verify_jwt off   platform; its job `access-saga-worker` remains parked until the test request below answers
-    ops-projector     ACTIVE, v146, verify_jwt off  platform; dormant until its dedicated secret is provisioned, with no scheduler entry
+    ops-projector     ACTIVE, v146, verify_jwt off  platform; dormant until its dedicated secret is provisioned; no scheduler entry
     trust-room        ACTIVE, v539, verify_jwt off  platform
     delete-account    ACTIVE, v516, verify_jwt off  platform
     billing-cancel    ACTIVE, v451, verify_jwt off  platform
     billing-checkout  ACTIVE, v480, verify_jwt off  platform
-    billing-portal    ACTIVE, v339, verify_jwt off  platform; deployment does not remove the governed billing availability gate
+    billing-portal    ACTIVE, v339, verify_jwt off  platform; remains off until configured as described below
     billing-webhook   ACTIVE, v480, verify_jwt off  platform
     lead-intake       ACTIVE, v479, verify_jwt off  platform
-    productivity-sourcecheck ACTIVE, v370, verify_jwt off platform
     support-reply-notify ACTIVE, v348, verify_jwt off, platform; delivery PARKED by SUPPORT_NOTIFY_VENDOR_APPROVED and SUPPORT_NOTIFY_ACTIVATED_AT pending Resend vendor approval and executed terms/DPA; provider acceptance was reached in the 3 October 2026 UAT, but that historical exercise is not current activation and Outlook inbox receipt remains pending. A future approved release must record a fresh UTC activation instant so parked-period intents are cancelled rather than delivered as backlog
 
 The same release defines `support-ticket-retention`, daily at 05:43 UTC, to
@@ -36,12 +35,15 @@ The migration installs and explicitly activates that credential-free job when
 pg_cron is present. It is not listed as live until a post-deploy read of
 `cron.job` and its first successful execution are recorded.
 
-`ops-projector` is deployed but not activated. It remains dormant until an operator sets a
+    productivity-sourcecheck ACTIVE, v370, verify_jwt off   platform
+
+`ops-projector` is source-complete and deployed but not activated. The function
+remains dormant until an operator sets a
 dedicated `OPS_PROJECTOR_SECRET`; there is no `scheduler.sql` entry. A valid
 manual POST runs one service-role-only database batch capped at 25 matching
 events. Retention sweeps and scheduler activation are later release gates.
 
-The new source-check function was deployed through the authenticated Management API on 1 October 2026; its initial entrypoint is `/tmp/user_fn_.../source/productivity-sourcecheck/index.ts`. This is recorded as `manual` provenance in the snapshot, awaiting the first platform deploy after merge. Every POST verifies the user's JWT with `auth.getUser`; OPTIONS carries no token. It reports public page availability and exact-excerpt presence, caps redirects, bytes and time, and rejects private DNS addresses. `PRODUCTIVITY_SOURCE_HOSTS` adds approved exact hosts outside .edu. It does not store or log source URLs/page bodies.
+The source-check function was first deployed through the authenticated Management API on 1 October 2026. The 17 October reading confirms that the continuous platform deploy has since replaced that manual bundle. Every POST verifies the user's JWT with `auth.getUser`; OPTIONS carries no token. It reports public page availability and exact-excerpt presence, caps redirects, bytes and time, and rejects private DNS addresses. `PRODUCTIVITY_SOURCE_HOSTS` adds approved exact hosts outside .edu. It does not store or log source URLs/page bodies.
 
 **This file once said two, at v1, and filed three of the other four under "Not
 deployed yet".** `fetchcal` had been live since 9 September when that was
