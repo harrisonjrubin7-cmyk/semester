@@ -69,3 +69,32 @@ the route-size gate. Budgets were not raised.
 Required follow-through: attribute the route closure growth and reduce eager
 dependencies, then rerun performance and downstream CI gates. No production
 merge or deployment of this PR is claimed here.
+
+## Continuation on 2026-10-17
+
+Reconciled main `03345c0b840c7a848b47e858d2f0b099cbdb3e11` into the
+branch at `74c3863c747a031814feaccac0c0642ce08108f1`. The local production
+build and current-main performance budgets passed. Main had independently
+updated the budgets; this continuation did not raise them. Export remained
+76,892 bytes and Recovery 73,900 bytes, so this is not a size reduction claim.
+The focused Community, Recovery, CSP, host-header and isolation run passed
+76 tests.
+
+The hosted integration build tested merge ref
+`fe46d54ecdbe9459c782af3d55db65044eb12883` and passed 24,447 tests, with
+three failures: the new evidence document was unregistered, the office-action
+fixture's October 15 deadline had elapsed, and billing-portal's deployment
+snapshot still said pending. The evidence entry is now registered without
+promoting any readiness claim. The office-action test pins the calendar and
+uses an independent elapsed-time clock for bounded waits. A read-only
+Management API observation found billing-portal ACTIVE, version 340, updated
+2026-10-17T15:22:22.298Z, with a platform entrypoint. The snapshot records
+that observation, not a payment acceptance result. All 36 tests in those
+three affected files passed after the corrections.
+
+HawkScan on that integration ref discovered 63 URLs (203 Ajax results), and
+still reported the same two NEW medium CSP paths. Scan:
+https://app.stackhawk.com/scans/6fc1ebe8-c6ef-48ce-8b94-6c3c52cce27d.
+The successful scanner job does not clear these findings or establish
+authenticated/backend coverage. Security remediation and final hosted
+validation remain open; no production promotion is claimed.

@@ -63,6 +63,17 @@ export interface EvidenceRecord {
 
 export const EVIDENCE: readonly EvidenceRecord[] = [
   {
+    id: 'community-guidelines-release-2026-10-16',
+    artifact: 'Community guidelines verification and open release findings',
+    path: 'docs/evidence/security/2026-10-16-community-guidelines-release.md',
+    produced: '2026-10-16',
+    validFor: MONTHLY,
+    owner: 'engineering',
+    claims: [],
+    rows: ['SRE-008'],
+    note: 'Repository and browser verification only. Records unresolved CSP findings and release checks; does not certify production deployment, institutional activation or general availability.',
+  },
+  {
     id: 'billing-live-acceptance-2026-10-03',
     artifact: 'Production Semester Plus lifecycle acceptance: live checkout, paid invoice, entitlement, customer portal and end-of-period cancellation',
     path: 'docs/evidence/BILLING-LIVE-ACCEPTANCE-2026-10-03.md',

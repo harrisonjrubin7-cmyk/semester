@@ -89,6 +89,10 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
+  // The fixture deadline must remain upcoming, regardless of the CI date.
+  // Keep real timers for the feed's asynchronous requests and React effects.
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-10-14T12:00:00Z'));
   window.location.hash = '';
   window.matchMedia = (() => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} })) as unknown as typeof window.matchMedia;
   localStorage.clear();
@@ -111,6 +115,7 @@ afterEach(async () => {
   host.remove();
   localStorage.clear();
   vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 const render = async (node: React.ReactNode) => {
@@ -123,8 +128,8 @@ const render = async (node: React.ReactNode) => {
 // A lazy chunk and a fetch. Waits for `ready`, up to two seconds; without
 // one, waits a fixed few turns.
 const settle = async (ready?: () => boolean) => {
-  const until = Date.now() + 2000;
-  for (let i = 0; ready ? !ready() && Date.now() < until : i < 5; i += 1) {
+  const until = performance.now() + 2000;
+  for (let i = 0; ready ? !ready() && performance.now() < until : i < 5; i += 1) {
     await act(async () => {
       await new Promise((r) => setTimeout(r, 10));
     });

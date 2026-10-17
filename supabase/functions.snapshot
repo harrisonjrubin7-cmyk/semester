@@ -90,9 +90,11 @@ trust-room         95  platform  2026-09-29T21:10:28Z
 delete-account     72  platform  2026-09-29T21:10:28Z
 billing-cancel      2  platform  2026-09-29T21:10:28Z
 billing-checkout   32  platform  2026-09-29T21:10:28Z
-# Added in the billing-availability release. Replace this pending row with the
-# Management API reading after the gated main deploy completes.
-billing-portal      -  pending   2026-10-03T07:31:00Z
+# Management API reading on 17 October 2026: ACTIVE, version 340,
+# entrypoint file:///app/supabase/functions/billing-portal/index.ts.
+# The timestamp is the observed update time, truncated to whole seconds.
+# This establishes deployment provenance, not a live billing acceptance run.
+billing-portal    340  platform  2026-10-17T15:22:22Z
 billing-webhook    32  platform  2026-09-29T21:10:28Z
 lead-intake        32  platform  2026-09-29T21:10:28Z
 
