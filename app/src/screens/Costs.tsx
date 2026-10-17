@@ -170,7 +170,7 @@ function OutOfPocket() {
                     {readTerm(before.term).label}: {money(before.cents)}
                   </div>
                 ) : null}
-                {theirs.map((x) => {
+                {theirs.map((x, index) => {
                   const details = [
                     kindOf(x.kind).label,
                     x.rented ? 'rented' : '',
@@ -215,7 +215,7 @@ function OutOfPocket() {
                       <button
                         type="button"
                         className="bare"
-                        aria-label={`Remove ${x.what}: ${removalDetails}`}
+                        aria-label={`Remove cost ${index + 1} of ${theirs.length}, ${x.what}: ${removalDetails}`}
                         onClick={() => dispatch({ type: 'dropCost', id: x.id })}
                         style={{ width: 24, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
                       >

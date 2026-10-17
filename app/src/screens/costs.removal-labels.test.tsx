@@ -33,7 +33,7 @@ beforeEach(async () => {
     costsTab: 'out',
     costs: [
       {
-        id: 'materials-econ',
+        id: 'materials-econ-one',
         courseId: 'econ',
         what: 'Course materials',
         kind: 'book',
@@ -44,6 +44,17 @@ beforeEach(async () => {
         at: 1,
       },
       {
+        id: 'materials-econ-two',
+        courseId: 'econ',
+        what: 'Course materials',
+        kind: 'book',
+        cents: 6499,
+        rented: false,
+        backCents: 2500,
+        term: '2026FA',
+        at: 2,
+      },
+      {
         id: 'materials-psci',
         courseId: 'psci',
         what: 'Course materials',
@@ -52,7 +63,7 @@ beforeEach(async () => {
         rented: false,
         backCents: 0,
         term: '2026FA',
-        at: 2,
+        at: 3,
       },
     ],
   }));
@@ -78,20 +89,21 @@ afterEach(async () => {
   localStorage.clear();
 });
 
-it('identifies duplicate cost removals by every represented fact', async () => {
+it('identifies exact duplicate cost removals by position and every represented fact', async () => {
   const removals = await vi.waitFor(() => {
-    const buttons = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove Course materials"]')];
-    expect(buttons).toHaveLength(2);
+    const buttons = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove cost"]')];
+    expect(buttons).toHaveLength(3);
     return buttons;
   });
   expect(removals.map((button) => button.ariaLabel)).toEqual([
-    'Remove Course materials: ECON 1020 · Textbook · $25.00 back · $64.99',
-    'Remove Course materials: PSCI 1104 · Access code · $50.00',
+    'Remove cost 1 of 2, Course materials: ECON 1020 · Textbook · $25.00 back · $64.99',
+    'Remove cost 2 of 2, Course materials: ECON 1020 · Textbook · $25.00 back · $64.99',
+    'Remove cost 1 of 1, Course materials: PSCI 1104 · Access code · $50.00',
   ]);
-  expect(new Set(removals.map((button) => button.ariaLabel)).size).toBe(2);
+  expect(new Set(removals.map((button) => button.ariaLabel)).size).toBe(3);
 
-  await act(async () => removals[0]?.click());
+  await act(async () => removals[1]?.click());
 
-  expect(seen.costs.map((row) => row.id)).toEqual(['materials-psci']);
+  expect(seen.costs.map((row) => row.id)).toEqual(['materials-econ-one', 'materials-psci']);
   expect(seen.undone?.label).toBe('Cost removed');
 });

@@ -1082,6 +1082,18 @@ No route, navigation, shared component, dependency, schema, policy, server opera
 
 No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
 
+## Automation pass 30 mapping — distinguishable exact-duplicate out-of-pocket cost removals (slice 159)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Exact-duplicate student-entered cost rows remain distinguishable at removal | `app/src/screens/Costs.tsx`; persisted `state.costs` | Existing but incomplete → existing and verified locally for this slice | Every accessible name includes one-based position/size within its represented course list before complete name, course, kind, rental/resale and amount facts. Position distinguishes otherwise identical rows. |
+| Preserve exact mutation and bounded recovery | Stable cost id; `app/src/state/slices/mine.ts`; `app/src/lib/undo.ts` | Existing and unchanged | The regression activates position 2 and proves only that id is removed. The shared eight-second Undo restores the `costs` snapshot. |
+| Preserve financial and institution authority | Student-owned device plan; `app/src/screens/Bill.tsx` | Existing and unchanged | Removal changes no school account, official charge, payment, enrolled plan, provider or institution record. |
+| Regression and repository gates | Extended `app/src/screens/costs.removal-labels.test.tsx` plus Bill, cost-domain, reducer/Undo, label, lifecycle, isolation and integration-control guards | Existing and verified locally for this slice | Red proof against complete-fact-only names; focused verification passes 182/182 and integration-control verification passes 42/42. Both typechecks, lint and build pass. Aggregate design verification passes 9 token tests, 70 design contracts and all eight report contracts with zero audit violations and unchanged CSS ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk and Docker are absent; API key, application ID, host override and live default target are unavailable. A local properties file exists but was not read. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, money movement, provider execution, institutional acceptance or production readiness.
+
 ## Automation pass 28 mapping — distinguishable exact-duplicate degree-planning removals (slice 157)
 
 | Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
