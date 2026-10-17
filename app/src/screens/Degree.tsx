@@ -570,8 +570,8 @@ function Transcript({ rows }: { rows?: Taken[] }) {
         <>
           <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Recorded</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
-            {taken.map((c) => (
-              <TakenRow key={c.id} course={c} />
+            {taken.map((c, index) => (
+              <TakenRow key={c.id} course={c} position={index + 1} total={taken.length} />
             ))}
           </div>
         </>
@@ -667,8 +667,8 @@ function Rules() {
         <>
           <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Recorded</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
-            {state.requirements.map((r) => (
-              <RequirementRow key={r.id} requirement={r} />
+            {state.requirements.map((r, index) => (
+              <RequirementRow key={r.id} requirement={r} position={index + 1} total={state.requirements.length} />
             ))}
           </div>
         </>
@@ -699,7 +699,7 @@ function Rules() {
  * hours and GPA at once, so changing all three on the first press hides more
  * than the word "Remove" says.
  */
-function TakenRow({ course: c }: { course: Taken }) {
+function TakenRow({ course: c, position, total }: { course: Taken; position: number; total: number }) {
   const { state, dispatch } = useStore();
   const [editing, setEditing] = useState(false);
   const [removing, setRemoving] = useState(false);
@@ -866,7 +866,7 @@ function TakenRow({ course: c }: { course: Taken }) {
         type="button"
         className="bare"
         onClick={() => setRemoving(true)}
-        aria-label={`Remove ${c.code}${c.title ? `: ${c.title}` : ''} · ${c.term || 'No term recorded'} · ${c.hours} ${c.hours === 1 ? 'hour' : 'hours'} · ${c.current ? 'in progress' : c.grade ? `grade ${c.grade}` : 'no grade recorded'}`}
+        aria-label={`Remove recorded course ${position} of ${total}, ${c.code}${c.title ? `: ${c.title}` : ''} · ${c.term || 'No term recorded'} · ${c.hours} ${c.hours === 1 ? 'hour' : 'hours'} · ${c.current ? 'in progress' : c.grade ? `grade ${c.grade}` : 'no grade recorded'}`}
         style={{ width: 'auto', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
       >
         Remove
@@ -913,7 +913,7 @@ function TakenRow({ course: c }: { course: Taken }) {
  * makes, so a row edited here and a row added there cannot end up holding two
  * different shapes of the same field.
  */
-function RequirementRow({ requirement: r }: { requirement: Requirement }) {
+function RequirementRow({ requirement: r, position, total }: { requirement: Requirement; position: number; total: number }) {
   const { dispatch } = useStore();
   const [editing, setEditing] = useState(false);
   const [removing, setRemoving] = useState(false);
@@ -1048,7 +1048,7 @@ function RequirementRow({ requirement: r }: { requirement: Requirement }) {
         type="button"
         className="bare"
         onClick={() => setRemoving(true)}
-        aria-label={`Remove ${r.name} requirement: ${r.programme} · ${r.count} ${r.need} · ${r.accepts.length > 0 ? `accepted courses: ${r.accepts.join(', ')}` : 'any course can count'}`}
+        aria-label={`Remove requirement ${position} of ${total}, ${r.name}: ${r.programme} · ${r.count} ${r.need} · ${r.accepts.length > 0 ? `accepted courses: ${r.accepts.join(', ')}` : 'any course can count'}`}
         style={{ width: 'auto', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
       >
         Remove

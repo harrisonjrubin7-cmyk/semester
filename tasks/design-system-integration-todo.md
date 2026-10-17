@@ -1604,6 +1604,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep private shortcut mutation separate from external navigation, campus-directory data, authentication and provider/institution records.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 28 update — distinguishable exact-duplicate degree-planning removals (slice 157)
+
+- [x] Start from clean required-branch head `aa7cb2bf0`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Degree history/current code for overlap.
+- [x] Re-rank exact-duplicate student-entered courses and degree requirements as the next bounded Phase 3 accessibility gap; keep official transcript and degree-audit mutation outside the device planning copy.
+- [x] Name every represented removal with one-based list position/size plus its existing complete course or requirement facts.
+- [x] Preserve the existing stable-id `dropTaken` / `dropRequirement` reducers, cancel-first consequence previews and official-record boundary.
+- [x] Prove both exact-duplicate regressions red against the former complete-fact-only controls, then pass 142/142 Degree, domain, reducer/Undo, graduation/advisor, label, dead-end, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing large-chunk warning.
+- [x] Pass 9/9 token export and 70/70 design contracts, generate the design report, and retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` present; and the default local target unavailable. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep student-entered planning copies separate from the registrar's official transcript and degree audit.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 23 update — distinguishable exact-duplicate citation removals (slice 152)
 
 - [x] Start from clean required-branch head `de1abfb06`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Sources history/current code for overlap.

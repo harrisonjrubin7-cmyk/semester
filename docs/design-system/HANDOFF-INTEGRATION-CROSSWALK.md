@@ -1069,6 +1069,18 @@ No route, navigation, dependency, schema, policy, provider configuration or exte
 
 No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
 
+## Automation pass 28 mapping — distinguishable exact-duplicate degree-planning removals (slice 157)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Exact-duplicate recorded courses and requirements remain distinguishable at removal | `app/src/screens/Degree.tsx`; student-entered Degree workspace | Existing but incomplete → existing and verified locally for this slice | Each accessible name includes one-based represented-list position/size before the existing complete course or requirement facts. Position distinguishes otherwise identical rows. |
+| Preserve exact mutation and consequence preview | Stable ids; `dropTaken` / `dropRequirement`; shared `ConfirmDialog` and `ActionPreview` | Existing and unchanged | Both regressions activate position 2 and prove only its stable id is removed. Cancellation writes nothing; the existing preview still names the derived planning consequence and recovery boundary. |
+| Preserve registrar authority | Degree workspace planning copy; `NotOfficial` and existing preview language | Existing and unchanged | Removing a private planning row recalculates Semester's local planning arithmetic only. The registrar's official transcript, degree audit and every provider/institution record remain unchanged. |
+| Regression and repository gates | Extended `app/src/screens/degree.requirement-removal.test.tsx` plus domain, Undo, label, lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against complete-fact-only names; 142/142 focused/control tests, both typechecks, lint and build pass. Token/design verification passes 9 and 70 tests with a generated report, zero audit violations and unchanged CSS ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk and Docker are absent; headless API key, application id and host overrides are unset; and no live target is available. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
 ## Automation pass 27 mapping — distinguishable exact-duplicate student shortcut removals (slice 156)
 
 | Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
