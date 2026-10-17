@@ -129,7 +129,9 @@ may safely retry a network failure with the same key. An upstream `502`
 unknown outcome remains non-retryable and must go through reconciliation. The
 two older refusal shapes are translated at this
 migration boundary with a focused equivalence test. **Not done:** the edge
-functions have not adopted the envelope, and `environment`,
+functions have not all adopted the envelope; the Claude shared-provider edge now
+uses the same error fields and request/correlation headers through a Deno-safe
+shared helper, while the remaining functions keep their prior shapes. `environment`,
 tenant status and `verifiedBy` in the context are approximations the file says so about.
 
 ### Phase 2 — Capability resolution, side by side
