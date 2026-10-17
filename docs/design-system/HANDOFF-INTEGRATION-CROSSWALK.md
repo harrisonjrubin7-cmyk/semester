@@ -1103,6 +1103,18 @@ No route, navigation, shared component, dependency, schema, policy, provider con
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
 
+## Automation pass 10 mapping — distinguishable mentor-request actions (slice 139)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated pending mentor requests remain distinguishable when answered or withdrawn | `app/src/components/MentorFinder.tsx`; `app/src/lib/mentors.ts` | Existing but incomplete → existing and verified locally for this slice | Every Accept, Decline and Withdraw name includes collection position/size, peer or alumni kind, direction, visible person and topics/no-topic state. Position distinguishes otherwise identical requests. |
+| Preserve exact server operation and refusal recovery | Existing request UUID, `answerRequest`, `answer_mentor_request` and component busy/notice flow | Existing and unchanged | The regression invokes only the represented second ids. One operation at a time remains enabled, a successful call reloads server state, and refusal retains the represented request with retry language. |
+| Preserve mutual consent, tenancy and privacy | `20260928110700_consent_and_moderation_narrowing.sql`; mentor roster/RLS checks | Existing and unchanged | Only the asked person accepts/declines and only the requester withdraws; acceptance rechecks cohort/capacity. Semester still exposes chosen display names/topics and says programme contact stays outside Semester. Live institution programme activation remains external. |
+| Regression and repository gates | Extended `MentorFinder.test.tsx` plus mentor, matching, label, root-lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against generic controls; focused verification passes 62/62. Both typechecks, lint and build pass; token export passes 9/9, combined design contracts 139/139 and report contracts 97/97. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status and Docker are absent; API key, app host and live target are unavailable. A local properties file exists but was not read. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, institution programme activation, production execution or production readiness.
+
 ## Automation pass 9 mapping — distinguishable Operating Rhythm simulator removals (slice 138)
 
 | Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |

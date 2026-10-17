@@ -1644,6 +1644,26 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep provider mailbox mutation, live account connection and sending as separate external-authority work.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 10 update — distinguishable mentor-request actions (slice 139)
+
+- [x] Start from clean required-branch head `09bbed065`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Mentor Finder history/current code for overlap.
+- [x] Re-rank repeated mentor-request controls as the next bounded Phase 7 accessibility gap; preserve mutual consent, programme contact and school/provider activation boundaries.
+- [x] Name Accept, Decline and Withdraw with one-based collection position, collection size, peer/alumni programme kind, direction, person and topics/no-topic state.
+- [x] Preserve the existing exact-id `answer_mentor_request` call, one-operation-at-a-time guard, server refresh and retryable refusal notice.
+- [x] Prove the repeated-request guard red against the former generic controls and confirm the second Decline and Withdraw actions send only their represented ids.
+- [x] Pass 62/62 focused Mentor Finder, mentor-domain, matching, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
+- [x] Pass 9/9 token-export tests, 139/139 combined design contracts and 97/97 report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Aggregate design check/report wrappers — their hardcoded `npm` / `npx` launchers are unavailable; exact constituents pass and no wrapper result is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep visible request identity, server-side mutual consent/capacity and institution programme activation as separate evidence boundaries.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 9 update — distinguishable Operating Rhythm simulator removals (slice 138)
 
 - [x] Start from clean required-branch head `2fd29ab2f`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Operating Rhythm history/current code for overlap.

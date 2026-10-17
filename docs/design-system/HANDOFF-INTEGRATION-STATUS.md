@@ -1353,6 +1353,18 @@ This local slice does not prove deployment, production execution, institutional 
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 10 / integration slice 139
+
+- Required-branch head `09bbed065` was clean before selection and already included current `origin/main` `3ec04d742`; exact Mentor Finder history/current-code inspection found no equivalent repeated-request action-name guard.
+- Every pending Accept, Decline and Withdraw action now names collection position/size, peer/alumni kind, direction, visible person and complete topics/no-topic state. Otherwise identical visible requests remain distinguishable.
+- Existing exact-id `answerRequest`, server-side mutual consent, tenant/cohort/capacity checks, one-operation-at-a-time UI guard, refresh and refusal recovery remain authoritative. No contact details pass through Semester and live programme activation remains external.
+- The regression failed against the former generic controls and proves the second Decline and Withdraw controls send only their represented ids. Focused Mentor Finder, mentor-domain, matching, label, root-lifecycle and isolation verification passes 62/62.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing large-chunk warning. Token export passes 9/9, combined design contracts pass 139/139 and report contracts pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Aggregate design wrappers are not claimed because their hardcoded `npm` / `npx` launchers are unavailable. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, provider execution, institution programme activation, production operation, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 9 / integration slice 138
 
 - Required-branch head `2fd29ab2f` was clean before the slice and already included current `origin/main` `3ec04d742`; exact Operating Rhythm history/current-code inspection found no equivalent simulator-removal identity guard.

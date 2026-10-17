@@ -80,6 +80,8 @@ export function MentorFinder({
     }
     run(() => askMentor(o, name, interests.filter((i) => o.topics.includes(i)), note));
   };
+  const requestName = (r: (typeof mine.waiting)[number], index: number, total: number, direction: 'from' | 'to', person: string) =>
+    `${r.kind === 'peer' ? 'peer mentor' : 'alumni mentor'} request ${index + 1} of ${total} ${direction} ${person}: ${r.topics.length ? r.topics.join(', ') : 'no topics selected'}`;
 
   return (
     <div className="jx-list">
@@ -88,14 +90,14 @@ export function MentorFinder({
       {mine.waiting.length ? (
         <>
           <SectionLabel>Asking you</SectionLabel>
-          {mine.waiting.map((r) => (
+          {mine.waiting.map((r, index) => (
             <div key={r.id} className="jx-entry">
               <div className="jx-entry-title">{r.requesterName}</div>
               {r.topics.length ? <div className="jx-entry-what">Wants to talk about {r.topics.join(', ')}</div> : null}
               {r.note ? <div className="jx-privacy">{r.note}</div> : null}
               <div className="jx-actions">
-                <button type="button" className="jx-go" disabled={busy} onClick={() => run(() => answerRequest(r.id, 'accepted'))}>Accept</button>
-                <button type="button" className="jx-go" disabled={busy} onClick={() => run(() => answerRequest(r.id, 'declined'))}>Decline</button>
+                <button type="button" className="jx-go" disabled={busy} aria-label={`Accept ${requestName(r, index, mine.waiting.length, 'from', r.requesterName)}`} onClick={() => run(() => answerRequest(r.id, 'accepted'))}>Accept</button>
+                <button type="button" className="jx-go" disabled={busy} aria-label={`Decline ${requestName(r, index, mine.waiting.length, 'from', r.requesterName)}`} onClick={() => run(() => answerRequest(r.id, 'declined'))}>Decline</button>
               </div>
             </div>
           ))}
@@ -121,7 +123,7 @@ export function MentorFinder({
       {mine.sent.length ? (
         <>
           <SectionLabel>Your requests</SectionLabel>
-          {mine.sent.map((r) => {
+          {mine.sent.map((r, index) => {
             const who = rosters.offers.find((o) => o.userId === r.recipient)?.name ?? 'A mentor';
             return (
               <div key={r.id} className="jx-entry">
@@ -133,7 +135,7 @@ export function MentorFinder({
                   <div className="jx-entry-what">Accepted. Your school’s mentoring program connects you from here — no contact details go through Semester.</div>
                 ) : null}
                 {r.status === 'pending' ? (
-                  <button type="button" className="jx-go" disabled={busy} onClick={() => run(() => answerRequest(r.id, 'withdrawn'))}>Withdraw</button>
+                  <button type="button" className="jx-go" disabled={busy} aria-label={`Withdraw ${requestName(r, index, mine.sent.length, 'to', who)}`} onClick={() => run(() => answerRequest(r.id, 'withdrawn'))}>Withdraw</button>
                 ) : null}
               </div>
             );
