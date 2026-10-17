@@ -1613,6 +1613,8 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove both exact-duplicate regressions red against the former complete-fact-only controls, then pass 142/142 Degree, domain, reducer/Undo, graduation/advisor, label, dead-end, root-lifecycle and isolation tests.
 - [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing large-chunk warning.
 - [x] Pass 9/9 token export and 70/70 design contracts, generate the design report, and retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [x] Commit the coherent slice as `8bd874312`, then merge non-overlapping final `origin/main` `35474ac5b` as `54c5120e4`; rerun 142/142 Degree/control tests and pass 6/6 upstream Course Engine web tests plus its TypeScript gate.
+- [ ] Upstream Course Engine API focused tests — locally unavailable because the active Python runtime has no `pytest` module; no local API-suite pass is claimed.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
 - [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` present; and the default local target unavailable. No scan, finding result, fix/rescan loop or security pass exists.
 
