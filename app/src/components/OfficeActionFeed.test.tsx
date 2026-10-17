@@ -75,6 +75,13 @@ vi.mock('../lib/office-actions-remote', async (importOriginal) => {
   };
 });
 
+// These fixtures describe a fall 2026 office deadline. Keep the product clock
+// in that same term so the action does not silently expire as wall time moves.
+vi.mock('../state/store', async (importOriginal) => {
+  const real = await importOriginal<typeof import('../state/store')>();
+  return { ...real, useNow: () => new Date('2026-10-01T12:00:00-05:00') };
+});
+
 const { OfficeActionFeed } = await import('./OfficeActionFeed');
 const { OfficeActionDesk } = await import('./OfficeActionDesk');
 const { TodayActionCenter } = await import('./TodayActionCenter');
