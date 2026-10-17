@@ -1,0 +1,62 @@
+# docs/operations/service-objectives.yaml
+# Status: specified. Internal operating targets, not external guarantees.
+# Error-budget arithmetic already exists in app/src/lib/governance/error-budgets.ts.
+
+service_objectives:
+  - id: SLO-READINESS-001
+    service: readiness_evaluation
+    measure: "Percentage of completed requests with a receipt or safe review state."
+    target: tenant_approved_target
+    window: rolling_30_days
+    exclusions:
+      - institution_planned_maintenance
+      - approved_cohort_blackout
+
+  - id: SLO-SOURCE-001
+    service: source_freshness
+    measure: "Percentage of source-backed facts within their approved freshness windows."
+    target: tenant_and_source_specific
+    window: rolling_7_days
+    action_when_breached:
+      - show_stale_state
+      - block_definitive_derived_outcome
+      - notify_integration_owner
+      - open_reconciliation_case_when_required
+
+  - id: SLO-WORKFLOW-001
+    service: durable_workflows
+    measure: "Percentage of workflow jobs completed, safely reviewed, or quarantined."
+    target: internal_operating_target
+    window: rolling_30_days
+    action_when_breached:
+      - alert_on_call
+      - investigate_dead_letter_queue
+      - assess_cohort_impact
+
+  - id: SLO-SUPPORT-001
+    service: support_handoff
+    measure: "Percentage of high-priority pilot cases acknowledged through the agreed route."
+    target: pilot_agreed_target
+    window: rolling_30_days
+    action_when_breached:
+      - escalate_to_pilot_owner
+      - review_staffing_and_routing
+
+  - id: SLO-ACCESS-001
+    service: authorization
+    measure: "Confirmed unauthorized restricted-record disclosures."
+    target: zero
+    window: continuous
+    action_when_breached:
+      - invoke_security_incident_process
+      - suspend_affected_path_if_necessary
+
+error_budget_policy:
+  rule: >
+    When a service exceeds its approved error budget or repeatedly enters a
+    blocked state, capability expansion pauses until the responsible owner
+    documents diagnosis, remediation, test evidence, and approval to resume.
+  prohibited_response:
+    - "Increase the target merely to close the issue."
+    - "Hide stale or unknown data to preserve completion metrics."
+    - "Expand a cohort while critical findings remain unresolved."

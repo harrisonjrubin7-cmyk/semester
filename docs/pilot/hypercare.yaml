@@ -1,0 +1,33 @@
+# docs/pilot/hypercare.yaml
+# Status: specified. Formal cadence for the hypercare window agreed with an institution.
+
+hypercare:
+  duration: institution_agreed_window
+
+  daily:
+    - review_source_freshness
+    - review_failed_and_quarantined_workflows
+    - review_support_cases_by_severity
+    - review_reconciliation_backlog
+    - verify_feature_flag_scope
+    - record_decisions_and_actions
+
+  twice_weekly:
+    - registrar_and_integration_review
+    - student_confusion_and_copy_review
+    - incident_and_near_miss_review
+    - accessibility_and_device_issue_review
+
+  weekly:
+    - pilot_health_report
+    - institution_owner_check_in
+    - risk_register_update
+    - evidence_expiry_review
+    - backlog_prioritization
+
+  exit_criteria:
+    - no_unresolved_critical_findings
+    - support_route_operates_with_named_owners
+    - reconciliation_process_is_proven
+    - source_freshness_behavior_is_accepted
+    - institution_owner_accepts_steady_state
