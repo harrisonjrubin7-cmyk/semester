@@ -1594,6 +1594,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove the exact-duplicate regression red against the former complete-fact-only controls, then pass 191/191 Links, grouping, school-link, reducer, Undo, label, root-lifecycle and isolation tests.
 - [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing large-chunk warning.
 - [x] Pass 79/79 design-check constituents and all eight test-backed report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [x] Commit the coherent code/test/control slice locally as `602122fa0` after confirming final `origin/main` remains `116d8444e` with no overlap.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
 - [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` and a local properties file present but unread; and the default local target unavailable. No scan, finding result, fix/rescan loop or security pass exists.
 
