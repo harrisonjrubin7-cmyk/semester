@@ -1,0 +1,48 @@
+test_changed_grade_binding (test_lab.TestLab.test_changed_grade_binding) ... ok
+test_changed_hold_binding (test_lab.TestLab.test_changed_hold_binding) ... ok
+test_course_scope (test_lab.TestLab.test_course_scope) ... ok
+test_cross_student (test_lab.TestLab.test_cross_student) ... ok
+test_cross_tenant (test_lab.TestLab.test_cross_tenant) ... ok
+test_cross_tenant_approval (test_lab.TestLab.test_cross_tenant_approval) ... ok
+test_decided_approval (test_lab.TestLab.test_decided_approval) ... ok
+test_duplicate_receipt (test_lab.TestLab.test_duplicate_receipt) ... ok
+test_empty_key (test_lab.TestLab.test_empty_key) ... ok
+test_expired (test_lab.TestLab.test_expired) ... ok
+test_expired_approval (test_lab.TestLab.test_expired_approval) ... ok
+test_faculty_cannot_approve (test_lab.TestLab.test_faculty_cannot_approve) ... ok
+test_full_learning_loop (test_lab.TestLab.test_full_learning_loop) ... ok
+test_grant_revoked (test_lab.TestLab.test_grant_revoked) ... ok
+test_hold_clear_not_ready (test_lab.TestLab.test_hold_clear_not_ready) ... ok
+test_key_conflict (test_lab.TestLab.test_key_conflict) ... ok
+test_no_submission (test_lab.TestLab.test_no_submission) ... ok
+test_onboarding_required (test_lab.TestLab.test_onboarding_required) ... ok
+test_operator_business_only (test_lab.TestLab.test_operator_business_only) ... ok
+test_readiness_confirmed (test_lab.TestLab.test_readiness_confirmed) ... ok
+test_reason_required (test_lab.TestLab.test_reason_required) ... ok
+test_rejection_rolls_back (test_lab.TestLab.test_rejection_rolls_back) ... ok
+test_released_grade_not_mutable (test_lab.TestLab.test_released_grade_not_mutable) ... ok
+test_restart_durable (test_lab.TestLab.test_restart_durable) ... ok
+test_score_invalid (test_lab.TestLab.test_score_invalid) ... ok
+test_self_approval_even_after_role_change (test_lab.TestLab.test_self_approval_even_after_role_change) ... ok
+test_stale_source (test_lab.TestLab.test_stale_source) ... ok
+test_student_cannot_grade (test_lab.TestLab.test_student_cannot_grade) ... ok
+test_unknown_command (test_lab.TestLab.test_unknown_command) ... ok
+test_version_conflict (test_lab.TestLab.test_version_conflict) ... ok
+test_worker_replay (test_lab.TestLab.test_worker_replay) ... ok
+test_worker_role (test_lab.TestLab.test_worker_role) ... ok
+test_worker_tenant (test_lab.TestLab.test_worker_tenant) ... ok
+test_wrong_kind (test_lab.TestLab.test_wrong_kind) ... ok
+test_approval_reason_visible_to_reviewer (test_lab.TestReviewFindings.test_approval_reason_visible_to_reviewer) ... ok
+test_expired_approval_leaves_pending_queue (test_lab.TestReviewFindings.test_expired_approval_leaves_pending_queue) ... ok
+test_faculty_sees_submitted_work (test_lab.TestReviewFindings.test_faculty_sees_submitted_work) ... ok
+test_grade_approvals_stay_with_faculty_and_registrar_sees_no_grade (test_lab.TestReviewFindings.test_grade_approvals_stay_with_faculty_and_registrar_sees_no_grade) ... ok
+test_grade_drafted_on_superseded_submission_cannot_request_release (test_lab.TestReviewFindings.test_grade_drafted_on_superseded_submission_cannot_request_release) ... ok
+test_lapsed_demo_sessions_renew_on_reopen (test_lab.TestReviewFindings.test_lapsed_demo_sessions_renew_on_reopen) ... ok
+test_new_submission_invalidates_grade_approval (test_lab.TestReviewFindings.test_new_submission_invalidates_grade_approval) ... ok
+test_non_string_identifier_is_rejected_not_crashed (test_lab.TestReviewFindings.test_non_string_identifier_is_rejected_not_crashed) ... ok
+test_repeated_onboarding_keeps_version (test_lab.TestReviewFindings.test_repeated_onboarding_keeps_version) ... ok
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.850s
+
+OK

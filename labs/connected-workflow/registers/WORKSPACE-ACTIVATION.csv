@@ -1,0 +1,341 @@
+workspace_proposed,gate,canonical_mapping,state,owner,target_sha,evidence,expiry,activation
+student,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+faculty,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+ta,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+advisor,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+registrar,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+student-finance,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+campus-services,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+career,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+alumni,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+family,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+employer,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-administration,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+institution-it,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+privacy-security,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+company,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+operations,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,entry/identity,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,scope/grants,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,first value,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,complete job loop,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,authority/source,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,current data,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,access denial,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,safe failure,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,durable receipt,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,reconciliation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,staffed support,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,recovery/offboarding,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,privacy/consent,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,AI policy,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,manual accessibility,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,independent security,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,legal scope,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,measurement baseline,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,customer acceptance,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
+developer,two-person activation,not reconciled,not_assessed,assign named owner,,,control-specific; proposed maximum90days for pilot review,disabled
