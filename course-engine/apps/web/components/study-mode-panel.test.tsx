@@ -88,6 +88,39 @@ describe("stored study asset interactions", () => {
     expect(screen.queryByRole("heading", { name: "Uncited term" })).not.toBeInTheDocument();
   });
 
+  it("renders a citation-bound lecture outline as reviewable slides", () => {
+    renderPanel("slides", { ...baseAsset, asset_type: "lecture_outline", title: "Coordination lecture", content: {
+      sections: [{
+        heading: "Decision ownership",
+        explanation: "A named owner keeps the decision path legible.",
+        key_points: ["Separate input from final authority.", "Publish the escalation path."],
+        examples: ["A product lead owns the launch decision."],
+        citation_ids: [citationId],
+      }],
+      citations: baseAsset.content.citations,
+    } });
+
+    expect(screen.getByText((_content, element) => element?.tagName === "P" && element.textContent === "1 cited slide")).toBeInTheDocument();
+    expect(screen.getByText("Slide 1")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Decision ownership" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Key points" })).toBeInTheDocument();
+    expect(screen.getByText("Separate input from final authority.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Examples" })).toBeInTheDocument();
+    expect(screen.getByText("A product lead owns the launch decision.")).toBeInTheDocument();
+    expect(screen.getByText("syllabus.pdf, p. 4")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open material" })).not.toBeInTheDocument();
+  });
+
+  it("fails closed when a lecture-outline slide has no resolvable citation", () => {
+    renderPanel("slides", { ...baseAsset, asset_type: "lecture_outline", content: {
+      sections: [{ heading: "Uncited slide", explanation: "This must not render.", citation_ids: [] }],
+      citations: baseAsset.content.citations,
+    } });
+
+    expect(screen.getByRole("status")).toHaveTextContent("no valid cited slides");
+    expect(screen.queryByRole("heading", { name: "Uncited slide" })).not.toBeInTheDocument();
+  });
+
   it("rejects malformed optional guide lists instead of crashing the panel", () => {
     renderPanel("read", { ...baseAsset, content: {
       ...baseAsset.content,
