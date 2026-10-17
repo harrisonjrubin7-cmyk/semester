@@ -72,7 +72,7 @@ jobs:
 
       - name: Run HawkScan
         if: steps.config.outputs.enabled == 'true'
-        uses: stackhawk/hawkscan-action@29a62fe1e926ea50ac87a1b64efc59b82ffd5b7d # v2.2.0
+        uses: stackhawk/hawkscan-action@9d8651a084df3a0b71a47de3c74bbb9be6986b41 # v3.1.1
         env:
           STACKHAWK_APPLICATION_ID: ${{ vars.STACKHAWK_APPLICATION_ID }}
           APP_HOST: http://localhost:4173
@@ -123,7 +123,7 @@ jobs:
           exit 1
 
       - name: Install pinned HawkScan CLI
-        uses: stackhawk/hawkscan-action@29a62fe1e926ea50ac87a1b64efc59b82ffd5b7d # v2.2.0
+        uses: stackhawk/hawkscan-action@9d8651a084df3a0b71a47de3c74bbb9be6986b41 # v3.1.1
         with:
           apiKey: ${{ secrets.HAWK_API_KEY }}
           installCLIOnly: true
