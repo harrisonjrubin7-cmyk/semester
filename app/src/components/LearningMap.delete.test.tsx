@@ -56,7 +56,7 @@ const type = (field: HTMLInputElement | HTMLTextAreaElement, value: string) =>
 
 const savedMap = () => {
   const key = Object.keys(localStorage).find((candidate) => candidate.startsWith('semester.learning-map.v1'));
-  return key ? JSON.parse(localStorage.getItem(key)!) as { own: { name: string }[]; checks: Record<string, unknown> } : null;
+  return key ? JSON.parse(localStorage.getItem(key)!) as { own: { name: string; note: string }[]; checks: Record<string, unknown> } : null;
 };
 
 describe('Learning Map deletion previews', () => {
@@ -81,6 +81,34 @@ describe('Learning Map deletion previews', () => {
     await click('Delete');
     await click('Delete concept');
     expect(savedMap()?.own.map((item) => item.name)).not.toContain('Confounders');
+  });
+
+  it('distinguishes repeated private concepts and deletes the represented entry', async () => {
+    const form = host.querySelector('.learning-map form') as HTMLFormElement;
+    const name = form.querySelector('input.input') as HTMLInputElement;
+    const note = form.querySelector('textarea') as HTMLTextAreaElement;
+
+    await type(name, 'Confounders');
+    await type(note, 'First note');
+    await act(async () => void form.requestSubmit());
+    await type(name, 'Confounders');
+    await type(note, 'Second note');
+    await act(async () => void form.requestSubmit());
+
+    const first = host.querySelector<HTMLButtonElement>(
+      'button[aria-label="Delete private concept 1 of 2, Confounders: Not started"]',
+    );
+    const second = host.querySelector<HTMLButtonElement>(
+      'button[aria-label="Delete private concept 2 of 2, Confounders: Not started"]',
+    );
+    expect(first).not.toBeNull();
+    expect(second).not.toBeNull();
+
+    await act(async () => void second!.click());
+    expect(host.querySelector('[role="dialog"]')?.textContent).toContain('First note');
+    await click('Delete concept');
+
+    expect(savedMap()?.own.map((item) => item.note)).toEqual(['Second note']);
   });
 
   it('previews deleting a Start Here result before it stops shaping the map', async () => {

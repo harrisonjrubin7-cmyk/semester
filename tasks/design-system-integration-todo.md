@@ -1566,6 +1566,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 1 update — distinguishable Learning Map concept removals (slice 130)
+
+- [x] Fetch `origin/main`, confirm the clean required branch and upstream are both `4ac162f1c`, and inspect exact Learning Map history/current code for equivalent work.
+- [x] Re-rank repeated private Learning Map rows as the next bounded Phase 3 accessibility gap; preserve account/term device authority and the existing workspace-backup recovery boundary.
+- [x] Name every removal with list position, private concept/question type, complete title and current learning state.
+- [x] Preserve the shared cancel-first deletion preview, exact-id device-library mutation, unchanged-record language and backup-only recovery contract.
+- [x] Prove the repeated-concept regression red against the former generic controls, then pass the final 31/31 focused Learning Map, Office Agenda, workspace-backup, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass 148/148 design contracts, zero-violation audit with 86 existing warnings and the unchanged CSS ledger.
+- [ ] Aggregate design check/report wrappers — their hardcoded `npm` / `npx` launchers are unavailable; exact constituents pass and no wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; no new full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep course-guide concepts, official grades/records and provider learning systems separate from this private device map.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 28 update — distinguishable registration-cart removals (slice 129)
 
 - [x] Identify the duplicate accessible-name gap for different sections of the same course in the local registration cart.

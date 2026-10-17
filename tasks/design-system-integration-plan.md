@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-16 · **Latest observed `origin/main`** `06c2d5c74` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `4ac162f1c` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -1325,3 +1325,13 @@ The interrupted runner found that two sections of the same course could expose i
 The regression proves section 02 can be removed without removing section 01. The recovered focused registration, saved-schedule, course-detail, label and root-lifecycle set passes 27/27. Slice commit `4b9575afb` merges final `origin/main` `4e1a043f1` cleanly as `d78048709` after two normal promotion races; the prior combined head passes 390/390 focused and upstream tests, both app TypeScript gates, lint, production build, 63/63 platform-control tests and its TypeScript gate using the app's installed type roots. The final readiness-event-schema delta passes 7/7 Registration/schema tests and app TypeScript.
 
 This remains a device-side planning action. It does not enroll, drop, reserve a seat or mutate an institution/provider system. HawkScan remains open because its runtime, credentials, app host and live target are unavailable; no DAST pass is claimed.
+
+## Automation pass 1 — distinguishable Learning Map concept removals (slice 130)
+
+Required-branch head and current `origin/main` were both `4ac162f1c` with a clean tree. Exact history and current-code inspection found the existing governed Learning Map deletion preview, exact-id account/term device update and workspace-backup recovery contract, but repeated private concepts or questions still exposed identical **Delete** controls. Re-ranking selected this bounded Phase 3 accessibility gap because all authority, persistence, consequence and recovery layers already exist and no server, provider or institutional write is involved.
+
+Each removal now identifies collection position, concept/question type, complete title and current learning state. Position distinguishes even otherwise identical rows. The existing cancel-first `ConfirmDialog` / `ActionPreview`, exact-id `useDeviceLibrary` update, unchanged-record language and device-workspace backup boundary remain authoritative.
+
+The repeated-concept regression failed against the former generic controls, then the final focused Learning Map, Office Agenda, workspace-backup, label, root-lifecycle and isolation set passed 31/31. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design contracts pass 148/148; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. The aggregate design wrappers are not claimed because their hardcoded `npm` / `npx` launchers are unavailable. Ordered and shuffled full suites were not rerun for this bounded slice.
+
+The active HawkScan skill stopped at mandatory preflight: Hawk v6/config and Docker are absent, `HAWK_API_KEY` / `HAWK_APP_HOST` are unset and no live target exists. `stackhawk.yml` and a local properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, dependency, schema, policy, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
