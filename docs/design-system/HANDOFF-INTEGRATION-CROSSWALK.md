@@ -1103,6 +1103,18 @@ No route, navigation, shared component, dependency, schema, policy, provider con
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
 
+## Automation pass 11 mapping — distinguishable cost-estimate removals (slice 140)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated private cost estimates remain distinguishable at removal | `app/src/components/CostPlanner.tsx`; versioned Graduation Simulator plan | Existing but incomplete → existing and verified locally for this slice | Every removal name includes collection position/size, complete label, amount, term cadence and student-entered/imported source. Imported rows include recorded provenance/date when present. Position distinguishes otherwise identical rows. |
+| Preserve exact mutation and consequence behavior | Existing cost-line id, `onChange`, `ConfirmDialog` and `ActionPreview` | Existing and unchanged | The regression removes only the represented second id, preserves the first same-label row and recalculates only the affected summer total. Cancel remains first and a refused device write keeps the line and retry path. |
+| Preserve authority and recovery boundaries | Private device Graduation workspace and device-workspace backup | Existing and unchanged | Other cost lines, scenarios, downloads, aid records and the registrar's official degree audit remain unchanged. Recovery remains limited to a backup made before removal or manually adding the estimate again. |
+| Regression and repository gates | Extended `GraduationSimulator.phase-d.test.tsx` plus Graduation, root-lifecycle, isolation and design contracts | Existing and verified locally for this slice | Red proof against label-only names; 45/45 focused tests and 196/196 broader focused/control/design tests pass. Both typechecks, lint and build pass; audit stays at zero violations with 86 existing warnings and CSS remains within its ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status and Docker are absent; API key, app host and live target are unavailable. No local properties file was found. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
+
 ## Automation pass 10 mapping — distinguishable mentor-request actions (slice 139)
 
 | Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |

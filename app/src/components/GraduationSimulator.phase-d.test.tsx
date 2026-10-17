@@ -303,7 +303,7 @@ describe('with cost_planner on', () => {
     }));
     mount({ simulator: false, costs: true });
 
-    act(() => (host.querySelector('button[aria-label="Remove Tuition"]') as HTMLButtonElement).click());
+    act(() => (host.querySelector('button[aria-label^="Remove cost estimate 1 of 2, Tuition:"]') as HTMLButtonElement).click());
 
     const dialog = host.querySelector('[role="dialog"]')!;
     expect(dialog.textContent).toContain('Remove this cost estimate?');
@@ -318,6 +318,36 @@ describe('with cost_planner on', () => {
     expect(stored().plan.costLines?.map((line) => line.id)).toEqual(['housing']);
     expect(stored().plan.costPerTerm).toBe(5_000);
     expect(text()).toContain('“Tuition” removed from this device. Your estimated fall or spring total is now $5,000.');
+  });
+
+  it('distinguishes same-label cost lines and removes only the represented estimate', () => {
+    localStorage.setItem(GRADUATION_KEY, JSON.stringify({
+      ...PLAN,
+      plan: {
+        ...PLAN.plan,
+        costLines: [
+          { id: 'student-tuition', label: 'Tuition', amount: 18_000, per: 'term', source: 'student_entered' },
+          { id: 'published-tuition', label: 'Tuition', amount: 9_000, per: 'summer', source: 'imported', from: 'Summer costs', on: '2026-08-01' },
+        ],
+        costPerTerm: 18_000,
+        summerCost: 9_000,
+      },
+    }));
+    mount({ simulator: false, costs: true });
+
+    const removals = [...host.querySelectorAll<HTMLButtonElement>('.cost-line button[aria-label]')]
+      .filter((candidate) => candidate.textContent === 'Remove');
+    expect(removals.map((candidate) => candidate.getAttribute('aria-label'))).toEqual([
+      'Remove cost estimate 1 of 2, Tuition: $18,000 each fall or spring term · your own estimate',
+      'Remove cost estimate 2 of 2, Tuition: $9,000 each summer term · imported from Summer costs on Aug 1, 2026',
+    ]);
+
+    act(() => removals[1].click());
+    act(() => button(/^Remove cost$/)!.click());
+
+    expect(stored().plan.costLines?.map((line) => line.id)).toEqual(['student-tuition']);
+    expect(stored().plan.costPerTerm).toBe(18_000);
+    expect(stored().plan.summerCost).toBe(0);
   });
 
   it('keeps a refused cost-line removal represented for retry', () => {
@@ -337,7 +367,7 @@ describe('with cost_planner on', () => {
     });
     onTestFinished(() => refused.mockRestore());
     mount({ simulator: false, costs: true });
-    act(() => (host.querySelector('button[aria-label="Remove Tuition"]') as HTMLButtonElement).click());
+    act(() => (host.querySelector('button[aria-label^="Remove cost estimate 1 of 1, Tuition:"]') as HTMLButtonElement).click());
 
     act(() => button(/^Remove cost$/)!.click());
 

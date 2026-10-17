@@ -1365,6 +1365,17 @@ This local slice does not prove deployment, production execution, provider conne
 
 This local slice does not prove deployment, provider execution, institution programme activation, production operation, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 11 / integration slice 140
+
+- Required-branch head `1623d8ecb` was clean before selection and already included current `origin/main` `3ec04d742`; exact Cost Planner history/current-code inspection found no equivalent repeated-estimate removal-name guard.
+- Every cost-estimate removal now names collection position/size, complete label, amount, fall/spring or summer cadence and student-entered/imported source. Imported rows include their recorded source and readable copied-on date when present; otherwise identical rows remain distinguishable.
+- Existing exact-id device-plan persistence, cancel-first consequence preview, recalculated totals, persistence-refusal retry and backup-only recovery remain authoritative. Financial aid, bills, downloaded copies and the registrar's official degree audit remain separate.
+- The regression failed against the former label-only controls and proves the second same-label estimate alone is removed. Focused Graduation Simulator, cost-plan and graduation-domain verification passes 45/45; the broader focused/control/design set passes 196/196.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing large-chunk warning. Design audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present, no local properties file and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 9 / integration slice 138
 
 - Required-branch head `2fd29ab2f` was clean before the slice and already included current `origin/main` `3ec04d742`; exact Operating Rhythm history/current-code inspection found no equivalent simulator-removal identity guard.

@@ -1566,6 +1566,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 11 update — distinguishable cost-estimate removals (slice 140)
+
+- [x] Start from clean required-branch head `1623d8ecb`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Cost Planner history/current code for overlap.
+- [x] Re-rank repeated Cost Planner labels as the next bounded Phase 3 accessibility gap; keep financial aid, bills, registrar records and provider activity outside this private estimate mutation.
+- [x] Name every removal with one-based collection position, collection size, complete label, amount, cadence and student-entered/imported source, including recorded provenance and readable date for imported rows when present.
+- [x] Preserve the existing cancel-first consequence preview, exact-id device-plan update, recalculated totals, persistence-refusal retry and backup-only recovery language.
+- [x] Prove the repeated-label guard red against the former label-only controls and confirm the second removal deletes only its represented id.
+- [x] Pass 45/45 focused Graduation Simulator, cost-plan and graduation-domain tests and 196/196 broader focused/control/design tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
+- [x] Retain zero design-audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present, no local properties file and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep private cost estimates, financial-aid records, bills and the registrar's official degree audit as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 7 update — distinguishable remembered-line deletion (slice 136)
 
 - [x] Start from clean required-branch head `a39c56fb0`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact About Me history/current code for overlap.
