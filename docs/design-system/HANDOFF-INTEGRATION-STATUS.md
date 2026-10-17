@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 1 of 120 · **Integration slice** 130 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `4ac162f1c` · **Latest observed `origin/main`** `3ec04d742`
+**Automation pass** 2 of 120 · **Integration slice** 131 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `815239aed` · **Latest observed `origin/main`** `3ec04d742`
 
 ## State
 
@@ -1350,6 +1350,18 @@ This local slice does not prove deployment, production execution, institutional 
 - TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning.
 - The final focused set passes 198/198, including root-lifecycle, isolation and repository-map contracts. Aggregate design-system check passes 9 token tests and 70 design contracts; the test-backed report passes, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun; automation pass 2 remains the latest full-suite checkpoint.
 - The active HawkScan skill stops at mandatory preflight: Hawk v6/config and Docker are absent, `HAWK_API_KEY` and app-host environment values are unset, and no live target exists. `stackhawk.yml` and a local properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 2 / integration slice 131
+
+- Required-branch head `815239aed` was clean before the slice and already included current `origin/main` `3ec04d742`; exact Mail history/current-code inspection found no equivalent repeated-thread action-label guard.
+- Every Mail row action now names page position, participants, complete subject and full timestamp. Otherwise identical conversations remain distinguishable.
+- Existing exact-thread callbacks and local mailbox marks remain authoritative. Moving a conversation to Trash here does not delete provider mail, and the existing local folder action can move it back.
+- The repeated-thread regression failed against the former subject-only Trash names, then 88/88 focused List, mailbox, reducer, rules and paging tests passed.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Aggregate design-system check/report pass 9 token tests, 70 design contracts and 97 report contracts; audit remains at zero violations with 86 existing warnings and CSS within its ledger. Root-lifecycle and isolation guards also pass.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 

@@ -2698,3 +2698,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep durable moderation audit, published-listing administration and institution/provider activation as separate server-authority work.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 2 update — distinguishable Semester Mail row actions (slice 131)
+
+- [x] Start from clean required-branch head `815239aed`, fetch current `origin/main` `3ec04d742` and inspect exact Mail row/history evidence for overlap.
+- [x] Re-rank repeated Mail rows as the next bounded Phase 3 accessibility gap; keep provider-mail mutation, sending, account connection and live provider configuration outside this device-mark slice.
+- [x] Name every row action with page position, participants, complete subject and full timestamp so otherwise identical threads remain distinguishable.
+- [x] Preserve the existing exact-thread callbacks, mailbox-mark persistence, keyboard commands, provider links and read-only provider boundary.
+- [x] Prove the repeated-thread Trash regression red against the former subject-only name, then pass 88/88 focused List, mailbox, reducer, rules and paging tests plus TypeScript.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts and 97 report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [x] Pass the root-lifecycle and isolation guards as part of a 100/100 control-contract run.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep provider mailbox mutation, live account connection and sending as separate external-authority work.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

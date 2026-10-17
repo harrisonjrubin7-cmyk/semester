@@ -1056,6 +1056,18 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
 
+## Automation pass 2 mapping — distinguishable Semester Mail row actions (slice 131)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated Mail conversations remain distinguishable across row actions | `app/src/components/mail/List.tsx`; current page of `Thread` rows | Existing but incomplete → existing and verified locally for this slice | Select, star, open, archive, Trash, snooze and read-state names include page position, participants, complete subject and full timestamp. Position distinguishes otherwise identical threads. |
+| Preserve exact device-mail mutation | Existing `Thread` callbacks and mailbox-mark reducer | Existing and unchanged | The represented thread object still reaches the unchanged action. The regression proves the second of two otherwise identical conversations is the one passed to Trash. |
+| Preserve provider and recovery boundaries | `app/src/lib/mailbox.ts`; read-only provider scopes and local `Marks` | Existing and unchanged | Trash means moved to Trash in Semester; it does not delete provider mail. A conversation can be moved back through the existing local-folder action. Provider links, messages and account state remain unchanged. |
+| Regression and repository gates | `List.removal-labels.test.tsx` plus mailbox, reducer, rules, paging, root-lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against subject-only names; 88/88 focused tests, both typechecks, lint and build pass. Aggregate design check/report pass 9 token, 70 design and 97 report contracts with zero audit violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
+
 ## Automation pass 1 mapping — distinguishable Learning Map concept removals (slice 130)
 
 | Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
