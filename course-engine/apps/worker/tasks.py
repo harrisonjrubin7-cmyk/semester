@@ -8,7 +8,7 @@ from threading import Event, Thread
 from uuid import UUID, uuid4
 
 from celery import Celery
-from sqlalchemy import and_, delete, or_, select
+from sqlalchemy import and_, delete, func, or_, select
 
 from app.core.config import settings
 from app.core.database import SessionLocal
@@ -524,8 +524,25 @@ def generate_study_asset(job_id: str) -> dict:
         heartbeat_started = True
         if not update_job_progress(db, lease, utc_now(), JOB_LEASE_TTL, 10):
             return {"status": "lease_lost"}
-        evidence_query = (
-            select(Citation, SourceChunk, SourceDocument)
+        evidence_order = (
+            SourceDocument.id,
+            SourceChunk.page_number,
+            SourceChunk.slide_number,
+            SourceChunk.sheet_name,
+            SourceChunk.start_seconds,
+            SourceChunk.chunk_index,
+        )
+        bucketed_evidence = (
+            select(
+                Citation.id.label("citation_id"),
+                SourceDocument.id.label("document_id"),
+                SourceChunk.page_number.label("page_number"),
+                SourceChunk.slide_number.label("slide_number"),
+                SourceChunk.sheet_name.label("sheet_name"),
+                SourceChunk.start_seconds.label("start_seconds"),
+                SourceChunk.chunk_index.label("chunk_index"),
+                func.ntile(50).over(order_by=evidence_order).label("sample_bucket"),
+            )
             .join(SourceChunk, Citation.chunk_id == SourceChunk.id)
             .join(SourceDocument, SourceChunk.document_id == SourceDocument.id)
             .where(
@@ -533,24 +550,30 @@ def generate_study_asset(job_id: str) -> dict:
                 Citation.status == ReviewStatus.confirmed,
                 SourceDocument.deleted_at.is_(None),
             )
-            .order_by(
-                SourceDocument.id,
-                SourceChunk.page_number,
-                SourceChunk.slide_number,
-                SourceChunk.sheet_name,
-                SourceChunk.start_seconds,
-                SourceChunk.chunk_index,
-            )
+            .subquery()
         )
-        candidates = db.execute(evidence_query).all()
-        evidence_count = len(candidates)
-        sample_size = min(50, evidence_count)
-        offsets = (
-            [0]
-            if sample_size == 1
-            else [round(index * (evidence_count - 1) / (sample_size - 1)) for index in range(sample_size)]
-        )
-        evidence = [candidates[offset] for offset in offsets]
+        ranked_evidence = select(
+            bucketed_evidence,
+            func.row_number().over(
+                partition_by=bucketed_evidence.c.sample_bucket,
+                order_by=(
+                    bucketed_evidence.c.document_id,
+                    bucketed_evidence.c.page_number,
+                    bucketed_evidence.c.slide_number,
+                    bucketed_evidence.c.sheet_name,
+                    bucketed_evidence.c.start_seconds,
+                    bucketed_evidence.c.chunk_index,
+                ),
+            ).label("bucket_row"),
+        ).subquery()
+        evidence = db.execute(
+            select(Citation, SourceChunk, SourceDocument)
+            .join(SourceChunk, Citation.chunk_id == SourceChunk.id)
+            .join(SourceDocument, SourceChunk.document_id == SourceDocument.id)
+            .join(ranked_evidence, ranked_evidence.c.citation_id == Citation.id)
+            .where(ranked_evidence.c.bucket_row == 1)
+            .order_by(*evidence_order)
+        ).all()
         db.commit()
         if not evidence:
             raise ValueError("No confirmed citation-linked evidence is available")
