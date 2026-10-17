@@ -1,12 +1,23 @@
 // @vitest-environment jsdom
-import { act } from 'react';
+import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadSeed } from '../data/seed';
 import { SHORTLIST_KEY } from '../lib/course-detail';
+import * as courseRules from '../lib/courserules';
+import type { CoursePublicationsState } from '../lib/courserules';
 import { STORAGE_KEY } from '../state/shape';
-import { StoreProvider } from '../state/store';
+import { StoreProvider, useStore } from '../state/store';
 import { RegistrationPortal } from './RegistrationPortal';
+
+const publicationMock = {
+  current: { status: 'disabled', publications: {} } as {
+    status: CoursePublicationsState['status'];
+    publications: CoursePublicationsState['publications'];
+  },
+  retry: vi.fn(),
+  calls: [] as Parameters<typeof courseRules.useCoursePublicationsState>[],
+};
 
 /**
  * Phase F on screen, through the registration workspace: with the flag off,
@@ -20,6 +31,7 @@ import { RegistrationPortal } from './RegistrationPortal';
 let host: HTMLDivElement;
 let root: Root;
 let width = 390;
+let dispatch: ReturnType<typeof useStore>['dispatch'] = () => undefined;
 // jsdom has no `matchMedia`; whatever was there before this file is put back
 // after it, because the worker keeps the window between files.
 const hadMatchMedia = Object.getOwnPropertyDescriptor(window, 'matchMedia');
@@ -61,6 +73,7 @@ beforeEach(() => {
       schemaVersion: 6,
       seenOnboarding: true,
       sample: false,
+      term: '2027SP',
       courses: [],
       requirements: [{ id: 'core', programme: 'Economics major', name: 'Core theory', need: 'courses', count: 2, accepts: ['ECON 2010', 'ECON 2020'], note: '' }],
       taken: [{ id: 't1', code: 'ECON 1010', title: 'Principles', term: 'Fall 2026', hours: 3, grade: 'A', current: false }],
@@ -82,6 +95,13 @@ beforeEach(() => {
       plans: [],
     }),
   );
+  publicationMock.current = { status: 'disabled', publications: {} };
+  publicationMock.retry.mockReset();
+  publicationMock.calls.length = 0;
+  vi.spyOn(courseRules, 'useCoursePublicationsState').mockImplementation((...args) => {
+    publicationMock.calls.push(args);
+    return { ...publicationMock.current, error: '', retry: publicationMock.retry };
+  });
   host = document.createElement('div');
   host.className = 'device';
   document.body.append(host);
@@ -102,10 +122,18 @@ const mount = async (courseDetail: boolean) => {
   await act(async () => {
     root.render(
       <StoreProvider>
+        <StoreCapture />
         <RegistrationPortal courseDetail={courseDetail} />
       </StoreProvider>,
     );
   });
+};
+const StoreCapture = () => {
+  const next = useStore().dispatch;
+  useEffect(() => {
+    dispatch = next;
+  }, [next]);
+  return null;
 };
 const text = (el: ParentNode = host) => (el.textContent ?? '').replace(/\s+/g, ' ');
 const button = (name: RegExp, within: ParentNode = host) => {
@@ -200,6 +228,121 @@ describe('with course_detail_v2 on', () => {
     expect(opened).not.toHaveBeenCalled();
     await act(async () => button(/^Open catalog$/).click());
     expect(opened).toHaveBeenCalledWith('https://catalog.example.edu/econ-2010', '_blank', 'noopener,noreferrer');
+  });
+
+  it('shows published guidance and study packs with provenance and confirms an external reference', async () => {
+    publicationMock.current = {
+      status: 'ready',
+      publications: {
+        'ECON 2010': {
+          guidance: { body: 'Work the practice set before office hours.', published: '2026-10-05' },
+          packs: [
+            {
+              id: 'pack-1',
+              title: 'Midterm review',
+              note: 'Use these after lecture 4.',
+              published: '2026-10-06',
+              items: [
+                {
+                  title: 'Week 4 slides',
+                  citation: 'Slides 12–24',
+                  link: 'https://lms.example.edu/week-4',
+                  authority: 'supplemental',
+                },
+              ],
+            },
+          ],
+        },
+      },
+    };
+    const opened = vi.spyOn(window, 'open').mockReturnValue(null);
+
+    await mount(true);
+    await open('ECON 2010');
+
+    expect(text()).toContain('Instructor publications');
+    expect(host.querySelector('[data-source="connected"]')).not.toBeNull();
+    expect(publicationMock.calls.at(-1)?.slice(0, 4)).toEqual([['ECON 2010'], '2027SP', '', 'vanderbilt']);
+    expect(text()).toContain('Work the practice set before office hours.');
+    expect(text()).toContain('From your instructor · published 2026-10-05');
+    expect(text()).toContain('Midterm review');
+    expect(text()).toContain('Use these after lecture 4.');
+    expect(text()).toContain('Week 4 slides · Supplemental · Slides 12–24');
+    expect(text()).toContain('From your instructor · published 2026-10-06');
+    expect(text()).not.toContain('A faculty-approved study pack, when an instructor publishes one.');
+
+    await act(async () => button(/^Open Week 4 slides…$/).click());
+    expect(text()).toContain('You are leaving Semester');
+    expect(text()).toContain('https://lms.example.edu/week-4');
+    expect(opened).not.toHaveBeenCalled();
+    await act(async () => button(/^Open reference$/).click());
+    expect(opened).toHaveBeenCalledWith('https://lms.example.edu/week-4', '_blank', 'noopener,noreferrer');
+  });
+
+  it('closes a publication reference confirmation when the exact publication scope changes', async () => {
+    publicationMock.current = {
+      status: 'ready',
+      publications: {
+        'ECON 2010': {
+          packs: [
+            {
+              id: 'pack-1',
+              title: 'Midterm review',
+              note: '',
+              published: '2026-10-06',
+              items: [{ title: 'Week 4 slides', citation: '', link: 'https://lms.example.edu/week-4', authority: 'supplemental' }],
+            },
+          ],
+        },
+      },
+    };
+    const opened = vi.spyOn(window, 'open').mockReturnValue(null);
+
+    await mount(true);
+    await open('ECON 2010');
+    await act(async () => button(/^Open Week 4 slides…$/).click());
+    expect(text()).toContain('https://lms.example.edu/week-4');
+    expect(document.activeElement?.textContent).toBe('Cancel');
+
+    await act(async () => {
+      document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }));
+    });
+
+    expect(document.activeElement?.textContent).toBe('Open reference');
+
+    await act(async () => dispatch({ type: 'setTerm', term: '2026FA' }));
+
+    expect(text()).not.toContain('https://lms.example.edu/week-4');
+    expect([...host.querySelectorAll('button')].some((candidate) => candidate.textContent === 'Open reference')).toBe(false);
+    expect(opened).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['loading', 'Loading published guidance and study packs…'],
+    ['empty', 'No published guidance or study packs for this course.'],
+  ] as const)('shows the %s publication state distinctly', async (status, expected) => {
+    publicationMock.current = { status, publications: {} };
+    await mount(true);
+    await open('ECON 2010');
+    expect(text()).toContain(expected);
+  });
+
+  it('does not ask for another term’s publications', async () => {
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') as Record<string, unknown>;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...stored, term: '2026FA' }));
+    await mount(true);
+    await open('ECON 2010');
+    expect(publicationMock.calls.at(-1)?.slice(0, 2)).toEqual([['ECON 2010'], '']);
+    expect(text()).not.toContain('Instructor publications');
+  });
+
+  it('shows a recoverable publication error', async () => {
+    publicationMock.current = { status: 'error', publications: {} };
+    await mount(true);
+    await open('ECON 2010');
+    expect(host.querySelector('[role="alert"]')?.textContent).toContain('Published course content could not be loaded.');
+    await act(async () => button(/^Try again$/).click());
+    expect(publicationMock.retry).toHaveBeenCalledTimes(1);
   });
 
   it('is a drawer on a desktop, and another result replaces it', async () => {
