@@ -1,0 +1,12 @@
+{
+  "function": "evidence_ready",
+  "cases": [
+    {
+      "input": {
+        "artifact_digest": "d",
+        "tests": {}
+      },
+      "expected": false
+    }
+  ]
+}

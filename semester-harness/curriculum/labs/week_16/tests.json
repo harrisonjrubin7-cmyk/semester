@@ -1,0 +1,15 @@
+{
+  "function": "activation_ready",
+  "cases": [
+    {
+      "input": {
+        "certified": true,
+        "institution_approved": false,
+        "reconciled": true,
+        "rollback_ready": true,
+        "support_ready": true
+      },
+      "expected": false
+    }
+  ]
+}

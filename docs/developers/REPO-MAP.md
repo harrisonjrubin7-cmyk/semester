@@ -32,6 +32,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `project/` | The original Claude Design handoff: HTML prototypes and the design system. Reference material; the app does not import it. |
 | `registry/` | Machine-checked component passports: one JSON file per component under `passports/`. The shape is checked by `app/src/lib/registry/passport.ts`. See [`registry/README.md`](../../registry/README.md). |
 | `scripts/` | Scanners for the static company site (`company-site-scan-*.mjs`). Not the app's scripts; those are in `app/scripts/`. |
+| `semester-harness/` | The course grading and CI harness pack: the trusted local grader, the Docker runner, the expanded Week 3 suite, the static portal source and an inactive CI template. Not activated and not deployed. See [`semester-harness/DEPLOYMENT.md`](../../semester-harness/DEPLOYMENT.md). |
 | `supabase/` | The database and the edge functions, and the SQL that checks them. See below. |
 | `tasks/` | Planning notes (`plan.md`, `todo.md`). |
 | `infra/` | Infrastructure as code: Terraform modules and environments (`platform`, `staging`, `production`), the Rego policy that checks plans and workflows, and one change record per governed pull request. Nothing in it has been applied yet. See [`infra/README.md`](../../infra/README.md). |

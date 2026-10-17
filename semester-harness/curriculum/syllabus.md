@@ -1,0 +1,1 @@
+16-week revised concept-drill harness; Week 3 explicitly expands invalid-input cases. Weekly rubric correctness 30, tests 25, security/privacy 20, maintainability 15, docs/reflection 10. Official grades remain instructor-authorized.
