@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 30 of 120 · **Integration slice** 159 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `82a1a5218` · **Latest observed `origin/main`** `caa9967fb`
+**Automation pass** 34 of 120 · **Integration slice** 163 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `23397032a` · **Latest observed `origin/main`** `802c97c70`
 
 ## State
 
@@ -1841,5 +1841,17 @@ This local slice does not prove deployment, production execution, provider conne
 - Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Design-check constituents pass 79/79; all eight report contracts pass 97/97, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. The aggregate report writes its evidence but exits 1 because `npx` is unavailable.
 - The coherent slice is commit `1218e15ce`. Non-overlapping registration-readiness evidence from `origin/main` `802c97c70` merges as `6d7834258`; the combined head passes 57/57 focused Clocks/control tests and both app TypeScript gates. The upstream platform-control registry passes 63/63 tests, validation and TypeScript with the app-installed type root; the default noncanonical workspace lookup cannot find `@types/node`.
 - Mandatory HawkScan preflight reports the Hawk CLI and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present without reading credential material, and no live default target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 34 / integration slice 163
+
+- Required-branch head `23397032a` was clean before selection and already included current `origin/main` `802c97c70`; exact Mine history/current-code inspection found the earlier fact-complete task and appointment deletion names, stable-id mutations and shared Undo, but no exact-duplicate row identity guard.
+- Every task deletion now names its represented position/count within the displayed Today, Coming up, Someday or Overdue group before the complete existing title, course/personal, date, time, repeat and step facts. Every appointment deletion names represented position/count in the displayed chronological list before the complete title, date, time, kind, place, duration and repeat facts.
+- Existing stable ids, `deleteTask` / `deleteAppointment` mutations and eight-second Undo snapshots over only `tasks` or `appointments` remain authoritative. The regressions open two fact-identical rows, prove their names differ, activate the second stable-id action and prove the first remains represented.
+- The guards failed against the former fact-complete-only controls, then focused Mine, reducer/Undo, accessibility-label, root-lifecycle and isolation verification passes 63/63. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning.
+- Design verification passes 148 distinct token/design/report contract tests, zero audit violations with 86 existing warnings, CSS within its ledger and the test-backed design report across all eight contract files. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports the Hawk CLI and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present, no local properties file and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.

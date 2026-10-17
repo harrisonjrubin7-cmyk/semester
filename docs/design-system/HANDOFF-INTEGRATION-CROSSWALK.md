@@ -1463,3 +1463,15 @@ No route, navigation, dependency, schema, policy, provider configuration or exte
 | DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk and Docker runtimes, API key, app host and live target are unavailable. No scan, finding result, fix/rescan loop or security pass exists. |
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
+
+## Automation pass 34 mapping — distinguishable exact-duplicate Mine removals (slice 163)
+
+| Archive requirement | Repository authority | Disposition | Evidence |
+| --- | --- | --- | --- |
+| Exact-duplicate student actions remain distinguishable at deletion | `app/src/screens/Mine.tsx`, `app/src/screens/mine.removal-labels.test.tsx`; displayed Today/Coming up/Someday/Overdue group | Existing but incomplete → existing and verified locally for this slice | Deletion names add represented group position/count before complete title, course/personal, date, time, repeat and step facts. Two fact-identical rows receive different names. |
+| Exact-duplicate appointments remain distinguishable at deletion | `Mine`; chronological `appointments` list | Existing but incomplete → existing and verified locally for this slice | Deletion names add chronological position/count before complete title, date, time, kind, place, duration and repeat facts. The regression activates the second duplicate and preserves the first. |
+| Preserve exact private mutation and recovery | Stable task/appointment ids; `deleteTask`, `deleteAppointment`; `app/src/lib/undo.ts` | Existing and unchanged | Only the represented stable id is removed. The shared eight-second Undo snapshots only `tasks` or `appointments`; provider calendars and official institution records remain unchanged. |
+| Regression and repository gates | Extended Mine regression plus reducer, Undo, label, lifecycle, isolation and design contracts | Existing and verified locally for this slice | Red proof against fact-complete-only names; 63/63 focused tests, both typechecks, lint and build pass. Design verification passes 148 distinct tests, zero audit violations, unchanged CSS ledger and the test-backed report. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk CLI, Docker, API key, application id, app host, local properties and live target are unavailable. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.

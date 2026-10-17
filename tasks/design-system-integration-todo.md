@@ -3302,3 +3302,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep provider mailbox mutation, live account connection and sending as separate external-authority work.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-17 distinguishable exact-duplicate Mine removals — automation pass 34, integration slice 163
+
+- [x] Start from clean required-branch head `23397032a`; fetch current `origin/main` `802c97c70`, confirm it is already included and inspect exact Mine history/current code for overlap.
+- [x] Re-rank fact-identical student-authored action and appointment deletion names as the next bounded Phase 3 accessibility gap; keep provider calendars and official institution records outside the device/account workspace mutation.
+- [x] Name action deletions with represented position/count inside their displayed group while retaining complete title, course/personal, date, time, repeat and step facts.
+- [x] Name appointment deletions with represented position/count in chronological order while retaining complete title, date, time, kind, place, duration and repeat facts.
+- [x] Preserve stable-id `deleteTask` / `deleteAppointment` behavior and shared eight-second Undo snapshots; no provider or institution system changes.
+- [x] Prove both guards red against the former complete-fact-only controls, then pass 63/63 focused Mine, reducer/Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing warnings and the existing large-chunk warning.
+- [x] Pass 148 distinct token/design/report contract tests, zero-violation audit with 86 existing warnings, CSS within ledger and the test-backed design report across all eight contract files.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight found the Hawk CLI and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` is present, no local properties file or live target exists, and no scan/fix/rescan result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep student-entered task/appointment records, provider calendars and official institution schedules as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

@@ -1478,6 +1478,16 @@ The new guard failed against the former position-only labels. Focused Advisor Me
 
 The active HawkScan skill stops at mandatory preflight: Hawk v6/config/skills status and Docker are absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` are unset, and no live target is configured. `stackhawk.yml` and a local Hawk properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Automation pass 34 — distinguishable exact-duplicate Mine removals (slice 163)
+
+Required-branch head `23397032a` was clean before selection and already included current `origin/main` `802c97c70`. Exact upstream and branch history/current-code inspection found the earlier complete-fact labels from `6926dbc5b`, exact-id task/appointment deletion and bounded Undo, but no guard when two student-entered rows share every displayed fact.
+
+Task deletion names now add one-based position and collection size within the displayed action group. Appointment deletion names add one-based position and collection size within the chronological event list. Existing title, course/personal, date, time, repeat, step, kind, location and duration facts remain in the names. The regression opens both exact duplicates concurrently, proves the action names differ, deletes the second stable id and proves the first row remains.
+
+The existing `deleteTask` and `deleteAppointment` state operations and shared eight-second Undo snapshots remain authoritative. No route, persistence schema, institutional record, provider calendar, server operation or external system changes. Focused Mine/reducer/Undo/label/lifecycle/isolation verification passes 63/63; both TypeScript gates, lint and production build pass. The design gates pass 148 distinct tests, zero audit violations with 86 existing warnings, the CSS ledger and the test-backed eight-file report.
+
+HawkScan remains an open release gate. Mandatory preflight found no Hawk CLI, Docker runtime, API key, application id, app host, live target or local properties file; `stackhawk.yml` is present. No DAST result or security pass is claimed. Ordered and shuffled full suites remain open. The next slice requires a fresh dependency/consequence ranking.
+
 ## Automation pass 31 — distinguishable exact-duplicate People removals (slice 160)
 
 Required-branch head `f6f0c2db7` was clean before selection and already included current `origin/main` `caa9967fb`. Exact upstream history and current-code inspection found the earlier fact-complete People removal names, exact-id reducers and eight-second Undo snapshots, but two conversations or recommendation-letter plans whose represented facts were identical still exposed identical accessible names.
