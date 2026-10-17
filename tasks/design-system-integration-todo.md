@@ -1633,7 +1633,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Prove both regression paths red against the former complete-fact-only controls, then pass 222/222 focused Activities, activity-domain, reducer/Undo, accessibility-label, root-lifecycle and isolation tests.
 - [x] Run both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing large-chunk warning.
 - [x] Pass aggregate design-system check/report through a temporary package-runner compatibility launcher: 9 token tests, 70 design contracts and all eight report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
-- [ ] Re-fetch `origin/main`, reconcile any movement, commit the coherent code/test/control slice locally and rerun affected checks.
+- [x] Re-fetch final `origin/main` `caa9967fb`, confirm no movement or overlap, and commit the coherent code/test/control slice locally as `4f3ab4264`.
 - [ ] Ordered and shuffled full suites — not yet run for this bounded accessibility slice.
 - [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` present; and the default local target unavailable. No scan, finding result, fix/rescan loop or security pass exists.
 
