@@ -1361,7 +1361,7 @@ This local slice does not prove deployment, production execution, provider conne
 - The new exact-duplicate regression failed against the former citation-only names, then 204/204 focused Sources, source-domain, reducer, Undo, label, root-lifecycle and isolation tests passed.
 - Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing chunk-size warning. Aggregate design-system check/report pass through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger.
 - Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
-- HawkScan DAST remains pending the mandatory post-commit preflight; no scan result or security pass is claimed here.
+- The coherent code/test/control slice is commit `bb8191122`. The HawkScan skill's post-commit preflight finds Hawk 6.6.0 with config support and current skills, but this headless run has no `HAWK_API_KEY` or `STACKHAWK_APPLICATION_ID`, Docker is absent and the configured default `http://localhost:4173` target is not running. `HAWK_APP_HOST` / `APP_HOST` are unset; a local properties file exists but was not read. HawkScan cannot start, so no scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 

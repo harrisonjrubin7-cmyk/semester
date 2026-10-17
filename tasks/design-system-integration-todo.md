@@ -1576,7 +1576,8 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
 - [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts and all eight report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
-- [ ] HawkScan DAST — mandatory post-commit preflight remains to be run; no scan result or security pass is claimed.
+- [x] Commit the coherent code/test/control slice locally as `bb8191122`.
+- [ ] HawkScan DAST — post-commit preflight finds Hawk 6.6.0/config support/current skills, but headless `HAWK_API_KEY` and `STACKHAWK_APPLICATION_ID` are unset, Docker is absent and the default `http://localhost:4173` target is not running. Host overrides are unset; a local properties file exists but was not read. No scan, finding result, fix/rescan loop or security pass exists.
 
 ### Next implementation boundary
 
