@@ -99,7 +99,11 @@ for authentication is still active with the same tenant and roles. Every include
 must have valid server ids, belong to that account, and contain only known institution
 roles. `createContextActivationRequester` can resolve an explicitly confirmed membership
 and workspace only after this fresh reload, but returns an `ActiveContext` rather than a
-gateway `RequestContext`. No route calls either function, and
+gateway `RequestContext`. `createVerifiedContextActivationRequester` additionally returns
+an immutable, server-only authority record for the selected membership: its membership,
+person, tenant and provider ids plus roles copied from the same freshly reloaded row. That
+record is evidence for a later authorization boundary, not an authorization decision. No
+route calls these functions, and
 `contextForVerifiedSelection` still builds only the currently authenticated institution's
 single-membership directory. This is therefore not a live cross-institution request
 context, workspace-switching API, UI, client contract, adapter selection, or authorization

@@ -201,6 +201,19 @@ export interface ContextActivationRequest extends ContextSelection {
   confirmed: boolean;
 }
 
+export interface SelectedMembershipAuthority {
+  readonly membershipId: string;
+  readonly personId: string;
+  readonly tenantId: string;
+  readonly providerId: string;
+  readonly roles: readonly UniversityRole[];
+}
+
+export interface VerifiedContextActivation {
+  readonly activeContext: ActiveContext;
+  readonly membershipAuthority: SelectedMembershipAuthority;
+}
+
 /**
  * Resolve one explicitly confirmed selection against a freshly reloaded
  * server-side membership directory.
@@ -221,6 +234,47 @@ export function createContextActivationRequester(source: ContextMembershipDirect
       throw new PlatformError('conflict', 'Confirm the membership and workspace before activating context.');
     }
     return activateContext(await loadDirectory(identity), selection, systemClock.now().getTime());
+  };
+}
+
+/**
+ * Resolve a confirmed selection together with its freshly reloaded authority.
+ *
+ * The returned roles and provider id come from the same authoritative row used
+ * to assemble and activate the directory. They are intentionally kept in this
+ * server-only result instead of being added to the client-facing
+ * `ActiveContext`. This is evidence for a later authorization boundary; it is
+ * not itself a `RequestContext`, adapter selection, or action authorization.
+ */
+export function createVerifiedContextActivationRequester(source: ContextMembershipDirectory) {
+  return async (
+    identity: VerifiedMembershipIdentity,
+    selection: ContextActivationRequest,
+  ): Promise<VerifiedContextActivation> => {
+    if (!selection.confirmed) {
+      throw new PlatformError('conflict', 'Confirm the membership and workspace before activating context.');
+    }
+    const rows = await source.membershipsForUser(identity.userId);
+    const activeContext = activateContext(
+      contextDirectoryForVerifiedMemberships(identity, rows),
+      selection,
+      systemClock.now().getTime(),
+    );
+    const selected = rows.find((row) => row.id === activeContext.membershipId && row.status === 'active');
+    if (selected === undefined) throw unavailableDirectory();
+    const roles = selected.roles.filter((role): role is UniversityRole =>
+      UNIVERSITY_ROLES.includes(role as UniversityRole),
+    );
+    if (!roles.length || roles.length !== selected.roles.length) throw unavailableDirectory();
+
+    const membershipAuthority: SelectedMembershipAuthority = Object.freeze({
+      membershipId: selected.id,
+      personId: selected.userId,
+      tenantId: selected.tenantId,
+      providerId: selected.providerId,
+      roles: Object.freeze([...new Set(roles)]),
+    });
+    return Object.freeze({ activeContext, membershipAuthority });
   };
 }
 
