@@ -17,8 +17,9 @@ export function contractStatus(files) {
 }
 const CONTRACTS = ['src/lib/tokenexport.test.ts', 'src/styles/tokens.test.ts', 'src/styles/hex.test.ts', 'src/styles/stacking.test.ts', 'src/styles/taps.test.ts', 'src/styles/breakpoints.test.ts', 'src/styles/motion.test.ts', 'src/styles/scale.test.ts'];
 import { audit } from './design-system-audit.mjs';
+import { componentEvidence } from './design-system-component-evidence.mjs';
 
-export function report(result, contracts = {}) {
+export function report(result, contracts = {}, componentResult = null) {
   const s = result.stats;
   const by = (list) => list.reduce((m, x) => ((m[x.check] = (m[x.check] || 0) + 1), m), {});
   const lines = [
@@ -34,6 +35,7 @@ export function report(result, contracts = {}) {
     '| Figma mappings valid / missing / unmapped candidates | ' + (s.figma ? s.figma.valid + ' / ' + s.figma.missing + ' / ' + s.figma.unmappedCandidates : 'no mapping') + ' |',
     '| Token export (tokenexport.test.ts) | ' + (contracts['src/lib/tokenexport.test.ts'] ?? 'not run (pass --with-tests)') + ' |',
     '| Findings blocker / major / minor | ' + ['blocker', 'major', 'minor'].map((k) => [...result.violations, ...result.warnings].filter((x) => x.severity === k).length).join(' / ') + ' |',
+    ...(componentResult ? ['| Public component evidence complete / total | ' + componentResult.summary.complete + ' / ' + componentResult.summary.total + ' |'] : []),
     '',
     ...(Object.keys(contracts).length ? ['## Existing style contracts', '', '| Test | Result |', '| --- | --- |', ...Object.entries(contracts).map(([f, st]) => '| ' + f + ' | ' + st + ' |'), ''] : []),
     '',
@@ -44,6 +46,13 @@ export function report(result, contracts = {}) {
     '## Warnings', '',
     ...(result.warnings.length ? ['| Check | File | Detail |', '| --- | --- | --- |', ...result.warnings.slice(0, 200).map((w) => '| ' + w.check + ' | ' + w.file + (w.line ? ':' + w.line : '') + ' | ' + (w.value ?? '') + ' ' + w.detail + ' |')] : ['None.']),
     '',
+    ...(componentResult ? [
+      '## Public component evidence', '',
+      componentResult.claim_ceiling, '',
+      '| Requirement | Missing components |', '| --- | ---: |',
+      ...componentResult.requirements.map((requirement) => '| ' + requirement + ' | ' + componentResult.missing_by_requirement[requirement].length + ' |'),
+      '',
+    ] : []),
   ];
   return lines.join('\n');
 }
@@ -52,13 +61,14 @@ if (process.argv[1]?.endsWith('design-system-report.mjs')) {
   const args = process.argv.slice(2);
   const r = args.indexOf('--root');
   const result = audit(r >= 0 ? { root: resolve(args[r + 1]) } : {});
+  const componentResult = componentEvidence(r >= 0 ? { root: resolve(args[r + 1]) } : {});
   const contracts = args.includes('--with-tests') ? contractStatus(CONTRACTS) : {};
-  const md = report(result, contracts);
+  const md = report(result, contracts, componentResult);
   const o = args.indexOf('--out');
   const out = o >= 0 ? args[o + 1] : join(appDir, 'reports/design-system/report.md');
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, md);
-  writeFileSync(out.replace(/\.md$/, '.json'), JSON.stringify({ ...result, contracts }, null, 2) + '\n');
+  writeFileSync(out.replace(/\.md$/, '.json'), JSON.stringify({ ...result, contracts, componentEvidence: componentResult }, null, 2) + '\n');
   console.log('Wrote ' + out);
   if (Object.values(contracts).includes('fail')) process.exit(1);
   process.exit(result.ok ? 0 : 1);

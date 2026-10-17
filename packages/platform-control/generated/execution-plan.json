@@ -35,10 +35,13 @@
       "app/src/components/semester-design/semester-design.test.tsx",
       "app/src/lib/designsystem.test.ts",
       "app/src/lib/designtooling.test.ts",
-      "app/scripts/design-system-audit.mjs"
+      "app/scripts/design-system-audit.mjs",
+      "app/scripts/design-system-component-evidence.mjs",
+      "packages/platform-control/src/design-system-component-evidence.ts",
+      "packages/platform-control/generated/design-system-component-evidence.json"
     ],
     "blockers": [
-      "The package-level design-system authority is registered, but component-level passport coverage and referenced control artifacts remain incomplete."
+      "The component-level passport coverage census is now machine-readable for all 68 public exports, but none has component-specific light/dark proof; 12 also lack component contracts and 2 lack a named story/test fixture. Referenced control artifacts remain incomplete."
     ],
     "execution_status": "active",
     "open_dependencies": []
