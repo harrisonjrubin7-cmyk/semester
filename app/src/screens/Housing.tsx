@@ -6,6 +6,8 @@ import { Page } from '../components/Page';
 import { Group, ItemRow } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
 import { MaintenanceRequests } from '../components/MaintenanceRequests';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ActionPreview } from '../components/unity/ActionPreview';
 import { SectionLabel, TabList } from '../components/ui';
 import { TermSwitch } from '../components/TermSwitch';
 import { ErrorSummary, FieldMessage, useFieldErrors } from '../components/FieldMessage';
@@ -52,6 +54,7 @@ function HousingDetails() {
   const now = useNow();
 
   const mine = useMemo(() => current(state.residences, state.term), [state.residences, state.term]);
+  const [removing, setRemoving] = useState(false);
 
   const [hall, setHall] = useState(mine?.hall ?? '');
   const [room, setRoom] = useState(mine?.room ?? '');
@@ -267,8 +270,8 @@ function HousingDetails() {
               <button
                 type="button"
                 className="bare"
-                aria-label="Remove this room"
-                onClick={() => dispatch({ type: 'dropResidence', id: mine.id })}
+                aria-label={`Remove ${mine.hall}${mine.room ? ` · ${mine.room}` : ''} for ${readTerm(mine.term).label}`}
+                onClick={() => setRemoving(true)}
                 style={{ width: 24, color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
               >
                 ×
@@ -277,6 +280,27 @@ function HousingDetails() {
           />
         </Group>
       )}
+
+      {mine && removing ? (
+        <ConfirmDialog
+          title="Remove this saved room?"
+          preview={
+            <ActionPreview
+              subject={`${mine.hall}${mine.room ? ` · ${mine.room}` : ''}`}
+              says="This removes this saved room and its move-out calculation from this device."
+              exactly={`${readTerm(mine.term).label}${mine.moveOut ? ` · move out ${mine.moveOut}` : ''}${mine.hoursAfterLastExam ? ` · ${mine.hoursAfterLastExam} hours after the last exam` : ''}`}
+              doesNotChange="Your maintenance requests, application plan and official housing assignment stay unchanged."
+              recovery={{ kind: 'undo', how: 'Undo is available for eight seconds. A device workspace backup can also restore the saved room.' }}
+            />
+          }
+          confirmLabel="Remove saved room"
+          onCancel={() => setRemoving(false)}
+          onConfirm={() => {
+            dispatch({ type: 'dropResidence', id: mine.id });
+            setRemoving(false);
+          }}
+        />
+      ) : null}
 
       <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
         Nothing is fetched. The housing portal is behind single sign-on and publishes no interface a
