@@ -1,0 +1,37 @@
+# Operating plan object 13: end-of-pilot decision. A pilot succeeds when it yields a
+# reliable decision, not only when every metric is positive.
+end_of_pilot:
+  required_inputs:
+    - activation_scope_and_changes
+    - current_evidence_register
+    - student_experience_findings
+    - staff_operations_findings
+    - connector_and_reliability_findings
+    - reconciliation_analysis
+    - accessibility_and_trust_status
+    - commercial_and_sponsor_feedback
+    - limitations
+
+  decision_options:
+    renew_and_deepen:
+      use_when: workflow is valuable, safe, and operable; adjacent needs are clear
+      required_follow_up: define the next bounded capability and renewal scope
+    repeat:
+      use_when: workflow works and implementation is sufficiently reusable
+      required_follow_up: prepare the second-institution playbook
+    remediate:
+      use_when: value signal exists but reliability, clarity, or operations are not ready
+      required_follow_up: limit scope, address named gaps, retest
+    conclude_safely:
+      use_when: value, authority, or feasibility does not justify continuation
+      required_follow_up: safe-off, preserve evidence, follow retention and communication plan
+
+  decision_record:   # completed when the decision is made. All TBD until then.
+    selected_option: TBD   # one of renew_and_deepen, repeat, remediate, conclude_safely
+    decision_date: TBD
+    rationale: TBD
+    approving_owners: TBD
+
+  prohibited_conclusion: >
+    Do not claim general institutional readiness, broad compliance, or
+    product-market fit from one bounded pilot.

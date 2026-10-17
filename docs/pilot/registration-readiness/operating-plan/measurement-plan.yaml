@@ -1,0 +1,82 @@
+# Operating plan object 11: measurement plan.
+# Every metric carries the reporting rule's seven fields. Owner and source are
+# roles or systems; a field marked TBD is not yet measurable.
+measurement:
+  metrics:
+    adoption:
+      definition: Eligible cohort members who reach the first meaningful readiness action, reported alongside eligibility and authentication context.
+      numerator: cohort members who reached first meaningful readiness action
+      denominator: eligible cohort members
+      observation_period: TBD
+      scope: approved cohort only
+      source: readiness event stream (event schema not yet written)
+      owner: semester_product_owner
+      limitations: [cohort_definition, authentication_context_reported_separately]
+
+    completion:
+      definition: Requests reaching a student-visible outcome with an available safe next step. Report each outcome state separately.
+      numerator: requests reaching a student-visible outcome with a safe next step, per outcome state
+      denominator: all submitted evaluation requests in the cohort and observation period (not partitioned by outcome)
+      observation_period: TBD
+      scope: approved cohort only
+      source: workflow state records
+      owner: semester_product_owner
+      limitations: [source_outages, stale_source_periods]
+
+    understanding:
+      definition: Student evidence that the outcome and next step were understood, through a short in-context prompt or structured feedback.
+      numerator: responses reporting the outcome and next step were understood
+      denominator: students shown the prompt
+      observation_period: TBD
+      scope: approved cohort only
+      source: in-context prompt (not yet built)
+      owner: semester_product_owner
+      limitations: [response_rate, self_report]
+
+    operational_load:
+      definition: Staff handoffs, support cases, reconciliation cases, and resolution patterns by outcome state.
+      numerator: handoffs, cases, and reconciliation cases, counted by outcome state
+      denominator: none; reported as counts
+      observation_period: TBD
+      scope: approved cohort and approved offices
+      source: staff queue and audit history
+      owner: semester_operations_owner
+      limitations: [queue_routing_rules, staff_availability]
+
+    time_to_triage:
+      definition: Elapsed time from case opened to first triage action, reported as median and 90th percentile in minutes.
+      numerator: none; reported as median and p90 of opened-to-triaged durations
+      denominator: cases that reached triage in the observation period
+      observation_period: TBD
+      scope: approved offices only
+      source: staff queue timestamps (opened_at, triaged_at)
+      owner: semester_operations_owner
+      limitations: [queue_routing_rules, weekend_coverage]
+
+    reliability:
+      definition: Connector freshness, workflow completion, safe-state activation, incident count, and time to containment.
+      numerator: "per sub-measure: connector refreshes within expected window; workflow requests completed; safe-state activations that succeeded; incidents contained within target"
+      denominator: "per sub-measure: connector refreshes attempted; workflow requests submitted; safe-state activations attempted; incidents opened"
+      observation_period: TBD
+      scope: approved source only
+      source: connector health records, workflow state records, safe-state activation records, and the incident log
+      owner: semester_operations_owner
+      limitations: [freshness_thresholds_TBD, source_outages]
+
+    trust:
+      definition: Open controls, accessibility issues, privacy or security issues, and institution review feedback. Reported as status, not a single score.
+      numerator: none; reported as status per category
+      denominator: none
+      observation_period: TBD
+      scope: whole pilot
+      source: control register (not yet written), accessibility evidence, institution review
+      owner: semester_engineering_or_security_owner
+      limitations: [control_register_missing, no_composite_score]
+
+  required_limitations:
+    - cohort_definition
+    - data_gaps
+    - source_outages
+    - scope_exclusions
+    - changes_during_pilot
+    - unvalidated_claims

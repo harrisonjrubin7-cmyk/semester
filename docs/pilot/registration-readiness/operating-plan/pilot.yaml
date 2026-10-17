@@ -1,0 +1,29 @@
+# Operating plan object 1: pilot identity and boundary.
+# Source: "Pilot objective" section of the pilot operating plan brief.
+# Institution and term are TBD until the scope record is signed. Nothing here is approved.
+pilot:
+  id: PILOT-READINESS-001
+  title: Registration readiness pilot
+  institution: TBD
+  term: TBD
+  # The brief names this capability. It is not defined anywhere in this repository on main.
+  primary_capability: CAP-REG-001
+  objective: >
+    Demonstrate that a defined student cohort can understand an approved
+    registration-readiness status, take an appropriate next step, and receive
+    safely routed support without Semester representing itself as enrollment,
+    the registrar, or the institution's system of record.
+  student_promise: >
+    Semester shows what information is available, what it means for your next
+    step, and where to go when it cannot safely determine an outcome.
+  institutional_promise: >
+    Semester operates a bounded, source-aware workflow with scoped access,
+    staff routing, receipts, reconciliation, and measurable pilot evidence.
+  non_promises:
+    - enrollment_confirmation
+    - official_registration_action
+    - hold_removal
+    - prerequisite_override
+    - policy_override
+    - official_degree_audit
+    - autonomous_staff_or_AI_decision

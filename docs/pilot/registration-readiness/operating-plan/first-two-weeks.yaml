@@ -1,0 +1,39 @@
+# Operating plan object 15: first two weeks of work, in order.
+# Every step is not_started. Owners are roles; named people are TBD.
+first_two_weeks:
+  - step: 1
+    action: Confirm institution sponsor, registrar/source owner, IT/security contact, advising or student-support lead, and Semester product, engineering, operations, and security owners.
+    owner_role: pilot_sponsor_and_semester_product_owner
+    status: not_started
+  - step: 2
+    action: Freeze the approved cohort, term, goal, source fields, the exact meaning of each readiness outcome, and the measurement observation periods.
+    owner_role: registrar_or_source_owner
+    status: not_started
+  - step: 3
+    action: Build the control plane from docs/handoff/control-plane/baseline/ only. VERSIONS.md marks it current. v1 through v4 are superseded and must not be built in parallel.
+    owner_role: semester_engineering_owner
+    status: not_started
+  - step: 4
+    action: Run automated tenant, role, policy, freshness, idempotency, duplicate-event, revocation, and safe-off tests.
+    owner_role: semester_engineering_or_security_owner
+    status: not_started
+  - step: 5
+    action: Complete keyboard, screen-reader, mobile, zoom/reflow, contrast, and content-state checks for the complete student and staff critical paths.
+    owner_role: semester_product_owner
+    status: not_started
+  - step: 6
+    action: Approve student and staff copy. This resolves the draft status in student-journey.yaml.
+    owner_role: semester_product_owner_and_institution_pilot_owner
+    status: not_started
+  - step: 7
+    action: Deliver a tabletop drill for source outage, stale source, incorrect mapping, staff escalation, suspected access issue, and release rollback.
+    owner_role: semester_operations_owner
+    status: not_started
+  - step: 8
+    action: Confirm activation-release.yaml is approved, with every required EVD record present and go-no-go approved. Then train pilot staff, activate a limited cohort, and begin the daily health record on the first active day.
+    owner_role: semester_operations_owner
+    status: not_started
+  - step: 9
+    action: Hold scope until the first real operating patterns are visible.
+    owner_role: semester_product_owner
+    status: not_started
