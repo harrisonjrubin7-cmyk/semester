@@ -1056,6 +1056,18 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
 
+## Automation pass 20 mapping — distinguishable athletics-hours removals (slice 149)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated private athletics-hours rows remain distinguishable at removal | `app/src/components/CaraLog.tsx`; validated Athletics device library | Existing but incomplete → existing and verified locally for this slice | Every removal name includes represented weekly position/count, hours, activity kind, date and complete note/no-note state. Position distinguishes otherwise identical rows. |
+| Preserve exact recoverable device mutation | Stable Cara entry ID; `CaraLog.remove`; existing eight-second Undo snapshot | Existing and unchanged | The regression activates the second identical control and proves only its stable ID is removed; Undo continues to restore the exact entry at its prior device-list position. |
+| Preserve countability, compliance and official-record boundaries | `app/src/lib/cara.ts`; existing `NotOfficial` language | Existing and unchanged | Semester adds student-entered hours but does not decide whether activity counts, supply a compliance limit, make a compliance determination, contact a provider or mutate an official athletics record. |
+| Regression and repository gates | Extended `CaraLog.test.tsx` plus athletics, label, lifecycle and isolation guards | Existing and verified locally for this slice | Proved-red duplicate-row guard; 51/51 focused/adjacent tests, both typechecks, lint and build pass. Aggregate design check/report pass 9 token, 70 design and eight report contracts with zero audit violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
 ## Automation pass 19 mapping — distinguishable timer resets (slice 148)
 
 | Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |

@@ -1566,6 +1566,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 20 update — distinguishable athletics-hours removals (slice 149)
+
+- [x] Start from clean required-branch head `3bafc0b953`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Cara Log history/current code for overlap.
+- [x] Re-rank repeated private hours-log entries as the next bounded Phase 3/7 accessibility gap; keep countability, compliance determination, official athletics records and provider activity outside the mutation.
+- [x] Name every removal with position/list size, hours, activity kind, date and complete note/no-note state so otherwise identical entries remain distinguishable.
+- [x] Preserve the existing exact-id device-library mutation, validation and eight-second Undo snapshot.
+- [x] Prove the duplicate-entry regression red against the former label, then prove removing the second represented entry leaves the first stable ID unchanged.
+- [x] Pass 51/51 focused/adjacent Cara Log, athletics arithmetic/share, activity-removal, label, root-lifecycle and isolation tests from `app/`.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing warnings and the existing large-chunk warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep private hours planning, athletics-compliance determinations, official records and provider systems as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 19 update — distinguishable timer resets (slice 148)
 
 - [x] Start from clean required-branch head `928436a78`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Clocks history/current code for overlap.

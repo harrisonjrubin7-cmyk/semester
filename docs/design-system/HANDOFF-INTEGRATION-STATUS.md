@@ -1353,6 +1353,19 @@ This local slice does not prove deployment, production execution, institutional 
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 20 / integration slice 149
+
+- Required-branch head `3bafc0b953` was clean before selection and already included current `origin/main` `116d8444e`; exact Cara Log history/current-code inspection found the existing stable-id removal and Undo behavior but no same-facts identity guard.
+- Every hours-entry removal now names weekly position/count, hours, activity kind, date and complete note/no-note state. Otherwise identical student-entered rows therefore remain distinguishable to assistive technology.
+- Existing exact-id device-library persistence, validation and eight-second Undo remain authoritative. Removing a row does not determine countability/compliance, contact an athletics or compliance provider, or mutate an official record.
+- The regression failed against the former hours/kind/date-only label and proves the second identical control removes only its stable ID. Focused and adjacent Cara Log, athletics arithmetic/share, activity-removal, label, root-lifecycle and isolation verification passes 51/51 from `app/`.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Aggregate design-system check/report pass through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present and no live target. A local properties file exists but was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 19 / integration slice 148
 
 - Required-branch head `928436a78` was clean before selection and already included current `origin/main` `116d8444e`; exact Clocks history/current-code inspection found the distinguishable timer-clear and alarm-delete names, but no equivalent timer-reset guard.
