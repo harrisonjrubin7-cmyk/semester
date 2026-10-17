@@ -448,7 +448,7 @@
         "integrations.sis"
       ],
       "acceptanceCriteria": "events: registration.readiness_requested, registration.readiness_evaluated, registration.readiness_reconciliation_requested",
-      "implementationStatus": "in_progress",
+      "implementationStatus": "implemented",
       "verificationEvidence": [
         "docs/reference/registration-readiness-workflow.md",
         "packages/institution/src/readiness.ts",
@@ -456,7 +456,11 @@
         "supabase/registration-readiness-store.check.sql",
         "packages/institution/src/policy.ts",
         "packages/institution/src/policy.test.ts",
-        "packages/platform/src/tenancy/context.ts"
+        "packages/platform/src/tenancy/context.ts",
+        "app/server/institution/registration-readiness-commands.ts",
+        "app/server/institution/registration-readiness-commands.test.ts",
+        "app/server/institution/gateway.ts",
+        "app/server/institution/registration-readiness-gateway.test.ts"
       ],
       "deploymentStatus": "not_deployed",
       "blockers": [
@@ -1277,11 +1281,15 @@
       "implementationStatus": "in_progress",
       "verificationEvidence": [
         "packages/institution/src/readiness.ts",
-        "packages/institution/src/readiness.test.ts"
+        "packages/institution/src/readiness.test.ts",
+        "app/server/institution/registration-readiness-commands.ts",
+        "app/server/institution/registration-readiness-commands.test.ts",
+        "app/server/institution/gateway.ts",
+        "app/server/institution/registration-readiness-gateway.test.ts"
       ],
       "deploymentStatus": "not_deployed",
       "blockers": [
-        "API and target-environment evidence remain open."
+        "An approved tenant-bound source adapter and target-environment evidence remain open."
       ],
       "tasks": []
     },
@@ -1305,7 +1313,7 @@
       "verificationEvidence": [],
       "deploymentStatus": "not_deployed",
       "blockers": [
-        "SIS sandbox adapter and authoritative API are incomplete."
+        "An accepted SIS adapter and target-environment authoritative source connection are incomplete."
       ],
       "tasks": []
     },
@@ -1516,9 +1524,9 @@
   "summary": {
     "proposed": 0,
     "specified": 15,
-    "in_progress": 11,
+    "in_progress": 10,
     "blocked": 23,
-    "implemented": 10,
+    "implemented": 11,
     "verified": 2,
     "deployed": 0
   }
