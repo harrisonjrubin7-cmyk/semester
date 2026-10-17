@@ -1353,6 +1353,18 @@ This local slice does not prove deployment, production execution, institutional 
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 8 / integration slice 137
+
+- Required-branch head `0819ff74c` was clean before the slice and already included current `origin/main` `3ec04d742`; exact Student Operating history/current-code inspection found no equivalent repeated-item deletion-label guard.
+- Every saved-item deletion now names its one-based collection position, collection size, complete title, workflow kind, current status and deadline/no-deadline state. Otherwise identical private rows remain distinguishable.
+- Existing exact-id deletion, cancel-first `ConfirmDialog` / `ActionPreview`, private device/account workspace authority and backup-only recovery boundary remain unchanged. Other items, preferences, downloads and official records do not change.
+- The repeated-title regression failed against the former title-only names and proves deleting position 2 leaves position 1. The focused Student Operating, domain, backup, preview, label, root-lifecycle and isolation set passes 87/87.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and report contracts pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Aggregate design wrappers are not claimed because their hardcoded `npm` / `npx` launchers are unavailable. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 7 / integration slice 136
 
 - Required-branch head `a39c56fb0` was clean before selection and already included current `origin/main` `3ec04d742`; exact About Me history/current-code inspection found no equivalent repeated-line deletion-label guard.

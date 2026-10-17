@@ -1644,6 +1644,26 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep provider mailbox mutation, live account connection and sending as separate external-authority work.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 8 update — distinguishable Student Operating saved-item deletion (slice 137)
+
+- [x] Start from clean required-branch head `0819ff74c`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Student Operating history/current code for overlap.
+- [x] Re-rank repeated private workflow-item titles as the next bounded Phase 3 accessibility gap; keep account/provider configuration, downloaded copies and official records outside this exact-record mutation.
+- [x] Name every deletion with one-based collection position, collection size, complete title, workflow kind, current status and deadline/no-deadline state.
+- [x] Preserve the existing cancel-first consequence preview, exact-id workspace update, account-sync boundary and backup-only recovery language.
+- [x] Prove the repeated-title guard red against the former title-only names and confirm deletion of position 2 removes only its stable id.
+- [x] Pass 87/87 focused Student Operating, domain, workspace-backup, ActionPreview, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass 79/79 design-check constituents and 97/97 report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Aggregate design check/report wrappers — their hardcoded `npm` / `npx` launchers are unavailable; exact constituents pass and no wrapper result is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep private operating items, downloaded exports, account sync and official institution records as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 5 update — distinguishable filed-feedback removals (slice 134)
 
 - [x] Start from clean required-branch head `05c19d68c`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Feedback inbox history/current code for overlap.
