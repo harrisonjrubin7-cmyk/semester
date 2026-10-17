@@ -251,7 +251,7 @@ export function Sources() {
                         type="button"
                         className="bare"
                         onClick={() => dispatch({ type: 'dropSource', id: s.id })}
-                        aria-label={`Remove ${s.raw.slice(0, 40)}`}
+                        aria-label={`Remove source: ${s.raw}`}
                         style={{ paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))', color: 'var(--app-dim)', fontSize: 'var(--type-sm)' }}
                       >
                         Remove
