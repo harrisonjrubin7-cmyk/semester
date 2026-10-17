@@ -4,7 +4,7 @@ const baseURL = "http://127.0.0.1:43107";
 
 export default defineConfig({
   testDir: "./e2e",
-  snapshotPathTemplate: "{testDir}/{testFilePath}-snapshots/{arg}{ext}",
+  snapshotPathTemplate: "{testDir}/{testFilePath}-snapshots/{arg}-{platform}{ext}",
   timeout: 60_000,
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
@@ -31,10 +31,8 @@ export default defineConfig({
     url: baseURL,
   },
   expect: {
-    // Chromium's font rasterization differs between macOS and the Ubuntu CI
-    // runner even with the same bundled fonts. Keep the allowance just above
-    // the measured 3% renderer delta; dimensions, journey, overflow, and
-    // accessibility checks remain exact assertions.
-    toHaveScreenshot: { animations: "disabled", maxDiffPixelRatio: 0.035 },
+    // Platform-specific reviewed baselines absorb renderer differences without
+    // weakening the regression threshold within either supported environment.
+    toHaveScreenshot: { animations: "disabled", maxDiffPixelRatio: 0.01 },
   },
 });
