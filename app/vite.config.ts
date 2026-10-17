@@ -713,6 +713,7 @@ function vercelUncovered(extra: string): string[] {
  */
 const MOCKS_MODULES = [
   'src/components/AboutMe.test.tsx',
+  'src/components/ListingDesk.moderation-preview.test.tsx',
   'src/components/MyRules.test.tsx',
   'src/components/ProductivityCloud.test.tsx',
   'src/components/TodayActionCenter.shadow.sources.test.tsx',
@@ -828,7 +829,9 @@ const MOCKS_MODULES = [
   'src/lib/presence.test.ts',
   'src/screens/call/leaving.test.tsx',
   'src/screens/call/consent.ui.test.tsx',
+  'src/screens/activities.removal-labels.test.tsx',
   'src/screens/addmaterial.test.tsx',
+  'src/screens/groupwork.part-removal.test.tsx',
   'src/screens/pathway.test.tsx',
   'src/screens/pathwaygrid.test.tsx',
   'src/screens/solvephoto.test.tsx',

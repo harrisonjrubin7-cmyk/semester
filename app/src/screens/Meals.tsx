@@ -21,8 +21,16 @@ import {
   readMoney,
   readSwipes,
   staleLine,
+  type Balance,
 } from '../lib/meals';
 import { formatDate } from '../lib/locale';
+
+function balanceReadingLine(reading: Balance): string {
+  return [
+    reading.swipes >= 0 ? `${reading.swipes} swipes` : 'No meal swipes recorded',
+    cashLine(reading),
+  ].filter(Boolean).join(' · ');
+}
 
 /**
  * Swipes, Commodore Cash, and the week they run out.
@@ -272,13 +280,12 @@ function MealsDetails() {
                 {formatDate(r.at)}
               </span>
               <span style={{ flex: 'none', fontSize: 'var(--type-base)', fontVariantNumeric: 'tabular-nums' }}>
-                {r.swipes >= 0 ? `${r.swipes} swipes` : '—'}
-                {r.cashCents > 0 ? ` · ${money(r.cashCents)}` : ''}
+                {balanceReadingLine(r)}
               </span>
               <button
                 type="button"
                 className="bare"
-                aria-label="Remove this reading"
+                aria-label={`Remove balance reading from ${formatDate(r.at)}: ${balanceReadingLine(r)}`}
                 onClick={() => dispatch({ type: 'dropBalance', id: r.id })}
                 style={{ flex: 'none', width: 24, color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
               >
