@@ -1361,7 +1361,8 @@ This local slice does not prove deployment, production execution, provider conne
 - The repeated-rule regression failed against the former sentence-only names and proves the second control dispatches only the second rule id. Focused My Rules, Undo, reducer, accessibility, root-lifecycle and isolation verification passes 162/162.
 - Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and all eight report contract files pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
 - The aggregate design report launcher writes its artifact but exits 1 because its hardcoded `npx` is unavailable. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
-- Mandatory HawkScan preflight and exact final-commit status are recorded after the coherent slice commit; no DAST result or security pass is inferred.
+- The coherent code/test/control slice is commit `ba529da24`; final `origin/main` remains `3ec04d742` with no overlap.
+- Mandatory HawkScan preflight for `ba529da24` reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 

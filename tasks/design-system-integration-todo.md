@@ -1578,7 +1578,8 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Pass design-check constituents: 79/79 token/design contracts, zero audit violations with 86 existing warnings and CSS within its ledger; pass all eight report contract files at 97/97.
 - [ ] Aggregate design report launcher — writes its artifact, then exits 1 because its hardcoded `npx` command is unavailable; exact constituents pass and no aggregate-wrapper pass is claimed.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
-- [ ] HawkScan DAST — mandatory preflight and exact final-commit result are recorded after the coherent slice commit.
+- [x] Commit the coherent code/test/control slice as `ba529da24`; final `origin/main` remains `3ec04d742` with no overlap.
+- [ ] HawkScan DAST — mandatory preflight for `ba529da24` reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No scan, finding result, fix/rescan loop or security pass exists.
 
 ### Next implementation boundary
 
