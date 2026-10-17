@@ -29,7 +29,7 @@ because it needs a human decision first.
 | 13 | accessibility/readiness-evidence.yaml | written | `accessibility/readiness-evidence.yaml`. Status: not_started. |
 | 14 | risk-register.yaml | open | No content in the PDF. |
 | 15 | control-register.yaml | open | No content in the PDF. |
-| 16 | readiness-event.schema.json | open | Derivable from the events list. Next slice. |
+| 16 | readiness-event.schema.json | written | `readiness-event.schema.json`, aligned to the workflow descriptor, durable receipt store, and minimal payload boundary. |
 | 17 | receipt.schema.json | open | Derivable from the receipt fields. Next slice. |
 | 18 | integration-adapter.schema.json | open | Derivable from the adapter contract. Next slice. |
 | 19 | policy-decision.schema.json | open | Derivable from the policy-decision contract. Next slice. |
@@ -45,7 +45,7 @@ because it needs a human decision first.
 | 29 | pilot-results-template.md | open | Template only. Next slice. |
 | 30 | post-launch-review.md | open | Template only. Next slice. |
 
-Count: 14 written, 16 open.
+Count: 15 written, 15 open.
 
 ## Decisions this package depends on
 
@@ -75,6 +75,7 @@ Run from the repo root:
 python3 scripts/validate-pilot-artifacts.py   # parses every YAML file in this folder
 npm test --workspace app -- src/lib/registry/passport.test.ts
 npm test --workspace app -- src/lib/source-verification.test.ts
+npm test --workspace app -- src/lib/registry/readiness-event-schema.test.ts
 ```
 
 The Python script checks that every YAML file parses. It does not check the
