@@ -36,8 +36,6 @@ The migration installs and explicitly activates that credential-free job when
 pg_cron is present. It is not listed as live until a post-deploy read of
 `cron.job` and its first successful execution are recorded.
 
-    productivity-sourcecheck ACTIVE, v370, verify_jwt off   platform
-
 `ops-projector` is source-complete and deployed but not activated. The function
 remains dormant until an operator sets a
 dedicated `OPS_PROJECTOR_SECRET`; there is no `scheduler.sql` entry. A valid
@@ -757,8 +755,9 @@ Vault and the `access-saga-worker` job, which every five minutes (minutes 1, 6, 
 `app/server/institution/access-saga-tick.ts` over the Postgres saga store: the database lists the sagas that are due
 (`public.access_saga_due`) and the runner moves each one a step. The token check is
 `public.access_saga_tick_authorized` (20261012040000), the same shape as `integration_tick_authorized`. The job is
-**parked** in the file, and `health.sql` expects it parked, because the function is PENDING above: it deploys with
-the merge that adds it, and nothing has read it yet. No participants are registered
+**parked** in the file, and `health.sql` expects it parked. The 17 October Management API reading above confirms
+that `access-saga-tick` is deployed by the platform at v56; the remaining gate is an authenticated test request,
+not function deployment. No participants are registered
 (`app/server/institution/access-saga-registry.ts` holds null), so until they are every tick answers
 `{"outcome":"unregistered","due":N,...}` and claims no saga; the job can be unparked on that answer, as
 `integration-sync` was, and the count then says how much work waits for a real policy administrator and enforcement
