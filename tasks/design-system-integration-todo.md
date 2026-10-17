@@ -3351,6 +3351,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Pass 162/162 focused SchoolPicker, reducer/Undo, label, root-lifecycle and isolation tests.
 - [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing warnings and the existing large-chunk warning.
 - [x] Pass 9 token tests, 70 design contracts, all eight report contract files with 97/97 tests, zero audit violations with 86 existing warnings and CSS within its ledger.
+- [x] Commit the coherent slice as `23b750f68`; merge non-overlapping final `origin/main` `955d9e06e` as `42bb130b8`, then pass 168/168 combined focused/control/upstream tests and both application TypeScript gates.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility/identity slice.
 - [ ] HawkScan DAST — the active skill stops at mandatory preflight because the Hawk CLI and Docker are absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` and an unread local properties file are present; no live target, scan, finding result, fix/rescan loop or security pass exists.
 

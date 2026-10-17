@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `802c97c70` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `955d9e06e` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -1487,6 +1487,8 @@ Every custom-school Forget action now names its one-based position and current f
 The new regression failed against the former name-only control, then the focused SchoolPicker, reducer/Undo, accessibility-label, root-lifecycle and isolation set passes 162/162. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Design verification passes 9 token tests, 70 design contracts and all eight report files with 97/97 tests; audit remains at zero violations with 86 existing warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun.
 
 The active HawkScan skill stops at mandatory preflight: the Hawk CLI and Docker are absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset, `stackhawk.yml` and an unread local properties file are present, and no live target is configured. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+The coherent slice is commit `23b750f68`. Final non-overlapping edge-error-envelope `origin/main` `955d9e06e` merges as `42bb130b8`; the combined head passes 168/168 focused/control/upstream tests and both application TypeScript gates.
 
 ## Automation pass 35 — distinguishable exact-duplicate waiting-send actions (slice 164)
 

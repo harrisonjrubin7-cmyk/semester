@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 36 of 120 · **Integration slice** 165 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `14eb02a63` · **Latest observed `origin/main`** `802c97c70`
+**Automation pass** 36 of 120 · **Integration slice** 165 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `14eb02a63` · **Latest observed `origin/main`** `955d9e06e`
 
 ## State
 
@@ -15,6 +15,7 @@ Phase 0 reconciliation is complete for the archive populations and includes the 
 - Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Design verification passes 9 token tests, 70 design contracts and all eight report files with 97/97 tests; audit remains at zero violations with 86 existing warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun.
 - The active HawkScan skill stops at mandatory preflight: the Hawk CLI and Docker are absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` and an unread local properties file are present; and no live target exists. No DAST scan, finding result, fix/rescan loop or security pass exists.
 - No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+- Coherent slice commit `23b750f68` is followed by non-overlapping edge-error-envelope merge `42bb130b8` from final `origin/main` `955d9e06e`; the combined head passes 168/168 focused/control/upstream tests and both application TypeScript gates.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 

@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `802c97c70` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `955d9e06e` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -1497,5 +1497,6 @@ No route, navigation, shared component, dependency, schema, policy, provider con
 | Preserve school-data authority boundaries | Bundled schools and `SchoolPackDoor` institution-authored pack | Existing and unchanged | The action remains available only for `state.mySchools`; it cannot remove bundled or loaded-pack authority and adds no live directory/provider claim. |
 | Regression and repository gates | SchoolPicker/reducer/Undo/label/lifecycle/isolation tests plus standard design contracts | Existing and verified locally for this slice | Red proof against name-only actions; 162/162 focused tests, both typechecks, lint and build pass. Design verification passes 9 token tests, 70 design contracts and eight report files with 97/97 tests, zero audit violations and unchanged CSS ledger. Full ordered/shuffled suites remain open. |
 | DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | The Hawk skill is available, but the Hawk CLI, Docker, API key, application id, app host and live target are absent. A local properties file is present but unread. No scan, finding result, fix/rescan loop or security pass exists. |
+| Final upstream reconciliation | Slice `23b750f68`; `origin/main` `955d9e06e`; merge `42bb130b8` | Existing and verified for this slice | The upstream edge-error-envelope files do not overlap SchoolPicker or integration controls. The combined head passes 168/168 focused/control/upstream tests and both application TypeScript gates. |
 
 No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish live school data, institution-pack approval, deployment, production execution, institutional acceptance or production readiness.
