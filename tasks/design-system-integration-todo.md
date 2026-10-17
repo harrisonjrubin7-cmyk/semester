@@ -1566,6 +1566,26 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 6 update — distinguishable custom-reminder deletion (slice 135)
+
+- [x] Start from clean required-branch head `4669bb5aa`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact My Rules history/current code for overlap.
+- [x] Re-rank duplicate custom-reminder deletion names as the next bounded Phase 3 accessibility gap; keep built-in reminders, official deadlines, provider notifications and institution records outside this device mutation.
+- [x] Name each deletion with one-based collection position, collection size and the complete existing rule sentence so otherwise identical rules remain distinguishable.
+- [x] Preserve the existing exact-id `deleteMyRule` action, device persistence and eight-second Undo snapshot of only `myRules`.
+- [x] Prove the repeated-rule regression red against the former sentence-only names and confirm the second control dispatches only the second rule id.
+- [x] Pass 162/162 focused My Rules, Undo, reducer, accessibility, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass design-check constituents: 79/79 token/design contracts, zero audit violations with 86 existing warnings and CSS within its ledger; pass all eight report contract files at 97/97.
+- [ ] Aggregate design report launcher — writes its artifact, then exits 1 because its hardcoded `npx` command is unavailable; exact constituents pass and no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight and exact final-commit result are recorded after the coherent slice commit.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep custom reminder rules device-owned and recoverable without implying provider scheduling or institution-authored deadline changes.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 1 update — distinguishable Learning Map concept removals (slice 130)
 
 - [x] Fetch `origin/main`, confirm the clean required branch and upstream are both `4ac162f1c`, and inspect exact Learning Map history/current code for equivalent work.

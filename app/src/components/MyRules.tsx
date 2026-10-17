@@ -54,7 +54,7 @@ export function MyRules() {
         replacing any, so nothing here can make a reminder stop arriving.
       </div>
 
-      {rules.map((r) => (
+      {rules.map((r, index) => (
         <div
           key={r.id}
           style={{
@@ -78,7 +78,7 @@ export function MyRules() {
               type="button"
               className="bare"
               onClick={() => dispatch({ type: 'deleteMyRule', id: r.id })}
-              aria-label={`Delete: ${ruleLine(r, courseCode)}`}
+              aria-label={`Delete custom reminder ${index + 1} of ${rules.length}: ${ruleLine(r, courseCode)}`}
               style={{ flex: 'none', width: 28, color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
             >
               ×

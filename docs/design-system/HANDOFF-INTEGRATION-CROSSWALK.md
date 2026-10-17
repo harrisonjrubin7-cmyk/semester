@@ -1056,6 +1056,18 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
 
+## Automation pass 6 mapping — distinguishable custom-reminder deletion (slice 135)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated student-authored reminder rules remain distinguishable at deletion | `app/src/components/MyRules.tsx`; `state.myRules` | Existing but incomplete -> existing and verified locally for this slice | Each accessible deletion name includes one-based collection position, collection size and the complete existing rule sentence. Position distinguishes otherwise identical rules. |
+| Preserve exact device mutation and recovery | Existing rule id, `deleteMyRule` and shared eight-second Undo | Existing and unchanged | The regression activates position 2 and proves only `rule-two` is dispatched. Undo continues to snapshot only `myRules`, preserving unrelated student work. |
+| Preserve academic and external authority boundaries | Existing custom-reminder contract | Existing and unchanged | Built-in reminders, course deadlines, provider notifications and institution records remain unchanged. No delivery, synchronization or official-record claim is added. |
+| Regression and repository gates | `MyRules.test.tsx` and adjacent Undo/reducer/accessibility/lifecycle/isolation guards | Existing and verified locally for this slice | Red proof against identical sentence-only names; 162/162 focused/control tests, both typechecks, lint and build pass. Design constituents pass 79/79, report contracts pass 97/97, audit stays at zero violations and CSS remains within its ledger. Full ordered/shuffled suites and DAST remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked pending final preflight record | Exact runtime, credential and target availability is recorded after the coherent slice commit; no scan result is inferred from local application gates. |
+
+No route, navigation, shared component, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
+
 ## Automation pass 2 mapping — distinguishable Semester Mail row actions (slice 131)
 
 | Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |

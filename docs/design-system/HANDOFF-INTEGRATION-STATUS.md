@@ -1353,6 +1353,18 @@ This local slice does not prove deployment, production execution, institutional 
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 6 / integration slice 135
+
+- Required-branch head `4669bb5aa` was clean before selection and already included current `origin/main` `3ec04d742`; exact My Rules history/current-code inspection found no equivalent repeated-rule deletion-label guard.
+- Every custom-reminder deletion now names one-based collection position, collection size and the complete existing rule sentence. Otherwise identical rules remain distinguishable.
+- Existing exact-id `deleteMyRule`, device persistence and eight-second Undo of only `myRules` remain authoritative. Built-in reminders, deadlines, provider notifications and institution records do not change.
+- The repeated-rule regression failed against the former sentence-only names and proves the second control dispatches only the second rule id. Focused My Rules, Undo, reducer, accessibility, root-lifecycle and isolation verification passes 162/162.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and all eight report contract files pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- The aggregate design report launcher writes its artifact but exits 1 because its hardcoded `npx` is unavailable. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight and exact final-commit status are recorded after the coherent slice commit; no DAST result or security pass is inferred.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 5 / integration slice 134
 
 - Required-branch head `05c19d68c` was clean before selection and already included current `origin/main` `3ec04d742`; exact Feedback inbox history/current-code inspection found no equivalent repeated-entry action-label guard.
