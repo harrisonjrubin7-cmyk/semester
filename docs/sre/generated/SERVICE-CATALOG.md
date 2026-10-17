@@ -2,7 +2,7 @@
 
 # Service catalog (generated)
 
-74 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
+75 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
 
 | Id | Name | Kind | Class | Role | Journeys | Depends on | Kill switch | Runbook |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -68,6 +68,7 @@
 | `pipeline:ci` | CI (the merge gate) | pipeline | C2 | platform | — | `github-pages` | — | RB-08 |
 | `pipeline:course-engine` | Course Engine source gate | pipeline | C3 | platform | — | — | — | RB-08 |
 | `pipeline:pages` | Deploy to Pages | pipeline | C2 | platform | — | `github-pages` | — | RB-08 |
+| `pipeline:starter-ci` | Starter monorepo CI | pipeline | C3 | platform | — | — | — | RB-08 |
 | `pipeline:functions` | Deploy Edge Functions | pipeline | C2 | platform | — | `supabase-edge-runtime` | — | RB-08 |
 | `pipeline:schema-deploy` | Schema deploy (Supabase Branching, db push) | pipeline | C1 | data | — | `supabase-db` | — | RB-09 |
 | `pipeline:production-smoke` | Hourly production probe (the only automated monitor) | pipeline | C1 | platform | — | `github-pages`, `supabase-db` | — | RB-01 |
