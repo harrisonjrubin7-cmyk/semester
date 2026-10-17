@@ -25,7 +25,7 @@ Exit: a seeded user can complete `upload → review → calendar → study → s
 
 ## Phase 2 — Learning intelligence
 
-1. Field guide now renders citation-resolved concepts, connections, examples, and source labels with browser coverage. Slides, Cases, Cram, and Listen remain to be completed.
+1. Field guide and Slides now render citation-resolved concepts, lecture outlines, examples, and source labels with browser coverage. Cases, Cram, and Listen remain to be completed.
 2. Add spaced repetition and weak-concept evidence without streaks or gamification.
 3. Add Ask Semester with course-source retrieval, uncertainty, and AI-policy disclosure.
 4. Add real provider adapters only behind explicit policy and consent gates.
