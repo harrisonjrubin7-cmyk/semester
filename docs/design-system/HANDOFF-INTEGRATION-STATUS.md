@@ -1361,7 +1361,7 @@ This local slice does not prove deployment, production execution, provider conne
 - The new regression failed against the former fact-only names, then 298/298 focused Bill, arithmetic, Undo, export, reducer, root-lifecycle and isolation tests passed.
 - Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing chunk-size warning. Aggregate design-system check/report pass through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger.
 - Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
-- The active HawkScan capability is unavailable. Preflight reports Hawk and Docker runtimes absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- The coherent code/test/control slice is commit `8a991db4d`. The HawkScan skill's post-commit preflight reports `hawk` and Docker runtimes absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. HawkScan cannot start; no DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
