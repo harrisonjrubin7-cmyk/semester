@@ -348,14 +348,17 @@ describe('the assistant button, and what it sits on', () => {
     expect(assistant()).toContain("node.hasAttribute('data-danger')");
   });
 
-  it('is what the delete buttons in Mine are marked with', () => {
+  it('is what the context-rich removal buttons in Mine are marked with', () => {
     const mine = src('../screens/Mine.tsx');
     // One per row editor — a task's and an appointment's.
     expect(mine.match(/data-danger=""/g) ?? []).toHaveLength(2);
-    for (const label of ['`Delete ${t.title}`', '`Delete ${a.title}`']) {
+    for (const label of [
+      '`Delete action ${t.title}: ${[',
+      '`Delete appointment ${a.title}: ${[',
+    ]) {
       const at = mine.indexOf(label);
       expect(at, `${label} is still there`).toBeGreaterThan(-1);
-      expect(mine.slice(at, at + 400), `${label} carries the marker`).toContain('data-danger');
+      expect(mine.slice(at, at + 700), `${label} carries the marker`).toContain('data-danger');
     }
   });
 });
