@@ -1,6 +1,6 @@
 # Which pipeline last deployed each Edge Function, read off the project at
-# 21:27 UTC on 29 September 2026. Every function, billing-cancel included,
-# last deployed by the platform at 21:10:28Z.
+# 14:23 UTC on 17 October 2026. Every function, access-saga-tick included,
+# last deployed by the platform at 14:22:49Z.
 #
 # Four columns: slug, version, the pipeline that deployed that version, and when.
 # `app/src/lib/functionsdeployed.test.ts` holds `supabase/functions/` to this
@@ -75,23 +75,21 @@
 # Management API's function list (the dashboard's Edge Functions page shows the
 # same versions), and the columns below are transcribed from it.
 
-# Management API reading on 17 October. Every function reported an `/app/...`
-# entrypoint and the same update instant: the continuous platform deploy.
-claude                    694  platform  2026-10-17T15:52:20Z
-push                      642  platform  2026-10-17T15:52:20Z
-calendar                  638  platform  2026-10-17T15:52:20Z
-fetchcal                  683  platform  2026-10-17T15:52:20Z
-canvas                    680  platform  2026-10-17T15:52:20Z
-lti                       682  platform  2026-10-17T15:52:20Z
-integration-tick          539  platform  2026-10-17T15:52:20Z
-access-saga-tick           58  platform  2026-10-17T15:52:20Z
-ops-projector             148  platform  2026-10-17T15:52:20Z
-trust-room                541  platform  2026-10-17T15:52:20Z
-delete-account            518  platform  2026-10-17T15:52:20Z
-billing-cancel            453  platform  2026-10-17T15:52:20Z
-billing-checkout          482  platform  2026-10-17T15:52:20Z
-billing-portal            341  platform  2026-10-17T15:52:20Z
-billing-webhook           482  platform  2026-10-17T15:52:20Z
-lead-intake               481  platform  2026-10-17T15:52:20Z
-productivity-sourcecheck  372  platform  2026-10-17T15:52:20Z
-support-reply-notify      350  platform  2026-10-17T15:52:20Z
+claude                   692  platform  2026-10-17T14:22:49Z
+push                     640  platform  2026-10-17T14:22:49Z
+calendar                 636  platform  2026-10-17T14:22:49Z
+fetchcal                 681  platform  2026-10-17T14:22:49Z
+canvas                   678  platform  2026-10-17T14:22:49Z
+lti                      680  platform  2026-10-17T14:22:49Z
+integration-tick         537  platform  2026-10-17T14:22:49Z
+access-saga-tick          56  platform  2026-10-17T14:22:49Z
+ops-projector            146  platform  2026-10-17T14:22:49Z
+trust-room               539  platform  2026-10-17T14:22:49Z
+delete-account           516  platform  2026-10-17T14:22:49Z
+billing-cancel           451  platform  2026-10-17T14:22:49Z
+billing-checkout         480  platform  2026-10-17T14:22:49Z
+billing-portal           339  platform  2026-10-17T14:22:49Z
+billing-webhook          480  platform  2026-10-17T14:22:49Z
+lead-intake              479  platform  2026-10-17T14:22:49Z
+productivity-sourcecheck 370  platform  2026-10-17T14:22:49Z
+support-reply-notify     348  platform  2026-10-17T14:22:49Z
