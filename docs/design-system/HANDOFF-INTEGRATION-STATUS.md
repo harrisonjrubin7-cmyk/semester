@@ -1366,6 +1366,19 @@ This local slice does not prove deployment, production execution, provider conne
 
 This local slice does not prove deployment, provider execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 16 / integration slice 145
+
+- Required-branch head `8dabfa54e` was clean before selection and already included current `origin/main` `116d8444e`; exact Grapher history/current-code inspection found no equivalent repeated-formula removal identity guard.
+- Every graph-line removal now names its list position/size, complete formula or blank-line state, and shown/hidden state.
+- Existing stable-id `dropPlot`, device workspace persistence and eight-second Undo remain authoritative. Removing a row does not change another same-formula row, contact a provider or mutate an official academic record.
+- The regression failed against the former position-only name, then 163/163 focused Grapher, reducer, Undo, label, root-lifecycle and isolation tests passed.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing chunk-size warning. Aggregate design-system check/report pass through the temporary package-runner shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing warnings and CSS within ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, API key/app-host values unset, `stackhawk.yml` present and a local properties file detected but unread. No live target, DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, provider execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 14 / integration slice 143
 
 - Required-branch head `36fbb71b4` was clean before selection and already included current `origin/main` `116d8444e`; exact Registration Day history/current-code inspection found no equivalent cross-primary backup-action identity guard.

@@ -1068,6 +1068,18 @@ No route, navigation, dependency, schema, policy, provider configuration or exte
 
 No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
 
+## Automation pass 16 mapping — distinguishable graph-line removals (slice 145)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated graph formulas remain distinguishable at removal | `app/src/components/Grapher.tsx`; persisted `state.plots` rows | Existing but incomplete → existing and verified locally for this slice | Every removal name includes position/list size, complete formula or blank state, and shown/hidden state. |
+| Preserve exact recoverable device mutation | Stable plot ID; `dropPlot`; `UNDOABLE.dropPlot` snapshot over `plots` | Existing and unchanged | The regression activates the second same-formula control and proves only its ID is dispatched. Existing Undo remains the recovery boundary. |
+| Preserve academic and external authority boundaries | Student graph workspace and local persistence | Existing and unchanged | Removing a line changes one student-created device row. No provider call, course record, grade or institution system changes. |
+| Regression and repository gates | Extended `Grapher.clear.test.tsx` plus reducer/Undo/label/lifecycle/isolation guards | Existing and verified locally for this slice | Red proof against the former position-only name; 163/163 focused tests, both typechecks, lint and build pass. Aggregate design check/report pass 9 token, 70 design and eight report contracts with zero audit violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
 ## Automation pass 14 mapping — distinguishable Registration Day backup actions (slice 143)
 
 | Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |

@@ -1585,6 +1585,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Keep advisor-share mutation, official advising records, provider connectivity and institution operations as separate authority boundaries.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 16 — distinguishable graph-line removals (slice 145)
+
+- [x] Start from clean required-branch head `8dabfa54e`, fetch current `origin/main` `116d8444e` and confirm no equivalent graph-line identity guard landed.
+- [x] Re-rank the bounded Phase 3 graph workspace ahead of external or institution-controlled gaps; keep provider activity and official academic records outside this device-row mutation.
+- [x] Identify every line removal by one-based position, list size, complete formula or blank-line state, and shown/hidden state.
+- [x] Preserve the existing stable-id `dropPlot` reducer, device persistence and eight-second Undo snapshot.
+- [x] Prove the guard red against the former position-only labels and verify the second same-formula control dispatches only its represented plot ID.
+- [x] Pass 163/163 focused Grapher, reducer, Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through the temporary package-runner shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing warnings and CSS within ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — preflight confirms Hawk v6/config/skills status and Docker are absent, API key/app-host values are unset and no live target exists. The local properties file was not read; no scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep device graph lines, provider activity and official academic records as separate authority boundaries.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 13 update — exact shared-photo removal and thumbnail lifetime (slice 142)
 
 - [x] Start from clean required-branch head `ed04f81dd`, fetch current `origin/main` `3ec04d742` and inspect exact shared-capture history/current code for overlap.
