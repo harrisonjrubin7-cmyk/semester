@@ -354,9 +354,11 @@ describe('the assistant button, and what it sits on', () => {
     const markers = [...mine.matchAll(/data-danger=""/g)];
     expect(markers).toHaveLength(2);
     for (const marker of markers) {
-      const before = mine.slice(Math.max(0, marker.index - 400), marker.index);
-      expect(before, 'a destructive marker belongs to an accessible delete button').toMatch(
-        /aria-label=\{`Delete \$\{[^}]+\.title\}`\}[\s\S]*$/,
+      const buttonAt = mine.lastIndexOf('<button', marker.index);
+      expect(buttonAt, 'a destructive marker is on a button').toBeGreaterThan(-1);
+      const opening = mine.slice(buttonAt, marker.index);
+      expect(opening, 'a destructive marker belongs to an accessible delete button').toMatch(
+        /aria-label=\{`Delete[\s\S]*?\.title/,
       );
     }
   });
