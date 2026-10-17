@@ -1502,6 +1502,16 @@ The coherent code/test/control slice is commit `1218e15ce`. During the final fet
 
 The active HawkScan requirement stops at mandatory preflight: the Hawk CLI and Docker are absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` and a local Hawk properties file are present, but credential material was not read; and no live default target exists. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Automation pass 33 — distinguishable exact-duplicate Course Studio draft removals (slice 162)
+
+Required-branch head `f118e9508` was clean before selection and already included current `origin/main` `802c97c70`. Exact upstream history and current-code inspection found the earlier fact-complete Edit Course removal names and exact draft mutations, but two grading rows, meetings or deadlines whose represented facts were identical still exposed identical accessible names.
+
+Every grading-row, meeting and deadline removal now names its one-based position and current collection size before its existing complete facts. Position distinguishes exact duplicate draft rows. Existing index-scoped grading/schedule filtering, stable-id deadline removal and explicit Save boundary remain authoritative; removing a row changes only the current draft until the student saves it, and no official LMS, provider or institution record changes.
+
+All four regressions failed against the former complete-fact-only controls, then the focused Edit Course, edit-domain, accessibility-label, root-lifecycle and isolation set passes 50/50. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Aggregate design-system check/report pass through the cached package-runner shim: 9/9 token tests, 70/70 design contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger. Ordered and shuffled full suites remain a separate checkpoint.
+
+The active HawkScan skill stops at mandatory preflight: the Hawk CLI and Docker are absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` is present and no live target exists. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Automation pass 26 — distinguishable exact-duplicate emergency-contact removals (slice 155)
 
 Required-branch head `b35714eae` was clean before selection and already included current `origin/main` `116d8444e`. Exact upstream history and current-code inspection found the existing device-only Support library, cancel-first consequence preview and exact-id deletion, but two contacts with identical names and phone numbers still exposed identical removal names.

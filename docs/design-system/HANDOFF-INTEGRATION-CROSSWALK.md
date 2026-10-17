@@ -1076,6 +1076,17 @@ No route, navigation, dependency, schema, policy, provider configuration or exte
 | Final upstream reconciliation | Slice commit `1218e15ce`; registration-readiness `origin/main` `802c97c70`; merge `6d7834258` | Existing and verified locally for this slice | The upstream delta is confined to platform-control and operator-generated registration-readiness evidence. The combined head passes 57/57 Clocks/control tests and both app TypeScript gates; upstream registry verification passes 63/63 tests, validation and TypeScript with the app-installed type root. |
 | DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk CLI and Docker are absent; required environment values and a live target are unavailable. A local properties file exists but was not read. No scan, finding result, fix/rescan loop or security pass exists. |
 
+## Automation pass 33 update — distinguishable exact-duplicate Course Studio draft removals (slice 162)
+
+| Archive requirement | Repository authority | Disposition | Evidence |
+| --- | --- | --- | --- |
+| Exact duplicate grading-row removals remain distinguishable | `app/src/screens/EditCourse.tsx`, `app/src/screens/editcourse.removal-labels.test.tsx`; current draft grading array | Existing but incomplete → existing and verified locally for this slice | Removal names include represented position/count, complete row name and weight. The regression activates position 3 and proves the otherwise identical position-2 row remains. |
+| Exact duplicate meeting removals remain distinguishable | `EditCourse`; current draft schedule array | Existing but incomplete → existing and verified locally for this slice | Removal names include represented position/count, title, complete day list, time and optional state. The regression activates position 3 and proves the otherwise identical position-2 meeting remains. |
+| Exact duplicate deadline removals remain distinguishable | `EditCourse`; stable deadline id in the current draft | Existing but incomplete → existing and verified locally for this slice | Removal names include represented position/count, title, formatted date, time, kind and weight. The regression activates position 3 and proves the otherwise identical position-2 deadline remains. |
+| Preserve draft and institutional authority | Existing `withGrading`, `withSchedule`, `dropItem` and explicit Save transition | Existing and unchanged | Row removal changes only the current student-edited draft until Save. No LMS, source-provider or official institution record is mutated. |
+| Regression and repository gates | Extended rendered Edit Course regression plus edit-domain, label, lifecycle and isolation contracts | Existing and verified locally for this slice | Red proof against complete-fact-only names; 50/50 focused/control tests, both typechecks, lint and build pass. Aggregate design checks pass 9 token and 70 contract tests; audit remains at zero violations with 86 existing warnings and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk CLI and Docker are absent; API key, application id, app host and live target are unavailable. No scan, finding result, fix/rescan loop or security pass exists. |
+
 ## Automation pass 26 mapping — distinguishable exact-duplicate emergency-contact removals (slice 155)
 
 | Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |

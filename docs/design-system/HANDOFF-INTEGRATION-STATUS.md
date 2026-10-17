@@ -1821,6 +1821,17 @@ This local slice does not prove deployment, production execution, provider conne
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 33 / integration slice 162
+
+- Required-branch head `f118e9508` was clean before selection and already included current `origin/main` `802c97c70`; exact Edit Course history/current-code inspection found no equivalent exact-duplicate removal-name guard.
+- Every grading-row, meeting and deadline removal now names represented position/count plus the complete existing row facts. Otherwise identical student-edited course-draft rows remain distinguishable.
+- Existing index-scoped grading/schedule filtering, stable-id deadline removal and explicit Save boundary remain authoritative. No persisted course state changes until Save, and no official LMS, provider or institution record changes.
+- All four regressions failed against the former complete-fact-only controls, then the focused Edit Course, edit-domain, label, root-lifecycle and isolation set passes 50/50.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Aggregate design-system check/report pass through the cached package-runner shim: 9/9 token tests, 70/70 design contracts, zero audit violations, 86 existing warnings and CSS within its ledger. Ordered and shuffled full suites remain open.
+- Mandatory HawkScan preflight reports the Hawk CLI and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 32 / integration slice 161
 
 - Required-branch head `0d295c00d` was clean before selection and already included current `origin/main` `9c1f1f514`; exact Clocks history/current-code inspection found no equivalent exact-duplicate action-name guard.

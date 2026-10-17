@@ -25,14 +25,17 @@ const COURSE: CourseModule = {
     grading: [
       { what: 'Project', pct: '30%' },
       { what: 'Project', pct: '45%' },
+      { what: 'Project', pct: '45%' },
     ],
   },
   items: [
     { id: 'draft', c: 'course-1', title: 'Portfolio', kind: 'Project', month: 9, day: 12, dueTime: '3:00p', weight: '20%', where: '', detail: '', quote: '', source: '' },
     { id: 'final', c: 'course-1', title: 'Portfolio', kind: 'Final', month: 11, day: 4, dueTime: '11:59p', weight: '35%', where: '', detail: '', quote: '', source: '' },
+    { id: 'final-copy', c: 'course-1', title: 'Portfolio', kind: 'Final', month: 11, day: 4, dueTime: '11:59p', weight: '35%', where: '', detail: '', quote: '', source: '' },
   ],
   schedule: [
     { days: [1, 3], at: 540, time: '9:00a', title: 'Studio', meta: 'Studio 2' },
+    { days: [2, 4], at: 840, time: '2:00p', title: 'Studio', meta: 'Studio 2' },
     { days: [2, 4], at: 840, time: '2:00p', title: 'Studio', meta: 'Studio 2' },
   ],
   guide: { code: 'ART 1100', name: '', blurb: '', source: '', mastery: 0, audio: false, units: [], terms: [] },
@@ -73,24 +76,43 @@ afterEach(async () => {
 
 it('distinguishes repeated course-draft removals by their represented facts', async () => {
   const names = [
-    'Remove grading row Project: 30%',
-    'Remove grading row Project: 45%',
-    'Remove meeting Studio: Monday and Wednesday · 9:00a',
-    'Remove meeting Studio: Tuesday and Thursday · 2:00p',
-    'Remove deadline Portfolio: Oct 12, 2026 · 3:00p · Project · 20%',
-    'Remove deadline Portfolio: Dec 4, 2026 · 11:59p · Final · 35%',
+    'Remove grading row 1 of 3, Project: 30%',
+    'Remove grading row 2 of 3, Project: 45%',
+    'Remove grading row 3 of 3, Project: 45%',
+    'Remove meeting 1 of 3, Studio: Monday and Wednesday · 9:00a',
+    'Remove meeting 2 of 3, Studio: Tuesday and Thursday · 2:00p',
+    'Remove meeting 3 of 3, Studio: Tuesday and Thursday · 2:00p',
+    'Remove deadline 1 of 3, Portfolio: Oct 12, 2026 · 3:00p · Project · 20%',
+    'Remove deadline 2 of 3, Portfolio: Dec 4, 2026 · 11:59p · Final · 35%',
+    'Remove deadline 3 of 3, Portfolio: Dec 4, 2026 · 11:59p · Final · 35%',
   ];
 
   for (const name of names) {
     expect(host.querySelector(`button[aria-label="${name}"]`), name).not.toBeNull();
   }
 
-  const removeAfternoon = host.querySelector<HTMLButtonElement>(
-    'button[aria-label="Remove meeting Studio: Tuesday and Thursday · 2:00p"]',
-  );
-  await act(async () => removeAfternoon?.click());
+  expect(host.textContent).toContain('Nothing changed');
+});
 
-  expect(host.querySelector('button[aria-label="Remove meeting Studio: Tuesday and Thursday · 2:00p"]')).toBeNull();
-  expect(host.querySelector('button[aria-label="Remove meeting Studio: Monday and Wednesday · 9:00a"]')).not.toBeNull();
-  expect(host.textContent).toContain('Nothing is saved until you press that.');
+it.each([
+  {
+    remove: 'Remove grading row 3 of 3, Project: 45%',
+    remains: 'Remove grading row 2 of 2, Project: 45%',
+  },
+  {
+    remove: 'Remove meeting 3 of 3, Studio: Tuesday and Thursday · 2:00p',
+    remains: 'Remove meeting 2 of 2, Studio: Tuesday and Thursday · 2:00p',
+  },
+  {
+    remove: 'Remove deadline 3 of 3, Portfolio: Dec 4, 2026 · 11:59p · Final · 35%',
+    remains: 'Remove deadline 2 of 2, Portfolio: Dec 4, 2026 · 11:59p · Final · 35%',
+  },
+])('removes only the represented exact-duplicate draft row: $remove', async ({ remove, remains }) => {
+  const control = host.querySelector<HTMLButtonElement>(`button[aria-label="${remove}"]`);
+  expect(control).not.toBeNull();
+
+  await act(async () => control?.click());
+
+  expect(host.querySelector(`button[aria-label="${remove}"]`)).toBeNull();
+  expect(host.querySelector(`button[aria-label="${remains}"]`)).not.toBeNull();
 });

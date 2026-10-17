@@ -2038,6 +2038,23 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep ordinary timers and alarms separate from academic work-session evidence, provider notification guarantees and official institution schedules.
 
+## 2026-10-17 distinguishable exact-duplicate Course Studio draft removals — automation pass 33, integration slice 162
+
+- [x] Start from clean required-branch head `f118e9508`; fetch current `origin/main` `802c97c70`, confirm it is already included and inspect exact Edit Course history/current code for overlap.
+- [x] Re-rank exact-duplicate grading-row, meeting and deadline removal names as the next bounded Phase 4 accessibility gap; keep the unsaved draft, explicit Save boundary and official LMS/institution records separate.
+- [x] Name every represented removal with one-based position and current collection size while retaining the complete existing grading, schedule or deadline facts.
+- [x] Preserve current index-scoped grading/schedule removal, stable-id deadline removal and explicit course-draft Save behavior; no persisted course changes until Save.
+- [x] Prove all four behavior guards red against the former fact-complete-only names, then pass 50/50 focused Edit Course, edit-domain, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
+- [x] Pass aggregate design-system check/report through a temporary cached package-runner shim: 9/9 token tests, 70/70 design contracts, zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports the Hawk CLI and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` is present and no live target exists. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep student-edited course drafts separate from official LMS/source records, provider synchronization and institution-controlled publication.
+
 ## Automation pass 14 update — distinguishable Registration Day backup actions (slice 143)
 
 - [x] Merge current `origin/main` `116d8444e` into clean required-branch head `d10396349`, then select from combined head `36fbb71b4`.
