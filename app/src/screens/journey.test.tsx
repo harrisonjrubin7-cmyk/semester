@@ -136,7 +136,7 @@ describe('Support', () => {
     }));
     draw(<Support />);
 
-    click(host.querySelector('button[aria-label="Remove Aunt Maya"]')!);
+    click(host.querySelector('button[aria-label="Remove Aunt Maya: 615-555-0142"]')!);
     expect(host.textContent).toContain('Remove this emergency contact?');
     expect(host.textContent).toContain('Aunt Maya');
     expect(host.textContent).toContain('615-555-0142');
@@ -148,11 +148,36 @@ describe('Support', () => {
     expect(host.querySelector('a[href="tel:615-555-0142"]')).not.toBeNull();
     expect(JSON.parse(localStorage.getItem('semester.support.v1:device')!).contacts).toHaveLength(1);
 
-    click(host.querySelector('button[aria-label="Remove Aunt Maya"]')!);
+    click(host.querySelector('button[aria-label="Remove Aunt Maya: 615-555-0142"]')!);
     click(button('Remove contact'));
     expect(host.querySelector('a[href="tel:615-555-0142"]')).toBeNull();
     expect(JSON.parse(localStorage.getItem('semester.support.v1:device')!).contacts).toHaveLength(0);
     expect(host.textContent).toContain('Aunt Maya removed from this device.');
+  });
+
+  it('distinguishes repeated contact names and removes only the represented phone record', () => {
+    localStorage.setItem('semester.support.v1:device', JSON.stringify({
+      contacts: [
+        { id: 'c-1', name: 'Aunt Maya', phone: '615-555-0142' },
+        { id: 'c-2', name: 'Aunt Maya', phone: '615-555-0199' },
+      ],
+    }));
+    draw(<Support />);
+
+    const first = host.querySelector<HTMLButtonElement>('button[aria-label="Remove Aunt Maya: 615-555-0142"]');
+    const second = host.querySelector<HTMLButtonElement>('button[aria-label="Remove Aunt Maya: 615-555-0199"]');
+    expect(first).not.toBeNull();
+    expect(second).not.toBeNull();
+
+    click(second!);
+    expect(host.querySelector('[role="dialog"]')?.textContent).toContain('615-555-0199');
+    click(button('Remove contact'));
+
+    expect(host.querySelector('a[href="tel:615-555-0142"]')).not.toBeNull();
+    expect(host.querySelector('a[href="tel:615-555-0199"]')).toBeNull();
+    expect(JSON.parse(localStorage.getItem('semester.support.v1:device')!).contacts).toEqual([
+      { id: 'c-1', name: 'Aunt Maya', phone: '615-555-0142' },
+    ]);
   });
 });
 

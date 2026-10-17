@@ -28,13 +28,13 @@ the directory on exit.
 
 The public [developer-tools topic](https://github.com/topics/developer-tools)
 is volatile, so coverage is recorded against a dated snapshot rather than
-implied to be permanent. On 2026-10-16, a refreshed review of the first twelve
-topic pages displayed 240 repository cards covering 240 unique repositories.
+implied to be permanent. On 2026-10-17, a refreshed review of the first thirteen
+topic pages displayed 260 repository cards covering 260 unique repositories.
 The ranking changed during the review: 21 repositories not present in the
 earlier three-page snapshot were reviewed in the page-four increment, followed
 by 20 repositories on page five, 20 on page six, 20 on page seven, 20 on page
-eight, 20 on page nine, 20 on page ten, 20 on page eleven and 20 on page twelve.
-Every repository in the refreshed twelve-page snapshot is accounted for. ShellCheck closed the
+eight, 20 on page nine, 20 on page ten, 20 on page eleven, 20 on page twelve and
+20 on page thirteen. Every repository in the refreshed thirteen-page snapshot is accounted for. ShellCheck closed the
 standalone-script lint gap; the other repositories did not supply a new
 Semester product or CI requirement.
 
@@ -187,6 +187,16 @@ Semester product or CI requirement.
 | [jcodemunch-mcp](https://github.com/jgravelle/jcodemunch-mcp) and [jevgrep](https://github.com/dzhng/jevgrep) | Agent-oriented code retrieval would create derived indexes or source-context copies. Existing repository-native search and inventories cover the current need; any persistent or external processing requires data-flow, retention, exclusion and access review. |
 | [Restfox](https://github.com/flawiddsouza/Restfox) | Like HTTPie, Bruno, Hoppscotch and Posting, another API client does not create the stable, owned and published API contract Semester needs first. |
 | [webcmd](https://github.com/agentrhq/webcmd) | A self-learning browser agent overlaps Semester's reviewed browser-development and Playwright paths while expanding browser-state, credential and execution boundaries without a measured testing gap. |
+| [HolyClaude](https://github.com/CoderLuii/HolyClaude), [tweakcc](https://github.com/Piebald-AI/tweakcc), [CodeMachine](https://github.com/moazbuilds/CodeMachine-CLI), [CodeIsland](https://github.com/wxtsky/CodeIsland), [Spacebot](https://github.com/spacedriveapp/spacebot), [Agent Skills Platform](https://github.com/FrancyJGLisboa/agent-skills-platform), [OpenWolf](https://github.com/cytostack/openwolf), [Agent Teams](https://github.com/777genius/agent-teams-ai) and [Claude Code History Viewer](https://github.com/jhlee0409/claude-code-history-viewer) | Agent workstations, prompt customizers, orchestrators, status interfaces, skill marketplaces, memory layers and history viewers overlap Semester's reviewed development environment. They would expand execution, instruction, local-log, repository-data, model or credential boundaries without a measured application or CI gap. |
+| [Awesome Independent Tools](https://github.com/yaolifeng0629/Awesome-independent-tools) and [Backend Best Practices](https://github.com/Sairyss/backend-best-practices) | Tool catalogues and development guidance are reference material, not auditable dependencies or release gates. Any underlying tool or practice still requires individual review against the live repository. |
+| [Ripwire](https://github.com/redhat-et/ripwire) | Agent-oriented code navigation and impact analysis may merit a bounded benchmark, but adopting another semantic index and MCP surface requires an owned correctness baseline plus data-flow, retention, exclusions and access review. Existing repository-native search and inventories cover the current need. |
+| [React Monocle](https://github.com/team-gryff/react-monocle) and [Web Vitals Extension](https://github.com/GoogleChrome/web-vitals-extension) | The archived React visualizer and archived browser performance extension do not strengthen Semester's maintained React, Playwright, accessibility and performance-budget gates. |
+| [Stealth Browser MCP](https://github.com/vibheksoni/stealth-browser-mcp) | Anti-bot bypass, stealth automation, traffic interception and UI cloning conflict with Semester's governed browser-testing boundary and create material legal, credential and security risk. It has no legitimate product or CI requirement. |
+| [WebCodex](https://github.com/yyjeqhc/webcodex) | Giving cloud agents remote execution on developer machines would create a broad host, credential and repository boundary. Semester's managed local tasks and governed previews already cover the approved execution path. |
+| [Instill Core](https://github.com/instill-ai/instill-core) | A full-stack AI data, model and pipeline platform would introduce a parallel orchestration and deployment architecture without an owned product requirement, provider contract or data-governance review. |
+| [OpenRelay](https://github.com/romgX/openrelay) | A proxy advertising free model quotas is not acceptable provider, availability, privacy or credential evidence. Semester model integrations require named providers, owned credentials, tenancy controls, retention review and production receipts. |
+| [Phantomas](https://github.com/macbre/phantomas) | Another headless-Chromium performance collector would duplicate Semester's maintained browser journeys and route performance budgets without an uncovered metric or monitoring requirement. |
+| [Claude Code Video Toolkit](https://github.com/digitalsamba/claude-code-video-toolkit) | An agent-oriented video production stack would add browser automation, rendering, speech-provider and generated-media provenance boundaries. It does not serve the application build or CI path and needs a named content-production requirement before review. |
 
 Revisit a deferred tool only when a concrete product or engineering requirement
 exists, and repeat the ownership, licence, provenance, permissions, maintenance,
