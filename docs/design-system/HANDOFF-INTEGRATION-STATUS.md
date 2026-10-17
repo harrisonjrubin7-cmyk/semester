@@ -1820,3 +1820,14 @@ This local slice does not prove deployment, production execution, provider conne
 - Mandatory HawkScan preflight reports the Hawk CLI and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present, no local properties file, no live default target and no HawkScan package in the available skill catalog. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 32 / integration slice 161
+
+- Required-branch head `0d295c00d` was clean before selection and already included current `origin/main` `9c1f1f514`; exact Clocks history/current-code inspection found no equivalent exact-duplicate action-name guard.
+- Every timer Reset/Clear now names represented position/count, complete label, requested duration, current remainder and running/paused state. Every alarm Delete names position/count, complete time, label, repeat schedule and on/off state. Otherwise identical device-tool rows remain distinguishable.
+- Existing stable ids and exact `patchTimer`, `removeTimer` and `removeAlarm` reducers remain authoritative. Timer removal and alarm deletion retain the shared eight-second Undo; Reset retains the existing exact timer row without claiming an undo. No course, grade, deadline, provider clock, notification service or institution record changes.
+- All three regressions failed against the former complete-fact-only controls, then the focused Clocks, clock-domain, reducer, label, root-lifecycle and isolation set passes 57/57.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Design-check constituents pass 79/79; all eight report contracts pass 97/97, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. The aggregate report writes its evidence but exits 1 because `npx` is unavailable.
+- Mandatory HawkScan preflight reports the Hawk CLI and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present without reading credential material, and no live default target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.

@@ -194,8 +194,8 @@ function Timers() {
         <>
           <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(10px * var(--density, 1))' }}>Running</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))' }}>
-            {state.timers.map((t) => (
-              <TimerRow key={t.id} t={t} at={at} />
+            {state.timers.map((t, index) => (
+              <TimerRow key={t.id} t={t} at={at} position={index + 1} total={state.timers.length} />
             ))}
           </div>
         </>
@@ -217,7 +217,7 @@ function Timers() {
   );
 }
 
-function TimerRow({ t, at }: { t: Timer; at: number }) {
+function TimerRow({ t, at, position, total }: { t: Timer; at: number; position: number; total: number }) {
   const { dispatch, say } = useStore();
   // Two clocks, deliberately. `at` is the reading this frame was drawn from,
   // handed down from `useNow`, and is only ever used to put a remainder on the
@@ -278,13 +278,13 @@ function TimerRow({ t, at }: { t: Timer; at: number }) {
         </Small>
         <Small onClick={() => swap((now) => stretch(t, 60, now))}>+1 min</Small>
         <Small
-          ariaLabel={`Reset timer ${t.label || lengthLine(t.seconds)} · ${lengthLine(t.seconds)} total · ${clockFace(left)} remaining · ${running(t) ? 'running' : 'paused'}`}
+          ariaLabel={`Reset timer ${position} of ${total}, ${t.label || lengthLine(t.seconds)} · ${lengthLine(t.seconds)} total · ${clockFace(left)} remaining · ${running(t) ? 'running' : 'paused'}`}
           onClick={() => swap(() => reset(t))}
         >
           Reset
         </Small>
         <Small
-          ariaLabel={`Clear timer ${t.label || lengthLine(t.seconds)} · ${lengthLine(t.seconds)} total · ${clockFace(left)} remaining · ${running(t) ? 'running' : 'paused'}`}
+          ariaLabel={`Clear timer ${position} of ${total}, ${t.label || lengthLine(t.seconds)} · ${lengthLine(t.seconds)} total · ${clockFace(left)} remaining · ${running(t) ? 'running' : 'paused'}`}
           onClick={() => {
             dispatch({ type: 'removeTimer', id: t.id });
             say(`${t.label || 'Timer'} cleared.`);
@@ -411,7 +411,7 @@ function Alarms() {
         <>
           <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(10px * var(--density, 1))' }}>Set</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))' }}>
-            {state.alarms.map((a) => (
+            {state.alarms.map((a, index) => (
               <Blueprint plain key={a.id} style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-6)' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -469,7 +469,7 @@ function Alarms() {
                     type="button"
                     className="bare tappable"
                     onClick={() => dispatch({ type: 'removeAlarm', id: a.id })}
-                    aria-label={`Delete ${timeLine(a.at)} alarm: ${a.label || 'No label'} · ${daysLine(a.days)} · ${a.on ? 'on' : 'off'}`}
+                    aria-label={`Delete alarm ${index + 1} of ${state.alarms.length} at ${timeLine(a.at)}: ${a.label || 'No label'} · ${daysLine(a.days)} · ${a.on ? 'on' : 'off'}`}
                     style={{ width: 'auto', paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}
                   >
                     Delete

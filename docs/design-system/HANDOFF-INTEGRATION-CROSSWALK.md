@@ -1065,6 +1065,16 @@ No route, navigation, dependency, schema, policy, provider configuration or exte
 | Preserve exact private mutation and recovery | Existing stable ids, `dropVisit` / `dropLetter` reducers and shared Undo snapshot | Existing and unchanged | Only the represented private row is removed and the existing eight-second Undo remains available. No recommender is contacted and no official application, course, provider or institution record changes. |
 | Final upstream reconciliation | Slice commit `e56a643d3`; Course Engine slide `origin/main` `9c1f1f514`; merge `06cb40fe8` | Existing and verified locally for this slice | The upstream delta is confined to Course Engine Study Mode and its roadmap. The combined head passes 85/85 People-focused tests, both app TypeScript gates, 10/10 upstream Study Mode tests and its web TypeScript gate. |
 
+## Automation pass 32 update — distinguishable exact-duplicate Clocks actions (slice 161)
+
+| Archive requirement | Repository authority | Disposition | Evidence |
+| --- | --- | --- | --- |
+| Exact duplicate timer Reset and Clear actions remain distinguishable | `app/src/screens/Clocks.tsx`, `app/src/screens/clocks.removal-labels.test.tsx`; current persisted `Timer[]` | Existing but incomplete → existing and verified locally for this slice | Action names include represented position/count, complete label, requested duration, current remainder and running/paused state. The regressions activate position 3 and prove the otherwise identical position-2 timer remains unchanged. |
+| Exact duplicate alarm Delete actions remain distinguishable | `app/src/screens/Clocks.tsx`, `app/src/screens/clocks.removal-labels.test.tsx`; current persisted `Alarm[]` | Existing but incomplete → existing and verified locally for this slice | Delete names include represented position/count, complete time, label, repeat schedule and on/off state. The regression activates position 3 and proves the otherwise identical position-2 alarm remains. |
+| Preserve exact private mutation and recovery | Existing stable ids; `patchTimer`, `removeTimer`, `removeAlarm`; shared Undo snapshot | Existing and unchanged | Only the represented device row resets or is removed. Removal retains the eight-second Undo; Reset keeps the exact timer and does not claim an undo. No academic, provider-clock, notification-service or institution record changes. |
+| Regression and repository gates | Extended rendered Clocks regression plus domain, reducer, label, lifecycle, isolation and design contracts | Existing and verified locally for this slice | Red proof against complete-fact-only names; 57/57 focused/control tests, both typechecks, lint and build pass. Design constituents pass 79/79, report contracts 97/97, audit stays at zero violations and CSS remains within its ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk CLI and Docker are absent; required environment values and a live target are unavailable. A local properties file exists but was not read. No scan, finding result, fix/rescan loop or security pass exists. |
+
 ## Automation pass 26 mapping — distinguishable exact-duplicate emergency-contact removals (slice 155)
 
 | Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |

@@ -2019,6 +2019,24 @@ Documentation only. Application code was not changed after the reset onto `d577a
 
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 
+## 2026-10-17 distinguishable exact-duplicate Clocks actions — automation pass 32, integration slice 161
+
+- [x] Start from clean required-branch head `0d295c00d`; fetch current `origin/main` `9c1f1f514`, confirm it is already included and inspect exact Clocks history/current code for overlap.
+- [x] Re-rank exact-duplicate device-only timer Reset/Clear and alarm Delete names as the next bounded Phase 3 accessibility gap; keep academic records, provider clocks, notification services and institution systems outside the mutation.
+- [x] Name every represented action with one-based position and list size while retaining its complete existing label, duration/remainder/state or time/schedule/state facts.
+- [x] Preserve stable-id `patchTimer`, `removeTimer` and `removeAlarm` reducers plus the shared eight-second removal Undo; no external authority changes.
+- [x] Prove all three regressions red against the former fact-complete-only controls, then pass 57/57 focused and adjacent Clocks, reducer, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
+- [x] Pass 79/79 design-check constituents, 97/97 report contracts, zero-violation design audit and the existing CSS ledger.
+- [ ] Aggregate design report launcher — writes the report, then exits 1 because its hardcoded `npx` is unavailable; exact constituents pass and no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight found the Hawk CLI and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` and a local properties file exist but credential material was not read; and no live target exists. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep ordinary timers and alarms separate from academic work-session evidence, provider notification guarantees and official institution schedules.
+
 ## Automation pass 14 update — distinguishable Registration Day backup actions (slice 143)
 
 - [x] Merge current `origin/main` `116d8444e` into clean required-branch head `d10396349`, then select from combined head `36fbb71b4`.
