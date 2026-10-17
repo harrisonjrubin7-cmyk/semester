@@ -1353,6 +1353,18 @@ This local slice does not prove deployment, production execution, institutional 
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 18 / integration slice 147
+
+- Required-branch head `708863314` was clean before the slice and already included current `origin/main` `116d8444e`; exact Workflow Builder history/current-code inspection found no equivalent full-fact removal-name guard.
+- Every draft-step removal now names its position/count, complete title, kind, owner and wait state. Every eligibility-check removal names its position/count, fact, comparison, value, complete explanation and next step.
+- Existing exact-position unsaved edits, `workflow:manage`, tenant RLS, database validation, authorized draft save and separate-person publish remain authoritative. This slice neither persists by itself nor runs a student workflow or changes an official record.
+- The new behavior guard failed against the former position-only controls, then 82/82 focused Workflow Builder, workflow spec/API/path/shell, root-lifecycle and isolation tests passed.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Aggregate design-system check/report pass: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing warnings and CSS within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, workflow execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 15 / integration slice 144
 
 - Required-branch head `bef213ba9` was clean before selection and already included current `origin/main` `116d8444e`; exact Advisor Meeting history/current-code inspection found no equivalent preparation-line identity guard.

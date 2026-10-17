@@ -1056,6 +1056,18 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
 
+## Automation pass 18 mapping — distinguishable Workflow Builder draft removals (slice 147)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Workflow-definition removals identify the exact represented draft facts | `app/src/components/institutional/WorkflowBuilder.tsx`; typed `Definition`, `Step` and `Requirement` vocabulary | Existing but incomplete → existing and verified locally for this slice | Step names include position/count, complete title, kind, owner and wait state. Check names include position/count, fact, comparison, value, complete explanation and next step. |
+| Preserve exact draft mutation and controlled publication | Existing `edit` state update, `workflow:manage`, tenant RLS, database validation and separate-person `workflow:publish` rule | Existing and unchanged | The regression removes a represented step and check and proves only the next exact rows move into their positions. Nothing is persisted until an authorized draft save, and no edit publishes or runs a workflow. |
+| Preserve student-record and institution authority boundaries | `app/src/lib/workflow/spec.ts`; `20260930231000_workflow_builder.sql` | Existing and unchanged | Definitions contain bounded workflow rules, not a student request or official record. This slice adds no route, server operation, schema, policy or provider integration. |
+| Regression and repository gates | Extended `WorkflowBuilder.test.tsx` plus workflow and control contracts | Existing and verified locally for this slice | Red proof against the former position-only names; 82/82 focused/control tests, both typechecks, lint and build pass. Design checks pass 9 token and 70 contract tests, all eight report contracts pass, and existing audit/CSS ledgers remain unchanged. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
+
 ## Automation pass 15 mapping — distinguishable Advisor Meeting preparation removals (slice 144)
 
 | Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |

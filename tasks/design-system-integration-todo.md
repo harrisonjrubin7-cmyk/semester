@@ -1566,6 +1566,25 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 18 update — distinguishable Workflow Builder draft removals (slice 147)
+
+- [x] Start from clean required-branch head `708863314`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Workflow Builder history/current code for overlap.
+- [x] Re-rank position-only step/check removals as the next bounded Phase 10 accessibility gap; keep draft saving, publishing, workflow execution and official student records outside this label-only mutation.
+- [x] Name every draft-step removal with position, list size, complete title, kind, owner and wait/no-wait state.
+- [x] Name every eligibility-check removal with position, list size, fact, comparison, value, complete explanation and next step.
+- [x] Preserve exact-position unsaved-definition edits, `workflow:manage`, tenant RLS, database validation, authorized draft save and the separate-person `workflow:publish` boundary.
+- [x] Prove the behavior guard red against the former position-only names, then pass 82/82 Workflow Builder, workflow spec/API/path/shell, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing warnings and the existing large-chunk warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep editing an unsaved workflow definition, saving a tenant draft, publishing by a second authorized person and running any student workflow as separate authority transitions.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 15 — distinguishable Advisor Meeting preparation removals (slice 144)
 
 - [x] Start from clean required-branch head `bef213ba9`, fetch current `origin/main` `116d8444e` and confirm no equivalent Advisor Meeting preparation-line identity guard landed.
