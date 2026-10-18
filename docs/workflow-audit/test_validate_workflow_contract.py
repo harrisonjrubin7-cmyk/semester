@@ -169,6 +169,12 @@ class RejectedContracts(unittest.TestCase):
             d['readiness']['deployed'] = {'status': 'unverified', 'evidence': [dict(EVIDENCE, reference='ev:other')], 'reason': 'x'}
         self.assertRejected(mutate(fn), 'not in the tested gate: ev:other')
 
+    def test_future_effective_date_rejected_once_authorized(self):
+        def fn(d):
+            d['authority']['effective_from'] = '2099-01-01T00:00:00Z'
+            d['readiness']['institution_authorized'] = {'status': 'verified', 'evidence': [EVIDENCE], 'reason': 'x'}
+        self.assertRejected(mutate(fn), 'effective_from is in the future for verified authority')
+
 
 if __name__ == '__main__':
     unittest.main()

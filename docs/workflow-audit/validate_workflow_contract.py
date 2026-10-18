@@ -90,9 +90,14 @@ def semantic_errors(doc):
     effective_from = doc['authority']['effective_from']
     if effective_from is not None:
         try:
-            parse_timestamp(effective_from)
+            effective = parse_timestamp(effective_from)
         except ValueError:
             errors.append('effective_from is not a valid date-time')
+        else:
+            authorized = doc['readiness']['institution_authorized']['status'] == 'verified'
+            activated = doc['readiness']['production_enabled']['status'] == 'verified'
+            if (authorized or activated) and effective > datetime.now(timezone.utc):
+                errors.append('effective_from is in the future for verified authority')
     scope_bound = doc['authority']['institution_scope']
     if scope_bound is not None and not (doc['scope']['tenant_id'] and scope_bound.startswith(doc['scope']['tenant_id'] + '/')):
         errors.append('Authority institution_scope is not bound to scope tenant_id')
