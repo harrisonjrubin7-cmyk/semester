@@ -9,7 +9,7 @@ create table private.students(id uuid primary key,tenant_id uuid not null refere
 create table private.role_grants(id uuid primary key,tenant_id uuid not null,user_id uuid not null,
  role_key text not null check(role_key in('Faculty','TA','Advisor','Registrar','Finance','Student Affairs','Student')),
  valid_from timestamptz not null default now(),expires_at timestamptz,revoked_at timestamptz,
- foreign key(tenant_id,user_id) references private.memberships(tenant_id,user_id),unique(id,tenant_id),
+ foreign key(tenant_id,user_id) references private.memberships(tenant_id,user_id),unique(id,tenant_id),unique(id,tenant_id,user_id),
  check(expires_at is null or expires_at>valid_from));
 create table private.session_contexts(session_id uuid primary key,user_id uuid not null references auth.users(id),grant_id uuid not null references private.role_grants(id));
 create table private.role_read_rules(role_key text not null,record_kind text not null,primary key(role_key,record_kind));
@@ -69,7 +69,7 @@ create table private.audit_events(id bigint generated always as identity primary
  tenant_id uuid not null references private.tenants(id),actor_id uuid not null references auth.users(id),
  grant_id uuid,record_id uuid not null,event text not null,
  policy_version text not null,occurred_at timestamptz not null default now(),
- foreign key(grant_id,tenant_id) references private.role_grants(id,tenant_id),
+ foreign key(grant_id,tenant_id,actor_id) references private.role_grants(id,tenant_id,user_id),
  foreign key(record_id,tenant_id) references public.education_records(id,tenant_id));
 create table private.disclosure_records(id bigint generated always as identity primary key,
  tenant_id uuid not null,student_id uuid not null,event_kind text not null check(event_kind in('request','disclosure')),
@@ -77,7 +77,8 @@ create table private.disclosure_records(id bigint generated always as identity p
  fields_disclosed text[] not null,emergency_threat text,occurred_at timestamptz not null default now(),
  foreign key(student_id,tenant_id) references private.students(id,tenant_id),
  check(jsonb_typeof(parties)='array' and jsonb_array_length(parties)>0),
- check(legal_basis<>'health_safety_emergency' or nullif(btrim(emergency_threat),'') is not null));
+ check(legal_basis<>'health_safety_emergency' or nullif(btrim(emergency_threat),'') is not null),
+ check(event_kind<>'disclosure' or cardinality(fields_disclosed)>0));
 create function private.reject_evidence_change() returns trigger language plpgsql set search_path='' as $$
  begin raise exception 'Evidence rows are append-only' using errcode='55000'; end;
 $$;

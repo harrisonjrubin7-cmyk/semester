@@ -99,7 +99,8 @@
         "string",
         "null"
       ],
-      "format": "date-time"
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$"
     },
     "supersedes": {
       "type": [
@@ -211,6 +212,29 @@
           },
           "published_at": {
             "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "approved"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "reviewed_by"
+        ],
+        "properties": {
+          "reviewed_by": {
+            "type": "string",
+            "minLength": 1
           }
         }
       }
