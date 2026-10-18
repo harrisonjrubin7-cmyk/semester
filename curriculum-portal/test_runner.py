@@ -110,6 +110,15 @@ class HarnessTests(unittest.TestCase):
         record=json.loads((BASE/'verification.json').read_text())
         self.assertEqual(record['week3_visible_cases_passed'],len(MODULES[2]['cases']))
         self.assertEqual(record['harness_unittest_methods'],len([n for n in dir(HarnessTests) if n.startswith('test_')]))
+    def test_common_shortcuts_lose_points(self):
+        shortcuts={
+            13:"def safe_destination(r):\n    from urllib.parse import urlsplit\n    u=urlsplit(r['url'])\n    return u.scheme=='https' and ':' not in u.hostname and '.' in u.hostname and u.username is None and u.port in (None,443)\n",
+            14:"def evidence_ready(r):\n    t=r.get('tests',{})\n    return all(bool(r.get(k)) for k in ('artifact_digest','contract_version','fixture_version')) and all(t.get(k) for k in ('contract','isolation','revocation','accessibility','recovery'))\n",
+            11:"def redact(r):\n    for k in ('token','password','student_name','submission_body'):\n        if k in r:\n            r.pop(k)\n            break\n    return r\n",
+        }
+        for week,code in shortcuts.items():
+            result=self.run_week(week-1,code)
+            self.assertLess(result['passed'],result['total'],'week %d'%week)
     def test_always_false_does_not_earn_full_credit(self):
         for index,name in ((13,'evidence_ready'),(15,'activation_ready')):
             result=self.run_week(index,f'def {name}(r): return False\n')
