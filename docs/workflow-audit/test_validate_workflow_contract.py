@@ -152,6 +152,20 @@ class RejectedContracts(unittest.TestCase):
             d['readiness']['tested'] = {'status': 'verified', 'evidence': [future], 'reason': 'x'}
         self.assertRejected(mutate(fn), 'verified_at is in the future')
 
+    def test_verified_production_requires_activation_ref(self):
+        def fn(d):
+            for test in d['acceptance_tests']:
+                test['evidence_refs'] = ['ev:1']
+            d['authority']['official_record_write'] = False
+            d['authority']['mode'] = 'authoritative'
+            d['authority']['writer_policy'] = 'no_write'
+            d['authority']['effective_from'] = '2026-10-01T00:00:00Z'
+            d['authority']['activation_ref'] = None
+            for gate in ('designed', 'implemented', 'tested', 'deployed', 'institution_authorized'):
+                d['readiness'][gate] = {'status': 'verified', 'evidence': [EVIDENCE], 'reason': 'x'}
+            d['readiness']['production_enabled'] = {'status': 'verified', 'evidence': [dict(EVIDENCE, environment='production')], 'reason': 'x'}
+        self.assertRejected(mutate(fn), 'Verified production enablement requires activation_ref')
+
     def test_recovery_path_must_link_matching_test(self):
         def fn(d):
             for r in d['recovery_paths']:

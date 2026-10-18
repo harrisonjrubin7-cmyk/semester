@@ -121,6 +121,8 @@ def semantic_errors(doc):
     institutional_active = doc['readiness']['institution_authorized']['status'] == 'verified' or doc['readiness']['production_enabled']['status'] == 'verified'
     if institutional_active and scope_bound is None:
         errors.append('Verified institution authority requires institution_scope')
+    if doc['readiness']['production_enabled']['status'] == 'verified' and not doc['authority']['activation_ref']:
+        errors.append('Verified production enablement requires activation_ref')
     bound_prefix = str(doc['scope']['tenant_id']) + '/' + doc['domain']
     if scope_bound is not None and not (doc['scope']['tenant_id'] and (scope_bound == bound_prefix or scope_bound.startswith(bound_prefix + '/'))):
         errors.append('Authority institution_scope is not bound to scope tenant_id and domain')
