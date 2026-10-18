@@ -21,7 +21,7 @@ class HarnessTests(unittest.TestCase):
         self.assertEqual(result['passed'],result['total']);self.assertIsNone(result['final_grade'])
     def test_incorrect_submission(self):
         result=self.run_code('def validate_task(r): return True\n')
-        self.assertEqual(result['passed'],1)
+        self.assertEqual(result['passed'],sum(c['expected'] is True for c in MODULES[2]['cases']))
     def test_import_failure(self):
         self.assertEqual(self.run_code('raise RuntimeError()\n')['failure'],'execution_failed')
     def test_timeout(self):
@@ -140,7 +140,7 @@ class HarnessTests(unittest.TestCase):
             finally: grader.subprocess.Popen=real
         self.assertEqual(result['submission_sha256'],hashlib.sha256(original.encode()).hexdigest())
         self.assertIsNone(result['failure'])
-        self.assertEqual(result['passed'],1)
+        self.assertEqual(result['passed'],sum(c['expected'] is True for c in MODULES[2]['cases']))
     def test_mutation_of_a_retained_input_is_penalised(self):
         # A learner that keeps each input and clears it during a later call still mutated that input.
         code=("_kept=[]\n"
@@ -168,6 +168,20 @@ class HarnessTests(unittest.TestCase):
         shortcut="def retry_allowed(r): return r['status'] in (429,503) and r['attempt']!=r['max_attempts'] and (r['method']=='GET' or r.get('idempotency_key') is not None and r['idempotency_key']!='')\n"
         result=self.run_week(11,shortcut)
         self.assertLess(result['passed'],result['total'])
+    def test_open_only_shortcut_loses_points(self):
+        # The contract allows both open and completed tasks, so an implementation that only accepts open loses points.
+        code="def validate_task(r):\n    return isinstance(r,dict) and set(r)=={'id','title','status'} and all(isinstance(r[k],str) and bool(r[k].strip()) for k in ('id','title')) and r['status']=='open'\n"
+        result=self.run_week(2,code)
+        self.assertLess(result['passed'],result['total'])
+    def test_inclusive_limit_of_100_is_accepted(self):
+        shortcut="def paginate(r):\n    if r['offset']<0 or not 1<=r['limit']<100: raise ValueError()\n    return r['items'][r['offset']:r['offset']+r['limit']]\n"
+        result=self.run_week(3,shortcut)
+        self.assertLess(result['passed'],result['total'])
+    def test_reused_result_objects_are_scored_per_call(self):
+        # A correct implementation that returns one reused dictionary must not lose the earlier results.
+        code="_out={}\ndef error_model(r):\n    _out.clear()\n    _out.update(r)\n    _out['described_by']=r['field']+'-error'\n    return _out\n"
+        result=self.run_week(7,code)
+        self.assertEqual(result['passed'],result['total'])
     def test_suites_have_no_duplicate_cases(self):
         for module in MODULES:
             seen=set()

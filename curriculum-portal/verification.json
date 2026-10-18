@@ -1,6 +1,6 @@
 {
-  "harness_unittest_methods": 32,
-  "week3_visible_cases_passed": 7,
+  "harness_unittest_methods": 35,
+  "week3_visible_cases_passed": 8,
   "all16_syllabus_structure": "passed",
   "starter_syntax": "passed",
   "timeout_failure": "passed",

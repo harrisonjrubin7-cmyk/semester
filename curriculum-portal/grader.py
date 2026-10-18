@@ -15,7 +15,7 @@ results=[]
 originals=[copy.deepcopy(case['input']) for case in suite['cases']]
 for case in suite['cases']:
     try:
-        outcome={'value':getattr(module,suite['function'])(case['input'])}
+        outcome={'value':copy.deepcopy(getattr(module,suite['function'])(case['input']))}
         outcome['shape']=shape(outcome['value'])
     except ValueError: outcome={'exception':'ValueError'}
     except BaseException: outcome={'exception':'ExecutionError'}
