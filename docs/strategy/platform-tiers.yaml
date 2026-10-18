@@ -12,6 +12,7 @@ platform_tiers:
       - institution_console_basics
 
   tier_2_repeatable_institution_platform:
+    requires_tier: tier_1_trusted_wedge
     goal: >
       Prove that the same foundation supports a second connected journey and a
       second tenant or tenant-equivalent implementation.
@@ -23,6 +24,7 @@ platform_tiers:
       - implementation_toolkit
 
   tier_3_selective_native_education_platform:
+    requires_tier: tier_2_repeatable_institution_platform
     goal: >
       Add native systems only where Semester can own the authority boundary,
       operational burden, commercial model, and long-term support obligation.

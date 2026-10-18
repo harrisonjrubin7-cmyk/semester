@@ -3,6 +3,10 @@
 # A null owner is an open gap, not a decision: assign one before the pillar
 # is relied on for a pilot. `certification` is set only when a certification
 # record exists; `certification_target` names a planned ID with no record yet.
+# Owner keys here are the maturity program's role labels. The platform-control
+# registry uses other keys (identity is owned by platform-security in
+# registry/systems/core.json). Reconciling them is an open decision; until then,
+# do not route escalations from this file.
 pillars:
   identity_context:
     shared_responsibility: Tenant, institution, role, membership, session

@@ -9,6 +9,9 @@ contract_lab:
     - new_external_audience
     - new_AI_tool
     - new_consequential_action
+    # Changes to an existing contract: breaking or compatibility-affecting changes to a
+    # record, command, event, connector, external audience, AI tool, or action.
+    - changed_existing_contract
 
   submission:
     - capability_id

@@ -10,6 +10,7 @@ operations_os:
       - incidents
 
   phase_2_repeatability:
+    requires_phase: phase_1_pilot
     consoles:
       - tenant_implementation
       - configuration_changes
@@ -19,6 +20,7 @@ operations_os:
       - renewal_workflow
 
   phase_3_scale:
+    requires_phase: phase_2_repeatability
     consoles:
       - partner_operations
       - developer_operations

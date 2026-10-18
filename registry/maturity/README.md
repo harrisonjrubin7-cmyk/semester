@@ -1,6 +1,6 @@
 # Semester maturity registries
 
-Machine-readable form of the maturity program (source: `continue_12`). Every
+Machine-readable form of the maturity program (source: the uploaded `continue_12` document, which is not in this repository, so matching it to these files is manual). Every
 file here is **specified, not enforced**: no CI check reads these yet, and no
 capability is marked activated because of them.
 
@@ -11,7 +11,7 @@ Paths in the table are relative to `registry/`. This index is separate from the 
 | `maturity/capability-maturity.yaml` | Six facts that define "built"; what each status may and may not claim |
 | `platform/pillar-owners.yaml` | Twelve shared pillars; owner and certification where the source names them |
 | `connectors/connector-certification.yaml` | Sandbox → validated → pilot-approved → reusable gates |
-| `connectors/SIS-READINESS-001.yaml` | Connector passport for the readiness source (passport only, not certified) |
+| `connectors/SIS-READINESS-001.yaml` | Connector record for the readiness source (not a component passport; not certified) |
 | `portfolio/capability-intake.yaml` | Intake questions, rejection conditions, portfolio lanes |
 | `portfolio/domain-entry-criteria.yaml` | Prerequisites, 1–5 scoring factors, decision outcomes |
 | `developer/api-application.yaml` | Example partner application with prohibited scopes |

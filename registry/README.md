@@ -28,4 +28,4 @@ this change adds no dependency, so passports are JSON with the same keys.
 
 | ID | Status | Notes |
 | --- | --- | --- |
-| `WF-READINESS-001` | `proposed` | Shape from the continuation brief. Owners are the brief's role labels, not confirmed people. Upstream `integrations.sis` (the platform-control key; its connector passport is `registry/connectors/SIS-READINESS-001.yaml`, passport only, not certified) and `POL-READINESS-001` (not in this repo yet). |
+| `WF-READINESS-001` | `proposed` | Shape from the continuation brief. Owners are the brief's role labels, not confirmed people. Upstream `integrations.sis` (the platform-control key; its connector record is `registry/connectors/SIS-READINESS-001.yaml`, not a component passport and not certified) and `POL-READINESS-001` (not in this repo yet). |
