@@ -23,3 +23,8 @@ docs/handoff/reference-slice/live/module_registry.json:generic-api-key:36
 # written as a random-looking UUID in c150fb62 and replaced by a plain word
 # in the next commit; the historical line is what the commit-range scan sees.
 c150fb620df78ae82929174502d3c1e0a886cd02:app/server/institution/gateway.test.ts:generic-api-key:994
+# Notification policy test fixture: a made-up deduplication label was detected
+# as a generic API key. It never held a credential and the branch tip replaces
+# it with a plainly named low-entropy fixture. Keep this exception pinned to
+# the original commit, file, rule, and line.
+1489646e1c916173c0d137cb9128e55d4123923f:supabase/notification-inbox.check.sql:generic-api-key:144
