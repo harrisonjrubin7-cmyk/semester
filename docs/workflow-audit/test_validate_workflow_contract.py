@@ -156,6 +156,12 @@ class RejectedContracts(unittest.TestCase):
             d['readiness']['production_enabled'] = {'status': 'verified', 'evidence': [dict(EVIDENCE, environment='staging')], 'reason': 'x'}
         self.assertRejected(mutate(fn), 'production_enabled evidence is not from production')
 
+    def test_acceptance_evidence_must_resolve_to_readiness_evidence(self):
+        def fn(d):
+            for test in d['acceptance_tests']:
+                test['evidence_refs'] = ['missing-evidence']
+        self.assertRejected(mutate(fn), 'cites unresolved evidence: missing-evidence')
+
 
 if __name__ == '__main__':
     unittest.main()
