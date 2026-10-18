@@ -14,11 +14,14 @@ def shape(v):
 results=[]
 originals=[copy.deepcopy(case['input']) for case in suite['cases']]
 for case in suite['cases']:
+    # Only an exception from the learner's function counts as a contract exception; a failed snapshot is unserializable.
+    try: value=getattr(module,suite['function'])(case['input'])
+    except ValueError: results.append({'exception':'ValueError'}); continue
+    except BaseException: results.append({'exception':'ExecutionError'}); continue
     try:
-        outcome={'value':copy.deepcopy(getattr(module,suite['function'])(case['input']))}
+        outcome={'value':copy.deepcopy(value)}
         outcome['shape']=shape(outcome['value'])
-    except ValueError: outcome={'exception':'ValueError'}
-    except BaseException: outcome={'exception':'ExecutionError'}
+    except BaseException: outcome={'value':None,'shape':'unserializable'}
     results.append(outcome)
 def same(a,b):
     # 1 == True and 1 == 1.0 in Python, so compare the types too.

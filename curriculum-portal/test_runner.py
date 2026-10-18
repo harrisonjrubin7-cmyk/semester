@@ -35,7 +35,7 @@ class HarnessTests(unittest.TestCase):
     def test_input_mutation_is_not_correct(self):
         # Week 3 forbids mutating the input, even when the returned boolean is right.
         result=self.run_code('def validate_task(r):\n    if isinstance(r,dict): r.clear()\n    return False\n')
-        self.assertEqual(result['passed'],1)
+        self.assertEqual(result['passed'],sum(c['expected'] is True for c in MODULES[2]['cases']))
     def test_learner_exceptions_are_reported(self):
         result=self.run_code('def validate_task(r): raise RuntimeError()\n')
         self.assertEqual(result['failure'],'learner_exception')
@@ -88,7 +88,7 @@ class HarnessTests(unittest.TestCase):
             7:"def audit_ready(r): return all(isinstance(r.get(k),str) and bool(r[k]) for k in ('actor','tenant','action','target','request_id'))\n",
             10:"def deduplicate(r):\n    out=[]\n    for i in r['ids']:\n        if i not in out: out.append(i)\n    return out\n",
             11:"def redact(r): return {k:v for k,v in r.items() if k not in ('token','password','student_name','submission_body')}\n",
-            13:"def safe_destination(r):\n    from urllib.parse import urlsplit\n    import ipaddress\n    u=urlsplit(r['url'])\n    try: ip=ipaddress.ip_address(u.hostname)\n    except ValueError: return False\n    return u.scheme=='https' and ip.is_global and u.username is None and u.password is None and u.port in (None,443)\n",
+            13:"def safe_destination(r):\n    from urllib.parse import urlsplit\n    import ipaddress\n    u=urlsplit(r['url'])\n    try: ip=ipaddress.ip_address(u.hostname); port=u.port\n    except ValueError: return False\n    return u.scheme=='https' and ip.is_global and u.username is None and u.password is None and port in (None,443)\n",
             14:"def evidence_ready(r):\n    t=r.get('tests',{})\n    return all(bool(r.get(k)) for k in ('artifact_digest','contract_version','fixture_version')) and all(t.get(k) is True for k in ('contract','isolation','revocation','accessibility','recovery'))\n",
             16:"def activation_ready(r): return all(r.get(k) is True for k in ('certified','institution_approved','reconciled','rollback_ready','support_ready'))\n",
             9:"def idempotency(r):\n    p=r['previous_digest']\n    if p is None: return 'execute'\n    return 'replay' if p==r['digest'] else 'conflict'\n",
@@ -134,6 +134,25 @@ class HarnessTests(unittest.TestCase):
         for week,code in shortcuts.items():
             result=self.run_week(week-1,code)
             self.assertLess(result['passed'],result['total'],'week %d'%week)
+    def test_round_four_shortcuts_lose_points(self):
+        shortcuts={
+            2:"def validate_pr(r): return r['title'].strip()!='' and bool(r['test_evidence']) and bool(r['reviewer'])\n",
+            3:"def validate_task(r):\n    if not isinstance(r,dict) or set(r)-{'id','title','status'}: return False\n    return isinstance(r['id'],str) and bool(r['id'].strip()) and isinstance(r['title'],str) and bool(r['title'].strip()) and r['status'] in ('open','completed')\n",
+            4:"def paginate(r):\n    if r['offset']<0 or r['limit']==0 or r['limit']>100: raise ValueError()\n    return r['items'][r['offset']:r['offset']+r['limit']]\n",
+            10:"def deduplicate(r):\n    out=[]\n    for i in r['ids'][:-1]:\n        if i not in out: out.append(i)\n    return out\n",
+            12:"def retry_allowed(r): return r['status'] in (429,503) and r['attempt']<r['max_attempts'] and (r['method']=='GET' or (r['method']=='POST' and bool(r.get('idempotency_key'))))\n",
+            13:"def safe_destination(r):\n    from urllib.parse import urlsplit\n    import ipaddress\n    u=urlsplit(r['url'])\n    try: ip=ipaddress.ip_address(u.hostname)\n    except ValueError: return False\n    return u.scheme=='https' and not ip.is_loopback and u.username is None and u.password is None and u.port in (None,443)\n",
+            14:"def evidence_ready(r):\n    t=r.get('tests',{})\n    if not t: return False\n    return all(k in r for k in ('artifact_digest','contract_version','fixture_version')) and all(t[k] is True for k in ('contract','isolation','revocation','accessibility','recovery'))\n",
+            16:"def activation_ready(r): return r.get('support_ready') is True and all(r[k] is True for k in ('certified','institution_approved','reconciled','rollback_ready'))\n",
+        }
+        for week,code in shortcuts.items():
+            result=self.run_week(week-1,code)
+            self.assertLess(result['passed'],result['total'],'week %d'%week)
+    def test_snapshot_failure_is_not_a_contract_exception(self):
+        # A result whose copy raises ValueError must not satisfy the '!ValueError' contract on week 4.
+        code="class Bad:\n    def __deepcopy__(self,memo): raise ValueError()\ndef paginate(r):\n    if r['offset']<0 or not 1<=r['limit']<=100: return Bad()\n    return r['items'][r['offset']:r['offset']+r['limit']]\n"
+        result=self.run_week(3,code)
+        self.assertLess(result['passed'],result['total'])
     def test_mutation_check_compares_types_not_just_values(self):
         # 1 == True in Python, so replacing an id of 1 with True is a mutation even though the dictionaries compare equal.
         code="def validate_task(r):\n    if isinstance(r,dict) and type(r.get('id')) is int and r['id']==1: r['id']=True\n    return isinstance(r,dict) and set(r)=={'id','title','status'} and all(isinstance(r[k],str) and bool(r[k].strip()) for k in ('id','title')) and r['status'] in ('open','completed')\n"
