@@ -211,13 +211,13 @@ export function confirm(
   // reserve only admits a bed or student that is free at its own clock, so any later reservation
   // for either means this hold had already lapsed; a delayed confirmation must not revive it.
   const others = Object.values(state.reservations).filter((o) => o.id !== r.id);
-  if (others.some((o) => o.bedId === r.bedId && o.createdAt >= r.createdAt)) return refuse('bed_taken');
-  if (others.some((o) => o.studentId === r.studentId && o.createdAt >= r.createdAt)) return refuse('student_placed');
+  if (others.some((o) => o.bedId === r.bedId && o.createdAt > r.createdAt)) return refuse('bed_taken');
+  if (others.some((o) => o.studentId === r.studentId && o.createdAt > r.createdAt)) return refuse('student_placed');
   // An override or room change that has since ended still proves the bed or student moved on after this hold began.
-  if (Object.values(state.assignments).some((a) => a.bedId === r.bedId && a.startedAt >= r.createdAt)) {
+  if (Object.values(state.assignments).some((a) => a.bedId === r.bedId && a.startedAt > r.createdAt)) {
     return refuse('bed_taken');
   }
-  if (Object.values(state.assignments).some((a) => a.studentId === r.studentId && a.startedAt >= r.createdAt)) {
+  if (Object.values(state.assignments).some((a) => a.studentId === r.studentId && a.startedAt > r.createdAt)) {
     return refuse('student_placed');
   }
   if (Object.values(state.assignments).some((a) => a.bedId === r.bedId && a.endedAt === null)) {

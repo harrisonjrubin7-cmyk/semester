@@ -415,6 +415,21 @@ describe('input guards', () => {
     })).toEqual({ ok: false, refusal: 'bed_taken' });
   });
 
+  it('allows a same-tick room change: a sibling that ended at the tick the new hold began is not history it overlaps', () => {
+    const base2 = initialState([{ id: 'b1', label: 'x' }]);
+    const overridden = must(override(base2, {
+      id: 'o1', bedId: 'b1', studentId: 'B', authority: 'RD', rationale: 'x',
+      expectedInventoryVersion: 1, now: 100,
+    }));
+    const vacated = must(endAssignment(overridden.state, {
+      assignmentId: 'o1', expectedInventoryVersion: overridden.state.inventoryVersion, now: 100,
+    }));
+    const held = must(reserve(vacated.state, {
+      ...base, expectedInventoryVersion: vacated.state.inventoryVersion, now: 100,
+    }));
+    expect(confirm(held.state, { id: 'a1', reservationId: 'r1', studentId: 'A', now: 150 })).toMatchObject({ ok: true });
+  });
+
   it('refuses inventory that names the same bed twice, rather than silently dropping one', () => {
     expect(() => initialState([{ id: 'b1', label: 'x' }, { id: 'b1', label: 'y' }])).toThrow(/duplicate bed/);
   });
