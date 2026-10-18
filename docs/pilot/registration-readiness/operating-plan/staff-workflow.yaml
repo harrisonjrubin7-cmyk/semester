@@ -12,6 +12,7 @@ staff_workflow:
       - prior_student_actions
       - required_next_decision
       - SLA_or_review_target
+      - triaged_at_audit_event   # recorded at first triage action; source of time_to_triage
       - audit_history
 
   staff_actions:

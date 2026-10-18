@@ -11,6 +11,7 @@ end_of_pilot:
     - accessibility_and_trust_status
     - commercial_and_sponsor_feedback
     - limitations
+    - repeatability_assessment   # implementation artifact quality, configuration changes, launch effort (success-plan.yaml)
 
   decision_options:
     renew_and_deepen:

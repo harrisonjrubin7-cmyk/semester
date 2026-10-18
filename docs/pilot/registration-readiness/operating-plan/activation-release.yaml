@@ -54,7 +54,13 @@ release:
       - semester_operations_owner
       - institution_pilot_owner
 
+  approval_records:   # one entry per required approver, filled by that approver
+    semester_product_owner: {approved: false, approver: TBD, approved_at: TBD}
+    semester_engineering_or_security_owner: {approved: false, approver: TBD, approved_at: TBD}
+    semester_operations_owner: {approved: false, approver: TBD, approved_at: TBD}
+    institution_pilot_owner: {approved: false, approver: TBD, approved_at: TBD}
+
   activation_rule: >
     All required evidence must be current, no blocking finding may remain open,
     scope must match approval, safe-off must be proven, and the referenced
-    production decision (go-no-go.yaml) must be approved.
+    production decision (go-no-go.yaml) must be approved, and every approval_records entry must carry approver and approved_at.

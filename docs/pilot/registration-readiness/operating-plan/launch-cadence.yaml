@@ -18,6 +18,7 @@ launch_cadence:
         - named_owner_for_every_role           # scope-record.yaml named_owners
         - sev_to_p_mapping_agreed              # escalation-matrix.yaml sev_to_p_mapping is no longer TBD
         - measurement_windows_approved         # every observation_period in measurement-plan.yaml is set
+        - freshness_and_alert_thresholds_agreed   # observability.yaml policy_threshold, agreed_threshold, agreed_SLA; source freshness policy
     - id: stage_2_configure
       status: not_started
       exit_criteria:
@@ -38,6 +39,7 @@ launch_cadence:
         - accessibility_critical_path_complete
         - training_complete
         - release_evidence_current
+        - student_understanding_prompt_built_and_tested   # in-context prompt and event capture (measurement-plan.yaml understanding)
     - id: stage_4_activate
       status: not_started
       exit_criteria:

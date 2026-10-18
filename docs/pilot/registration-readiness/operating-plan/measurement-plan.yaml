@@ -45,11 +45,11 @@ measurement:
 
     time_to_triage:
       definition: Elapsed time from case opened to first triage action, reported as median and 90th percentile in minutes.
-      numerator: none; reported as median and p90 of opened-to-triaged durations
-      denominator: cases that reached triage in the observation period
+      numerator: none; median and p90 of opened-to-triaged durations for triaged cases, plus the untriaged count and the age of each untriaged case at cutoff
+      denominator: all cases opened in the observation period
       observation_period: TBD
       scope: approved offices only
-      source: staff queue timestamps (opened_at, triaged_at)
+      source: audit events case_opened and triaged_at_audit_event (staff-workflow.yaml)
       owner: semester_operations_owner
       limitations: [queue_routing_rules, weekend_coverage]
 

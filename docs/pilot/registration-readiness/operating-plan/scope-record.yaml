@@ -20,6 +20,9 @@ scope:
     semester_support_lead: TBD
     semester_security_owner: TBD
     executive_sponsor: TBD
+    authorized_institutional_owner: TBD
+    product_sponsor: TBD
+    product_or_engineering_owner: TBD
     contacts: TBD
 
   cohort:
@@ -47,6 +50,8 @@ scope:
       owner: TBD
       note: source to be named by the institution
       allowed_fields: TBD   # field allowlist, or reference to an immutable field-level source mapping; required before activation
+
+  goal_and_outcome_definitions: TBD   # approved goal and exact meaning of each readiness outcome, or an immutable reference; frozen at first-two-weeks step 2
 
   prohibited_actions:
     - enrollment_execution
