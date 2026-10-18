@@ -25,6 +25,10 @@ export type DegreeScenario = {
 // Returns the reasons a scenario must not be shown or shared. An empty list means valid.
 export function validateDegreeScenario(s: DegreeScenario): string[] {
   const errors: string[] = [];
+  // A scenario must be bound to a tenant and a student before it can be shown or shared.
+  if (s.tenantId.trim() === "" || s.studentId.trim() === "") {
+    errors.push("A planning scenario must belong to a tenant and a student.");
+  }
   if (!s.disclaimer || s.disclaimer.required !== true || s.disclaimer.text.trim() === "") {
     errors.push("A planning scenario must carry its disclaimer.");
   }

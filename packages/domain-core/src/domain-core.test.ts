@@ -133,6 +133,11 @@ describe("validateDegreeScenario", () => {
     expect(validateDegreeScenario(bad)).toHaveLength(1);
   });
 
+  it("refuses a scenario with no tenant or student identity", () => {
+    expect(validateDegreeScenario(scenario({ tenantId: " " }))).toHaveLength(1);
+    expect(validateDegreeScenario(scenario({ studentId: "" }))).toHaveLength(1);
+  });
+
   it("refuses a student-entered course marked as completed", () => {
     const bad = scenario({
       courses: [{ courseId: "ART200", source: "student_entered", scenarioRole: "completed" }],
@@ -203,6 +208,15 @@ describe("validateAnswerFrame", () => {
       confidence: "limited",
     });
     expect(validateAnswerFrame(unsourced)).toHaveLength(1);
+  });
+
+  it("does not count a source with a blank label as a source", () => {
+    const blankLabel = answer({
+      sources: [{ label: "   ", authority: "course" }],
+      limitations: [],
+      confidence: "limited",
+    });
+    expect(validateAnswerFrame(blankLabel)).toHaveLength(1);
   });
 
   it("does not count a whitespace-only limitation as a stated limitation", () => {

@@ -33,7 +33,8 @@ export function validateAnswerFrame(f: AIAnswerFrame): string[] {
     errors.push("Every stated limitation must say something.");
   }
   // A source with authority "none" is no source at all, so it needs a stated limitation too.
-  const hasSource = f.sources.some((s) => s.authority !== "none");
+  // A source with no label has nothing to show, so it does not count either.
+  const hasSource = f.sources.some((s) => s.authority !== "none" && s.label.trim() !== "");
   if (!hasSource && f.limitations.every((l) => l.trim() === "")) {
     errors.push("An answer with no sources must state its limitations.");
   }
