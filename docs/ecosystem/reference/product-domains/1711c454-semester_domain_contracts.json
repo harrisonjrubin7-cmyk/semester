@@ -1,0 +1,338 @@
+{
+  "status": "Proposed specification; not audited live inventory",
+  "domains": [
+    {
+      "domain_id": "gradebook",
+      "name": "Gradebook",
+      "roles": "Faculty|TA|Student",
+      "authority": "Faculty assessment authority",
+      "state_flow": "Draft \u2192 reviewed \u2192 released \u2192 correction requested",
+      "tables": "assessments|grade_drafts|grade_releases|grading_overrides",
+      "capabilities": "grades.draft|grades.release",
+      "critical_tests": "Student cannot read draft; TA cannot release; projection cannot overwrite actual"
+    },
+    {
+      "domain_id": "degree-audit",
+      "name": "Degree audit",
+      "roles": "Student|Advisor|Registrar",
+      "authority": "Configured academic-record and exception authorities",
+      "state_flow": "Evidence loaded \u2192 evaluated \u2192 exception review \u2192 accepted snapshot",
+      "tables": "requirement_versions|audit_runs|audit_nodes|exceptions",
+      "capabilities": "audit.read|audit.exception.approve",
+      "critical_tests": "Unknown evidence is not satisfied; what-if cannot update official audit"
+    },
+    {
+      "domain_id": "transcripts",
+      "name": "Transcripts",
+      "roles": "Student|Registrar",
+      "authority": "Registrar academic-record authority",
+      "state_flow": "Requested \u2192 validated \u2192 generated \u2192 released \u2192 delivered",
+      "tables": "transcript_requests|record_snapshots|deliveries",
+      "capabilities": "transcript.request|transcript.release",
+      "critical_tests": "Draft excluded; delivery retry not duplicate request"
+    },
+    {
+      "domain_id": "admissions",
+      "name": "Admissions \u00b7 PROP-WF-016",
+      "roles": "Prospect|Applicant|Admissions",
+      "authority": "Admissions decision authority",
+      "state_flow": "Prospect \u2192 application draft \u2192 submitted \u2192 review \u2192 decision released \u2192 matriculation handoff",
+      "tables": "program_requirement_versions|applications|documents|decisions|matriculation_tasks",
+      "capabilities": "application.self.edit|decision.release",
+      "critical_tests": "Applicant cannot read internal review; submit does not imply admit"
+    },
+    {
+      "domain_id": "campus-services",
+      "name": "Campus services",
+      "roles": "Student|Housing|Dining|Finance|Campus Services",
+      "authority": "Separate housing, dining, maintenance, and finance owners",
+      "state_flow": "Request \u2192 allocation \u2192 contract \u2192 charge \u2192 entitlement \u2192 move-in \u2192 service",
+      "tables": "allocations|contracts|charge_requests|entitlements|redemptions|service_requests",
+      "capabilities": "bed.allocate|contract.accept|dining.redeem",
+      "critical_tests": "Last bed has one winner; replay redemption debits once"
+    },
+    {
+      "domain_id": "community",
+      "name": "Community and clubs",
+      "roles": "Student|Moderator|Club Lead",
+      "authority": "Content owner and moderation authority",
+      "state_flow": "Draft \u2192 published \u2192 reported \u2192 review \u2192 action \u2192 appeal",
+      "tables": "posts|groups|memberships|events|reports|moderation_actions",
+      "capabilities": "community.publish|moderation.review",
+      "critical_tests": "Private group not indexed publicly; report does not publish identity"
+    },
+    {
+      "domain_id": "marketplace",
+      "name": "Campus marketplace",
+      "roles": "Student|Marketplace Partner|Moderator",
+      "authority": "Listing owner; governed reservation and moderation services",
+      "state_flow": "Draft \u2192 verified \u2192 live \u2192 reserved \u2192 pickup confirmed \u2192 completed",
+      "tables": "listings|reservations|pickup_confirmations|disputes",
+      "capabilities": "listing.publish|reservation.create",
+      "critical_tests": "One active reservation; institutional affiliation not safety guarantee"
+    },
+    {
+      "domain_id": "marketing",
+      "name": "Company site and marketing",
+      "roles": "Visitor|Company Marketing",
+      "authority": "Company content and legal reviewers",
+      "state_flow": "Draft \u2192 review \u2192 published \u2192 identity handoff",
+      "tables": "site_pages|campaigns|leads|approved_claims",
+      "capabilities": "site.publish",
+      "critical_tests": "No private education records in acquisition analytics"
+    },
+    {
+      "domain_id": "institution-console",
+      "name": "Institution console",
+      "roles": "Institution Admin|IT|Privacy|Support",
+      "authority": "Tenant-scoped administrative authorities",
+      "state_flow": "Configure \u2192 validate \u2192 approve \u2192 activate \u2192 monitor",
+      "tables": "tenant_settings|approvals|integrations|security_events",
+      "capabilities": "tenant.configure|integration.manage",
+      "critical_tests": "Institution admin is not unrestricted student-record reader"
+    },
+    {
+      "domain_id": "course-studio",
+      "name": "Course Studio",
+      "roles": "Faculty|TA",
+      "authority": "Course author and delegated teaching team",
+      "state_flow": "Draft \u2192 accessibility review \u2192 approved \u2192 published \u2192 archived",
+      "tables": "course_versions|syllabi|assignments|question_bank|ai_rules",
+      "capabilities": "course.author|course.publish",
+      "critical_tests": "TA scope bounded; question bank not leaked to student"
+    },
+    {
+      "domain_id": "course-workspace",
+      "name": "Course workspace \u00b7 ECON 1020 / BUS 1400",
+      "roles": "Student|Faculty|TA",
+      "authority": "Course publication authority; learner personal artifacts",
+      "state_flow": "Published item \u2192 saved working set \u2192 study \u2192 reflection",
+      "tables": "course_items|working_sets|reflections|takeaways",
+      "capabilities": "course.item.read|working_set.self.edit",
+      "critical_tests": "Today and course share canonical item ID; course content remains fixtures unless sourced"
+    },
+    {
+      "domain_id": "device-permissions",
+      "name": "Device capabilities",
+      "roles": "Student|Account Owner",
+      "authority": "Device OS plus account owner",
+      "state_flow": "Not asked \u2192 pre-prompt \u2192 OS decision \u2192 available or declined \u2192 revoked",
+      "tables": "permission_preferences|device_sessions",
+      "capabilities": "device.preference.edit",
+      "critical_tests": "Decline offers fallback; server preference cannot claim OS grant"
+    },
+    {
+      "domain_id": "external-audiences",
+      "name": "External audiences",
+      "roles": "Applicant|Guardian|Alumni|Employer|Marketplace Partner",
+      "authority": "Audience-specific relationship authority",
+      "state_flow": "Invite \u2192 verify \u2192 grant scope \u2192 use \u2192 expire or revoke",
+      "tables": "relationships|audience_grants|consents",
+      "capabilities": "external.scope.read",
+      "critical_tests": "Verified identity does not imply educational-record access"
+    },
+    {
+      "domain_id": "faculty-grading",
+      "name": "Faculty grading workspace",
+      "roles": "Faculty|TA",
+      "authority": "Assessment owner and configured approver",
+      "state_flow": "Rubric draft \u2192 suggestions reviewed \u2192 submitted \u2192 approved \u2192 released",
+      "tables": "rubric_scores|feedback_drafts|review_submissions",
+      "capabilities": "grading.submit|grading.approve",
+      "critical_tests": "AI suggestions stay draft; accommodation instructions omit unrelated sensitive detail"
+    },
+    {
+      "domain_id": "mobile",
+      "name": "Student mobile",
+      "roles": "Student",
+      "authority": "Same domain authorities as desktop",
+      "state_flow": "Today \u2192 My Path \u2192 Search \u2192 Plan \u2192 Me",
+      "tables": "navigation_manifests|device_preferences",
+      "capabilities": "workspace.enter",
+      "critical_tests": "Phone layout does not expand permissions"
+    },
+    {
+      "domain_id": "career",
+      "name": "Careers and employers",
+      "roles": "Student|Career|Employer",
+      "authority": "Student sharing choice and career/employer scope",
+      "state_flow": "Profile choice \u2192 opportunity \u2192 application \u2192 employer review \u2192 outcome",
+      "tables": "career_profiles|opportunities|career_applications",
+      "capabilities": "opportunity.publish|application.review",
+      "critical_tests": "Employer sees submitted scope, not grades by default"
+    },
+    {
+      "domain_id": "alumni",
+      "name": "Alumni mentoring",
+      "roles": "Student|Alumni|Career",
+      "authority": "Consent-bound relationship authority",
+      "state_flow": "Opt in \u2192 match \u2192 accept \u2192 interact \u2192 close or revoke",
+      "tables": "mentor_profiles|matches|mentor_consents",
+      "capabilities": "mentoring.opt_in|mentoring.accept",
+      "critical_tests": "Matching does not reveal academic records"
+    },
+    {
+      "domain_id": "family",
+      "name": "Family and guardian access",
+      "roles": "Student|Guardian",
+      "authority": "Verified delegation and applicable institutional rules",
+      "state_flow": "Invite \u2192 accept \u2192 scoped grant \u2192 view \u2192 expire or revoke",
+      "tables": "delegations|delegation_items|revocations",
+      "capabilities": "delegation.create|delegated.read",
+      "critical_tests": "Revoke blocks subsequent access; guardian role alone grants nothing"
+    },
+    {
+      "domain_id": "registrar-readiness",
+      "name": "Registrar readiness pilot",
+      "roles": "Student|Registrar|Advisor",
+      "authority": "Owning offices confirm facts; registrar coordinates readiness",
+      "state_flow": "Unknown \u2192 evidence checked \u2192 ready as of or blocked/review/stale/handoff",
+      "tables": "readiness_runs|readiness_checks|holds|time_tickets|outreach_approvals",
+      "capabilities": "readiness.read|outreach.approve",
+      "critical_tests": "One released hold does not imply ready; missing prerequisite unknown"
+    },
+    {
+      "domain_id": "registrar-native",
+      "name": "Registrar replacement blueprint",
+      "roles": "Registrar|Academic Affairs|Institution Admin",
+      "authority": "One configured writer per authoritative domain",
+      "state_flow": "Propose \u2192 validate \u2192 approve \u2192 commit \u2192 project \u2192 reconcile",
+      "tables": "authority_register|enrollment_commands|record_versions|reconciliations",
+      "capabilities": "enrollment.commit|record.publish",
+      "critical_tests": "Last seat one winner; authority switch requires approved cutover"
+    },
+    {
+      "domain_id": "account-mail",
+      "name": "Semester Account and Mail",
+      "roles": "Account Owner|IT",
+      "authority": "Identity authority; separate mailbox and institution owners",
+      "state_flow": "Sign up \u2192 verify \u2192 recoverable account \u2192 link institution \u2192 optional mailbox",
+      "tables": "accounts|identifiers|mailboxes|institution_links|authorized_apps",
+      "capabilities": "account.self.manage|mailbox.use",
+      "critical_tests": "Username is not mailbox entitlement; account link not role grant"
+    },
+    {
+      "domain_id": "staff-support",
+      "name": "Student Affairs / Advisor slice",
+      "roles": "Student Affairs|Advisor|Student",
+      "authority": "Assigned case and caseload authorities",
+      "state_flow": "Intake \u2192 triage \u2192 assigned \u2192 referral accepted \u2192 support \u2192 resolved",
+      "tables": "cases|student_updates|internal_notes|restricted_notes|referrals",
+      "capabilities": "case.read|case.update|referral.send",
+      "critical_tests": "Note classes separated; referral discloses only approved fields"
+    },
+    {
+      "domain_id": "study-studio",
+      "name": "Study Studio",
+      "roles": "Student|Faculty",
+      "authority": "Source owner and authorized artifact creator",
+      "state_flow": "Choose sources \u2192 choose format \u2192 generate draft \u2192 review \u2192 save/share",
+      "tables": "sources|source_versions|study_artifacts|artifact_citations",
+      "capabilities": "source.read|artifact.generate",
+      "critical_tests": "No unauthorized source retrieval; regeneration preserves edits"
+    },
+    {
+      "domain_id": "platform",
+      "name": "Semester platform and staff shell",
+      "roles": "Student|Faculty|TA|Advisor|Registrar|Finance|Student Affairs",
+      "authority": "Identity plus active tenant/term/grant",
+      "state_flow": "Enter \u2192 validate grant \u2192 select workspace \u2192 first action",
+      "tables": "memberships|role_grants|role_capabilities|session_contexts",
+      "capabilities": "workspace.enter",
+      "critical_tests": "Role switch clears forbidden cache and late responses"
+    },
+    {
+      "domain_id": "lifecycle",
+      "name": "Student lifecycle",
+      "roles": "Applicant|Student|Alumni|Institution Staff",
+      "authority": "Separate domain state-machine owners",
+      "state_flow": "Admission \u2192 affiliation \u2192 enrollment \u2192 progression \u2192 completion \u2192 alumni",
+      "tables": "lifecycle_transitions|authority_receipts|consent_decisions",
+      "capabilities": "lifecycle.transition",
+      "critical_tests": "Student lifecycle does not collapse into one status field"
+    },
+    {
+      "domain_id": "catalog",
+      "name": "Master catalog and screen atlas",
+      "roles": "Builder|Product|Design|QA",
+      "authority": "Catalog owner and evidence reviewers",
+      "state_flow": "Specified \u2192 rendered \u2192 behavioral \u2192 integrated \u2192 permission tested \u2192 verified",
+      "tables": "roles|screens|workflow_steps|systems|documents|evidence",
+      "capabilities": "catalog.read|catalog.edit",
+      "critical_tests": "Rendered thumbnail is not implementation evidence"
+    },
+    {
+      "domain_id": "design-system",
+      "name": "Design system and trust components",
+      "roles": "Builder|Design|QA",
+      "authority": "Component contract owners",
+      "state_flow": "Specify \u2192 implement \u2192 test \u2192 adopt \u2192 version",
+      "tables": "component_contracts|variants|component_tests",
+      "capabilities": "component.inspect",
+      "critical_tests": "Every state named; missing numbers not zero; source and authority visible"
+    }
+  ],
+  "study_formats": [
+    "Cards",
+    "Read",
+    "Field guide",
+    "Watch",
+    "Slides",
+    "Doc",
+    "Quiz",
+    "Figures",
+    "Cases",
+    "Cram",
+    "Listen"
+  ],
+  "connection_states": [
+    "confirmed",
+    "pending",
+    "updating",
+    "stale",
+    "blocked",
+    "degraded",
+    "reconcile",
+    "resolved"
+  ],
+  "readiness_states": [
+    "ready_as_of",
+    "blocked",
+    "review_required",
+    "unknown",
+    "stale",
+    "handoff_pending",
+    "action_completed"
+  ],
+  "screen_states": [
+    "default",
+    "loading",
+    "empty",
+    "error",
+    "forbidden",
+    "offline"
+  ],
+  "unresolved": [
+    "Degree auditor description truncated after requirement tree",
+    "Admissions missing-do suffix",
+    "Campus services aid suffix",
+    "Course reflections suffix",
+    "Alumni consent-base suffix",
+    "Registrar six independent facts unspecified",
+    "93 capabilities / 9 domains not enumerated",
+    "Role workspace im suffix",
+    "24 stages and 10 FERPA checkpoints not supplied",
+    "SessionRow contract not supplied"
+  ],
+  "counts_from_user": {
+    "student_destinations": 64,
+    "student_areas": 7,
+    "catalog_screens": 673,
+    "workflow_gap_screens": 84,
+    "master_roles": 51,
+    "workflow_steps": 319,
+    "workflows": 17,
+    "systems": 88,
+    "documents": 82
+  }
+}
