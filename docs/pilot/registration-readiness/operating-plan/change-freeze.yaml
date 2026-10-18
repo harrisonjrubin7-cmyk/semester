@@ -24,3 +24,9 @@ pilot_change_freeze:
     - unrelated_UI_redesign
     - untested_connector
     - public_feature_claim_not_supported_by_evidence
+
+  # Every change in requires_change_control gets one record before it takes effect.
+  pilot_change_record:
+    fields: [change_id, category, affected_scope, rationale, requested_by, approvers, decision_time, evidence_refs, release_invalidation]
+    storage: TBD   # system of record, named before stage 4
+    approval_rule: no requires_change_control change takes effect until its record carries every approver and a decision_time

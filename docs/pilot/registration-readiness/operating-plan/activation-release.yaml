@@ -63,4 +63,4 @@ release:
   activation_rule: >
     All required evidence must be current, no blocking finding may remain open,
     scope must match approval, safe-off must be proven, and the referenced
-    production decision (go-no-go.yaml) must be approved, and every approval_records entry must carry approved: true, approver, and approved_at.
+    production decision (go-no-go.yaml) must be approved, and every approval_records entry must carry approved: true, approver, and approved_at. The capability definition CAP-REG-001 must exist and be current (absent on main today), and the readiness event schema and tested capture, the scoped control register, and the approved retention and communication plan must each be present and current.

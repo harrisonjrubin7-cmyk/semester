@@ -30,5 +30,6 @@ daily_pilot_health:
     P2: count
 
   decision:
-    activation_status: active_or_limited_or_safe_off
+    # paused: activation stopped, release still in place. rolled_back: release reverted. safe_off: safe-off invoked.
+    activation_status: active_or_limited_or_paused_or_rolled_back_or_safe_off
     notes: required

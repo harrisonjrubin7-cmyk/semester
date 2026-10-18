@@ -6,9 +6,9 @@ scope:
   tenant: TBD
   term: TBD
   signatures:
-    institution_pilot_owner: TBD
-    semester_product_owner: TBD
-    semester_operations_owner: TBD
+    institution_pilot_owner: {name: TBD, signed: false, signed_at: TBD, signature_ref: TBD}
+    semester_product_owner: {name: TBD, signed: false, signed_at: TBD, signature_ref: TBD}
+    semester_operations_owner: {name: TBD, signed: false, signed_at: TBD, signature_ref: TBD}
 
   named_owners:   # stage 1 exit requires a name and contact for every role
     pilot_sponsor: TBD
