@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   createApplication,
+  createMemoryEvidence,
   createMemoryStore,
   listApplications,
   readApplication,
   transitionApplication,
+  type ApplicationRecord,
+  type MemoryEvidence,
   type Principal,
 } from './registry';
 
@@ -15,46 +18,85 @@ const reader = (orgId: string): Principal => ({
   grantActive: true,
 });
 
-const none = new Set<string>();
-const evidence = (...items: string[]): ReadonlySet<string> => new Set(items);
+/** Ids are assigned in order, so tests can name the records they create. */
+const sequence = (prefix: string): (() => string) => {
+  let next = 0;
+  return () => `${prefix}_${++next}`;
+};
 
-async function seed(store: ReturnType<typeof createMemoryStore>, orgId: string, id: string): Promise<void> {
-  const result = await createApplication(store, reader(orgId), { id, name: `App ${id}`, purpose: 'Planning' });
+async function seed(
+  store: ReturnType<typeof createMemoryStore>,
+  orgId: string,
+  id: string,
+): Promise<string> {
+  const result = await createApplication(store, reader(orgId), { name: `App ${id}`, purpose: 'Planning' }, () => id);
   expect(result.ok).toBe(true);
+  return id;
 }
 
 describe('creating an application', () => {
-  it('starts as a draft owned by the principal organization, not by any id in the input', async () => {
+  it('starts as a draft owned by the principal organization, with an id the server assigns', async () => {
     const store = createMemoryStore();
-    const result = await createApplication(store, reader('org_a'), { id: 'app_1', name: 'Planner', purpose: 'Tasks' });
+    const result = await createApplication(
+      store,
+      reader('org_a'),
+      { name: 'Planner', purpose: 'Tasks' },
+      sequence('app'),
+    );
     expect(result).toEqual({
       ok: true,
       value: { id: 'app_1', orgId: 'org_a', name: 'Planner', purpose: 'Tasks', state: 'draft', version: 1 },
     });
   });
 
+  it('ignores any id the caller tries to supply', async () => {
+    const store = createMemoryStore();
+    const input = { name: 'Planner', purpose: 'Tasks', id: 'app_a' };
+    const result = await createApplication(store, reader('org_b'), input, sequence('gen'));
+    expect(result.ok && result.value.id).toBe('gen_1');
+    expect(await store.get('app_a')).toBeUndefined();
+  });
+
   it('refuses a principal without apps:write', async () => {
     const store = createMemoryStore();
     const viewer: Principal = { ...reader('org_a'), scopes: new Set(['apps:read']) };
-    const result = await createApplication(store, viewer, { id: 'app_1', name: 'x', purpose: 'y' });
+    const result = await createApplication(store, viewer, { name: 'x', purpose: 'y' }, sequence('app'));
     expect(result).toEqual({ ok: false, error: { code: 'FORBIDDEN', scope: 'apps:write' } });
-    expect(await store.get('app_1')).toBeUndefined();
+    expect(await listApplications(store, reader('org_a'))).toEqual({ ok: true, value: [] });
+  });
+});
+
+describe('conditional writes in the store', () => {
+  const record: ApplicationRecord = {
+    id: 'app_1',
+    orgId: 'org_a',
+    name: 'Planner',
+    purpose: 'Tasks',
+    state: 'draft',
+    version: 1,
+  };
+
+  it('insert stores a record only when its id is free', async () => {
+    const store = createMemoryStore();
+    expect(await store.insert(record)).toBe(true);
+    expect(await store.insert({ ...record, orgId: 'org_b' })).toBe(false);
+    expect((await store.get('app_1'))?.orgId).toBe('org_a');
   });
 
-  it('refuses a duplicate id instead of overwriting the existing record', async () => {
+  it('replace stores a record only while the stored version is the expected one', async () => {
     const store = createMemoryStore();
-    await seed(store, 'org_a', 'app_1');
-    const again = await createApplication(store, reader('org_b'), { id: 'app_1', name: 'Other', purpose: 'z' });
-    expect(again).toEqual({ ok: false, error: { code: 'CONFLICT' } });
-    expect((await store.get('app_1'))?.orgId).toBe('org_a');
+    await store.insert(record);
+    expect(await store.replace({ ...record, version: 2 }, 1)).toBe(true);
+    expect(await store.replace({ ...record, version: 3, name: 'Late' }, 1)).toBe(false);
+    expect((await store.get('app_1'))?.version).toBe(2);
   });
 });
 
 describe('tenant isolation', () => {
   it('reports another organization record as NOT_FOUND, not FORBIDDEN, so its existence does not leak', async () => {
     const store = createMemoryStore();
-    await seed(store, 'org_a', 'app_1');
-    expect(await readApplication(store, reader('org_b'), 'app_1')).toEqual({
+    const id = await seed(store, 'org_a', 'app_1');
+    expect(await readApplication(store, reader('org_b'), id)).toEqual({
       ok: false,
       error: { code: 'NOT_FOUND' },
     });
@@ -79,11 +121,12 @@ describe('tenant isolation', () => {
 
   it('will not transition another organization record', async () => {
     const store = createMemoryStore();
+    const evidence = createMemoryEvidence();
     await seed(store, 'org_a', 'app_1');
-    const result = await transitionApplication(store, reader('org_b'), {
+    evidence.grant('org_b', 'app_1', 'sandbox-fixtures');
+    const result = await transitionApplication(store, evidence, reader('org_b'), {
       id: 'app_1',
       to: 'sandbox-enabled',
-      evidence: evidence('sandbox-fixtures'),
       expectedVersion: 1,
     });
     expect(result).toEqual({ ok: false, error: { code: 'NOT_FOUND' } });
@@ -104,15 +147,16 @@ describe('scopes and revoked grants', () => {
 
   it('refuses every operation once the grant is revoked, before any record is read', async () => {
     const store = createMemoryStore();
+    const evidence = createMemoryEvidence();
     await seed(store, 'org_a', 'app_1');
+    evidence.grant('org_a', 'app_1', 'sandbox-fixtures');
     const revoked: Principal = { ...reader('org_a'), grantActive: false };
     expect(await readApplication(store, revoked, 'app_1')).toEqual({ ok: false, error: { code: 'GRANT_REVOKED' } });
     expect(await listApplications(store, revoked)).toEqual({ ok: false, error: { code: 'GRANT_REVOKED' } });
     expect(
-      await transitionApplication(store, revoked, {
+      await transitionApplication(store, evidence, revoked, {
         id: 'app_1',
         to: 'sandbox-enabled',
-        evidence: evidence('sandbox-fixtures'),
         expectedVersion: 1,
       }),
     ).toEqual({ ok: false, error: { code: 'GRANT_REVOKED' } });
@@ -122,11 +166,12 @@ describe('scopes and revoked grants', () => {
 describe('transitions through the registry', () => {
   it('moves a draft to sandbox-enabled, bumps the version, and persists the new state', async () => {
     const store = createMemoryStore();
+    const evidence = createMemoryEvidence();
     await seed(store, 'org_a', 'app_1');
-    const result = await transitionApplication(store, reader('org_a'), {
+    evidence.grant('org_a', 'app_1', 'sandbox-fixtures');
+    const result = await transitionApplication(store, evidence, reader('org_a'), {
       id: 'app_1',
       to: 'sandbox-enabled',
-      evidence: evidence('sandbox-fixtures'),
       expectedVersion: 1,
     });
     expect(result.ok && result.value.state).toBe('sandbox-enabled');
@@ -135,24 +180,38 @@ describe('transitions through the registry', () => {
 
   it('reports missing evidence and does not persist anything', async () => {
     const store = createMemoryStore();
+    const evidence = createMemoryEvidence();
     await seed(store, 'org_a', 'app_1');
-    const result = await transitionApplication(store, reader('org_a'), {
+    const result = await transitionApplication(store, evidence, reader('org_a'), {
       id: 'app_1',
       to: 'sandbox-enabled',
-      evidence: none,
       expectedVersion: 1,
     });
     expect(result).toEqual({ ok: false, error: { code: 'EVIDENCE_REQUIRED', missing: ['sandbox-fixtures'] } });
     expect((await store.get('app_1'))?.state).toBe('draft');
   });
 
+  it('does not count evidence held by another organization', async () => {
+    const store = createMemoryStore();
+    const evidence = createMemoryEvidence();
+    await seed(store, 'org_a', 'app_1');
+    evidence.grant('org_b', 'app_1', 'sandbox-fixtures');
+    const result = await transitionApplication(store, evidence, reader('org_a'), {
+      id: 'app_1',
+      to: 'sandbox-enabled',
+      expectedVersion: 1,
+    });
+    expect(result).toEqual({ ok: false, error: { code: 'EVIDENCE_REQUIRED', missing: ['sandbox-fixtures'] } });
+  });
+
   it('refuses a skipped state and lists the moves that are allowed', async () => {
     const store = createMemoryStore();
+    const evidence = createMemoryEvidence();
     await seed(store, 'org_a', 'app_1');
-    const result = await transitionApplication(store, reader('org_a'), {
+    evidence.grant('org_a', 'app_1', 'certified-release');
+    const result = await transitionApplication(store, evidence, reader('org_a'), {
       id: 'app_1',
       to: 'active',
-      evidence: evidence('certified-release'),
       expectedVersion: 1,
     });
     expect(result).toEqual({ ok: false, error: { code: 'INVALID_TRANSITION', allowed: ['sandbox-enabled'] } });
@@ -160,19 +219,39 @@ describe('transitions through the registry', () => {
 
   it('refuses a stale expected version and reports the current one', async () => {
     const store = createMemoryStore();
+    const evidence = createMemoryEvidence();
     await seed(store, 'org_a', 'app_1');
-    await transitionApplication(store, reader('org_a'), {
+    evidence.grant('org_a', 'app_1', 'sandbox-fixtures');
+    await transitionApplication(store, evidence, reader('org_a'), {
       id: 'app_1',
       to: 'sandbox-enabled',
-      evidence: evidence('sandbox-fixtures'),
       expectedVersion: 1,
     });
-    const stale = await transitionApplication(store, reader('org_a'), {
+    const stale = await transitionApplication(store, evidence, reader('org_a'), {
       id: 'app_1',
       to: 'active',
-      evidence: evidence('certified-release'),
       expectedVersion: 1,
     });
     expect(stale).toEqual({ ok: false, error: { code: 'PRECONDITION_FAILED', currentVersion: 2 } });
+  });
+
+  it('lets exactly one of two concurrent transitions with the same expected version succeed', async () => {
+    const store = createMemoryStore();
+    const evidence: MemoryEvidence = createMemoryEvidence();
+    await seed(store, 'org_a', 'app_1');
+    evidence.grant('org_a', 'app_1', 'sandbox-fixtures');
+    const attempt = () =>
+      transitionApplication(store, evidence, reader('org_a'), {
+        id: 'app_1',
+        to: 'sandbox-enabled',
+        expectedVersion: 1,
+      });
+    const results = await Promise.all([attempt(), attempt()]);
+    expect(results.filter((result) => result.ok)).toHaveLength(1);
+    expect(results.find((result) => !result.ok)).toEqual({
+      ok: false,
+      error: { code: 'PRECONDITION_FAILED', currentVersion: 2 },
+    });
+    expect((await store.get('app_1'))?.version).toBe(2);
   });
 });
