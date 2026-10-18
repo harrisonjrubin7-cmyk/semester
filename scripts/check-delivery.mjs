@@ -68,8 +68,13 @@ const DELIVERY_STATE_ORDER = [
   'evidence_ready', 'approved_for_release', 'enabled', 'monitored', 'retired',
 ];
 // Records the registry must keep: removing them must fail the check, not shrink it.
-const REQUIRED_INCREMENT_IDS = ['RDY-INC-003'];
+const REQUIRED_INCREMENT_IDS = ['RDY-INC-003', 'RDY-INC-004', 'RDY-INC-005', 'RDY-INC-006', 'RDY-INC-007'];
 const REQUIRED_ARTIFACT_IDS = ['ART-RDY-011'];
+const REQUIRED_RISK_IDS = ['RSK-001', 'RSK-002', 'RSK-003', 'RSK-004'];
+const REQUIRED_DECISIONS = [
+  'Pilot scope', 'Source mapping', 'RLS and policy change', 'Feature flag enablement',
+  'Emergency disable', 'Official academic outcome', 'Pilot expansion',
+];
 // Members a release-approved rollout plan must answer, not just contain.
 const REQUIRED_PLAN_MEMBERS = ['feature_flag', 'safe_off', 'rollback'];
 const isPlaceholder = (v) => typeof v === 'string' && PLACEHOLDER_VALUES.has(v.trim().toUpperCase());
@@ -225,12 +230,22 @@ export function check(repo) {
     if (isEmpty(r.owner)) errors.push(`risk ${r.id}: no owner`);
   }
 
+  const riskIds = new Set(repo.risks.risks.map((r) => r.id));
+  for (const id of REQUIRED_RISK_IDS) {
+    if (!riskIds.has(id)) errors.push(`risk-register: required risk ${id} is missing`);
+  }
+
   // Decision rights: an unnamed holder is a warning until an institution names one.
   for (const d of repo.decisions.decisions) {
     // Empty, null and the UNASSIGNED sentinel all mean nobody is named; a deleted field must not look reviewed.
     if (!d.approver_holder || d.approver_holder === 'UNASSIGNED') {
       warnings.push(`decision-rights: "${d.decision}" has no named approver`);
     }
+  }
+
+  const decidedNames = new Set(repo.decisions.decisions.map((d) => d.decision));
+  for (const name of REQUIRED_DECISIONS) {
+    if (!decidedNames.has(name)) errors.push(`decision-rights: required decision "${name}" is missing`);
   }
 
   // Increments: required fields once approved, safe-off before enablement, hard dependencies gate progress.
@@ -266,7 +281,7 @@ export function check(repo) {
         errors.push(`${label}: capability_key ${inc.capability_key} is not in ${CAPABILITY_DIR}`);
       }
     } else if (!capabilityKeys && approved) {
-      warnings.push(`${label}: capability registry ${CAPABILITY_DIR} is absent, so capability_key is unchecked`);
+      errors.push(`${label}: capability registry ${CAPABILITY_DIR} is absent, so capability_key cannot be verified`);
     }
     for (const field of REFERENCE_FIELDS) {
       const value = inc[field];
@@ -285,7 +300,7 @@ export function check(repo) {
     if (r >= rank('approved_for_release')) {
       for (const k of REQUIRED_PLAN_MEMBERS) {
         const v = inc.rollout_and_rollback_plan?.[k];
-        if (isEmpty(v) || isPlaceholder(v)) errors.push(`${label}: ${inc.state} requires rollout_and_rollback_plan.${k}`);
+        if (typeof v !== 'string' || isEmpty(v) || isPlaceholder(v)) errors.push(`${label}: ${inc.state} requires rollout_and_rollback_plan.${k}`);
       }
     }
     for (const d of inc.hard_dependencies ?? []) {
@@ -370,7 +385,7 @@ export function check(repo) {
     if (!FINANCE_STATUSES.includes(a.status)) errors.push(`finance: ${a.id} has unknown status ${a.status}`);
     if (a.status === 'not_started') warnings.push(`finance: ${a.id} not started`);
     // A "present" artifact must point at evidence in the repository, so the baseline cannot claim unbuilt work.
-    if (a.status === 'present' && (isEmpty(a.evidence) || insideRoot(a.evidence) === null || !existsSync(insideRoot(a.evidence)))) {
+    if (a.status === 'present' && (isEmpty(a.evidence) || insideRoot(a.evidence) === null || !existsSync(insideRoot(a.evidence)) || !statSync(insideRoot(a.evidence)).isFile())) {
       errors.push(`finance: ${a.id} is marked present but its evidence ${a.evidence ?? '(none)'} does not exist`);
     }
   }

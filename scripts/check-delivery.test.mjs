@@ -363,3 +363,41 @@ test('control: a release-approved increment whose rollout plan has no answers fa
   const { errors } = check(repo);
   assert.ok(errors.some((e) => /RDY-INC-003: approved_for_release requires rollout_and_rollback_plan\.feature_flag/.test(e)));
 });
+
+test('control: deleting a specification-defined increment card fails', () => {
+  const repo = loadRepo();
+  repo.increments = repo.increments.filter((i) => i.data.id !== 'RDY-INC-005');
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /required record RDY-INC-005 is missing/.test(e)));
+});
+
+test('control: deleting a specification-defined risk fails', () => {
+  const repo = loadRepo();
+  repo.risks.risks = repo.risks.risks.filter((r) => r.id !== 'RSK-002');
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /required risk RSK-002 is missing/.test(e)));
+});
+
+test('control: deleting a specification-defined decision row fails', () => {
+  const repo = loadRepo();
+  repo.decisions.decisions = repo.decisions.decisions.filter((d) => d.decision !== 'Emergency disable');
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /required decision "Emergency disable" is missing/.test(e)));
+});
+
+test('control: a present finance control pointing at a directory fails', () => {
+  const repo = loadRepo();
+  const control = repo.finance.minimum_artifacts.find((a) => a.status === 'present');
+  control.evidence = 'docs/';
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /is marked present but its evidence docs\/ does not exist/.test(e)));
+});
+
+test('control: a release-approved rollout plan with boolean answers fails', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => {
+    d.state = 'approved_for_release';
+    d.rollout_and_rollback_plan = { feature_flag: false, safe_off: false, rollback: false };
+  });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /requires rollout_and_rollback_plan\.feature_flag/.test(e)));
+});
