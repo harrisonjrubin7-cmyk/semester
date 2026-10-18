@@ -1,5 +1,6 @@
-import copy
+import copy,re
 from jsonschema import Draft202012Validator,FormatChecker
+from jsonschema.exceptions import SchemaError
 
 def migrate_subset(schema):
     if not isinstance(schema,dict):raise ValueError('3.0 Schema Object required')
@@ -32,13 +33,18 @@ def migrate_subset(schema):
         if k in s and not isinstance(s[k],list):raise ValueError('composition must be an array')
         if k in s:s[k]=[migrate_subset(v) for v in s[k]]
     if s.get('readOnly') or s.get('writeOnly') or 'discriminator' in s:raise ValueError('Manual directional/composition review required')
-    Draft202012Validator.check_schema(s);return s
+    if 'pattern' in s and re.search(r'\\[dDwWsSbB]',s['pattern']):raise ValueError('pattern shorthand class differs from ECMA-262')
+    try:Draft202012Validator.check_schema(s)
+    except SchemaError as ex:raise ValueError(f'invalid schema: {ex.message}') from ex
+    return s
 
 def pointer(parts):
     # RFC 6901: the root is the empty string, and ~ and / inside a token are escaped
     return ''.join('/'+str(p).replace('~','~0').replace('/','~1') for p in parts)
 
 MISSING=object()
+
+def same_const(a,b):return Draft202012Validator({'const':b}).is_valid(a)
 
 def branch_operation(e,i):
     branches=e.schema.get(e.validator,[]) if isinstance(e.schema,dict) else []
@@ -54,7 +60,7 @@ def leaf_errors(e):
     branches={}
     for c in e.context:branches.setdefault(c.relative_schema_path[0] if c.relative_schema_path else None,[]).append(c)
     op=e.instance.get('operation',MISSING) if isinstance(e.instance,dict) else MISSING
-    matched=[i for i in branches if op is not MISSING and branch_operation(e,i) is not MISSING and branch_operation(e,i)==op]
+    matched=[i for i in branches if op is not MISSING and branch_operation(e,i) is not MISSING and same_const(branch_operation(e,i),op)]
     pool=[branches[i] for i in matched] or list(branches.values())
     return [leaf for c in min(pool,key=len) for leaf in leaf_errors(c)]
 

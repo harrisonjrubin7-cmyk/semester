@@ -25,6 +25,8 @@ class MigrationTests(unittest.TestCase):
     def test_properties_must_be_mapping(self):self.blocked({'type':'object','properties':[]})
     def test_composition_must_be_array(self):self.blocked({'oneOf':None})
     def test_additional_properties_must_be_bool_or_schema(self):self.blocked({'type':'object','additionalProperties':[]})
+    def test_schema_errors_become_value_error(self):self.blocked({'type':'object','required':None})
+    def test_shorthand_pattern_classes_are_rejected(self):self.blocked({'type':'string','pattern':'^\\d+$'})
     def test_null_default_rejected_unless_nullable(self):
         self.blocked({'type':'string','default':None})
         self.assertIsNone(migrate_subset({'type':'string','nullable':True,'default':None})['default'])
@@ -93,6 +95,10 @@ class EnrollmentTests(unittest.TestCase):
         s={'oneOf':[{'properties':{'operation':{'const':'add'}},'required':['z1']},{'properties':{'operation':{'const':None}},'required':['a','b','c']}]}
         msgs=[e['message'] for e in validate(s,{'operation':None})]
         self.assertTrue(any("'a'" in m for m in msgs))
+    def test_const_compares_json_types(self):
+        s={'oneOf':[{'properties':{'operation':{'const':False}},'required':['a','b']},{'properties':{'operation':{'const':0}},'required':['c','d','e']}]}
+        msgs=[e['message'] for e in validate(s,{'operation':0})]
+        self.assertTrue(any("'c'" in m for m in msgs))
     def test_missing_operation_does_not_match_null_const(self):
         s={'oneOf':[{'properties':{'operation':{'const':'add'}}},{'required':['z1','z2','z3']}]}
         msgs=[e['message'] for e in validate(s,{'operation':None})]
