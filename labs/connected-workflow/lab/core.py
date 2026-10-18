@@ -1,9 +1,12 @@
 import sqlite3,json,hashlib,time,uuid
 from contextlib import contextmanager
+from urllib.parse import quote
 class Rejected(Exception): pass
 
 def canon(v): return json.dumps(v,sort_keys=True,separators=(',',':'),allow_nan=False)
 def digest(v): return hashlib.sha256(canon(v).encode()).hexdigest()
+# Each part is percent-encoded, so a ':' inside a course or student ID cannot make two pairs share one grade row.
+def grade_id(tenant,course,student): return ':'.join(quote(p,safe='') for p in (tenant,course,student))
 class Lab:
  def __init__(self,path):
   self.path=str(path)
@@ -92,7 +95,7 @@ CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TE
     if not d.execute('SELECT 1 FROM submissions WHERE tenant=? AND course=? AND student=?',(tenant,course,s['id'])).fetchone():raise Rejected('submission required')
     score=p.get('score')
     if isinstance(score,bool) or not isinstance(score,(float,int)) or not 0<=score<=100:raise Rejected('score must be 0 to 100')
-    oid=tenant+':'+course+':'+s['id'];g=d.execute('SELECT * FROM grades WHERE id=? AND tenant=?',(oid,tenant)).fetchone();version=g['version'] if g else 0
+    oid=grade_id(tenant,course,s['id']);g=d.execute('SELECT * FROM grades WHERE id=? AND tenant=?',(oid,tenant)).fetchone();version=g['version'] if g else 0
     if p.get('version')!=version:raise Rejected('grade version conflict')
     if g and g['state']=='released':raise Rejected('released grade needs separate correction workflow')
     d.execute('INSERT INTO grades VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET score=excluded.score,version=excluded.version,submission_id=excluded.submission_id',(oid,tenant,course,s['id'],score,'draft',version+1,self.latest_submission(d,tenant,course,s['id'])));result={'grade':oid,'version':version+1,'state':'draft'}
@@ -160,12 +163,16 @@ CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TE
    a=self.actor(d,token);t=a['tenant'];role=a['role'];out={'actor':a['id'],'tenant':t,'role':role,'label':'synthetic local lab; not official records'}
    if role=='operator':
     out['health']={'pending_events':d.execute('SELECT count(*) FROM outbox WHERE tenant=? AND projected=0',(t,)).fetchone()[0]};return out
-   self.allowed(d,a,'course')
+   # Workspace data follows the actor's own course grants, not a fixed seed course.
+   courses=[r['course'] for r in d.execute('SELECT course FROM access WHERE tenant=? AND actor=?',(t,a['id'])).fetchall()]
+   if not courses:raise Rejected('course object scope denied')
+   marks=','.join('?'*len(courses));grading=role in ('faculty','reviewer')
    if role=='student':
     s=self.student(d,a,a['id']);fresh=time.time()-s['source_at']<=300
     readiness='blocked' if s['hold'] else 'unknown' if s['prerequisite']!='confirmed' else 'stale' if not fresh else 'ready_as_of'
     out.update(student=dict(s),readiness=readiness,grades=[json.loads(r['payload']) for r in d.execute("SELECT payload FROM projection WHERE tenant=? AND kind='grade'",(t,)) if json.loads(r['payload']).get('student')==a['id']]);return out
-   out['grades']=[dict(r) for r in d.execute('SELECT * FROM grades WHERE tenant=? AND course=?',(t,'course'))]
+   # Grade records go only to grading roles; a registrar sees holds and prerequisites, not scores.
+   out['grades']=[dict(r) for r in d.execute(f'SELECT * FROM grades WHERE tenant=? AND course IN ({marks})',(t,*courses))] if grading else []
    # Pending and unexpired only; faculty see grade approvals and registrars see hold approvals, reviewers see both.
    kind={'faculty':'grade','registrar':'hold'}.get(role)
    sql="SELECT id,kind,object_id,requester,expires,state,reason FROM approvals WHERE tenant=? AND state='pending' AND expires>?"+(" AND kind=?" if kind else '')
@@ -176,5 +183,9 @@ CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TE
     g=d.execute('SELECT course FROM grades WHERE id=? AND tenant=?',(r['object_id'],t)).fetchone()
     return bool(g) and d.execute('SELECT 1 FROM access WHERE tenant=? AND course=? AND actor=?',(t,g['course'],a['id'])).fetchone() is not None
    out['approvals']=[{k:v for k,v in r.items() if k!='binding'} for r in rows if self.approval_current(d,t,r) and granted(r)]
-   if role=='faculty':out['submissions']=[dict(r) for r in d.execute('SELECT id,student,body,created FROM submissions WHERE tenant=? AND course=?',(t,'course'))]
-   out['students']=[dict(r) for r in d.execute('SELECT * FROM students WHERE tenant=?',(t,))];return out
+   if role=='faculty':out['submissions']=[dict(r) for r in d.execute(f'SELECT id,student,body,created FROM submissions WHERE tenant=? AND course IN ({marks})',(t,*courses))]
+   # Registrars get the full student rows for hold and prerequisite work. Grading roles get only the students with work in their courses, and no registrar-only fields.
+   if role=='registrar':out['students']=[dict(r) for r in d.execute('SELECT * FROM students WHERE tenant=?',(t,))]
+   elif grading:out['students']=[dict(r) for r in d.execute(f'SELECT id,onboarded FROM students WHERE tenant=? AND id IN (SELECT student FROM submissions WHERE tenant=? AND course IN ({marks}))',(t,t,*courses))]
+   else:out['students']=[]
+   return out

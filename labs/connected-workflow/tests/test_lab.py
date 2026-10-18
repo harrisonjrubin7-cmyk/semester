@@ -1,6 +1,6 @@
 import unittest,tempfile,time,sqlite3
 from pathlib import Path
-from lab.core import Lab,Rejected
+from lab.core import Lab,Rejected,grade_id
 class TestLab(unittest.TestCase):
  def setUp(self):
   self.dir=tempfile.TemporaryDirectory();self.lab=Lab(Path(self.dir.name)/'lab.sqlite');self.lab.seed();self.n=0
@@ -180,6 +180,30 @@ class TestReviewFindings(unittest.TestCase):
   self.cmd('a-faculty','grade.request_release',{'grade':g2['grade'],'version':1,'reason':'Other course','course':'other'})
   # The reviewer has no 'other' grant, so only the same-course approval is listed.
   self.assertEqual([r['object_id'] for r in self.lab.view('demo-a-reviewer')['approvals']],[g['grade']])
+ def test_workspace_follows_the_actors_course_grant(self):
+  import sqlite3
+  self.cmd('a-student','onboarding.complete')
+  d=sqlite3.connect(self.lab.path);tenant=d.execute('SELECT tenant FROM access WHERE actor=?',('a-faculty',)).fetchone()[0]
+  d.execute('INSERT INTO courses VALUES (?,?)',('other',tenant))
+  for actor in ('a-student','a-faculty'):d.execute('INSERT INTO access VALUES (?,?,?)',(tenant,'other',actor))
+  d.execute('DELETE FROM access WHERE tenant=? AND course=? AND actor=?',(tenant,'course','a-faculty'))
+  d.commit();d.close()
+  self.cmd('a-student','submission.create',{'body':'work','course':'other'})
+  # The faculty member now holds only 'other', and still opens the workspace and sees that course's work.
+  self.assertEqual([r['body'] for r in self.lab.view('demo-a-faculty')['submissions']],['work'])
+ def test_grade_records_go_only_to_grading_roles(self):
+  self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'synthetic work'})
+  self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})
+  self.assertEqual(len(self.lab.view('demo-a-faculty')['grades']),1)
+  self.assertEqual(self.lab.view('demo-a-registrar')['grades'],[])
+ def test_grading_roles_see_no_registrar_only_student_fields(self):
+  self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'synthetic work'})
+  rows=self.lab.view('demo-a-faculty')['students']
+  self.assertEqual(len(rows),1);self.assertEqual(set(rows[0]),{'id','onboarded'})
+  self.assertIn('hold',self.lab.view('demo-a-registrar')['students'][0])
+ def test_grade_ids_do_not_collide_across_delimiters(self):
+  self.assertEqual(grade_id('t','course','a-student'),'t:course:a-student')
+  self.assertNotEqual(grade_id('t','x','y:z'),grade_id('t','x:y','z'))
  def test_submission_after_release_is_rejected(self):
   self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'work'})
   g=self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})
