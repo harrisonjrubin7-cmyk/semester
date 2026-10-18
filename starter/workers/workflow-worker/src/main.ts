@@ -1,3 +1,4 @@
+import { getPool } from "@semester/database/client";
 import { runOnce } from "./queue";
 
 let stopping = false;
@@ -6,13 +7,18 @@ process.on("SIGTERM", () => {
 });
 
 async function main(): Promise<void> {
-  while (!stopping) {
-    const didWork = await runOnce();
-    if (!didWork) await new Promise((resolve) => setTimeout(resolve, 1000));
+  try {
+    while (!stopping) {
+      const didWork = await runOnce();
+      if (!didWork) await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  } finally {
+    // Idle pool connections keep the process alive, so close them on the way out.
+    await getPool().end();
   }
 }
 
 main().catch((error: unknown) => {
   console.error(error);
-  process.exit(1);
+  process.exitCode = 1;
 });

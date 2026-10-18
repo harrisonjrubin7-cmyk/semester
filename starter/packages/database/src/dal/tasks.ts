@@ -20,6 +20,12 @@ function toView(row: TaskRow): TaskView {
 
 export async function queryOwnTasks(ctx: ActorContext, limit: number): Promise<TaskView[]> {
   const tenantId = requireTenant(ctx);
+  // Authorize here, not only in callers: RLS limits rows but not the grant.
+  await authorize(ctx, "student.tasks.read", {
+    tenantId,
+    ownerAccountId: ctx.accountId,
+    sensitivity: "moderate",
+  });
   return withRlsTransaction({ accountId: ctx.accountId, tenantId }, async (client) => {
     const { rows } = await client.query<TaskRow>(
       `select id, title, status, created_at

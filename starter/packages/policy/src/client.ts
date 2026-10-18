@@ -36,7 +36,12 @@ export async function evaluatePolicy(input: PolicyInput): Promise<PolicyDecision
   }
   if (!response.ok) throw new Error("POLICY_UNAVAILABLE");
 
-  const body = (await response.json()) as { result?: PolicyDecision };
+  let body: { result?: PolicyDecision };
+  try {
+    body = (await response.json()) as { result?: PolicyDecision };
+  } catch {
+    throw new Error("POLICY_UNAVAILABLE");
+  }
   if (!body.result || typeof body.result.allow !== "boolean") {
     throw new Error("POLICY_UNAVAILABLE");
   }

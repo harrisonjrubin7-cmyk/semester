@@ -4,7 +4,7 @@ on:
   pull_request:
     paths: ["starter/**", ".github/workflows/starter-ci.yml"]
   push:
-    branches: [claude/blissful-franklin-ixpmdc]
+    branches: [main, claude/blissful-franklin-ixpmdc]
     paths: ["starter/**", ".github/workflows/starter-ci.yml"]
 
 permissions:

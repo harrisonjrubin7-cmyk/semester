@@ -16,7 +16,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (!request.cookies.get("semester_session")) {
+  // Same expression as SESSION_COOKIE in packages/auth/src/server.ts.
+  const sessionCookie = process.env.SESSION_COOKIE_NAME || "semester_session";
+  if (!request.cookies.get(sessionCookie)) {
     const loginUrl = new URL("/signup", request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);

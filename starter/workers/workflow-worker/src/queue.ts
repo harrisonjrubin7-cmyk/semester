@@ -38,11 +38,21 @@ export async function leaseNextJob(): Promise<LeasedJob | null> {
   }
 }
 
-export async function finishJob(id: string, status: "done" | "failed"): Promise<void> {
-  await getPool().query(
-    "update public.jobs set status = $2, leased_at = null where id = $1",
-    [id, status],
+/**
+ * Records the outcome only if this worker still holds the lease. A worker whose
+ * handler outlived LEASE_TIMEOUT has a stale attempt number, so its write matches
+ * no row and cannot overwrite the reprocessed job.
+ */
+export async function finishJob(
+  id: string,
+  attempts: number,
+  status: "done" | "failed",
+): Promise<boolean> {
+  const result = await getPool().query(
+    "update public.jobs set status = $3, leased_at = null where id = $1 and attempts = $2 and status = 'leased'",
+    [id, attempts, status],
   );
+  return result.rowCount === 1;
 }
 
 /** Leases and runs one job. Returns false when the queue is empty. */
@@ -51,14 +61,14 @@ export async function runOnce(): Promise<boolean> {
   if (!job) return false;
   const handler = handlers[job.kind];
   if (!handler) {
-    await finishJob(job.id, "failed");
+    await finishJob(job.id, job.attempts, "failed");
     return true;
   }
   try {
     await handler(job);
-    await finishJob(job.id, "done");
+    await finishJob(job.id, job.attempts, "done");
   } catch {
-    await finishJob(job.id, "failed");
+    await finishJob(job.id, job.attempts, "failed");
   }
   return true;
 }

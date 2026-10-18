@@ -78,10 +78,16 @@ set search_path = public
 as $$
   select s.id, s.account_id, s.tenant_id, s.membership_id, s.active_workspace, m.role_key
     from public.sessions s
-    left join public.memberships m on m.id = s.membership_id
+    left join public.memberships m
+      on m.id = s.membership_id
+     and m.account_id = s.account_id
+     and m.tenant_id = s.tenant_id
    where s.token_hash = p_token_hash
      and s.expires_at > now()
-     and (m.id is null or m.status = 'active');
+     and (s.membership_id is null or (m.id is not null and m.status = 'active'));
 $$;
 
 revoke execute on function public.resolve_session(text) from public;
+-- The runtime role resolves sessions before it has a tenant context, so it needs
+-- execute here. Other runtime roles get nothing.
+grant execute on function public.resolve_session(text) to semester_app;

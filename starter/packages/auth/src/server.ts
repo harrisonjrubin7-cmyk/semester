@@ -4,7 +4,8 @@ import { getSessionByToken } from "@semester/database/sessions";
 import { grantsForRole } from "@semester/permissions/roles";
 import type { RequestContext } from "./types";
 
-export const SESSION_COOKIE = "semester_session";
+// Same expression as apps/student-app/src/middleware.ts. Keep the two in step.
+export const SESSION_COOKIE = process.env.SESSION_COOKIE_NAME || "semester_session";
 
 export async function requireSession(): Promise<RequestContext> {
   const cookieStore = await cookies();
