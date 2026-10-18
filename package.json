@@ -36,6 +36,6 @@
     "source-map-js": "1.2.2"
   },
   "devDependencies": {
-    "yaml": "^2.5.1"
+    "yaml": "^2.8.4"
   }
 }
