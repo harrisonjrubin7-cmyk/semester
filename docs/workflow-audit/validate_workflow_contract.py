@@ -46,11 +46,16 @@ def semantic_errors(doc):
     for step_id in sorted(step_ids - transition_steps):
         errors.append('Step without transition: ' + step_id)
     available_refs = set(doc['data']['input_refs'])
+    produced_refs = set()
     for step in doc['steps']:
         missing = set(step['input_refs']) - available_refs
         if missing:
             errors.append('Step ' + step['id'] + ' reads unknown input refs: ' + ', '.join(sorted(missing)))
         available_refs.update(step['output_refs'])
+        produced_refs.update(step['output_refs'])
+    unproduced = set(doc['data']['output_refs']) - produced_refs
+    if unproduced:
+        errors.append('Declared outputs not produced by any step: ' + ', '.join(sorted(unproduced)))
     effective_from = doc['authority']['effective_from']
     if effective_from is not None:
         try:
