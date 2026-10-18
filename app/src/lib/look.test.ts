@@ -17,7 +17,9 @@ import {
   densityOf,
   fade,
   ground,
+  MATCH_DEVICE,
   readLook,
+  resolveGround,
   scaleOf,
   tokensFor,
   typefaceOf,
@@ -67,12 +69,22 @@ describe('accent', () => {
 });
 
 describe('reference-inspired workspace shell tokens', () => {
-  it('keeps the dark rail and warm canvas while retaining a dark content ground', () => {
-    const light = tokensFor({ ground: 'parchment' });
-    const dark = tokensFor({ ground: 'ink' });
+  it('keeps navigation surfaces in the active light, dark or device ground family', () => {
+    const choices = [
+      ...GROUNDS.map(({ id }) => id),
+      resolveGround(MATCH_DEVICE, false),
+      resolveGround(MATCH_DEVICE, true),
+    ];
 
-    expect(light['--workspace-rail']).toBe('#173336');
-    expect(light['--workspace-canvas']).toBe('#f4f3ee');
+    for (const id of choices) {
+      const tokens = tokensFor({ ground: id });
+      expect(tokens['--workspace-rail'], `${id} unselected navigation`).toBe(tokens['--app-bg']);
+      expect(tokens['--workspace-rail-raised'], `${id} selected navigation`).toBe(tokens['--app-panel']);
+      expect(tokens['--workspace-rail-text'], `${id} selected navigation text`).toBe(tokens['--app-fg']);
+    }
+
+    expect(tokensFor({ ground: resolveGround(MATCH_DEVICE, false) })['--workspace-canvas']).toBe('#f4f3ee');
+    const dark = tokensFor({ ground: resolveGround(MATCH_DEVICE, true) });
     expect(dark['--workspace-canvas']).toBe(dark['--app-bg']);
   });
 
@@ -82,7 +94,7 @@ describe('reference-inspired workspace shell tokens', () => {
     expect(contrast(tokens['--workspace-action-ink'], tokens['--workspace-action'])).toBeGreaterThanOrEqual(4.5);
   });
 
-  it('keeps navigation text readable on the teal rail for every ground', () => {
+  it('keeps navigation text readable on the rail for every ground', () => {
     for (const g of GROUNDS) {
       const tokens = tokensFor({ ground: g.id });
       expect(

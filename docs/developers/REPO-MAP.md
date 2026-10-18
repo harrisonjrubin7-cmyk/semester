@@ -30,6 +30,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `packages/` | Two source-only packages shared by the app and the servers: `contract` and `institution`. Neither is published. |
 | `pipeline/` | Syllabus to course tooling: ingest, lessons, slides, handouts, alignment, and `validate.mjs`, which CI runs. See [`pipeline/README.md`](../../pipeline/README.md). |
 | `project/` | The original Claude Design handoff: HTML prototypes and the design system. Reference material; the app does not import it. |
+| `registry/` | Machine-checked component passports: one JSON file per component under `passports/`. The shape is checked by `app/src/lib/registry/passport.ts`. See [`registry/README.md`](../../registry/README.md). |
 | `scripts/` | Scanners for the static company site (`company-site-scan-*.mjs`). Not the app's scripts; those are in `app/scripts/`. |
 | `starter/` | The pnpm and Turborepo backbone for identity, row-level security, policy, the data access layer, a student app, and a workflow worker. Separate from `app/`; its CI is `.github/workflows/starter-ci.yml`. See [`starter/README.md`](../../starter/README.md). |
 | `supabase/` | The database and the edge functions, and the SQL that checks them. See below. |
