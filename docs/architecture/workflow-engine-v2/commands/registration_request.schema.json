@@ -220,6 +220,28 @@
         "properties": {
           "waitlist_offer_ref": {
             "type": "null"
+          },
+          "section_ref": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "swap"
+          }
+        },
+        "required": [
+          "command"
+        ]
+      },
+      "then": {
+        "properties": {
+          "waitlist_offer_ref": {
+            "type": "null"
           }
         }
       }
