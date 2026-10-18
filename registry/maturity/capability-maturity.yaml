@@ -1,5 +1,8 @@
 # Capability maturity: the company's operating definition of "built".
 # A screen is not a capability; a prototype is not a production system.
+# This is the company-level claim vocabulary, not the release gate. The enforced
+# ten-stage model is packages/platform-control/types.ts. A mapping between the two
+# is an open item; until it exists, do not use this file to approve a release.
 maturity:
   facts:
     designed:

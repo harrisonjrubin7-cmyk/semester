@@ -1,7 +1,8 @@
 # Every institutional or external connection is a product component with an
 # authority contract, a delivery contract, a failure contract, a reconciliation
-# plan, and an owner. Each level requires its own list plus every list of the
-# levels in its `inherits` (inheritance is explicit, not implied by order).
+# plan, and an owner. Each level requires its own `required` list plus the
+# `required` list of every level in its `inherits`. `prohibited` and `allowed`
+# lists are sandbox-scoped and do not carry forward.
 connector_certification:
   levels:
     sandbox:

@@ -1,8 +1,10 @@
-# Connector passport: institution readiness-source connector. This is the
-# canonical ID for the upstream named as SIS-001 by WF-READINESS-001.
+# Connector passport for the readiness source. This is the same connector as the
+# platform-control key `integrations.sis`
+# (packages/platform-control/registry/integrations/sis.json), which the implemented
+# registration.readiness capability depends on. Use that key; do not add a second one.
 connector:
-  id: SIS-READINESS-001
-  name: Institution readiness-source connector
+  id: integrations.sis
+  name: Student information system (readiness source)
   type: institution_system
 
   authority:

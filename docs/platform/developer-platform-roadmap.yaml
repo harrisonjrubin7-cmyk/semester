@@ -15,12 +15,27 @@ developer_platform:
     - audit_and_rate_limit_controls
 
   stage_2_limited_external:
-    - self_service_documentation
-    - scoped_application_registration
-    - test_tenant
-    - versioned_API
-    - webhook_verification
-    - revocation_and_support_process
+    requires_stage: stage_1_design_partners
+    requires_all_of_stage_1: true
+    additional_requirements:
+      - tenant_isolation_tests_passing
+      - observability_active
+      - connector_certification_at_validated_or_above
+      - partner_agreement_per_application
+      - approved_use_case_per_application
+      - access_review_per_application
+      - audit_controls_active
+    items:
+      - self_service_documentation
+      - scoped_application_registration
+      - test_tenant
+      - versioned_API
+      - webhook_verification
+      - revocation_and_support_process
+    # Proposed default, not yet approved: these stay out of stage 2 entirely.
+    still_forbidden_at_stage_2:
+      - production_self_service_keys
+      - access_to_restricted_student_data
 
   forbidden_before_stage_2:
     - production_self_service_keys

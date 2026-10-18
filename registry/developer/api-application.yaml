@@ -1,7 +1,12 @@
-# Example API application for a design partner. Scopes are the allow-list;
+# ILLUSTRATIVE FIXTURE, NOT REGISTERABLE. It shows the shape of an application;
+# it cannot grant access. A real application must first satisfy the contract-lab
+# intake (docs/engineering/contract-lab.yaml), including owner, authority, policy,
+# freshness, failure, audit, retention, tests and safe-off.
+# Scopes are the allow-list;
 # prohibited_scopes are denied even if requested.
 api_application:
   id: APP-PARTNER-001
+  registerable: false
   partner_id: PARTNER-001
   tenant_scope:
     - tenant-a

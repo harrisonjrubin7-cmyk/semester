@@ -17,7 +17,12 @@ domain_entry:
     - measurable_success_definition
 
   scoring:
-    # Each factor is scored 1 to 5.
+    # Each factor is scored 1 to 5. `direction` says which end is favorable.
+    # Thresholds for decision_outcomes are not set: a score alone selects no
+    # outcome until an owner approves them.
+    direction:
+      favorable_when_high: [student_or_institution_value, implementation_reuse, commercial_evidence]
+      unfavorable_when_high: [authority_complexity, data_sensitivity, connector_dependency, operations_burden]
     student_or_institution_value: 1_to_5
     authority_complexity: 1_to_5
     data_sensitivity: 1_to_5
