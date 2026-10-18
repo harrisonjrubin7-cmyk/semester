@@ -134,6 +134,13 @@ describe('tenant scope', () => {
 });
 
 describe('timestamps and evidence', () => {
+  it('refuses a tenant identifier that is not a non-blank string, rather than skipping the mismatch check', () => {
+    expect(healthEventProblems({ ...base, tenantId: 42 as unknown as string })).toContain('tenant identifiers must be non-blank strings');
+    expect(
+      healthEventProblems({ ...base, affectedScope: { tenantId: 42, sourceSystem: 'SIS' } as unknown as HealthEvent['affectedScope'] }),
+    ).toContain('tenant identifiers must be non-blank strings');
+  });
+
   it('refuses evidence lists that hold a non-string entry, open or closed', () => {
     const mixed = ['evidence/ok', 42] as unknown as string[];
     expect(healthEventProblems({ ...base, evidenceReferences: mixed })).toContain(

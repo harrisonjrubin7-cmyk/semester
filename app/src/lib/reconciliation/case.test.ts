@@ -471,6 +471,34 @@ describe('persisted history and evidence windows', () => {
     expect(moveCase(chain('Bob'), 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(true);
   });
 
+  it('refuses a safe-repair close with an unrelated move inside the active cycle', () => {
+    const withStray = (stray: boolean): ReconciliationCase => ({
+      ...opened(),
+      state: 'reverified',
+      proposedRepair: 'refresh_source_snapshot',
+      proposedBy: 'Ana',
+      approvedBy: 'Bob',
+      resolution: [...RESOLUTION_REQUIRED],
+      history: [
+        { from: 'triaged', to: 'repair_proposed', at: AT, by: 'Ana' },
+        ...(stray ? [{ from: 'repair_proposed' as const, to: 'escalated' as const, at: AT, by: 'Ana' }] : []),
+        { from: 'repair_proposed', to: 'repair_approved', at: AT, by: 'Bob' },
+        { from: 'repair_approved', to: 'repaired', at: AT, by: 'Ana' },
+        { from: 'repaired', to: 'reverified', at: AT, by: 'Ana' },
+      ],
+    });
+    // A stray move between proposal and approval breaks adjacency, so the chain must not pass.
+    expect(moveCase(withStray(true), 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(false);
+    // Control: the same chain without the stray move closes.
+    expect(moveCase(withStray(false), 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(true);
+    // A stray move after the final re-verification is not part of the chain either.
+    const trailing: ReconciliationCase = {
+      ...withStray(false),
+      history: [...withStray(false).history, { from: 'reverified', to: 'escalated', at: AT, by: 'Ana' }],
+    };
+    expect(moveCase(trailing, 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(false);
+  });
+
   it('refuses a safe-repair close whose approval never ran through the workflow', () => {
     const fields: ReconciliationCase = {
       ...opened(),

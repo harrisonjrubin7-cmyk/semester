@@ -79,6 +79,11 @@ export function healthEventProblems(event: HealthEvent): string[] {
   if (!SCOPE_KEYS.some((key) => present(event.affectedScope?.[key]))) {
     problems.push('affectedScope must name at least one scope key');
   }
+  // A tenant that is named at all must be a usable string: a non-string would read as absent and skip the check below.
+  const tenantValues: unknown[] = [event.tenantId, event.affectedScope?.tenantId];
+  if (tenantValues.some((value) => value !== undefined && !(typeof value === 'string' && value.trim().length > 0))) {
+    problems.push('tenant identifiers must be non-blank strings');
+  }
   // The tenant may be named twice; two different names would route the event under one tenant while claiming another.
   if (present(event.tenantId) && present(event.affectedScope?.tenantId) && event.tenantId !== event.affectedScope.tenantId) {
     problems.push('tenantId and affectedScope.tenantId name different tenants');

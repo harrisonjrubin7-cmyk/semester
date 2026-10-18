@@ -158,14 +158,15 @@ function hasActiveCycleChain(history: readonly CaseEvent[], proposer: string, ap
     ['repair_approved', 'repaired'],
     ['repaired', 'reverified'],
   ];
-  let cursor = start;
-  for (const [from, to] of steps) {
-    const next = history.findIndex((entry, index) => index > cursor && entry.from === from && entry.to === to);
-    if (next < 0) return false;
-    if (to === 'repair_approved' && actorKey(history[next].by) !== actorKey(approver)) return false;
-    cursor = next;
+  // Each step must be the very next entry: an unrelated move inside the cycle would otherwise sit between them unseen.
+  if (history.length !== start + steps.length + 1) return false;
+  for (let i = 0; i < steps.length; i++) {
+    const [from, to] = steps[i];
+    const entry = history[start + 1 + i];
+    if (entry.from !== from || entry.to !== to) return false;
+    if (to === 'repair_approved' && actorKey(entry.by) !== actorKey(approver)) return false;
   }
-  return cursor === history.length - 1;
+  return true;
 }
 
 /**
