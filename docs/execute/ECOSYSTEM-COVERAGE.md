@@ -3,7 +3,7 @@
 Source of truth: `docs/handoff/execute/00-INDEX.md`, which defines streams 00–13. The repository has no
 `25-completion-program.md` or `30-phased-build.md`, so streams 14–29 have no source file here and their rows are
 **unverified**: they describe what was not audited, not what the handoff requires. Status is what the **repository**
-shows on `claude/quirky-meitner-4z1ida` at `bcdd2b58`.
+shows on `claude/quirky-meitner-4z1ida` at `c79f439e`.
 
 Status vocabulary: **proposed** (spec only), **specified** (spec in repo), **in progress**,
 **blocked**, **implemented** (code present), **verified** (acceptance gates run with evidence),
@@ -13,13 +13,13 @@ Status vocabulary: **proposed** (spec only), **specified** (spec in repo), **in 
 | --- | --- | --- | --- | --- |
 | 00 | Repo audit, design-system sync | `docs/execute/00-setup-report.md` (self-reported) | in progress | Founder approval of design-system baseline |
 | 01 | Database, tenancy, RLS, core logic | `docs/execute/01-platform-core-report.md`; 235 files in `supabase/migrations/` (file count only) | in progress | Migrations not applied to any hosted DB in this session |
-| 01b | semester-core: consequence / freshness / approvals | `app/src/lib/core/` (this PR), 17 tests pass, `tsc` and lint clean | **verified (unit)** | No UI consumer yet |
+| 01b | semester-core: consequence / freshness / approvals | `app/src/lib/core/` (this PR), 25 tests pass across 3 files, `tsc` and lint clean | **verified (unit)** | No UI consumer yet; `approvals.ts` duplicates the server approval workflow and is pending a keep-or-remove decision |
 | 01c | semester-core: provenance / nextaction | repo has `provenance.ts`, handoff conflicts | proposed | Reconcile names with repo `provenance.ts` |
 | 01d | semester-core: access | would duplicate role/capability model | **blocked by design rule** | Must map onto `has_capability`, not a second core |
 | 01e | semester-core: aigateway / scoring / pilot | gateway exists in `app/src/ai`; pilot tests exist | proposed | Reconcile with live gateway |
 | 02 | Identity, SAML SSO, onboarding | `docs/execute/02-identity-sso-diff.md` only, no report | in progress | Staging IdP test login needed |
 | 03 | Student OS | screens exist under `app/src/screens` (159 files); no stream report | proposed (audit needed) | Acceptance gates not run |
-| 04 | Faculty, TA, advisor, registrar, finance, affairs | no stream report | proposed (audit needed) | Two-person approvals need the new `approvals.ts` wired to a UI |
+| 04 | Faculty, TA, advisor, registrar, finance, affairs | no stream report | proposed (audit needed) | Two-person approvals live in `supabase/migrations/20260929110000_console_approvals_and_break_glass.sql` and `components/console/Approvals.tsx`; the client `approvals.ts` must be removed or reconciled with them |
 | 05 | Institution console, integrations, migration | `app/server/`, `packages/institution`; no stream report | proposed (audit needed) | Reconciliation gate |
 | 06 | Governed AI gateway | `app/src/ai`, `app/server`; no stream report | proposed (audit needed) | ai-redteam suite not run |
 | 07 | Community, career, family, developer platform | `app/src/community`, career screens; no stream report | proposed (audit needed) | — |
@@ -47,4 +47,5 @@ No environment has been deployed by this session.
 
 - Migrations on disk: 235 SQL files (`supabase/migrations/`). Not a claim about applied state.
 - Screen files: 159 under `app/src/screens/`. Not checked against the 281-route prototype inventory.
-- Full unit suite on this branch: 24,197 passing, 2 failing (both pre-existing or unrelated to this change; see `docs/execute/semester-core-port-report.md`).
+- Full suite, measured on a scratch rebase of the four port commits onto `origin/main` (`70f53e22`): 1529 files, 24,259 tests passing; `tsc`, `check:university`, lint and build passing. Not re-measured at branch head `c79f439e`.
+- `src/lib/core` at branch head: 3 files, 25 tests passing.
