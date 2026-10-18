@@ -19,6 +19,8 @@ for case in suite['cases']:
     except ValueError: outcome={'exception':'ValueError'}
     except BaseException: outcome={'exception':'ExecutionError'}
     outcome['mutated']=case['input']!=before
+    try: json.dumps(outcome,allow_nan=False)
+    except (TypeError,ValueError): outcome={'value':None,'shape':'unserializable','mutated':outcome['mutated']}
     results.append(outcome)
 with os.fdopen(RESULT,'w') as out: out.write(json.dumps(results,allow_nan=False)+'\\n')
 """

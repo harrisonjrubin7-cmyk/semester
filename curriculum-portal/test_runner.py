@@ -119,6 +119,12 @@ class HarnessTests(unittest.TestCase):
         for week,code in shortcuts.items():
             result=self.run_week(week-1,code)
             self.assertLess(result['passed'],result['total'],'week %d'%week)
+    def test_unserializable_result_is_incorrect_not_a_worker_failure(self):
+        # A set cannot cross the JSON result channel; it must score as wrong, not abort the whole grade.
+        result=self.run_week(9,'def deduplicate(r): return set(r["ids"])\n')
+        self.assertIsNone(result['failure'])
+        self.assertEqual(result['passed'],0)
+        self.assertEqual(result['learner_errors'],0)
     def test_always_false_does_not_earn_full_credit(self):
         for index,name in ((13,'evidence_ready'),(15,'activation_ready')):
             result=self.run_week(index,f'def {name}(r): return False\n')
