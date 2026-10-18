@@ -148,6 +148,10 @@ def semantic_errors(doc):
         if undeclared:
             errors.append('Official write recovery codes not declared by any step: ' + ', '.join(sorted(undeclared)))
     for r in doc['recovery_paths']:
+        if r['code'] == 'NO_COMMIT' and r['to_execution_state'] == 'committed':
+            errors.append('NO_COMMIT recovery must not target committed')
+        if r['code'] == 'OUTCOME_UNKNOWN' and r['retry_policy'] == 'new_approved_command':
+            errors.append('OUTCOME_UNKNOWN recovery must not issue a new command')
         if r['code'] == 'OUTCOME_UNKNOWN' and r['to_execution_state'] in doc['states']['terminal_execution']:
             errors.append('OUTCOME_UNKNOWN recovery must target a nonterminal state')
         if r['to_execution_state'] not in doc['states']['execution']:

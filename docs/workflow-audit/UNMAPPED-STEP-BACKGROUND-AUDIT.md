@@ -75,4 +75,4 @@ Codex flagged five gaps in the contract tooling. All five were reproduced and fi
 - Institution-scoped contracts with `production_enabled` verified require `institution_authorized` verified, regardless of writes.
 - `readiness.tested` or `production_enabled` verified requires non-empty `evidence_refs` on every acceptance test.
 
-The 14 original negative cases in `workflow_schema_validation_results.csv` were not rerun, and that CSV was not updated. The executable record is `docs/workflow-audit/test_validate_workflow_contract.py`: `python3 -m unittest test_validate_workflow_contract` runs 27 tests, and the registration example validates.
+The 14 original negative cases in `workflow_schema_validation_results.csv` were not rerun, and that CSV was not updated. The executable record is `docs/workflow-audit/test_validate_workflow_contract.py`: `python3 -m unittest test_validate_workflow_contract` runs every test in the module (the count is not recorded here, since it changes with each fix), and the registration example validates.

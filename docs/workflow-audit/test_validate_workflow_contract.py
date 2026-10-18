@@ -133,6 +133,20 @@ class RejectedContracts(unittest.TestCase):
             d['readiness']['designed'] = {'status': 'blocked', 'evidence': [], 'reason': ''}
         self.assertRejected(mutate(fn), 'readiness/designed/reason')
 
+    def test_no_commit_recovery_must_not_target_committed(self):
+        def fn(d):
+            for r in d['recovery_paths']:
+                if r['code'] == 'NO_COMMIT':
+                    r['to_execution_state'] = 'committed'
+        self.assertRejected(mutate(fn), 'NO_COMMIT recovery must not target committed')
+
+    def test_outcome_unknown_retry_must_not_issue_new_command(self):
+        def fn(d):
+            for r in d['recovery_paths']:
+                if r['code'] == 'OUTCOME_UNKNOWN':
+                    r['retry_policy'] = 'new_approved_command'
+        self.assertRejected(mutate(fn), 'OUTCOME_UNKNOWN recovery must not issue a new command')
+
     def test_recovery_path_must_be_declared_by_a_step(self):
         def fn(d):
             d['recovery_paths'].append(dict(d['recovery_paths'][0], code='UNUSED'))
