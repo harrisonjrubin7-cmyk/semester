@@ -38,7 +38,7 @@ test_faculty_sees_submitted_work (test_lab.TestReviewFindings.test_faculty_sees_
 test_grade_approvals_stay_with_faculty_and_registrar_sees_no_grade (test_lab.TestReviewFindings.test_grade_approvals_stay_with_faculty_and_registrar_sees_no_grade) ... ok
 test_grade_drafted_on_superseded_submission_cannot_request_release (test_lab.TestReviewFindings.test_grade_drafted_on_superseded_submission_cannot_request_release) ... ok
 test_lapsed_demo_sessions_renew_on_reopen (test_lab.TestReviewFindings.test_lapsed_demo_sessions_renew_on_reopen) ... ok
-test_legacy_database_gains_new_columns_and_backfill (test_lab.TestReviewFindings.test_legacy_database_gains_new_columns_and_backfill) ... ok
+test_legacy_database_gains_new_columns_and_retires_unreasoned_approvals (test_lab.TestReviewFindings.test_legacy_database_gains_new_columns_and_retires_unreasoned_approvals) ... ok
 test_new_submission_invalidates_grade_approval (test_lab.TestReviewFindings.test_new_submission_invalidates_grade_approval) ... ok
 test_non_string_identifier_is_rejected_not_crashed (test_lab.TestReviewFindings.test_non_string_identifier_is_rejected_not_crashed) ... ok
 test_repeated_onboarding_keeps_version (test_lab.TestReviewFindings.test_repeated_onboarding_keeps_version) ... ok
@@ -46,6 +46,6 @@ test_stale_approval_leaves_reviewer_queue (test_lab.TestReviewFindings.test_stal
 test_submission_after_release_is_rejected (test_lab.TestReviewFindings.test_submission_after_release_is_rejected) ... ok
 
 ----------------------------------------------------------------------
-Ran 46 tests in 16.970s
+Ran 46 tests in 1.222s
 
 OK
