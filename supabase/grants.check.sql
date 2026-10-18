@@ -429,6 +429,10 @@ declare
     -- boolean about a switch key and a school and returns no row.
     'integration_approve_connection(want_connection text, want_direction text)',
     'integration_approve_scope(want_scope uuid)',
+    -- The way back (20261012055000): the same `integration:approve` capability
+    -- the approval took, a reason required, audited by the same trigger.
+    'integration_revoke_connection(want_connection text, want_reason text)',
+    'integration_revoke_scope(want_scope uuid, want_reason text)',
     'integration_request_replay(want_dead_letter uuid, want_reason text)',
     'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
     'kill_switch_engaged(want_switch text, want_tenant text)',

@@ -30,7 +30,8 @@ export function RegistrationReadiness({ onPrepareMeeting }: { onPrepareMeeting?:
     registration: plan.data,
     meetings: meetings.value,
     institution: plan.institution,
-  }), [meetings.value, plan.cart, plan.catalog, plan.data, plan.institution, profile.value, state.courses, state.requirements.length]);
+    importedAt: plan.importedAt,
+  }), [meetings.value, plan.cart, plan.catalog, plan.data, plan.importedAt, plan.institution, profile.value, state.courses, state.requirements.length]);
   const items = useMemo(() => pathReadiness(input), [input]);
   const count = readinessCount(items);
   const overall = overallReadiness(items, readinessFacts(input));
