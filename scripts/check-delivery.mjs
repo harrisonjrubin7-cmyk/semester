@@ -177,7 +177,7 @@ export function check(repo) {
       if (abs === null) return 'is outside the repository';
       if (!existsSync(abs)) return 'does not exist on disk';
       if (!statSync(abs).isFile()) return 'is not a regular file';
-      const registered = [...artifactById.values()].find((a) => insideRoot(a.location) === abs);
+      const registered = [...artifactById.values()].find((a) => !isEmpty(a.location) && insideRoot(a.location) === abs);
       if (registered && registered.state !== 'approved') {
         return `is registered artifact ${registered.id}, currently ${registered.state}, not approved`;
       }
@@ -247,8 +247,11 @@ export function check(repo) {
   // The risk review must be scheduled with a named owner before any increment is enabled (hypercare starts there).
   const enabledReached = repo.increments.some((i) => rank(i.data.state) >= rank('enabled'));
   const reviewDate = String(repo.risks.review?.next_review ?? '');
-  const reviewReady = isCalendarDate(reviewDate) && !isUnanswered(String(repo.risks.review?.owner ?? '').trim());
-  if (!reviewReady && enabledReached) errors.push('risk-register: an increment is enabled but the risk review has no scheduled date and owner');
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const reviewPast = isCalendarDate(reviewDate) && reviewDate < todayIso;
+  const reviewReady = isCalendarDate(reviewDate) && !reviewPast && !isUnanswered(String(repo.risks.review?.owner ?? '').trim());
+  if (reviewPast && enabledReached) errors.push(`risk-register: the risk review date ${reviewDate} is in the past`);
+  else if (!reviewReady && enabledReached) errors.push('risk-register: an increment is enabled but the risk review has no scheduled date and owner');
   else if (!reviewReady) warnings.push('risk-register: the risk review has no scheduled date and owner');
 
   // Risks: enumerated levels, mitigations and an owner.
@@ -256,7 +259,7 @@ export function check(repo) {
     if (!LEVELS.includes(r.likelihood)) errors.push(`risk ${r.id}: unknown likelihood ${r.likelihood}`);
     if (!LEVELS.includes(r.impact)) errors.push(`risk ${r.id}: unknown impact ${r.impact}`);
     if (isEmpty(r.mitigations)) errors.push(`risk ${r.id}: no mitigations`);
-    if (isEmpty(r.owner)) errors.push(`risk ${r.id}: no owner`);
+    if (isUnanswered(String(r.owner ?? '').trim())) errors.push(`risk ${r.id}: no owner`);
   }
 
   const riskIds = new Set(repo.risks.risks.map((r) => r.id));
@@ -401,7 +404,7 @@ export function check(repo) {
 
   // Expansion scorecard: hard stops are defined and the no-override rule is stated.
   // It stays not_run until a run records results, so a status cannot claim an outcome nobody measured.
-  if (repo.scorecard.status !== 'not_run' && !Array.isArray(repo.scorecard.results)) {
+  if (repo.scorecard.status !== 'not_run' && !(Array.isArray(repo.scorecard.results) && repo.scorecard.results.length > 0)) {
     errors.push(`expansion-scorecard: status ${repo.scorecard.status} needs recorded results`);
   }
   if (isEmpty(repo.scorecard.hard_stops)) errors.push('expansion-scorecard: no hard stops');

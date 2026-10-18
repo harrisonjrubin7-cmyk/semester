@@ -523,3 +523,33 @@ test('control: a registered artifact id is not replaced by a root-level file of 
     unlinkSync(file);
   }
 });
+
+test('control: an enabled increment whose risk review date has passed fails', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'enabled'; });
+  repo.risks.review = { cadence: 'recurring during hypercare', next_review: '2020-01-01', owner: 'Alice' };
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /risk-register: the risk review date 2020-01-01 is in the past/.test(e)));
+});
+
+test('control: a scorecard status with an empty results list fails', () => {
+  const repo = loadRepo();
+  repo.scorecard.status = 'passed';
+  repo.scorecard.results = [];
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /expansion-scorecard: status passed needs recorded results/.test(e)));
+});
+
+test('control: an artifact with no location does not stop the checker', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => {
+    d.operational_runbook = 'docs/pilot/registration-readiness/INC-READINESS-001.yaml';
+  });
+  repo.artifacts.find((a) => a.data.id === 'ART-RDY-011').data.location = null;
+  assert.doesNotThrow(() => check(repo));
+});
+
+test('control: a required risk with a placeholder owner fails', () => {
+  const repo = loadRepo();
+  repo.risks.risks.find((r) => r.id === 'RSK-004').owner = 'TBD';
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /risk RSK-004: no owner/.test(e)));
+});
