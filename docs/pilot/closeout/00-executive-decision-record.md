@@ -1,6 +1,6 @@
 # 00 — Executive decision record
 
-Pilot: registration_readiness · Tenant: named_institution · Status: **pending** (no observation window has closed) · Decision date: _pending_
+Pilot: registration_readiness · Tenant: named_institution · Status: **pending** (no observation window has closed)
 
 ## Decision
 
@@ -10,12 +10,13 @@ Decision: _pending_
 
 ## Evidence this decision rests on
 
-Links to files 01–08 and 10. File 09 is a recommendation written before this record. A decision with a blank file is not ready to sign.
+Links to files 01–10. A decision with a blank file is not ready to sign.
 
 ## Hard stops checked
 
 - [ ] No unresolved critical access finding
 - [ ] No unresolved critical accessibility finding
+- [ ] No unresolved critical security or privacy finding
 - [ ] Authority known for every required source
 - [ ] Safe-off state operated in a drill
 - [ ] No repeated student confusion about enrollment

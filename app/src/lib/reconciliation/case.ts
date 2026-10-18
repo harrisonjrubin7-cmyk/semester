@@ -209,11 +209,14 @@ export function moveCase(current: ReconciliationCase, to: CaseState, options: Mo
 
   // Approval records no evidence: the approver decides the repair, and evidence gathered for it must come after execution.
   const recorded = to === 'repair_approved' ? [] : (options.evidence ?? []);
+  let resolution = [...new Set([...current.resolution, ...recorded])];
+  // Repair execution and escalation each start a fresh evidence window: nothing gathered before them can satisfy the close.
+  if (to === 'repaired') resolution = [...new Set(recorded)];
+  if (to === 'escalated') resolution = [];
   let next: ReconciliationCase = {
     ...current,
     state: to,
-    // Repair execution starts a fresh evidence window, so nothing gathered before it can satisfy the close.
-    resolution: to === 'repaired' ? [...new Set(recorded)] : [...new Set([...current.resolution, ...recorded])],
+    resolution,
     history: [...current.history, { from: current.state, to, at: options.at, by: options.by }],
   };
 

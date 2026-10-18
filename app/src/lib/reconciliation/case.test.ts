@@ -392,6 +392,12 @@ describe('persisted history and evidence windows', () => {
     expect(repaired.ok && repaired.case.resolution).toEqual([]);
   });
 
+  it('clears evidence gathered before an escalation', () => {
+    const triaged: ReconciliationCase = { ...opened(), discrepancy: 'schema_change', state: 'triaged', resolution: [...RESOLUTION_REQUIRED] };
+    const result = moveCase(triaged, 'escalated', { by: 'registrar_owner', at: AT });
+    expect(result.ok && result.case.resolution).toEqual([]);
+  });
+
   it('closes a class with no safe repair only after escalation and re-verification', () => {
     const reverified: ReconciliationCase = {
       ...opened(),

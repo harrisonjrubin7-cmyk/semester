@@ -102,6 +102,13 @@ describe('transitionHealthEvent', () => {
     expect(result).toEqual({ ok: false, reason: 'unknown state: archived' });
   });
 
+  it('refuses to overwrite a stored update time that is not an ISO timestamp', () => {
+    const result = transitionHealthEvent({ ...base, updatedAt: 'yesterday' }, 'acknowledged', '2026-10-01T10:00:00.000Z');
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toContain('updatedAt must be an ISO timestamp');
+  });
+
   it('refuses a transition timestamped before the last update', () => {
     const result = transitionHealthEvent({ ...base, updatedAt: '2026-10-01T11:00:00.000Z' }, 'acknowledged', '2026-10-01T10:00:00.000Z');
     expect(result).toEqual({ ok: false, reason: 'transition time precedes the last update' });

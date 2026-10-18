@@ -107,6 +107,9 @@ export function transitionHealthEvent(event: HealthEvent, to: HealthState, at: s
   if (!TRANSITIONS[event.state].includes(to)) {
     return { ok: false, reason: `cannot move from ${event.state} to ${to}` };
   }
+  // Refuse a malformed stored timeline before building the next record, which would overwrite its bad timestamps.
+  const storedTimeProblems = healthEventProblems(event).filter((p) => p.includes('createdAt') || p.includes('updatedAt'));
+  if (storedTimeProblems.length > 0) return { ok: false, reason: storedTimeProblems.join('; ') };
   if (!isIsoTimestamp(at)) return { ok: false, reason: 'at must be an ISO timestamp' };
   if (isIsoTimestamp(event.updatedAt) && Date.parse(at) < Date.parse(event.updatedAt)) {
     return { ok: false, reason: 'transition time precedes the last update' };
