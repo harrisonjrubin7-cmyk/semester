@@ -24,6 +24,7 @@ export interface Reservation {
   readonly bedId: string;
   readonly studentId: string;
   readonly status: ReservationStatus;
+  readonly createdAt: number;
   readonly expiresAt: number;
   readonly holdMs: number;
   readonly assignmentId: string | null;
@@ -152,6 +153,7 @@ export function reserve(state: AllocationState, input: ReserveInput): Outcome {
     bedId: input.bedId,
     studentId: input.studentId,
     status: 'held',
+    createdAt: input.now,
     expiresAt,
     holdMs: input.holdMs,
     assignmentId: null,
@@ -179,8 +181,18 @@ export function confirm(
   // Expiry is checked here, at the moment of confirmation, not only when the
   // hold lapses: a hold that ran out during checkout must not become a bed.
   if (r.status !== 'held' || input.now >= r.expiresAt) return refuse('reservation_expired');
+  // A confirmation stamped before its own hold existed belongs to no valid history.
+  if (input.now < r.createdAt) return refuse('invalid_input');
+  // reserve only admits a bed or student that is free at its own clock, so any later reservation
+  // for either means this hold had already lapsed; a delayed confirmation must not revive it.
+  const others = Object.values(state.reservations).filter((o) => o.id !== r.id);
+  if (others.some((o) => o.bedId === r.bedId && o.createdAt >= r.createdAt)) return refuse('bed_taken');
+  if (others.some((o) => o.studentId === r.studentId && o.createdAt >= r.createdAt)) return refuse('student_placed');
   if (Object.values(state.assignments).some((a) => a.bedId === r.bedId && a.endedAt === null)) {
     return refuse('bed_taken');
+  }
+  if (Object.values(state.assignments).some((a) => a.studentId === r.studentId && a.endedAt === null)) {
+    return refuse('student_placed');
   }
   if (own(state.assignments, input.id)) return refuse('duplicate_id');
 
@@ -274,6 +286,8 @@ export function endAssignment(
 
 /** Mark every hold that has run out as expired. Changes availability only when something lapsed. */
 export function expire(state: AllocationState, now: number): AllocationState {
+  // Infinity satisfies every expiry comparison, so a non-finite clock would release every hold.
+  if (!Number.isFinite(now)) return state;
   const lapsed = Object.values(state.reservations).filter((r) => r.status === 'held' && now >= r.expiresAt);
   if (lapsed.length === 0) return state;
   const reservations = { ...state.reservations };

@@ -307,4 +307,53 @@ describe('input guards', () => {
     }
     expect(placed.state.assignments['o1']).toMatchObject({ endedAt: null });
   });
+
+  it('refuses to expire at a non-finite clock, which would release every hold', () => {
+    const held = must(reserve(oneBed(), base));
+    expect(expire(held.state, Number.POSITIVE_INFINITY)).toBe(held.state);
+    expect(held.state.reservations['r1']).toMatchObject({ status: 'held' });
+  });
+
+  it('refuses a confirmation timestamped before its reservation was created', () => {
+    const held = must(reserve(oneBed(), { ...base, now: 100 }));
+    expect(confirm(held.state, { id: 'a1', reservationId: 'r1', studentId: 'A', now: 50 })).toEqual({
+      ok: false,
+      refusal: 'invalid_input',
+    });
+  });
+
+  it('refuses a late confirmation of a lapsed hold once another reservation has taken the bed', () => {
+    const first = must(reserve(oneBed(), base));
+    const second = must(reserve(first.state, {
+      ...base, id: 'r2', key: 'k2', studentId: 'B', expectedInventoryVersion: first.state.inventoryVersion, now: HOLD + 10,
+    }));
+    // r1's hold ended at HOLD; a confirmation stamped just before that must not seat A beside B.
+    expect(confirm(second.state, { id: 'a1', reservationId: 'r1', studentId: 'A', now: HOLD - 1 })).toEqual({
+      ok: false,
+      refusal: 'bed_taken',
+    });
+  });
+
+  it('refuses a late confirmation once the same student has reserved another bed', () => {
+    const first = must(reserve(initialState([{ id: 'b1', label: 'x' }, { id: 'b2', label: 'y' }]), base));
+    const second = must(reserve(first.state, {
+      ...base, id: 'r2', key: 'k2', bedId: 'b2', expectedInventoryVersion: first.state.inventoryVersion, now: HOLD + 10,
+    }));
+    expect(confirm(second.state, { id: 'a1', reservationId: 'r1', studentId: 'A', now: HOLD - 1 })).toEqual({
+      ok: false,
+      refusal: 'student_placed',
+    });
+  });
+
+  it('refuses a late confirmation once the student has been placed elsewhere', () => {
+    const held = must(reserve(initialState([{ id: 'b1', label: 'x' }, { id: 'b2', label: 'y' }]), base));
+    const placed = must(override(held.state, {
+      id: 'o1', bedId: 'b2', studentId: 'A', authority: 'RD', rationale: 'x',
+      expectedInventoryVersion: held.state.inventoryVersion, now: HOLD + 10,
+    }));
+    expect(confirm(placed.state, { id: 'a1', reservationId: 'r1', studentId: 'A', now: HOLD - 1 })).toEqual({
+      ok: false,
+      refusal: 'student_placed',
+    });
+  });
 });
