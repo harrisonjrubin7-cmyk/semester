@@ -199,14 +199,15 @@ declare
   live text;
 begin
   new.updated_at := now();
-  if new.status in ('draft', 'blocked', 'retired') then
-    select string_agg(c.capability_key, ', ' order by c.capability_key) into live
-      from private.registry_capabilities c
-     where c.workspace_id = new.id and c.status in ('deployed', 'active');
-    if live is not null then
-      raise exception 'registry: workspace % cannot be % while % is deployed or active', new.workspace_key, new.status, live
-        using errcode = 'check_violation';
-    end if;
+  -- Any status ranked below a live child (blocked and retired rank nowhere) would leave that child claiming more than its workspace.
+  select string_agg(c.capability_key, ', ' order by c.capability_key) into live
+    from private.registry_capabilities c
+   where c.workspace_id = new.id
+     and c.status in ('deployed', 'active')
+     and private.registry_status_rank(c.status) > private.registry_status_rank(new.status);
+  if live is not null then
+    raise exception 'registry: workspace % cannot be % while % is deployed or active', new.workspace_key, new.status, live
+      using errcode = 'check_violation';
   end if;
   return new;
 end $$;

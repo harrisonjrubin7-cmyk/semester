@@ -35,9 +35,13 @@ export function renderRegistryProjection(snapshot: RegistrySnapshot): string {
     '-- Idempotent. Status is derived from maturity; the gate triggers refuse anything the evidence chain does not support.',
     'begin;',
   ];
+  const RANK: Record<ReturnType<typeof projectedStatus>, number> = { draft: 1, implemented: 2, tested: 3, deployed: 4 };
+  // The gate requires a workspace to rank at least as high as each capability it holds, so it is projected at the highest of them.
+  const workspaceRank = (key: string): number => Math.max(1, ...snapshot.capabilities.filter((c) => c.workspace === key).map((c) => RANK[projectedStatus(c.maturity)]));
+  const WORKSPACE_STATUS = ['draft', 'implemented', 'tested', 'deployed'] as const;
   for (const os of [...inception.operating_systems].sort((a, b) => a.key.localeCompare(b.key))) {
     const classification = scopes.get(os.pilot_scopes[0])?.data_classification ?? 'internal';
-    const status = os.status === 'blocked' ? 'blocked' : 'draft';
+    const status = os.status === 'blocked' ? 'blocked' : WORKSPACE_STATUS[workspaceRank(os.key) - 1];
     lines.push(
       `insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)`,
       `  values (${literal(os.key)}, ${literal(os.name)}, ${literal(os.os_family)}, ${literal(os.routes[0])}, ${literal(os.owner)}, ${literal(classification)}, ${literal(status)})`,

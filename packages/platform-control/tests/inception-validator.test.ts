@@ -202,6 +202,11 @@ test('the coverage matrix is counted from the registry, and the release is block
   assert.equal(decision.inception.unverifiedJourneys.length, JOURNEY_COUNT);
   assert.equal(decision.inception.unverifiedAdapters.length, registry.inception!.adapters.length);
   assert.ok(decision.issues.some((i) => i.code === 'artifact_without_producer'));
+  // Every artifact is absent from release/ here, so each one must be reported missing: a producer string alone is not evidence.
+  const missing = decision.issues.filter((i) => i.code === 'artifact_missing').length;
+  assert.equal(missing, registry.inception!.evidence_pack.length);
+  const everyPresent = new Set(registry.inception!.evidence_pack.map((a) => a.artifact));
+  assert.equal(validateRelease(registry, everyPresent).issues.filter((i) => i.code === 'artifact_missing').length, 0);
 });
 
 test('the SQL projection derives status from maturity and never writes a status the evidence does not support', () => {
