@@ -20,9 +20,15 @@ for case in suite['cases']:
     except ValueError: outcome={'exception':'ValueError'}
     except BaseException: outcome={'exception':'ExecutionError'}
     results.append(outcome)
+def same(a,b):
+    # 1 == True and 1 == 1.0 in Python, so compare the types too.
+    if type(a) is not type(b): return False
+    if isinstance(a,dict): return a.keys()==b.keys() and all(same(a[k],b[k]) for k in a)
+    if isinstance(a,(list,tuple)): return len(a)==len(b) and all(same(x,y) for x,y in zip(a,b))
+    return a==b
 # Compare after every call, so a learner that keeps an input and changes it during a later call is still caught.
 for index,case in enumerate(suite['cases']):
-    results[index]['mutated']=case['input']!=originals[index]
+    results[index]['mutated']=not same(case['input'],originals[index])
     try: json.dumps(results[index],allow_nan=False)
     except (TypeError,ValueError): results[index]={'value':None,'shape':'unserializable','mutated':results[index]['mutated']}
 with os.fdopen(RESULT,'w') as out: out.write(json.dumps(results,allow_nan=False)+'\\n')

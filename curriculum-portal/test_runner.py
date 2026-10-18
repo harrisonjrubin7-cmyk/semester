@@ -126,10 +126,19 @@ class HarnessTests(unittest.TestCase):
             7:"def audit_ready(r): return all(k in r for k in ('actor','tenant','action','target','request_id')) and all(isinstance(r[k],str) and bool(r[k]) for k in ('actor','request_id'))\n",
             14:"def evidence_ready(r):\n    t=r.get('tests',{})\n    return all(k in r for k in ('artifact_digest','contract_version','fixture_version')) and all(t.get(k) is True for k in ('contract','isolation','revocation','accessibility','recovery'))\n",
             16:"def activation_ready(r): return all(r.get(k) for k in ('certified','institution_approved','reconciled','rollback_ready','support_ready'))\n",
+            4:"def paginate(r):\n    if r['offset']<0 or not 1<=r['limit']<=100 or r['offset']>=len(r['items']): raise ValueError()\n    return r['items'][r['offset']:r['offset']+r['limit']]\n",
+            12:"def retry_allowed(r): return (r['status']==503 and r['attempt']<r['max_attempts'] and (r['method']=='GET' or bool(r.get('idempotency_key')))) or (r['status']==429 and r['method']=='GET' and r['attempt']<r['max_attempts'])\n",
+            13:"def safe_destination(r):\n    from urllib.parse import urlsplit\n    import ipaddress\n    u=urlsplit(r['url'])\n    try: ip=ipaddress.ip_address(u.hostname)\n    except ValueError: return False\n    return u.scheme=='https' and not ip.is_loopback and u.username is None and u.password is None and u.port in (None,443)\n",
+            16:"def activation_ready(r): return r['certified'] is True and r['institution_approved'] is True and r['reconciled'] is True and r['rollback_ready'] is True and r['support_ready'] is True\n",
         }
         for week,code in shortcuts.items():
             result=self.run_week(week-1,code)
             self.assertLess(result['passed'],result['total'],'week %d'%week)
+    def test_mutation_check_compares_types_not_just_values(self):
+        # 1 == True in Python, so replacing an id of 1 with True is a mutation even though the dictionaries compare equal.
+        code="def validate_task(r):\n    if isinstance(r,dict) and type(r.get('id')) is int and r['id']==1: r['id']=True\n    return isinstance(r,dict) and set(r)=={'id','title','status'} and all(isinstance(r[k],str) and bool(r[k].strip()) for k in ('id','title')) and r['status'] in ('open','completed')\n"
+        result=self.run_week(2,code)
+        self.assertLess(result['passed'],result['total'])
     def test_unserializable_result_is_incorrect_not_a_worker_failure(self):
         # A set cannot cross the JSON result channel; it must score as wrong, not abort the whole grade.
         result=self.run_week(9,'def deduplicate(r): return set(r["ids"])\n')
