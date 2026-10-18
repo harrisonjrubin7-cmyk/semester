@@ -38,11 +38,8 @@ export function validateAnswerFrame(f: AIAnswerFrame): string[] {
   if (!hasSource && f.limitations.every((l) => l.trim() === "")) {
     errors.push("An answer with no sources must state its limitations.");
   }
-  // No sources means no source-backed claim, so high confidence is unsupported too.
-  if (
-    (f.sources.length === 0 || f.sources.some((s) => s.authority === "none")) &&
-    f.confidence === "high"
-  ) {
+  // No real source means no source-backed claim, so high confidence is unsupported too.
+  if (!hasSource && f.confidence === "high") {
     errors.push("An answer without a source for each claim cannot be high confidence.");
   }
   // The student must be shown what a consequential action will do before confirming it.

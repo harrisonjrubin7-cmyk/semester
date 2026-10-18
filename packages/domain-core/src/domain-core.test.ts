@@ -217,6 +217,12 @@ describe("validateAnswerFrame", () => {
       confidence: "limited",
     });
     expect(validateAnswerFrame(blankLabel)).toHaveLength(1);
+    const blankHigh = answer({
+      sources: [{ label: "   ", authority: "course" }],
+      limitations: ["Source unlabelled."],
+      confidence: "high",
+    });
+    expect(validateAnswerFrame(blankHigh)).toHaveLength(1);
   });
 
   it("does not count a whitespace-only limitation as a stated limitation", () => {
