@@ -62,6 +62,16 @@ const REQUIRED_INCREMENT_FIELDS = [
 ];
 // Values that fill a field without answering it.
 const PLACEHOLDER_VALUES = new Set(['UNASSIGNED', 'TBD']);
+// Ranks compare by position, so the sequence itself is pinned: a reordered list would silently change every gate.
+const DELIVERY_STATE_ORDER = [
+  'proposed', 'shaped', 'approved_for_build', 'in_build', 'integration_ready',
+  'evidence_ready', 'approved_for_release', 'enabled', 'monitored', 'retired',
+];
+// Records the registry must keep: removing them must fail the check, not shrink it.
+const REQUIRED_INCREMENT_IDS = ['RDY-INC-003'];
+const REQUIRED_ARTIFACT_IDS = ['ART-RDY-011'];
+// Members a release-approved rollout plan must answer, not just contain.
+const REQUIRED_PLAN_MEMBERS = ['feature_flag', 'safe_off', 'rollback'];
 const isPlaceholder = (v) => typeof v === 'string' && PLACEHOLDER_VALUES.has(v.trim().toUpperCase());
 // The checks each quality gate must keep; removing one changes the specification's gate catalogue.
 const REQUIRED_GATE_CHECKS = {
@@ -102,6 +112,15 @@ export function check(repo) {
   };
   const today = repo.today ?? new Date().toISOString().slice(0, 10);
   const states = model.delivery_states;
+  if (JSON.stringify(states) !== JSON.stringify(DELIVERY_STATE_ORDER)) {
+    errors.push('operating-model: delivery_states must be the pinned order');
+  }
+  for (const [dir, list] of [['registry/increments', repo.increments], ['registry/artifacts', repo.artifacts]]) {
+    if (list.length === 0) errors.push(`${dir}: registry is missing or holds no records`);
+  }
+  for (const id of REQUIRED_ARTIFACT_IDS) {
+    if (!repo.artifacts.some((a) => a.data.id === id)) errors.push(`registry/artifacts: required record ${id} is missing`);
+  }
   const rank = (s) => states.indexOf(s);
   const nodes = new Map();
   const trainIds = model.release_trains.map((t) => t.id);
@@ -263,6 +282,12 @@ export function check(repo) {
     if (r >= rank('enabled') && (safeOff === '' || PLACEHOLDER_VALUES.has(safeOff.toUpperCase()))) {
       errors.push(`${label}: ${inc.state} without a safe-off behavior`);
     }
+    if (r >= rank('approved_for_release')) {
+      for (const k of REQUIRED_PLAN_MEMBERS) {
+        const v = inc.rollout_and_rollback_plan?.[k];
+        if (isEmpty(v) || isPlaceholder(v)) errors.push(`${label}: ${inc.state} requires rollout_and_rollback_plan.${k}`);
+      }
+    }
     for (const d of inc.hard_dependencies ?? []) {
       if (!nodes.has(d)) errors.push(`${label}: hard dependency ${d} is not in dependency-graph`);
     }
@@ -285,6 +310,10 @@ export function check(repo) {
       if (approved) errors.push(`${message}; ${inc.state} cannot carry open gaps`);
       else warnings.push(message);
     }
+  }
+
+  for (const id of REQUIRED_INCREMENT_IDS) {
+    if (!ids.has(id)) errors.push(`registry/increments: required record ${id} is missing`);
   }
 
   // Artifacts: a state other than missing needs a location on disk; missing must not exist.

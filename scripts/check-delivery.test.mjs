@@ -337,3 +337,29 @@ test('control: an artifact whose location is a directory fails', () => {
   const { errors } = check(repo);
   assert.ok(errors.some((e) => /ART-RDY-011: state draft but .* is not a regular file/.test(e)));
 });
+
+test('control: reordering the delivery states fails', () => {
+  const repo = loadRepo();
+  const s = repo.model.delivery_states;
+  [s[2], s[7]] = [s[7], s[2]];
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /delivery_states must be the pinned order/.test(e)));
+});
+
+test('control: an emptied increment registry fails, and a removed baseline record fails', () => {
+  const emptied = loadRepo();
+  emptied.increments = [];
+  assert.ok(check(emptied).errors.some((e) => /registry\/increments: registry is missing or holds no records/.test(e)));
+  const dropped = loadRepo();
+  dropped.artifacts = dropped.artifacts.filter((a) => a.data.id !== 'ART-RDY-011');
+  assert.ok(check(dropped).errors.some((e) => /required record ART-RDY-011 is missing/.test(e)));
+});
+
+test('control: a release-approved increment whose rollout plan has no answers fails', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => {
+    d.state = 'approved_for_release';
+    d.rollout_and_rollback_plan = { bogus: true };
+  });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /RDY-INC-003: approved_for_release requires rollout_and_rollback_plan\.feature_flag/.test(e)));
+});
