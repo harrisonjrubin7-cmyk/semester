@@ -88,6 +88,8 @@ class RecoveryTests(unittest.TestCase):
         r = self.submit(m, actor='u2', key='k2')
         self.assertEqual(r['state'], 'waitlisted')
         self.assertEqual(r['execution'], 'committed')
+        self.assertEqual(m.waitlist[r['key']]['receipt'], r['receipt'])
+        self.assertFalse(m.authoritative.get(r['key']))
         self.assertEqual(self.submit(m, actor='u2', key='k2')['state'], 'waitlisted')
 
     def test_REG_10_projection_repair(self):
@@ -111,6 +113,36 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual(self.submit(m, {'override_expired': True})['state'], 'awaiting_approval')
         self.assertEqual(self.submit(m, {'permission_ok': False})['state'], 'denied')
         self.assertFalse(m.authoritative)
+
+    def test_REG_12_revoked_between_preview_and_commit(self):
+        m = RegistrationModel()
+        # Preview: the eligibility override is missing, so nothing commits yet.
+        self.assertEqual(self.submit(m, {'eligible': False})['state'], 'awaiting_approval')
+        # The override arrives, but the permission is revoked before the commit attempt.
+        self.assertEqual(self.submit(m, {'eligible': False, 'scoped_override': True,
+                                         'permission_ok': False})['state'], 'denied')
+        self.assertFalse(m.authoritative)
+        # Authority restored: the commit runs on fresh checks, not on the earlier preview.
+        self.assertEqual(self.submit(m, {'eligible': False, 'scoped_override': True})['state'], 'committed')
+        self.assertEqual(len(m.authoritative), 1)
+
+    def test_replay_after_revocation_returns_original(self):
+        m = RegistrationModel()
+        first = self.submit(m)
+        revoked = self.submit(m, {'permission_ok': False})
+        self.assertEqual(revoked['state'], 'committed')
+        self.assertEqual(revoked['receipt'], first['receipt'])
+        self.assertEqual(len(m.authoritative), 1)
+
+    def test_payload_snapshot_is_independent_of_caller(self):
+        m = RegistrationModel()
+        payload = {'section': 's1', 'override_grant_refs': ['g1']}
+        r = self.submit(m, payload=payload)
+        payload['override_grant_refs'].append('g2')
+        self.assertEqual(m.authoritative[r['key']]['payload']['override_grant_refs'], ['g1'])
+        self.assertEqual(m.commands[r['key']]['original_payload']['override_grant_refs'], ['g1'])
+        same = self.submit(m, payload={'section': 's1', 'override_grant_refs': ['g1']})
+        self.assertEqual(same['receipt'], r['receipt'])
 
     def test_REG_13_offer_expiry(self):
         m = RegistrationModel()

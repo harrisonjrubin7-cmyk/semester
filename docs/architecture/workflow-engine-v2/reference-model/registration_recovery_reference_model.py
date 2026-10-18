@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from threading import Lock
+import copy
 import hashlib
 import json
 
@@ -8,6 +9,7 @@ class RegistrationModel:
     capacity: int = 1
     commands: dict = field(default_factory=dict)
     authoritative: dict = field(default_factory=dict)
+    waitlist: dict = field(default_factory=dict)
     corrections: list = field(default_factory=list)
     trail: dict = field(default_factory=dict)
     lock: object = field(default_factory=Lock)
@@ -26,6 +28,12 @@ class RegistrationModel:
         digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
         k = (tenant, actor, 'enroll', key)
         with self.lock:
+            existing = self.commands.get(k)
+            if existing and existing['hash'] != digest:
+                return {'state': 'conflict', 'effects': 0}
+            if existing and not existing.get('confirmed_no_commit'):
+                # A durable outcome answers a repeat before any current authorization check.
+                return self._view(existing)
             grants = c.get('grant_tenants')
             if grants is not None and tenant not in grants:
                 return {'state': 'denied', 'effects': 0}
@@ -35,13 +43,7 @@ class RegistrationModel:
                 return {'state': 'paused', 'effects': 0}
             if not c.get('fresh', True):
                 return {'state': 'awaiting_information', 'effects': 0}
-            existing = self.commands.get(k)
-            if existing:
-                if existing['hash'] != digest:
-                    return {'state': 'conflict', 'effects': 0}
-                if not existing.get('confirmed_no_commit'):
-                    return self._view(existing)
-                # Authority proved no commit: a same-key retry re-enters the checks above.
+            # Authority proved no commit: a same-key retry re-enters the checks above.
             if not c.get('window_open', True) or not c.get('ticket_open', True):
                 return {'state': 'denied', 'effects': 0}
             if c.get('hold', False):
@@ -55,12 +57,12 @@ class RegistrationModel:
             if fault == 'precommit':
                 # Persist the payload binding so a same-key retry cannot change the payload.
                 cmd = {'state': 'failed', 'hash': digest, 'key': k, 'effects': 0,
-                       'projection': 'pending', 'original_payload': dict(payload),
+                       'projection': 'pending', 'original_payload': copy.deepcopy(payload),
                        'confirmed_no_commit': True}
                 self.commands[k] = cmd
                 return self._view(cmd)
             cmd = {'state': 'running', 'hash': digest, 'key': k, 'effects': 0,
-                   'projection': 'pending', 'original_payload': dict(payload)}
+                   'projection': 'pending', 'original_payload': copy.deepcopy(payload)}
             self.commands[k] = cmd
             if fault == 'timeout_before':
                 cmd.update(state='result_unknown')
@@ -69,10 +71,13 @@ class RegistrationModel:
             occupied = sum(1 for kk, rec in self.authoritative.items()
                            if (kk[0], rec['payload'].get('section')) == scope)
             if occupied >= self.capacity:
-                cmd.update(state='committed', business='waitlisted')
+                # Waitlisting is an authoritative write of a waitlist entry, so it carries its own receipt.
+                self.waitlist[k] = {'receipt': 'waitlist:' + str(len(self.waitlist) + 1),
+                                    'payload': copy.deepcopy(payload)}
+                cmd.update(state='committed', business='waitlisted', receipt=self.waitlist[k]['receipt'])
                 return self._view(cmd)
             self.authoritative[k] = {'receipt': 'authority:' + str(len(self.authoritative) + 1),
-                                     'payload': dict(payload), 'status': 'enrolled'}
+                                     'payload': copy.deepcopy(payload), 'status': 'enrolled'}
             cmd.update(state='committed', effects=1,
                        receipt=self.authoritative[k]['receipt'])
             if fault == 'timeout_after':
