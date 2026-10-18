@@ -295,12 +295,12 @@ describe('review fixes: boundaries, tenancy, atomic release, event metadata', ()
       .resolves.toMatchObject({ status: 'completed' });
   });
 
-  it('events carry the command key, the request correlation id, and the service clock', async () => {
+  it('events carry their own id as the downstream key, the request correlation id, and the service clock', async () => {
     const { service, store, as, KEY_1 } = fixture();
     await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
     await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1, correlationId: 'req-abc-12345' });
     const [row] = store.outbox.rows;
-    expect(row.event.idempotencyKey).toBe(JSON.stringify(['inst-a', 'stu-1', KEY_1]));
+    expect(row.event.idempotencyKey).toBe(row.event.eventId);
     expect(row.event.correlationId).toBe('req-abc-12345');
     expect(row.event.occurredAt).toBe('2026-10-18T12:00:00.000Z');
   });
@@ -488,6 +488,19 @@ describe('review fixes: boundaries, tenancy, atomic release, event metadata', ()
     const keys = store.outbox.rows.map((r) => r.event).filter((e) => e.eventType === 'grade.posted').map((e) => e.idempotencyKey);
     expect(keys).toHaveLength(2);
     expect(new Set(keys).size).toBe(2);
+  });
+
+  it('every event passes the envelope check even when the tenant, actor and key are all at their longest', async () => {
+    const { service, store, as } = fixture();
+    const tenant = 'i'.repeat(128);
+    const user = 'u'.repeat(128);
+    store.assignments.set('long', { id: 'long', institutionId: tenant, courseId: 'course-long', closesAt: '2026-10-20T23:59:00Z' });
+    store.memberships.push({ userId: user, institutionId: tenant, courseId: 'course-long', role: 'student', status: 'active' });
+    await service.saveDraft(as(user, tenant), { assignmentId: 'long', body: 'v1', expectedVersion: 0 });
+    await service.submitAssignment(as(user, tenant), { assignmentId: 'long', draftVersion: 1, idempotencyKey: 'k'.repeat(128) });
+
+    const [row] = store.outbox.rows;
+    expect(validateEvent(row.event).ok).toBe(true);
   });
 });
 

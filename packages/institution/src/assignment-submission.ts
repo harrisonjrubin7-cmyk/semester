@@ -338,7 +338,6 @@ export class AssignmentSubmissionService {
       subjectType: 'submission',
       subjectId: submissionId,
       correlationId: correlationOf(input.correlationId, `submission-${submissionId}`),
-      idempotencyKey: key,
       payload: { submissionId, assignmentId, version: 1 },
     });
     this.store.receipts.set(receipt.id, { ...receipt });
@@ -420,7 +419,6 @@ export class AssignmentSubmissionService {
       subjectType: 'student',
       subjectId: submission.userId,
       correlationId: correlationOf(input.correlationId, `release-${submission.id}`),
-      idempotencyKey: key,
       payload: { submissionId: submission.id, assignment: assignment.id },
     });
     this.store.receipts.set(receipt.id, { ...receipt });
@@ -535,7 +533,11 @@ export class AssignmentSubmissionService {
     return { id: this.newId(), status: 'completed', message, recordedAt };
   }
 
-  /** An event that is not yet in the outbox. It carries the command key and the service clock, not the process clock. */
+  /**
+   * An event that is not yet in the outbox. It carries the service clock, not the process clock. Its downstream key is its
+   * own id: a redelivery keeps the id, and a replayed command emits no new event, so no sender, institution or command key
+   * can make two events share one key, and the key stays within the envelope's length limit.
+   */
   private eventFor(input: {
     eventType: 'submission.finalized' | 'grade.posted';
     actorId: string;
@@ -543,11 +545,11 @@ export class AssignmentSubmissionService {
     subjectType: 'submission' | 'student';
     subjectId: string;
     correlationId: string;
-    idempotencyKey: string;
     payload: Record<string, string | number>;
   }): SemesterEvent {
+    const eventId = this.newEventId();
     return makeEvent({
-      eventId: this.newEventId(),
+      eventId,
       eventType: input.eventType,
       producer: this.producer,
       environment: this.environment,
@@ -556,9 +558,7 @@ export class AssignmentSubmissionService {
       actor: { id: input.actorId, type: 'user' },
       subject: { type: input.subjectType, id: input.subjectId },
       correlationId: input.correlationId,
-      // The institution, the sender and the key as a JSON tuple: the same key reused by one person in two institutions, or
-      // by two people, gets its own downstream key, and an id or key containing a colon cannot make two tuples read the same.
-      idempotencyKey: JSON.stringify([input.tenantId, input.actorId, input.idempotencyKey]),
+      idempotencyKey: eventId,
       payload: input.payload,
     });
   }
