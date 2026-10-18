@@ -3,6 +3,8 @@ import sys
 from datetime import datetime, timezone
 from jsonschema import Draft202012Validator, FormatChecker
 
+RECOVERY_SUITES = {'OUTCOME_UNKNOWN': {'timeout', 'unknown_outcome'}, 'NO_COMMIT': {'recovery'}}
+
 def semantic_errors(doc):
     errors = []
     for key in ['steps', 'transitions', 'acceptance_tests']:
@@ -102,6 +104,11 @@ def semantic_errors(doc):
             errors.append('Undefined recovery state: ' + r['code'])
         if not set(r['acceptance_test_ids']) <= test_ids:
             errors.append('Undefined recovery test: ' + r['code'])
+        if r['code'] in RECOVERY_SUITES:
+            suite_by_id = {t['id']: t['suite'] for t in doc['acceptance_tests']}
+            linked = {suite_by_id[i] for i in r['acceptance_test_ids'] if i in suite_by_id}
+            if not linked & RECOVERY_SUITES[r['code']]:
+                errors.append('Recovery path not linked to a matching acceptance test: ' + r['code'])
     suites = {t['suite'] for t in doc['acceptance_tests']}
     baseline = {'happy_path', 'recovery', 'role_denial', 'scoped_visibility', 'stale_source', 'cancellation', 'accessibility', 'ownership'}
     if not baseline <= suites:

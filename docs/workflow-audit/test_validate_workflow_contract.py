@@ -132,6 +132,13 @@ class RejectedContracts(unittest.TestCase):
             d['readiness']['tested'] = {'status': 'verified', 'evidence': [future], 'reason': 'x'}
         self.assertRejected(mutate(fn), 'verified_at is in the future')
 
+    def test_recovery_path_must_link_matching_test(self):
+        def fn(d):
+            for r in d['recovery_paths']:
+                if r['code'] == 'NO_COMMIT':
+                    r['acceptance_test_ids'] = ['happy_path']
+        self.assertRejected(mutate(fn), 'not linked to a matching acceptance test: NO_COMMIT')
+
 
 if __name__ == '__main__':
     unittest.main()
