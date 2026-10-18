@@ -40,7 +40,9 @@ def pointer(parts):
 def branch_operation(e,i):
     branches=e.schema.get(e.validator,[]) if isinstance(e.schema,dict) else []
     branch=branches[i] if isinstance(i,int) and 0<=i<len(branches) else None
-    return branch.get('properties',{}).get('operation',{}).get('const') if isinstance(branch,dict) else None
+    props=branch.get('properties',{}) if isinstance(branch,dict) else {}
+    op=props.get('operation',{}) if isinstance(props,dict) else {}
+    return op.get('const') if isinstance(op,dict) else None
 
 def leaf_errors(e):
     # A oneOf/anyOf error hides its reasons in context. Descend into the branch whose operation const

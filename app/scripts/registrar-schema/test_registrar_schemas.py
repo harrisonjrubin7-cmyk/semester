@@ -85,6 +85,9 @@ class EnrollmentTests(unittest.TestCase):
     def test_required_errors_name_the_field(self):
         msgs=[e['message'] for e in validate(enrollment_schema(),{})]
         self.assertTrue(any("'studentId'" in m for m in msgs))
+    def test_boolean_operation_subschema_does_not_crash(self):
+        s={'oneOf':[{'type':'object','properties':{'operation':False}},{'type':'object','properties':{'operation':False}}]}
+        self.assertTrue(validate(s,{'operation':'add'}))
     def test_artifact_matches_builder(self):
         import json,os
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'enrollment_commands.schema.json')) as f:artifact=json.load(f)
