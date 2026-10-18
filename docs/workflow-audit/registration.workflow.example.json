@@ -385,6 +385,24 @@
       "suite": "correction",
       "criterion": "Proposed correction acceptance criterion; runtime evidence required",
       "evidence_refs": []
+    },
+    {
+      "id": "scoped_visibility",
+      "suite": "scoped_visibility",
+      "criterion": "Proposed scoped_visibility acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "cancellation",
+      "suite": "cancellation",
+      "criterion": "Proposed cancellation acceptance criterion; runtime evidence required",
+      "evidence_refs": []
+    },
+    {
+      "id": "ownership",
+      "suite": "ownership",
+      "criterion": "Proposed ownership acceptance criterion; runtime evidence required",
+      "evidence_refs": []
     }
   ],
   "readiness": {

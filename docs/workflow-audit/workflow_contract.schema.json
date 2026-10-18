@@ -551,7 +551,10 @@
               "approval_expiry",
               "unknown_outcome",
               "reconciliation",
-              "correction"
+              "correction",
+              "scoped_visibility",
+              "cancellation",
+              "ownership"
             ]
           },
           "criterion": {
@@ -1370,6 +1373,79 @@
             }
           }
         }
+      }
+    },
+    {
+      "if": {
+        "anyOf": [
+          {
+            "properties": {
+              "readiness": {
+                "properties": {
+                  "institution_authorized": {
+                    "properties": {
+                      "status": {
+                        "const": "verified"
+                      }
+                    },
+                    "required": [
+                      "status"
+                    ]
+                  }
+                },
+                "required": [
+                  "institution_authorized"
+                ]
+              }
+            },
+            "required": [
+              "readiness"
+            ]
+          },
+          {
+            "properties": {
+              "readiness": {
+                "properties": {
+                  "production_enabled": {
+                    "properties": {
+                      "status": {
+                        "const": "verified"
+                      }
+                    },
+                    "required": [
+                      "status"
+                    ]
+                  }
+                },
+                "required": [
+                  "production_enabled"
+                ]
+              }
+            },
+            "required": [
+              "readiness"
+            ]
+          }
+        ]
+      },
+      "then": {
+        "properties": {
+          "authority": {
+            "properties": {
+              "effective_from": {
+                "type": "string",
+                "format": "date-time",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "effective_from"
+            ]
+          }
+        },
+        "required": [
+          "authority"
+        ]
       }
     }
   ]

@@ -1,5 +1,6 @@
 import json
 import sys
+from datetime import datetime
 from jsonschema import Draft202012Validator, FormatChecker
 
 def semantic_errors(doc):
@@ -41,6 +42,24 @@ def semantic_errors(doc):
     for t in doc['transitions']:
         if t['step_id'] not in step_ids:
             errors.append('Undefined step: ' + t['step_id'])
+    transition_steps = {t['step_id'] for t in doc['transitions']}
+    for step_id in sorted(step_ids - transition_steps):
+        errors.append('Step without transition: ' + step_id)
+    available_refs = set(doc['data']['input_refs'])
+    for step in doc['steps']:
+        missing = set(step['input_refs']) - available_refs
+        if missing:
+            errors.append('Step ' + step['id'] + ' reads unknown input refs: ' + ', '.join(sorted(missing)))
+        available_refs.update(step['output_refs'])
+    effective_from = doc['authority']['effective_from']
+    if effective_from is not None:
+        try:
+            datetime.fromisoformat(effective_from.replace('Z', '+00:00'))
+        except ValueError:
+            errors.append('effective_from is not a valid date-time')
+    scope_bound = doc['authority']['institution_scope']
+    if scope_bound is not None and not (doc['scope']['tenant_id'] and scope_bound.startswith(doc['scope']['tenant_id'] + '/')):
+        errors.append('Authority institution_scope is not bound to scope tenant_id')
     recovery_codes = [x['code'] for x in doc['recovery_paths']]
     if len(recovery_codes) != len(set(recovery_codes)):
         errors.append('Duplicate recovery codes')
@@ -49,15 +68,22 @@ def semantic_errors(doc):
         for code in step['failure_codes']:
             if code not in recovery_codes:
                 errors.append('Failure without recovery: ' + code)
+    if doc['authority']['official_record_write']:
+        missing_codes = {'OUTCOME_UNKNOWN', 'NO_COMMIT'} - set(recovery_codes)
+        if missing_codes:
+            errors.append('Official write missing recovery paths: ' + ', '.join(sorted(missing_codes)))
     for r in doc['recovery_paths']:
         if r['to_execution_state'] not in doc['states']['execution']:
             errors.append('Undefined recovery state: ' + r['code'])
         if not set(r['acceptance_test_ids']) <= test_ids:
             errors.append('Undefined recovery test: ' + r['code'])
+    suites = {t['suite'] for t in doc['acceptance_tests']}
+    baseline = {'role_denial', 'scoped_visibility', 'stale_source', 'cancellation', 'accessibility', 'ownership'}
+    if not baseline <= suites:
+        errors.append('Missing baseline acceptance suites: ' + ', '.join(sorted(baseline - suites)))
     if doc['authority']['official_record_write']:
         if doc['authority']['mode'] in ['personal', 'read_only', 'shadow']:
             errors.append('Official write forbidden in this mode')
-        suites = {t['suite'] for t in doc['acceptance_tests']}
         required = {'happy_path', 'authority', 'tenant_isolation', 'role_denial', 'concurrency', 'replay',
                     'timeout', 'recovery', 'approval_expiry', 'unknown_outcome', 'reconciliation', 'correction'}
         if not required <= suites:
