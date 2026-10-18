@@ -119,6 +119,19 @@ class RejectedContracts(unittest.TestCase):
             d['steps'][0]['executor_ref'] = None
         self.assertRejected(mutate(fn), 'no workspace or checklist reference')
 
+    def test_produced_output_must_be_declared_or_consumed(self):
+        def fn(d):
+            d['steps'][0]['output_refs'] = ['proposed:registration-receipt', 'proposed:sensitive-extra']
+        self.assertRejected(mutate(fn), 'neither declared nor consumed: proposed:sensitive-extra')
+
+    def test_future_dated_readiness_evidence_is_rejected(self):
+        def fn(d):
+            future = dict(EVIDENCE, verified_at='2099-01-01T00:00:00Z')
+            for test in d['acceptance_tests']:
+                test['evidence_refs'] = ['ev:1']
+            d['readiness']['tested'] = {'status': 'verified', 'evidence': [future], 'reason': 'x'}
+        self.assertRejected(mutate(fn), 'verified_at is in the future')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,6 +1,6 @@
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from jsonschema import Draft202012Validator, FormatChecker
 
 def semantic_errors(doc):
@@ -60,6 +60,22 @@ def semantic_errors(doc):
     unproduced = set(doc['data']['output_refs']) - produced_refs
     if unproduced:
         errors.append('Declared outputs not produced by any step: ' + ', '.join(sorted(unproduced)))
+    consumed_refs = {ref for step in doc['steps'] for ref in step['input_refs']}
+    unaccounted = produced_refs - set(doc['data']['output_refs']) - consumed_refs
+    if unaccounted:
+        errors.append('Produced outputs neither declared nor consumed: ' + ', '.join(sorted(unaccounted)))
+    now = datetime.now(timezone.utc)
+    for gate_name, gate in doc['readiness'].items():
+        for ev in gate['evidence']:
+            try:
+                verified_at = datetime.fromisoformat(ev['verified_at'].replace('Z', '+00:00'))
+            except ValueError:
+                errors.append(gate_name + ' evidence has an invalid verified_at')
+                continue
+            if verified_at.tzinfo is None:
+                verified_at = verified_at.replace(tzinfo=timezone.utc)
+            if verified_at > now:
+                errors.append(gate_name + ' evidence verified_at is in the future: ' + ev['reference'])
     effective_from = doc['authority']['effective_from']
     if effective_from is not None:
         try:
