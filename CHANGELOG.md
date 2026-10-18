@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### An item can carry your own time estimate
+
+On an item's detail page, below **Done**, there is now **Your estimate, in minutes**. Type how long you expect the work to take and press Enter or leave the field; blank removes it. Semester shows your number beside the figure it works out from your own past pace in that course, and says which is which. Your estimate is kept with your other study records and is included in your data export. Nothing you need to do changes.
+
 ### Mine names the exact action, step or event before removing it
 
 In **Mine**, screen readers now distinguish removal controls for repeated step text, same-title actions and same-title events. A step says its position, action and completion state; an action says its personal/course scope, date, time, repeat and step progress; and an event says its date, time, kind, location, length and repeat. Removal still changes only the exact device-workspace record and keeps the existing eight-second **Undo**.
