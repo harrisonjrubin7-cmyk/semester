@@ -169,6 +169,28 @@
     },
     {
       "if": {
+        "properties": {
+          "version": {
+            "const": 1
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
+      "then": {
+        "properties": {
+          "supersedes": {
+            "type": "null"
+          },
+          "correction_reason": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
         "required": [
           "status"
         ],
