@@ -5,15 +5,18 @@ from jsonschema.validators import extend
 # OpenAPI 3.0 integers are JSON numbers without a fraction or exponent, so 1.0 and 1e0 are not integers here.
 StrictValidator=extend(Draft202012Validator,type_checker=Draft202012Validator.TYPE_CHECKER.redefine('integer',lambda c,x:isinstance(x,int) and not isinstance(x,bool)))
 
-def ecma_dot(p):
-    # Python's . excludes only \n; ECMA-262's also excludes \r, U+2028 and U+2029. Rewrite unescaped dots outside classes.
+def ecma_pattern(p):
+    # Python's . excludes only \n and its $ also matches before a final \n; ECMA-262's . also excludes \r, U+2028 and
+    # U+2029, and its $ matches only at the end of input. Rewrite unescaped . and $ outside character classes.
     out=[];i=0;in_class=False
     while i<len(p):
         c=p[i]
         if c=='\\':out.append(p[i:i+2]);i+=2;continue
         if in_class and c==']':in_class=False
         elif not in_class and c=='[':in_class=True
-        out.append(r'[^\n\r  ]' if c=='.' and not in_class else c)
+        if c=='.' and not in_class:out.append(r'[^\n\r  ]')
+        elif c=='$' and not in_class:out.append(r'\Z')
+        else:out.append(c)
         i+=1
     return ''.join(out)
 
@@ -53,7 +56,7 @@ def migrate_subset(schema):
         if k in s:s[k]=[migrate_subset(v) for v in s[k]]
     if s.get('readOnly') or s.get('writeOnly') or 'discriminator' in s:raise ValueError('Manual directional/composition review required')
     if isinstance(s.get('pattern'),str) and re.search(r'\\[dDwWsSbB]',s['pattern']):raise ValueError('pattern shorthand class differs from ECMA-262')
-    if isinstance(s.get('pattern'),str):s['pattern']=ecma_dot(s['pattern'])
+    if isinstance(s.get('pattern'),str):s['pattern']=ecma_pattern(s['pattern'])
     try:Draft202012Validator.check_schema(s)
     except SchemaError as ex:raise ValueError(f'invalid schema: {ex.message}') from ex
     return s
