@@ -43,6 +43,17 @@ measurement:
       owner: semester_operations_owner
       limitations: [queue_routing_rules, staff_availability]
 
+    reconciliation:
+      definition: Cases where the outcome Semester presented and the institution's official record disagree or need checking, and how each case was resolved. Feeds the reconciliation_rate_and_resolution_pattern decision indicator in success-plan.yaml.
+      numerator: reconciliation cases reaching a resolution state in the observation period
+      denominator: reconciliation cases opened in the observation period
+      resolution_pattern: count of resolved cases per resolution state and resolution code, reported as a distribution alongside the rate
+      observation_period: TBD
+      scope: approved cohort and approved offices
+      source: reconciliation cases in the staff queue and audit history
+      owner: semester_operations_owner
+      limitations: [official_record_timing, resolution_code_consistency]
+
     time_to_triage:
       definition: Elapsed time from case opened to first triage action, reported as median and 90th percentile in minutes.
       numerator: none; median and p90 of opened-to-triaged durations for triaged cases, plus the untriaged count and the age of each untriaged case at cutoff

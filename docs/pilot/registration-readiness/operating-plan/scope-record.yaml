@@ -26,6 +26,8 @@ scope:
     contacts: TBD
 
   cohort:
+    cohort_reference: TBD   # immutable roster or query reference, frozen at first-two-weeks step 2
+    cohort_version: TBD     # changes after freeze require change control and invalidate the release
     inclusion:
       - approved_student_population
       - active_authenticated_membership

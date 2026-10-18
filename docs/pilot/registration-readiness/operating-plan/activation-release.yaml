@@ -63,4 +63,4 @@ release:
   activation_rule: >
     All required evidence must be current, no blocking finding may remain open,
     scope must match approval, safe-off must be proven, and the referenced
-    production decision (go-no-go.yaml) must be approved, and every approval_records entry must carry approver and approved_at.
+    production decision (go-no-go.yaml) must be approved, and every approval_records entry must carry approved: true, approver, and approved_at.
