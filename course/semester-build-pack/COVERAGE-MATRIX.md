@@ -124,7 +124,7 @@ Not run: Playwright end-to-end tests (install hung on the proxy), keyboard and s
 1. **Deployment target.** Which host and environment should receive the portal (static file hosting, the existing app's staging, or none)? Publishing the portal outside this repository is an external communication and needs your approval.
 2. **Where the developer console lives.** `app/` already contains a Semester product, and the architecture guide says to inventory the repository before adding duplicate infrastructure. `course-engine/` is a separate product. Choose one home for the API (inside `app/`, a new service, or outside the repo).
 3. **Identity provider and database** for the API. The guide requires RLS, OAuth/PKCE and signed webhooks; the existing stack's choice of these is not confirmed in this pack.
-4. **Reference solutions for labs 2–16.** Confirm whether the course team will supply them. Without them the 40-case claim is unverified.
+4. **Reference solutions for labs 2–16.** Confirm whether the course team will supply them. Without them the reference-implementation claim (40 cases, measured before week 8 gained its second case) is unverified.
 5. **Institutional approval.** The syllabus and certification workflow are marked "proposed". No owner or approver is named in the pack.
 6. **Isolated runner.** Required before any learner code is run outside a trusted local setting.
 
