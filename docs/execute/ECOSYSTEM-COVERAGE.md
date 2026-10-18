@@ -1,8 +1,9 @@
 # Semester ecosystem coverage matrix (stream level)
 
-Source of truth: `handoff/execute/00-INDEX.md` (streams 00–24), `handoff/execute/25-completion-program.md`,
-`handoff/execute/30-phased-build.md`. Status is what the **repository** shows on this branch
-(`claude/quirky-meitner-4z1ida`, equal to `origin/main` at `7e0bca84` when this was written).
+Source of truth: `docs/handoff/execute/00-INDEX.md`, which defines streams 00–13. The repository has no
+`25-completion-program.md` or `30-phased-build.md`, so streams 14–29 have no source file here and their rows are
+**unverified**: they describe what was not audited, not what the handoff requires. Status is what the **repository**
+shows on `claude/quirky-meitner-4z1ida` at `bcdd2b58`.
 
 Status vocabulary: **proposed** (spec only), **specified** (spec in repo), **in progress**,
 **blocked**, **implemented** (code present), **verified** (acceptance gates run with evidence),

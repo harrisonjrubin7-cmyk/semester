@@ -16,6 +16,9 @@ describe('consequence pattern', () => {
     expect(pattern({ reversible: false, record: true })).toBe('review-confirm');
     expect(pattern({ reversible: true, money: 25 })).toBe('review-confirm');
   });
+  it('money moving out is as consequential as money moving in', () => {
+    expect(pattern({ reversible: true, money: -25 })).toBe('review-confirm');
+  });
   it('zero money is not money', () => {
     expect(pattern({ reversible: true, money: 0 })).toBe('undo');
   });

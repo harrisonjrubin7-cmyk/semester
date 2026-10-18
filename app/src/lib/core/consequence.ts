@@ -3,7 +3,8 @@ export type Pattern = 'undo' | 'preview' | 'review-confirm' | 'two-person';
 /** The one rule for how hard an action is to take. */
 export function pattern(a: Action): Pattern {
   if (a.institutional) return 'two-person';
-  if (a.record || (a.money ?? 0) > 0) return 'review-confirm';
+  // Money moves in either direction: a refund or reversal is as consequential as a charge.
+  if (a.record || Math.abs(a.money ?? 0) > 0) return 'review-confirm';
   if (a.leavesSemester || a.affectsOthers || !a.reversible) return 'preview';
   return 'undo';
 }

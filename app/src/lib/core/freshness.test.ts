@@ -9,6 +9,9 @@ describe('freshness state', () => {
     expect(state({ lastEventAt: NOW, appliedAt: NOW - 30e3 }, NOW)).toBe('recent');
     expect(state({ lastEventAt: NOW, appliedAt: NOW - 120e3 }, NOW)).toBe('delayed');
   });
+  it('a caught-up projection is live however long it has been idle', () => {
+    expect(state({ lastEventAt: NOW - 10 * 60e3, appliedAt: NOW - 10 * 60e3 }, NOW)).toBe('live');
+  });
   it('a failed worker wins over lag, and a rebuild wins over failure', () => {
     expect(state({ lastEventAt: NOW, appliedAt: NOW, workerFailed: true }, NOW)).toBe('failed');
     expect(state({ lastEventAt: NOW, appliedAt: NOW, workerFailed: true, rebuilding: true }, NOW)).toBe('rebuilding');
