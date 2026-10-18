@@ -1877,6 +1877,9 @@
               },
               "commit_proof_ref": {
                 "type": "null"
+              },
+              "business_outcome": {
+                "type": "null"
               }
             }
           }
