@@ -13,6 +13,7 @@ import {
 } from './office-handoff.ts';
 
 const readiness: RoutableReadiness = {
+  projectionId: 'projection-fall',
   subjectId: 'student-1',
   version: 4,
   blockers: [{ code: 'advising_hold', label: 'Advising required', sourceRefIds: ['sis-1'] }],
@@ -65,6 +66,7 @@ describe('decideBlockerRoute', () => {
   it('lets the student route an open blocker to its owning office', () => {
     expect(route()).toEqual({
       ok: true,
+      projectionId: 'projection-fall',
       subjectId: 'student-1',
       target: 'blocker:advising_hold',
       officeId: 'advising',
@@ -99,6 +101,17 @@ describe('decideBlockerRoute', () => {
         ownership: { ...ownership, 'blocker:housing_hold': 'housing' },
       }),
     ).toEqual({ ok: false, reason: 'target_not_in_readiness' });
+  });
+
+  it('refuses a blocker code that names two blockers, because it cannot say which one is meant', () => {
+    const twice: RoutableReadiness = {
+      ...readiness,
+      blockers: [
+        { code: 'advising_hold', label: 'Advising required', sourceRefIds: ['sis-1'] },
+        { code: 'advising_hold', label: 'Advising required again', sourceRefIds: ['sis-2'] },
+      ],
+    };
+    expect(route({ readiness: twice })).toEqual({ ok: false, reason: 'target_ambiguous' });
   });
 
   it('refuses a hold that is already clear', () => {
@@ -177,6 +190,12 @@ describe('routeFingerprint and classifyRetry', () => {
   it('treats a retry against a newer readiness version as a conflict, not a replay', () => {
     const changed = { ...accepted, readinessVersion: 5 };
     expect(classifyRetry(routeFingerprint(accepted), routeFingerprint(changed))).toBe('conflict');
+  });
+
+  it('treats the same version from a different projection as a conflict, not a replay', () => {
+    const spring = route({ readiness: { ...readiness, projectionId: 'projection-spring' } });
+    if (!spring.ok) throw new Error('fixture must route');
+    expect(classifyRetry(routeFingerprint(accepted), routeFingerprint(spring))).toBe('conflict');
   });
 
   it('treats a reused key with a different office as a conflict', () => {

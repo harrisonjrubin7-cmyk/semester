@@ -52,6 +52,8 @@ export function targetKey(target: RoutableTarget): string {
 
 /** The readiness facts a route decision is made against. */
 export interface RoutableReadiness {
+  /** Stable identity of the projection, so a retry against a different projection never replays. */
+  projectionId: string;
   subjectId: string;
   version: number;
   blockers: readonly ReadinessBlocker[];
@@ -79,11 +81,19 @@ export type RouteRefusal =
   | 'not_authorized'
   | 'stale_readiness'
   | 'target_not_in_readiness'
+  | 'target_ambiguous'
   | 'target_not_open'
   | 'no_owning_office';
 
 export type RouteVerdict =
-  | { ok: true; subjectId: string; target: string; officeId: string; readinessVersion: number }
+  | {
+      ok: true;
+      projectionId: string;
+      subjectId: string;
+      target: string;
+      officeId: string;
+      readinessVersion: number;
+    }
   | { ok: false; reason: RouteRefusal };
 
 /**
@@ -100,6 +110,7 @@ export function decideBlockerRoute(request: RouteBlockerRequest): RouteVerdict {
 
   const presence = targetPresence(readiness, target);
   if (presence === 'missing') return { ok: false, reason: 'target_not_in_readiness' };
+  if (presence === 'ambiguous') return { ok: false, reason: 'target_ambiguous' };
   if (presence === 'clear') return { ok: false, reason: 'target_not_open' };
 
   const officeId: string | undefined = ownership[targetKey(target)];
@@ -107,6 +118,7 @@ export function decideBlockerRoute(request: RouteBlockerRequest): RouteVerdict {
 
   return {
     ok: true,
+    projectionId: readiness.projectionId,
     subjectId: readiness.subjectId,
     target: targetKey(target),
     officeId,
@@ -127,11 +139,17 @@ function actorMayRouteFor(actor: HandoffActor, subjectId: string): boolean {
   }
 }
 
-function targetPresence(readiness: RoutableReadiness, target: RoutableTarget): 'missing' | 'clear' | 'open' {
+function targetPresence(
+  readiness: RoutableReadiness,
+  target: RoutableTarget,
+): 'missing' | 'ambiguous' | 'clear' | 'open' {
   if (target.kind === 'blocker') {
-    // A blocker in the projection is open by definition.
+    // A blocker in the projection is open by definition. The projection does not enforce unique
+    // codes, so a code that names two blockers cannot say which one the student means. Refuse it.
     const { code } = target;
-    return readiness.blockers.some((blocker) => blocker.code === code) ? 'open' : 'missing';
+    const matches = readiness.blockers.filter((blocker) => blocker.code === code).length;
+    if (matches === 0) return 'missing';
+    return matches === 1 ? 'open' : 'ambiguous';
   }
   const { id } = target;
   const hold = readiness.holds.find((candidate) => candidate.id === id);
@@ -182,7 +200,13 @@ function actorMayAct(actor: HandoffActor, handoff: HandoffRecord, action: Handof
  * does not.
  */
 export function routeFingerprint(verdict: Extract<RouteVerdict, { ok: true }>): string {
-  return JSON.stringify([verdict.subjectId, verdict.target, verdict.officeId, verdict.readinessVersion]);
+  return JSON.stringify([
+    verdict.projectionId,
+    verdict.subjectId,
+    verdict.target,
+    verdict.officeId,
+    verdict.readinessVersion,
+  ]);
 }
 
 export type RetryOutcome = 'new' | 'replay' | 'conflict';
