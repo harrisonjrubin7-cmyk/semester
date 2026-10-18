@@ -60,6 +60,11 @@ describe('two-person approval', () => {
     expect((step(late, { type: 'approve', by: 'x', at: fresh.expiresAt + 1 }) as Approval).state).toBe('expired');
   });
 
+  it('a fully approved request cannot be executed after its deadline', () => {
+    const one = step(fresh, { type: 'approve', by: 'x', at: NOW }) as Approval;
+    const two = step(one, { type: 'approve', by: 'y', at: NOW }) as Approval;
+    expect((step(two, { type: 'execute', by: 'r', at: fresh.expiresAt + 1 }) as Approval).state).toBe('expired');
+  });
   it('a rejection stays a rejection after the deadline passes', () => {
     const rejected = step(fresh, { type: 'reject', by: 'x', at: NOW }) as Approval;
     const late: Approval = { ...rejected, mfaAt: { y: fresh.expiresAt - MIN } };

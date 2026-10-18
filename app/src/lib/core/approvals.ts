@@ -5,7 +5,7 @@ const MFA_MS = 15 * 60e3;
 /** Two-person duty: two distinct approvers, neither the requester, each with MFA in the last 15 min; execute only by the requester after full approval. */
 export function step(a: Approval, e: Ev): Approval | { error: string } {
   // Only live requests expire; a rejection or an execution is a terminal outcome and keeps its state.
-  if (e.at > a.expiresAt && ['requested', 'approved-1'].includes(a.state)) return { ...a, state: 'expired' };
+  if (e.at > a.expiresAt && ['requested', 'approved-1', 'approved'].includes(a.state)) return { ...a, state: 'expired' };
   if (e.type === 'execute') return a.state === 'approved' && e.by === a.requester ? { ...a, state: 'executed' } : { error: 'Needs two approvals; only the requester runs it.' };
   if (e.by === a.requester) return { error: 'You can’t approve your own request.' };
   if (a.approvers.includes(e.by)) return { error: 'You already decided this one.' };
