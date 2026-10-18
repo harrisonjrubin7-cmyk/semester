@@ -25,7 +25,7 @@ end_of_pilot:
       required_follow_up: limit scope, address named gaps, retest
     conclude_safely:
       use_when: value, authority, or feasibility does not justify continuation
-      required_follow_up: safe-off, preserve evidence, follow the approved retention and communication plan (retention_and_communication_plan_ref: TBD; must be approved before data collection begins, per launch-cadence.yaml stage 1)
+      required_follow_up: "safe-off, preserve evidence, follow the approved retention and communication plan (retention_and_communication_plan_ref TBD; must be approved before data collection begins, per launch-cadence.yaml stage 1)"
 
   decision_record:   # completed when the decision is made. All TBD until then.
     selected_option: TBD   # one of renew_and_deepen, repeat, remediate, conclude_safely
