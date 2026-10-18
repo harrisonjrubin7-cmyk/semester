@@ -119,6 +119,17 @@ class HarnessTests(unittest.TestCase):
         for week,code in shortcuts.items():
             result=self.run_week(week-1,code)
             self.assertLess(result['passed'],result['total'],'week %d'%week)
+    def test_field_presence_shortcuts_lose_points(self):
+        shortcuts={
+            3:"def validate_task(r):\n    return isinstance(r,dict) and set(r)=={'id','title','status'} and isinstance(r['id'],str) and bool(r['id'].strip()) and bool(str(r['title']).strip()) and r['status'] in ('open','completed')\n",
+            6:"def tenant_access(r): return bool(r['principal_tenant']) and r['principal_tenant']==r['resource_tenant'] and r['active'] is True and r['scopes']==['tasks:read']\n",
+            7:"def audit_ready(r): return all(k in r for k in ('actor','tenant','action','target','request_id')) and all(isinstance(r[k],str) and bool(r[k]) for k in ('actor','request_id'))\n",
+            14:"def evidence_ready(r):\n    t=r.get('tests',{})\n    return all(k in r for k in ('artifact_digest','contract_version','fixture_version')) and all(t.get(k) is True for k in ('contract','isolation','revocation','accessibility','recovery'))\n",
+            16:"def activation_ready(r): return all(r.get(k) for k in ('certified','institution_approved','reconciled','rollback_ready','support_ready'))\n",
+        }
+        for week,code in shortcuts.items():
+            result=self.run_week(week-1,code)
+            self.assertLess(result['passed'],result['total'],'week %d'%week)
     def test_unserializable_result_is_incorrect_not_a_worker_failure(self):
         # A set cannot cross the JSON result channel; it must score as wrong, not abort the whole grade.
         result=self.run_week(9,'def deduplicate(r): return set(r["ids"])\n')
