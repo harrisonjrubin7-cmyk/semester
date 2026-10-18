@@ -78,6 +78,11 @@ class RejectedContracts(unittest.TestCase):
             d['authority']['institution_scope'] = 'other-tenant/registration/enroll'
         self.assertRejected(mutate(fn), 'not bound to scope tenant_id')
 
+    def test_authority_scope_not_bound_to_workflow_domain(self):
+        def fn(d):
+            d['authority']['institution_scope'] = 'illustrative-tenant/financial-aid/enroll'
+        self.assertRejected(mutate(fn), 'not bound to scope tenant_id and domain')
+
     def test_invalid_effective_from(self):
         def fn(d):
             d['authority']['effective_from'] = '2026-13-45T00:00:00Z'

@@ -118,8 +118,9 @@ def semantic_errors(doc):
             if (authorized or activated) and effective > datetime.now(timezone.utc):
                 errors.append('effective_from is in the future for verified authority')
     scope_bound = doc['authority']['institution_scope']
-    if scope_bound is not None and not (doc['scope']['tenant_id'] and scope_bound.startswith(doc['scope']['tenant_id'] + '/')):
-        errors.append('Authority institution_scope is not bound to scope tenant_id')
+    bound_prefix = str(doc['scope']['tenant_id']) + '/' + doc['domain']
+    if scope_bound is not None and not (doc['scope']['tenant_id'] and (scope_bound == bound_prefix or scope_bound.startswith(bound_prefix + '/'))):
+        errors.append('Authority institution_scope is not bound to scope tenant_id and domain')
     recovery_codes = [x['code'] for x in doc['recovery_paths']]
     if len(recovery_codes) != len(set(recovery_codes)):
         errors.append('Duplicate recovery codes')
