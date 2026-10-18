@@ -1,6 +1,6 @@
 # Semester architecture dashboard — package and status
 
-Source: architecture package uploaded 2026-10-13 (`Semester-architecture-dashboard-and-code-review.zip`, sha256 `98fce65d…79bbab6`). `index.html` is the uploaded dashboard (sha256 `d6a41fb2…7507fd3a`) with two changes made in this repository: search matches only route, title and regions, and the skip link focuses `main` without rewriting the route in `location.hash`.
+Source: architecture package uploaded 2026-10-13 (`Semester-architecture-dashboard-and-code-review.zip`, sha256 `98fce65d…79bbab6`). `index.html` is the uploaded dashboard (sha256 `d6a41fb2…7507fd3a`) with four changes made in this repository: (1) search matches only route, title and regions; (2) the skip link focuses `main` without rewriting the route in `location.hash`; (3) dark-theme variables are reset under `@media print`; (4) the wireframe render omits the `hero` and `CTA` regions that the shell already renders. The current file's sha256 is `d1bc823e…7deb`.
 
 ## Contents
 
