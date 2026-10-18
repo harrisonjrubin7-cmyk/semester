@@ -21,6 +21,10 @@ CREATE TABLE IF NOT EXISTS outbox(seq INTEGER PRIMARY KEY AUTOINCREMENT,id TEXT 
 CREATE TABLE IF NOT EXISTS projection(tenant TEXT,kind TEXT,object_id TEXT,version INTEGER,payload TEXT,PRIMARY KEY(tenant,kind,object_id));
 CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TEXT,actor TEXT,command TEXT,object_id TEXT,receipt TEXT,created REAL);
 """)
+   # Databases created before a column existed keep their old tables; add missing columns and backfill.
+   for table,col in (('grades','submission_id'),('approvals','reason')):
+    if col not in [r['name'] for r in d.execute(f'PRAGMA table_info({table})')]:d.execute(f'ALTER TABLE {table} ADD COLUMN {col} TEXT')
+   d.execute('UPDATE grades SET submission_id=(SELECT id FROM submissions s WHERE s.tenant=grades.tenant AND s.course=grades.course AND s.student=grades.student ORDER BY s.created DESC LIMIT 1) WHERE submission_id IS NULL')
  @contextmanager
  def db(self):
   d=sqlite3.connect(self.path,timeout=5);d.row_factory=sqlite3.Row
@@ -73,6 +77,7 @@ CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TE
     if role!='student':raise Rejected('student submission only')
     s=self.student(d,a,a['id'])
     if not s['onboarded']:raise Rejected('onboarding required')
+    if d.execute("SELECT 1 FROM grades WHERE tenant=? AND course=? AND student=? AND state='released'",(tenant,course,a['id'])).fetchone():raise Rejected('grade already released; submissions are closed')
     body=p.get('body')
     if not isinstance(body,str) or not body.strip() or len(body)>4000:raise Rejected('submission body required, max 4000')
     oid=str(uuid.uuid4());d.execute('INSERT INTO submissions VALUES (?,?,?,?,?,?)',(oid,tenant,course,a['id'],body,time.time()));result={'submission':oid,'state':'submitted'}
@@ -126,6 +131,13 @@ CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TE
    d.execute('INSERT INTO receipts VALUES (?,?,?,?,?,?)',(rid,tenant,a['id'],key,fp,canon(receipt)))
    d.execute('INSERT INTO audit(tenant,actor,command,object_id,receipt,created) VALUES (?,?,?,?,?,?)',(tenant,a['id'],command,oid,rid,time.time()))
    return receipt
+ def approval_current(self,d,tenant,r):
+  # An approval is actionable only while the object it names still matches the binding recorded at request time.
+  if r['kind']=='grade':
+   g=d.execute('SELECT * FROM grades WHERE id=? AND tenant=?',(r['object_id'],tenant)).fetchone()
+   return bool(g) and digest(dict(g))==r['binding'] and g['submission_id']==self.latest_submission(d,tenant,g['course'],g['student'])
+  s=d.execute('SELECT * FROM students WHERE id=? AND tenant=?',(r['object_id'],tenant)).fetchone()
+  return bool(s) and digest(dict(s))==r['binding']
  def latest_submission(self,d,tenant,course,student):
   sub=d.execute('SELECT id FROM submissions WHERE tenant=? AND course=? AND student=? ORDER BY created DESC LIMIT 1',(tenant,course,student)).fetchone()
   return sub['id'] if sub else None
@@ -154,6 +166,7 @@ CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TE
    # Pending and unexpired only; faculty see grade approvals and registrars see hold approvals, reviewers see both.
    kind={'faculty':'grade','registrar':'hold'}.get(role)
    sql="SELECT id,kind,object_id,requester,expires,state,reason FROM approvals WHERE tenant=? AND state='pending' AND expires>?"+(" AND kind=?" if kind else '')
-   out['approvals']=[dict(r) for r in d.execute(sql,(t,time.time())+((kind,) if kind else ()))]
+   rows=[dict(r) for r in d.execute(sql.replace('state,reason','state,reason,binding'),(t,time.time())+((kind,) if kind else ()))]
+   out['approvals']=[{k:v for k,v in r.items() if k!='binding'} for r in rows if self.approval_current(d,t,r)]
    if role=='faculty':out['submissions']=[dict(r) for r in d.execute('SELECT id,student,body,created FROM submissions WHERE tenant=? AND course=?',(t,'course'))]
    out['students']=[dict(r) for r in d.execute('SELECT * FROM students WHERE tenant=?',(t,))];return out

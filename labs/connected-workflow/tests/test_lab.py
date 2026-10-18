@@ -157,3 +157,24 @@ class TestReviewFindings(unittest.TestCase):
  def test_lapsed_demo_sessions_renew_on_reopen(self):
   import sqlite3;d=sqlite3.connect(self.lab.path);d.execute('UPDATE actors SET expires=0');d.commit();d.close()
   Lab(self.lab.path).seed();self.assertEqual(self.lab.view('demo-a-student')['role'],'student')
+ def test_stale_approval_leaves_reviewer_queue(self):
+  self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'work'})
+  g=self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})
+  self.cmd('a-faculty','grade.request_release',{'grade':g['grade'],'version':1,'reason':'Reviewed rubric'})
+  self.cmd('a-faculty','grade.draft',{'student':'a-student','score':70,'version':1})
+  self.assertEqual(self.lab.view('demo-a-reviewer')['approvals'],[])
+ def test_submission_after_release_is_rejected(self):
+  self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'work'})
+  g=self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})
+  a=self.cmd('a-faculty','grade.request_release',{'grade':g['grade'],'version':1,'reason':'Reviewed rubric'})
+  self.cmd('a-reviewer','grade.approve_release',{'approval':a['approval']})
+  with self.assertRaises(Rejected):self.cmd('a-student','submission.create',{'body':'late revision'})
+ def test_legacy_database_gains_new_columns_and_backfill(self):
+  import sqlite3
+  self.cmd('a-student','onboarding.complete');sub=self.cmd('a-student','submission.create',{'body':'work'})['submission']
+  self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})
+  d=sqlite3.connect(self.lab.path);d.execute('ALTER TABLE grades DROP COLUMN submission_id');d.execute('ALTER TABLE approvals DROP COLUMN reason');d.commit();d.close()
+  Lab(self.lab.path).seed()
+  d=sqlite3.connect(self.lab.path);cols=lambda t:[r[1] for r in d.execute(f'PRAGMA table_info({t})')]
+  self.assertIn('submission_id',cols('grades'));self.assertIn('reason',cols('approvals'))
+  self.assertEqual(d.execute('SELECT submission_id FROM grades').fetchone()[0],sub);d.close()
