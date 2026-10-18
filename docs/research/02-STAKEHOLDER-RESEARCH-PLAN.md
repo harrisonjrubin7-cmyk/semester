@@ -1,3 +1,54 @@
+---
+stale-refs:
+  - source: docs/research/08-ETHICS-CONSENT-DATA-HANDLING.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: PILOT.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-readiness/PROCUREMENT-OPERATING-MAP.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/01-EVIDENCE-MODEL.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/03-INTERVIEW-GUIDES.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/04-TESTING-AND-OBSERVATION.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/06-RESEARCH-REPOSITORY.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/07-PILOT-AND-LONGITUDINAL.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 02 · Stakeholder research plan
 
 Twelve groups, one plan. Terms (`C0`–`C4`, source classes, `route`) are defined

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: SECRETS.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: supabase/DEPLOY.md
+    changed_at: "2026-10-18T20:45:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Edge functions
 
 > **Type:** reference · **Audience:** implementers, operators · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/platform-reference.test.ts`

@@ -1,3 +1,48 @@
+---
+stale-refs:
+  - source: docs/institutional-implementation/FEEDBACK-AND-ESCALATION.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/HYPERCARE-AND-HANDOFF.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/MIGRATION-WORKBOOK.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/OFFBOARDING-AND-EXPORT.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/README.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/TENANT-CONFIGURATION-WORKBOOK.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/README.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Implementation methodology
 
 | Control | Value |

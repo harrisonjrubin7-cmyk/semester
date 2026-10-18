@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/program/COMPLETION_RISK_REGISTER.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # No more unscoped build — rule
 
 **Effective:** on adoption by the owner. **Proposed:** 2026-10-04. **Status:** PROPOSAL (it records no decision; adoption is a decision for the owner and takes its pull request's number as `docs/decisions/D-<PR#>.md` per `CLAUDE.md`).

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/master/SEMESTER_DATA_AUTHORITY_MATRIX.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_DOMAIN_REPLACEMENT_GATES.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Domain authority matrix (Phase 0 delta)
 
 **As of** 2026-10-05 · **Status** Phase 0. The full matrix is [`SEMESTER_DATA_AUTHORITY_MATRIX.md`](SEMESTER_DATA_AUTHORITY_MATRIX.md) and the replacement gates are [`SEMESTER_DOMAIN_REPLACEMENT_GATES.md`](SEMESTER_DOMAIN_REPLACEMENT_GATES.md). This page only adds what the live schema shows.

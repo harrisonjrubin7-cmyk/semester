@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/CAPABILITY-ACTIVATION-REGISTER.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester — complete capability register (Phase 0)
 
 **Assessment date:** 2026-10-04 · **Repository:** `origin/main` @ `c170dcd` · **Companion:** [`FINAL_BASELINE_AUDIT.md`](FINAL_BASELINE_AUDIT.md)

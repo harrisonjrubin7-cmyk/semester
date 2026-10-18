@@ -1,3 +1,34 @@
+---
+stale-refs:
+  - source: labs/connected-workflow/lab/README.md
+    changed_at: "2026-10-18T16:29:24"
+    sections_changed: [Executable connected workflow lab]
+    summary: "Removed: Schema note: the approvals table gained a `reason` column, and grades gained a `submission_id` column (drafts record the submission they assess). Delete an existing synthetic database before running this version; `CREATE TABLE IF NOT EXISTS` does not migrate old files.. Added: Schema note: the approvals table gained a `reason` column, and grades gained a `submission_id` column (drafts record the submission they assess). An existing synthetic database is migrated on open: missing columns are added and existing grades are backfilled with their latest submission. Deleting it is still the simplest reset."
+  - source: README.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUPPLY-CHAIN.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/README.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # Repository map
 
 > **Type:** reference · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`

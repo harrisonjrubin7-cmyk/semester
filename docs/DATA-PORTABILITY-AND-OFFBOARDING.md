@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Data portability and offboarding
 
 Part 13 of the expansion command. Phase 5. Much of the student half exists.

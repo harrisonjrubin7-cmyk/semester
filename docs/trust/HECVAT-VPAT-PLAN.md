@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # HECVAT and VPAT/ACR: 90-Day Plan
 
 HECVAT is a higher-ed vendor assessment questionnaire, and a VPAT is the

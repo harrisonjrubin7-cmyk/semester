@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/design/SEMESTER-UI-CONSTITUTION.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DESIGN-SYSTEM-MIGRATION-PLAN.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Design and Product Finalization Audit
 
 | Control | Value |

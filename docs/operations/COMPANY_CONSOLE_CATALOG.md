@@ -1,3 +1,54 @@
+---
+stale-refs:
+  - source: docs/OPERATIONS-CONSOLE-MAP.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/README.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/INSTITUTION_CONSOLE_CATALOG.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/OPERATIONS_COMMAND_CENTER.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/SEMESTER_COMPANY_OPERATING_SYSTEM.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/02-implementation-methodology.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/10-tenant-launch-risk-and-readiness.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Company console catalog
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision. Overview: [`SEMESTER_COMPANY_OPERATING_SYSTEM.md`](SEMESTER_COMPANY_OPERATING_SYSTEM.md). Same dossier format and conventions as [`INSTITUTION_CONSOLE_CATALOG.md`](INSTITUTION_CONSOLE_CATALOG.md): eight lines for the nineteen dimensions, **⊕** = proposed capability or event, screens are views of the existing Console (`#/console/<view>`, B-00) and reuse its shared pattern, states and context bar. Operating owner is a Semester **seat**; every seat is the founder or `UNASSIGNED` today.

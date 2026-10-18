@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: MARKET-POSITION.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/gtm/BRAND-AND-MARKETING-STRATEGY.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester brand platform
 
 > **DRAFT FOR OWNER REVIEW AND CLAIMS REVIEW.** Nothing here is an approved public

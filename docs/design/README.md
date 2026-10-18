@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/design/DESIGN-SYSTEM-PRODUCT-SPEC.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/design/LAYOUT-CONTRACT.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester design standards
 
 Consistency beyond the visuals: what words mean, how screens are shaped, how

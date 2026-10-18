@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/DOMAIN-REPLACEMENT-REGISTER.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/OPERATIONAL-REALITY-REGISTER.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Institutional Capability Matrix
 
 | Control | Value |

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/trust/AI-GOVERNANCE-PROGRAM.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # AI Human Oversight Standard
 
 | Control | Value |

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: MONITORING.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester logging, monitoring, and alerting standard — controlled draft
 
 - **Status:** `PARTIAL / NOT FULLY STAFFED OR OPERATED`

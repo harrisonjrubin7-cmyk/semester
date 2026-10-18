@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/PAID-PILOT-FRAMEWORK.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Pilot Success Plan (template and metric dictionary)
 
 | Control | Value |

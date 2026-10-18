@@ -1,3 +1,26 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/OPERATING-RHYTHM.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Proof calendar
 
 <!-- Rendered from app/src/lib/ops/proofcalendar.ts by proofcalendar.test.ts. Edit the data, then run `npm run registers` from app/. -->

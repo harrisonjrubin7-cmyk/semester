@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Pilot evidence plan: logo volume, pilot conversion and sales-cycle length
 
 | Control | Value |

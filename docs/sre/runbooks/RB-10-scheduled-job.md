@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # RB-10 · A scheduled job is not running
 
 Class C1 to C3, by job · role per job · alerts `job:absent`, `job:integrity-failed` · components every `job:*`.
