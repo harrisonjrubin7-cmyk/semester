@@ -80,6 +80,15 @@ def semantic_errors(doc):
         effective_at = parse_timestamp(doc['authority']['effective_from']) if doc['authority']['effective_from'] else None
     except ValueError:
         effective_at = None
+    prerequisites = ['designed', 'implemented', 'tested', 'deployed', 'institution_authorized']
+    prerequisite_times = []
+    for name in prerequisites:
+        if doc['readiness'][name]['status'] == 'verified':
+            for ev in doc['readiness'][name]['evidence']:
+                try:
+                    prerequisite_times.append((name, parse_timestamp(ev['verified_at'])))
+                except ValueError:
+                    pass
     for gate_name, gate in doc['readiness'].items():
         for ev in gate['evidence']:
             try:
@@ -91,6 +100,10 @@ def semantic_errors(doc):
                 errors.append(gate_name + ' evidence verified_at is in the future: ' + ev['reference'])
             if gate_name == 'production_enabled' and gate['status'] == 'verified' and effective_at and verified_at < effective_at:
                 errors.append('production_enabled evidence predates authority effective_from: ' + ev['reference'])
+            if gate_name == 'production_enabled' and gate['status'] == 'verified':
+                for name, prerequisite_at in prerequisite_times:
+                    if verified_at < prerequisite_at:
+                        errors.append('production_enabled evidence predates ' + name + ' evidence: ' + ev['reference'])
             if gate_name == 'production_enabled' and gate['status'] == 'verified' and ev['environment'] != 'production':
                 errors.append('production_enabled evidence is not from production: ' + ev['reference'])
     effective_from = doc['authority']['effective_from']
