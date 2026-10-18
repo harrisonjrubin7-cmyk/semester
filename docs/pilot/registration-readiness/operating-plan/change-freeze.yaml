@@ -1,0 +1,32 @@
+# Operating plan object 12: change rules for the pilot. Applies from activation (stage 4).
+pilot_change_freeze:
+  allowed_without_scope_reapproval:
+    - security_fix
+    - privacy_fix
+    - accessibility_blocker_fix
+    - correctness_fix
+    - safe_state_or_support_improvement
+    - emergency_safe_off
+
+  requires_change_control:
+    - new_data_element
+    - new_source
+    - new_role_or_permission
+    - new_institution_policy_rule
+    - change_to_student_consequence
+    - AI_scope_change
+    - expanded_cohort
+    - new_staff_queue_or_external_system_action
+
+  prohibited_during_hypercare:
+    - new_product_domain
+    - autonomous_decision
+    - unrelated_UI_redesign
+    - untested_connector
+    - public_feature_claim_not_supported_by_evidence
+
+  # Every change in requires_change_control gets one record before it takes effect.
+  pilot_change_record:
+    fields: [change_id, category, affected_scope, rationale, requested_by, approvers, decision, decision_time, evidence_refs, release_invalidation]   # decision: approved or rejected
+    storage: TBD   # system of record, named before stage 4
+    approval_rule: "no requires_change_control change takes effect until its record carries decision approved, an approval from every approver, and a decision_time"
