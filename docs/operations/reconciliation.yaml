@@ -1,0 +1,97 @@
+# docs/operations/reconciliation.yaml
+# Status: specified. State machine and safe-repair rules implemented in
+# app/src/lib/reconciliation/case.ts (moveCase, isRepairAllowed).
+# Reconciliation is the response when a derived projection conflicts with, lags behind,
+# or cannot be confirmed against an authoritative institutional source.
+
+reconciliation:
+  case_states:
+    - detected
+    - triaged
+    - awaiting_source
+    - awaiting_institution
+    - repair_proposed
+    - repair_approved
+    - repaired
+    - reverified
+    - closed
+    - escalated
+
+  discrepancy_classes:
+    - stale_source
+    - missing_authoritative_record
+    - mapping_error
+    - schema_change
+    - duplicate_delivery
+    - ordering_conflict
+    - policy_version_mismatch
+    - institution_override
+    - unknown
+
+  safe_repairs:
+    stale_source:
+      - refresh_source_snapshot
+      - rerun_derived_evaluation
+      - retain_prior_receipt_with_supersession_link
+    mapping_error:
+      - quarantine_invalid_payload
+      - correct_versioned_mapping
+      - replay_from_known_safe_checkpoint
+      - reverify_affected_records
+    institution_override:
+      - preserve_institution_record
+      - mark_semester_projection_superseded
+      - notify_affected_workflow_owner
+    # Classes without an entry have no pre-approved repair: they are escalated.
+
+  prohibited_repairs:
+    - "Overwrite an authoritative institutional record."
+    - "Backdate an audit event."
+    - "Delete a discrepancy to improve a dashboard."
+    - "Re-run a consequential command without idempotency and policy checks."
+
+  # Implemented rules beyond the narrative: the proposer cannot approve their own repair
+  # (actor names compared without case or surrounding spaces), re-verification failure
+  # returns the case to triage with its repair evidence cleared, escalated cases with no
+  # safe repair may move to reverified, and closing needs every key below. Each case records
+  # detectedAt, sourceSystem and cohortId when it opens.
+  resolution_required:
+    - source_refresh_verified
+    - affected_scope_rechecked
+    - audit_linked
+    - student_outcome_recomputed_or_reviewed
+    - case_owner_closed
+
+example_case:
+  id: REC-2026-001
+  tenant: named_institution
+  capability: registration_readiness
+  class: stale_source
+  severity: high
+  detected_by: source_freshness_monitor
+  source:
+    system: SIS
+    mapping_version: 1
+    last_confirmed_at: pending
+    approved_freshness_window: tenant_defined
+  affected:
+    cohort: approved_pilot_cohort
+    record_count: unknown_until_scoped
+    definitive_outcomes_blocked: true
+  safe_state:
+    student_display: >
+      A source needed for this check is not current enough to show a final
+      readiness result. Your official registration record has not changed.
+    staff_display: >
+      Source freshness exceeded its approved window. Review the connection,
+      then rerun the affected readiness evaluations.
+
+open_decisions:
+  - id: RECON-CONTRACT-001
+    summary: >
+      This contract and docs/pilot/registration-readiness/reconciliation-policy.yaml define different state and
+      discrepancy vocabularies. The runtime in app/src/lib/reconciliation/case.ts implements only this contract's
+      states. Persistence and API wiring must not accept records written under the pilot policy until one contract
+      is adopted or a documented, tested mapping exists.
+    status: open
+    owner: _pending_
