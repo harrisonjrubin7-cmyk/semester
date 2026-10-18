@@ -91,10 +91,25 @@ class HarnessTests(unittest.TestCase):
             13:"def safe_destination(r):\n    from urllib.parse import urlsplit\n    import ipaddress\n    u=urlsplit(r['url'])\n    try: ip=ipaddress.ip_address(u.hostname)\n    except ValueError: return False\n    return u.scheme=='https' and ip.is_global and u.username is None and u.password is None and u.port in (None,443)\n",
             14:"def evidence_ready(r):\n    t=r.get('tests',{})\n    return all(bool(r.get(k)) for k in ('artifact_digest','contract_version','fixture_version')) and all(t.get(k) is True for k in ('contract','isolation','revocation','accessibility','recovery'))\n",
             16:"def activation_ready(r): return all(r.get(k) is True for k in ('certified','institution_approved','reconciled','rollback_ready','support_ready'))\n",
+            9:"def idempotency(r):\n    p=r['previous_digest']\n    if p is None: return 'execute'\n    return 'replay' if p==r['digest'] else 'conflict'\n",
+            15:"def reconcile(r):\n    e=set(r['expected']); o=set(r['observed'])\n    return {'missing':sorted(e-o),'unexpected':sorted(o-e)}\n",
         }
         for week,code in references.items():
             result=self.run_week(week-1,code)
             self.assertEqual(result['passed'],result['total'],'week %d'%week)
+    def test_nested_result_types_are_checked(self):
+        code="def reconcile(r):\n    return {'missing':tuple(sorted(set(r['expected'])-set(r['observed']))),'unexpected':tuple(sorted(set(r['observed'])-set(r['expected'])))}\n"
+        result=self.run_week(14,code)
+        self.assertLess(result['passed'],result['total'])
+    def test_learner_module_is_registered_before_execution(self):
+        code="from __future__ import annotations\nfrom dataclasses import dataclass\n@dataclass\nclass Check:\n    value: int = 0\ndef validate_task(r):\n    return isinstance(r,dict) and set(r)=={'id','title','status'} and all(isinstance(r[k],str) and bool(r[k].strip()) for k in ('id','title')) and r['status'] in ('open','completed')\n"
+        result=self.run_code(code)
+        self.assertIsNone(result['failure'])
+        self.assertEqual(result['passed'],result['total'])
+    def test_verification_record_matches_the_suite(self):
+        record=json.loads((BASE/'verification.json').read_text())
+        self.assertEqual(record['week3_visible_cases_passed'],len(MODULES[2]['cases']))
+        self.assertEqual(record['harness_unittest_methods'],len([n for n in dir(HarnessTests) if n.startswith('test_')]))
     def test_always_false_does_not_earn_full_credit(self):
         for index,name in ((13,'evidence_ready'),(15,'activation_ready')):
             result=self.run_week(index,f'def {name}(r): return False\n')

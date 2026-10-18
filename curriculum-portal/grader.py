@@ -5,19 +5,28 @@ from pathlib import Path
 WORKER = """import copy,importlib.util,json,os,sys
 RESULT=os.dup(1);os.dup2(2,1);sys.stdout=sys.stderr
 spec=importlib.util.spec_from_file_location('learner',sys.argv[1])
-module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+module=importlib.util.module_from_spec(spec);sys.modules['learner']=module;spec.loader.exec_module(module)
+def shape(v):
+    if isinstance(v,dict): return {k:shape(x) for k,x in v.items()}
+    if isinstance(v,(list,tuple)): return [type(v).__name__]+[shape(x) for x in v]
+    return type(v).__name__
 suite=json.loads(sys.stdin.read());results=[]
 for case in suite['cases']:
     before=copy.deepcopy(case['input'])
     try:
         outcome={'value':getattr(module,suite['function'])(case['input'])}
-        outcome['type']=type(outcome['value']).__name__
+        outcome['shape']=shape(outcome['value'])
     except ValueError: outcome={'exception':'ValueError'}
     except BaseException: outcome={'exception':'ExecutionError'}
     outcome['mutated']=case['input']!=before
     results.append(outcome)
 with os.fdopen(RESULT,'w') as out: out.write(json.dumps(results,allow_nan=False)+'\\n')
 """
+
+def shape(v):
+    if isinstance(v, dict): return {k: shape(x) for k, x in v.items()}
+    if isinstance(v, (list, tuple)): return [type(v).__name__] + [shape(x) for x in v]
+    return type(v).__name__
 
 def grade(suite, submission, timeout=5):
     with open(submission, 'rb') as handle:
@@ -69,8 +78,8 @@ def grade(suite, submission, timeout=5):
                 unexpected = result.get('exception') == 'ExecutionError' or (
                     result.get('exception') == 'ValueError' and expected != '!ValueError')
                 if unexpected: learner_errors += 1
-                # 0 == False and 1 == True, and JSON turns tuples into lists, so the worker reports the native type name.
-                value_ok = 'value' in result and result['value'] == expected and result.get('type') == type(expected).__name__
+                # 0 == False and 1 == True, and JSON turns tuples into lists, so the worker reports the native shape.
+                value_ok = 'value' in result and result['value'] == expected and result.get('shape') == shape(expected)
                 # Only contracts that forbid mutation (suite 'immutable') penalise it.
                 ok = (not suite.get('immutable') or result.get('mutated') is False) and (
                     (expected == '!ValueError' and result.get('exception') == 'ValueError') or
