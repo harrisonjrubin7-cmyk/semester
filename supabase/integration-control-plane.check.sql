@@ -124,6 +124,7 @@ do $$
 declare
   integ uuid; uadmin uuid; student uuid; classmate uuid; integ_b uuid; platform uuid;
   conn uuid; conn_pub text; conn_b uuid; scope_ok uuid; dlq uuid; run uuid;
+  conn_r uuid; conn_r_pub text; scope_own uuid;
   n bigint; st text;
 begin
   insert into public.schools (id, name, email_domains) values
@@ -405,8 +406,79 @@ begin
          allowed_in_approved_ai, allowed_in_consumer_ai, allowed_in_external_connector, allowed_in_community, retention_policy)
        values ('icp-a', 'T2', true, false, false, false, false, 'x')$q$);
 
+  -- Revocation ------------------------------------------------------------
+  --
+  -- Approval that cannot be withdrawn is not approval, it is a one-way door.
+  -- Phase 4 (P4-N2): the approver's capability, and only it, takes an approved
+  -- connection or scope back; the worker's own rule (`approved_at` set, status
+  -- not disconnected) then refuses it without being told anything new.
+
+  perform pg_temp.expect_allowed('a second connection is added, to be revoked', integ,
+    $q$insert into public.integration_connections (tenant_id, provider_domain, provider_name, connection_name)
+       values ('icp-a', 'sis', 'Banner', 'Banner SIS read')$q$);
+  select id, public_id into conn_r, conn_r_pub from public.integration_connections where provider_name = 'Banner';
+  perform pg_temp.expect_allowed('and approved', uadmin,
+    format('select public.integration_approve_connection(%L, %L)', conn_r_pub, 'read'));
+  perform pg_temp.expect_refused('the integration admin revokes a connection''s approval', integ,
+    format('select public.integration_revoke_connection(%L, %L)', conn_r_pub, 'contract ended'));
+  perform pg_temp.expect_refused('another school''s admin revokes it', integ_b,
+    format('select public.integration_revoke_connection(%L, %L)', conn_r_pub, 'contract ended'));
+  perform pg_temp.expect_refused('revoking without a reason', uadmin,
+    format('select public.integration_revoke_connection(%L, %L)', conn_r_pub, '  '));
+  perform pg_temp.expect_allowed('the university admin revokes it, with a reason', uadmin,
+    format('select public.integration_revoke_connection(%L, %L)', conn_r_pub, 'contract ended'));
+  select count(*) into n from public.integration_connections
+   where id = conn_r and approved_at is null and approved_by is null
+     and status = 'disconnected' and disconnected_at is not null;
+  perform pg_temp.counted('revocation clears the approval and disconnects the connection', n, 1);
+  perform pg_temp.expect_rejected('a revoked connection cannot be made healthy by a direct update',
+    format('update public.integration_connections set status = %L where id = %L', 'healthy', conn_r));
+  perform pg_temp.expect_allowed('revoking twice is a no-op, not an error', uadmin,
+    format('select public.integration_revoke_connection(%L, %L)', conn_r_pub, 'contract ended'));
+  perform pg_temp.expect_allowed('a later approval is a new decision', uadmin,
+    format('select public.integration_approve_connection(%L, %L)', conn_r_pub, 'read'));
+  select count(*) into n from public.integration_connections
+   where id = conn_r and approved_at is not null and status = 'configuring';
+  perform pg_temp.counted('and starts again from configuring', n, 1);
+
+  perform pg_temp.expect_refused('the integration admin revokes a scope''s approval', integ,
+    format('select public.integration_revoke_scope(%L, %L)', scope_ok, 'no longer needed'));
+  perform pg_temp.expect_allowed('the university admin revokes a scope''s approval', uadmin,
+    format('select public.integration_revoke_scope(%L, %L)', scope_ok, 'no longer needed'));
+  select count(*) into n from public.integration_scopes
+   where id = scope_ok and not approved and approved_by is null and approved_at is null;
+  perform pg_temp.counted('the scope is unapproved again, with no approver left on it', n, 1);
+
+  -- Scope approval needs two people. The proposer is recorded by the server
+  -- when the scope is proposed; the same person may not then approve it.
+  perform pg_temp.expect_refused('a client naming the proposer of a scope', integ,
+    format($q$insert into public.integration_scopes (tenant_id, connection_id, scope_key, scope_type, purpose, proposed_by)
+              values ('icp-a', %L, 'scope.lms.course_titles_read', 'read', 'Show course names', %L)$q$, conn, uadmin));
+  perform pg_temp.expect_allowed('the integration admin proposes a scope', integ,
+    format($q$insert into public.integration_scopes (tenant_id, connection_id, scope_key, scope_type, purpose)
+              values ('icp-a', %L, 'scope.lms.course_titles_read', 'read', 'Show course names')$q$, conn));
+  select count(*) into n from public.integration_scopes
+   where scope_key = 'scope.lms.course_titles_read' and proposed_by = integ;
+  perform pg_temp.counted('the proposer is stamped from the session', n, 1);
+  -- A scope the university admin proposed (written here without a session, as
+  -- a migration or an operator would; the stamp keeps what was supplied).
+  -- `become` sets the claims for the whole transaction, so they are cleared
+  -- first or the stamp would name the last account this suite became.
+  perform set_config('request.jwt.claims', '', true);
+  insert into public.integration_scopes (tenant_id, connection_id, scope_key, scope_type, purpose, proposed_by)
+  values ('icp-a', conn, 'scope.lms.section_titles_read', 'read', 'Show section names', uadmin)
+  returning id into scope_own;
+  perform pg_temp.expect_refused('the proposer approving their own scope through the function', uadmin,
+    format('select public.integration_approve_scope(%L)', scope_own));
+  select count(*) into n from public.integration_scopes where id = scope_own and not approved;
+  perform pg_temp.counted('and the scope stays unapproved', n, 1);
+
   -- Audit -----------------------------------------------------------------
 
+  select count(*) into n from public.tenant_policy_audit_event
+   where tenant_id = 'icp-a' and entity_type = 'integration_connections'
+     and actor_id = uadmin and action = 'update' and new_data ->> 'status' = 'disconnected';
+  perform pg_temp.counted('the revocation is audited against the revoker', n, 1);
   select count(*) into n from public.tenant_policy_audit_event
    where tenant_id = 'icp-a' and entity_type = 'integration_connections';
   if n < 3 then raise exception 'FAILED: connection changes left % audit events', n; end if;
@@ -421,7 +493,7 @@ begin
   perform pg_temp.counted('the replay request is audited against its requester', n, 1);
   select count(*) into n from public.tenant_policy_audit_event
    where entity_type = 'integration_scopes' and actor_id = uadmin and action = 'update';
-  perform pg_temp.counted('the scope approval is audited against its approver', n, 1);
+  perform pg_temp.counted('the scope approval and its revocation are audited against the approver', n, 2);
   perform pg_temp.counted('another school''s auditor reads these events',
     pg_temp.seen(integ_b, $q$select 1 from public.tenant_policy_audit_event where tenant_id = 'icp-a'$q$), 0);
 end $$;
