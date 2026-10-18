@@ -190,6 +190,39 @@ begin
     $q$update public.trust_artifact_versions set storage_ref = 'trust-packet/hecvat/other.pdf' where artifact_key = 'hecvat'$q$,
     'append-only');
 
+  -- An artifact that has been published cannot be loosened to public (F-1).
+  -- Before its first version, the tier is still being settled.
+  perform pg_temp.run(officer, $q$insert into public.trust_artifacts (key, title, tier, owner) values
+    ('tier-scratch', 'Tier scratch', 'nda', 'Security lead')$q$);
+  perform pg_temp.counted('an NDA artifact with no version yet can still be set to public',
+    pg_temp.run(officer, $q$update public.trust_artifacts set tier = 'public' where key = 'tier-scratch'$q$), 1);
+  perform pg_temp.run(officer, $q$update public.trust_artifacts set tier = 'nda' where key = 'tier-scratch'$q$);
+  perform pg_temp.run(officer, $q$insert into public.trust_artifact_versions
+    (artifact_key, version, storage_ref, review_on) values
+    ('tier-scratch', '1.0', 'trust-packet/tier-scratch/tier-scratch-1.0.pdf', current_date + 90)$q$);
+  perform pg_temp.refused_with('flipping a published NDA artifact to public', officer,
+    $q$update public.trust_artifacts set tier = 'public' where key = 'tier-scratch'$q$,
+    'cannot be made public');
+  perform pg_temp.refused_with('the same flip on the HECVAT register', officer,
+    $q$update public.trust_artifacts set tier = 'public' where key = 'hecvat'$q$,
+    'cannot be made public');
+  perform pg_temp.counted('a new title on a published artifact is still allowed',
+    pg_temp.run(officer, $q$update public.trust_artifacts set title = 'HECVAT readiness register (2026)' where key = 'hecvat'$q$), 1);
+  perform pg_temp.counted('so is a new owner',
+    pg_temp.run(officer, $q$update public.trust_artifacts set owner = 'Security and privacy lead' where key = 'hecvat'$q$), 1);
+  perform pg_temp.run(officer, $q$insert into public.trust_artifacts (key, title, tier, owner) values
+    ('tier-public', 'Tier public', 'public', 'Privacy lead')$q$);
+  perform pg_temp.run(officer, $q$insert into public.trust_artifact_versions
+    (artifact_key, version, storage_ref, review_on) values
+    ('tier-public', '1.0', 'trust-packet/tier-public/tier-public-1.0.pdf', current_date + 90)$q$);
+  perform pg_temp.counted('and raising a published public artifact to NDA',
+    pg_temp.run(officer, $q$update public.trust_artifacts set tier = 'nda' where key = 'tier-public'$q$), 1);
+  -- THE CONTROL: without the guard the same UPDATE goes through.
+  alter table public.trust_artifacts disable trigger trust_artifacts_tier_guard;
+  perform pg_temp.counted('without the guard the flip goes through (the control)',
+    pg_temp.run(officer, $q$update public.trust_artifacts set tier = 'public' where key = 'tier-scratch'$q$), 1);
+  alter table public.trust_artifacts enable trigger trust_artifacts_tier_guard;
+
   -- The request -------------------------------------------------------------
   perform pg_temp.run(sales, $q$insert into public.gtm_accounts (name, segment) values ('Room University', 'research')$q$);
   select id into acct from public.gtm_accounts where name = 'Room University';
@@ -381,7 +414,7 @@ begin
     end;
   end loop;
   perform pg_temp.said('the published versions stay, unattributed',
-    (select count(*)::text from public.trust_artifact_versions where published_by is null), '4');
+    (select count(*)::text from public.trust_artifact_versions where published_by is null), '6');
   perform pg_temp.said('and so do the grants, revoked one included',
     (select count(*)::text from public.trust_room_grants where granted_by is null), '2');
 end $$;
