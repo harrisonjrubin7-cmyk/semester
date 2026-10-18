@@ -345,6 +345,67 @@ describe('input guards', () => {
     });
   });
 
+  it('refuses a late confirmation once an override has come and gone on the bed', () => {
+    const held = must(reserve(oneBed(), base));
+    const overridden = must(override(held.state, {
+      id: 'o1', bedId: 'b1', studentId: 'B', authority: 'RD', rationale: 'x',
+      expectedInventoryVersion: held.state.inventoryVersion, now: HOLD + 10,
+    }));
+    const ended = must(endAssignment(overridden.state, {
+      assignmentId: 'o1', expectedInventoryVersion: overridden.state.inventoryVersion, now: HOLD + 20,
+    }));
+    expect(confirm(ended.state, { id: 'a1', reservationId: 'r1', studentId: 'A', now: HOLD - 1 })).toEqual({
+      ok: false,
+      refusal: 'bed_taken',
+    });
+  });
+
+  it('does not replay a confirmed reservation whose assignment has since ended', () => {
+    const held = must(reserve(oneBed(), base));
+    const placed = must(confirm(held.state, { id: 'a1', reservationId: 'r1', studentId: 'A', now: 1 }));
+    const ended = must(endAssignment(placed.state, {
+      assignmentId: 'a1', expectedInventoryVersion: placed.state.inventoryVersion, now: 5,
+    }));
+    expect(reserve(ended.state, { ...base, id: 'r1-retry', now: 10 })).toEqual({
+      ok: false,
+      refusal: 'reservation_expired',
+    });
+  });
+
+  it('does not replay a confirmation whose assignment has since ended', () => {
+    const held = must(reserve(oneBed(), base));
+    const placed = must(confirm(held.state, { id: 'a1', reservationId: 'r1', studentId: 'A', now: 1 }));
+    const ended = must(endAssignment(placed.state, {
+      assignmentId: 'a1', expectedInventoryVersion: placed.state.inventoryVersion, now: 5,
+    }));
+    expect(confirm(ended.state, { id: 'a1', reservationId: 'r1', studentId: 'A', now: 10 })).toEqual({
+      ok: false,
+      refusal: 'reservation_expired',
+    });
+  });
+
+  it('refuses a late confirmation once the student has had an override that has since ended', () => {
+    const held = must(reserve(initialState([{ id: 'b1', label: 'x' }, { id: 'b2', label: 'y' }]), base));
+    const overridden = must(override(held.state, {
+      id: 'o1', bedId: 'b2', studentId: 'A', authority: 'RD', rationale: 'x',
+      expectedInventoryVersion: held.state.inventoryVersion, now: HOLD + 10,
+    }));
+    const ended = must(endAssignment(overridden.state, {
+      assignmentId: 'o1', expectedInventoryVersion: overridden.state.inventoryVersion, now: HOLD + 20,
+    }));
+    expect(confirm(ended.state, { id: 'a1', reservationId: 'r1', studentId: 'A', now: HOLD - 1 })).toEqual({
+      ok: false,
+      refusal: 'student_placed',
+    });
+  });
+
+  it('validates the clock before a retry of a live hold, so a bad clock cannot change the answer', () => {
+    const held = must(reserve(oneBed(), base));
+    for (const now of [Number.NaN, Number.NEGATIVE_INFINITY]) {
+      expect(reserve(held.state, { ...base, id: 'r1-retry', now })).toEqual({ ok: false, refusal: 'invalid_input' });
+    }
+  });
+
   it('refuses a late confirmation once the student has been placed elsewhere', () => {
     const held = must(reserve(initialState([{ id: 'b1', label: 'x' }, { id: 'b2', label: 'y' }]), base));
     const placed = must(override(held.state, {

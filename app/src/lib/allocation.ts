@@ -128,13 +128,17 @@ export function reserve(state: AllocationState, input: ReserveInput): Outcome {
   if (!Number.isFinite(input.holdMs) || input.holdMs <= 0) return refuse('invalid_input');
   // A blank student would own a hold no one can claim, and every other blank request would collide with it.
   if (input.studentId.trim() === '') return refuse('invalid_input');
+  // A bad clock is invalid input on a retry too, not an answer about the prior hold.
+  if (!Number.isFinite(input.now)) return refuse('invalid_input');
   const prior = Object.values(state.reservations).find((r) => r.key === input.key);
   if (prior) {
     if (prior.bedId !== input.bedId || prior.studentId !== input.studentId || prior.holdMs !== input.holdMs) {
       return refuse('idempotency_conflict');
     }
-    // A retry returns what the first attempt made, without touching state.
-    const live = prior.status === 'confirmed' || (prior.status === 'held' && input.now < prior.expiresAt);
+    // A retry returns what the first attempt made, without touching state. A confirmed hold is live
+    // only while its assignment is still open; once it has ended, replaying it would be stale.
+    const open = prior.assignmentId !== null && own(state.assignments, prior.assignmentId)?.endedAt === null;
+    const live = prior.status === 'confirmed' ? open : prior.status === 'held' && input.now < prior.expiresAt;
     return live ? accept(state, prior.id) : refuse('reservation_expired');
   }
   if (input.expectedInventoryVersion !== state.inventoryVersion) return refuse('stale_inventory');
@@ -177,7 +181,11 @@ export function confirm(
   const r = own(state.reservations, input.reservationId);
   if (!r) return refuse('reservation_unknown');
   if (r.studentId !== input.studentId) return refuse('reservation_not_yours');
-  if (r.status === 'confirmed' && r.assignmentId) return accept(state, r.assignmentId);
+  if (r.status === 'confirmed' && r.assignmentId) {
+    return own(state.assignments, r.assignmentId)?.endedAt === null
+      ? accept(state, r.assignmentId)
+      : refuse('reservation_expired');
+  }
   // Expiry is checked here, at the moment of confirmation, not only when the
   // hold lapses: a hold that ran out during checkout must not become a bed.
   if (r.status !== 'held' || input.now >= r.expiresAt) return refuse('reservation_expired');
@@ -188,6 +196,13 @@ export function confirm(
   const others = Object.values(state.reservations).filter((o) => o.id !== r.id);
   if (others.some((o) => o.bedId === r.bedId && o.createdAt >= r.createdAt)) return refuse('bed_taken');
   if (others.some((o) => o.studentId === r.studentId && o.createdAt >= r.createdAt)) return refuse('student_placed');
+  // An override or room change that has since ended still proves the bed or student moved on after this hold began.
+  if (Object.values(state.assignments).some((a) => a.bedId === r.bedId && a.startedAt >= r.createdAt)) {
+    return refuse('bed_taken');
+  }
+  if (Object.values(state.assignments).some((a) => a.studentId === r.studentId && a.startedAt >= r.createdAt)) {
+    return refuse('student_placed');
+  }
   if (Object.values(state.assignments).some((a) => a.bedId === r.bedId && a.endedAt === null)) {
     return refuse('bed_taken');
   }
