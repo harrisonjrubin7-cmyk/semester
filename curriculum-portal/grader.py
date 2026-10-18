@@ -12,17 +12,19 @@ def shape(v):
     if isinstance(v,(list,tuple)): return [type(v).__name__]+[shape(x) for x in v]
     return type(v).__name__
 results=[]
+originals=[copy.deepcopy(case['input']) for case in suite['cases']]
 for case in suite['cases']:
-    before=copy.deepcopy(case['input'])
     try:
         outcome={'value':getattr(module,suite['function'])(case['input'])}
         outcome['shape']=shape(outcome['value'])
     except ValueError: outcome={'exception':'ValueError'}
     except BaseException: outcome={'exception':'ExecutionError'}
-    outcome['mutated']=case['input']!=before
-    try: json.dumps(outcome,allow_nan=False)
-    except (TypeError,ValueError): outcome={'value':None,'shape':'unserializable','mutated':outcome['mutated']}
     results.append(outcome)
+# Compare after every call, so a learner that keeps an input and changes it during a later call is still caught.
+for index,case in enumerate(suite['cases']):
+    results[index]['mutated']=case['input']!=originals[index]
+    try: json.dumps(results[index],allow_nan=False)
+    except (TypeError,ValueError): results[index]={'value':None,'shape':'unserializable','mutated':results[index]['mutated']}
 with os.fdopen(RESULT,'w') as out: out.write(json.dumps(results,allow_nan=False)+'\\n')
 """
 

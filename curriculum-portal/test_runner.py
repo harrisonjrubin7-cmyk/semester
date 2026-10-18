@@ -141,6 +141,32 @@ class HarnessTests(unittest.TestCase):
         self.assertEqual(result['submission_sha256'],hashlib.sha256(original.encode()).hexdigest())
         self.assertIsNone(result['failure'])
         self.assertEqual(result['passed'],1)
+    def test_mutation_of_a_retained_input_is_penalised(self):
+        # A learner that keeps each input and clears it during a later call still mutated that input.
+        code=("_kept=[]\n"
+              "def validate_task(r):\n"
+              "    while _kept:\n"
+              "        x=_kept.pop()\n"
+              "        if isinstance(x,dict): x.clear()\n"
+              "    _kept.append(r)\n"
+              "    return isinstance(r,dict) and set(r)=={'id','title','status'} and all(isinstance(r[k],str) and bool(r[k].strip()) for k in ('id','title')) and r['status'] in ('open','completed')\n")
+        result=self.run_week(2,code)
+        self.assertLess(result['passed'],result['total'])
+    def test_empty_idempotency_key_is_not_a_key(self):
+        shortcut="def retry_allowed(r): return r['status'] in (429,503) and r['attempt']<r['max_attempts'] and (r['method']=='GET' or r.get('idempotency_key') is not None)\n"
+        result=self.run_week(11,shortcut)
+        self.assertLess(result['passed'],result['total'])
+    def test_username_only_webhook_credentials_are_rejected(self):
+        shortcut="def safe_destination(r):\n    from urllib.parse import urlsplit\n    import ipaddress\n    u=urlsplit(r['url'])\n    try: ip=ipaddress.ip_address(u.hostname)\n    except ValueError: return False\n    return u.scheme=='https' and ip.is_global and u.password is None and u.port in (None,443)\n"
+        result=self.run_week(12,shortcut)
+        self.assertLess(result['passed'],result['total'])
+    def test_suites_have_no_duplicate_cases(self):
+        for module in MODULES:
+            seen=set()
+            for case in module['cases']:
+                key=json.dumps([case['input'],case['expected']],sort_keys=True)
+                self.assertNotIn(key,seen,module['week'])
+                seen.add(key)
     def test_always_false_does_not_earn_full_credit(self):
         for index,name in ((13,'evidence_ready'),(15,'activation_ready')):
             result=self.run_week(index,f'def {name}(r): return False\n')
