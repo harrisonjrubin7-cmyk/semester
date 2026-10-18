@@ -42,17 +42,17 @@ Total visible cases: 92 (sum of the per-lab counts in `labs/*/tests.json`). The 
 
 | Tag | Operations | Tag | Operations |
 |---|---|---|---|
-| Webhooks | 8 | Pilots | 2 |
-| Grants | 6 | Offboarding | 2 |
-| Certification | 6 | Permissions | 1 |
-| Apps | 5 | Events | 1 |
-| Installations | 5 | Exports | 1 |
-| Memberships | 5 | Jobs | 1 |
-| Environments | 4 | Audit | 1 |
-| Credentials | 4 | Usage | 1 |
-| Releases | 4 | Capabilities | 1 |
-| Organizations | 3 | Evidence | 2 |
-| Support | 3 | Tests | 2 |
+| Webhooks | 8 | Evidence | 2 |
+| Certification | 7 | Offboarding | 2 |
+| Grants | 6 | Pilots | 2 |
+| Apps | 5 | Tests | 2 |
+| Installations | 5 | Audit | 1 |
+| Memberships | 5 | Capabilities | 1 |
+| Credentials | 4 | Events | 1 |
+| Environments | 4 | Exports | 1 |
+| Releases | 4 | Jobs | 1 |
+| Organizations | 3 | Permissions | 1 |
+| Support | 3 | Usage | 1 |
 
 Total 69. Every operation is **specified, not implemented**.
 
