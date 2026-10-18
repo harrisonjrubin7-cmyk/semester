@@ -3,7 +3,7 @@
 ## / — Home
 prototype mapping; clean URL proposed
 Tree: SiteShell > SiteHeader > PageHero > RegionGrid > PrimaryCTA > SiteFooter
-Wireframe: Header → Hero → hero → source demo → product jobs → status disclosure → trust → CTA → CTA → Footer
+Wireframe: Header → Hero → source demo → product jobs → status disclosure → trust → CTA → Footer
 Mobile: same logical order, one column, labelled navigation and visible focus.
 Authority: approved copy and actual server adapters before publication/delivery claims.
 
@@ -31,7 +31,7 @@ Authority: approved copy and actual server adapters before publication/delivery 
 ## /product — Product
 prototype mapping; clean URL proposed
 Tree: SiteShell > SiteHeader > PageHero > RegionGrid > PrimaryCTA > SiteFooter
-Wireframe: Header → Hero → OS overview → role paths → modules → boundaries → CTA → CTA → Footer
+Wireframe: Header → Hero → OS overview → role paths → modules → boundaries → CTA → Footer
 Mobile: same logical order, one column, labelled navigation and visible focus.
 Authority: approved copy and actual server adapters before publication/delivery claims.
 
@@ -66,7 +66,7 @@ Authority: approved copy and actual server adapters before publication/delivery 
 ## /solutions — Solutions
 proposed extension
 Tree: SiteShell > SiteHeader > PageHero > RegionGrid > PrimaryCTA > SiteFooter
-Wireframe: Header → Hero → audiences → shared foundation → CTA → CTA → Footer
+Wireframe: Header → Hero → audiences → shared foundation → CTA → Footer
 Mobile: same logical order, one column, labelled navigation and visible focus.
 Authority: approved copy and actual server adapters before publication/delivery claims.
 
@@ -108,7 +108,7 @@ Authority: approved copy and actual server adapters before publication/delivery 
 ## /solutions/:audience — Audience detail
 proposed extension
 Tree: SiteShell > SiteHeader > PageHero > RegionGrid > PrimaryCTA > SiteFooter
-Wireframe: Header → Hero → purpose → workflow → authority → CTA → CTA → Footer
+Wireframe: Header → Hero → purpose → workflow → authority → CTA → Footer
 Mobile: same logical order, one column, labelled navigation and visible focus.
 Authority: approved copy and actual server adapters before publication/delivery claims.
 
@@ -136,7 +136,7 @@ Authority: approved copy and actual server adapters before publication/delivery 
 ## /demo/tour — Tour
 proposed extension
 Tree: SiteShell > SiteHeader > PageHero > RegionGrid > PrimaryCTA > SiteFooter
-Wireframe: Header → Hero → Today → sources → privacy → action example → CTA → CTA → Footer
+Wireframe: Header → Hero → Today → sources → privacy → action example → CTA → Footer
 Mobile: same logical order, one column, labelled navigation and visible focus.
 Authority: approved copy and actual server adapters before publication/delivery claims.
 

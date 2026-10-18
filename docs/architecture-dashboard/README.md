@@ -29,6 +29,6 @@ Source: architecture package uploaded 2026-10-13 (`Semester-architecture-dashboa
 ## Open items before any release
 
 1. Explicit confirmation of the preview deployment target and any production alias (none was made).
-2. Acceptance criteria, owners and data-contract review for each of the 122 capabilities (matrix column "Acceptance criteria" is empty by design).
+2. Acceptance criteria, owners and data-contract review for each of the 122 capabilities. None is written yet, and `COVERAGE-MATRIX.md` has no acceptance-criteria column; the Blockers column records this gap per row.
 3. Independent accessibility and security review of the dashboard (not performed here).
 4. Repository shared services named in the spec (identity, memberships, audit, files, AI gateway, outbox, notifications, search) are not implemented in this change.
