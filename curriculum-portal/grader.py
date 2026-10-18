@@ -2,7 +2,8 @@
 import argparse, hashlib, json, subprocess, sys, threading
 from pathlib import Path
 
-WORKER = """import copy,importlib.util,json,sys
+WORKER = """import copy,importlib.util,json,os,sys
+RESULT=os.dup(1);os.dup2(2,1);sys.stdout=sys.stderr
 spec=importlib.util.spec_from_file_location('learner',sys.argv[1])
 module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 suite=json.loads(sys.stdin.read());results=[]
@@ -13,7 +14,7 @@ for case in suite['cases']:
     except BaseException: outcome={'exception':'ExecutionError'}
     outcome['mutated']=case['input']!=before
     results.append(outcome)
-print(json.dumps(results,allow_nan=False))
+with os.fdopen(RESULT,'w') as out: out.write(json.dumps(results,allow_nan=False)+'\\n')
 """
 
 def grade(suite, submission, timeout=5):

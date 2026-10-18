@@ -55,6 +55,22 @@ class HarnessTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             submission=Path(folder)/'starter.py';submission.write_bytes(b'#'*65537)
             with self.assertRaises(ValueError):grade(MODULES[2],submission)
+    def test_learner_output_does_not_corrupt_results(self):
+        # A correct week 3 submission that prints while importing and while running must still score in full.
+        code="print('importing')\nimport sys\ndef validate_task(r):\n    print('checking', r)\n    return isinstance(r,dict) and set(r)=={'id','title','status'} and all(isinstance(r[k],str) and bool(r[k].strip()) for k in ('id','title')) and r['status'] in ('open','completed')\n"
+        result=self.run_code(code)
+        self.assertIsNone(result['failure'])
+        self.assertEqual(result['passed'],result['total'])
+    def test_week5_and_week12_reject_partial_contracts(self):
+        for index,code in ((4,"def authorize(r): return r['active']\n"),(11,"def retry_allowed(r): return r['method'] == 'GET'\n")):
+            result=self.run_week(index,code)
+            self.assertLess(result['passed'],result['total'],MODULES[index]['week'])
+    def test_correct_week5_and_week12_pass_every_case(self):
+        authorize="def authorize(r): return r['active'] is True and 'tasks:read' in r['scopes']\n"
+        retry="def retry_allowed(r): return r['status'] in (429,503) and r['attempt']<r['max_attempts'] and (r['method']=='GET' or bool(r.get('idempotency_key')))\n"
+        for code,index in ((authorize,4),(retry,11)):
+            result=self.run_week(index,code)
+            self.assertEqual(result['passed'],result['total'],MODULES[index]['week'])
     def test_always_false_does_not_earn_full_credit(self):
         for index,name in ((13,'evidence_ready'),(15,'activation_ready')):
             result=self.run_week(index,f'def {name}(r): return False\n')
