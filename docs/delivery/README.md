@@ -35,7 +35,7 @@ node --test scripts/check-delivery.test.mjs
 
 ## What blocks RDY-INC-003 from `approved_for_build`
 
-The validator reports these hard dependencies below `approved_for_build`: identity_context, source_authority_register, SIS_adapter, readiness_case_workflow, audit_event_store, alerting. The card also has open gaps: no source-authority record, no UI state specification for the stale state, the runbook ART-RDY-011 is missing, no release evidence, and no named institution owner.
+The validator reports these hard dependencies below `approved_for_build`: identity_context, source_authority_register, SIS_adapter, readiness_case_workflow, audit_event_store, alerting. The card also has four open gaps: no source-authority record, the runbook ART-RDY-011 is registered as `draft` (its roles are TBD and its dependencies are unregistered), no release evidence, and no named institution owner. The UI state specification is now linked (`docs/pilot/registration-readiness/connection-states.yaml`).
 
 ## Not done
 

@@ -54,6 +54,14 @@ const FINANCE_CONTROLS = [
   'refund_approval_policy', 'month_end_close_checklist', 'financial_access_review',
 ];
 const CAPABILITY_DIR = 'packages/platform-control/registry/capabilities';
+// Pinned here so an edit to the operating model cannot quietly drop a field every approved increment needs.
+const REQUIRED_INCREMENT_FIELDS = [
+  'capability_key', 'problem_statement', 'accountable_owner', 'institutional_authority_statement', 'user_roles',
+  'workflow_definition', 'source_authority_record', 'data_contract', 'access_policy', 'UI_states',
+  'acceptance_tests', 'operational_runbook', 'release_evidence', 'rollout_and_rollback_plan',
+];
+// Values that fill a field without answering it.
+const PLACEHOLDER_VALUES = new Set(['UNASSIGNED', 'TBD']);
 // The checks each quality gate must keep; removing one changes the specification's gate catalogue.
 const REQUIRED_GATE_CHECKS = {
   'GATE-01': ['user_outcome_defined', 'institution_authority_defined', 'prohibited_claims_defined', 'source_types_defined', 'accountable_owner_named'],
@@ -103,10 +111,16 @@ export function check(repo) {
     : null;
   // Artifact ids must be unique and match their file names, so a reference resolves to exactly one record.
   const artifactById = new Map();
+  // Two artifacts sharing one location would make a path's state ambiguous, so each location is registered once.
+  const artifactByLocation = new Map();
   for (const { path, data } of repo.artifacts) {
     if (artifactById.has(data.id)) errors.push(`${data.id ?? path}: duplicate artifact id`);
     else artifactById.set(data.id, data);
     if (path !== `registry/artifacts/${data.id}.json`) errors.push(`${data.id ?? path}: file name must match id`);
+    const abs = isEmpty(data.location) ? null : insideRoot(data.location);
+    if (abs === null) continue;
+    if (artifactByLocation.has(abs)) errors.push(`${data.id ?? path}: location ${data.location} is also registered by ${artifactByLocation.get(abs)}`);
+    else artifactByLocation.set(abs, data.id ?? path);
   }
   // Returns why a reference does not resolve, or null when it does. A path that is a registered
   // artifact's location inherits that artifact's state, so a draft runbook cannot pass as approved.
@@ -129,7 +143,12 @@ export function check(repo) {
 
   // Every gated state needs a declared hard-dependency threshold, or the dependency gate stops applying silently.
   for (const state of ['approved_for_build', 'in_build', 'integration_ready', 'evidence_ready', 'approved_for_release', 'enabled', 'monitored']) {
-    if (!model.hard_dependency_minimum_state?.[state]) errors.push(`operating-model: hard_dependency_minimum_state is missing ${state}`);
+    const target = model.hard_dependency_minimum_state?.[state];
+    if (!target) errors.push(`operating-model: hard_dependency_minimum_state is missing ${state}`);
+    else if (!states.includes(target)) errors.push(`operating-model: hard_dependency_minimum_state.${state} ${target} is not a delivery state`);
+  }
+  if (JSON.stringify(model.every_increment_requires) !== JSON.stringify(REQUIRED_INCREMENT_FIELDS)) {
+    errors.push('operating-model: every_increment_requires must list the pinned required fields in order');
   }
 
   // Dependency graph: unique nodes, known statuses, known edge endpoints, acyclic.
@@ -239,7 +258,8 @@ export function check(repo) {
       if (approved) errors.push(message);
       else warnings.push(message);
     }
-    if (r >= rank('enabled') && isEmpty(inc.rollout_and_rollback_plan?.safe_off)) {
+    const safeOff = String(inc.rollout_and_rollback_plan?.safe_off ?? '').trim();
+    if (r >= rank('enabled') && (safeOff === '' || PLACEHOLDER_VALUES.has(safeOff.toUpperCase()))) {
       errors.push(`${label}: ${inc.state} without a safe-off behavior`);
     }
     for (const d of inc.hard_dependencies ?? []) {
@@ -280,6 +300,8 @@ export function check(repo) {
       else warnings.push(`${label}: missing (${a.location} not found)`);
     } else if (!exists) {
       errors.push(`${label}: state ${a.state} but ${a.location} does not exist`);
+    } else if (!statSync(location).isFile()) {
+      errors.push(`${label}: state ${a.state} but ${a.location} is not a regular file`);
     }
     if (a.release_critical && a.state !== 'approved') warnings.push(`${label}: release-critical and ${a.state}`);
     // An approved artifact whose review date has passed is expired by the operating model's own rule.

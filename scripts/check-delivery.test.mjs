@@ -286,3 +286,45 @@ test('control: a gated state without a hard-dependency threshold fails', () => {
   const { errors } = check(repo);
   assert.ok(errors.some((e) => /hard_dependency_minimum_state is missing approved_for_build/.test(e)));
 });
+
+test('control: two artifacts registered at one location fail', () => {
+  const repo = loadRepo();
+  const original = repo.artifacts.find((a) => a.data.id === 'ART-RDY-011');
+  const copy = clone(original);
+  copy.data.id = 'ART-RDY-099';
+  copy.path = 'registry/artifacts/ART-RDY-099.json';
+  repo.artifacts.push(copy);
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /ART-RDY-099: location .* is also registered by ART-RDY-011/.test(e)));
+});
+
+test('control: a safe-off behavior that is a placeholder fails once enabled', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => {
+    d.state = 'enabled';
+    d.rollout_and_rollback_plan.safe_off = ' unassigned ';
+  });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /RDY-INC-003: enabled without a safe-off/.test(e)));
+});
+
+test('control: a dependency threshold naming a state that does not exist fails', () => {
+  const repo = loadRepo();
+  repo.model.hard_dependency_minimum_state.approved_for_build = 'approved_for_bulid';
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /hard_dependency_minimum_state\.approved_for_build approved_for_bulid is not a delivery state/.test(e)));
+});
+
+test('control: dropping a pinned required field from the operating model fails', () => {
+  const repo = loadRepo();
+  repo.model.every_increment_requires = repo.model.every_increment_requires.filter((k) => k !== 'UI_states');
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /every_increment_requires must list the pinned required fields/.test(e)));
+});
+
+test('control: an artifact whose location is a directory fails', () => {
+  const repo = loadRepo();
+  const art = repo.artifacts.find((a) => a.data.id === 'ART-RDY-011');
+  art.data.location = 'docs/pilot/registration-readiness/accessibility';
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /ART-RDY-011: state draft but .* is not a regular file/.test(e)));
+});
