@@ -9,6 +9,7 @@ import type { CourseId, CoursesTab } from '../lib/types';
 import { nameFor, renamed } from '../lib/yours';
 import { secondLine } from '../lib/dim';
 import { HowLong } from '../components/HowLong';
+import { EffortField } from '../components/EffortField';
 import { Timer } from '../components/Timer';
 import { ShareCourse } from '../components/ShareCourse';
 import { Attendance } from '../components/Attendance';
@@ -888,6 +889,7 @@ export function ItemDetail() {
           {going ? 'Not started after all' : 'I have started this'}
         </button>
       )}
+      {!done && <EffortField id={item.id} courseId={item.c} kind={item.kind} />}
       {going && !done && (
         <div
           style={{

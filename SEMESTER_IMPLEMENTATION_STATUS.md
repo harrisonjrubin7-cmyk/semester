@@ -1,9 +1,27 @@
+---
+stale-refs:
+  - source: SEMESTER_IMPLEMENTATION_PLAN.md
+    changed_at: "2026-10-18T17:40:07"
+    sections_changed: ["Phase 1 — §91, the record the rest of Part B is waiting on"]
+---
+
 # Semester — implementation status
 
 Every requirement in [`SEMESTER-MASTER-COMMAND.md`](SEMESTER-MASTER-COMMAND.md),
 measured against this repository, with the file that settles it. Step 1 of §63.
 
 Measured at `origin/main` `387dcfb`, 21 September 2026.
+
+**Re-measured 18 October 2026 at `4823e8a6`.** Where this file and the code
+disagree, the code is right. Two rows in the §91 section below are out of date:
+`lib/stage.ts` derives all seven §91 statuses from stored `ready`, `submitted`
+and `started` maps, the `done` and `returned` records, and the planned-task set,
+so *Status* is built. The stored *Estimated effort* (§91) landed in the batch
+that carries this note: `lib/effort.ts` and `state.effort`, shown on the item
+detail beside the pace-based figure. *Attachments*, *Subtasks* on an item and a
+stored *Priority* remain absent. Gates at `4823e8a6`, before that batch:
+`tsc -b`, `check:university`, `lint`, `test` (245 s), `build`,
+`design-system:check`, `ecosystem:check` all exit 0.
 
 **Part C (§226–300) is not audited here.** It arrived after this document was
 written, and §226's own first instruction is that it gets an audit of its own —

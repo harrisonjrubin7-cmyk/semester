@@ -84,6 +84,7 @@ import { LEGACY_TERM, termNow } from '../lib/term';
 import { navOf, readLook, type Look } from '../lib/look';
 import { readStarted } from '../lib/underway';
 import { readStage, type ItemStage } from '../lib/stage';
+import { readEffort, type EffortMap } from '../lib/effort';
 import { SCHEMA, migrate, versionOf, type Migrated } from '../lib/migrate';
 import { readOverrides, type GradeSystem } from '../lib/cutoffs';
 import { readPretested } from '../lib/pretest';
@@ -783,6 +784,12 @@ export interface Persisted {
    */
   started: Record<string, number>;
   /**
+   * Deadline id to the minutes the student expects it to take. §91's
+   * *Estimated effort*, stored per item. See `lib/effort.ts` for why it sits
+   * beside the pace-based inference rather than replacing it.
+   */
+  effort: EffortMap;
+  /**
    * Deadline id to the moment the work was finished and had not gone anywhere.
    *
    * The fourth position on a tick box that has two. `done` is the student
@@ -1449,6 +1456,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   athlete: false,
   schemaVersion: SCHEMA,
   started: {},
+  effort: {},
   ready: {},
   submitted: {},
   cleared: false,
@@ -1976,6 +1984,7 @@ export function loadPersisted(): Persisted {
       role: roleOf(typeof saved.role === 'string' ? saved.role : DEFAULT_ROLE).id,
       tickedAt: saved.tickedAt ?? {},
       started: readStarted(saved.started),
+      effort: readEffort(saved.effort),
       ready: readStage(saved.ready),
       submitted: readStage(saved.submitted),
       schoolId: typeof saved.schoolId === 'string' ? saved.schoolId : DEFAULT_PERSISTED.schoolId,
@@ -2189,6 +2198,7 @@ export function pickPersisted(state: State): Persisted {
     role: state.role,
     tickedAt: state.tickedAt,
     started: state.started,
+    effort: state.effort,
     ready: state.ready,
     submitted: state.submitted,
     schoolId: state.schoolId,
@@ -2404,6 +2414,7 @@ export type Action =
   | { type: 'toggleUnit'; index: number }
   | { type: 'clearNotifs' }
   | { type: 'toggleStarted'; id: string }
+  | { type: 'setEffort'; id: string; minutes: number | null }
   /**
    * Marking one of the three later stages, or unmarking it.
    *
