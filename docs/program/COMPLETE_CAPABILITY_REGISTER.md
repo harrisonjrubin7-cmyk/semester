@@ -1,3 +1,32 @@
+---
+stale-refs:
+  - source: docs/CAPABILITY-ACTIVATION-REGISTER.md
+    changed_at: "2026-10-18T20:41:09"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/COMPANY_LIVE_STATUS.md
+    changed_at: "2026-10-18T20:41:20"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/FINAL_BASELINE_AUDIT.md
+    changed_at: "2026-10-18T20:41:20"
+    sections_changed: []
+    summary: externally modified
+  - source: operations/GO_NO_GO_SCORECARD.md
+    changed_at: "2026-10-18T20:41:21"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Semester — complete capability register (Phase 0)
 
 **Assessment date:** 2026-10-04 · **Repository:** `origin/main` @ `c170dcd` · **Companion:** [`FINAL_BASELINE_AUDIT.md`](FINAL_BASELINE_AUDIT.md)

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: LEGAL-REVIEW-QUEUE.md
+    changed_at: "2026-10-18T20:41:08"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-18T20:41:08"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Legal review queue: Phase 0 reconciliation view
 
 > **Not legal advice. Every row requires qualified counsel (and, where marked, an accountant or tax adviser). This file lists questions; it concludes nothing.**

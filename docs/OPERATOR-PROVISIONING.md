@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: docs/OPERATIONS-CONSOLE-MAP.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROLE-LAUNCH-REGISTER.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Provisioning an operations test user (development and staging only)
 
 The operations console at `#/console` opens for one thing: a live `role_grants`

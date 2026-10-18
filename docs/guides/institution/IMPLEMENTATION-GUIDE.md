@@ -1,3 +1,74 @@
+---
+stale-refs:
+  - source: docs/LAUNCH-READINESS-COUNCIL.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/institution/CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-18T20:41:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/PILOT-TO-PRODUCTION.md
+    changed_at: "2026-10-18T20:41:19"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/vanderbilt/L5-NAMED-TENANT-APPROVAL-REGISTER.md
+    changed_at: "2026-10-18T20:41:20"
+    sections_changed: []
+    summary: externally modified
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-18T18:01:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/institution/PARALLEL-RUN-EVIDENCE.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/institution/PROCUREMENT-AND-ACCESSIBILITY-ARTEFACTS.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/institution/CONFIGURATION-AND-APPROVALS.md
+    changed_at: "2026-10-18T20:41:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/institution/LTI-SETUP.md
+    changed_at: "2026-10-18T20:41:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/institution/ROSTER-AND-DATA-LOADING.md
+    changed_at: "2026-10-18T20:41:11"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Implementation guide
 
 > **Type:** runbook · **Audience:** implementers, institution-admins · **Owner:** `success` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/institution-guides.test.ts`

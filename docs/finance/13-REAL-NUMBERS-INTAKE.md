@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/finance/11-PILOT-EVIDENCE-PLAN.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/10-GO-NO-GO-GATES.md
+    changed_at: "2026-10-18T20:41:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/12-GATED-HIRING-SCHEDULE.md
+    changed_at: "2026-10-18T20:41:11"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Real-numbers intake: replacing placeholders with the company's own figures
 
 | Control | Value |

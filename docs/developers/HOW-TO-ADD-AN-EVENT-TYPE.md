@@ -1,3 +1,36 @@
+---
+stale-refs:
+  - source: docs/developers/HOW-TO-ADD-A-MIGRATION.md
+    changed_at: "2026-10-18T20:41:11"
+    sections_changed: []
+    summary: externally modified
+  - source: RETENTION.md
+    changed_at: "2026-10-18T20:41:08"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ANALYTICS-EVENTS.md
+    changed_at: "2026-10-18T18:02:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/EVENTS.md
+    changed_at: "2026-10-18T18:02:02"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # How to add an event type
 
 > **Type:** how-to · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/SSO-SECURITY-AND-SESSION-MANAGEMENT.md
+    changed_at: "2026-10-18T18:02:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/INSTITUTIONAL-SSO-ARCHITECTURE.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester identity and access management standard — controlled draft
 
 - **Status:** `PARTIAL / TENANT-CONFIGURATION DEPENDENT`

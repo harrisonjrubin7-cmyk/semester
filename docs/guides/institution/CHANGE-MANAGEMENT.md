@@ -1,3 +1,26 @@
+---
+stale-refs:
+  - source: docs/releases/README.md
+    changed_at: "2026-10-18T18:02:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/institution/PARALLEL-RUN-EVIDENCE.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: CHANGELOG.md
+    changed_at: "2026-10-18T20:41:08"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Change management
 
 > **Type:** how-to · **Audience:** institution-admins, implementers · **Owner:** `success` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/institution-guides.test.ts`

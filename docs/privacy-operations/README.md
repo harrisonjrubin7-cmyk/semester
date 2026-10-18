@@ -1,3 +1,86 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-18T20:41:08"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-18T20:41:09"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md
+    changed_at: "2026-10-18T20:41:19"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-INVENTORY-AND-LINEAGE.md
+    changed_at: "2026-10-18T18:02:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/01-PROCESSING-REGISTER-AND-CONTROLS.md
+    changed_at: "2026-10-18T18:02:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/03-VENDOR-REVIEW-PROCESS.md
+    changed_at: "2026-10-18T18:02:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/04-PRIVACY-BY-DESIGN-REVIEW.md
+    changed_at: "2026-10-18T18:02:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/08-FINDINGS-AND-RECONCILIATION.md
+    changed_at: "2026-10-18T18:02:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/VENDOR-RISK-REGISTER.md
+    changed_at: "2026-10-18T18:02:02"
+    sections_changed: []
+    summary: externally modified
+  - source: LEGAL-REVIEW-QUEUE.md
+    changed_at: "2026-10-18T20:41:08"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/05-PRIVACY-INCIDENT-COORDINATION.md
+    changed_at: "2026-10-18T20:41:19"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Privacy operations pack
 
 **Status `DESIGNED`. Produced 4 October 2026 against `origin/main` at `8e9b746`. Owner: the privacy seat, which is vacant (maturity RM-06); Harrison Rubin holds it on an interim basis with no backup named.**

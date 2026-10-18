@@ -1,3 +1,60 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T18:02:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/LAUNCH-READINESS-COUNCIL.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROLE-LAUNCH-REGISTER.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/PILOT-TO-PRODUCTION.md
+    changed_at: "2026-10-18T20:41:19"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/customer-commitments/README.md
+    changed_at: "2026-10-18T20:41:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SECURITY-ACCESSIBILITY-READINESS.md
+    changed_at: "2026-10-18T18:02:00"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Launch war room
 
 <!-- Rendered from app/src/lib/ops/warroom.ts by warroom.test.ts. Edit the data, then run `npm run registers` from app/. -->

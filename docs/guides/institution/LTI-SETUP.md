@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/institutional-readiness/LTI-READINESS.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # LTI setup
 
 > **Type:** runbook · **Audience:** implementers, institution-admins · **Owner:** `data` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/institution-guides.test.ts`

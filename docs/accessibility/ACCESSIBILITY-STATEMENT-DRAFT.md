@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/accessibility/PROGRAM.md
+    changed_at: "2026-10-18T18:02:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/accessibility/ISSUE-PROCESS.md
+    changed_at: "2026-10-18T20:41:11"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Accessibility statement: DRAFT, NOT PUBLISHED
 
 > **Do not publish this page, or any sentence from it, as it stands.** It is a draft for the accessibility lead and

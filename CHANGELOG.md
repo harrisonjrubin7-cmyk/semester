@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/OPERATOR-PROVISIONING.md
+    changed_at: "2026-10-18T18:02:00"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # What changed
 
 For people testing Semester, not for people writing it. Every entry says what

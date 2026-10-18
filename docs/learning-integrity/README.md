@@ -1,3 +1,70 @@
+---
+stale-refs:
+  - source: docs/LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/COMPLIANCE-CROSSWALK.md
+    changed_at: "2026-10-18T20:41:20"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/01-LEARNING-DESIGN-AND-EVIDENCE.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/02-ASSESSMENT-MASTERY-AND-FEEDBACK.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/README.md
+    changed_at: "2026-10-18T18:02:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/03-AI-TUTORING-AND-BOUNDARIES.md
+    changed_at: "2026-10-18T20:41:17"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/04-ACADEMIC-INTEGRITY-CONTROLS.md
+    changed_at: "2026-10-18T20:41:17"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/06-POLICY-CONFIGURATION-AND-WORKFLOWS.md
+    changed_at: "2026-10-18T20:41:17"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/07-METRICS.md
+    changed_at: "2026-10-18T20:41:18"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/08-GOVERNANCE-AND-REQUIREMENTS-TRACE.md
+    changed_at: "2026-10-18T20:41:18"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester learning science and academic integrity — role pack
 
 Status: **proposed**, written 2026-10-04 against `origin/main` `dac31c9`.

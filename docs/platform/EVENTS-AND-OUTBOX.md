@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/platform/OPERATIONS.md
+    changed_at: "2026-10-18T18:02:02"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Event schema and the outbox pattern
 
 The envelope, the type catalogue, the outbox tables and the consumer rule are

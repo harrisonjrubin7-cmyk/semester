@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: CLAUDE.md
+    changed_at: "2026-10-18T18:01:59"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER_IMPLEMENTATION_PLAN.md
+    changed_at: "2026-10-18T20:41:09"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester — product completeness matrix
 
 §226's deliverable. Every feature classified across the six states and thirteen

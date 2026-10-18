@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: CHANGELOG.md
+    changed_at: "2026-10-18T20:41:08"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Rolling back
 
 What to do when a deploy has made the live app worse, who does it, and how long

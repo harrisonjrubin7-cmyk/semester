@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: LEGAL-REVIEW-QUEUE.md
+    changed_at: "2026-10-18T20:41:08"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 07 · Privacy counsel review queue
 
 **Status `OPEN`; no item closed. 4 October 2026. Owner: privacy seat (vacant) to prepare; qualified counsel (unassigned) to decide.**

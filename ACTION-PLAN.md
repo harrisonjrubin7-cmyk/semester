@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-18T20:41:08"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-18T20:41:09"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Action plan — September 2026
 
 Seventeen items, written against the market analysis, the financial model, the

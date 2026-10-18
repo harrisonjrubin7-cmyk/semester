@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/market-readiness/LAUNCH-READINESS-CHECKLIST.md
+    changed_at: "2026-10-18T20:41:18"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/MARKET-READINESS-BASELINE.md
+    changed_at: "2026-10-18T20:41:18"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Executive go / no-go
 
 **Decision date:** 2026-10-02

@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/institutional-implementation/HYPERCARE-AND-HANDOFF.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: RESTORE.md
+    changed_at: "2026-10-18T20:41:08"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/METHODOLOGY.md
+    changed_at: "2026-10-18T20:41:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/TRAINING-PLAN-AND-ACADEMY.md
+    changed_at: "2026-10-18T20:41:12"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Cutover checklist, rollback plan and go-live checklist
 
 | Control | Value |

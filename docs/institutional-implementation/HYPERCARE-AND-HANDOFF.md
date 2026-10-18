@@ -1,3 +1,26 @@
+---
+stale-refs:
+  - source: docs/LAUNCH-WAR-ROOM.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/METHODOLOGY.md
+    changed_at: "2026-10-18T20:41:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/TRAINING-PLAN-AND-ACADEMY.md
+    changed_at: "2026-10-18T20:41:12"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Hypercare support model and handoff to steady state
 
 | Control | Value |

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md
+    changed_at: "2026-10-18T18:02:00"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Accessibility Test Plan
 
 | Control | Value |

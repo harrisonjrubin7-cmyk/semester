@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/LAUNCH-READINESS-COUNCIL.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+  - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
+    changed_at: "2026-10-18T20:41:08"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Decision rights (ADR program view)
 
 This page assigns who may *accept* each class of ADR. It points at the existing, enforced rules instead of restating them: database two-person rules are in [`docs/DECISION-RIGHTS.md`](../DECISION-RIGHTS.md); seat holders are in [`docs/LAUNCH-READINESS-COUNCIL.md`](../LAUNCH-READINESS-COUNCIL.md) and [`OWNER-AND-ACCOUNTABILITY-MATRIX.md`](../../OWNER-AND-ACCOUNTABILITY-MATRIX.md). Per those documents most seats are held by the founder, several acting, and none has signed — this page does not change that.

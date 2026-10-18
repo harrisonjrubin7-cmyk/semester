@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/commercial/REVENUE-OPERATIONS-ARCHITECTURE.md
+    changed_at: "2026-10-18T20:41:11"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Reconciliation and settlement
 
 | Control | Value |

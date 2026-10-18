@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-18T18:01:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/10-GO-NO-GO-GATES.md
+    changed_at: "2026-10-18T20:41:11"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Gated hiring: release schedule and cash effect
 
 | Control | Value |

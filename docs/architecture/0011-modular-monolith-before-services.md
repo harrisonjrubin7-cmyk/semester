@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/architecture/modularization/README.md
+    changed_at: "2026-10-18T20:41:11"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 0011 · Modularize the monolith in place; extract a service only when a stated trigger fires
 
 **Status:** Accepted. Recorded as [D-1156](../decisions/D-1156.md). Plan:

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/DATA-INVENTORY-AND-LINEAGE.md
+    changed_at: "2026-10-18T18:02:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-RETENTION-EXPORT-DELETION.md
+    changed_at: "2026-10-18T18:02:00"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Data lifecycle and deletion
 
 ## Required lifecycle

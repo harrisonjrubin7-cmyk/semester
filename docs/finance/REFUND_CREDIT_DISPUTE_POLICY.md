@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/REVENUE-OPERATIONS-ARCHITECTURE.md
+    changed_at: "2026-10-18T20:41:11"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Refund, credit, dispute and write-off policy
 
 | Control | Value |

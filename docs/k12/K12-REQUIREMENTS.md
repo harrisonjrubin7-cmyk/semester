@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T18:02:00"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # K–12 requirements
 
 <!-- Rendered from app/src/lib/k12/requirements.ts by requirements.test.ts. Edit the data, then run `npm run registers` from app/. -->

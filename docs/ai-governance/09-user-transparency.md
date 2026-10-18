@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/trust/AI-TRANSPARENCY-AND-USER-NOTICE.md
+    changed_at: "2026-10-18T20:41:20"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 09 · User-facing transparency
 
 **Builds on:** [`../trust/AI-TRANSPARENCY-AND-USER-NOTICE.md`](../trust/AI-TRANSPARENCY-AND-USER-NOTICE.md) (the standard, the

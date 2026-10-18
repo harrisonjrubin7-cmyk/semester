@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/native-platform/README.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # "Native Education OS" PDF: delta against main
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** Phase 0. Extends [`SEMESTER_PDF_RECONCILIATION.md`](SEMESTER_PDF_RECONCILIATION.md), which listed five PDFs and did not list this one (`now_break_down_entire_semester…`, 22 pp, read in full).

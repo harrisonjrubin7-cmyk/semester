@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/ADAPTIVE-DEVICE-EXPERIENCE.md
+    changed_at: "2026-10-18T20:41:09"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Responsive component spec
 
 How the shell's parts behave at each width, as built. Tier names are the ones

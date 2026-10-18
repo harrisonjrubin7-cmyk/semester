@@ -1,3 +1,46 @@
+---
+stale-refs:
+  - source: docs/LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/QTI-3-ASSESSMENT-AND-MIGRATION.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/01-LEARNING-DESIGN-AND-EVIDENCE.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/04-ACADEMIC-INTEGRITY-CONTROLS.md
+    changed_at: "2026-10-18T20:41:17"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/06-POLICY-CONFIGURATION-AND-WORKFLOWS.md
+    changed_at: "2026-10-18T20:41:17"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/07-METRICS.md
+    changed_at: "2026-10-18T20:41:18"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 02 · Assessment model, mastery, feedback, rubrics and gradebook
 
 Deliverables covered: **assessment model**, **feedback model**, and the

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/DESIGN-SYSTEM-MIGRATION-PLAN.md
+    changed_at: "2026-10-18T18:02:00"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Platform unity patterns
 
 The shared components that make Semester read as one environment rather than a

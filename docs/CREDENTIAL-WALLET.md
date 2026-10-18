@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/STRATEGIC-EXPANSION-REGISTER.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/CAREER-PORTABILITY-AND-LIFELONG-ACCESS.md
+    changed_at: "2026-10-18T18:02:00"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Student Credential Wallet
 
 A student-controlled, portable record of verified learning and experience:

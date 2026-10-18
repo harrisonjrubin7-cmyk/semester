@@ -1,3 +1,64 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T18:02:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/integrated-trust/ACCESSIBILITY-PROGRAM.md
+    changed_at: "2026-10-18T20:41:13"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/integrated-trust/SUPPORT-ROUTES.md
+    changed_at: "2026-10-18T20:41:15"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/integrated-trust/THREAT-MODELS.md
+    changed_at: "2026-10-18T20:41:16"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/FERPA-CONSENT-WORKFLOW.md
+    changed_at: "2026-10-18T20:41:20"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SECURITY-THREAT-MODEL.md
+    changed_at: "2026-10-18T18:02:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-RISK-ASSESSMENT.md
+    changed_at: "2026-10-18T18:02:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md
+    changed_at: "2026-10-18T20:41:11"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Domain requirements
 
 <!-- Rendered from app/src/lib/ops/trustdomains.ts by trustcontrols.test.ts. Edit the data, then run `npm run registers` from app/. -->

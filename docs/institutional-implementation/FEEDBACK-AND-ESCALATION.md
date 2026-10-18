@@ -1,3 +1,26 @@
+---
+stale-refs:
+  - source: docs/DO-NOT-BUILD.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/README.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/METHODOLOGY.md
+    changed_at: "2026-10-18T20:41:12"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Customer feedback intake and product escalation loop
 
 | Control | Value |

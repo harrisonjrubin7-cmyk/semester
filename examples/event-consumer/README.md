@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/guides/integrations/event-consumer.md
+    changed_at: "2026-10-18T20:41:11"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Example: event consumer
 
 > **Type:** reference · **Audience:** implementers, contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/examples.test.ts`

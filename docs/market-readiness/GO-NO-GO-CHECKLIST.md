@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/LAUNCH-READINESS-COUNCIL.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Market-readiness go/no-go checklist
 
 Launch is `GO` only when the executed scope, named owners, data/access approval, target-environment security/privacy/accessibility acceptance, UAT, monitoring/support, incident/restore/rollback/export/deletion/offboarding rehearsals, baseline/guardrails and every council sign-off are current and linked.

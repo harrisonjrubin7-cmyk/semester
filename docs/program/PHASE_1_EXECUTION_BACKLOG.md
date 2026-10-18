@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/program/RISK_REGISTER.md
+    changed_at: "2026-10-18T18:02:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/evidence/operations/2026-10-04-main-ci-red-diagnosis.md
+    changed_at: "2026-10-18T20:41:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/STEP_1_RESTORE_DRILL_RUNSHEET.md
+    changed_at: "2026-10-18T20:41:20"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Phase 1 execution backlog
 
 **Purpose.** The ordered, smallest-vertical-slice plan for Phase 1 (security, tenancy, recovery, platform spine), derived from the Phase 0 audit. **Date** 2026-10-04. **Status** Phase 0 baseline — a plan, not a commitment and not a readiness claim. Nothing here has started. The ten steps and their order are the program's; this page adds, for each, the evidence it starts from, its first slice, its proof, and what must be true before it begins. Risk IDs are in [`RISK_REGISTER.md`](RISK_REGISTER.md); ADRs are `docs/decisions/proposed/ADR-nnnn-*.md` (all Proposed, none accepted).

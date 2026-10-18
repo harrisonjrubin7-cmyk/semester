@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-18T20:41:08"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # SCIM lifecycle management
 
 Status: **BUILT.** Service: `app/server/institution/scim.ts`. Contracts:

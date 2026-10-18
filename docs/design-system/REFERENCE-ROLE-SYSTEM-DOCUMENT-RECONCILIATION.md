@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/ROLE-LAUNCH-REGISTER.md
+    changed_at: "2026-10-18T20:41:10"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Reference role, system and document reconciliation
 
 **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086` · **Population** 49 roles + 88 systems + 82 documents = 219 rows · **Status** Phase 0 evidence, not release evidence

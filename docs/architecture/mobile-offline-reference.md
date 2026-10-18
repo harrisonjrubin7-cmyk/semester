@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/target-architecture/README.md
+    changed_at: "2026-10-18T18:02:02"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Mobile, offline, encrypted-storage and CRDT reference
 
 Status: **reference design plus a tested platform-neutral core.** There is still no native app, no SQLCipher binding, no gateway sync endpoint and no CRDT service in this repository. What exists is [`packages/offline-sync`](../../packages/offline-sync): the queue, protocol, conflict rules, device lease, key hierarchy, attachment cache and a reference CRDT, written against interfaces a phone supplies, and run in tests against an in-memory gateway. Nothing here changes the public claim in [`offline-sync-contract.md`](offline-sync-contract.md): *"responsive installable PWA with limited offline behavior,"* not *"encrypted FERPA offline mobile client."*

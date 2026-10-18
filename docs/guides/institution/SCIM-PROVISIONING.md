@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/reference/SCIM-API.md
+    changed_at: "2026-10-18T20:41:20"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # SCIM provisioning
 
 > **Type:** how-to · **Audience:** implementers, institution-admins · **Owner:** `security` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/institution-guides.test.ts`

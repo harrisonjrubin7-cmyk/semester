@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: CLAUDE.md
+    changed_at: "2026-10-18T18:01:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Revenue and Finance Operations Architecture
 
 | Control | Value |

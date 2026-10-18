@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/program/03-RAID.md
+    changed_at: "2026-10-18T20:41:19"
+    sections_changed: []
+    summary: externally modified
+  - source: LAUNCH-RISK-REGISTER.md
+    changed_at: "2026-10-18T20:41:08"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Semester — completion-baseline risk register (PR-xx)
 
 **Date:** 2026-10-04 · **Does not replace:** [`LAUNCH-RISK-REGISTER.md`](../../LAUNCH-RISK-REGISTER.md) (FR-001..FR-016, v0.2, 2026-10-03) and [`03-RAID.md`](03-RAID.md). This register **maps** to them and adds the risks Phase 0 found that they do not carry. Severity uses the launch register's rule: **P0** blocks every affected motion, no exception · **P1** blocks paid or supported activation · **P2** needs owner, dated mitigation, disclosure and approval · **P3** maturity.

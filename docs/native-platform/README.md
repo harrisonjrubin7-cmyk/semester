@@ -1,3 +1,56 @@
+---
+stale-refs:
+  - source: docs/master/SEMESTER_COMPLETE_OPERATING_SYSTEM.md
+    changed_at: "2026-10-18T20:41:18"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_CAPABILITY_MATRIX.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_DATA_AUTHORITY_MATRIX.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_DOMAIN_CATALOG.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_DOMAIN_REPLACEMENT_GATES.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_MASTER_BACKLOG.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_ROLE_CATALOG.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_NATIVE_PDF_DELTA.md
+    changed_at: "2026-10-18T20:41:18"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Native platform: where each document lives
 
 The native-first Phase 0 reconciliation landed on `main` under [`docs/master/`](../master/) and [`docs/finish-line/`](../finish-line/) before this folder existed. To keep one authority per fact, nothing is copied here; this page maps the requested names to the real files. Edit those, not this.

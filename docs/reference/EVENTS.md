@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-18T20:41:08"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Event catalog and outbox
 
 > **Type:** reference · **Audience:** implementers, partner-developers · **Owner:** `data` · **Truth:** generated · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/platform-reference.test.ts`

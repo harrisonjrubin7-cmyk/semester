@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/guides/integrations/which-integration-path.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/EVENTS.md
+    changed_at: "2026-10-18T18:02:02"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Consume events
 
 > **Type:** how-to · **Audience:** implementers, contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/examples.test.ts`

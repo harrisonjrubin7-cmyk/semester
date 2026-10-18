@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-18T18:01:59"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Finance release gates
 
 | Control | Value |

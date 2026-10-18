@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-18T20:41:09"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # RB-09 · Schema deploy failed
 
 Class C1 · role data · alerts `deploy:schema-failed`, `deploy:ledger-drift` · component `pipeline:schema-deploy`.

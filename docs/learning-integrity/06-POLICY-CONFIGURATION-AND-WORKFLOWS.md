@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/learning-integrity/02-ASSESSMENT-MASTERY-AND-FEEDBACK.md
+    changed_at: "2026-10-18T18:02:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/03-AI-TUTORING-AND-BOUNDARIES.md
+    changed_at: "2026-10-18T20:41:17"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/04-ACADEMIC-INTEGRITY-CONTROLS.md
+    changed_at: "2026-10-18T20:41:17"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # 06 · Policy configuration, and faculty and tutor workflows
 
 Deliverables covered: **faculty/tutor workflows** and **policy configuration

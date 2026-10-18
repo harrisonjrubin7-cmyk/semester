@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: ANALYTICS.md
+    changed_at: "2026-10-18T20:41:08"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Product analytics and data ethics
 
 Launch-readiness Phase 5. What Semester measures about the people who use it,

@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/target-architecture/README.md
+    changed_at: "2026-10-18T18:02:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/03-TECHNOLOGY-DECISIONS.md
+    changed_at: "2026-10-18T20:41:20"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/09-CONVERSION-PLAN.md
+    changed_at: "2026-10-18T20:41:20"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # 08 · Staffing, team topology, milestones, architecture review, technical debt
 
 > Part of the [CTO architecture pack](README.md). Status: **proposed**.
