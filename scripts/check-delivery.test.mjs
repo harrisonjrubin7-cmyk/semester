@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { symlinkSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
 import { check, loadRepo } from './check-delivery.mjs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 // Each control below is a deliberate break of one rule. The test fails if the checker stops catching it.
 const clone = (x) => structuredClone(x);
@@ -400,4 +406,50 @@ test('control: a release-approved rollout plan with boolean answers fails', () =
   });
   const { errors } = check(repo);
   assert.ok(errors.some((e) => /requires rollout_and_rollback_plan\.feature_flag/.test(e)));
+});
+
+test('control: a whitespace-only rollout answer fails at release approval', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => {
+    d.state = 'approved_for_release';
+    d.rollout_and_rollback_plan = { feature_flag: '   ', safe_off: 'Read-only guidance.', rollback: 'Disable flag.' };
+  });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /RDY-INC-003: approved_for_release requires rollout_and_rollback_plan\.feature_flag/.test(e)));
+});
+
+test('control: a boolean in a required increment field fails at approval', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => {
+    d.state = 'approved_for_build';
+    d.problem_statement = false;
+  });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /RDY-INC-003: approved_for_build requires .*problem_statement/.test(e)));
+});
+
+test('control: a root-level evidence file resolves as a path, not an artifact id', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.operational_runbook = 'GO-NO-GO-DECISION.md'; });
+  const { warnings } = check(repo);
+  assert.ok(!warnings.some((w) => /operational_runbook GO-NO-GO-DECISION.md is neither/.test(w)));
+});
+
+test('control: a symlink inside the repository that points outside it is not evidence', () => {
+  const link = join(ROOT, '.delivery-test-link');
+  symlinkSync(process.execPath, link);
+  try {
+    const repo = loadRepo();
+    const control = repo.finance.minimum_artifacts.find((a) => a.status === 'present');
+    control.evidence = '.delivery-test-link';
+    const { errors } = check(repo);
+    assert.ok(errors.some((e) => /is marked present but its evidence .delivery-test-link does not exist/.test(e)));
+  } finally {
+    unlinkSync(link);
+  }
+});
+
+test('control: removing a required dependency from ART-RDY-011 fails', () => {
+  const repo = loadRepo();
+  const art = repo.artifacts.find((a) => a.data.id === 'ART-RDY-011');
+  art.data.dependencies = art.data.dependencies.filter((d) => d !== 'alert-routing');
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /ART-RDY-011: dependency alert-routing must stay declared/.test(e)));
 });

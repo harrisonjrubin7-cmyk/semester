@@ -1,6 +1,6 @@
 // Checks the delivery-management records under docs/delivery, registry/, and docs/finance.
 // Run: node scripts/check-delivery.mjs   (exit 1 when there are errors; warnings do not fail)
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -78,6 +78,10 @@ const REQUIRED_DECISIONS = [
 // Members a release-approved rollout plan must answer, not just contain.
 const REQUIRED_PLAN_MEMBERS = ['feature_flag', 'safe_off', 'rollback'];
 const isPlaceholder = (v) => typeof v === 'string' && PLACEHOLDER_VALUES.has(v.trim().toUpperCase());
+// A field that is blank, a sentinel, or a boolean or number does not answer a question that wants text.
+const isUnanswered = (v) => isEmpty(v) || isPlaceholder(v) || typeof v === 'boolean' || typeof v === 'number' || (typeof v === 'string' && v.trim() === '');
+// The three dependencies ART-RDY-011 must keep; removing one would let the runbook pass without it.
+const REQUIRED_ARTIFACT_DEPENDENCIES = { 'ART-RDY-011': ['source-authority-register', 'alert-routing', 'support-intake'] };
 // The checks each quality gate must keep; removing one changes the specification's gate catalogue.
 const REQUIRED_GATE_CHECKS = {
   'GATE-01': ['user_outcome_defined', 'institution_authority_defined', 'prohibited_claims_defined', 'source_types_defined', 'accountable_owner_named'],
@@ -100,9 +104,18 @@ export function check(repo) {
   const warnings = [];
   const { model, graph, root } = repo;
   // A repository-relative path resolved to an absolute one inside the repository, or null when it escapes.
+  // A path is inside the repository only if it is lexically inside and, when it exists, its real target is too.
+  const realRoot = realpathSync(root);
   const insideRoot = (rel) => {
     const abs = resolve(root, rel);
-    return abs === root || abs.startsWith(root + sep) ? abs : null;
+    if (!(abs === root || abs.startsWith(root + sep))) return null;
+    if (!existsSync(abs)) return abs;
+    const real = realpathSync(abs);
+    return real === realRoot || real.startsWith(realRoot + sep) ? abs : null;
+  };
+  const isFileAt = (rel) => {
+    const abs = insideRoot(rel);
+    return abs !== null && existsSync(abs) && statSync(abs).isFile();
   };
   // True when artifact `from` depends on `target`, directly or through other artifacts.
   const dependsOn = (from, target, seen = new Set()) => {
@@ -125,6 +138,12 @@ export function check(repo) {
   }
   for (const id of REQUIRED_ARTIFACT_IDS) {
     if (!repo.artifacts.some((a) => a.data.id === id)) errors.push(`registry/artifacts: required record ${id} is missing`);
+  }
+  for (const [id, deps] of Object.entries(REQUIRED_ARTIFACT_DEPENDENCIES)) {
+    const declared = repo.artifacts.find((a) => a.data.id === id)?.data.dependencies ?? [];
+    for (const dep of deps) {
+      if (!declared.includes(dep)) errors.push(`${id}: dependency ${dep} must stay declared`);
+    }
   }
   const rank = (s) => states.indexOf(s);
   const nodes = new Map();
@@ -150,7 +169,8 @@ export function check(repo) {
   // Returns why a reference does not resolve, or null when it does. A path that is a registered
   // artifact's location inherits that artifact's state, so a draft runbook cannot pass as approved.
   const referenceProblem = (value) => {
-    if (value.includes('/')) {
+    // A bare name is a file when one exists at the repository root, so root-level evidence documents resolve.
+    if (value.includes('/') || isFileAt(value)) {
       const abs = insideRoot(value);
       if (abs === null) return 'is outside the repository';
       if (!existsSync(abs)) return 'does not exist on disk';
@@ -264,7 +284,7 @@ export function check(repo) {
     const r = rank(inc.state);
     const approved = r >= rank('approved_for_build');
     if (approved) {
-      const missing = model.every_increment_requires.filter((k) => isEmpty(inc[k]) || isPlaceholder(inc[k]));
+      const missing = model.every_increment_requires.filter((k) => isUnanswered(inc[k]));
       if (missing.length) errors.push(`${label}: ${inc.state} requires ${missing.join(', ')}`);
       // A missing list is not the same as a reviewed "no hard dependencies" decision.
       if (!Array.isArray(inc.hard_dependencies)) {
@@ -300,7 +320,7 @@ export function check(repo) {
     if (r >= rank('approved_for_release')) {
       for (const k of REQUIRED_PLAN_MEMBERS) {
         const v = inc.rollout_and_rollback_plan?.[k];
-        if (typeof v !== 'string' || isEmpty(v) || isPlaceholder(v)) errors.push(`${label}: ${inc.state} requires rollout_and_rollback_plan.${k}`);
+        if (typeof v !== 'string' || isUnanswered(v)) errors.push(`${label}: ${inc.state} requires rollout_and_rollback_plan.${k}`);
       }
     }
     for (const d of inc.hard_dependencies ?? []) {
