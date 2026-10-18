@@ -300,7 +300,7 @@ describe('review fixes: boundaries, tenancy, atomic release, event metadata', ()
     await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
     await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1, correlationId: 'req-abc-12345' });
     const [row] = store.outbox.rows;
-    expect(row.event.idempotencyKey).toBe(KEY_1);
+    expect(row.event.idempotencyKey).toBe(`stu-1:${KEY_1}`);
     expect(row.event.correlationId).toBe('req-abc-12345');
     expect(row.event.occurredAt).toBe('2026-10-18T12:00:00.000Z');
   });
@@ -408,6 +408,45 @@ describe('review fixes: boundaries, tenancy, atomic release, event metadata', ()
 
     await expect(service.submitAssignment(as('stu-1', 'inst-b'), { assignmentId: 'b1', draftVersion: 1, idempotencyKey: KEY_1 }))
       .resolves.toMatchObject({ status: 'completed' });
+  });
+
+  it('identifiers use the platform alphabet, so an id with dots and colons is accepted', async () => {
+    const { service, store, as } = fixture();
+    store.assignments.set('unit.2:essay', { id: 'unit.2:essay', institutionId: 'inst-a', courseId: 'course-a1', closesAt: '2026-10-20T23:59:00Z' });
+    await expect(service.saveDraft(as('stu-1'), { assignmentId: 'unit.2:essay', body: 'v1', expectedVersion: 0 }))
+      .resolves.toMatchObject({ version: 1 });
+  });
+
+  it('grade.posted carries the assignment under the name the grade notifier reads', async () => {
+    const { service, store, as, KEY_1, KEY_2 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    const submissionId = [...store.submissions.values()][0].id;
+    await service.recordAssessment(as('fac-1'), { submissionId, grade: 80, feedback: 'ok', idempotencyKey: KEY_1 });
+    await service.releaseFeedback(as('fac-1'), { submissionId, idempotencyKey: KEY_2 });
+
+    const posted = store.outbox.rows.map((r) => r.event).find((e) => e.eventType === 'grade.posted');
+    expect(posted?.payload).toMatchObject({ assignment: 'a1' });
+  });
+
+  it('two faculty who reuse one command key release two grades under two event keys, so the notifier does not collapse them', async () => {
+    const { service, store, as } = fixture();
+    store.memberships.push({ userId: 'fac-3', institutionId: 'inst-a', courseId: 'course-a1', role: 'faculty', status: 'active' });
+    store.memberships.push({ userId: 'stu-2', institutionId: 'inst-a', courseId: 'course-a1', role: 'student', status: 'active' });
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay one', expectedVersion: 0 });
+    await service.saveDraft(as('stu-2'), { assignmentId: 'a1', body: 'essay two', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: 'submit-key-000001' });
+    await service.submitAssignment(as('stu-2'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: 'submit-key-000001' });
+    const [first, second] = [...store.submissions.values()];
+    await service.recordAssessment(as('fac-1'), { submissionId: first.id, grade: 80, feedback: 'ok', idempotencyKey: 'assess-key-000001' });
+    await service.recordAssessment(as('fac-3'), { submissionId: second.id, grade: 70, feedback: 'ok', idempotencyKey: 'assess-key-000001' });
+
+    await service.releaseFeedback(as('fac-1'), { submissionId: first.id, idempotencyKey: 'release-key-000001' });
+    await service.releaseFeedback(as('fac-3'), { submissionId: second.id, idempotencyKey: 'release-key-000001' });
+
+    const keys = store.outbox.rows.map((r) => r.event).filter((e) => e.eventType === 'grade.posted').map((e) => e.idempotencyKey);
+    expect(keys).toHaveLength(2);
+    expect(new Set(keys).size).toBe(2);
   });
 });
 

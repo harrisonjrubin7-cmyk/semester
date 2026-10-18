@@ -190,7 +190,8 @@ export interface FacultySubmissionView {
   assessment: { grade: number; feedback: string; released: boolean } | null;
 }
 
-const ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
+/** The platform's identifier alphabet (`packages/platform/src/tenancy/organization.ts`). Keep the two in step. */
+const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 /** The gateway's idempotency-key contract (`packages/platform/src/gateway/headers.ts`). Keep the two in step. */
 const KEY_PATTERN = /^[A-Za-z0-9._:-]{16,128}$/;
 const BODY_LIMIT = 50_000;
@@ -420,7 +421,7 @@ export class AssignmentSubmissionService {
       subjectId: submission.userId,
       correlationId: correlationOf(input.correlationId, `release-${submission.id}`),
       idempotencyKey: key,
-      payload: { submissionId: submission.id, assignmentId: assignment.id },
+      payload: { submissionId: submission.id, assignment: assignment.id },
     });
     this.store.receipts.set(receipt.id, { ...receipt });
     assessment.releasedAt = releasedAt;
@@ -555,7 +556,8 @@ export class AssignmentSubmissionService {
       actor: { id: input.actorId, type: 'user' },
       subject: { type: input.subjectType, id: input.subjectId },
       correlationId: input.correlationId,
-      idempotencyKey: input.idempotencyKey,
+      // Namespaced by the sender: two people who reuse one command key must not give a downstream dedupe the same key.
+      idempotencyKey: `${input.actorId}:${input.idempotencyKey}`,
       payload: input.payload,
     });
   }
