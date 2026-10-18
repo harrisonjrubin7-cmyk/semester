@@ -155,6 +155,7 @@ function targetPresence(
   // The projection does not enforce unique hold ids either, so two holds with one id are refused
   // rather than letting list order pick the outcome.
   const matches = readiness.holds.filter((candidate) => candidate.id === id);
+  if (matches.length > 1) return 'ambiguous';
   const [hold] = matches;
   if (!hold) return 'missing';
   return hold.state === 'clear' ? 'clear' : 'open';
