@@ -188,3 +188,50 @@ test('control: an approved increment with an unknown capability key fails', () =
   const { errors } = check(repo);
   assert.ok(errors.some((e) => /capability_key registration.typo is not in packages\/platform-control/.test(e)));
 });
+
+test('control: an approved increment with a non-string reference value fails', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'approved_for_build'; d.operational_runbook = { bogus: true }; });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /RDY-INC-003: operational_runbook \[object Object\]|RDY-INC-003: operational_runbook must be a string reference/.test(e)));
+});
+
+test('control: an approved increment whose reference escapes the repository fails', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'approved_for_build'; d.data_contract = '../../etc/passwd'; });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /RDY-INC-003: data_contract \.\.\/\.\.\/etc\/passwd is outside the repository/.test(e)));
+});
+
+test('control: a finance control with an unknown status fails', () => {
+  const repo = loadRepo();
+  repo.finance.minimum_artifacts.find((a) => a.id === 'finance_component_passport').status = 'complete_typo';
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /finance: finance_component_passport has unknown status complete_typo/.test(e)));
+});
+
+test('control: an approved artifact without an accountable owner fails', () => {
+  const repo = loadRepo();
+  const art = repo.artifacts.find((a) => a.data.id === 'ART-RDY-011');
+  art.data.state = 'approved';
+  art.data.review.next_due = '2099-01-01';
+  delete art.data.owners;
+  art.data.location = 'docs/pilot/registration-readiness/INC-READINESS-001.yaml';
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /ART-RDY-011: approved without an accountable owner/.test(e)));
+});
+
+test('control: an approved artifact with an unresolved dependency fails', () => {
+  const repo = loadRepo();
+  const art = repo.artifacts.find((a) => a.data.id === 'ART-RDY-011');
+  art.data.state = 'approved';
+  art.data.review.next_due = '2099-01-01';
+  art.data.location = 'docs/pilot/registration-readiness/INC-READINESS-001.yaml';
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /ART-RDY-011: approved with unresolved dependency source-authority-register/.test(e)));
+});
+
+test('control: an expansion scorecard missing a required hard stop fails', () => {
+  const repo = loadRepo();
+  repo.scorecard.hard_stops = repo.scorecard.hard_stops.filter((s) => s !== 'confirmed_unauthorized_access');
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /missing required hard stops \[confirmed_unauthorized_access\]/.test(e)));
+});

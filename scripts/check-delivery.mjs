@@ -1,7 +1,7 @@
 // Checks the delivery-management records under docs/delivery, registry/, and docs/finance.
 // Run: node scripts/check-delivery.mjs   (exit 1 when there are errors; warnings do not fail)
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -54,11 +54,23 @@ const FINANCE_CONTROLS = [
   'refund_approval_policy', 'month_end_close_checklist', 'financial_access_review',
 ];
 const CAPABILITY_DIR = 'packages/platform-control/registry/capabilities';
+const FINANCE_STATUSES = ['not_started', 'present'];
+// The expansion scorecard's no-override hard stops; deleting one must not pass.
+const REQUIRED_HARD_STOPS = [
+  'confirmed_unauthorized_access', 'unresolved_critical_accessibility_issue',
+  'inability_to_identify_authoritative_source', 'failure_to_safely_disable_capability',
+  'missing_institutional_decision_owner',
+];
 
 export function check(repo) {
   const errors = [];
   const warnings = [];
   const { model, graph, root } = repo;
+  // A repository-relative path resolved to an absolute one inside the repository, or null when it escapes.
+  const insideRoot = (rel) => {
+    const abs = resolve(root, rel);
+    return abs === root || abs.startsWith(root + sep) ? abs : null;
+  };
   const today = repo.today ?? new Date().toISOString().slice(0, 10);
   const states = model.delivery_states;
   const rank = (s) => states.indexOf(s);
@@ -79,7 +91,9 @@ export function check(repo) {
   // artifact's location inherits that artifact's state, so a draft runbook cannot pass as approved.
   const referenceProblem = (value) => {
     if (value.includes('/')) {
-      if (!existsSync(join(root, value))) return 'does not exist on disk';
+      const abs = insideRoot(value);
+      if (abs === null) return 'is outside the repository';
+      if (!existsSync(abs)) return 'does not exist on disk';
       const registered = [...artifactById.values()].find((a) => a.location === value);
       if (registered && registered.state !== 'approved') {
         return `is registered artifact ${registered.id}, currently ${registered.state}, not approved`;
@@ -188,8 +202,8 @@ export function check(repo) {
     }
     for (const field of REFERENCE_FIELDS) {
       const value = inc[field];
-      if (typeof value !== 'string' || value === '') continue;
-      const problem = referenceProblem(value);
+      if (isEmpty(value)) continue;
+      const problem = typeof value === 'string' ? referenceProblem(value) : 'must be a string reference';
       if (!problem) continue;
       // Before approval a broken reference is a gap to close; once approved it is a blocker.
       const message = `${label}: ${field} ${value} ${problem}`;
@@ -230,7 +244,8 @@ export function check(repo) {
       errors.push(`${label}: unknown artifact state ${a.state}`);
       continue;
     }
-    const exists = !isEmpty(a.location) && existsSync(join(root, a.location));
+    const location = isEmpty(a.location) ? null : insideRoot(a.location);
+    const exists = location !== null && existsSync(location);
     if (a.state === 'missing') {
       if (exists) errors.push(`${label}: marked missing but ${a.location} exists`);
       else warnings.push(`${label}: missing (${a.location} not found)`);
@@ -239,6 +254,13 @@ export function check(repo) {
     }
     if (a.release_critical && a.state !== 'approved') warnings.push(`${label}: release-critical and ${a.state}`);
     // An approved artifact whose review date has passed is expired by the operating model's own rule.
+    if (a.state === 'approved') {
+      if (isEmpty(a.owners?.accountable)) errors.push(`${label}: approved without an accountable owner`);
+      for (const dep of a.dependencies ?? []) {
+        const d = artifactById.get(dep);
+        if (!d || d.state !== 'approved') errors.push(`${label}: approved with unresolved dependency ${dep}`);
+      }
+    }
     const due = a.review?.next_due;
     if (a.state === 'approved' && isCalendarDate(due ?? '') && due < today) {
       errors.push(`${label}: approved but its review was due ${due}; it cannot support a release`);
@@ -249,6 +271,9 @@ export function check(repo) {
 
   // Expansion scorecard: hard stops are defined and the no-override rule is stated.
   if (isEmpty(repo.scorecard.hard_stops)) errors.push('expansion-scorecard: no hard stops');
+  const declaredStops = repo.scorecard.hard_stops ?? [];
+  const missingStops = REQUIRED_HARD_STOPS.filter((id) => !declaredStops.includes(id));
+  if (missingStops.length) errors.push(`expansion-scorecard: missing required hard stops [${missingStops.join(', ')}]`);
   if (!/no score may override/i.test(repo.scorecard.score_policy ?? '')) {
     errors.push('expansion-scorecard: score_policy must state that no score overrides a critical control failure');
   }
@@ -259,9 +284,10 @@ export function check(repo) {
   const missingControls = FINANCE_CONTROLS.filter((id) => !financeIds.includes(id));
   if (missingControls.length) errors.push(`finance: minimum artifacts missing [${missingControls.join(', ')}]`);
   for (const a of repo.finance.minimum_artifacts) {
+    if (!FINANCE_STATUSES.includes(a.status)) errors.push(`finance: ${a.id} has unknown status ${a.status}`);
     if (a.status === 'not_started') warnings.push(`finance: ${a.id} not started`);
     // A "present" artifact must point at evidence in the repository, so the baseline cannot claim unbuilt work.
-    if (a.status === 'present' && (isEmpty(a.evidence) || !existsSync(join(root, a.evidence)))) {
+    if (a.status === 'present' && (isEmpty(a.evidence) || insideRoot(a.evidence) === null || !existsSync(insideRoot(a.evidence)))) {
       errors.push(`finance: ${a.id} is marked present but its evidence ${a.evidence ?? '(none)'} does not exist`);
     }
   }
