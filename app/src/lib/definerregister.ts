@@ -374,7 +374,6 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20260930200000_school_offboarding.sql',
   '20260930234000_data_subject_request_intake.sql',
   '20261004200000_answer_data_subject_requests.sql',
-  '20261018120000_registration_swap.sql',
 ];
 
 /**
@@ -470,10 +469,6 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
       'registration_withdraw',
     ],
   },
-  {
-    file: '20261018120000_registration_swap.sql',
-    functions: ['registration_swap'],
-  },
 ];
 
 /**
@@ -564,6 +559,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261006160000_my_sessions.sql',
     functions: ['end_my_session', 'my_sessions'],
+  },
+  {
+    file: '20261018120000_registration_swap.sql',
+    functions: ['registration_swap'],
   },
 ];
 

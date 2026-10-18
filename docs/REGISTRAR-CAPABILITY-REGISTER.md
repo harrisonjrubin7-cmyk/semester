@@ -57,7 +57,7 @@ Identifiers are `REG-<section>.<n>`, so each blueprint item has one row.
 | ID | Capability | Status | Evidence / gap |
 |---|---|---|---|
 | REG-2.1 | Entity families (identity, academic structure, policy, curriculum, scheduling, enrollment, learning, official record, degree, services, governance) | Partial | Enrollment, learning and official-record families have schema. Curriculum, scheduling detail, degree, services and policy-version families are missing. |
-| REG-2.2 | Common metadata (`institution_id`, `record_version`, `effective_at`, `recorded_at`, `supersedes_record_id`, provenance) | Partial | `recorded_at` is present in the ledger. No `effective_at` column was found by name, and no `record_version` or `supersedes_record_id` was found. |
+| REG-2.2 | Common metadata (`institution_id`, `record_version`, `effective_at`, `recorded_at`, `supersedes_record_id`, provenance) | Partial | `recorded_at` is on the ledger. `record_version` exists on the registrar readiness records (`20261009160000_registration_readiness_store.sql`) and `effective_at` on course-material retention (`20261009001500_course_material_retention_policy.sql`), but neither is on the academic record ledger. No `supersedes_record_id` was found. |
 | REG-2.3 | Composite tenant/object foreign keys | Unverified | Not checked in this pass. Needs a schema inspection test. |
 | REG-2.4 | Invariant: no duplicate active enrollment for the same section | Schema (to verify) | Blueprint requires one live row per student and section. The registration migration has a "one live row" comment. Needs a constraint test. |
 | REG-2.5 | Invariant: official decisions are not silently overwritten | Schema | Ledger has an append-only guard (`academic_record_entries_append_only`) and a change guard. |
@@ -97,7 +97,7 @@ The blueprint's routes are `/v1/academic/*` HTTP endpoints. The repo implements 
 | REG-5.1 | `GET /v1/academic/terms` | Partial | `my_registration` (student view only) |
 | REG-5.2 | `GET /v1/academic/catalog-versions/{id}` | Missing | |
 | REG-5.3 | `GET /v1/academic/sections` | Partial | Section data via registration reads; no filtered public search found |
-| REG-5.4 | `GET /v1/academic/students/{id}/enrollments` | Partial | `my_registration` (self only); no staff scoped view found |
+| REG-5.4 | `GET /v1/academic/students/{id}/enrollments` | Partial | `my_registration` (self only). Staff read exists at the database layer: `authenticated` has SELECT on `registration_enrollments`, and `registration:administer` reads its school's rows. No HTTP route. |
 | REG-5.5 | `GET /v1/academic/students/{id}/history` | Missing | |
 | REG-5.6 | `GET /v1/academic/degree-audits/{id}` | Missing | |
 | REG-5.7 | `GET /v1/academic/operations/{id}`, `receipts/{id}` | Missing | No operation or receipt model found |
@@ -106,7 +106,7 @@ The blueprint's routes are `/v1/academic/*` HTTP endpoints. The repo implements 
 | REG-5.10 | `POST /v1/academic/eligibility-evaluations` | Partial | Readiness store and refusal reasons |
 | REG-5.11 | `POST /v1/academic/registration-requests` (add/drop/swap) | Partial | `registration_enroll`, `registration_drop`, `registration_withdraw`, `registration_swap` (no HTTP route yet; the RPC is the transaction) |
 | REG-5.12 | `POST /v1/academic/overrides` | Schema | `registrar_grant_override` |
-| REG-5.13 | `POST /v1/academic/overrides/{id}/decisions` | Schema | `registrar_decide` |
+| REG-5.13 | `POST /v1/academic/overrides/{id}/decisions` | Missing | `registrar_decide` decides enrollments in `pending_approval` only. `registrar_grant_override` writes a final override row with no pending or decision state. |
 | REG-5.14 | `POST /v1/academic/waitlist-offers/{id}/acceptances` | Partial | Promotion exists; no offer-acceptance with expiry found |
 | REG-5.15 | `POST /v1/academic/grade-submissions` | Partial | `gradebook_enter`, `gradebook_release`; no registrar submission |
 | REG-5.16 | `POST /v1/academic/grade-postings` | Missing | No gradebook-to-ledger posting |
@@ -124,7 +124,7 @@ The blueprint's routes are `/v1/academic/*` HTTP endpoints. The repo implements 
 | ID | Capability | Status | Evidence / gap |
 |---|---|---|---|
 | REG-6.1 | Readiness: ready / blocked / stale / unknown / review-required, routed blockers, re-evaluation | Schema | Readiness store and tests exist. Readiness is not a seat guarantee in the code. |
-| REG-6.2 | Add/drop with validation steps 1–10 (window, standing, holds, overrides, prerequisites, credit load, clashes, linked components, capacity, version, atomic write, receipt, outbox, projections) | Partial | Window, holds, clash, capacity, version and audit exist in the RPCs. Credit load, linked components, and outbox were not found. |
+| REG-6.2 | Add/drop with validation steps 1–10 (window, standing, holds, overrides, prerequisites, credit load, clashes, linked components, capacity, version, atomic write, receipt, outbox, projections) | Partial | Window, holds, prerequisites, clash, credit load, capacity, version and audit exist in `private.registration_blocker` and the RPCs. Linked components and outbox were not found. |
 | REG-6.3 | Atomic swap evaluated on the resulting schedule, original preserved on failure | **Implemented** (verified on local PostgreSQL 16, not 17; not deployed) | `registration_swap` in `20261018120000_registration_swap.sql`. The drop is written first and the add judged on the schedule it leaves; a refused add rolls the drop back in a nested block. Seat-only: a waitlist place or an approval-required section refuses. Checked by `supabase/registration_swap.check.sql` (25 checks); reverting the rollback turns it red. |
 | REG-6.4 | Waitlist join → position → seat release → recheck → reserve → accept before expiry → confirm | Partial | Join, position and promotion exist. Expiry-based acceptance and release were not found. |
 | REG-6.5 | Configurable queue policy (not FIFO by default) | Missing | Queue order is implemented as a fixed position rule. |
@@ -141,7 +141,7 @@ The blueprint's routes are `/v1/academic/*` HTTP endpoints. The repo implements 
 | REG-7.5 | Ledger entry contract (attempt, decision type, value, policy version, effective and recorded time, actor, approval, supersession, reason) | Partial | Recorded time, actor and change records exist. Policy version and approval reference were not found by name. |
 | REG-7.6 | Versioned calculations (GPA mappings, repeat, transfer, credit-earned, rounding, standing, incomplete, multi-career) | Missing | No calculation module found in `app/src/lib/record` beyond ledger display (not verified). |
 | REG-7.7 | Decimal arithmetic with retained inputs; deterministic projection rebuild | Missing | |
-| REG-7.8 | Correction workflow (request → evidence → review → posting → recompute → issued-document impact) | Missing | |
+| REG-7.8 | Correction workflow (request → evidence → review → posting → recompute → issued-document impact) | Partial | `20260929210000_academic_record_ledger.sql`: a correction is a new ledger entry, approved under `record:override`, and the prior entry is kept. Recompute and issued-document impact were not found. |
 | REG-7.9 | Issued transcripts are not silently regenerated | Missing | Depends on REG-1.7. |
 
 ### §8 IAM and infrastructure
@@ -204,4 +204,4 @@ Slices 2–4 need the CLAUDE.md decision-record step (`docs/decisions/D-<pr>.md`
 
 ## Gates run for this change
 
-This change adds one documentation file. No code, schema, or tests changed. The repository gates (`tsc -b`, lint, `check:university`, tests, build) were not run for this change. The register's claims were checked by reading migration filenames and grepping `supabase/migrations`, `app/`, `api/`, `server/` and `packages/`. They were not checked by executing code.
+This change adds the register and the atomic registration swap (REG-6.3): migration `20261018120000_registration_swap.sql`, the check suite `supabase/registration_swap.check.sql`, the grants and definer-register entries, and decision `docs/decisions/D-1549.md`. The swap suite (25 checks), the registration suite (100) and the grants suite (13) were run on local PostgreSQL 16, not PostgreSQL 17, and the migration has not run on the remote project. `tsc -b`, lint and the full `npm test` suite passed. The register's status claims were checked against migrations and code; the swap was executed, the rest of the register was not.
