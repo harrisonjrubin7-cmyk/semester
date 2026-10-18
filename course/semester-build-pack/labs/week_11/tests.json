@@ -18,6 +18,36 @@
       "expected": {
         "status": 503
       }
+    },
+    {
+      "input": {
+        "password": "p",
+        "request_id": "r"
+      },
+      "expected": {
+        "request_id": "r"
+      }
+    },
+    {
+      "input": {
+        "submission_body": "x",
+        "request_id": "r"
+      },
+      "expected": {
+        "request_id": "r"
+      }
+    },
+    {
+      "input": {
+        "password": "p",
+        "submission_body": "b",
+        "token": "t",
+        "student_name": "X",
+        "status": 503
+      },
+      "expected": {
+        "status": 503
+      }
     }
   ]
 }

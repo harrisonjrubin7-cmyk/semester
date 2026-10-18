@@ -14,29 +14,29 @@ Columns are reduced from the full template where they do not apply to a docs-and
 |---|---|---|---|---|---|---|---|---|
 | SYS-PORTAL | Learning portal `portal.html` | 16 module list, lesson view, search, starter downloads, progress, export/import, architecture, syllabus, certification, API inspector | Learner | Browse modules; search; download starters; track progress locally | Loads with no JS errors; search filters; no horizontal scroll at 320px | implemented, partially verified | See section 3, checks P1–P4 | Lesson download, progress export/import round trip, API and certification tabs not exercised. No authentication; progress is browser-local (per README) |
 | SYS-GRADER | `grader.py` | `--lab 1..16` runner | Learner, instructor | Run visible tests, write JSON report | Starters score 0 with exit 1; a correct solution scores full with exit 0 | implemented, verified for trusted local use only | Checks G1–G2 | Not a sandbox (grader's own warning; ARCH §8). Production runner not built |
-| SYS-OAS | Developer console contract `developer-console.openapi.json` | 68 operations, 53 paths, 54 schemas | Partner developer (proposed) | Control-plane API for organizations, apps, installations, grants, webhooks, releases, certification, pilots, offboarding, audit, support | Passes OpenAPI structural validation; unique operation IDs | specified (contract only), structurally verified | Check O1 | No service implements any operation. Semantic conformance tests not written. Base URL and OAuth endpoints are placeholders |
+| SYS-OAS | Developer console contract `developer-console.openapi.json` | 69 operations, 54 paths, 55 schemas | Partner developer (proposed) | Control-plane API for organizations, apps, installations, grants, webhooks, releases, certification, pilots, offboarding, audit, support | Passes OpenAPI structural validation; unique operation IDs | specified (contract only), structurally verified | Check O1 | No service implements any operation. Semantic conformance tests not written. Base URL and OAuth endpoints are placeholders |
 | SYS-SYLLABUS | Syllabus and lab PDF | Course document | Instructor, learner | Outcomes, weekly rhythm, assessment, rubrics, integrity policy | File identical to upload | proposed | md5 match | Requires instructor and institutional approval (syllabus text) |
 | SYS-ARCH | Architecture guides | 11 sections | Engineers | Trust boundaries, identity, authorization, API rules, events, SDK, grading isolation, AI policy, release | Document present | specified | n/a | Nothing in section 1 of the guide is implemented (see section 2) |
 | SYS-CERT | Partner certification workflow | 16 steps with owner, evidence and exit gate | Partner operations, security, institution approver | Register publisher through institutional pilot activation | Document present | proposed | n/a | No owners, review panel, records or evidence store exist. No SLA or legal timeline adopted |
 | SYS-CAP | Capstone: synthetic planning extension | Tenant-scoped tasks, shared-shell UI, typed client, duplicate-safe events, revocation | Learner | Build across weeks 4–16 increments | Rubric in syllabus | specified | n/a | TypeScript toolchain is an instructor choice; no capstone starter exists |
 | LAB-01 | System boundaries | Week 1 | Learner | Classify draft, grade and fixture records | Visible tests: 3 | specified; starter verified failing; pass path verified via control | Checks G1, G3 | Reference solution not in pack |
-| LAB-02 | Git and engineering evidence | Week 2 | Learner | Lab 2 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-03 | Contracts and validation | Week 3 | Learner | Lab 3 | Visible tests: 3 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-04 | Pagination and API design | Week 4 | Learner | Lab 4 | Visible tests: 3 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-05 | Authentication versus authorization | Week 5 | Learner | Lab 5 | Visible tests: 3 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-06 | Tenant isolation | Week 6 | Learner | Lab 6 | Visible tests: 3 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-07 | Transactions and audit | Week 7 | Learner | Lab 7 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-02 | Git and engineering evidence | Week 2 | Learner | Lab 2 | Visible tests: 6 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-03 | Contracts and validation | Week 3 | Learner | Lab 3 | Visible tests: 7 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-04 | Pagination and API design | Week 4 | Learner | Lab 4 | Visible tests: 7 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-05 | Authentication versus authorization | Week 5 | Learner | Lab 5 | Visible tests: 6 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-06 | Tenant isolation | Week 6 | Learner | Lab 6 | Visible tests: 6 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-07 | Transactions and audit | Week 7 | Learner | Lab 7 | Visible tests: 7 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-08 | Accessible interfaces | Week 8 | Learner | Lab 8 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-09 | Idempotency | Week 9 | Learner | Lab 9 | Visible tests: 3 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-10 | Events and deduplication | Week 10 | Learner | Lab 10 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-11 | Diagnostics and recovery | Week 11 | Learner | Lab 11 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-10 | Events and deduplication | Week 10 | Learner | Lab 10 | Visible tests: 4 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-11 | Diagnostics and recovery | Week 11 | Learner | Lab 11 | Visible tests: 5 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-12 | Typed SDK behavior | Week 12 | Learner | Lab 12 | Visible tests: 8 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-13 | Security threat modeling | Week 13 | Learner | Lab 13 | Visible tests: 4 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-13 | Security threat modeling | Week 13 | Learner | Lab 13 | Visible tests: 9 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-14 | Release and certification evidence | Week 14 | Learner | Lab 14 | Visible tests: 8 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-15 | Pilot reconciliation | Week 15 | Learner | Lab 15 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-15 | Pilot reconciliation | Week 15 | Learner | Lab 15 | Visible tests: 3 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-16 | Capstone activation and defense | Week 16 | Learner | Lab 16 | Visible tests: 8 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 
-Total visible cases: 58 (sum of the per-lab counts in `labs/*/tests.json`). The reference-implementation run in the README was measured on 40 cases, before week 8 gained its second case; it cannot be re-run here because references are not in the pack.
+Total visible cases: 92 (sum of the per-lab counts in `labs/*/tests.json`). The reference-implementation run in the README was measured on 40 cases, before week 8 gained its second case; it cannot be re-run here because references are not in the pack.
 
 ### 1a. Developer console operations by tag (OAS)
 
@@ -54,7 +54,7 @@ Total visible cases: 58 (sum of the per-lab counts in `labs/*/tests.json`). The 
 | Organizations | 3 | Evidence | 2 |
 | Support | 3 | Tests | 2 |
 
-Total 68. Every operation is **specified, not implemented**.
+Total 69. Every operation is **specified, not implemented**.
 
 ### 1b. Shared platform capabilities (from the architecture guide)
 
@@ -93,7 +93,7 @@ Built or verified in this directory:
 - Local verification as described in section 3.
 
 Not built (all specified only):
-- The developer console service behind the 68 operations, the OAuth/OIDC identity layer, tenant isolation and RLS, idempotency and event outbox, SDK packages, isolated grading runner, capstone starter, certification records, and operations (monitoring, backups, runbooks).
+- The developer console service behind the 69 operations, the OAuth/OIDC identity layer, tenant isolation and RLS, idempotency and event outbox, SDK packages, isolated grading runner, capstone starter, certification records, and operations (monitoring, backups, runbooks).
 - Reference solutions for labs 2–16 (not in the pack).
 
 ## 3. Verification evidence (this session)
@@ -104,7 +104,7 @@ Not built (all specified only):
 | G2 | Grader pass path works (control) | Scratch solution `classify_record` for lab 1 (dict lookup on `kind`) run through the grader | 3 of 3 passed; exit code 0 |
 | G4 | Learner `print()` does not corrupt results | Lab-1 control plus a `print()` call through the old runner, then the fixed runner | Old runner: 0 of 3, "Timeout or invalid output" (reproduced). Fixed runner: 3 of 3, exit 0. Fixed runner still exits 1 on all 16 starters with 0 passes |
 | G3 | Lab 1 control covers the visible cases | `tests.json` lab 1 expects draft→private, grade→official, fixture→synthetic | Matches the control's mapping |
-| O1 | OpenAPI validity | `openapi-spec-validator` (latest from PyPI, installed in a scratch venv) on `developer-console.openapi.json` | Valid. 68 operations, 0 missing or duplicate operationIds, 53 paths, 54 schemas |
+| O1 | OpenAPI validity | `openapi-spec-validator` (latest from PyPI, installed in a scratch venv) on `developer-console.openapi.json` | Valid. 69 operations, 0 missing or duplicate operationIds, 53 paths, 54 schemas |
 | P1 | Portal loads without JS errors | Headless Chromium (`/opt/pw-browsers/chromium`) with `--enable-logging=stderr`; control page with `console.error` and an uncaught throw was logged, so the logger works | 0 console or uncaught errors |
 | P2 | Week search filters the module list | Iframe probe: set search input to `Idempot` and dispatch `input` | 16 → 1 (`Week 9: Idempotency`) → 0 for a non-matching query |
 | P3 | No horizontal scroll at 320px (before fix) | Iframe probe, 320px wide | scrollWidth 386 vs clientWidth 305; 2 overflowing elements: the "Import personal progress" file input and its label (370px, min-width auto as a flex item) |

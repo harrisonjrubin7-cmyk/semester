@@ -16,6 +16,37 @@
         "reviewer": "A"
       },
       "expected": false
+    },
+    {
+      "input": {
+        "title": "",
+        "test_evidence": "run-1",
+        "reviewer": "A"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "title": "Fix",
+        "test_evidence": "run-1",
+        "reviewer": ""
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "title": 1,
+        "test_evidence": "run-1",
+        "reviewer": "A"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "title": "Fix",
+        "test_evidence": "run-1"
+      },
+      "expected": false
     }
   ]
 }

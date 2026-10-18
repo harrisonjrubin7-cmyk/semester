@@ -19,6 +19,54 @@
         "target": "x"
       },
       "expected": false
+    },
+    {
+      "input": {
+        "tenant": "t",
+        "action": "create",
+        "target": "x",
+        "request_id": "r"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "actor": "u",
+        "tenant": "",
+        "action": "create",
+        "target": "x",
+        "request_id": "r"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "actor": "u",
+        "tenant": "t",
+        "action": "create",
+        "target": 5,
+        "request_id": "r"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "actor": "u",
+        "tenant": "t",
+        "target": "x",
+        "request_id": "r"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "actor": "u",
+        "tenant": "t",
+        "action": "create",
+        "target": "x",
+        "request_id": ""
+      },
+      "expected": false
     }
   ]
 }

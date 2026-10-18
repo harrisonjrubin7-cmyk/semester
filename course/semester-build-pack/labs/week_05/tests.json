@@ -25,6 +25,34 @@
         "scopes": []
       },
       "expected": false
+    },
+    {
+      "input": {
+        "active": true,
+        "scopes": [
+          "tasks:write"
+        ]
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "active": true,
+        "scopes": [
+          "tasks:read",
+          "tasks:write"
+        ]
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "active": true,
+        "scopes": [
+          "other"
+        ]
+      },
+      "expected": false
     }
   ]
 }

@@ -11176,6 +11176,173 @@
         },
         "x-authority": "Application membership and resource policy"
       }
+    },
+    "/v1/certification-submissions/{certificationId}/findings/{findingId}": {
+      "patch": {
+        "operationId": "patch_v1_certification_submissions_certificationId_findings_findingId",
+        "tags": [
+          "Certification"
+        ],
+        "summary": "Record a finding remediation decision",
+        "description": "Moves an open finding to resolved (publisher-evidenced fix) or accepted (reviewer risk acceptance).",
+        "security": [
+          {
+            "oauth2": [
+              "certification:review"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "certificationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "findingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful authorized operation",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Finding"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy denial",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Absent or concealed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "State or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale precondition",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-authority": "Assigned independent reviewer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FindingUpdate"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -11420,9 +11587,8 @@
             "format": "email"
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": [],
+        "minProperties": 1
       },
       "Environment": {
         "type": "object",
@@ -11854,9 +12020,8 @@
             ]
           }
         },
-        "required": [
-          "status"
-        ]
+        "required": [],
+        "minProperties": 1
       },
       "WebhookVerification": {
         "type": "object",
@@ -11993,6 +12158,14 @@
               "certified",
               "withdrawn"
             ]
+          },
+          "contractVersion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "hostingProfileId": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
@@ -12001,7 +12174,9 @@
           "version",
           "artifactDigest",
           "permissions",
-          "status"
+          "status",
+          "contractVersion",
+          "hostingProfileId"
         ]
       },
       "ReleaseCreate": {
@@ -12079,6 +12254,14 @@
           "verifiedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "artifactId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "testRunId": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
@@ -12087,7 +12270,9 @@
           "kind",
           "artifactDigest",
           "result",
-          "verifiedAt"
+          "verifiedAt",
+          "artifactId",
+          "testRunId"
         ]
       },
       "EvidenceCreate": {
@@ -12158,6 +12343,10 @@
               "type": "string",
               "minLength": 1
             }
+          },
+          "fixtureVersion": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
@@ -12165,7 +12354,8 @@
           "releaseId",
           "suite",
           "status",
-          "evidenceIds"
+          "evidenceIds",
+          "fixtureVersion"
         ]
       },
       "TestRunCreate": {
@@ -12236,13 +12426,21 @@
           "expiresAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "declaredLimitations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         },
         "required": [
           "id",
           "releaseId",
           "status",
-          "evidenceIds"
+          "evidenceIds",
+          "declaredLimitations"
         ]
       },
       "CertificationCreate": {
@@ -12411,12 +12609,17 @@
             "type": "string",
             "enum": [
               "requested",
+              "denied",
               "approved",
               "pilot",
               "enabled",
               "revoked",
               "offboarded"
             ]
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
@@ -12424,7 +12627,8 @@
           "appId",
           "releaseId",
           "tenantId",
-          "status"
+          "status",
+          "purpose"
         ]
       },
       "InstallationCreate": {
@@ -12896,6 +13100,22 @@
           "institutionAuthorized",
           "productionEnabled",
           "evidenceIds"
+        ]
+      },
+      "FindingUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "resolved",
+              "accepted"
+            ]
+          }
+        },
+        "required": [
+          "status"
         ]
       }
     },

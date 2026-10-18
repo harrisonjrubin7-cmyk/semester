@@ -8,7 +8,10 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 3,
+      "suite_cases_current": 3,
+      "stale": false
     },
     {
       "lab": 2,
@@ -18,7 +21,11 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 2,
+      "suite_cases_current": 6,
+      "stale": true,
+      "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     },
     {
       "lab": 3,
@@ -28,7 +35,11 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 3,
+      "suite_cases_current": 7,
+      "stale": true,
+      "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     },
     {
       "lab": 4,
@@ -38,7 +49,11 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 3,
+      "suite_cases_current": 7,
+      "stale": true,
+      "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     },
     {
       "lab": 5,
@@ -48,7 +63,11 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 3,
+      "suite_cases_current": 6,
+      "stale": true,
+      "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     },
     {
       "lab": 6,
@@ -58,7 +77,11 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 3,
+      "suite_cases_current": 6,
+      "stale": true,
+      "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     },
     {
       "lab": 7,
@@ -68,7 +91,11 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 2,
+      "suite_cases_current": 7,
+      "stale": true,
+      "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     },
     {
       "lab": 8,
@@ -78,7 +105,11 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 1,
+      "suite_cases_current": 2,
+      "stale": true,
+      "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     },
     {
       "lab": 9,
@@ -88,7 +119,10 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 3,
+      "suite_cases_current": 3,
+      "stale": false
     },
     {
       "lab": 10,
@@ -98,7 +132,11 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 2,
+      "suite_cases_current": 4,
+      "stale": true,
+      "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     },
     {
       "lab": 11,
@@ -108,7 +146,11 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 2,
+      "suite_cases_current": 5,
+      "stale": true,
+      "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     },
     {
       "lab": 12,
@@ -118,7 +160,11 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 3,
+      "suite_cases_current": 8,
+      "stale": true,
+      "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     },
     {
       "lab": 13,
@@ -128,7 +174,11 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 4,
+      "suite_cases_current": 9,
+      "stale": true,
+      "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     },
     {
       "lab": 14,
@@ -138,7 +188,11 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 2,
+      "suite_cases_current": 8,
+      "stale": true,
+      "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     },
     {
       "lab": 15,
@@ -148,7 +202,11 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 2,
+      "suite_cases_current": 3,
+      "stale": true,
+      "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     },
     {
       "lab": 16,
@@ -158,7 +216,11 @@
       "manual_points_available": 70,
       "final_grade": null,
       "error": null,
-      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner."
+      "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
+      "suite_cases_at_run": 2,
+      "suite_cases_current": 8,
+      "stale": true,
+      "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     }
   ],
   "openapi_structural_checks": {
@@ -167,5 +229,21 @@
     "full_semantic_validation": false
   },
   "browser_e2e_tested": false,
-  "deployed": false
+  "deployed": false,
+  "stale_reference_labs": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ]
 }

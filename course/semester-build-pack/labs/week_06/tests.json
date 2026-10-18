@@ -33,6 +33,37 @@
         ]
       },
       "expected": false
+    },
+    {
+      "input": {
+        "principal_tenant": "a",
+        "resource_tenant": "a",
+        "active": false,
+        "scopes": [
+          "tasks:read"
+        ]
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "principal_tenant": "a",
+        "resource_tenant": "a",
+        "active": true,
+        "scopes": []
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "principal_tenant": "a",
+        "resource_tenant": "a",
+        "active": true,
+        "scopes": [
+          "tasks:write"
+        ]
+      },
+      "expected": false
     }
   ]
 }

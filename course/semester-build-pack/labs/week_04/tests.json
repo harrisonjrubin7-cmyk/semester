@@ -32,6 +32,58 @@
         "limit": 0
       },
       "expected": "!ValueError"
+    },
+    {
+      "input": {
+        "items": [
+          1,
+          2,
+          3
+        ],
+        "offset": -1,
+        "limit": 1
+      },
+      "expected": "!ValueError"
+    },
+    {
+      "input": {
+        "items": [
+          1,
+          2,
+          3
+        ],
+        "offset": 0,
+        "limit": -1
+      },
+      "expected": "!ValueError"
+    },
+    {
+      "input": {
+        "items": [
+          1,
+          2,
+          3
+        ],
+        "offset": 0,
+        "limit": 101
+      },
+      "expected": "!ValueError"
+    },
+    {
+      "input": {
+        "items": [
+          1,
+          2,
+          3
+        ],
+        "offset": 0,
+        "limit": 100
+      },
+      "expected": [
+        1,
+        2,
+        3
+      ]
     }
   ]
 }

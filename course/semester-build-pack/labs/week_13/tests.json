@@ -24,6 +24,36 @@
         "url": "https://example.com/hook"
       },
       "expected": false
+    },
+    {
+      "input": {
+        "url": "https://10.0.0.1/hook"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "url": "https://169.254.169.254/hook"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "url": "https://user:pass@8.8.8.8/hook"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "url": "https://8.8.8.8:8443/hook"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "url": "https://8.8.8.8:443/hook"
+      },
+      "expected": true
     }
   ]
 }

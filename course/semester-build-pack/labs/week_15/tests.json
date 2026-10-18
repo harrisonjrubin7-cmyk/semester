@@ -34,6 +34,30 @@
         "missing": [],
         "unexpected": []
       }
+    },
+    {
+      "input": {
+        "expected": [
+          "d",
+          "a",
+          "c"
+        ],
+        "observed": [
+          "b",
+          "c",
+          "e"
+        ]
+      },
+      "expected": {
+        "missing": [
+          "a",
+          "d"
+        ],
+        "unexpected": [
+          "b",
+          "e"
+        ]
+      }
     }
   ]
 }
