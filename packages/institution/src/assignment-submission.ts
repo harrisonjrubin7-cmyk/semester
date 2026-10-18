@@ -31,8 +31,8 @@
  */
 
 import { Refusal, type Receipt } from './index.ts';
-import { makeEvent, MemoryOutbox } from './events.ts';
-import type { PolicyEnvironment } from './policy.ts';
+import { makeEvent, MemoryOutbox, type SemesterEvent } from './events.ts';
+import { CORRELATION_ID_PATTERN, type PolicyEnvironment } from './policy.ts';
 import { ASSESSMENT_SUBMISSION, walk, type AssessmentSubmissionState } from './workflow.ts';
 
 export const SUBMISSION_CODES = [
@@ -130,8 +130,9 @@ export class MemorySubmissionStore {
   readonly receipts = new Map<string, Receipt>();
   readonly outbox = new MemoryOutbox();
 
-  membership(userId: string, courseId: string): CourseMembership | undefined {
-    return this.memberships.find((m) => m.userId === userId && m.courseId === courseId);
+  /** Institution is part of the key: one user may hold memberships in two institutions with the same course id. */
+  membership(userId: string, courseId: string, institutionId: string): CourseMembership | undefined {
+    return this.memberships.find((m) => m.userId === userId && m.courseId === courseId && m.institutionId === institutionId);
   }
 
   submissionFor(userId: string, assignmentId: string): Submission | undefined {
@@ -159,6 +160,8 @@ export interface SubmitInput {
   assignmentId: string;
   draftVersion: number;
   idempotencyKey: string;
+  /** The gateway request's correlation id, carried onto the event. Omitted, the event gets one derived from the record. */
+  correlationId?: string;
 }
 
 export interface AssessInput {
@@ -166,11 +169,13 @@ export interface AssessInput {
   grade: number;
   feedback: string;
   idempotencyKey: string;
+  correlationId?: string;
 }
 
 export interface ReleaseInput {
   submissionId: string;
   idempotencyKey: string;
+  correlationId?: string;
 }
 
 /** What a student is allowed to see. Nothing about an unreleased grade, not even that it exists. */
@@ -217,6 +222,12 @@ const requireText = (value: unknown, field: string, limit: number): string => {
     throw new SubmissionRefusal('invalid_input', `${field} must be text of at most ${limit} characters`);
   }
   return value;
+};
+
+const correlationOf = (supplied: string | undefined, fallback: string): string => {
+  if (supplied === undefined) return fallback;
+  if (!CORRELATION_ID_PATTERN.test(supplied)) throw new SubmissionRefusal('invalid_input', 'correlationId is malformed');
+  return supplied;
 };
 
 /**
@@ -274,7 +285,13 @@ export class AssignmentSubmissionService {
     const id = requireId(assignmentId, 'assignmentId');
     const assignment = this.store.assignments.get(id);
     if (!assignment || assignment.institutionId !== actor.institutionId) return null;
-    return this.store.drafts.get(draftKey(actor.userId, id)) ?? null;
+    const membership = this.store.membership(actor.userId, assignment.courseId, actor.institutionId);
+    if (membership?.role === 'student' && membership.status === 'revoked') {
+      throw new SubmissionRefusal('membership_revoked', 'Your access to this course has been revoked');
+    }
+    // A copy: the caller cannot change the stored draft or its version by writing to what it was given.
+    const draft = this.store.drafts.get(draftKey(actor.userId, id));
+    return draft ? { ...draft } : null;
   }
 
   /** Freeze the draft at `draftVersion` into a submission and issue a receipt. */
@@ -304,10 +321,21 @@ export class AssignmentSubmissionService {
       throw new Error('assessment submission workflow no longer walks to receipt_issued');
     }
 
-    // Every check has passed. Nothing above this line has written anything.
+    // Every check has passed. Build everything first (ids, the receipt, the event); the writes come last, so a
+    // failure while building leaves the store as it was.
     const submissionId = this.newId();
-    const receipt = this.issueReceipt('Your submission was received.');
     const submittedAt = this.now().toISOString();
+    const receipt = this.receiptFor('Your submission was received.');
+    const event = this.eventFor({
+      eventType: 'submission.finalized',
+      actorId: actor.userId,
+      tenantId: assignment.institutionId,
+      subjectId: submissionId,
+      correlationId: correlationOf(input.correlationId, `submission-${submissionId}`),
+      idempotencyKey: key,
+      payload: { submissionId, assignmentId, version: 1 },
+    });
+    this.store.receipts.set(receipt.id, receipt);
     this.store.submissions.set(submissionId, {
       id: submissionId,
       assignmentId,
@@ -319,14 +347,7 @@ export class AssignmentSubmissionService {
       receiptId: receipt.id,
     });
     this.claim(actor.userId, 'submit_assignment', key, fingerprint, receipt.id);
-    this.emit({
-      eventType: 'submission.finalized',
-      actorId: actor.userId,
-      tenantId: assignment.institutionId,
-      subjectId: submissionId,
-      correlationId: `submission-${submissionId}`,
-      payload: { submissionId, assignmentId, version: 1 },
-    });
+    this.store.outbox.append(event);
     return receipt;
   }
 
@@ -350,7 +371,8 @@ export class AssignmentSubmissionService {
       throw new SubmissionRefusal('invalid_state', 'An assessment is already recorded for this submission');
     }
 
-    const receipt = this.issueReceipt('Assessment saved. The student cannot see it until feedback is released.');
+    const receipt = this.receiptFor('Assessment saved. The student cannot see it until feedback is released.');
+    this.store.receipts.set(receipt.id, receipt);
     this.store.assessments.set(submissionId, {
       submissionId,
       graderId: actor.userId,
@@ -379,17 +401,22 @@ export class AssignmentSubmissionService {
     if (!assessment) throw new SubmissionRefusal('invalid_state', 'Record an assessment before releasing feedback');
     if (assessment.releasedAt) throw new SubmissionRefusal('invalid_state', 'Feedback was already released');
 
-    assessment.releasedAt = this.now().toISOString();
-    const receipt = this.issueReceipt('Feedback released to the student.');
-    this.claim(actor.userId, 'release_feedback', key, fingerprint, receipt.id);
-    this.emit({
+    // Build the receipt and the event before the grade becomes visible. A failure here leaves the release undone,
+    // so a retry still emits the one event.
+    const receipt = this.receiptFor('Feedback released to the student.');
+    const event = this.eventFor({
       eventType: 'grade.posted',
       actorId: actor.userId,
       tenantId: assignment.institutionId,
       subjectId: submission.id,
-      correlationId: `release-${submission.id}`,
+      correlationId: correlationOf(input.correlationId, `release-${submission.id}`),
+      idempotencyKey: key,
       payload: { submissionId: submission.id, assignmentId: assignment.id },
     });
+    this.store.receipts.set(receipt.id, receipt);
+    assessment.releasedAt = this.now().toISOString();
+    this.claim(actor.userId, 'release_feedback', key, fingerprint, receipt.id);
+    this.store.outbox.append(event);
     return receipt;
   }
 
@@ -438,8 +465,8 @@ export class AssignmentSubmissionService {
   }
 
   private enrolledStudent(actor: SubmissionActor, assignment: Assignment): CourseMembership {
-    const membership = this.store.membership(actor.userId, assignment.courseId);
-    if (!membership || membership.institutionId !== actor.institutionId || membership.role !== 'student') {
+    const membership = this.store.membership(actor.userId, assignment.courseId, actor.institutionId);
+    if (!membership || membership.role !== 'student') {
       throw new SubmissionRefusal('not_enrolled', 'You are not enrolled as a student in this course');
     }
     if (membership.status !== 'active') {
@@ -449,8 +476,8 @@ export class AssignmentSubmissionService {
   }
 
   private teacher(actor: SubmissionActor, assignment: Assignment): CourseMembership {
-    const membership = this.store.membership(actor.userId, assignment.courseId);
-    if (!membership || membership.institutionId !== actor.institutionId || membership.role !== 'faculty') {
+    const membership = this.store.membership(actor.userId, assignment.courseId, actor.institutionId);
+    if (!membership || membership.role !== 'faculty') {
       throw new SubmissionRefusal('not_teaching', 'You do not teach this course');
     }
     if (membership.status !== 'active') {
@@ -460,7 +487,8 @@ export class AssignmentSubmissionService {
   }
 
   private refuseIfClosed(assignment: Assignment): void {
-    if (this.now().getTime() > Date.parse(assignment.closesAt)) {
+    // The closing instant is already closed, as every other expiry check in the repository treats it.
+    if (this.now().getTime() >= Date.parse(assignment.closesAt)) {
       throw new SubmissionRefusal('window_closed', 'The submission window for this assignment has closed');
     }
   }
@@ -487,32 +515,33 @@ export class AssignmentSubmissionService {
     this.store.claims.set(claimKey(userId, command, key), { fingerprint, receiptId });
   }
 
-  private issueReceipt(message: string): Receipt {
-    const receipt: Receipt = { id: this.newId(), status: 'completed', message, recordedAt: this.now().toISOString() };
-    this.store.receipts.set(receipt.id, receipt);
-    return receipt;
+  /** A receipt that is not yet stored: the caller stores it with the rest of the write. */
+  private receiptFor(message: string): Receipt {
+    return { id: this.newId(), status: 'completed', message, recordedAt: this.now().toISOString() };
   }
 
-  private emit(input: {
+  /** An event that is not yet in the outbox. It carries the command key and the service clock, not the process clock. */
+  private eventFor(input: {
     eventType: 'submission.finalized' | 'grade.posted';
     actorId: string;
     tenantId: string;
     subjectId: string;
     correlationId: string;
+    idempotencyKey: string;
     payload: Record<string, string | number>;
-  }): void {
-    this.store.outbox.append(
-      makeEvent({
-        eventId: this.newEventId(),
-        eventType: input.eventType,
-        producer: this.producer,
-        environment: this.environment,
-        tenantId: input.tenantId,
-        actor: { id: input.actorId, type: 'user' },
-        subject: { type: 'submission', id: input.subjectId },
-        correlationId: input.correlationId,
-        payload: input.payload,
-      }),
-    );
+  }): SemesterEvent {
+    return makeEvent({
+      eventId: this.newEventId(),
+      eventType: input.eventType,
+      producer: this.producer,
+      environment: this.environment,
+      occurredAt: this.now().toISOString(),
+      tenantId: input.tenantId,
+      actor: { id: input.actorId, type: 'user' },
+      subject: { type: 'submission', id: input.subjectId },
+      correlationId: input.correlationId,
+      idempotencyKey: input.idempotencyKey,
+      payload: input.payload,
+    });
   }
 }
