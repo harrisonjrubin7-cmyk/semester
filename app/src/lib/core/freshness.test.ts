@@ -9,6 +9,9 @@ describe('freshness state', () => {
     expect(state({ lastEventAt: NOW, appliedAt: NOW - 30e3 }, NOW)).toBe('recent');
     expect(state({ lastEventAt: NOW, appliedAt: NOW - 120e3 }, NOW)).toBe('delayed');
   });
+  it('an unapplied projection is never live, however recent its event', () => {
+    expect(state({ lastEventAt: NOW }, NOW)).toBe('delayed');
+  });
   it('a caught-up projection is live however long it has been idle', () => {
     expect(state({ lastEventAt: NOW - 10 * 60e3, appliedAt: NOW - 10 * 60e3 }, NOW)).toBe('live');
   });

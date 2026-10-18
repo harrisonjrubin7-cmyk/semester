@@ -60,6 +60,11 @@ describe('two-person approval', () => {
     expect((step(late, { type: 'approve', by: 'x', at: fresh.expiresAt + 1 }) as Approval).state).toBe('expired');
   });
 
+  it('a rejection stays a rejection after the deadline passes', () => {
+    const rejected = step(fresh, { type: 'reject', by: 'x', at: NOW }) as Approval;
+    const late: Approval = { ...rejected, mfaAt: { y: fresh.expiresAt - MIN } };
+    expect(step(late, { type: 'approve', by: 'y', at: fresh.expiresAt + 1 })).toEqual({ error: 'This request is rejected.' });
+  });
   it('expires after the deadline and a rejection ends the request', () => {
     expect((step(fresh, { type: 'approve', by: 'x', at: NOW + 2 * H }) as Approval).state).toBe('expired');
     const rejected = step(fresh, { type: 'reject', by: 'x', at: NOW }) as Approval;
