@@ -573,14 +573,21 @@ describe('the onboarding page', () => {
       'operator:test',
       'operator:typecheck',
       'platform-control:test',
+      'recovery:rebuild-projections',
+      'recovery:reconcile',
+      'recovery:restore',
       'registry:build',
       'registry:validate',
       'release:check',
       'release:report',
+      'test:operations',
+      'verify:environment-boundaries',
+      'verify:feature-flags',
     ]);
     for (const script of ['operator:typecheck', 'operator:test', 'operator:build', 'operator:demo']) expect(onboarding).toContain(`\`${script}\``);
     expect(onboarding).toContain(`engines: { node: "${root.engines?.node}" }`);
     expect(onboarding).toContain('root exposes only the platform-control registry commands');
+    for (const script of ['recovery:restore', 'recovery:rebuild-projections', 'recovery:reconcile', 'verify:feature-flags', 'verify:environment-boundaries', 'test:operations']) expect(onboarding).toContain(`\`${script}\``);
     expect(onboarding).toContain('plain `npm test` still fails with "Missing script"');
     expect(existsSync(at('package-lock.json')), 'the page says the one lockfile is at the root').toBe(true);
     expect(existsSync(at('app/package-lock.json')), 'the page no longer mentions an app lockfile').toBe(false);

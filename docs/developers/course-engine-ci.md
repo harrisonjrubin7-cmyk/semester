@@ -9,7 +9,7 @@ This page explains the isolated Course Engine source gate; stop reading if you a
 
 The API matrix installs `course-engine/apps/api` with its `dev` extra, runs Ruff over the
 API, tests, and worker, then runs the complete Pytest suite against both SQLite and a
-PostgreSQL 17 service. `tests/test_migrations.py` performs real Alembic upgrade and downgrade
+PostgreSQL 17 service. `course-engine/apps/api/tests/test_migrations.py` performs real Alembic upgrade and downgrade
 cycles. It verifies that measured confidence and linked citations survive, unknown confidence
 blocks the lossy downgrade, and SQLite foreign-key enforcement is restored after its required
 batch-table rebuild.

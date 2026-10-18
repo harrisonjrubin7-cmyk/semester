@@ -22,6 +22,8 @@ Dot-directories are included. Files at the root are listed after the table.
 | `database/` | Catalog-derived isolation evidence for production, read read-only: the tenant-isolation matrix, grant allowlist, function-authorization matrix and data-classification register, and `schema/inventory.sql`, which regenerates every figure. Nothing in it was applied to a database. See [`database/README.md`](../../database/README.md). |
 | `docs/` | Documentation: registers, runbooks, architecture records, decision records, design standards. Indexed by `docs/README.md`, which is written outside this page's slice and may not be in your checkout yet. |
 | `examples/` | Being added by another author. This row was written before the directory existed and says nothing about its contents. |
+| `evidence/` | Acceptance and recovery evidence as data: `acceptance/REL-READINESS-001.yaml` (the release-readiness matrix) and `recovery/` (restore records). Read by the tests under `tests/`. |
+| `tests/` | Contract tests for the operations readiness program (`tests/operations/*.spec.ts`, run by the root script `test:operations`). |
 | `extensions/` | `semester-capture`, a browser extension (`manifest.json`, `popup.html`, `popup.js`). |
 | `ops/` | Operating registers rendered from data under `app/src/lib/ops/`: billing, claims, customer commitments, master plan, operations console, strategic boundaries. See [`ops/README.md`](../../ops/README.md). |
 | `operations/` | The launch command center and the go/no-go scorecard (Phase 0 baseline): the ordered Phase 1 plan, stop conditions, dated exceptions. Sequences work; approves no launch. |
