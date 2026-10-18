@@ -74,6 +74,15 @@
         "method": "POST"
       },
       "expected": false
+    },
+    {
+      "input": {
+        "status": 503,
+        "attempt": 4,
+        "max_attempts": 3,
+        "method": "GET"
+      },
+      "expected": false
     }
   ]
 }

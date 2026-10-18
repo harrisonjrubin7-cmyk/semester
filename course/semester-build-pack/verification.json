@@ -162,7 +162,7 @@
       "error": null,
       "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
       "suite_cases_at_run": 3,
-      "suite_cases_current": 8,
+      "suite_cases_current": 9,
       "stale": true,
       "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     },
@@ -190,7 +190,7 @@
       "error": null,
       "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
       "suite_cases_at_run": 2,
-      "suite_cases_current": 8,
+      "suite_cases_current": 11,
       "stale": true,
       "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     },
@@ -218,7 +218,7 @@
       "error": null,
       "warning": "Trusted local code only; not isolated from host files/network. Production requires an isolated runner.",
       "suite_cases_at_run": 2,
-      "suite_cases_current": 8,
+      "suite_cases_current": 11,
       "stale": true,
       "note": "Suite changed after this run; the instructor reference is not in the pack, so this result is not re-verified."
     }

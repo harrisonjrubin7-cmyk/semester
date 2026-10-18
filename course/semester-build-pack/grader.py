@@ -39,7 +39,7 @@ try:
 except (subprocess.TimeoutExpired,json.JSONDecodeError):
     passed=0; results=[]; error='Timeout or invalid output'
 total=len(spec['cases'])
-report={'lab':a.lab,'passed':passed,'total':total,'correctness_points':round(30*passed/total,2),'manual_points_available':70,'final_grade':None,'error':error,'warning':'Trusted local code only; not isolated from host files/network. Production requires an isolated runner.'}
+report={'lab':a.lab,'passed':passed,'total':total,'case_results':results,'correctness_points':round(30*passed/total,2),'manual_points_available':70,'final_grade':None,'error':error,'warning':'Trusted local code only; not isolated from host files/network. Production requires an isolated runner.'}
 Path(a.report).write_text(json.dumps(report,indent=2))
 print(json.dumps(report))
 sys.exit(0 if passed==total else 1)

@@ -9809,6 +9809,12 @@
                   "type": "string",
                   "minLength": 1
                 }
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
               }
             },
             "content": {
@@ -11662,6 +11668,12 @@
                   "type": "string",
                   "minLength": 1
                 }
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
               }
             },
             "content": {
@@ -11773,6 +11785,186 @@
           }
         },
         "x-authority": "Application membership and resource policy"
+      },
+      "patch": {
+        "operationId": "patch_v1_support_cases_supportCaseId",
+        "tags": [
+          "Support"
+        ],
+        "summary": "Assign or resolve a support case",
+        "description": "Moves an open case to assigned or resolved. Operators only; request IDs stay attached.",
+        "security": [
+          {
+            "oauth2": [
+              "support:write"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "supportCaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful authorized operation",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportCase"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy denial",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Absent or concealed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "State or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale precondition",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-authority": "Assigned independent reviewer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportCaseUpdate"
+              }
+            }
+          }
+        }
       }
     },
     "/v1/capabilities": {
@@ -12214,12 +12406,17 @@
           },
           "verified": {
             "type": "boolean"
+          },
+          "technicalContact": {
+            "type": "string",
+            "format": "email"
           }
         },
         "required": [
           "id",
           "name",
-          "verified"
+          "verified",
+          "technicalContact"
         ]
       },
       "OrganizationCreate": {
@@ -13274,6 +13471,10 @@
               "type": "string",
               "minLength": 1
             }
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
@@ -13297,7 +13498,8 @@
             "items": {
               "type": "string",
               "minLength": 1
-            }
+            },
+            "minItems": 1
           },
           "declaredLimitations": {
             "type": "array",
@@ -13638,12 +13840,17 @@
           "rollbackEvidenceId": {
             "type": "string",
             "minLength": 1
+          },
+          "supportReadinessEvidenceId": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
           "pilotId",
           "reconciliationEvidenceId",
-          "rollbackEvidenceId"
+          "rollbackEvidenceId",
+          "supportReadinessEvidenceId"
         ]
       },
       "Job": {
@@ -13994,10 +14201,30 @@
               "resolved",
               "accepted"
             ]
+          },
+          "evidenceId": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
           "status"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "resolved"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "evidenceId"
+              ]
+            }
+          }
         ]
       },
       "PilotUpdate": {
@@ -14036,6 +14263,22 @@
             }
           }
         ]
+      },
+      "SupportCaseUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "assigned",
+              "resolved"
+            ]
+          }
+        }
       }
     },
     "securitySchemes": {

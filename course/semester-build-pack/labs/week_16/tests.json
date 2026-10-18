@@ -80,6 +80,36 @@
         "support_ready": true
       },
       "expected": false
+    },
+    {
+      "input": {
+        "certified": true,
+        "institution_approved": "yes",
+        "reconciled": true,
+        "rollback_ready": true,
+        "support_ready": true
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "certified": true,
+        "institution_approved": true,
+        "reconciled": "yes",
+        "rollback_ready": true,
+        "support_ready": true
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "certified": true,
+        "institution_approved": true,
+        "reconciled": true,
+        "rollback_ready": "yes",
+        "support_ready": true
+      },
+      "expected": false
     }
   ]
 }
