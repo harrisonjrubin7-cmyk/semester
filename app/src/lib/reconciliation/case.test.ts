@@ -282,6 +282,36 @@ describe('moveCase', () => {
     });
   });
 
+  it('refuses closure by someone other than the case owner, even with every evidence key', () => {
+    const ready: ReconciliationCase = {
+      ...opened(),
+      state: 'reverified',
+      resolution: [...RESOLUTION_REQUIRED],
+      proposedRepair: 'refresh_source_snapshot',
+      proposedBy: 'integration_owner',
+      approvedBy: 'registrar_owner',
+    };
+    expect(moveCase(ready, 'closed', { by: 'someone_else', at: AT })).toEqual({
+      ok: false,
+      reason: 'only the case owner can close a case',
+    });
+  });
+
+  it('refuses closure when the proposer also holds the approval on record', () => {
+    const selfApproved: ReconciliationCase = {
+      ...opened(),
+      state: 'reverified',
+      resolution: [...RESOLUTION_REQUIRED],
+      proposedRepair: 'refresh_source_snapshot',
+      proposedBy: 'Ana',
+      approvedBy: ' ana ',
+    };
+    expect(moveCase(selfApproved, 'closed', { by: 'registrar_owner', at: AT })).toEqual({
+      ok: false,
+      reason: 'a safe-repair case closes only with its approved repair on record',
+    });
+  });
+
   it('does not let an escalated case with a safe repair skip repair and approval', () => {
     const escalated: ReconciliationCase = { ...opened(), state: 'escalated' };
     const result = moveCase(escalated, 'reverified', { by: 'registrar_owner', at: AT, evidence: [...RESOLUTION_REQUIRED] });

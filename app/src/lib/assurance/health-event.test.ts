@@ -115,6 +115,16 @@ describe('timestamps and evidence', () => {
     );
   });
 
+  it('reports a closed event with a missing or null evidence array instead of throwing', () => {
+    const { evidenceReferences: _omit, ...withoutEvidence } = base;
+    expect(healthEventProblems({ ...withoutEvidence, state: 'closed' } as HealthEvent)).toContain(
+      'a closed event needs evidenceReferences',
+    );
+    expect(healthEventProblems({ ...base, state: 'closed', evidenceReferences: null as unknown as string[] })).toContain(
+      'a closed event needs evidenceReferences',
+    );
+  });
+
   it('requires ISO 8601, not a locale date that Date.parse would also accept', () => {
     expect(healthEventProblems({ ...base, createdAt: '10/01/2026', updatedAt: '10/01/2026' })).toEqual(
       expect.arrayContaining(['createdAt must be an ISO timestamp', 'updatedAt must be an ISO timestamp']),

@@ -79,7 +79,9 @@ export function healthEventProblems(event: HealthEvent): string[] {
   if ((event.severity === 'critical' || event.severity === 'high') && !present(event.safeImmediateAction)) {
     problems.push('critical and high events need a safeImmediateAction');
   }
-  if (event.state === 'closed' && !event.evidenceReferences.some((ref) => present(ref))) {
+  // A record decoded from storage may omit the array or hold null: report that, do not throw.
+  const hasEvidence = Array.isArray(event.evidenceReferences) && event.evidenceReferences.some((ref) => present(ref));
+  if (event.state === 'closed' && !hasEvidence) {
     problems.push('a closed event needs evidenceReferences');
   }
   if (!isIsoTimestamp(event.createdAt)) problems.push('createdAt must be an ISO timestamp');
