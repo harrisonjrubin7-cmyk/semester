@@ -93,6 +93,16 @@ class RejectedContracts(unittest.TestCase):
             d['readiness']['institution_authorized'] = {'status': 'verified', 'evidence': [EVIDENCE], 'reason': 'x'}
         self.assertRejected(mutate(fn), 'effective_from')
 
+    def test_verified_institution_authority_requires_scope_for_non_official_writes(self):
+        def fn(d):
+            d['authority']['official_record_write'] = False
+            d['authority']['mode'] = 'authoritative'
+            d['authority']['writer_policy'] = 'no_write'
+            d['authority']['effective_from'] = '2026-01-01T00:00:00Z'
+            d['authority']['institution_scope'] = None
+            d['readiness']['institution_authorized'] = {'status': 'verified', 'evidence': [EVIDENCE], 'reason': 'x'}
+        self.assertRejected(mutate(fn), 'Verified institution authority requires institution_scope')
+
     def test_recovery_path_must_be_declared_by_a_step(self):
         def fn(d):
             d['recovery_paths'].append(dict(d['recovery_paths'][0], code='UNUSED'))

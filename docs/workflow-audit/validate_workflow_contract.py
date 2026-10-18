@@ -118,6 +118,9 @@ def semantic_errors(doc):
             if (authorized or activated) and effective > datetime.now(timezone.utc):
                 errors.append('effective_from is in the future for verified authority')
     scope_bound = doc['authority']['institution_scope']
+    institutional_active = doc['readiness']['institution_authorized']['status'] == 'verified' or doc['readiness']['production_enabled']['status'] == 'verified'
+    if institutional_active and scope_bound is None:
+        errors.append('Verified institution authority requires institution_scope')
     bound_prefix = str(doc['scope']['tenant_id']) + '/' + doc['domain']
     if scope_bound is not None and not (doc['scope']['tenant_id'] and (scope_bound == bound_prefix or scope_bound.startswith(bound_prefix + '/'))):
         errors.append('Authority institution_scope is not bound to scope tenant_id and domain')
