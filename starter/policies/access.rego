@@ -21,6 +21,8 @@ build_obligations := ["audit"] if {
   input.resource.sensitivity == "high"
 }
 
+# `not` rather than `!=`: an omitted sensitivity leaves the comparison undefined,
+# and only `not` succeeds on undefined.
 build_obligations := [] if {
-  input.resource.sensitivity != "high"
+  not input.resource.sensitivity == "high"
 }

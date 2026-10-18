@@ -29,3 +29,12 @@ test_deny_when_action_not_granted if {
 test_high_sensitivity_requires_audit if {
   "audit" in access.allow_with_context.obligations with input as object.union(base, {"resource": {"tenantId": "t1", "sensitivity": "high"}})
 }
+
+# object.union merges nested objects, so the input is built whole to really omit sensitivity.
+test_omitted_sensitivity_still_allows if {
+  access.allow_with_context.allow with input as {
+    "actor": base.actor,
+    "resource": {"tenantId": "t1"},
+    "action": base.action,
+  }
+}

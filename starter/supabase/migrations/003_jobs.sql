@@ -11,6 +11,8 @@ create table public.jobs (
 );
 
 create index jobs_ready_idx on public.jobs (created_at) where status = 'ready';
+-- leaseNextJob also reclaims leased rows whose lease has expired; index that path too.
+create index jobs_leased_idx on public.jobs (leased_at) where status = 'leased';
 
 alter table public.jobs enable row level security;
 revoke all on public.jobs from anon, authenticated, semester_app;
