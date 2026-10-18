@@ -190,7 +190,7 @@ class TestReviewFindings(unittest.TestCase):
   d.commit();d.close()
   self.cmd('a-student','submission.create',{'body':'work','course':'other'})
   # The faculty member now holds only 'other', and still opens the workspace and sees that course's work.
-  self.assertEqual([r['body'] for r in self.lab.view('demo-a-faculty')['submissions']],['work'])
+  self.assertEqual([(r['body'],r['course']) for r in self.lab.view('demo-a-faculty')['submissions']],[('work','other')])
  def test_grade_records_go_only_to_grading_roles(self):
   self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'synthetic work'})
   self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})

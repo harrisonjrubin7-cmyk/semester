@@ -185,7 +185,7 @@ CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TE
     g=d.execute('SELECT course FROM grades WHERE id=? AND tenant=?',(r['object_id'],t)).fetchone()
     return bool(g) and d.execute('SELECT 1 FROM access WHERE tenant=? AND course=? AND actor=?',(t,g['course'],a['id'])).fetchone() is not None
    out['approvals']=[{k:v for k,v in r.items() if k!='binding'} for r in rows if self.approval_current(d,t,r) and granted(r)]
-   if role=='faculty':out['submissions']=[dict(r) for r in d.execute(f'SELECT id,student,body,created FROM submissions WHERE tenant=? AND course IN ({marks})',(t,*courses))]
+   if role=='faculty':out['submissions']=[dict(r) for r in d.execute(f'SELECT id,course,student,body,created FROM submissions WHERE tenant=? AND course IN ({marks})',(t,*courses))]
    # Registrars get the full student rows for hold and prerequisite work. Grading roles get only the students with work in their courses, and no registrar-only fields.
    if role=='registrar':out['students']=[dict(r) for r in d.execute('SELECT * FROM students WHERE tenant=?',(t,))]
    elif grading:out['students']=[dict(r) for r in d.execute(f'SELECT id,onboarded FROM students WHERE tenant=? AND id IN (SELECT student FROM submissions WHERE tenant=? AND course IN ({marks}))',(t,t,*courses))]
