@@ -125,6 +125,8 @@ export function reserve(state: AllocationState, input: ReserveInput): Outcome {
   if (input.key.trim() === '' || input.id.trim() === '') return refuse('invalid_input');
   // A hold must be bounded and positive: zero or NaN never blocks the bed, Infinity never lapses.
   if (!Number.isFinite(input.holdMs) || input.holdMs <= 0) return refuse('invalid_input');
+  // A blank student would own a hold no one can claim, and every other blank request would collide with it.
+  if (input.studentId.trim() === '') return refuse('invalid_input');
   const prior = Object.values(state.reservations).find((r) => r.key === input.key);
   if (prior) {
     if (prior.bedId !== input.bedId || prior.studentId !== input.studentId || prior.holdMs !== input.holdMs) {
@@ -141,8 +143,9 @@ export function reserve(state: AllocationState, input: ReserveInput): Outcome {
   if (studentIsPlaced(state, input.studentId, input.now)) return refuse('student_placed');
 
   const expiresAt = input.now + input.holdMs;
-  // A clock near the float limit can push the expiry to Infinity, which never lapses.
-  if (!Number.isFinite(expiresAt)) return refuse('invalid_input');
+  // A tiny hold can round back to now, and a clock near the float limit can overflow to Infinity;
+  // either way the hold would not be live when it is written.
+  if (!Number.isFinite(expiresAt) || expiresAt <= input.now) return refuse('invalid_input');
   const reservation: Reservation = {
     id: input.id,
     key: input.key,
@@ -216,7 +219,9 @@ export interface OverrideInput {
  */
 export function override(state: AllocationState, input: OverrideInput): Outcome {
   if (input.authority.trim() === '' || input.rationale.trim() === '') return refuse('authority_missing');
-  if (input.id.trim() === '' || !Number.isFinite(input.now)) return refuse('invalid_input');
+  if (input.id.trim() === '' || input.studentId.trim() === '' || !Number.isFinite(input.now)) {
+    return refuse('invalid_input');
+  }
   if (input.expectedInventoryVersion !== state.inventoryVersion) return refuse('stale_inventory');
   if (!own(state.beds, input.bedId)) return refuse('bed_unknown');
   if (own(state.assignments, input.id)) return refuse('duplicate_id');
@@ -251,8 +256,11 @@ export function endAssignment(
   state: AllocationState,
   input: { readonly assignmentId: string; readonly expectedInventoryVersion: number; readonly now: number },
 ): Outcome {
+  // A NaN or infinite end would free the bed, since only null counts as open; an end before the start corrupts history.
+  if (!Number.isFinite(input.now)) return refuse('invalid_input');
   const a = own(state.assignments, input.assignmentId);
   if (!a) return refuse('assignment_unknown');
+  if (input.now < a.startedAt) return refuse('invalid_input');
   if (a.endedAt !== null) return accept(state, a.id);
   if (input.expectedInventoryVersion !== state.inventoryVersion) return refuse('stale_inventory');
   return accept(

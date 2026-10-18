@@ -280,4 +280,31 @@ describe('input guards', () => {
       refusal: 'idempotency_conflict',
     });
   });
+
+  it('refuses a hold too small to move the expiry past now, which would never be live', () => {
+    expect(reserve(oneBed(), { ...base, now: 1_000_000_000_000, holdMs: Number.MIN_VALUE })).toEqual({
+      ok: false,
+      refusal: 'invalid_input',
+    });
+  });
+
+  it('refuses a blank student id on reserve and override, so unowned holds never exist', () => {
+    expect(reserve(oneBed(), { ...base, studentId: '  ' })).toEqual({ ok: false, refusal: 'invalid_input' });
+    expect(override(oneBed(), { id: 'o1', bedId: 'b1', studentId: '', authority: 'RD', rationale: 'x', expectedInventoryVersion: 1, now: 0 })).toEqual({
+      ok: false,
+      refusal: 'invalid_input',
+    });
+  });
+
+  it('refuses to end an assignment at a non-finite clock or before it started', () => {
+    const placed = must(override(oneBed(), { id: 'o1', bedId: 'b1', studentId: 'A', authority: 'RD', rationale: 'x', expectedInventoryVersion: 1, now: 100 }));
+    const v = placed.state.inventoryVersion;
+    for (const now of [Number.NaN, Number.POSITIVE_INFINITY, 50]) {
+      expect(endAssignment(placed.state, { assignmentId: 'o1', expectedInventoryVersion: v, now })).toEqual({
+        ok: false,
+        refusal: 'invalid_input',
+      });
+    }
+    expect(placed.state.assignments['o1']).toMatchObject({ endedAt: null });
+  });
 });
