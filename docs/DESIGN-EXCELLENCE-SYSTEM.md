@@ -1,3 +1,36 @@
+---
+stale-refs:
+  - source: docs/EMPTY-LOADING-ERROR-SUCCESS-STATES.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/COMPONENT-RELEASE-CHECKLIST.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DESIGN-SYSTEM-MIGRATION-PLAN.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MICRO-INTERACTION-SYSTEM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SEMESTER-PLATFORM-UNITY-PATTERNS.md
+    changed_at: "2026-10-18T20:45:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Design excellence system
 
 The index for the design-excellence work: the semantic token layer, the shared

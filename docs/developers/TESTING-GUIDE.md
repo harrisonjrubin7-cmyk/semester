@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/developers/ONBOARDING.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Testing guide
 
 > **Type:** how-to · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`

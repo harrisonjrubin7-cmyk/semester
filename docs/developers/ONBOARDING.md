@@ -1,3 +1,42 @@
+---
+stale-refs:
+  - source: docs/developers/TESTING-GUIDE.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: CONTRIBUTING.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/design-system/README.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/CODING-STANDARDS.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/README.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/REPO-MAP.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # Contributor onboarding
 
 > **Type:** tutorial · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`

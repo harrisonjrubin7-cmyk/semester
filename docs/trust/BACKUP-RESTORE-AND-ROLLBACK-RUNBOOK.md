@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: ROLLBACK.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester backup, restore, and rollback runbook — controlled draft
 
 - **Status:** `PARTIAL / LOGICAL REHEARSAL ONLY`

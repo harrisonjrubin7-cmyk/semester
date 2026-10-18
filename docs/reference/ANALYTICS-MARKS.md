@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-18T17:10:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/EDGE-FUNCTIONS.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: ANALYTICS.md
+    changed_at: "2026-10-18T20:45:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/EVENTS.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Analytics marks
 
 > **Type:** reference · **Audience:** operators, security-reviewers · **Owner:** `data` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/platform-reference.test.ts`

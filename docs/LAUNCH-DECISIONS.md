@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Launch Decisions — for the owner
 
 Code can't finish a launch on its own. This page lists the decisions and

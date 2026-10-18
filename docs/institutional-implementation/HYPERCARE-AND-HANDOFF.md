@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/LAUNCH-WAR-ROOM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Hypercare support model and handoff to steady state
 
 | Control | Value |

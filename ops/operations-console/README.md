@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-18T17:10:50"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/claims/README.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Operations console controls
 
 <!-- Rendered from app/src/lib/ops/console.ts by console.test.ts. Edit the data, then run `npm run registers` from app/. -->

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/privacy-operations/README.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Privacy review queue: Phase 0 view
 
 > **Not legal advice. Questions for qualified privacy and education counsel; nothing here decides applicability or compliance.**

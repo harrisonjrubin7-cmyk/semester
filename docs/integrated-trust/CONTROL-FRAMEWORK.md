@@ -1,3 +1,36 @@
+---
+stale-refs:
+  - source: SECRETS.md
+    changed_at: "2026-10-18T17:10:50"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/integrated-trust/REMEDIATION-SEQUENCE.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal-drafts/LAW-ENFORCEMENT-REQUEST-PROCEDURE-DRAFT.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/ENCRYPTION-AND-KEY-MANAGEMENT-STANDARD.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Control framework
 
 <!-- Rendered from app/src/lib/ops/trustcontrols.ts by trustcontrols.test.ts. Edit the data, then run `npm run registers` from app/. -->

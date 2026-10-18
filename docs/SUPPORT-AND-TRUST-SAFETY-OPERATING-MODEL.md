@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-18T17:10:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Support and Trust-and-Safety operating model
 
 | Control | Value |

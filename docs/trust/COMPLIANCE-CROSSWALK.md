@@ -1,3 +1,36 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-18T17:10:50"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/OPERATIONAL-MATURITY.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Compliance crosswalk: HECVAT 4, 1EdTech TrustEd Apps and EDUCAUSE 2026
 
 <!-- Rendered from app/src/lib/trust/compliance-crosswalk.ts by compliance-crosswalk.test.ts. Edit the data, then run `npm run registers` from app/. -->

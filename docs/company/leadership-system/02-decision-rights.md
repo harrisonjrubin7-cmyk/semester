@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/company/leadership-system/06-domain-governance.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/08-continuity.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 2 · Decision rights, delegation and escalation
 
 > **PROPOSED — NOT ADOPTED.** Extends, and does not replace, [`COMPANY-OPERATING-MODEL.md`](../COMPANY-OPERATING-MODEL.md#operating-system) (decision classes), the owner matrix ([`OWNER-AND-ACCOUNTABILITY-MATRIX.md`](../../../OWNER-AND-ACCOUNTABILITY-MATRIX.md#decision-rights)) and the database-enforced two-person rules in [`DECISION-RIGHTS.md`](../../DECISION-RIGHTS.md). Anything marked `[COUNSEL]` needs qualified review.

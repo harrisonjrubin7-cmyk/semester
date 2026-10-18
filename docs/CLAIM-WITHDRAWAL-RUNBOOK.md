@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/gtm/BRAND-AND-MARKETING-STRATEGY.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 > **DRAFT FOR OWNER REVIEW. This is an operational procedure, not legal advice. Counsel decides legal conclusions and notification duties; this document does not.**
 
 # Claim and brand-asset withdrawal runbook

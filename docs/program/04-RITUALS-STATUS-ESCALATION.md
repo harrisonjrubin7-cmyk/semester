@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/LAUNCH-WAR-ROOM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 04 · Rituals, status reporting, escalation and decisions
 
 > Part of the [program pack](README.md). It adds one review and one report

@@ -1,3 +1,60 @@
+---
+stale-refs:
+  - source: docs/trust/CONTROL-FACTS.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: ANALYTICS.md
+    changed_at: "2026-10-18T20:45:42"
+    sections_changed: []
+    summary: externally modified
+  - source: MARKET-POSITION.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/INVENTORY.md
+    changed_at: "2026-10-18T20:45:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/gtm/SEMESTER_MASTER_GTM_PLAYBOOK_CUSTOMER_SAFE.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/sales/OBJECTION_HANDLING_LIBRARY.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/sales/PILOT_PROPOSAL_TEMPLATE.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/gtm/BRAND-AND-MARKETING-STRATEGY.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/README.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester Master Go-To-Market Playbook
 
 | Control | Value |

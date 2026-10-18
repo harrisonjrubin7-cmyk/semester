@@ -1,3 +1,228 @@
+---
+stale-refs:
+  - source: docs/developers/TESTING-GUIDE.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/integrations/gateway-client.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/API-GATEWAY.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/AUTH-AND-LIMITS.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/EDGE-FUNCTIONS.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/ERRORS.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/CONTROL-FACTS.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: CONTRIBUTING.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/README.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/CODING-STANDARDS.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/HOW-TO-ADD-AN-EDGE-FUNCTION.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/HOW-TO-ADD-AN-EVENT-TYPE.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/ONBOARDING.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/README.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/REPO-MAP.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/documentation/STYLE-GUIDE.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/institution/ADMIN-GUIDE.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/institution/AUDIT-AND-DATA-REQUESTS.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/institution/CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/institution/PROCUREMENT-AND-ACCESSIBILITY-ARTEFACTS.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/institution/STUDENT-DATA-MAP.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/integrations/README.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/integrations/sis-adapter.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/integrations/which-integration-path.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/ANALYTICS-MARKS.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/CONFIGURATION.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/EVENTS.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/README.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/SCIM-API.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/releases/CHANGE-COMMUNICATION.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/releases/README.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DOCUMENT-MAP.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/REVIEWER-QUESTION-MAP.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/SECURITY-OVERVIEW.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+  - source: examples/README.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+  - source: examples/gateway-client/README.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Documentation index
 
 > **Type:** reference · **Audience:** contributors · **Owner:** `engineering` · **Truth:** generated · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/docindex.test.ts`

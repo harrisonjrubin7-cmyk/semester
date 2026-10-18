@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: supabase/DEPLOY.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Where every secret lives
 
 An inventory: what this project holds, which store each one is in, and who can

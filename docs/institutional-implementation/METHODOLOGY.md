@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/institutional-implementation/TENANT-CONFIGURATION-WORKBOOK.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/README.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Implementation methodology
 
 | Control | Value |

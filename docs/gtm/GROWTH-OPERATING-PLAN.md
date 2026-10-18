@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/gtm/BRAND-AND-MARKETING-STRATEGY.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Growth, lifecycle and demand operating plan
 
 | Control | Value |

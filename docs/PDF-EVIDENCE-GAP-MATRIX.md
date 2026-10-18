@@ -1,3 +1,60 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-INVENTORY-AND-LINEAGE.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-RETENTION-EXPORT-DELETION.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/FERPA-IDENTITY-GUARDRAILS.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/LAUNCH-WAR-ROOM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROLE-PERMISSION-MATRIX.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/COMPLIANCE-CROSSWALK.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # PDF-to-evidence gap matrix
 
 <!-- Rendered from app/src/lib/ops/pdfgaps.ts by pdfgaps.test.ts. Edit the data, then run `npm run registers` from app/. -->

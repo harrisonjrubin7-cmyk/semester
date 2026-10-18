@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: ROLLBACK.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # ADR-0018 · Incident, escalation and disaster-recovery commitments exist only where a drill has exercised them
 
 | Field | Value |

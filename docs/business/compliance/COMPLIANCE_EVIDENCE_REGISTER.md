@@ -1,3 +1,72 @@
+---
+stale-refs:
+  - source: docs/trust/CONTROL-FACTS.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/CLOUD_SECURITY_PLAN.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/DATA_INVENTORY_TEMPLATE.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/DATA_SECURITY_CHECKLIST.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/HECVAT_ROADMAP.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/INCIDENT_RESPONSE_PLAN.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/SECURITY_QUESTIONNAIRE_LIBRARY.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/VENDOR_RISK_REGISTER.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/integrated-trust/CONTROL-FRAMEWORK.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/integrated-trust/REMEDIATION-SEQUENCE.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Compliance Evidence Register (consolidated per-control view)
 
 | Control | Value |

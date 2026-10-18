@@ -1,3 +1,54 @@
+---
+stale-refs:
+  - source: docs/DEFINER-RLS-REGISTER.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROLE-LAUNCH-REGISTER.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROLE-PERMISSION-MATRIX.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/roles/ROLE_CAPABILITY_MATRIX.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/roles/ROLE_CATALOG.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/roles/ROLE_LIFECYCLE_CATALOG.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/roles/ROLE_READINESS_SCORECARD.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/roles/ROLE_TENANT_SCOPE_MATRIX.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Role system master map
 
 **As of** 2026-10-05 · **Base** `origin/main` `d6179af6` (audit began at `3bd382d`; main moved twice meanwhile, reconciled in the gap register) · **Phase** 0, `audit/role-system-reconciliation` · **Status** audit evidence; nothing here is a release claim.

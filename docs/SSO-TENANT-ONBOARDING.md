@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/SCIM-LIFECYCLE-MANAGEMENT.md
+    changed_at: "2026-10-18T20:45:45"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # SSO tenant onboarding
 
 The order a new institution goes through. Each step links to where it is

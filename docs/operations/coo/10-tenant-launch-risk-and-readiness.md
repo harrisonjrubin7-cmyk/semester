@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/LAUNCH-WAR-ROOM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/OPERATIONAL-READINESS-PACK.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/RELEASE-CERTIFICATION.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # 10 · Tenant launch risk and readiness system
 
 | Control | Value |

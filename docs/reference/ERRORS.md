@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/reference/API-GATEWAY.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/AUTH-AND-LIMITS.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/SCIM-API.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Gateway error codes
 
 > **Type:** reference · **Audience:** partner-developers, implementers · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/gateway-reference.test.ts`

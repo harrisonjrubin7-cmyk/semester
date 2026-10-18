@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/trust/CONTROL-FACTS.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Pilot Proposal Template - Registration Readiness Pilot
 
 > **NON-BINDING DISCUSSION DRAFT - NOT AN OFFER - requires counsel review. Paid acceptance is HELD under [`GO-NO-GO-DECISION.md`](../../../GO-NO-GO-DECISION.md) (paid institutional pilot = NO-GO/RED).**

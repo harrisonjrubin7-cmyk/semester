@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Learning, Assessment and Gradebook Register
 
 <!-- Rendered from app/src/lib/learningregister.ts by learningregister.test.ts. Edit the data, then run `npm run registers` from app/. -->

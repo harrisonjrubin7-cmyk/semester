@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: ROLLBACK.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/migration/06-ACCEPTANCE-SIGNOFF-AND-EVIDENCE.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 01 Methodology
 
 ## 1. Principles

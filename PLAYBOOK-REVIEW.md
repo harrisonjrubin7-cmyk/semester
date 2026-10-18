@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: ACTION-PLAN.md
+    changed_at: "2026-10-18T20:45:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Playbook review — the September strategy document, checked against the code
 
 The current-state analysis and four-pillar playbook, read item by item against

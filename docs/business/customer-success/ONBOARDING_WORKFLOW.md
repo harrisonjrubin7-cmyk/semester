@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/INSTITUTIONAL-CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUPPORT-AND-TRUST-SAFETY-OPERATING-MODEL.md
+    changed_at: "2026-10-18T20:45:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/TENANT-CONFIGURATION-WORKBOOK.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Onboarding Workflow (sales handoff to pilot results)
 
 | Control | Value |

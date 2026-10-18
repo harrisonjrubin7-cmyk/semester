@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: SECRETS.md
+    changed_at: "2026-10-18T17:10:50"
+    sections_changed: []
+    summary: externally modified
+  - source: ROLLBACK.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Documentation style guide
 
 > **Type:** reference · **Audience:** contributors · **Owner:** `product` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/docsystem.test.ts`

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Workflow Builder
 
 Item 3 of the platform brief of 30 September

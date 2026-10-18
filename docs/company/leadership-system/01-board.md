@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/company/leadership-system/06-domain-governance.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/08-continuity.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 1 · Board, committees, cadence and packet
 
 > **PROPOSED — NOT ADOPTED.** Board and director matters depend on the legal entity and on any financing terms. Everything marked `[COUNSEL]` needs qualified review. See the [README](README.md).

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/SCIM-LIFECYCLE-MANAGEMENT.md
+    changed_at: "2026-10-18T20:45:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Example: SCIM provisioner
 
 > **Type:** reference · **Audience:** implementers, partner-developers · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/examples.test.ts`

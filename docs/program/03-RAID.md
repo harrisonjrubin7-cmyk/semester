@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 03 · RAID register
 
 > Part of the [program pack](README.md). Assessed **2026-10-04** against `origin/main`

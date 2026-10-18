@@ -1,3 +1,42 @@
+---
+stale-refs:
+  - source: docs/DEFINER-RLS-REGISTER.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/EMPTY-LOADING-ERROR-SUCCESS-STATES.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MODULE-PRIVACY-MODEL.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SAAS-LAUNCH-KIT.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SSO-SECURITY-AND-SESSION-MANAGEMENT.md
+    changed_at: "2026-10-18T20:45:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # Release certification
 
 <!-- Rendered from app/src/lib/governance/certification.ts by certification.test.ts. Edit the data, then run `npm run registers` from app/. -->

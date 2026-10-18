@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/business/sales/OBJECTION_HANDLING_LIBRARY.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/sales/PILOT_SALES_EMAIL_SEQUENCES.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # CRM Pipeline Definition (funnel, stages, forecast and hygiene)
 
 | Control | Value |

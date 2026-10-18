@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/infrastructure/SECURITY-CONTROLS.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Infrastructure
 
 How Semester's infrastructure is defined, changed, secured, observed and

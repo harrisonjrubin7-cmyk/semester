@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-18T17:10:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester data architecture
 
 Canonical entity model, provenance, lifecycle governance, analytics, search, AI data access and

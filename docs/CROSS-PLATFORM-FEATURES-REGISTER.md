@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Cross-platform Features Register
 
 <!-- Rendered from app/src/lib/crossplatformregister.ts by crossplatformregister.test.ts. Edit the data, then run `npm run registers` from app/. -->

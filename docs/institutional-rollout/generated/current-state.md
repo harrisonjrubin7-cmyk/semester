@@ -1,3 +1,48 @@
+---
+stale-refs:
+  - source: ACTION-PLAN.md
+    changed_at: "2026-10-18T20:45:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DESIGN-SYSTEM-MIGRATION-PLAN.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/OPERATIONAL-READINESS-PACK.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/RESILIENCE-INCLUSION-ECOSYSTEM-AUDIT.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROADMAP-AUDIT.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROLE-PERMISSION-MATRIX.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester institutional current-state census
 
 Commit: `1f8ff58565dfa4d941f525fb8613b3a719433b91`

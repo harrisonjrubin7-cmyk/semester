@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: course-engine/IMPLEMENTATION_STATUS.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: course-engine/VERIFICATION_REPORT.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Course Engine
 
 Course Engine is a citation-first course workspace. It preserves original uploads, extracts page/slide/cell/timestamp chunks, routes uncertainty into review, publishes only confirmed calendar data, and renders versioned study assets from stored evidence.

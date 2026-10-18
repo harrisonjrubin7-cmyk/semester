@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/business/gtm/SEMESTER_MASTER_GTM_PLAYBOOK.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DOCUMENT-MAP.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester 90-Day Go-To-Market Plan
 
 | Control | Value |

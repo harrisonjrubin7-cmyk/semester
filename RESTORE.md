@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: ROLLBACK.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Getting the data back
 
 [`ROLLBACK.md`](ROLLBACK.md) is about putting the code back. This is the other

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/operations/OPERATIONS_RELEASE_GATES.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Operations audit and evidence
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision.

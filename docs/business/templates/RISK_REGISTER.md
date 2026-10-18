@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/business/sales/PILOT_PROPOSAL_TEMPLATE.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/strategy/RISK-REGISTER.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # GTM and Company-Operations Risk Register (Template, Pre-Populated)
 
 | Control | Value |

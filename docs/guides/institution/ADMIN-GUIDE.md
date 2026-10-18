@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/institutional-readiness/ACCESS-REVIEW-PROCEDURE.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROLE-PERMISSION-MATRIX.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/institution/AUDIT-AND-DATA-REQUESTS.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Admin guide
 
 > **Type:** how-to · **Audience:** institution-admins · **Owner:** `success` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/institution-guides.test.ts`

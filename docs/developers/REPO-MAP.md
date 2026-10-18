@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: registry/README.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Repository map
 
 > **Type:** reference · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`

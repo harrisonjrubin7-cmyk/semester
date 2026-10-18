@@ -1,3 +1,42 @@
+---
+stale-refs:
+  - source: docs/MODULE-PRIVACY-MODEL.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/OPERATIONAL-REALITY-REGISTER.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SAAS-LAUNCH-KIT.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/OPERATIONAL-MATURITY.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/RELEASE-CERTIFICATION.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/TRUST-BRAND-AND-LEGAL.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester operating model
 
 Semester is no longer short of product categories. The gap now is the discipline that keeps a platform this broad

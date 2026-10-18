@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-18T17:10:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Data retention, export and deletion
 
 Full-beta Milestone 1. A synthesis of what the tree does, revalidated at `d246a348`, with each claim pointing at its source. The per-table schedule is [RETENTION.md](../RETENTION.md), which `retention.test.ts` holds to the migrations in both directions; this page does not restate it, and if the two disagree, RETENTION.md wins and this page is wrong.

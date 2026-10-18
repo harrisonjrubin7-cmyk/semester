@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/LAUNCH-WAR-ROOM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/TENANT-CONFIGURATION-WORKBOOK.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Institutional implementation and customer success system
 
 | Control | Value |

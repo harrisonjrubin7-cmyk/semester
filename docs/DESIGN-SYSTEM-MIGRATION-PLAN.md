@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/EMPTY-LOADING-ERROR-SUCCESS-STATES.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Design system migration plan
 
 How the design-excellence work landed, what is left, and the order in which

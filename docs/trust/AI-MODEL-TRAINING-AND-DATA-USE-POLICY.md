@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # AI Model Training and Data Use Policy
 
 <!-- Rendered from app/src/lib/trust/ai-training-policy.ts by ai-training-policy.test.ts. Edit the data, then run `npm run registers` from app/. -->

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # QTI 3: assessment content and migration
 
 <!-- Rendered from app/src/lib/assessment/qti.ts by qti.test.ts. Edit the data, then run `npm run registers` from app/. -->

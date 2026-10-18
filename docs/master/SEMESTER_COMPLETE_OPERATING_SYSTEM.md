@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PLATFORM-CONSTITUTION.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_TRUST_AND_GOVERNANCE_MODEL.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Semester complete operating system: the master operating map
 
 **As of** 2026-10-05 · **Base** origin/main 790ebbf · **Status** Phase 0 deliverable, proposal for the owner. It records no decision and closes no risk.

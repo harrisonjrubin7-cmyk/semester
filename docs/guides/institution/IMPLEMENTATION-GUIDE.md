@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/guides/institution/CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/institution/PROCUREMENT-AND-ACCESSIBILITY-ARTEFACTS.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Implementation guide
 
 > **Type:** runbook · **Audience:** implementers, institution-admins · **Owner:** `success` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/institution-guides.test.ts`

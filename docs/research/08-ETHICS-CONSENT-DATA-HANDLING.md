@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 08 · Research ethics, consent and data handling
 
 > **DRAFT FOR QUALIFIED REVIEW.** This is an operating standard and a set of

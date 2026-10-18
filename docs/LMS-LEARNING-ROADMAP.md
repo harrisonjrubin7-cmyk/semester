@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/ONE-SYSTEM-PLATFORM-GRAMMAR.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # LMS and learning roadmap: where the app stands
 
 Three planning documents asked Semester to become the most attractive LMS

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/master/SEMESTER_TRUST_AND_GOVERNANCE_MODEL.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester domain catalog
 
 <!-- Rendered from docs/master/tools/domains.py by docs/master/tools/render.py. Edit the data, then run `python3 docs/master/tools/render.py` from the repository root. -->

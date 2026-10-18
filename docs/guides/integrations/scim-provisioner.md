@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/SCIM-LIFECYCLE-MANAGEMENT.md
+    changed_at: "2026-10-18T20:45:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/integrations/which-integration-path.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/SCIM-API.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Provision users over SCIM
 
 > **Type:** how-to · **Audience:** implementers, partner-developers · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/examples.test.ts`

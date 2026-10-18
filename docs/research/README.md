@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: ANALYTICS.md
+    changed_at: "2026-10-18T20:45:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester product research — the evidence system
 
 | Control | Value |

@@ -1,3 +1,54 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-18T17:10:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/COMPLIANCE_EVIDENCE_REGISTER.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-RETENTION-EXPORT-DELETION.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/DATA_INVENTORY_TEMPLATE.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/SECURITY_QUESTIONNAIRE_LIBRARY.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Data Retention and Deletion Plan
 
 | Control | Value |

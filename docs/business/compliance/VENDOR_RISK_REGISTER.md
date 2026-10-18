@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/business/compliance/COMPLIANCE_EVIDENCE_REGISTER.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/CLOUD_SECURITY_PLAN.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Vendor Risk Register (consolidated working view)
 
 | Control | Value |

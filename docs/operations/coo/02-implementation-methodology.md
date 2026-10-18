@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DEFINITION-OF-DONE.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROLE-PERMISSION-MATRIX.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # 02 · Customer implementation methodology
 
 | Control | Value |

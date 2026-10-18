@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROADMAP-AUDIT.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 <!-- Rendered from app/src/lib/governance/master-plan.ts by master-plan.test.ts. Edit the data, then run `npm run registers` from app/. -->
 
 # Semester Master Plan: From Registration Readiness Pilot to University Operating System

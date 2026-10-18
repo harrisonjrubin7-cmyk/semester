@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/sre/README.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 03 · Observability
 
 > Part of the [SRE pack](README.md). Status: **proposed**; what exists is stated exactly in §1. Existing prose: [OBSERVABILITY-PLAN.md](../engineering-operations/OBSERVABILITY-PLAN.md), [MONITORING.md](../../MONITORING.md), [ZERO-TRUST-EVENT-API-OBSERVABILITY-ROADMAP.md](../ZERO-TRUST-EVENT-API-OBSERVABILITY-ROADMAP.md), ADR 0010 (correlation ids and the error envelope). Alerts: [generated/ALERTS.md](generated/ALERTS.md).

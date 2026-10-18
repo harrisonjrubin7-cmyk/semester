@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-18T17:10:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/CAREER-PORTABILITY-AND-LIFELONG-ACCESS.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/INSTITUTIONAL-CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Resilience, trust, inclusion and ecosystem expansion — Phase 0 audit
 
 This is Phase 0 of the *Semester Resilience, Trust, Inclusion, Faculty,

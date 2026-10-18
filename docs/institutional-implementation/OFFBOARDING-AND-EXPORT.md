@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/CAREER-PORTABILITY-AND-LIFELONG-ACCESS.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
+    changed_at: "2026-10-18T20:45:48"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Offboarding and export
 
 | Control | Value |

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/DEFINITION-OF-DONE.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/INSTITUTIONAL-CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 06 · Vendor management, quality operations and change management
 
 | Control | Value |

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: ROLLBACK.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/OPERATIONAL-MATURITY.md
+    changed_at: "2026-10-18T20:45:47"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 11 · From founder-led execution to repeatable teams and processes
 
 | Control | Value |

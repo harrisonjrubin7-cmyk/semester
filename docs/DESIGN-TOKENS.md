@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/DESIGN-SYSTEM-MIGRATION-PLAN.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Design tokens — reference
 
 Every token in `app/src/styles/tokens.css`, with the value it resolves to, and

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/guides/integrations/gateway-client.md
+    changed_at: "2026-10-18T17:10:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Example: gateway client
 
 > **Type:** reference · **Audience:** implementers, partner-developers · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/examples.test.ts`

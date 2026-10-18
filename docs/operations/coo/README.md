@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-18T20:45:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/RUNBOOKS.md
+    changed_at: "2026-10-18T20:45:44"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester COO operating system
 
 | Control | Value |
