@@ -251,6 +251,7 @@ function validateAdapters(records: AdapterRecord[], systems: OperatingSystemReco
     if (!strings(record.required_behavior) || record.required_behavior.length === 0) issue('missing_required_behavior', `${path}.required_behavior`, 'required_behavior is required.');
     if (!text(record.credential_reference)) issue('missing_credential_reference', `${path}.credential_reference`, 'credential_reference is required.');
     else if (LOOKS_LIKE_SECRET.test(record.credential_reference)) issue('credential_in_registry', `${path}.credential_reference`, 'credential_reference must be a reference into the secret store, not a secret.');
+    if (typeof record.sandbox_verified !== 'boolean') issue('sandbox_verified_not_boolean', `${path}.sandbox_verified`, 'sandbox_verified is true or false.');
     if (record.sandbox_verified === true && record.status !== 'verified') issue('sandbox_claim_without_verification', `${path}.sandbox_verified`, 'A sandbox-verified adapter is a verified adapter.');
   }
 }

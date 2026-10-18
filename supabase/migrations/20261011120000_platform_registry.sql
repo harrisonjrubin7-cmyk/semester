@@ -147,6 +147,11 @@ begin
   end if;
 
   if new.status in ('deployed', 'active') then
+    -- Share-locks the workspaces this promotion reads, so a concurrent workspace downgrade (which takes a row lock) waits for this commit or runs before it.
+    perform 1 from private.registry_workspaces w
+     where w.workspace_key in (select d.dependency_key from private.registry_capability_dependencies d where d.capability_id = new.id and d.dependency_type = 'workspace')
+        or w.id = new.workspace_id
+     for share;
     select * into ws from private.registry_workspaces where id = new.workspace_id;
     if ws.id is null or private.registry_status_rank(ws.status) < private.registry_status_rank(new.status) then
       raise exception 'registry: capability % cannot be % while workspace % is %',
@@ -177,7 +182,7 @@ begin
       select 1 from private.registry_capability_evidence e
        where e.capability_id = new.id
          and e.verified_at is not null
-         and e.status <> 'draft'
+         and e.status in ('implemented', 'tested', 'deployed', 'active')
          and (e.expires_at is null or e.expires_at > now())
     ) then
       raise exception 'registry: capability % cannot be active without unexpired verified evidence', new.capability_key
@@ -199,12 +204,21 @@ declare
   live text;
 begin
   new.updated_at := now();
-  -- Any status ranked below a live child (blocked and retired rank nowhere) would leave that child claiming more than its workspace.
+  -- A live capability is left claiming more than this workspace in two cases: it sits in the workspace and ranks above the new status
+  -- (blocked and retired rank nowhere), or it depends on this workspace and the new status no longer meets the dependency's requirement.
   select string_agg(c.capability_key, ', ' order by c.capability_key) into live
     from private.registry_capabilities c
-   where c.workspace_id = new.id
-     and c.status in ('deployed', 'active')
-     and private.registry_status_rank(c.status) > private.registry_status_rank(new.status);
+   where c.status in ('deployed', 'active')
+     and (
+       (c.workspace_id = new.id and private.registry_status_rank(c.status) > private.registry_status_rank(new.status))
+       or exists (
+         select 1 from private.registry_capability_dependencies d
+          where d.capability_id = c.id
+            and d.dependency_type = 'workspace'
+            and d.dependency_key = new.workspace_key
+            and private.registry_status_rank(new.status) < private.registry_status_rank(d.required_status)
+       )
+     );
   if live is not null then
     raise exception 'registry: workspace % cannot be % while % is deployed or active', new.workspace_key, new.status, live
       using errcode = 'check_violation';
@@ -219,5 +233,7 @@ create trigger registry_workspace_gate
 
 -- Invoker functions, but a browser role has no business calling them either.
 revoke execute on function private.registry_status_rank(private.registry_status) from public, anon, authenticated;
+-- The projection runs as service_role, and every gate reaches this helper through its own invoker context.
+grant execute on function private.registry_status_rank(private.registry_status) to service_role;
 revoke execute on function private.registry_capability_gate() from public, anon, authenticated;
 revoke execute on function private.registry_workspace_gate() from public, anon, authenticated;

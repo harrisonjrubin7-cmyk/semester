@@ -220,6 +220,806 @@
       "code": "artifact_without_producer",
       "path": "evidence_pack.rollback-drill.json",
       "message": "Nothing in the repository produces rollback-drill.json."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.admissions.applicant.converted.catalog_event",
+      "message": "admissions.applicant.converted is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.admissions.application.submitted.catalog_event",
+      "message": "admissions.application.submitted is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.admissions.decision.released.catalog_event",
+      "message": "admissions.decision.released is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.advising.appointment.booked.catalog_event",
+      "message": "advising.appointment.booked is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.advising.referral.created.catalog_event",
+      "message": "advising.referral.created is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.ai_governance.ai.request_authorized.catalog_event",
+      "message": "ai_governance.ai.request_authorized is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.ai_governance.ai.response_validated.catalog_event",
+      "message": "ai_governance.ai.response_validated is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.campus.event.rsvp_created.catalog_event",
+      "message": "campus.event.rsvp_created is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.campus.service_request.opened.catalog_event",
+      "message": "campus.service_request.opened is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.career.application.submitted.catalog_event",
+      "message": "career.application.submitted is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.career.employer.verified.catalog_event",
+      "message": "career.employer.verified is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.career.opportunity.published.catalog_event",
+      "message": "career.opportunity.published is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.community.moderation.actioned.catalog_event",
+      "message": "community.moderation.actioned is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.community.post.published.catalog_event",
+      "message": "community.post.published is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.community.report.received.catalog_event",
+      "message": "community.report.received is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.company.contract.executed.catalog_event",
+      "message": "company.contract.executed is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.company.deal.stage_changed.catalog_event",
+      "message": "company.deal.stage_changed is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.company.renewal.updated.catalog_event",
+      "message": "company.renewal.updated is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.developer.app.created.catalog_event",
+      "message": "developer.app.created is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.developer.key.issued.catalog_event",
+      "message": "developer.key.issued is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.developer.webhook.delivery_failed.catalog_event",
+      "message": "developer.webhook.delivery_failed is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.faculty.grade_draft.submitted.catalog_event",
+      "message": "faculty.grade_draft.submitted is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.family.delegation.granted.catalog_event",
+      "message": "family.delegation.granted is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.finance.payment.receipt_received.catalog_event",
+      "message": "finance.payment.receipt_received is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.finance.payment_intent.created.catalog_event",
+      "message": "finance.payment_intent.created is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.finance.refund.completed.catalog_event",
+      "message": "finance.refund.completed is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.identity.membership.activated.catalog_event",
+      "message": "identity.membership.activated is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.institution.integration.connected.catalog_event",
+      "message": "institution.integration.connected is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.institution.policy.updated.catalog_event",
+      "message": "institution.policy.updated is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.institution.tenant.configured.catalog_event",
+      "message": "institution.tenant.configured is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.learning.review.resolved.catalog_event",
+      "message": "learning.review.resolved is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.learning.source.extracted.catalog_event",
+      "message": "learning.source.extracted is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.learning.study_asset.generated.catalog_event",
+      "message": "learning.study_asset.generated is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.marketplace.dispute.opened.catalog_event",
+      "message": "marketplace.dispute.opened is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.marketplace.listing.published.catalog_event",
+      "message": "marketplace.listing.published is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.marketplace.offer.created.catalog_event",
+      "message": "marketplace.offer.created is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.operations.job.quarantined.catalog_event",
+      "message": "operations.job.quarantined is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.operations.release.promoted.catalog_event",
+      "message": "operations.release.promoted is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.security.access.denied.catalog_event",
+      "message": "security.access.denied is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.security.key.rotated.catalog_event",
+      "message": "security.key.rotated is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.student.calendar.event.confirmed.catalog_event",
+      "message": "student.calendar.event.confirmed is not carried by the event catalog."
+    },
+    {
+      "code": "event_without_catalog",
+      "path": "events.student.course.created.catalog_event",
+      "message": "student.course.created is not carried by the event catalog."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./",
+      "message": "/ has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./account-recovery",
+      "message": "/account-recovery has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./admissions/applicants",
+      "message": "/admissions/applicants has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./advising",
+      "message": "/advising has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./advising/caseload",
+      "message": "/advising/caseload has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./advising/referrals",
+      "message": "/advising/referrals has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./alumni",
+      "message": "/alumni has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/calendar",
+      "message": "/app/calendar has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/campus",
+      "message": "/app/campus has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/career",
+      "message": "/app/career has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/community",
+      "message": "/app/community has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/courses",
+      "message": "/app/courses has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/dining",
+      "message": "/app/dining has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/family",
+      "message": "/app/family has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/housing",
+      "message": "/app/housing has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/marketplace",
+      "message": "/app/marketplace has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/money",
+      "message": "/app/money has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/privacy",
+      "message": "/app/privacy has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/privacy/ai",
+      "message": "/app/privacy/ai has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/solve",
+      "message": "/app/solve has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/sources",
+      "message": "/app/sources has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/study",
+      "message": "/app/study has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/support",
+      "message": "/app/support has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/today",
+      "message": "/app/today has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./app/write",
+      "message": "/app/write has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./campus/events",
+      "message": "/campus/events has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./campus/housing",
+      "message": "/campus/housing has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./campus/services",
+      "message": "/campus/services has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./career",
+      "message": "/career has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./community/moderation",
+      "message": "/community/moderation has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./company",
+      "message": "/company has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./company/board",
+      "message": "/company/board has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./company/implementation",
+      "message": "/company/implementation has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./company/partners",
+      "message": "/company/partners has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./company/renewals",
+      "message": "/company/renewals has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./company/sales",
+      "message": "/company/sales has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./company/success",
+      "message": "/company/success has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./console",
+      "message": "/console has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./console/ai",
+      "message": "/console/ai has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./console/audit",
+      "message": "/console/audit has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./console/integrations",
+      "message": "/console/integrations has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./developers",
+      "message": "/developers has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./developers/apps",
+      "message": "/developers/apps has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./developers/webhooks",
+      "message": "/developers/webhooks has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./finance",
+      "message": "/finance has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./finance/reconciliation",
+      "message": "/finance/reconciliation has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./institutions",
+      "message": "/institutions has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./investor",
+      "message": "/investor has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./legal",
+      "message": "/legal has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./marketplace/operations",
+      "message": "/marketplace/operations has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./onboarding",
+      "message": "/onboarding has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./ops",
+      "message": "/ops has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./ops/ai",
+      "message": "/ops/ai has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./ops/inbox",
+      "message": "/ops/inbox has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./ops/incidents",
+      "message": "/ops/incidents has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./ops/releases",
+      "message": "/ops/releases has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./portal/alumni",
+      "message": "/portal/alumni has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./portal/applicant",
+      "message": "/portal/applicant has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./portal/employer",
+      "message": "/portal/employer has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./portal/family",
+      "message": "/portal/family has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./portal/partner",
+      "message": "/portal/partner has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./privacy",
+      "message": "/privacy has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./registrar",
+      "message": "/registrar has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./registrar/overrides",
+      "message": "/registrar/overrides has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./registrar/readiness",
+      "message": "/registrar/readiness has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./security",
+      "message": "/security has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./sign-in",
+      "message": "/sign-in has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./students",
+      "message": "/students has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./support/cases",
+      "message": "/support/cases has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./support/referrals",
+      "message": "/support/referrals has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./teach",
+      "message": "/teach has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./teach/assessments",
+      "message": "/teach/assessments has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./teach/gradebook",
+      "message": "/teach/gradebook has no screen contract."
+    },
+    {
+      "code": "route_without_contract",
+      "path": "operating_systems.routes./trust",
+      "message": "/trust has no screen contract."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.advisor-os.refs.deployments",
+      "message": "advisor-os has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.alumni-portal.refs.deployments",
+      "message": "alumni-portal has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.applicant-portal.refs.deployments",
+      "message": "applicant-portal has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.community-marketplace.refs.deployments",
+      "message": "community-marketplace has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.company-os.refs.deployments",
+      "message": "company-os has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.developer-portal.refs.deployments",
+      "message": "developer-portal has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.employer-portal.refs.deployments",
+      "message": "employer-portal has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.faculty-os.refs.deployments",
+      "message": "faculty-os has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.finance-os.refs.deployments",
+      "message": "finance-os has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.guardian-portal.refs.deployments",
+      "message": "guardian-portal has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.institution-console.refs.deployments",
+      "message": "institution-console has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.operations-os.refs.deployments",
+      "message": "operations-os has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.partner-portal.refs.deployments",
+      "message": "partner-portal has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.public-web.refs.deployments",
+      "message": "public-web has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.registrar-os.refs.deployments",
+      "message": "registrar-os has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.student-affairs-os.refs.deployments",
+      "message": "student-affairs-os has no deployment evidence."
+    },
+    {
+      "code": "pilot_scope_without_deployment",
+      "path": "workspaces.student-os.refs.deployments",
+      "message": "student-os has no deployment evidence."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.all-capability-passports.json",
+      "message": "release/all-capability-passports.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.approvers.json",
+      "message": "release/approvers.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.asyncapi-diff.md",
+      "message": "release/asyncapi-diff.md does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.backup-restore-drill.json",
+      "message": "release/backup-restore-drill.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.build-artifacts.json",
+      "message": "release/build-artifacts.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.container-scan.json",
+      "message": "release/container-scan.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.database-migrations.json",
+      "message": "release/database-migrations.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.dependency-scan.json",
+      "message": "release/dependency-scan.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.feature-config-snapshot.json",
+      "message": "release/feature-config-snapshot.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.git-commit.txt",
+      "message": "release/git-commit.txt does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.integration-health-snapshot.json",
+      "message": "release/integration-health-snapshot.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.migration-checksums.json",
+      "message": "release/migration-checksums.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.openapi-diff.md",
+      "message": "release/openapi-diff.md does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.production-smoke-test.json",
+      "message": "release/production-smoke-test.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.registry-validation.json",
+      "message": "release/registry-validation.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.release-manifest.json",
+      "message": "release/release-manifest.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.release-notes.md",
+      "message": "release/release-notes.md does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.rollback-drill.json",
+      "message": "release/rollback-drill.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.secrets-scan.json",
+      "message": "release/secrets-scan.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.staging-smoke-test.json",
+      "message": "release/staging-smoke-test.json does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.test-results/accessibility.xml",
+      "message": "release/test-results/accessibility.xml does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.test-results/e2e.xml",
+      "message": "release/test-results/e2e.xml does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.test-results/integration.xml",
+      "message": "release/test-results/integration.xml does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.test-results/performance.xml",
+      "message": "release/test-results/performance.xml does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.test-results/rls.xml",
+      "message": "release/test-results/rls.xml does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.test-results/security.xml",
+      "message": "release/test-results/security.xml does not exist."
+    },
+    {
+      "code": "artifact_missing",
+      "path": "evidence_pack.test-results/unit.xml",
+      "message": "release/test-results/unit.xml does not exist."
     }
   ],
   "blockedCapabilities": [
@@ -274,6 +1074,145 @@
       "integration-health-snapshot.json",
       "openapi-diff.md",
       "rollback-drill.json"
+    ],
+    "eventsWithoutCatalog": [
+      "admissions.applicant.converted",
+      "admissions.application.submitted",
+      "admissions.decision.released",
+      "advising.appointment.booked",
+      "advising.referral.created",
+      "ai_governance.ai.request_authorized",
+      "ai_governance.ai.response_validated",
+      "campus.event.rsvp_created",
+      "campus.service_request.opened",
+      "career.application.submitted",
+      "career.employer.verified",
+      "career.opportunity.published",
+      "community.moderation.actioned",
+      "community.post.published",
+      "community.report.received",
+      "company.contract.executed",
+      "company.deal.stage_changed",
+      "company.renewal.updated",
+      "developer.app.created",
+      "developer.key.issued",
+      "developer.webhook.delivery_failed",
+      "faculty.grade_draft.submitted",
+      "family.delegation.granted",
+      "finance.payment.receipt_received",
+      "finance.payment_intent.created",
+      "finance.refund.completed",
+      "identity.membership.activated",
+      "institution.integration.connected",
+      "institution.policy.updated",
+      "institution.tenant.configured",
+      "learning.review.resolved",
+      "learning.source.extracted",
+      "learning.study_asset.generated",
+      "marketplace.dispute.opened",
+      "marketplace.listing.published",
+      "marketplace.offer.created",
+      "operations.job.quarantined",
+      "operations.release.promoted",
+      "security.access.denied",
+      "security.key.rotated",
+      "student.calendar.event.confirmed",
+      "student.course.created"
+    ],
+    "routesWithoutContracts": [
+      "/",
+      "/account-recovery",
+      "/admissions/applicants",
+      "/advising",
+      "/advising/caseload",
+      "/advising/referrals",
+      "/alumni",
+      "/app/calendar",
+      "/app/campus",
+      "/app/career",
+      "/app/community",
+      "/app/courses",
+      "/app/dining",
+      "/app/family",
+      "/app/housing",
+      "/app/marketplace",
+      "/app/money",
+      "/app/privacy",
+      "/app/privacy/ai",
+      "/app/solve",
+      "/app/sources",
+      "/app/study",
+      "/app/support",
+      "/app/today",
+      "/app/write",
+      "/campus/events",
+      "/campus/housing",
+      "/campus/services",
+      "/career",
+      "/community/moderation",
+      "/company",
+      "/company/board",
+      "/company/implementation",
+      "/company/partners",
+      "/company/renewals",
+      "/company/sales",
+      "/company/success",
+      "/console",
+      "/console/ai",
+      "/console/audit",
+      "/console/integrations",
+      "/developers",
+      "/developers/apps",
+      "/developers/webhooks",
+      "/finance",
+      "/finance/reconciliation",
+      "/institutions",
+      "/investor",
+      "/legal",
+      "/marketplace/operations",
+      "/onboarding",
+      "/ops",
+      "/ops/ai",
+      "/ops/inbox",
+      "/ops/incidents",
+      "/ops/releases",
+      "/portal/alumni",
+      "/portal/applicant",
+      "/portal/employer",
+      "/portal/family",
+      "/portal/partner",
+      "/privacy",
+      "/registrar",
+      "/registrar/overrides",
+      "/registrar/readiness",
+      "/security",
+      "/sign-in",
+      "/students",
+      "/support/cases",
+      "/support/referrals",
+      "/teach",
+      "/teach/assessments",
+      "/teach/gradebook",
+      "/trust"
+    ],
+    "pilotScopesWithoutDeployment": [
+      "advisor-os",
+      "alumni-portal",
+      "applicant-portal",
+      "community-marketplace",
+      "company-os",
+      "developer-portal",
+      "employer-portal",
+      "faculty-os",
+      "finance-os",
+      "guardian-portal",
+      "institution-console",
+      "operations-os",
+      "partner-portal",
+      "public-web",
+      "registrar-os",
+      "student-affairs-os",
+      "student-os"
     ]
   },
   "registryIssues": []

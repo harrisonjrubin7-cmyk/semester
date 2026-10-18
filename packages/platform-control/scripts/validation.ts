@@ -1,5 +1,5 @@
 import { access } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 import type { RegistrySnapshot, ValidationIssue } from '../types.ts';
 import { validateCapabilities } from '../validators/capability-validator.ts';
 import { validateBacklog } from '../validators/backlog-validator.ts';
@@ -23,10 +23,19 @@ export async function validateEvidence(snapshot: RegistrySnapshot): Promise<Vali
   }
   for (const item of snapshot.backlog) for (const path of item.evidence) paths.add(path);
   for (const path of [...paths].sort()) {
-    try { await access(resolve(repositoryRoot, path)); }
+    const absolute = resolveInside(repositoryRoot, path);
+    if (absolute === null) { issues.push({ code: 'evidence_outside_repository', path, message: 'Evidence path resolves outside the repository.' }); continue; }
+    try { await access(absolute); }
     catch { issues.push({ code: 'missing_evidence_path', path, message: 'Evidence path does not exist in the repository.' }); }
   }
   return issues;
+}
+
+/** The absolute location of `path` under `directory`, or null when it is absolute or climbs out of `directory`. */
+export function resolveInside(directory: string, path: string): string | null {
+  const absolute = resolve(directory, path);
+  const within = relative(directory, absolute);
+  return within === '..' || within.startsWith(`..${sep}`) ? null : absolute;
 }
 
 export async function validateSnapshot(snapshot: RegistrySnapshot): Promise<ValidationIssue[]> {
