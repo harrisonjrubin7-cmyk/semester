@@ -87,3 +87,6 @@ app/reports/
 # Course Engine browser evidence is uploaded by CI, not committed.
 course-engine/apps/web/playwright-report/
 course-engine/apps/web/test-results/
+
+# anchor-memory auto-saved session snapshot (local only)
+.anchor/
