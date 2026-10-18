@@ -71,6 +71,10 @@ const DELIVERY_STATE_ORDER = [
 const REQUIRED_INCREMENT_IDS = ['RDY-INC-003', 'RDY-INC-004', 'RDY-INC-005', 'RDY-INC-006', 'RDY-INC-007'];
 const REQUIRED_ARTIFACT_IDS = ['ART-RDY-011'];
 const REQUIRED_RISK_IDS = ['RSK-001', 'RSK-002', 'RSK-003', 'RSK-004'];
+// The six hard dependencies RDY-INC-003 is specified to carry; an empty list would unblock it silently.
+const REQUIRED_HARD_DEPENDENCIES = {
+  'RDY-INC-003': ['identity_context', 'source_authority_register', 'SIS_adapter', 'readiness_case_workflow', 'audit_event_store', 'alerting'],
+};
 const REQUIRED_DECISIONS = [
   'Pilot scope', 'Source mapping', 'RLS and policy change', 'Feature flag enablement',
   'Emergency disable', 'Official academic outcome', 'Pilot expansion',
@@ -364,6 +368,12 @@ export function check(repo) {
 
   for (const id of REQUIRED_INCREMENT_IDS) {
     if (!ids.has(id)) errors.push(`registry/increments: required record ${id} is missing`);
+  }
+  for (const [id, deps] of Object.entries(REQUIRED_HARD_DEPENDENCIES)) {
+    const declared = repo.increments.find((i) => i.data.id === id)?.data.hard_dependencies ?? [];
+    for (const dep of deps) {
+      if (!declared.includes(dep)) errors.push(`${id}: hard dependency ${dep} must stay declared`);
+    }
   }
 
   // Artifacts: a state other than missing needs a location on disk; missing must not exist.

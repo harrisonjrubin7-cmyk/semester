@@ -553,3 +553,11 @@ test('control: a required risk with a placeholder owner fails', () => {
   const { errors } = check(repo);
   assert.ok(errors.some((e) => /risk RSK-004: no owner/.test(e)));
 });
+
+test('control: removing a specified hard dependency from RDY-INC-003 fails', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => {
+    d.hard_dependencies = d.hard_dependencies.filter((x) => x !== 'alerting');
+  });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /RDY-INC-003: hard dependency alerting must stay declared/.test(e)));
+});
