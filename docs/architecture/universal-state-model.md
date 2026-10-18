@@ -1,6 +1,6 @@
 # Universal state model
 
-Status: target contract. Current UI has many good local patterns but no single enforced state type across every data-backed view.
+Status: implemented incrementally. `ReadEnvelope` is the typed, fail-closed contract for the first data-backed routes, and shared renderers cover loading, empty, error, offline and permission-denied states. Route-wide adoption and enforcement remain open.
 
 | State | Required behavior | Never imply |
 | --- | --- | --- |
@@ -29,4 +29,4 @@ Every data-backed state resolves a safe title/explanation, source, source time, 
 - Client-side role changes cannot create `permission_denied → connected`.
 - Unknown states fail closed to `unavailable`, never `connected` or `verified`.
 
-Source badges, offline banners, retry views, empty-state components and sync vocabularies already exist, but names and payloads vary. Phase B should add one typed contract plus accessible shared renderers, map every route, preserve the Semester design system, and assert state/claim parity in tests.
+`app/src/lib/read/envelope.ts` owns the typed contract and claim-safe projection. `ReadState` maps it to shared accessible renderers, including a non-leaking `PermissionState`, on Today, Calendar, Me and Mine. `ModuleGateState` uses the same permission renderer for Registration and Gradebook when a school pauses a module, a person is signed out or the account has no school. The remaining work is to map every data-backed route, consolidate older local vocabularies and enforce state/claim parity across that route inventory.

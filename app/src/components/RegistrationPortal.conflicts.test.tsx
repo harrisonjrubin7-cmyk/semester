@@ -18,10 +18,10 @@ import { Yes } from '../screens/Yes';
 
 const REG_KEY = 'semester.registration.v1';
 
-const section = (id: string, code: string, start: string, end: string) => ({
+const section = (id: string, code: string, start: string, end: string, sectionNumber = '01') => ({
   id,
   code,
-  section: '01',
+  section: sectionNumber,
   title: `${code} title`,
   term: 'Spring 2027',
   department: code.split(' ')[0],
@@ -113,5 +113,25 @@ describe('the term plan', () => {
     const body = host.textContent ?? '';
     expect(body).not.toContain('overlap on');
     expect(body.indexOf('Review your selections')).toBeGreaterThanOrEqual(0);
+  });
+
+  it('distinguishes same-course section removals and removes only the chosen cart row', async () => {
+    seed(
+      [section('econ-01', 'ECON 1010', '09:00', '10:15'), section('econ-02', 'ECON 1010', '11:00', '12:15', '02')],
+      ['econ-01', 'econ-02'],
+    );
+    await render(<RegistrationPortal demandForecasting={false} />);
+    await act(async () => button(/^Cart \(2\)$/).click());
+
+    const removals = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove ECON 1010 section"]')];
+    expect(removals.map((control) => control.getAttribute('aria-label'))).toEqual([
+      'Remove ECON 1010 section 01, ECON 1010 title, from cart: Spring 2027 · Mon/Wed 09:00–10:15',
+      'Remove ECON 1010 section 02, ECON 1010 title, from cart: Spring 2027 · Mon/Wed 11:00–12:15',
+    ]);
+
+    await act(async () => removals[1].click());
+    expect(JSON.parse(localStorage.getItem(REG_KEY)!).cart).toEqual(['econ-01']);
+    expect(host.querySelector('button[aria-label*="section 01"]')).toBeTruthy();
+    expect(host.querySelector('button[aria-label*="section 02"]')).toBeNull();
   });
 });
