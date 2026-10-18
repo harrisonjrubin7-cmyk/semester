@@ -453,3 +453,28 @@ test('control: removing a required dependency from ART-RDY-011 fails', () => {
   const { errors } = check(repo);
   assert.ok(errors.some((e) => /ART-RDY-011: dependency alert-routing must stay declared/.test(e)));
 });
+
+test('control: an absolute path to a repository file is not evidence', () => {
+  const repo = loadRepo();
+  const control = repo.finance.minimum_artifacts.find((a) => a.status === 'present');
+  control.evidence = join(ROOT, 'GO-NO-GO-DECISION.md');
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /is marked present but its evidence .*GO-NO-GO-DECISION\.md does not exist/.test(e)));
+});
+
+test('control: an in-repository alias of a draft artifact is matched to that artifact', () => {
+  const alias = join(ROOT, '.delivery-alias-test');
+  const target = 'docs/pilot/registration-readiness/INC-READINESS-001.yaml';
+  symlinkSync(join(ROOT, target), alias);
+  try {
+    const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => {
+      d.state = 'approved_for_build';
+      d.operational_runbook = target;
+    });
+    repo.artifacts.find((a) => a.data.id === 'ART-RDY-011').data.location = '.delivery-alias-test';
+    const { errors } = check(repo);
+    assert.ok(errors.some((e) => /is registered artifact ART-RDY-011, currently draft/.test(e)));
+  } finally {
+    unlinkSync(alias);
+  }
+});

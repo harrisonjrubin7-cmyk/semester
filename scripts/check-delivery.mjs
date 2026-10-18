@@ -1,7 +1,7 @@
 // Checks the delivery-management records under docs/delivery, registry/, and docs/finance.
 // Run: node scripts/check-delivery.mjs   (exit 1 when there are errors; warnings do not fail)
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
-import { dirname, join, resolve, sep } from 'node:path';
+import { dirname, isAbsolute, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -104,14 +104,16 @@ export function check(repo) {
   const warnings = [];
   const { model, graph, root } = repo;
   // A repository-relative path resolved to an absolute one inside the repository, or null when it escapes.
-  // A path is inside the repository only if it is lexically inside and, when it exists, its real target is too.
+  // Evidence is repository-relative. A path is accepted only if it is lexically inside the repository and, when it
+  // exists, its real target is too. The real path is returned, so an in-repository alias matches its target.
   const realRoot = realpathSync(root);
   const insideRoot = (rel) => {
+    if (isAbsolute(rel)) return null;
     const abs = resolve(root, rel);
     if (!(abs === root || abs.startsWith(root + sep))) return null;
     if (!existsSync(abs)) return abs;
     const real = realpathSync(abs);
-    return real === realRoot || real.startsWith(realRoot + sep) ? abs : null;
+    return real === realRoot || real.startsWith(realRoot + sep) ? real : null;
   };
   const isFileAt = (rel) => {
     const abs = insideRoot(rel);
