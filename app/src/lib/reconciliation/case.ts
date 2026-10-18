@@ -2,6 +2,8 @@
 // lags behind, or cannot be confirmed against an authoritative institutional source.
 // Contract: docs/operations/reconciliation.yaml.
 
+import { isIsoTimestamp } from '../assurance/timestamps';
+
 export const CASE_STATES = [
   'detected',
   'triaged',
@@ -145,8 +147,23 @@ export function openCase(input: {
 /** Applies one state move. Every rule the contract states is checked here, not in the caller. */
 export function moveCase(current: ReconciliationCase, to: CaseState, options: MoveOptions): CaseResult {
   if (!options.by.trim()) return { ok: false, reason: 'a named actor is required' };
+  // Checked before the table lookup: a persisted case with an unknown state must refuse, not throw.
+  if (!(CASE_STATES as readonly string[]).includes(current.state)) {
+    return { ok: false, reason: `unknown state: ${current.state}` };
+  }
   if (!TRANSITIONS[current.state].includes(to)) {
     return { ok: false, reason: `cannot move from ${current.state} to ${to}` };
+  }
+  if (current.state === 'escalated' && to === 'reverified' && SAFE_REPAIRS[current.discrepancy] !== undefined) {
+    return { ok: false, reason: `${current.discrepancy} has a safe repair; repair it rather than re-verify an escalation` };
+  }
+
+  // History only moves forward: a move may not be earlier than detection or the move before it.
+  if (!isIsoTimestamp(options.at)) return { ok: false, reason: 'at must be an ISO timestamp' };
+  const floor = current.history.length > 0 ? current.history[current.history.length - 1].at : current.detectedAt;
+  if (!isIsoTimestamp(floor)) return { ok: false, reason: 'case history has an invalid timestamp' };
+  if (Date.parse(options.at) < Date.parse(floor)) {
+    return { ok: false, reason: 'transition time precedes the case history' };
   }
 
   let next: ReconciliationCase = {

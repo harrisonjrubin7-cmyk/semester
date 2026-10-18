@@ -176,4 +176,40 @@ describe('moveCase', () => {
     expect(c.sourceSystem).toBe('SIS');
     expect(c.cohortId).toBe('approved_pilot_cohort');
   });
+
+  it('refuses a transition time that is not ISO 8601', () => {
+    expect(moveCase(opened(), 'triaged', { by: 'x', at: '10/01/2026' })).toEqual({
+      ok: false,
+      reason: 'at must be an ISO timestamp',
+    });
+  });
+
+  it('refuses a transition earlier than detection, or earlier than the move before it', () => {
+    expect(moveCase(opened(), 'triaged', { by: 'x', at: '2026-10-01T07:00:00.000Z' })).toEqual({
+      ok: false,
+      reason: 'transition time precedes the case history',
+    });
+
+    const triaged = moveCase(opened(), 'triaged', { by: 'x', at: '2026-10-01T10:00:00.000Z' });
+    if (!triaged.ok) throw new Error('setup');
+    expect(moveCase(triaged.case, 'awaiting_source', { by: 'x', at: '2026-10-01T09:30:00.000Z' })).toEqual({
+      ok: false,
+      reason: 'transition time precedes the case history',
+    });
+  });
+
+  it('refuses an unknown or prototype-named state without throwing', () => {
+    for (const state of ['archived', 'constructor']) {
+      const result = moveCase({ ...opened(), state: state as ReconciliationCase['state'] }, 'triaged', { by: 'x', at: AT });
+      expect(result).toEqual({ ok: false, reason: `unknown state: ${state}` });
+    }
+  });
+
+  it('does not let an escalated case with a safe repair skip repair and approval', () => {
+    const escalated: ReconciliationCase = { ...opened(), state: 'escalated' };
+    const result = moveCase(escalated, 'reverified', { by: 'registrar_owner', at: AT, evidence: [...RESOLUTION_REQUIRED] });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toContain('has a safe repair');
+  });
 });
