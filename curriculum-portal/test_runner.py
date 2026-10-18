@@ -182,6 +182,26 @@ class HarnessTests(unittest.TestCase):
         code="_out={}\ndef error_model(r):\n    _out.clear()\n    _out.update(r)\n    _out['described_by']=r['field']+'-error'\n    return _out\n"
         result=self.run_week(7,code)
         self.assertEqual(result['passed'],result['total'])
+    def test_non_string_evidence_fields_are_rejected(self):
+        shortcut="def validate_pr(r): return isinstance(r.get('title'),str) and bool(r['title'].strip()) and bool(r.get('test_evidence')) and bool(r.get('reviewer'))\n"
+        result=self.run_week(1,shortcut)
+        self.assertLess(result['passed'],result['total'])
+    def test_present_but_invalid_audit_fields_are_rejected(self):
+        shortcut="def audit_ready(r): return all(k in r for k in ('actor','tenant','action','target','request_id'))\n"
+        result=self.run_week(6,shortcut)
+        self.assertLess(result['passed'],result['total'])
+    def test_redaction_keeps_other_safe_fields(self):
+        shortcut="def redact(r): return {'request_id':r['request_id']} if 'request_id' in r else {}\n"
+        result=self.run_week(10,shortcut)
+        self.assertLess(result['passed'],result['total'])
+    def test_build_clears_stale_output(self):
+        import subprocess
+        stale=BASE/'dist'/'stale-removed.txt'
+        stale.parent.mkdir(exist_ok=True);stale.write_text('old')
+        try:
+            subprocess.run(['node','build.mjs'],cwd=BASE,check=True,capture_output=True)
+            self.assertFalse(stale.exists())
+        finally: stale.unlink(missing_ok=True)
     def test_suites_have_no_duplicate_cases(self):
         for module in MODULES:
             seen=set()
