@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/DESIGN-SYSTEM-MIGRATION-PLAN.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Design token architecture
 
 Semester's visual values live in three layers. Only the middle one is new; the

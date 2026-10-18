@@ -1,38 +1,3 @@
----
-stale-refs:
-  - source: docs/program/03-RAID.md
-    changed_at: "2026-10-18T20:41:19"
-    sections_changed: []
-    summary: externally modified
-  - source: LAUNCH-RISK-REGISTER.md
-    changed_at: "2026-10-18T20:41:08"
-    sections_changed: []
-    summary: externally modified
-  - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
-    changed_at: "2026-10-18T20:41:08"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/architecture/ai/ai-policy-enforcement-map.md
-    changed_at: "2026-10-18T20:41:11"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/evidence/operations/2026-10-04-main-ci-red-diagnosis.md
-    changed_at: "2026-10-18T20:41:11"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
-
-
-
-
 # Program risk register (Phase 0)
 
 **Purpose.** One ranked list of what stands between the repository and the Phase 1 gate, with an owner role, a Phase 1 action and a review date. **Date** 2026-10-04. **Base** `origin/main` `4adb8cc`. **Status** Phase 0 baseline — evidence-cited, not a readiness claim. Nothing was run against production; no `*.check.sql` or suite was executed for this register. Severity: P0 = could expose cross-tenant or person data, cause irrecoverable loss, or block the Phase 1 gate; P1 = must be fixed before any pilot touches real data; P2/P3 lower.

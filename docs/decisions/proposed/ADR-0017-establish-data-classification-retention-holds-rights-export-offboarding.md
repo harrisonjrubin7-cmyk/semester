@@ -1,26 +1,3 @@
----
-stale-refs:
-  - source: RETENTION.md
-    changed_at: "2026-10-18T20:41:08"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/DATA-RETENTION-EXPORT-DELETION.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
 # ADR-0017 · Retention, legal holds, rights requests, export and offboarding hang off one per-table data class
 
 | Field | Value |

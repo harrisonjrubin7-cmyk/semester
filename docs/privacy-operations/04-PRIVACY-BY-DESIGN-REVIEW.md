@@ -1,26 +1,3 @@
----
-stale-refs:
-  - source: docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md
-    changed_at: "2026-10-18T20:41:19"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/PRODUCT-ANALYTICS-DATA-ETHICS.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/trust/AI-RISK-ASSESSMENT.md
-    changed_at: "2026-10-18T18:02:02"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
 # 04 · Privacy-by-design review
 
 **Status `DESIGNED`. 4 October 2026. Owner: privacy seat (vacant; no review can be signed until it is filled).**

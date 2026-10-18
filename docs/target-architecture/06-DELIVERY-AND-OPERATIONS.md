@@ -1,30 +1,3 @@
----
-stale-refs:
-  - source: docs/target-architecture/README.md
-    changed_at: "2026-10-18T18:02:02"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/target-architecture/02-MONOREPO-STRUCTURE.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/target-architecture/05-ENVIRONMENTS-AND-ROLLOUT.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/target-architecture/09-CONVERSION-PLAN.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
 # 06 · CI/CD, release, rollback, migration, secrets, backup/DR, offline sync, observability
 
 > Part of the [CTO architecture pack](README.md). Status: **proposed**.

@@ -1,22 +1,3 @@
----
-stale-refs:
-  - source: REGRESSION-CHECKLIST.md
-    changed_at: "2026-10-18T20:41:08"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/operating-model/PORTFOLIO-GOVERNANCE.md
-    changed_at: "2026-10-18T20:41:19"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
 # Quality-management system
 
 "We test features" is a practice. A quality-management system goes further: it says what must be true at each point in

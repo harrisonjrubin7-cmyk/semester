@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: docs/help/students/back-up-and-sync.md
-    changed_at: "2026-10-18T20:41:12"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/help/students/export-or-delete-your-data.md
-    changed_at: "2026-10-18T20:41:12"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # When something is missing or wrong
 
 > **Type:** help · **Audience:** students · **Owner:** `success` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/help.test.ts`

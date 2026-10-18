@@ -1,36 +1,3 @@
----
-stale-refs:
-  - source: docs/migration/06-ACCEPTANCE-SIGNOFF-AND-EVIDENCE.md
-    changed_at: "2026-10-18T18:02:01"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/migration/02-SOURCE-INVENTORY-AND-EXTRACTION.md
-    changed_at: "2026-10-18T20:41:18"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/migration/03-MAPPING-CLEANSING-TRANSFORMATION.md
-    changed_at: "2026-10-18T20:41:19"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/migration/04-VALIDATION-AND-RECONCILIATION.md
-    changed_at: "2026-10-18T20:41:19"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/migration/README.md
-    changed_at: "2026-10-18T20:41:19"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
-
-
 # 01 Methodology
 
 ## 1. Principles

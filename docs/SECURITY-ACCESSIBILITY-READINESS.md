@@ -1,14 +1,3 @@
----
-stale-refs:
-  - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-18T20:41:10"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Security, Accessibility and Trust Packet
 
 What Semester can hand a university's security, privacy, accessibility and

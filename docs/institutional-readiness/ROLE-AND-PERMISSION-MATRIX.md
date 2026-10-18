@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/ROLE-PERMISSION-MATRIX.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Institutional Role and Permission Matrix
 
 | Control | Value |

@@ -1,26 +1,3 @@
----
-stale-refs:
-  - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-18T20:41:09"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/FEATURE-EXPANSION-CROSSWALK.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/DESIGN-SYSTEM-IMPROVEMENTS.md
-    changed_at: "2026-10-18T20:41:10"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
 # UX enhancement plan — feature expansion, Phase A
 
 **Baseline:** `semester-unified-platform` at `1c8ab70` (on `origin/main`

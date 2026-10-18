@@ -1,30 +1,3 @@
----
-stale-refs:
-  - source: docs/operating-model/QUALITY-MANAGEMENT.md
-    changed_at: "2026-10-18T18:02:01"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/quality-system/03-SUITES.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/quality-system/04-GATES-AND-CI.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/quality-system/README.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
 # 06 · Defects, severity, triage, escape analysis and quality dashboards
 
 > Part of the [quality-system pack](README.md). Status: **proposed**.

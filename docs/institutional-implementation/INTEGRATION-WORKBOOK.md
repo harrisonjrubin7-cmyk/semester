@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/institutional-implementation/METHODOLOGY.md
-    changed_at: "2026-10-18T20:41:12"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Integration workbook
 
 | Control | Value |

@@ -1,14 +1,3 @@
----
-stale-refs:
-  - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
-    changed_at: "2026-10-18T20:41:09"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Unit-economics dashboard
 
 | Control | Value |

@@ -1,24 +1,3 @@
----
-stale-refs:
-  - source: docs/legal/AI-USE-POLICY-DRAFT.md
-    changed_at: "2026-10-18T18:02:01"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/trust/AI-SYSTEM-INVENTORY.md
-    changed_at: "2026-10-18T18:02:02"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/ai-governance/README.md
-    changed_at: "2026-10-18T20:41:11"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
 # AI policy enforcement map
 
 | | |

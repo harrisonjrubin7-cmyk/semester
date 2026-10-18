@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: MONITORING.md
-    changed_at: "2026-10-18T18:01:59"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Support, reliability and abuse prevention
 
 Launch-readiness Phase 5. This is what exists, what is measured, and what is

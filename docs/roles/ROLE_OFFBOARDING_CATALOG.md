@@ -1,36 +1,3 @@
----
-stale-refs:
-  - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/DATA-RETENTION-EXPORT-DELETION.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/SCIM-LIFECYCLE-MANAGEMENT.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/roles/ROLE_SYSTEM_MASTER_MAP.md
-    changed_at: "2026-10-18T18:02:02"
-    sections_changed: []
-    summary: externally modified
-  - source: RESTORE.md
-    changed_at: "2026-10-18T20:41:08"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
-
-
 # Role offboarding catalog
 
 **As of** 2026-10-05 · **Part of** [`ROLE_SYSTEM_MASTER_MAP.md`](ROLE_SYSTEM_MASTER_MAP.md) · **Status** audit evidence.

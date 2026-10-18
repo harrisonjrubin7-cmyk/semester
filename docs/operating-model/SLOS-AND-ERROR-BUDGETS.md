@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md
-    changed_at: "2026-10-18T20:41:10"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # SLOs and error budgets
 
 **Code: `app/src/lib/governance/error-budgets.ts`.** [SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md](../SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md)

@@ -1,24 +1,3 @@
----
-stale-refs:
-  - source: MONITORING.md
-    changed_at: "2026-10-18T18:01:59"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/quality-system/README.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/target-architecture/05-ENVIRONMENTS-AND-ROLLOUT.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
 # 07 · Production test verification and synthetic monitoring
 
 > Part of the [quality-system pack](README.md). Status: **proposed**.

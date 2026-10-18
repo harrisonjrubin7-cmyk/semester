@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/legal-drafts/SUPPORT-AND-ESCALATION-POLICY-DRAFT.md
-    changed_at: "2026-10-18T20:41:18"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Institutional Support and Escalation
 
 | Control | Value |

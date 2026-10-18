@@ -1,24 +1,3 @@
----
-stale-refs:
-  - source: docs/quality-system/07-PRODUCTION-VERIFICATION.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/quality-system/README.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/target-architecture/02-MONOREPO-STRUCTURE.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
 # 08 · Repository structure, fixtures and the first pull requests
 
 > Part of the [quality-system pack](README.md). Status: **proposed**, with two

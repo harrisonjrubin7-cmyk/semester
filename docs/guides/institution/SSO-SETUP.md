@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: docs/SAML-IMPLEMENTATION-RUNBOOK.md
-    changed_at: "2026-10-18T20:41:10"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/SSO-TENANT-ONBOARDING.md
-    changed_at: "2026-10-18T20:41:10"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # SSO setup
 
 > **Type:** runbook · **Audience:** implementers, institution-admins · **Owner:** `security` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/institution-guides.test.ts`

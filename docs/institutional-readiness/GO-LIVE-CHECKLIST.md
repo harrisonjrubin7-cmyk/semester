@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/market-readiness/LAUNCH-READINESS-CHECKLIST.md
-    changed_at: "2026-10-18T20:41:18"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Institutional Go-Live Checklist
 
 | Control | Value |

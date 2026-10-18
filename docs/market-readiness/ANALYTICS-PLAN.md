@@ -1,32 +1,3 @@
----
-stale-refs:
-  - source: ANALYTICS.md
-    changed_at: "2026-10-18T20:41:08"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/ANALYTICS-EVENTS.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/PRODUCT-ANALYTICS-DATA-ETHICS.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/market-readiness/EVENT-TAXONOMY.md
-    changed_at: "2026-10-18T18:02:01"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
-
-
 # Analytics plan
 
 > **Status: a plan, not sent.** This page describes what the company would like to measure. It is not what the app sends: the app's student activity marks are exactly three (`opened`, `course`, `studied`; see [`/ANALYTICS.md`](../../ANALYTICS.md) and [`../ANALYTICS-EVENTS.md`](../ANALYTICS-EVENTS.md)). Separately, the go-to-market tables (`gtm_*`) and `site_leads` record prospect and lead activity for the company site; those are governed by `docs/privacy-operations/04-PRIVACY-BY-DESIGN-REVIEW.md`, not by this plan. Do not read any funnel step below as collected today.

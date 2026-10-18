@@ -1,20 +1,3 @@
----
-stale-refs:
-  - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/business/README.md
-    changed_at: "2026-10-18T20:41:11"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
 # Semester
 
 > Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](SEMESTER-OPERATING-SYSTEM.md).

@@ -1,14 +1,3 @@
----
-stale-refs:
-  - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-18T20:41:09"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Configuration Studio
 
 The first item of the platform brief of 30 September

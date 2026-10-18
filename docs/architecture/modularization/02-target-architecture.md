@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: docs/target-architecture/README.md
-    changed_at: "2026-10-18T18:02:02"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/target-architecture/04-DOMAIN-BOUNDARIES-AND-OWNERSHIP.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # 2 · Target module graph, dependency rules, boundaries, anti-corruption layers
 
 ## The shape: a modular monolith with a hard inside

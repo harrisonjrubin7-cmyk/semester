@@ -1,24 +1,3 @@
----
-stale-refs:
-  - source: docs/target-architecture/README.md
-    changed_at: "2026-10-18T18:02:02"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/architecture/modularization/02-target-architecture.md
-    changed_at: "2026-10-18T20:41:11"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/decisions/D-1144.md
-    changed_at: "2026-10-18T20:41:11"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
 # Modularizing Semester
 
 Measured at `origin/main` `7287ddc`, pull request

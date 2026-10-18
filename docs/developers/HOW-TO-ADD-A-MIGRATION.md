@@ -1,22 +1,3 @@
----
-stale-refs:
-  - source: docs/developers/ONBOARDING.md
-    changed_at: "2026-10-18T18:02:01"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/ARCHITECTURE.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
 # How to add a migration and its check
 
 > **Type:** how-to · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`

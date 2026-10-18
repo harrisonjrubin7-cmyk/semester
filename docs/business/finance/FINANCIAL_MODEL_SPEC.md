@@ -1,24 +1,3 @@
----
-stale-refs:
-  - source: docs/business/finance/PRICING_AND_PACKAGING.md
-    changed_at: "2026-10-18T18:02:01"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/business/finance/UNIT_ECONOMICS.md
-    changed_at: "2026-10-18T20:41:11"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/finance/10-GO-NO-GO-GATES.md
-    changed_at: "2026-10-18T20:41:11"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
 # Financial model specification: the in-app GTM model
 
 | Control | Value |

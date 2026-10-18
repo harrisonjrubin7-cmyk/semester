@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md
-    changed_at: "2026-10-18T20:41:10"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Performance and low-end device plan
 
 Part 17 of the expansion command. Phase 7. Some of it exists.

@@ -1,14 +1,3 @@
----
-stale-refs:
-  - source: docs/PROOF-CALENDAR.md
-    changed_at: "2026-10-18T20:41:10"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Student First-Win Specification
 
 | Control | Value |

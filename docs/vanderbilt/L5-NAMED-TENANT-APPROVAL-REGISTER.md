@@ -1,14 +1,3 @@
----
-stale-refs:
-  - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Vanderbilt named-tenant L5 approval register
 
 <!-- Rendered from app/src/lib/governance/named-tenant-approval.ts by named-tenant-approval.test.ts. Edit the data, then run `npm run registers` from app/. -->

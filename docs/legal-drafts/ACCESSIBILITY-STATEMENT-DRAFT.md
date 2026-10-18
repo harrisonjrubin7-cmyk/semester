@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/legal/ACCESSIBILITY-STATEMENT-DRAFT.md
-    changed_at: "2026-10-18T18:02:01"
-    sections_changed: []
-    summary: externally modified
----
-
-
 > **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is a business and operational template, not legal advice, not an executed agreement, and not a substitute for review by licensed counsel in the applicable jurisdiction.**
 
 # Semester accessibility statement — controlled draft index

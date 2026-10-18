@@ -1,30 +1,3 @@
----
-stale-refs:
-  - source: docs/PAID-PILOT-FRAMEWORK.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
-    changed_at: "2026-10-18T20:41:10"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/business/customer-success/ONBOARDING_WORKFLOW.md
-    changed_at: "2026-10-18T20:41:11"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/business/customer-success/RENEWAL_AND_EXPANSION_PLAYBOOK.md
-    changed_at: "2026-10-18T20:41:11"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
 # Pilot Success Plan (template and metric dictionary)
 
 | Control | Value |

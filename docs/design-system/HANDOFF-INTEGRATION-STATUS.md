@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/design-system/REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md
-    changed_at: "2026-10-18T18:02:01"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Handoff integration status
 
 **Automation pass** 1 of 120 · **Integration slice** 91 · **Date** 2026-10-12 · **Branch** `codex/handoff-integration-slice-91` · **Slice base** `d2d1db59` · **Latest observed `origin/main`** `d2d1db59`

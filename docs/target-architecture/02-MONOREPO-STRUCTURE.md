@@ -1,30 +1,3 @@
----
-stale-refs:
-  - source: docs/target-architecture/README.md
-    changed_at: "2026-10-18T18:02:02"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/target-architecture/06-DELIVERY-AND-OPERATIONS.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/target-architecture/08-ORGANIZATION-AND-MILESTONES.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/target-architecture/09-CONVERSION-PLAN.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
 # 02 · Monorepo structure
 
 > Part of the [CTO architecture pack](README.md). Status: **proposed**.

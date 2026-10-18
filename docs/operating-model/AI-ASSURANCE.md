@@ -1,20 +1,3 @@
----
-stale-refs:
-  - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/operating-model/AI-LIFECYCLE-GATES.md
-    changed_at: "2026-10-18T20:41:19"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
 # AI assurance: NIST AI RMF and NIST AI 800-1, audit-ready
 
 <!-- Rendered from app/src/lib/governance/ai-assurance.ts by ai-assurance.test.ts. Edit the data, then run `npm run registers` from app/. -->

@@ -1,14 +1,3 @@
----
-stale-refs:
-  - source: docs/DEFINITION-OF-DONE.md
-    changed_at: "2026-10-18T20:41:09"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Core User Journeys
 
 | Control | Value |

@@ -1,34 +1,3 @@
----
-stale-refs:
-  - source: docs/master/SEMESTER_COMPLETE_OPERATING_SYSTEM.md
-    changed_at: "2026-10-18T20:41:18"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/strategy/RISK-REGISTER.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/program/RISK_REGISTER.md
-    changed_at: "2026-10-18T18:02:02"
-    sections_changed: []
-    summary: externally modified
-  - source: LAUNCH-RISK-REGISTER.md
-    changed_at: "2026-10-18T20:41:08"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
-
-
-
-
 # Semester master risk register
 
 **As of** 2026-10-05 · **Base** origin/main 790ebbf · **Part of** [`SEMESTER_COMPLETE_OPERATING_SYSTEM.md`](SEMESTER_COMPLETE_OPERATING_SYSTEM.md)

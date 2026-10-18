@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-18T18:01:59"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Semester — institutional pilot readiness (Phase 0)
 
 **Date:** 2026-10-04 · **Status:** BASELINE — authorizes no pilot, price, tenant or data · **Controlling:** [`GO-NO-GO-DECISION.md`](../GO-NO-GO-DECISION.md) (paid pilot **NO-GO / RED**; design-partner **GO / GREEN, non-activation only**) · **Executable gates:** `app/src/lib/governance/release-profiles.ts` (`paid-institutional-manual-pilot`, `paid-institutional-pilot`), generated contract `docs/PILOT-AND-INDIVIDUAL-RELEASE-PROFILES.md`

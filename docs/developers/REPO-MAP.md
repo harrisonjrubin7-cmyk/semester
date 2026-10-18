@@ -1,36 +1,3 @@
----
-stale-refs:
-  - source: README.md
-    changed_at: "2026-10-18T20:41:08"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/SUPPLY-CHAIN.md
-    changed_at: "2026-10-18T20:41:11"
-    sections_changed: []
-    summary: externally modified
-  - source: ops/README.md
-    changed_at: "2026-10-18T20:41:21"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/target-architecture/02-MONOREPO-STRUCTURE.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Repository map
 
 > **Type:** reference · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`

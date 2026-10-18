@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/institutional-implementation/README.md
-    changed_at: "2026-10-18T18:02:01"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Institutional Implementation Playbook
 
 | Control | Value |

@@ -1,14 +1,3 @@
----
-stale-refs:
-  - source: docs/LAUNCH-READINESS-COUNCIL.md
-    changed_at: "2026-10-18T20:41:10"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Semester Education OS current-state audit
 
 > **Type:** explanation · **Audience:** contributors, implementers · **Owner:** `engineering` · **Truth:** reviewed · **Reviewed:** 2026-10-08 · **Held by:** —

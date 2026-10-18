@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/master/SEMESTER_NATIVE_PDF_DELTA.md
-    changed_at: "2026-10-18T20:41:18"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Control plane
 
 Reference material for the connection and control backbone. Nothing here is deployed.

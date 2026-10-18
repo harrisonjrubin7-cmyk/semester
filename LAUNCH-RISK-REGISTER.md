@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: EVIDENCE-REGISTER.md
-    changed_at: "2026-10-18T18:01:59"
-    sections_changed: []
-    summary: externally modified
-  - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-18T18:01:59"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Semester launch risk register
 
 **Version:** 0.2

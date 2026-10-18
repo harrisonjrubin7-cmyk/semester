@@ -1,38 +1,3 @@
----
-stale-refs:
-  - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/business/compliance/COMPLIANCE_EVIDENCE_REGISTER.md
-    changed_at: "2026-10-18T18:02:01"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/trust/HECVAT-VPAT-PLAN.md
-    changed_at: "2026-10-18T18:02:02"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/business/compliance/SECURITY_QUESTIONNAIRE_LIBRARY.md
-    changed_at: "2026-10-18T20:41:11"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/business/compliance/TRUST_CENTER_INVENTORY.md
-    changed_at: "2026-10-18T20:41:11"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
-
-
-
-
 # HECVAT Roadmap (Lite first, then Full)
 
 | Control | Value |

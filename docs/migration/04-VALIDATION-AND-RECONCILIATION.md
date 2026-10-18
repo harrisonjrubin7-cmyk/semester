@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/migration/06-ACCEPTANCE-SIGNOFF-AND-EVIDENCE.md
-    changed_at: "2026-10-18T18:02:01"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # 04 Validation and reconciliation
 
 Stages: **sample_import**, **validation**, **reconciliation**. Code:

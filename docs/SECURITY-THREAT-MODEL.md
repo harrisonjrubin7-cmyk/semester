@@ -1,14 +1,3 @@
----
-stale-refs:
-  - source: SECURITY.md
-    changed_at: "2026-10-18T20:41:09"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Security threat model — whole platform
 
 Full-beta Milestone 1. Written 30 Sep 2026 from a read of the tree at `fd056fc`, not from a penetration test: **no adversarial testing of this platform has been done** (`docs/trust/PENETRATION-TEST-PLAN.md` is a plan). Every "Control" below names something in the tree; every "Evidence" says whether a test holds it, and where none does the row says so.

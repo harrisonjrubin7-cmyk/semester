@@ -1,22 +1,3 @@
----
-stale-refs:
-  - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/COMMUNITIES-REGISTER.md
-    changed_at: "2026-10-18T20:41:09"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
 # Semester Connect Register
 
 <!-- Rendered from app/src/lib/connectregister.ts, app/src/community/connect.ts and app/src/lib/gtm/social.ts by connectregister.test.ts. Edit the data, then run `npm run registers` from app/. -->

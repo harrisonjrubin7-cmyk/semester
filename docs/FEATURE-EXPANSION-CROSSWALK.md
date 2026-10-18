@@ -1,32 +1,3 @@
----
-stale-refs:
-  - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-18T20:41:09"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/UX-ENHANCEMENT-PLAN.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/DESIGN-SYSTEM-IMPROVEMENTS.md
-    changed_at: "2026-10-18T20:41:10"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/ROUTE-AND-FEATURE-CROSSWALK.md
-    changed_at: "2026-10-18T20:41:10"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
-
-
 # Feature-expansion crosswalk: Phases B–O
 
 **Baseline:** `semester-unified-platform` at `1c8ab70`, which is `origin/main`

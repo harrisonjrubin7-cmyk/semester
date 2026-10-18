@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/UX-ENHANCEMENT-PLAN.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Design system improvements — feature expansion, Phase A
 
 **Baseline:** `semester-unified-platform` at `1c8ab70`.

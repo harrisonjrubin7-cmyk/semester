@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/ELEVATION-AND-GLASS-POLICY.md
-    changed_at: "2026-10-18T20:41:10"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Colour, light and dark
 
 Semester already had a complete, measured light and dark system before this

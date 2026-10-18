@@ -1,14 +1,3 @@
----
-stale-refs:
-  - source: docs/SUPPLY-CHAIN.md
-    changed_at: "2026-10-18T20:41:11"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Dependency Management Policy
 
 | Control | Value |

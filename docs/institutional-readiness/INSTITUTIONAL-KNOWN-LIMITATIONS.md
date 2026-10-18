@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/institutional-readiness/INSTITUTIONAL-CAPABILITY-MATRIX.md
-    changed_at: "2026-10-18T18:02:01"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Institutional Known Limitations
 
 | Control | Value |

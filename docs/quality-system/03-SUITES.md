@@ -1,36 +1,3 @@
----
-stale-refs:
-  - source: docs/RESILIENCE-INCLUSION-ECOSYSTEM-TEST-PLAN.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/institutional-readiness/TENANT-ISOLATION-EVIDENCE.md
-    changed_at: "2026-10-18T20:41:13"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/quality-system/06-DEFECTS-AND-DASHBOARDS.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/quality-system/07-PRODUCTION-VERIFICATION.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/quality-system/README.md
-    changed_at: "2026-10-18T20:41:20"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
-
-
 # 03 · The ten suites
 
 > Part of the [quality-system pack](README.md). Status: **proposed**.

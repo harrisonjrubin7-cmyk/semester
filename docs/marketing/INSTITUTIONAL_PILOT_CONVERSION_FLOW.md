@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: docs/PAID-PILOT-FRAMEWORK.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
-    changed_at: "2026-10-18T20:41:10"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Institutional pilot conversion flow — Registration Readiness Pilot
 
 Status: proposed public flow and internal handoff. Source material already in the

@@ -1,30 +1,3 @@
----
-stale-refs:
-  - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-18T18:02:00"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/MODULE-PRIVACY-MODEL.md
-    changed_at: "2026-10-18T20:41:10"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/SERVICE-EXPANSION-REGISTER.md
-    changed_at: "2026-10-18T20:41:10"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
-
-
-
-
 # Basic-Needs Navigator
 
 <!-- Rendered from app/src/lib/basicneeds.ts by basicneeds.test.ts. Edit the data, then run `npm run registers` from app/. -->

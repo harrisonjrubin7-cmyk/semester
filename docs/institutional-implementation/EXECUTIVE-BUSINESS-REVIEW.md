@@ -1,30 +1,3 @@
----
-stale-refs:
-  - source: docs/institutional-implementation/FEEDBACK-AND-ESCALATION.md
-    changed_at: "2026-10-18T18:02:01"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/institutional-implementation/OFFBOARDING-AND-EXPORT.md
-    changed_at: "2026-10-18T18:02:01"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/institutional-implementation/METHODOLOGY.md
-    changed_at: "2026-10-18T20:41:12"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/institutional-implementation/SUCCESS-SYSTEM.md
-    changed_at: "2026-10-18T20:41:12"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
 # Executive business review (EBR) template
 
 | Control | Value |

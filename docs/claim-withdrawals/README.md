@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
-    changed_at: "2026-10-18T20:41:09"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Claim withdrawals
 
 One file per withdrawal, named `<date>-<slug>.md`. The procedure is

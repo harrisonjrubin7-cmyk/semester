@@ -1,24 +1,3 @@
----
-stale-refs:
-  - source: CLAUDE.md
-    changed_at: "2026-10-18T18:01:59"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/program/RISK_REGISTER.md
-    changed_at: "2026-10-18T18:02:02"
-    sections_changed: []
-    summary: externally modified
-  - source: RESTORE.md
-    changed_at: "2026-10-18T20:41:08"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
 # Phase 1 step 1 — restore drill runsheet
 
 - **Status:** `NOT RUN — RUNSHEET ONLY`. No measured RTO or RPO exists; risk R-002 in [`RISK_REGISTER.md`](RISK_REGISTER.md) stays open and Gate 1 stays NO-GO ([`PHASE_GATE_LOG.md`](PHASE_GATE_LOG.md)).
