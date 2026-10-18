@@ -41,8 +41,11 @@ import {
   money,
   readMoney,
   todo,
+  type Aid,
   type AidKind,
+  type Charge,
   type ChargeKind,
+  type Payment,
   type Plan,
 } from '../lib/bill';
 import { isoToDate, longLabel } from '../lib/date';
@@ -55,6 +58,26 @@ const MyStudentAccount = lazy(() => import('../components/MyStudentAccount').the
 
 /** How many instalments a plan can be split into. Five is the common one. */
 const PARTS = [1, 2, 3, 4, 5, 6, 8, 10, 12];
+
+function chargeRemovalLabel(charge: Charge) {
+  return `Remove charge ${charge.what}: ${chargeKindOf(charge.kind).label} · ${money(charge.cents)}`;
+}
+
+function aidRemovalLabel(aid: Aid) {
+  const kind = aidKindOf(aid.kind);
+  const meaning = [
+    kind.label,
+    money(aid.cents),
+    kind.credits ? '' : 'paid to you, not to the bill',
+    kind.repaid ? 'paid back' : '',
+    aid.pending ? 'not yet confirmed' : 'confirmed',
+  ].filter(Boolean).join(' · ');
+  return `Remove aid ${aid.what}: ${meaning}`;
+}
+
+function paymentRemovalLabel(payment: Payment) {
+  return `Remove payment ${payment.what}: ${money(payment.cents)} paid ${longLabel(isoToDate(payment.on))}`;
+}
 
 export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off' }: { schoolAccount?: boolean } = {}) {
   // `now` from the store rather than `new Date()` here: it is the one clock
@@ -198,7 +221,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
                 <button
                   type="button"
                   className="bare"
-                  aria-label={`Remove ${c.what}`}
+                  aria-label={chargeRemovalLabel(c)}
                   onClick={() => dispatch({ type: 'dropCharge', id: c.id })}
                   style={{ width: 24, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
                 >
@@ -257,7 +280,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
                   <button
                     type="button"
                     className="bare"
-                    aria-label={`Remove ${a.what}`}
+                    aria-label={aidRemovalLabel(a)}
                     onClick={() => dispatch({ type: 'dropAid', id: a.id })}
                     style={{ width: 24, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
                   >
@@ -382,7 +405,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
                 <button
                   type="button"
                   className="bare"
-                  aria-label={`Remove ${p.what}`}
+                  aria-label={paymentRemovalLabel(p)}
                   onClick={() => dispatch({ type: 'dropPayment', id: p.id })}
                   style={{ width: 24, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
                 >

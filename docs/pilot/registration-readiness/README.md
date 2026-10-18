@@ -14,10 +14,10 @@ because it needs a human decision first.
 
 | # | Artifact | Status | File / blocker |
 |---|----------|--------|----------------|
-| 1 | component-passport.schema.json | open | Derivable from the passport fields. Next slice. |
+| 1 | component-passport.schema.json | written | `component-passport.schema.json`, aligned to the runtime passport validator and reference-prefix rules. |
 | 2 | registration-readiness.passport.yaml | written | `registration-readiness.passport.yaml` (owner names TBD) |
 | 3 | connection-states.yaml | written | `connection-states.yaml` |
-| 4 | source-verification.ts | open | Types are in the PDF. Needs a `.ts` file, a test, and a typecheck. Next slice. |
+| 4 | source-verification.ts | written | `app/src/lib/source-verification.ts`, with a fail-closed definitive-result rule and focused test. |
 | 5 | source-freshness-policy.yaml | open | Needs freshness thresholds. The PDF does not give them. Decision needed. |
 | 6 | data-classification.yaml | open | Needs classification levels. The PDF does not give them. Decision needed. |
 | 7 | feature-flags.yaml | written | `feature-flags.yaml`. Spec only; the flag is not wired into app code. |
@@ -29,7 +29,7 @@ because it needs a human decision first.
 | 13 | accessibility/readiness-evidence.yaml | written | `accessibility/readiness-evidence.yaml`. Status: not_started. |
 | 14 | risk-register.yaml | open | No content in the PDF. |
 | 15 | control-register.yaml | open | No content in the PDF. |
-| 16 | readiness-event.schema.json | open | Derivable from the events list. Next slice. |
+| 16 | readiness-event.schema.json | written | `readiness-event.schema.json`, aligned to the workflow descriptor, durable receipt store, and minimal payload boundary. |
 | 17 | receipt.schema.json | open | Derivable from the receipt fields. Next slice. |
 | 18 | integration-adapter.schema.json | open | Derivable from the adapter contract. Next slice. |
 | 19 | policy-decision.schema.json | open | Derivable from the policy-decision contract. Next slice. |
@@ -45,7 +45,7 @@ because it needs a human decision first.
 | 29 | pilot-results-template.md | open | Template only. Next slice. |
 | 30 | post-launch-review.md | open | Template only. Next slice. |
 
-Count: 12 written, 18 open.
+Count: 15 written, 15 open.
 
 ## Decisions this package depends on
 
@@ -102,7 +102,12 @@ Run from the repo root:
 
 ```bash
 python3 scripts/validate-pilot-artifacts.py   # parses every YAML file in this folder
+npm test --workspace app -- src/lib/registry/passport.test.ts
+npm test --workspace app -- src/lib/source-verification.test.ts
+npm test --workspace app -- src/lib/registry/readiness-event-schema.test.ts
 ```
 
-The script checks that every YAML file parses. It does not check the content
-against the PDF, and it does not check any app behavior.
+The Python script checks that every YAML file parses. It does not check the
+content against the PDF or app behavior. The focused passport test keeps the
+JSON Schema's governed sections, passport types, and artifact-reference
+prefixes aligned with the runtime validator.

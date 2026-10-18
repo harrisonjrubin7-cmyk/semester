@@ -10,3 +10,9 @@
 5eb8e6eddae35d8b7d986bfc9e893c5b9bd96a7d:packages/institution/src/access-saga.test.ts:generic-api-key:821
 5eb8e6eddae35d8b7d986bfc9e893c5b9bd96a7d:packages/institution/src/policy.test.ts:generic-api-key:488
 5eb8e6eddae35d8b7d986bfc9e893c5b9bd96a7d:packages/institution/src/policy.test.ts:generic-api-key:496
+
+# Notification policy test fixture: a made-up deduplication label was detected
+# as a generic API key. It never held a credential and the branch tip replaces
+# it with a plainly named low-entropy fixture. Keep this exception pinned to
+# the original commit, file, rule, and line.
+1489646e1c916173c0d137cb9128e55d4123923f:supabase/notification-inbox.check.sql:generic-api-key:144

@@ -1,0 +1,18 @@
+# Capability map: pointer manifest. Not a second copy of the capability registers.
+# Authoritative sources:
+#   1. app/src/lib/governance/capability-governance.ts   data behind the activation register
+#   2. docs/CAPABILITY-ACTIVATION-REGISTER.md            rendered from (1); maturity != tenant activation
+#   3. docs/CAPABILITY-PARITY-MATRIX.md                  parity against the target feature set
+#   4. docs/ROLE-PERMISSION-MATRIX.md                    which role may use which capability
+# Product maturity does not prove tenant activation. Do not raise a level here.
+version: 0
+status: pointer
+owner: platform_lead
+sources:
+  governance_data: app/src/lib/governance/capability-governance.ts
+  activation_register: docs/CAPABILITY-ACTIVATION-REGISTER.md
+  parity_matrix: docs/CAPABILITY-PARITY-MATRIX.md
+  role_permissions: docs/ROLE-PERMISSION-MATRIX.md
+  route_crosswalk: docs/ROUTE-AND-FEATURE-CROSSWALK.md
+gaps:
+  - "Capability-to-route-to-table-to-API-to-event mapping is not consolidated into one file yet; each link lives in the sources above."
