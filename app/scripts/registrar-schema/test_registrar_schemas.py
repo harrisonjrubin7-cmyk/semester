@@ -24,6 +24,7 @@ class MigrationTests(unittest.TestCase):
     def test_valid_default_kept(self):self.assertEqual(migrate_subset({'type':'integer','default':3})['default'],3)
     def test_properties_must_be_mapping(self):self.blocked({'type':'object','properties':[]})
     def test_composition_must_be_array(self):self.blocked({'oneOf':None})
+    def test_additional_properties_must_be_bool_or_schema(self):self.blocked({'type':'object','additionalProperties':[]})
     def test_null_default_rejected_unless_nullable(self):
         self.blocked({'type':'string','default':None})
         self.assertIsNone(migrate_subset({'type':'string','nullable':True,'default':None})['default'])
@@ -88,6 +89,14 @@ class EnrollmentTests(unittest.TestCase):
     def test_boolean_operation_subschema_does_not_crash(self):
         s={'oneOf':[{'type':'object','properties':{'operation':False}},{'type':'object','properties':{'operation':False}}]}
         self.assertTrue(validate(s,{'operation':'add'}))
+    def test_explicit_null_operation_selects_null_const_branch(self):
+        s={'oneOf':[{'properties':{'operation':{'const':'add'}},'required':['z1']},{'properties':{'operation':{'const':None}},'required':['a','b','c']}]}
+        msgs=[e['message'] for e in validate(s,{'operation':None})]
+        self.assertTrue(any("'a'" in m for m in msgs))
+    def test_missing_operation_does_not_match_null_const(self):
+        s={'oneOf':[{'properties':{'operation':{'const':'add'}}},{'required':['z1','z2','z3']}]}
+        msgs=[e['message'] for e in validate(s,{'operation':None})]
+        self.assertFalse(any("'z1'" in m for m in msgs))
     def test_artifact_matches_builder(self):
         import json,os
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'enrollment_commands.schema.json')) as f:artifact=json.load(f)

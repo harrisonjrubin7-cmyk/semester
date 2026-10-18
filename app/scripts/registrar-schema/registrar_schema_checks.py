@@ -26,6 +26,7 @@ def migrate_subset(schema):
     if 'properties' in s:s['properties']={k:migrate_subset(v) for k,v in s['properties'].items()}
     for k in ['items','not']:
         if k in s:s[k]=migrate_subset(s[k])
+    if 'additionalProperties' in s and not isinstance(s['additionalProperties'],(bool,dict)):raise ValueError('additionalProperties must be a boolean or schema')
     if isinstance(s.get('additionalProperties'),dict):s['additionalProperties']=migrate_subset(s['additionalProperties'])
     for k in ['allOf','anyOf','oneOf']:
         if k in s and not isinstance(s[k],list):raise ValueError('composition must be an array')
@@ -37,12 +38,14 @@ def pointer(parts):
     # RFC 6901: the root is the empty string, and ~ and / inside a token are escaped
     return ''.join('/'+str(p).replace('~','~0').replace('/','~1') for p in parts)
 
+MISSING=object()
+
 def branch_operation(e,i):
     branches=e.schema.get(e.validator,[]) if isinstance(e.schema,dict) else []
     branch=branches[i] if isinstance(i,int) and 0<=i<len(branches) else None
     props=branch.get('properties',{}) if isinstance(branch,dict) else {}
     op=props.get('operation',{}) if isinstance(props,dict) else {}
-    return op.get('const') if isinstance(op,dict) else None
+    return op.get('const',MISSING) if isinstance(op,dict) else MISSING
 
 def leaf_errors(e):
     # A oneOf/anyOf error hides its reasons in context. Descend into the branch whose operation const
@@ -50,8 +53,8 @@ def leaf_errors(e):
     if e.validator not in ('oneOf','anyOf') or not e.context:return [e]
     branches={}
     for c in e.context:branches.setdefault(c.relative_schema_path[0] if c.relative_schema_path else None,[]).append(c)
-    op=e.instance.get('operation') if isinstance(e.instance,dict) else None
-    matched=[i for i in branches if op is not None and branch_operation(e,i)==op]
+    op=e.instance.get('operation',MISSING) if isinstance(e.instance,dict) else MISSING
+    matched=[i for i in branches if op is not MISSING and branch_operation(e,i) is not MISSING and branch_operation(e,i)==op]
     pool=[branches[i] for i in matched] or list(branches.values())
     return [leaf for c in min(pool,key=len) for leaf in leaf_errors(c)]
 
