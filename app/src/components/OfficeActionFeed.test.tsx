@@ -22,6 +22,18 @@ import { StoreProvider } from '../state/store';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+// The due date is taken from the clock, not written in. An office action leaves
+// the list a day after its date, so a fixed date passes and the test fails for
+// no reason in the code under test.
+const DUE = new Date(Date.now() + 3 * 86_400_000);
+const FAFSA_TITLE = `FAFSA verification documents are due ${DUE.toLocaleDateString('en-US', {
+  month: 'long',
+  day: 'numeric',
+  timeZone: 'UTC',
+})}`;
+
+const DUE_LABEL = DUE.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+
 const row = (over: Record<string, unknown> = {}) => ({
   id: 'a1',
   office: 'financial_aid',
@@ -30,9 +42,9 @@ const row = (over: Record<string, unknown> = {}) => ({
   audience_kind: 'tenant',
   target_program: null,
   target_eligibility: null,
-  title: 'FAFSA verification documents are due October 15',
+  title: FAFSA_TITLE,
   why_it_matters: 'This may affect aid processing.',
-  due_at: '2026-10-15T23:59:00Z',
+  due_at: DUE.toISOString(),
   official_url: 'https://aid.school.edu/verification',
   source_note: 'Financial Aid verification checklist',
   updated_at: new Date().toISOString(),
@@ -164,9 +176,9 @@ describe('with office_action_feed on', () => {
 
   it('shows each action with its office, source, date and the reason it reached this student', async () => {
     await render(<OfficeActionFeed enabled accountId="u1" />);
-    const card = host.querySelector('[aria-label="Financial Aid: FAFSA verification documents are due October 15"]')!;
+    const card = host.querySelector(`[aria-label="Financial Aid: ${FAFSA_TITLE}"]`)!;
     expect(card).not.toBeNull();
-    expect(text(card)).toContain('Due Thu, Oct 15');
+    expect(text(card)).toContain(`Due ${DUE_LABEL}`);
     expect(text(card)).toContain('This may affect aid processing.');
     expect(text(card)).toContain('Institution verified');
     expect(text(card)).toContain('Updated');
@@ -235,7 +247,7 @@ describe('with office_action_feed on', () => {
   it('ranks an office action in the Action Center, and leaves out one marked done', async () => {
     feed = readOfficeActions([row(), row({ id: 'a2', title: 'Housing deposit confirmed', done_at: new Date().toISOString() })]);
     await render(<TodayActionCenter officeActions officeAccountId="u1" />);
-    expect(text()).toContain('FAFSA verification documents are due October 15');
+    expect(text()).toContain(FAFSA_TITLE);
     expect(text()).not.toContain('Housing deposit confirmed');
   });
 

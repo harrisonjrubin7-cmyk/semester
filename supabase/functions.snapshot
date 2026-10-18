@@ -90,9 +90,8 @@ trust-room         95  platform  2026-09-29T21:10:28Z
 delete-account     72  platform  2026-09-29T21:10:28Z
 billing-cancel      2  platform  2026-09-29T21:10:28Z
 billing-checkout   32  platform  2026-09-29T21:10:28Z
-# Added in the billing-availability release. Replace this pending row with the
-# Management API reading after the gated main deploy completes.
-billing-portal      -  pending   2026-10-03T07:31:00Z
+# Read from the Management API on 18 October 2026: ACTIVE, entrypoint on the platform path.
+billing-portal      356  platform  2026-10-18T20:34:11Z
 billing-webhook    32  platform  2026-09-29T21:10:28Z
 lead-intake        32  platform  2026-09-29T21:10:28Z
 
