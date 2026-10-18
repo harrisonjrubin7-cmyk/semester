@@ -279,6 +279,18 @@ describe('review fixes: boundaries, tenancy, atomic release, event metadata', ()
     expect(await codeOf(() => service.readDraft(as('stu-1'), 'a1'))).toBe('membership_revoked');
   });
 
+  it('a draft is not read once the enrollment is removed or stops being a student role', async () => {
+    const { service, store, as } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'notes', expectedVersion: 0 });
+
+    const index = store.memberships.findIndex((m) => m.userId === 'stu-1');
+    const removed = store.memberships.splice(index, 1)[0];
+    expect(await codeOf(() => service.readDraft(as('stu-1'), 'a1'))).toBe('not_enrolled');
+
+    store.memberships.push({ ...removed, role: 'faculty' });
+    expect(await codeOf(() => service.readDraft(as('stu-1'), 'a1'))).toBe('not_enrolled');
+  });
+
   it('the closing instant itself is closed', async () => {
     const { service, as, KEY_1, setNow } = fixture();
     await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
