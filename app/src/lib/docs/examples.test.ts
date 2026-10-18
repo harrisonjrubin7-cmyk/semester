@@ -92,6 +92,7 @@ function world(options: WorldOptions = {}) {
     authenticate: async (token) => TOKENS[token] ?? null,
     adapters: [adapter],
     journal,
+    idempotency: journal,
     ...(options.rateLimiter ? { rateLimiter: options.rateLimiter } : {}),
     ...(options.readOnly ? { readOnly: options.readOnly } : {}),
   });

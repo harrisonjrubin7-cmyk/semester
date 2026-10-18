@@ -279,6 +279,7 @@ function TimerRow({ t, at }: { t: Timer; at: number }) {
         <Small onClick={() => swap((now) => stretch(t, 60, now))}>+1 min</Small>
         <Small onClick={() => swap(() => reset(t))}>Reset</Small>
         <Small
+          ariaLabel={`Clear timer ${t.label || lengthLine(t.seconds)} · ${lengthLine(t.seconds)} total · ${clockFace(left)} remaining · ${running(t) ? 'running' : 'paused'}`}
           onClick={() => {
             dispatch({ type: 'removeTimer', id: t.id });
             say(`${t.label || 'Timer'} cleared.`);
@@ -291,12 +292,13 @@ function TimerRow({ t, at }: { t: Timer; at: number }) {
   );
 }
 
-function Small({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+function Small({ children, onClick, ariaLabel }: { children: React.ReactNode; onClick: () => void; ariaLabel?: string }) {
   return (
     <button
       type="button"
       className="bare tappable"
       onClick={onClick}
+      aria-label={ariaLabel}
       style={{
         width: 'auto',
         paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
@@ -462,7 +464,7 @@ function Alarms() {
                     type="button"
                     className="bare tappable"
                     onClick={() => dispatch({ type: 'removeAlarm', id: a.id })}
-                    aria-label={`Delete the ${timeLine(a.at)} alarm`}
+                    aria-label={`Delete ${timeLine(a.at)} alarm: ${a.label || 'No label'} · ${daysLine(a.days)} · ${a.on ? 'on' : 'off'}`}
                     style={{ width: 'auto', paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}
                   >
                     Delete

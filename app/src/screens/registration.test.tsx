@@ -223,7 +223,7 @@ describe('when the school has not turned it on', () => {
   it('says it is paused, and by which switch, when a kill switch is engaged', async () => {
     mock.switches = [{ switch_key: 'kill.writeback', tenant_id: null, engaged: true }];
     await render();
-    expect(host.querySelector('[role="alert"]')?.textContent).toMatch(/paused registration.*kill\.writeback/);
+    expect(host.querySelector('[data-state="permission-denied"]')?.textContent).toMatch(/paused registration.*kill\.writeback/);
     expect(mock.sections).not.toHaveBeenCalled();
   });
 });
@@ -241,6 +241,8 @@ describe('who may see it', () => {
     mock.school = null;
     await render();
     expect(text()).toMatch(/not linked to a school yet.*your school decides whether registration is turned on/);
+    await press('Open your profile');
+    expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'profile' });
   });
 
   it('offers the registrar’s half only to registration:administer at this school', async () => {

@@ -232,6 +232,41 @@ export function PermissionNotice({
   );
 }
 
+/**
+ * A stable access boundary — what is unavailable, why, who controls access,
+ * and the one safe action the person can take next.
+ *
+ * This is deliberately separate from `PermissionNotice`: a notice confirms a
+ * change after content was shown or shared, while this state replaces the
+ * protected region and must never reveal whether its contents exist.
+ */
+export function PermissionState({
+  title,
+  body,
+  owner,
+  recover,
+}: {
+  title: string;
+  body: string;
+  owner: string;
+  recover?: { label: string; run: () => void };
+}) {
+  return (
+    <section className="state-permission" role="status" data-state="permission-denied" aria-label={title}>
+      <div className="state-title">{title}</div>
+      <p className="state-body">{body}</p>
+      <p className="state-note">Access is controlled by {owner}.</p>
+      {recover && (
+        <div className="state-actions">
+          <button type="button" className="btn btn-primary" onClick={recover.run}>
+            {recover.label}
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 /** An offline strip — says what still works and that work is queued. */
 /**
  * `syncs` is whether there is an account copy to catch up with. Without one —
