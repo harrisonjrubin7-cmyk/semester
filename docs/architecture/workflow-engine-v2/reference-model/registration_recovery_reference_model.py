@@ -127,6 +127,9 @@ class RegistrationModel:
         with self.lock:
             if key not in self.authoritative:
                 raise ValueError('No authoritative commitment to project')
+            # Projection repair publishes only a committed execution, never one still awaiting reconciliation.
+            if self.commands[key]['state'] != 'committed':
+                raise ValueError('Projection repair requires a committed execution')
             self.commands[key]['projection'] = 'complete'
             return self._view(self.commands[key])
 
@@ -161,24 +164,28 @@ class WorkerReferenceModel:
         self.effects = 0
         self.receipts = []
         self.lock = Lock()
-    def claim(self, job, event_id, tenant):
-        # A lease names the one event and tenant it covers; the fence is counted per job.
+    def claim(self, job, event_id, tenant, now=0, ttl=60):
+        # A lease names one event, tenant and consumer job, and expires after ttl; the fence is counted per (tenant, job).
         with self.lock:
-            self.fence[job] = self.fence.get(job, 0) + 1
-            return (job, self.fence[job], event_id, tenant)
-    def apply(self, event_id, token, approved=True, tenant='default', fault=None):
-        job, fence, bound_event, bound_tenant = token
-        key = (tenant, event_id)
+            fence_key = (tenant, job)
+            self.fence[fence_key] = self.fence.get(fence_key, 0) + 1
+            return (job, self.fence[fence_key], event_id, tenant, now + ttl)
+    def apply(self, event_id, token, approved=True, tenant='default', fault=None, now=0):
+        job, fence, bound_event, bound_tenant, expires_at = token
         with self.lock:
             # A token applies only to the event and tenant it leases, so no other lease can commit the effect.
             if bound_event != event_id:
                 return 'wrong_event'
             if bound_tenant != tenant:
                 return 'wrong_tenant'
-            # A consumed event answers with its durable outcome before any fencing or approval check.
+            # The inbox is per tenant, consumer and event, so one consumer's effect cannot mark another's delivery.
+            key = (tenant, job, event_id)
+            # A consumed event answers with its durable outcome before any expiry, fencing or approval check.
             if key in self.inbox:
                 return 'denied' if self.inbox[key] == 'denied' else 'duplicate'
-            if fence != self.fence.get(job):
+            if now >= expires_at:
+                return 'lease_expired'
+            if fence != self.fence.get((tenant, job)):
                 return 'stale_lease'
             if not approved:
                 self.inbox[key] = 'denied'

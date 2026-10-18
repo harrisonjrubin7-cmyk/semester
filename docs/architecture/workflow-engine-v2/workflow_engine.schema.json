@@ -1266,6 +1266,81 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "resolution": {
+                "properties": {
+                  "resolved": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "resolved"
+                ]
+              }
+            },
+            "required": [
+              "resolution"
+            ]
+          },
+          "then": {
+            "properties": {
+              "resolution": {
+                "required": [
+                  "code_ref",
+                  "code_digest",
+                  "evidence"
+                ],
+                "properties": {
+                  "code_ref": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "code_digest": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "evidence": {
+                    "minItems": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "effect": {
+                "properties": {
+                  "kind": {
+                    "not": {
+                      "const": "official_write"
+                    }
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              }
+            },
+            "required": [
+              "effect"
+            ]
+          },
+          "then": {
+            "properties": {
+              "authority": {
+                "properties": {
+                  "official_write": {
+                    "const": false
+                  }
+                }
+              }
+            }
+          }
         }
       ]
     },
@@ -2628,6 +2703,29 @@
                 "minLength": 1
               }
             }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "human_authority_required": {
+                "const": true
+              }
+            },
+            "required": [
+              "human_authority_required"
+            ]
+          },
+          "then": {
+            "properties": {
+              "approval_policy_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "approval_policy_ref"
+            ]
           }
         }
       ]

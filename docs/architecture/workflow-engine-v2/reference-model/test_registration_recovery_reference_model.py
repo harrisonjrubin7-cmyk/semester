@@ -195,6 +195,13 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual(second['correction_receipt'], 2)
         self.assertEqual(len(m.corrections), 2)
 
+    def test_repair_requires_committed_execution(self):
+        m = RegistrationModel()
+        r = self.submit(m, payload={'section_ref': 's1'}, fault='timeout_after')
+        with self.assertRaises(ValueError):
+            m.repair_projection(r['key'])
+        self.assertEqual(m.commands[r['key']]['projection'], 'pending')
+
     def test_reconcile_and_repair_return_copies(self):
         m = RegistrationModel()
         payload = {'section_ref': 's1', 'override_grant_refs': ['g1']}
@@ -297,6 +304,26 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(w.apply('e1', token, approved=False), 'denied')
         self.assertEqual(w.apply('e1', token, approved=True), 'denied')
         self.assertEqual(w.effects, 0)
+
+    def test_expired_lease_cannot_commit(self):
+        w = WorkerReferenceModel()
+        token = w.claim('default', 'e1', 'default', now=0, ttl=60)
+        self.assertEqual(w.apply('e1', token, now=60), 'lease_expired')
+        self.assertEqual(w.effects, 0)
+        self.assertEqual(w.apply('e1', token, now=30), 'committed')
+
+    def test_inbox_is_scoped_by_consumer(self):
+        w = WorkerReferenceModel()
+        a = w.claim('A', 'e1', 'default'); b = w.claim('B', 'e1', 'default')
+        self.assertEqual(w.apply('e1', a), 'committed')
+        self.assertEqual(w.apply('e1', b), 'committed')
+        self.assertEqual(w.effects, 2)
+
+    def test_fence_is_scoped_by_tenant_and_job(self):
+        w = WorkerReferenceModel()
+        a = w.claim('default', 'e1', 'tenant-a')
+        w.claim('default', 'e2', 'tenant-b')
+        self.assertEqual(w.apply('e1', a, tenant='tenant-a'), 'committed')
 
     def test_token_applies_only_to_its_event(self):
         w = WorkerReferenceModel()
