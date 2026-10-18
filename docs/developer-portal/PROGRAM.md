@@ -262,8 +262,10 @@ Not yet run in this session: the full `npm test`, `npm run test:shuffle`, `npm r
 
 ## 8. Continuation record
 
-Completed: specification inventoried; coverage matrix; blockers and decisions; lifecycle transitions implemented and verified.
+Completed: specification inventoried; coverage matrix; blockers and decisions; lifecycle transitions implemented and verified; application registry (`registry.ts`) behind an injected `ApplicationStore`, with tenant isolation (cross-tenant reads and writes report `NOT_FOUND`), revoked-grant denial (`GRANT_REVOKED`, checked before any read), scope checks, optimistic concurrency (`PRECONDITION_FAILED`), and lifecycle transitions routed through the same table. 13 registry tests; each of the tenant, grant, and scope guards was removed in turn and caught.
 
-Next executable task, unblocked by code alone: **application registry record and its authorization-checked store, behind an injected repository interface**, with tests for cross-tenant denial and a revoked-grant denial (§9.1). It needs Q-5 for the first slice's `apps:read` and `apps:write` rules; until then, use the teaching-model rule with its limitation stated in the code.
+Still open for the registry: the store is in-memory only (no database, no migration, no RLS); the API handlers and the gateway are not built; scopes follow the teaching model until Q-5 is decided; create and transition do not yet write an audit record (§5.1 step 10).
 
-Changed files: `app/src/lib/developer-portal/lifecycle.ts`, `app/src/lib/developer-portal/lifecycle.test.ts`, `docs/developer-portal/PROGRAM.md`.
+Next executable task: an audit record and outbox entry written in the same step as each registry mutation (§5.1, §5.7), with a test that a mutation whose audit write fails does not commit. Then the `/v1/apps` read and create handlers behind the gateway pipeline once the OpenAPI contract (B-01) exists.
+
+Changed files: `app/src/lib/developer-portal/lifecycle.ts`, `app/src/lib/developer-portal/lifecycle.test.ts`, `app/src/lib/developer-portal/registry.ts`, `app/src/lib/developer-portal/registry.test.ts`, `docs/developer-portal/PROGRAM.md`.
