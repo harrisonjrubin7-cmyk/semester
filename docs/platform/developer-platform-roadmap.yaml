@@ -8,11 +8,14 @@ developer_platform:
     - internal_event_catalog
 
   stage_1_design_partners:
-    - named_partner_agreement
-    - scoped_sandbox_credential
-    - approved_use_case
-    - manual_access_review
-    - audit_and_rate_limit_controls
+    requires_stage: stage_0_internal_only
+    requires_all_of_stage_0: true
+    items:
+      - named_partner_agreement
+      - scoped_sandbox_credential
+      - approved_use_case
+      - manual_access_review
+      - audit_and_rate_limit_controls
 
   stage_2_limited_external:
     requires_stage: stage_1_design_partners
@@ -35,6 +38,7 @@ developer_platform:
     # Proposed default, not yet approved: these stay out of stage 2 entirely.
     still_forbidden_at_stage_2:
       - production_self_service_keys
+      - unrestricted_event_subscriptions
       - access_to_restricted_student_data
 
   forbidden_before_stage_2:

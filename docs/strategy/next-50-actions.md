@@ -12,10 +12,10 @@ its evidence exists in the repository.
 - [ ] 2. Establish platform-pillar ownership. — `registry/platform/pillar-owners.yaml` (6 of 12 pillars have no owner)
 - [x] 3. Create the contract-lab submission template. — `docs/engineering/contract-lab.yaml`
 - [ ] 4. Validate all existing record-envelope schemas.
-- [ ] 5. Add tenant-isolation simulation to CI.
+- [x] 5. Add tenant-isolation simulation to CI. — `packages/platform/src/isolation/isolation.test.ts` (in the app test include, `app/vite.config.ts`)
 - [ ] 6. Add policy-reference checks to CI.
 - [ ] 7. Add API and event compatibility checks.
-- [ ] 8. Add release-evidence expiration rules.
+- [x] 8. Add release-evidence expiration rules. — `app/src/lib/governance/release-profiles.test.ts` (fails closed on stale, failed, revoked or expired evidence)
 - [ ] 9. Add correlation IDs end to end.
 - [ ] 10. Create a source/freshness state test harness.
 
