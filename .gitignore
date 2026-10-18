@@ -81,3 +81,6 @@ app/reports/
 
 # Local memory-tool snapshot
 .anchor/
+
+# md-linker session hook output (generated link index, not committed)
+.md-linker/
