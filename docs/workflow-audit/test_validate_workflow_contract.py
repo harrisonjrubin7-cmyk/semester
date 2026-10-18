@@ -88,6 +88,17 @@ class RejectedContracts(unittest.TestCase):
             d['readiness']['institution_authorized'] = {'status': 'verified', 'evidence': [EVIDENCE], 'reason': 'x'}
         self.assertRejected(mutate(fn), 'effective_from')
 
+    def test_step_actor_outside_allowed_roles(self):
+        def fn(d):
+            d['steps'][0]['actor_role'] = 'registrar'
+        self.assertRejected(mutate(fn), 'actor is outside allowed_roles')
+
+    def test_official_write_must_be_consequential(self):
+        def fn(d):
+            d['controls']['risk'] = 'low'
+            d['controls']['human_authority_required'] = False
+        self.assertRejected(mutate(fn), 'risk')
+
 
 if __name__ == '__main__':
     unittest.main()

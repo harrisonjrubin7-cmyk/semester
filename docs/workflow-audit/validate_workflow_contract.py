@@ -48,6 +48,8 @@ def semantic_errors(doc):
     available_refs = set(doc['data']['input_refs'])
     produced_refs = set()
     for step in doc['steps']:
+        if step['actor_role'] not in doc['scope']['allowed_roles']:
+            errors.append('Step ' + step['id'] + ' actor is outside allowed_roles: ' + step['actor_role'])
         missing = set(step['input_refs']) - available_refs
         if missing:
             errors.append('Step ' + step['id'] + ' reads unknown input refs: ' + ', '.join(sorted(missing)))

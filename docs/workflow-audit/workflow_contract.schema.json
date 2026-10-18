@@ -1447,6 +1447,51 @@
           "authority"
         ]
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "authority": {
+            "properties": {
+              "official_record_write": {
+                "const": true
+              }
+            },
+            "required": [
+              "official_record_write"
+            ]
+          }
+        },
+        "required": [
+          "authority"
+        ]
+      },
+      "then": {
+        "properties": {
+          "controls": {
+            "properties": {
+              "risk": {
+                "const": "consequential"
+              },
+              "human_authority_required": {
+                "const": true
+              },
+              "approval_policy_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "risk",
+              "human_authority_required",
+              "approval_policy_ref"
+            ]
+          }
+        },
+        "required": [
+          "controls"
+        ]
+      }
     }
   ]
 }
