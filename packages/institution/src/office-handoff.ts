@@ -152,7 +152,10 @@ function targetPresence(
     return matches === 1 ? 'open' : 'ambiguous';
   }
   const { id } = target;
-  const hold = readiness.holds.find((candidate) => candidate.id === id);
+  // The projection does not enforce unique hold ids either, so two holds with one id are refused
+  // rather than letting list order pick the outcome.
+  const matches = readiness.holds.filter((candidate) => candidate.id === id);
+  const [hold] = matches;
   if (!hold) return 'missing';
   return hold.state === 'clear' ? 'clear' : 'open';
 }
@@ -194,19 +197,21 @@ function actorMayAct(actor: HandoffActor, handoff: HandoffRecord, action: Handof
 }
 
 /**
- * The payload a retried route must match. Hashing the accepted decision, not
- * the raw request, means a retry that changes only harmless fields still
- * replays, while one that changes the target, office or readiness version
- * does not.
+ * The reviewed inputs of a route request, taken before any current-state check. A caller
+ * matches the idempotency key against this first. A retry after the projection, the target's
+ * status or the owning office has moved is then still recognised as the same request and
+ * replays the stored outcome, rather than being re-decided against new state. The office is
+ * deliberately absent: it is derived from ownership, which is current state.
  */
-export function routeFingerprint(verdict: Extract<RouteVerdict, { ok: true }>): string {
-  return JSON.stringify([
-    verdict.projectionId,
-    verdict.subjectId,
-    verdict.target,
-    verdict.officeId,
-    verdict.readinessVersion,
-  ]);
+export interface RouteRequestIdentity {
+  projectionId: string;
+  subjectId: string;
+  target: RoutableTarget;
+  readinessVersion: number;
+}
+
+export function requestFingerprint(request: RouteRequestIdentity): string {
+  return JSON.stringify([request.projectionId, request.subjectId, targetKey(request.target), request.readinessVersion]);
 }
 
 export type RetryOutcome = 'new' | 'replay' | 'conflict';

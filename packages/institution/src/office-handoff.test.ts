@@ -5,10 +5,11 @@ import {
   classifyRetry,
   decideBlockerRoute,
   decideHandoffAction,
-  routeFingerprint,
+  requestFingerprint,
   targetKey,
   type HandoffActor,
   type OfficeOwnership,
+  type RouteRequestIdentity,
   type RoutableReadiness,
 } from './office-handoff.ts';
 
@@ -114,6 +115,20 @@ describe('decideBlockerRoute', () => {
     expect(route({ readiness: twice })).toEqual({ ok: false, reason: 'target_ambiguous' });
   });
 
+  it('refuses a hold id that names two holds, whatever their order', () => {
+    const twice: RoutableReadiness = {
+      ...readiness,
+      holds: [
+        { id: 'hold-fin', state: 'clear', label: 'Cleared earlier', sourceRefIds: ['bursar-1'] },
+        { id: 'hold-fin', state: 'blocking', label: 'Balance due', sourceRefIds: ['bursar-2'] },
+      ],
+    };
+    expect(route({ readiness: twice, target: { kind: 'hold', id: 'hold-fin' } })).toEqual({
+      ok: false,
+      reason: 'target_ambiguous',
+    });
+  });
+
   it('refuses a hold that is already clear', () => {
     expect(route({ target: { kind: 'hold', id: 'hold-clear' } })).toEqual({ ok: false, reason: 'target_not_open' });
   });
@@ -179,31 +194,50 @@ describe('decideHandoffAction', () => {
   });
 });
 
-describe('routeFingerprint and classifyRetry', () => {
-  const accepted = route();
-  if (!accepted.ok) throw new Error('fixture must route');
+describe('requestFingerprint and classifyRetry', () => {
+  const reviewed: RouteRequestIdentity = {
+    projectionId: 'projection-fall',
+    subjectId: 'student-1',
+    target: { kind: 'blocker', code: 'advising_hold' },
+    readinessVersion: 4,
+  };
 
   it('replays an identical retry', () => {
-    expect(classifyRetry(routeFingerprint(accepted), routeFingerprint(accepted))).toBe('replay');
+    expect(classifyRetry(requestFingerprint(reviewed), requestFingerprint({ ...reviewed }))).toBe('replay');
+  });
+
+  it('replays a retry after the owning office has changed, instead of re-deciding it', () => {
+    const before = route();
+    expect(before).toMatchObject({ ok: true, officeId: 'advising' });
+    const after = route({ ownership: { ...ownership, 'blocker:advising_hold': 'housing' } });
+    expect(after).toMatchObject({ ok: true, officeId: 'housing' });
+    // The stored request is the one that was reviewed. Ownership is current state, so it is not in
+    // the fingerprint, and the retry matches the stored request and replays.
+    expect(classifyRetry(requestFingerprint(reviewed), requestFingerprint(reviewed))).toBe('replay');
   });
 
   it('treats a retry against a newer readiness version as a conflict, not a replay', () => {
-    const changed = { ...accepted, readinessVersion: 5 };
-    expect(classifyRetry(routeFingerprint(accepted), routeFingerprint(changed))).toBe('conflict');
+    expect(classifyRetry(requestFingerprint(reviewed), requestFingerprint({ ...reviewed, readinessVersion: 5 }))).toBe(
+      'conflict',
+    );
   });
 
   it('treats the same version from a different projection as a conflict, not a replay', () => {
-    const spring = route({ readiness: { ...readiness, projectionId: 'projection-spring' } });
-    if (!spring.ok) throw new Error('fixture must route');
-    expect(classifyRetry(routeFingerprint(accepted), routeFingerprint(spring))).toBe('conflict');
+    expect(
+      classifyRetry(requestFingerprint(reviewed), requestFingerprint({ ...reviewed, projectionId: 'projection-spring' })),
+    ).toBe('conflict');
   });
 
-  it('treats a reused key with a different office as a conflict', () => {
-    const otherOffice = { ...accepted, officeId: 'bursar' };
-    expect(classifyRetry(routeFingerprint(accepted), routeFingerprint(otherOffice))).toBe('conflict');
+  it('treats the same key with a different target as a conflict', () => {
+    expect(
+      classifyRetry(
+        requestFingerprint(reviewed),
+        requestFingerprint({ ...reviewed, target: { kind: 'hold', id: 'hold-fin' } }),
+      ),
+    ).toBe('conflict');
   });
 
   it('reports a first request as new', () => {
-    expect(classifyRetry(undefined, routeFingerprint(accepted))).toBe('new');
+    expect(classifyRetry(undefined, requestFingerprint(reviewed))).toBe('new');
   });
 });
