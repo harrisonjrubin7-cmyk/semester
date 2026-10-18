@@ -76,6 +76,10 @@ def semantic_errors(doc):
             if ref not in evidence_refs:
                 errors.append('Acceptance test ' + test['id'] + ' cites evidence not in the tested gate: ' + ref)
     now = datetime.now(timezone.utc)
+    try:
+        effective_at = parse_timestamp(doc['authority']['effective_from']) if doc['authority']['effective_from'] else None
+    except ValueError:
+        effective_at = None
     for gate_name, gate in doc['readiness'].items():
         for ev in gate['evidence']:
             try:
@@ -85,6 +89,8 @@ def semantic_errors(doc):
                 continue
             if verified_at > now:
                 errors.append(gate_name + ' evidence verified_at is in the future: ' + ev['reference'])
+            if gate_name == 'production_enabled' and gate['status'] == 'verified' and effective_at and verified_at < effective_at:
+                errors.append('production_enabled evidence predates authority effective_from: ' + ev['reference'])
             if gate_name == 'production_enabled' and gate['status'] == 'verified' and ev['environment'] != 'production':
                 errors.append('production_enabled evidence is not from production: ' + ev['reference'])
     effective_from = doc['authority']['effective_from']

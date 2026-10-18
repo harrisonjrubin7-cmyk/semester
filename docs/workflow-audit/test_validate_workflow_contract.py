@@ -175,6 +175,18 @@ class RejectedContracts(unittest.TestCase):
             d['readiness']['institution_authorized'] = {'status': 'verified', 'evidence': [EVIDENCE], 'reason': 'x'}
         self.assertRejected(mutate(fn), 'effective_from is in the future for verified authority')
 
+    def test_production_evidence_must_not_predate_authority(self):
+        def fn(d):
+            for test in d['acceptance_tests']:
+                test['evidence_refs'] = ['ev:1']
+            d['authority']['effective_from'] = '2026-10-15T00:00:00Z'
+            prod = dict(EVIDENCE, environment='production', verified_at='2026-10-01T00:00:00Z')
+            for gate in ('designed', 'implemented', 'tested', 'deployed'):
+                d['readiness'][gate] = {'status': 'verified', 'evidence': [EVIDENCE], 'reason': 'x'}
+            d['readiness']['institution_authorized'] = {'status': 'verified', 'evidence': [EVIDENCE], 'reason': 'x'}
+            d['readiness']['production_enabled'] = {'status': 'verified', 'evidence': [prod], 'reason': 'x'}
+        self.assertRejected(mutate(fn), 'predates authority effective_from')
+
 
 if __name__ == '__main__':
     unittest.main()
