@@ -312,6 +312,34 @@ describe('moveCase', () => {
     });
   });
 
+  it('drops evidence gathered before a repair, so only post-repair evidence can close the case', () => {
+    const triaged = moveCase(opened(), 'triaged', { by: 'registrar_owner', at: AT, evidence: [...RESOLUTION_REQUIRED] });
+    if (!triaged.ok) throw new Error('setup');
+    const proposed = moveCase(triaged.case, 'repair_proposed', {
+      by: 'integration_owner',
+      at: AT,
+      repair: 'refresh_source_snapshot',
+    });
+    if (!proposed.ok) throw new Error('setup');
+    expect(proposed.case.resolution).toEqual([]);
+  });
+
+  it('refuses to open a case with a detection time that is not ISO 8601', () => {
+    expect(() =>
+      openCase({
+        id: 'REC-2026-002',
+        tenantId: 'named-institution',
+        capability: 'registration_readiness',
+        discrepancy: 'stale_source',
+        severity: 'high',
+        ownerId: 'registrar_owner',
+        detectedAt: 'yesterday',
+        sourceSystem: 'SIS',
+        cohortId: 'approved_pilot_cohort',
+      }),
+    ).toThrow('detectedAt must be an ISO timestamp');
+  });
+
   it('does not let an escalated case with a safe repair skip repair and approval', () => {
     const escalated: ReconciliationCase = { ...opened(), state: 'escalated' };
     const result = moveCase(escalated, 'reverified', { by: 'registrar_owner', at: AT, evidence: [...RESOLUTION_REQUIRED] });

@@ -167,6 +167,8 @@ export function openCase(input: {
   sourceSystem: string;
   cohortId: string;
 }): ReconciliationCase {
+  // Refused at creation: a case with a non-ISO detection time could never move again, so it is not produced.
+  if (!isIsoTimestamp(input.detectedAt)) throw new Error('detectedAt must be an ISO timestamp');
   return { ...input, state: 'detected', resolution: [], history: [], priorCycles: [] };
 }
 
@@ -210,7 +212,9 @@ export function moveCase(current: ReconciliationCase, to: CaseState, options: Mo
     if (!isRepairAllowed(current.discrepancy, repair)) {
       return { ok: false, reason: `${repair} is not a safe repair for ${current.discrepancy}; escalate instead` };
     }
-    next = { ...next, proposedRepair: repair, proposedBy: options.by };
+    // Evidence gathered before a repair belongs to no repair cycle, so proposing one clears it: only evidence
+    // collected after the repair can close the case.
+    next = { ...next, resolution: [], proposedRepair: repair, proposedBy: options.by };
   }
 
   if (to === 'repair_approved') {
