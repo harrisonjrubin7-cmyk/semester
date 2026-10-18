@@ -190,8 +190,8 @@ export interface FacultySubmissionView {
 }
 
 const ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
-/** Same shape the dining payment keys use: a client may not send an unbounded or unsafe key. */
-const KEY_PATTERN = /^[A-Za-z0-9_.:-]{8,64}$/;
+/** The gateway's idempotency-key contract (`packages/platform/src/gateway/headers.ts`). Keep the two in step. */
+const KEY_PATTERN = /^[A-Za-z0-9._:-]{16,128}$/;
 const BODY_LIMIT = 50_000;
 const FEEDBACK_LIMIT = 10_000;
 const MAX_VERSION = 1_000_000_000;
@@ -205,7 +205,7 @@ const requireId = (value: unknown, field: string): string => {
 
 const requireKey = (value: unknown): string => {
   if (typeof value !== 'string' || !KEY_PATTERN.test(value)) {
-    throw new SubmissionRefusal('invalid_input', 'idempotencyKey must be 8 to 64 letters, digits, dots, colons, underscores or dashes');
+    throw new SubmissionRefusal('invalid_input', 'idempotencyKey must be 16 to 128 letters, digits, dots, colons or dashes');
   }
   return value;
 };
@@ -325,17 +325,18 @@ export class AssignmentSubmissionService {
     // failure while building leaves the store as it was.
     const submissionId = this.newId();
     const submittedAt = this.now().toISOString();
-    const receipt = this.receiptFor('Your submission was received.');
+    const receipt = this.receiptFor('Your submission was received.', submittedAt);
     const event = this.eventFor({
       eventType: 'submission.finalized',
       actorId: actor.userId,
       tenantId: assignment.institutionId,
+      subjectType: 'submission',
       subjectId: submissionId,
       correlationId: correlationOf(input.correlationId, `submission-${submissionId}`),
       idempotencyKey: key,
       payload: { submissionId, assignmentId, version: 1 },
     });
-    this.store.receipts.set(receipt.id, receipt);
+    this.store.receipts.set(receipt.id, { ...receipt });
     this.store.submissions.set(submissionId, {
       id: submissionId,
       assignmentId,
@@ -371,14 +372,16 @@ export class AssignmentSubmissionService {
       throw new SubmissionRefusal('invalid_state', 'An assessment is already recorded for this submission');
     }
 
-    const receipt = this.receiptFor('Assessment saved. The student cannot see it until feedback is released.');
-    this.store.receipts.set(receipt.id, receipt);
+    // Read the write time before anything is stored: a clock that fails here leaves the store as it was.
+    const recordedAt = this.now().toISOString();
+    const receipt = this.receiptFor('Assessment saved. The student cannot see it until feedback is released.', recordedAt);
+    this.store.receipts.set(receipt.id, { ...receipt });
     this.store.assessments.set(submissionId, {
       submissionId,
       graderId: actor.userId,
       grade,
       feedback,
-      recordedAt: this.now().toISOString(),
+      recordedAt,
       releasedAt: null,
     });
     this.claim(actor.userId, 'record_assessment', key, fingerprint, receipt.id);
@@ -403,18 +406,20 @@ export class AssignmentSubmissionService {
 
     // Build the receipt and the event before the grade becomes visible. A failure here leaves the release undone,
     // so a retry still emits the one event.
-    const receipt = this.receiptFor('Feedback released to the student.');
+    const releasedAt = this.now().toISOString();
+    const receipt = this.receiptFor('Feedback released to the student.', releasedAt);
     const event = this.eventFor({
       eventType: 'grade.posted',
       actorId: actor.userId,
       tenantId: assignment.institutionId,
-      subjectId: submission.id,
+      subjectType: 'student',
+      subjectId: submission.userId,
       correlationId: correlationOf(input.correlationId, `release-${submission.id}`),
       idempotencyKey: key,
       payload: { submissionId: submission.id, assignmentId: assignment.id },
     });
-    this.store.receipts.set(receipt.id, receipt);
-    assessment.releasedAt = this.now().toISOString();
+    this.store.receipts.set(receipt.id, { ...receipt });
+    assessment.releasedAt = releasedAt;
     this.claim(actor.userId, 'release_feedback', key, fingerprint, receipt.id);
     this.store.outbox.append(event);
     return receipt;
@@ -508,16 +513,16 @@ export class AssignmentSubmissionService {
     }
     const receipt = this.store.receipts.get(claim.receiptId);
     if (!receipt) throw new Error(`idempotency claim ${key} has no receipt`);
-    return receipt;
+    return { ...receipt };
   }
 
   private claim(userId: string, command: string, key: string, fingerprint: string, receiptId: string): void {
     this.store.claims.set(claimKey(userId, command, key), { fingerprint, receiptId });
   }
 
-  /** A receipt that is not yet stored: the caller stores it with the rest of the write. */
-  private receiptFor(message: string): Receipt {
-    return { id: this.newId(), status: 'completed', message, recordedAt: this.now().toISOString() };
+  /** A receipt that is not yet stored: the caller stores it with the rest of the write, at the time it already read. */
+  private receiptFor(message: string, recordedAt: string): Receipt {
+    return { id: this.newId(), status: 'completed', message, recordedAt };
   }
 
   /** An event that is not yet in the outbox. It carries the command key and the service clock, not the process clock. */
@@ -525,6 +530,7 @@ export class AssignmentSubmissionService {
     eventType: 'submission.finalized' | 'grade.posted';
     actorId: string;
     tenantId: string;
+    subjectType: 'submission' | 'student';
     subjectId: string;
     correlationId: string;
     idempotencyKey: string;
@@ -538,7 +544,7 @@ export class AssignmentSubmissionService {
       occurredAt: this.now().toISOString(),
       tenantId: input.tenantId,
       actor: { id: input.actorId, type: 'user' },
-      subject: { type: 'submission', id: input.subjectId },
+      subject: { type: input.subjectType, id: input.subjectId },
       correlationId: input.correlationId,
       idempotencyKey: input.idempotencyKey,
       payload: input.payload,

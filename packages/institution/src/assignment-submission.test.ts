@@ -37,8 +37,8 @@ function fixture(start = '2026-10-18T12:00:00Z') {
   );
 
   const as = (userId: string, institutionId = 'inst-a') => ({ userId, institutionId });
-  const KEY_1 = 'submit-key-0001';
-  const KEY_2 = 'submit-key-0002';
+  const KEY_1 = 'submit-key-000001';
+  const KEY_2 = 'submit-key-000002';
   return { store, service, as, KEY_1, KEY_2, setNow: (iso: string) => { now = new Date(iso); } };
 }
 
@@ -327,6 +327,60 @@ describe('review fixes: boundaries, tenancy, atomic release, event metadata', ()
     await service.releaseFeedback(as('fac-1'), { submissionId, idempotencyKey: KEY_2 });
     expect(store.outbox.rows.map((r) => r.event.eventType)).toEqual(['submission.finalized', 'grade.posted']);
     expect(await service.readFeedback(as('stu-1'), submissionId)).toEqual({ released: true, grade: 80, feedback: 'ok' });
+  });
+
+  it('a clock that fails partway through an assessment leaves no receipt that no claim points to', async () => {
+    const { service, store, as, KEY_1, KEY_2 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    const submissionId = [...store.submissions.values()][0].id;
+
+    // The clock answers once, then fails: only a second read inside the write can throw.
+    let reads = 0;
+    const flaky = new AssignmentSubmissionService(store, {
+      environment: 'demo',
+      now: () => {
+        if (++reads > 1) throw new Error('clock unavailable');
+        return new Date('2026-10-18T12:00:00Z');
+      },
+      newId: () => `flaky-${reads}`,
+    });
+    await flaky.recordAssessment(as('fac-1'), { submissionId, grade: 80, feedback: 'ok', idempotencyKey: KEY_2 }).catch(() => undefined);
+
+    const claimed = new Set([...store.claims.values()].map((c) => c.receiptId));
+    expect([...store.receipts.keys()].filter((id) => !claimed.has(id))).toEqual([]);
+  });
+
+  it('grade.posted names the student as its subject, the id the grade notifier reads', async () => {
+    const { service, store, as, KEY_1, KEY_2 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    const submissionId = [...store.submissions.values()][0].id;
+    await service.recordAssessment(as('fac-1'), { submissionId, grade: 80, feedback: 'ok', idempotencyKey: KEY_1 });
+    await service.releaseFeedback(as('fac-1'), { submissionId, idempotencyKey: KEY_2 });
+
+    const posted = store.outbox.rows.map((r) => r.event).find((e) => e.eventType === 'grade.posted');
+    expect(posted?.subject).toEqual({ type: 'student', id: 'stu-1' });
+  });
+
+  it('idempotency keys follow the gateway contract: 16 to 128 characters', async () => {
+    const { service, as } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    const submit = (key: string) => service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: key });
+
+    expect(await codeOf(() => submit('k'.repeat(15)))).toBe('invalid_input');
+    expect(await codeOf(() => submit('k'.repeat(129)))).toBe('invalid_input');
+    await expect(submit('k'.repeat(16))).resolves.toMatchObject({ status: 'completed' });
+  });
+
+  it('a receipt handed to the caller is a copy: changing it does not change what a replay returns', async () => {
+    const { service, as, KEY_1 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    const first = await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    Object.assign(first, { message: 'changed by the caller' });
+
+    const replay = await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    expect(replay.message).toBe('Your submission was received.');
   });
 });
 
