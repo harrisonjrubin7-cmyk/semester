@@ -166,7 +166,11 @@ describe("validateAnswerFrame", () => {
   });
 
   it("refuses high confidence on an unsourced claim", () => {
-    const bad = answer({ sources: [{ label: "Unknown", authority: "none" }], confidence: "high" });
+    const bad = answer({
+      sources: [{ label: "Unknown", authority: "none" }],
+      limitations: ["Source unknown."],
+      confidence: "high",
+    });
     expect(validateAnswerFrame(bad)).toHaveLength(1);
   });
 
@@ -190,6 +194,15 @@ describe("validateAnswerFrame", () => {
       },
     });
     expect(validateAnswerFrame(unconfirmed)).toHaveLength(1);
+  });
+
+  it("treats a source with no authority as no source, so it needs a stated limitation", () => {
+    const unsourced = answer({
+      sources: [{ label: "Unknown", authority: "none" }],
+      limitations: [],
+      confidence: "limited",
+    });
+    expect(validateAnswerFrame(unsourced)).toHaveLength(1);
   });
 
   it("does not count a whitespace-only limitation as a stated limitation", () => {

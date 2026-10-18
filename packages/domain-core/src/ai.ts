@@ -32,7 +32,9 @@ export function validateAnswerFrame(f: AIAnswerFrame): string[] {
   if (f.limitations.some((l) => l.trim() === "")) {
     errors.push("Every stated limitation must say something.");
   }
-  if (f.sources.length === 0 && f.limitations.every((l) => l.trim() === "")) {
+  // A source with authority "none" is no source at all, so it needs a stated limitation too.
+  const hasSource = f.sources.some((s) => s.authority !== "none");
+  if (!hasSource && f.limitations.every((l) => l.trim() === "")) {
     errors.push("An answer with no sources must state its limitations.");
   }
   // No sources means no source-backed claim, so high confidence is unsupported too.
