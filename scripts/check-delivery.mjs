@@ -172,7 +172,7 @@ export function check(repo) {
   // artifact's location inherits that artifact's state, so a draft runbook cannot pass as approved.
   const referenceProblem = (value) => {
     // A bare name is a file when one exists at the repository root, so root-level evidence documents resolve.
-    if (value.includes('/') || isFileAt(value)) {
+    if (value.includes('/') || (!artifactById.has(value) && isFileAt(value))) {
       const abs = insideRoot(value);
       if (abs === null) return 'is outside the repository';
       if (!existsSync(abs)) return 'does not exist on disk';
@@ -243,6 +243,13 @@ export function check(repo) {
       `quality-gates: expected GATE-01..GATE-06; missing [${missingGates.join(', ')}]; unexpected [${unexpectedGates.join(', ')}]`,
     );
   }
+
+  // The risk review must be scheduled with a named owner before any increment is enabled (hypercare starts there).
+  const enabledReached = repo.increments.some((i) => rank(i.data.state) >= rank('enabled'));
+  const reviewDate = String(repo.risks.review?.next_review ?? '');
+  const reviewReady = isCalendarDate(reviewDate) && !isUnanswered(String(repo.risks.review?.owner ?? '').trim());
+  if (!reviewReady && enabledReached) errors.push('risk-register: an increment is enabled but the risk review has no scheduled date and owner');
+  else if (!reviewReady) warnings.push('risk-register: the risk review has no scheduled date and owner');
 
   // Risks: enumerated levels, mitigations and an owner.
   for (const r of repo.risks.risks) {
@@ -393,6 +400,10 @@ export function check(repo) {
   }
 
   // Expansion scorecard: hard stops are defined and the no-override rule is stated.
+  // It stays not_run until a run records results, so a status cannot claim an outcome nobody measured.
+  if (repo.scorecard.status !== 'not_run' && !Array.isArray(repo.scorecard.results)) {
+    errors.push(`expansion-scorecard: status ${repo.scorecard.status} needs recorded results`);
+  }
   if (isEmpty(repo.scorecard.hard_stops)) errors.push('expansion-scorecard: no hard stops');
   const declaredStops = repo.scorecard.hard_stops ?? [];
   const missingStops = REQUIRED_HARD_STOPS.filter((id) => !declaredStops.includes(id));

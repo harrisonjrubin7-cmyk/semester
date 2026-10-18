@@ -28,7 +28,7 @@ node --test scripts/check-delivery.test.mjs
 | 6 | Populate risk register; schedule review during hypercare | Register populated. Review date and owner are `UNASSIGNED`. |
 | 7 | Definition of ready before development | Defined in `operating-model.json`. Not enforced beyond the state machine. |
 | 8 | Definition of done before release-ready | Defined. Not enforced. |
-| 9 | Artifact registry in the master-control surface; flag expired critical documents | Partial. One artifact (ART-RDY-011) registered and recorded as `missing`. Master-control surface not built. |
+| 9 | Artifact registry in the master-control surface; flag expired critical documents | Partial. One artifact (ART-RDY-011) registered as `draft`: the runbook exists but is not approved. Master-control surface not built. |
 | 10 | Finance-control baseline before any payment or ledger work | Done as a baseline record. No finance workflow exists here. One principle is cut off in the source text and is marked for completion. |
 | 11 | Pilot expansion scorecard at end of first observation period | Defined; `status: not_run`. No pilot period has started. |
 | 12 | Activate cohorts on evidence, not progress labels | Defined as hard stops and a score policy. Not applicable until a pilot runs. |

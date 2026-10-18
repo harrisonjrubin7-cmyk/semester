@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { symlinkSync, unlinkSync } from 'node:fs';
+import { symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { check, loadRepo } from './check-delivery.mjs';
 import { dirname, resolve } from 'node:path';
@@ -494,4 +494,32 @@ test('control: an unnamed decision holder blocks once an increment reaches relea
   const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'approved_for_release'; });
   const { errors } = check(repo);
   assert.ok(errors.some((e) => /decision-rights: "Feature flag enablement" has no named approver; release cannot proceed/.test(e)));
+});
+
+test('control: an enabled increment with an unscheduled risk review fails', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'enabled'; });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /risk-register: an increment is enabled but the risk review has no scheduled date and owner/.test(e)));
+});
+
+test('control: a scorecard status that claims an outcome without recorded results fails', () => {
+  const repo = loadRepo();
+  repo.scorecard.status = 'passed';
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /expansion-scorecard: status passed needs recorded results/.test(e)));
+});
+
+test('control: a registered artifact id is not replaced by a root-level file of the same name', () => {
+  const file = join(ROOT, 'ART-RDY-011');
+  writeFileSync(file, 'collision');
+  try {
+    const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => {
+      d.state = 'approved_for_build';
+      d.operational_runbook = 'ART-RDY-011';
+    });
+    const { errors } = check(repo);
+    assert.ok(errors.some((e) => /operational_runbook ART-RDY-011 is registered as draft, not approved/.test(e)));
+  } finally {
+    unlinkSync(file);
+  }
 });
