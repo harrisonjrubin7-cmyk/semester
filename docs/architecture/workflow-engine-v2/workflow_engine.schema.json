@@ -1058,6 +1058,9 @@
                   "event_type": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "schedule_ref": {
+                    "type": "null"
                   }
                 }
               }
@@ -1089,6 +1092,42 @@
                   "schedule_ref": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "event_type": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "trigger": {
+                "properties": {
+                  "kind": {
+                    "const": "manual"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              }
+            },
+            "required": [
+              "trigger"
+            ]
+          },
+          "then": {
+            "properties": {
+              "trigger": {
+                "properties": {
+                  "event_type": {
+                    "type": "null"
+                  },
+                  "schedule_ref": {
+                    "type": "null"
                   }
                 }
               }
@@ -1657,6 +1696,27 @@
               "correction_of": {
                 "type": "string",
                 "format": "uuid"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "not": {
+                  "const": "corrected"
+                }
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "correction_of": {
+                "type": "null"
               }
             }
           }
